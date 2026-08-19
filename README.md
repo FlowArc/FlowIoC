@@ -774,8 +774,8 @@ Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 | `Tools/FlowIoC/Create View` | Generate a View, a Mediator, and the prefab |
 | `Tools/FlowIoC/Delete Module` | Remove a module and its references |
 | `Tools/FlowIoC/Console/Flow Console` | The filterable runtime log window |
-| `Tools/FlowIoC/Dependency Diagram` | Visualize signal and injection edges between modules |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
+| `Tools/FlowIoC/Folder Drawer` | Colour Project window folders by path or by folder |
 | `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Detect, fix, and cleanse module metadata; update namespace settings |
@@ -787,16 +787,15 @@ header, `[ShowInModelViewer]` / `[HideInModelViewer]` control Model Viewer outpu
 `[ExcludeFromContextWindow]` hides a context from the sub-context picker, and
 `[ReadOnly]` locks an inspector field.
 
-See [`Editor/README.md`](Editor/README.md),
-[`CodeGenerator/Documentation.md`](Editor/CodeGenerator/Documentation.md) and
-[`DependencyDiagram/README.md`](Editor/DependencyDiagram/README.md).
+See [`Editor/README.md`](Editor/README.md) and
+[`CodeGenerator/Documentation.md`](Editor/CodeGenerator/Documentation.md).
 
 ---
 
 ## Module Layout Convention
 
-`Create Module` produces this shape. Keeping it makes the generators, the
-dependency diagram, and the namespace tools work without configuration:
+`Create Module` produces this shape. Keeping it makes the generators and the
+namespace tools work without configuration:
 
 ```
 Modules/
@@ -875,7 +874,6 @@ to use it, worked good-versus-bad scenarios, and the pitfalls that bite in pract
 | Runtime logging and diagnosis | [Flow Console](Runtime/ConsoleModule/Documentation/FlowConsole.md) |
 | The FlowIoC editor menu | [Editor Tools](Editor/README.md) |
 | Scaffolding modules and classes | [Code Generator](Editor/CodeGenerator/Documentation.md) |
-| Visualising module relationships | [Dependency Diagram](Editor/DependencyDiagram/README.md) |
 
 ---
 

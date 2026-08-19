@@ -122,7 +122,7 @@ InjectionBinderCrossContext.Bind<IEconomyModel, EconomyModel>();     // shared
 ```
 
 Default to the module-private binder. Cross-context is for models other modules
-genuinely read, and every one of those is a coupling the Dependency Diagram will draw.
+genuinely read, and every one of those is a coupling you will have to maintain.
 
 ---
 
@@ -158,8 +158,8 @@ Deleting by hand leaves the asmdef reference in every other module that referenc
 and Unity reports that as a compile error naming the *referencing* module — not the
 one you deleted.
 
-Before deleting, open the [Dependency Diagram](../DependencyDiagram/README.md) and
-look at the module's incoming edges. Connector wiring is resolved at runtime, so a
+Before deleting, search the project for references to the module's signals and
+models. Connector wiring is resolved at runtime, so a
 connector still pointing at a deleted module's signals fails when the scene runs, not
 when the project compiles.
 

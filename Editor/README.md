@@ -14,7 +14,7 @@ The tools keep those conventions correct so you do not have to.
 | `Tools/FlowIoC/Delete Module` | Remove a module and its registrations |
 | `Tools/FlowIoC/Console/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
-| `Tools/FlowIoC/Dependency Diagram` | See how modules actually connect |
+| `Tools/FlowIoC/Folder Drawer` | Colour Project window folders by path or by folder |
 | `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Repair module metadata and namespace settings |
@@ -119,14 +119,27 @@ public class CameraModel : ICameraModel
 Because models are plain C# objects rather than `MonoBehaviour`s, the Unity Inspector
 cannot show them — this window is the replacement.
 
-### Dependency Diagram
+### Folder Drawer
 
-Draws the graph the code actually forms: which signals exist, which commands they
-trigger, which contexts bind what, and where two modules touch. It also animates a
-signal travelling through the graph, which is the fastest way to explain a flow to
-somebody else.
+Tints Project window folders so a large module tree stays readable at a glance. Two
+kinds of rule:
 
-See [Dependency Diagram](DependencyDiagram/README.md).
+- **Path rules** match on the folder path — *contains*, *ends with* or *starts with*.
+  They are checked in order and the first match wins, so put the specific ones first.
+  A rule ending with `Module` colours every generated module without naming any of them.
+- **Folder rules** point at one folder asset and take priority over the path rules.
+  Use them for the handful of folders you want to stand out individually.
+
+Each rule sets a gradient, and optionally a label override, a selection colour, an
+icon and a marker.
+
+Open it from `Tools/FlowIoC/Folder Drawer`. Edits repaint the Project window as you
+make them.
+
+The settings live in your project, at
+`Assets/Editor/FlowIoC/FolderDrawer/FlowIoCFolderDrawerConfig.asset`, not in the
+package — so colours are per project, and are created with a sensible default set the
+first time the Editor opens.
 
 ---
 
@@ -151,5 +164,4 @@ The Root inspector itself is generated: it shows the binding phase toggles
 
 - [README — FlowIoC at a Glance](../README.md#flowioc-at-a-glance)
 - [Code Generator](CodeGenerator/Documentation.md) — the generators in detail
-- [Dependency Diagram](DependencyDiagram/README.md)
 - [Flow Console](../Runtime/ConsoleModule/Documentation/FlowConsole.md)

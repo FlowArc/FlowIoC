@@ -544,8 +544,7 @@ public override void SignalBindings()
 
 ```csharp
 // ❌ Everything cross-context. Any module can now dispatch this module's internal
-//    steps, and the Dependency Diagram can no longer tell you who really depends on
-//    whom.
+//    steps, and nothing tells you who really depends on whom any more.
 _signals  = InjectionBinderCrossContext.Bind<MatchSignals>();
 _internal = InjectionBinderCrossContext.Bind<MatchSignalsInternal>();
 ```
