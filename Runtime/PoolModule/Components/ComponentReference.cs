@@ -1,9 +1,11 @@
-using UnityEditor;
-using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine;
 
-namespace FlowIoC.PoolModule.Addressable.Components
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+namespace FlowIoC.PoolModule.Components
 {
     /// <summary>
     /// Creates an AssetReference that is restricted to having a specific Component.

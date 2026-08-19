@@ -1,6 +1,6 @@
 ﻿using System;
+using FlowIoC.PoolModule.Components;
 using UnityEngine;
-using FlowIoC.PoolModule.Addressable.Components;
 
 namespace FlowIoC.PoolModule.Data.ValueObjects
 {

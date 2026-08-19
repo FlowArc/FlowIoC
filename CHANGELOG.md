@@ -5,6 +5,28 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-08-19
+
+### Fixed
+
+- Guarded the `using UnityEditor;` directives in `ComponentReference.cs` and
+  `ScreenConfig.cs` behind `#if UNITY_EDITOR`. Both files belong to the runtime
+  assembly, which is compiled for players, so the unguarded directives broke player
+  builds in consuming projects. Verified by compiling the player script assemblies.
+
+### Changed
+
+- **Breaking:** renamed the namespace `FlowIoC.PoolModule.Addressable.Components` to
+  `FlowIoC.PoolModule.Components`. `ComponentReference` and
+  `AssetReferenceSpawnableObject` moved with it. Update any `using` directive that
+  referenced the old namespace.
+- Moved `ScreenManager.prefab` out of the package's `Resources` folder to
+  `Assets/Prefabs/`, alongside the other code generator templates. Nothing ever loaded
+  it through `Resources.Load`; the generator resolves it with `AssetDatabase`, so the
+  `Resources` folder only forced the asset into every consumer build. The asset GUID is
+  unchanged, so prefab links in already generated scenes still resolve. The package no
+  longer ships a `Resources` folder at all.
+
 ## [1.0.0] - 2026-08-19
 
 First tagged release, installable through the Unity Package Manager.

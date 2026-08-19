@@ -24,7 +24,7 @@ namespace FlowIoC.Editor.CodeGenerator
         internal const string CUSTOM_TYPES_FOLDER = "Assets/FlowIoC/Generated";
 
         public static readonly string SCREEN_SERVICE_ROOT_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenServiceRoot.prefab";
-        internal static readonly string SCREEN_MANAGER_PREFAB_PATH = PackageAssetRoot + "/Assets/Resources/Screen/ScreenManager.prefab";
+        internal static readonly string SCREEN_MANAGER_PREFAB_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenManager.prefab";
 
 
         internal static readonly string TempViewPath = PackageDiskRoot + "/Editor/CodeGenerator/TempViews/TempView.cs";

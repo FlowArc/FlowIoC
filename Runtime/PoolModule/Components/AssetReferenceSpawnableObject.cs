@@ -1,7 +1,7 @@
 ﻿using System;
 using FlowIoC.PoolModule.Entities;
 
-namespace FlowIoC.PoolModule.Addressable.Components
+namespace FlowIoC.PoolModule.Components
 {
     [Serializable]
     public class AssetReferenceSpawnableObject : ComponentReference<IPoolableItem>

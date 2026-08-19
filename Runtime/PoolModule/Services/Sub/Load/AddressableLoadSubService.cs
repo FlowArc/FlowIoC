@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FlowIoC.ConsoleModule;
-using FlowIoC.PoolModule.Addressable.Components;
+using FlowIoC.PoolModule.Components;
 using FlowIoC.PoolModule.Entities;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
