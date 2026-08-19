@@ -1,36 +1,52 @@
 ﻿#if UNITY_EDITOR
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator
 {
     internal static class CodeGeneratorStrings
     {
+        // The package root is resolved from this assembly instead of being hardcoded, so the
+        // generator keeps working however the package was installed: embedded under Packages/,
+        // pulled from a Git URL into Library/PackageCache, or resolved from a registry.
+        private static readonly PackageInfo Package =
+            PackageInfo.FindForAssembly(typeof(CodeGeneratorStrings).Assembly);
+
+        // Unity virtual path, e.g. "Packages/com.flowioc.core". Used with AssetDatabase.
+        private static readonly string PackageAssetRoot =
+            Package != null ? Package.assetPath : "Packages/com.flowioc.core";
+
+        // Absolute path on disk. Used with System.IO when reading the code templates.
+        private static readonly string PackageDiskRoot =
+            Package != null ? Package.resolvedPath : Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC";
+
         public const string CONFIG_PATH = "Assets/Editor/FlowIoC/CodeGenerator/CodeGeneratorSettings.asset";
-        public const string SCREEN_SERVICE_ROOT_PATH = "Packages/flow-ioc/Assets/Prefabs/ScreenServiceRoot.prefab";
-        internal const string SCREEN_MANAGER_PREFAB_PATH = "Packages/flow-ioc/Assets/Resources/Screen/ScreenManager.prefab";
         internal const string CUSTOM_TYPES_FOLDER = "Assets/FlowIoC/Generated";
 
-
-        internal static readonly string TempViewPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempViews/TempView.cs";
-        internal static readonly string TempMediatorPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempViews/TempMediator.cs";
-
-        internal static readonly string TempModelPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempModels/TempModel.cs";
-        internal static readonly string TempIModelPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempModels/ITempModel.cs";
-
-        internal static readonly string TempCommandPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempCommands/TempCommand.cs";
-
-        internal static readonly string TempContextPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempRoots/TempContext.cs";
-        internal static readonly string TempRootPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempRoots/TempRoot.cs";
+        public static readonly string SCREEN_SERVICE_ROOT_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenServiceRoot.prefab";
+        internal static readonly string SCREEN_MANAGER_PREFAB_PATH = PackageAssetRoot + "/Assets/Resources/Screen/ScreenManager.prefab";
 
 
-        internal static readonly string TempScreenViewPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempScreens/TempScreenView.cs";
-        internal static readonly string TempScreenMediatorPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempScreens/TempScreenMediator.cs";
+        internal static readonly string TempViewPath = PackageDiskRoot + "/Editor/CodeGenerator/TempViews/TempView.cs";
+        internal static readonly string TempMediatorPath = PackageDiskRoot + "/Editor/CodeGenerator/TempViews/TempMediator.cs";
 
-        internal static readonly string TempScreenContextPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempScreens/TempScreenContext.cs";
-        internal static readonly string TempScreenRootPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempScreens/TempScreenRoot.cs";
+        internal static readonly string TempModelPath = PackageDiskRoot + "/Editor/CodeGenerator/TempModels/TempModel.cs";
+        internal static readonly string TempIModelPath = PackageDiskRoot + "/Editor/CodeGenerator/TempModels/ITempModel.cs";
 
-        internal static readonly string TempScreenTestContextPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempScreens/TempScreenTestContext.cs";
-        internal static readonly string TempScreenTestRootPath = Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC/Editor/CodeGenerator/TempScreens/TempScreenTestRoot.cs";
+        internal static readonly string TempCommandPath = PackageDiskRoot + "/Editor/CodeGenerator/TempCommands/TempCommand.cs";
+
+        internal static readonly string TempContextPath = PackageDiskRoot + "/Editor/CodeGenerator/TempRoots/TempContext.cs";
+        internal static readonly string TempRootPath = PackageDiskRoot + "/Editor/CodeGenerator/TempRoots/TempRoot.cs";
+
+
+        internal static readonly string TempScreenViewPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenView.cs";
+        internal static readonly string TempScreenMediatorPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenMediator.cs";
+
+        internal static readonly string TempScreenContextPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenContext.cs";
+        internal static readonly string TempScreenRootPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenRoot.cs";
+
+        internal static readonly string TempScreenTestContextPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestContext.cs";
+        internal static readonly string TempScreenTestRootPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestRoot.cs";
 
         internal static string GetPath(string path, string parentFolderName)
         {

@@ -1,22 +1,36 @@
 {
-  "name": "flow-ioc",
+  "name": "com.flowioc.core",
   "version": "1.0.0",
   "displayName": "FlowIoC",
-  "description": "FlowIoC library.",
-  "unity": "2019.1",
-  "unityRelease": "0b5",
-  "keywords": [],
+  "description": "Signal-driven IoC framework for Unity. Provides contexts, signals, commands, models and view/mediator binding, plus an editor code generator for scaffolding modules.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "documentationUrl": "https://github.com/FlowIoC/FlowIoC#readme",
+  "changelogUrl": "https://github.com/FlowIoC/FlowIoC/blob/master/CHANGELOG.md",
+  "licensesUrl": "https://github.com/FlowIoC/FlowIoC/blob/master/LICENSE",
+  "keywords": [
+    "ioc",
+    "dependency-injection",
+    "signal",
+    "command",
+    "mvc",
+    "architecture",
+    "framework"
+  ],
   "author": {
-    "name": "Flow",
-    "email": "unity@example.com",
-    "url": "https://www.unity3d.com"
+    "name": "Cuneyt Taskent",
+    "url": "https://github.com/FlowIoC"
   },
-"samples": [
+  "dependencies": {
+    "com.unity.addressables": "2.9.1",
+    "com.unity.render-pipelines.core": "17.0.0"
+  },
+  "samples": [
     {
       "displayName": "Command Execution Test Module",
       "description": "Demonstrates command execution patterns with parallel and sequential commands",
       "path": "Samples~/CommandExecutionTestModule"
     }
-],
+  ],
   "hideInEditor": false
 }

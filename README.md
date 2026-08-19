@@ -127,35 +127,51 @@ flowchart LR
 
 | | |
 |---|---|
-| Minimum Unity | `2019.1` (declared in `package.json`) |
+| Package name | `com.flowioc.core` |
+| Minimum Unity | `6000.0` (declared in `package.json`) |
 | Actively developed against | Unity 6 (`6000.3`) |
+| Dependencies | `com.unity.addressables` 2.9.1+, `com.unity.render-pipelines.core` 17.0.0+ (resolved automatically) |
 | Assemblies | `FlowIoC` (runtime), `FlowIoC.Editor` (editor) |
 
 ---
 
 ## Installation
 
-### As a git submodule (recommended for teams)
+### As a UPM package (recommended)
 
-Place the package under `Packages/` so Unity picks it up as an embedded package
-and the framework stays version-pinned per project:
+In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
 
-```bash
-git submodule add https://github.com/FlowIoC/FlowIoC.git Packages/FlowIoC
-git submodule update --init --recursive
+```
+https://github.com/FlowIoC/FlowIoC.git#1.0.0
 ```
 
-### As a UPM package
-
-Add the following to `Packages/manifest.json`:
+Or add it to `Packages/manifest.json` directly:
 
 ```json
 {
   "dependencies": {
-    "flow-ioc": "https://github.com/FlowIoC/FlowIoC.git"
+    "com.flowioc.core": "https://github.com/FlowIoC/FlowIoC.git#1.0.0"
   }
 }
 ```
+
+Always pin a tag. Without `#<tag>` Unity resolves the tip of `master` and then locks that
+commit into `packages-lock.json`, so the package silently stops tracking new releases.
+To upgrade, change the tag and let Unity re-resolve.
+
+### As a git submodule (for working on FlowIoC itself)
+
+```bash
+git submodule add https://github.com/FlowIoC/FlowIoC.git Packages/FlowIoC
+git submodule update --init
+```
+
+Any folder under `Packages/` containing a `package.json` is treated by Unity as an *embedded*
+package: it is writable, so you can edit and commit the framework straight from the consuming
+project, and it takes precedence over any registry or Git version of `com.flowioc.core`.
+
+Anyone cloning a project that uses the submodule must run `git submodule update --init`,
+otherwise `Packages/FlowIoC` stays empty and the project will not compile.
 
 ---
 
