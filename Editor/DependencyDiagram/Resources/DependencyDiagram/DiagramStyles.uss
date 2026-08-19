@@ -1,0 +1,371 @@
+/* Global diagram styles */
+.diagram-content {
+    background-color: #1E1E1E;
+}
+
+/* Dependency Diagram Styles */
+
+/* Graph View */
+.diagram-view {
+    background-color: #252525;
+}
+
+/* Groups */
+.diagram-group {
+    border-width: 2px;
+    border-radius: 14px;
+    padding: 25px;
+    margin: 15px;
+    min-width: 350px;
+    min-height: 250px;
+    transition-duration: 0.2s;
+    transition-property: background-color, border-color;
+}
+
+.context-group {
+    background-color: rgba(30, 60, 90, 0.1);
+    border-color: rgba(30, 60, 90, 0.6);
+}
+
+.signal-group {
+    background-color: rgba(90, 30, 30, 0.1);
+    border-color: rgba(90, 30, 30, 0.6);
+}
+
+.command-group {
+    background-color: rgba(60, 90, 30, 0.1);
+    border-color: rgba(60, 90, 30, 0.6);
+}
+
+.mediator-group {
+    background-color: rgba(90, 30, 90, 0.1);
+    border-color: rgba(90, 30, 90, 0.6);
+}
+
+.view-group {
+    background-color: rgba(30, 90, 90, 0.1);
+    border-color: rgba(30, 90, 90, 0.6);
+}
+
+.injectable-group {
+    background-color: rgba(90, 60, 30, 0.1);
+    border-color: rgba(90, 60, 30, 0.6);
+}
+
+/* Group headers */
+.diagram-group > .unity-group__header {
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    height: auto;
+}
+
+.diagram-group > .unity-group__header > .unity-group__header-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 18px;
+    -unity-font-style: bold;
+    padding: 5px;
+}
+
+.context-group > .unity-group__header {
+    background-color: rgba(30, 60, 90, 0.8);
+}
+
+.signal-group > .unity-group__header {
+    background-color: rgba(90, 30, 30, 0.8);
+}
+
+.command-group > .unity-group__header {
+    background-color: rgba(60, 90, 30, 0.8);
+}
+
+.mediator-group > .unity-group__header {
+    background-color: rgba(90, 30, 90, 0.8);
+}
+
+.view-group > .unity-group__header {
+    background-color: rgba(30, 90, 90, 0.8);
+}
+
+.injectable-group > .unity-group__header {
+    background-color: rgba(90, 60, 30, 0.8);
+}
+
+/* Nodes */
+.diagram-node {
+    border-width: 2px;
+    border-radius: 8px;
+    padding: 6px;
+    margin: 5px;
+    min-width: 160px;
+    min-height: 100px;
+    background-color: rgba(40, 40, 40, 0.95);
+    transition-duration: 0.2s;
+    transition-property: border-color, transform;
+}
+
+.context-node {
+    border-color: rgb(40, 80, 120);
+}
+
+.signal-node {
+    border-color: rgb(120, 40, 40);
+}
+
+.command-node {
+    border-color: rgb(70, 110, 40);
+}
+
+.mediator-node {
+    border-color: rgb(110, 40, 110);
+}
+
+.view-node {
+    border-color: rgb(40, 110, 110);
+}
+
+.injectable-node {
+    border-color: rgb(120, 80, 40);
+}
+
+/* Node headers */
+.diagram-node-header {
+    padding: 8px;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: 5px;
+}
+
+.context-node .diagram-node-header {
+    background-color: rgb(40, 80, 120);
+}
+
+.signal-node .diagram-node-header {
+    background-color: rgb(120, 40, 40);
+}
+
+.command-node .diagram-node-header {
+    background-color: rgb(70, 110, 40);
+}
+
+.mediator-node .diagram-node-header {
+    background-color: rgb(110, 40, 110);
+}
+
+.view-node .diagram-node-header {
+    background-color: rgb(40, 110, 110);
+}
+
+.injectable-node .diagram-node-header {
+    background-color: rgb(120, 80, 40);
+}
+
+/* Node type labels */
+.diagram-node-type {
+    background-color: rgba(20, 20, 20, 0.8);
+    color: rgba(230, 230, 230, 0.9);
+    font-size: 12px;
+    padding: 5px;
+    border-radius: 3px;
+    margin-top: 5px;
+    -unity-text-align: middle-center;
+}
+
+/* Edges */
+.diagram-edge {
+    --edge-width: 1.5px;
+    opacity: 0.6;
+    transition-duration: 0.2s;
+    transition-property: opacity;
+}
+
+.diagram-edge:hover,
+.diagram-edge:selected {
+    opacity: 1;
+}
+
+.signalbinding-edge {
+    --edge-color: rgb(40, 180, 40);
+}
+
+.commandbinding-edge {
+    --edge-color: rgb(180, 120, 40);
+}
+
+.mediatorbinding-edge {
+    --edge-color: rgb(120, 40, 180);
+}
+
+.injectionbinding-edge {
+    --edge-color: rgb(40, 120, 180);
+}
+
+.sequentialcommand-edge {
+    --edge-color: rgb(180, 60, 60);
+    --edge-width: 2px;
+}
+
+.parallelcommand-edge {
+    --edge-color: rgb(180, 60, 180);
+    --edge-width: 2px;
+}
+
+.unknown-edge {
+    --edge-color: rgb(150, 150, 150);
+}
+
+/* Ports */
+Port {
+    height: 24px;
+    margin: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+Port > #connector {
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    margin: 6px;
+    background-color: white;
+}
+
+.context-node Port > #connector {
+    background-color: rgb(40, 80, 120);
+}
+
+.signal-node Port > #connector {
+    background-color: rgb(120, 40, 40);
+}
+
+.command-node Port > #connector {
+    background-color: rgb(70, 110, 40);
+}
+
+.mediator-node Port > #connector {
+    background-color: rgb(110, 40, 110);
+}
+
+.view-node Port > #connector {
+    background-color: rgb(40, 110, 110);
+}
+
+.injectable-node Port > #connector {
+    background-color: rgb(120, 80, 40);
+}
+
+/* Toolbar */
+.diagram-toolbar {
+    background-color: #333333;
+    border-bottom-width: 1px;
+    border-color: #444444;
+}
+
+/* Quick filter bar */
+.diagram-quick-filter {
+    background-color: #2A2A2A;
+    border-bottom-width: 1px;
+    border-color: #444444;
+    align-items: center;
+}
+
+.diagram-quick-filter Toggle {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.diagram-quick-filter Label {
+    -unity-font-style: bold;
+}
+
+/* Status bar */
+.diagram-status-bar {
+    background-color: #333333;
+    border-top-width: 1px;
+    border-color: #444444;
+}
+
+/* Selection */
+.diagram-node:selected {
+    border-width: 3px;
+    border-color: rgb(100, 180, 255);
+    transform: scale(1.05);
+}
+
+.diagram-group:selected > .unity-group__header {
+    border-width: 2px;
+    border-color: rgb(100, 180, 255);
+}
+
+/* Hover effects */
+.diagram-node:hover {
+    border-color: rgb(140, 200, 255);
+    transform: scale(1.02);
+}
+
+.diagram-group:hover > .unity-group__header {
+    background-color: rgba(60, 120, 200, 0.7);
+}
+
+.diagram-group:hover {
+    border-color: rgba(60, 120, 200, 0.7);
+}
+
+/* Grid background */
+GridBackground {
+    --grid-background-color: #282828;
+    --line-color: rgba(80, 80, 80, 0.3);
+    --thick-line-color: rgba(120, 120, 120, 0.5);
+    --spacing: 50;
+}
+
+/* Make labels more visible */
+Label {
+    color: rgba(240, 240, 240, 0.9);
+}
+
+/* Edge styles */
+.sequential-command {
+    --edge-width: 2.5;
+    --edge-color: #f04040;
+}
+
+.parallel-command {
+    --edge-width: 2.5;
+    --edge-color: #d040d0;
+}
+
+.sequentialcommand-edge {
+    --edge-width: 2.5;
+    --edge-color: #f04040;
+}
+
+.parallelcommand-edge {
+    --edge-width: 2.5;
+    --edge-color: #d040d0;
+}
+
+.commandbinding-edge {
+    --edge-width: 1.5;
+    --edge-color: #e07020;
+}
+
+.signalbinding-edge {
+    --edge-width: 1.5;
+    --edge-color: #10b810;
+}
+
+.mediatorbinding-edge {
+    --edge-width: 1.5; 
+    --edge-color: #b020e0;
+}
+
+.injectionbinding-edge {
+    --edge-width: 1.5;
+    --edge-color: #1090e0;
+}
+
+.diagram-status-bar {
+    background-color: #333333;
+    border-top-width: 1px;
+    border-color: #444444;
+} 

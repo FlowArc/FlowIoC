@@ -1,0 +1,147 @@
+﻿#if UNITY_EDITOR
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.BaseModule.Injectable;
+using FlowIoC.BaseModule.Root;
+using UnityEditor;
+using UnityEngine;
+
+namespace FlowIoC.Editor.ModelViewer
+{
+    internal class ModelViewerEditorWindow : EditorWindow
+    {
+        [MenuItem("Tools/FlowIoC/Model Viewer", false, 151)]
+        private static void OpenModelViewer()
+        {
+            GetWindow<ModelViewerEditorWindow>("Model Viewer");
+        }
+
+        private RootBase _inspectedRoot;
+
+        private void OnGUI()
+        {
+            if (!Application.isPlaying)
+            {
+                EditorGUILayout.LabelField("Enter Play Mode to view Models.");
+                return;
+            }
+
+            if (_inspectedRoot == null)
+            {
+                DisplayAllRootsAndSelectGUI();
+                return;
+            }
+
+            DisplayAllInjectedTypesGUI();
+        }
+
+        private void DisplayAllRootsAndSelectGUI()
+        {
+            var rootObjects = FindObjectsByType<RootBase>(FindObjectsSortMode.None);
+            EditorGUILayout.BeginVertical("box");
+
+            foreach (var contextRoot in rootObjects)
+            {
+                if (GUILayout.Button(contextRoot.name))
+                {
+                    _inspectedRoot = contextRoot;
+                }
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        Vector2 _scrollPosition = Vector2.zero;
+
+        private void DisplayAllInjectedTypesGUI()
+        {
+            GUI.backgroundColor = Color.red;
+            var backButton = GUILayout.Button("Select Context");
+            GUI.backgroundColor = Color.white;
+
+            if (backButton)
+            {
+                _inspectedRoot = null;
+                return;
+            }
+
+            EditorGUILayout.Space(15);
+
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Local Injected Objects", EditorStyles.boldLabel);
+
+            /*
+             var injectionBinder = _inspectedRoot.Context.InjectionBinder;
+            var injectedObjects = injectionBinder.GetAllInjectionBindings();
+            
+            foreach (InjectionBinding injectedObject in injectedObjects)
+            {
+                DrawInjectedObject(injectedObject);
+            }
+            
+            foreach (var subContext in _inspectedRoot.Context.SubContexts)
+            {
+                var injectionBinderSub = subContext.InjectionBinder;
+                var injectedObjectsSub = injectionBinderSub.GetAllInjectionBindings();
+                
+                if (_inspectedRoot.Context.GetType() == subContext.GetType())
+                    continue;
+
+                EditorGUILayout.LabelField("SubContext{" + injectedObjectsSub.GetType() + "} - Local Injected Objects", EditorStyles.boldLabel);
+
+                foreach (InjectionBinding injectedObject in injectedObjectsSub)
+                {
+                    DrawInjectedObject(injectedObject);
+                }
+            }
+             
+             */
+            foreach (var subContext in _inspectedRoot.Context.SubContexts)
+            {
+                var injectionBinderSub = subContext.InjectionBinder;
+                var injectedObjectsSub = injectionBinderSub.GetAllInjectionBindings();
+
+                foreach (InjectionBinding injectedObject in injectedObjectsSub)
+                {
+                    DrawInjectedObject(injectedObject);
+                }
+            }
+            
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space(10);
+            
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+
+            //EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Cross Context Injected Objects", EditorStyles.boldLabel);
+
+            var crossContextInjectionBinder = _inspectedRoot.Context.InjectionBinderCrossContext;
+            var crossContextInjectedObjects = crossContextInjectionBinder.GetAllInjectionBindings();
+
+            foreach (InjectionBinding injectedObject in crossContextInjectedObjects)
+            {
+                DrawInjectedObject(injectedObject);
+            }
+
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawInjectedObject(InjectionBinding injectedObject)
+        {
+            var hideAttribute = injectedObject.Value.GetType()
+                .GetCustomAttributes(typeof(HideInModelViewerAttribute), true).Length != 0;
+            if (hideAttribute)
+                return;
+
+            var injectionName = injectedObject.Name != "" ? " - {" + injectedObject.Name + "}" : "";
+
+            if (GUILayout.Button(injectedObject.Value.GetType().Name + injectionName))
+            {
+                var window =
+                    CreateWindow<InspectWindow>(injectedObject.Value.GetType() + " Name: " + injectedObject.Name);
+                window.Initialize(injectedObject.Value, _inspectedRoot.Context, injectedObject.Name);
+            }
+        }
+    }
+}
+#endif

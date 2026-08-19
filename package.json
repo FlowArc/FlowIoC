@@ -1,0 +1,22 @@
+{
+  "name": "flow-ioc",
+  "version": "1.0.0",
+  "displayName": "FlowIoC",
+  "description": "FlowIoC library.",
+  "unity": "2019.1",
+  "unityRelease": "0b5",
+  "keywords": [],
+  "author": {
+    "name": "Flow",
+    "email": "unity@example.com",
+    "url": "https://www.unity3d.com"
+  },
+"samples": [
+    {
+      "displayName": "Command Execution Test Module",
+      "description": "Demonstrates command execution patterns with parallel and sequential commands",
+      "path": "Samples~/CommandExecutionTestModule"
+    }
+],
+  "hideInEditor": false
+}
