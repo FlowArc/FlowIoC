@@ -3,7 +3,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.FolderDrawer
+namespace FlowIoC.Editor.FolderDrawer
 {
     /// <summary>
     /// Edits the project local folder drawer config. Every change is written straight to

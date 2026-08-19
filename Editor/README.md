@@ -130,8 +130,8 @@ kinds of rule:
 - **Folder rules** point at one folder asset and take priority over the path rules.
   Use them for the handful of folders you want to stand out individually.
 
-Each rule sets a gradient, and optionally a label override, a selection colour, an
-icon and a marker.
+Each rule sets a gradient, and optionally a label override, a selection colour and an
+icon.
 
 Open it from `Tools/FlowIoC/Folder Drawer`. Edits repaint the Project window as you
 make them.

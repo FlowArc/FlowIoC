@@ -5,7 +5,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.FolderDrawer
+namespace FlowIoC.Editor.FolderDrawer
 {
     /// <summary>
     /// Reads the project local drawer config, and creates it with a usable set of default

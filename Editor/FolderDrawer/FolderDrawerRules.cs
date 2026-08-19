@@ -4,7 +4,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.FolderDrawer
+namespace FlowIoC.Editor.FolderDrawer
 {
     // The field names below are the serialization keys of the config asset.
     // Renaming a field drops whatever the user already configured, so keep them stable.
@@ -30,7 +30,6 @@ namespace FlowIoC.FolderDrawer
         public FolderDrawerSelection Selection = new FolderDrawerSelection();
         public FolderDrawerLabel Text = new FolderDrawerLabel();
         public FolderDrawerIcon Icon = new FolderDrawerIcon();
-        public FolderDrawerIcon Marker = new FolderDrawerIcon();
     }
 
     [Serializable]

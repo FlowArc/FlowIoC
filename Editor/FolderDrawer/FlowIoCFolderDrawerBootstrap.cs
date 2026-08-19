@@ -2,7 +2,7 @@
 
 using UnityEditor;
 
-namespace FlowIoC.FolderDrawer
+namespace FlowIoC.Editor.FolderDrawer
 {
     /// <summary>
     /// The only static surface of the folder drawer. Unity's load hook has to be static,

@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FlowIoC.FolderDrawer
+namespace FlowIoC.Editor.FolderDrawer
 {
     /// <summary>
     /// Plain data. It is created and read by <see cref="FlowIoCFolderDrawerConfigLoader"/>

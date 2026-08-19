@@ -3,7 +3,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.FolderDrawer
+namespace FlowIoC.Editor.FolderDrawer
 {
     [CustomEditor(typeof(FlowIoCFolderDrawerConfig))]
     public class FlowIoCFolderDrawerConfigEditor : UnityEditor.Editor

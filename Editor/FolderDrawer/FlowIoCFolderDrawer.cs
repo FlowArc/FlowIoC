@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.FolderDrawer
+namespace FlowIoC.Editor.FolderDrawer
 {
     /// <summary>
     /// Paints the Project window folder rows from the project local config.
@@ -124,11 +124,6 @@ namespace FlowIoC.FolderDrawer
             if (visualRuleSet.Icon.Enable)
             {
                 DrawIcon(rect, visualRuleSet.Icon.Texture, visualRuleSet.Icon.Size, visualRuleSet.Icon.OffsetScaleX, visualRuleSet.Icon.PixelOffsetX, visualRuleSet.Icon.PixelOffsetY);
-            }
-
-            if (visualRuleSet.Marker.Enable)
-            {
-                DrawIcon(rect, visualRuleSet.Marker.Texture, visualRuleSet.Marker.Size, visualRuleSet.Marker.OffsetScaleX, visualRuleSet.Marker.PixelOffsetX, visualRuleSet.Marker.PixelOffsetY);
             }
         }
 
