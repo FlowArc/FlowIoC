@@ -1,12 +1,6 @@
 # This repository is a Unity package, not a Unity project.
 # Never ignore *.meta files: Unity needs them for every asset the package ships.
 
-# Exception: GitHub gives every root file whose name looks like a license its own
-# repository tab, so a tracked LICENSE.meta appears next to the real MIT license tab
-# with the raw importer YAML as its body. Nothing references the license text by GUID
-# and Unity regenerates this file on import, so it is deliberately left untracked.
-LICENSE.meta
-
 # Unity generated
 [Ll]ibrary/
 [Tt]emp/

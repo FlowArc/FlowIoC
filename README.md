@@ -895,4 +895,4 @@ to use it, worked good-versus-bad scenarios, and the pitfalls that bite in pract
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](LICENSE.md).

@@ -7,7 +7,7 @@
   "license": "MIT",
   "documentationUrl": "https://github.com/FlowIoC/FlowIoC#readme",
   "changelogUrl": "https://github.com/FlowIoC/FlowIoC/blob/master/CHANGELOG.md",
-  "licensesUrl": "https://github.com/FlowIoC/FlowIoC/blob/master/LICENSE",
+  "licensesUrl": "https://github.com/FlowIoC/FlowIoC/blob/master/LICENSE.md",
   "keywords": [
     "ioc",
     "dependency-injection",
