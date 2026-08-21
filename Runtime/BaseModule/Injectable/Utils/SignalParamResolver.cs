@@ -98,19 +98,33 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                 List<int> candidates = GetCandidates(entry.Type, values);
 
                 int slot = -1;
+                int nullSlot = -1;
                 int claimedCount = 0;
 
                 for (int c = 0; c < candidates.Count; c++)
                 {
-                    if (_claimedBy[candidates[c]] != null)
+                    int candidate = candidates[c];
+
+                    if (_claimedBy[candidate] != null)
                     {
                         claimedCount++;
                         continue;
                     }
 
-                    slot = candidates[c];
-                    break;
+                    if (values[candidate] != null)
+                    {
+                        slot = candidate;
+                        break;
+                    }
+
+                    // Remember the first free null but keep looking — a real value further
+                    // along the payload is a better match than a null before it.
+                    if (nullSlot < 0)
+                        nullSlot = candidate;
                 }
+
+                if (slot < 0)
+                    slot = nullSlot;
 
                 if (slot < 0)
                 {

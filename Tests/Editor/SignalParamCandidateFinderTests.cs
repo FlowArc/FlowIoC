@@ -64,5 +64,14 @@ namespace FlowIoC.Tests
         {
             Assert.That(_finder.Find(typeof(int), new object[0]), Is.Empty);
         }
+
+        [Test]
+        public void Find_does_not_let_a_null_only_exact_pass_suppress_the_assignable_one()
+        {
+            var payload = new object[] { null, new SubList() };
+
+            CollectionAssert.AreEqual(new[] { 0, 1 },
+                _finder.Find(typeof(IEnumerable<string>), payload));
+        }
     }
 }

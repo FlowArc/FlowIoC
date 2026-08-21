@@ -120,6 +120,11 @@ property has claimed, so `[SignalParam] int _x` followed by `[SignalParam] int _
 receives the first and second int. Use an explicit index when the declaration order
 is not obvious from reading the class.
 
+When a base class declares a `[SignalParam]` property and a derived class overrides
+it, the property is read once and the base class's declaration decides the index. An
+index written on the override is ignored, so put it on the declaration that owns the
+attribute.
+
 ### Finishing later — `Retain()` and `Release()`
 
 `Execute()` is expected to be finished when it returns. If your work continues past

@@ -102,6 +102,22 @@ namespace FlowIoC.Tests
             public string Skin => _skin;
         }
 
+        private interface IMarker { }
+
+        private class Marker : IMarker { }
+
+        private class WantsMarker
+        {
+            [SignalParam] private IMarker _marker { get; set; }
+            public IMarker Marker => _marker;
+        }
+
+        private class SingleAmount
+        {
+            [SignalParam] private double _amount { get; set; }
+            public double Amount => _amount;
+        }
+
         [Test]
         public void Indexed_properties_of_one_type_take_distinct_slots()
         {
@@ -273,6 +289,27 @@ namespace FlowIoC.Tests
 
             Assert.That(target.X, Is.EqualTo(3));
             Assert.That(target.Y, Is.EqualTo(7));
+            Assert.That(_resolver.Diagnostics, Is.Empty);
+        }
+
+        [Test]
+        public void A_null_earlier_in_the_payload_does_not_steal_an_interface_typed_slot()
+        {
+            var marker = new Marker();
+            var target = new WantsMarker();
+            Resolve(target, null, marker);
+
+            Assert.That(target.Marker, Is.SameAs(marker));
+            Assert.That(_resolver.Diagnostics, Is.Empty);
+        }
+
+        [Test]
+        public void A_single_property_of_a_unique_type_binds_as_it_always_did()
+        {
+            var target = new SingleAmount();
+            Resolve(target, "currency", 12.5d, 3);
+
+            Assert.That(target.Amount, Is.EqualTo(12.5d));
             Assert.That(_resolver.Diagnostics, Is.Empty);
         }
     }

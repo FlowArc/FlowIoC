@@ -30,6 +30,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             // property has to be matched against its underlying type.
             Type effective = Nullable.GetUnderlyingType(type) ?? type;
             bool acceptsNull = CanHoldNull(type);
+            bool hasNonNullExact = false;
 
             for (int i = 0; i < values.Length; i++)
             {
@@ -46,13 +47,19 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                 }
 
                 if (value.GetType() == effective)
+                {
                     _exact.Add(i);
+                    hasNonNullExact = true;
+                }
 
                 if (effective.IsInstanceOfType(value))
                     _assignable.Add(i);
             }
 
-            candidates.AddRange(_exact.Count > 0 ? _exact : _assignable);
+            // A null joins both passes, so _exact can be non-empty while holding nothing
+            // but nulls. Preferring it there would hide a real value the assignable pass
+            // found later in the payload.
+            candidates.AddRange(hasNonNullExact ? _exact : _assignable);
             return candidates;
         }
 

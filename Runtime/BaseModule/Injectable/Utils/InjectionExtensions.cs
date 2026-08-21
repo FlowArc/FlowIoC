@@ -418,8 +418,17 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             resolver.Resolve(command, entries, signalParams);
 
             IReadOnlyList<SignalParamDiagnostic> diagnostics = resolver.Diagnostics;
-            for (int i = 0; i < diagnostics.Count; i++)
-                LogSignalParamDiagnostic(diagnostics[i]);
+            if (diagnostics.Count == 0)
+                return;
+
+            // Copy before logging: a log sink that dispatches would re-enter the resolver
+            // and clear this list out from under the loop.
+            var snapshot = new SignalParamDiagnostic[diagnostics.Count];
+            for (int i = 0; i < snapshot.Length; i++)
+                snapshot[i] = diagnostics[i];
+
+            for (int i = 0; i < snapshot.Length; i++)
+                LogSignalParamDiagnostic(snapshot[i]);
         }
 
         private static List<SignalParamEntry> GetSignalParamEntries(Type commandType)
@@ -437,6 +446,8 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         {
             string reason = diagnostic.Kind switch
             {
+                SignalParamDiagnosticKind.IndexOutOfRange when diagnostic.RequestedIndex < 0 =>
+                    $"[SignalParam({diagnostic.RequestedIndex})] has a negative index. Indices count from zero.",
                 SignalParamDiagnosticKind.IndexOutOfRange =>
                     $"[SignalParam({diagnostic.RequestedIndex})] needs at least {diagnostic.RequestedIndex + 1} {diagnostic.PropertyType.Name} values in the payload because the index counts from zero, but the signal carried {diagnostic.CandidateCount}.",
                 SignalParamDiagnosticKind.DuplicateClaim =>
