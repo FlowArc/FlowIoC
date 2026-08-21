@@ -26,7 +26,18 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         public readonly Type PropertyType;
         public readonly int RequestedIndex;
         public readonly int CandidateCount;
+
+        /// <summary>
+        /// How many candidates of this property's type were already claimed. Meaningful
+        /// only for <see cref="SignalParamDiagnosticKind.NoFreeSlot"/>; zero otherwise.
+        /// </summary>
         public readonly int ClaimedCount;
+
+        /// <summary>
+        /// The property that already took the slot this one asked for. Set only for
+        /// <see cref="SignalParamDiagnosticKind.DuplicateClaim"/>; null otherwise.
+        /// </summary>
+        public readonly string ClaimingPropertyName;
 
         public SignalParamDiagnostic(
             SignalParamDiagnosticKind kind,
@@ -35,7 +46,8 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             Type propertyType,
             int requestedIndex,
             int candidateCount,
-            int claimedCount)
+            int claimedCount,
+            string claimingPropertyName)
         {
             Kind = kind;
             TargetType = targetType;
@@ -44,6 +56,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             RequestedIndex = requestedIndex;
             CandidateCount = candidateCount;
             ClaimedCount = claimedCount;
+            ClaimingPropertyName = claimingPropertyName;
         }
     }
 }

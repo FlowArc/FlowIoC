@@ -13,7 +13,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         private readonly SignalParamCandidateFinder _candidateFinder = new SignalParamCandidateFinder();
         private readonly Dictionary<Type, List<int>> _candidatesByType = new Dictionary<Type, List<int>>();
         private readonly List<SignalParamDiagnostic> _diagnostics = new List<SignalParamDiagnostic>();
-        private bool[] _claimed = Array.Empty<bool>();
+        private string[] _claimedBy = Array.Empty<string>();
 
         public IReadOnlyList<SignalParamDiagnostic> Diagnostics => _diagnostics;
 
@@ -28,10 +28,10 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             if (values == null || values.Length == 0)
                 return;
 
-            if (_claimed.Length < values.Length)
-                _claimed = new bool[values.Length];
+            if (_claimedBy.Length < values.Length)
+                _claimedBy = new string[values.Length];
             else
-                Array.Clear(_claimed, 0, values.Length);
+                Array.Clear(_claimedBy, 0, values.Length);
 
             Type targetType = target.GetType();
 
@@ -51,18 +51,18 @@ namespace FlowIoC.BaseModule.Injectable.Utils
 
                 if (entry.Index < 0 || entry.Index >= candidates.Count)
                 {
-                    Report(SignalParamDiagnosticKind.IndexOutOfRange, targetType, entry, candidates.Count, 0);
+                    Report(SignalParamDiagnosticKind.IndexOutOfRange, targetType, entry, candidates.Count, 0, null);
                     continue;
                 }
 
                 int slot = candidates[entry.Index];
-                if (_claimed[slot])
+                if (_claimedBy[slot] != null)
                 {
-                    Report(SignalParamDiagnosticKind.DuplicateClaim, targetType, entry, candidates.Count, 1);
+                    Report(SignalParamDiagnosticKind.DuplicateClaim, targetType, entry, candidates.Count, 0, _claimedBy[slot]);
                     continue;
                 }
 
-                _claimed[slot] = true;
+                _claimedBy[slot] = entry.Property.Name;
                 entry.Property.SetValue(target, values[slot]);
             }
         }
@@ -82,7 +82,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
 
                 for (int c = 0; c < candidates.Count; c++)
                 {
-                    if (_claimed[candidates[c]])
+                    if (_claimedBy[candidates[c]] != null)
                     {
                         claimedCount++;
                         continue;
@@ -94,11 +94,11 @@ namespace FlowIoC.BaseModule.Injectable.Utils
 
                 if (slot < 0)
                 {
-                    Report(SignalParamDiagnosticKind.NoFreeSlot, targetType, entry, candidates.Count, claimedCount);
+                    Report(SignalParamDiagnosticKind.NoFreeSlot, targetType, entry, candidates.Count, claimedCount, null);
                     continue;
                 }
 
-                _claimed[slot] = true;
+                _claimedBy[slot] = entry.Property.Name;
                 entry.Property.SetValue(target, values[slot]);
             }
         }
@@ -113,11 +113,11 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             return candidates;
         }
 
-        private void Report(SignalParamDiagnosticKind kind, Type targetType, SignalParamEntry entry, int candidateCount, int claimedCount)
+        private void Report(SignalParamDiagnosticKind kind, Type targetType, SignalParamEntry entry, int candidateCount, int claimedCount, string claimingPropertyName)
         {
             _diagnostics.Add(new SignalParamDiagnostic(
                 kind, targetType, entry.Property.Name, entry.Type,
-                entry.Index, candidateCount, claimedCount));
+                entry.Index, candidateCount, claimedCount, claimingPropertyName));
         }
     }
 }
