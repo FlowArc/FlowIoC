@@ -26,6 +26,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         {
             public Dictionary<Type, List<FieldInfo>> CachedFieldInfoList = new();
             public Dictionary<Type, List<PropertyInfo>> CachedPropertyInfoList = new();
+            public List<SignalParamEntry> SignalParamEntries;
         }
 
         internal static bool TryToInjectObject(this InjectionBinding binding)
@@ -404,63 +405,53 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             if (signalParams == null || signalParams.Length == 0)
                 return;
 
-            //List<FieldInfo> signalFields = GetInjectableFieldInfoList<SignalParamAttribute>(command);
-            List<PropertyInfo> signalProperties = GetInjectablePropertyInfoList<SignalParamAttribute>(command);
+            List<SignalParamEntry> entries = GetSignalParamEntries(command.GetType());
+            if (entries.Count == 0)
+                return;
 
-            AssignSignalParameters(command, signalProperties, signalParams);
+            SignalParamResolver resolver = context?.SignalParamResolver ?? new SignalParamResolver();
+            resolver.Resolve(command, entries, signalParams);
+
+            IReadOnlyList<SignalParamDiagnostic> diagnostics = resolver.Diagnostics;
+            for (int i = 0; i < diagnostics.Count; i++)
+                LogSignalParamDiagnostic(diagnostics[i]);
         }
 
-        private static void AssignSignalParameters(object command, IEnumerable<PropertyInfo> signalProperties, IEnumerable<object> signalParams)
+        private static List<SignalParamEntry> GetSignalParamEntries(Type commandType)
         {
-            IEnumerable<object> enumerable = signalParams.ToList();
-            // foreach (FieldInfo signalField in signalFields)
-            // {
-            //     if (TryGetSignalParameter(enumerable, signalField.FieldType, out object param))
-            //     {
-            //         signalField.SetValue(command, param);
-            //     }
-            //     else
-            //     {
-            //         LogSignalParamError(command, signalField.FieldType);
-            //     }
-            // }
-
-            foreach (PropertyInfo signalProperty in signalProperties)
+            if (!_cachedInjectableData.TryGetValue(commandType, out CachedInjectableData data))
             {
-                if (TryGetSignalParameter(enumerable, signalProperty.PropertyType, out object param))
-                {
-                    signalProperty.SetValue(command, param);
-                }
-                else
-                {
-                    LogSignalParamError(command, signalProperty.PropertyType);
-                }
-            }
-        }
-
-        private static bool TryGetSignalParameter(IEnumerable<object> signalParams, Type paramType, out object param)
-        {
-            IEnumerable<object> enumerable = signalParams.ToList();
-            param = enumerable.FirstOrDefault(x => x != null && x.GetType() == paramType);
-            if (param == null)
-            {
-                param = enumerable.FirstOrDefault(x => x != null && paramType.IsInstanceOfType(x));
+                data = new CachedInjectableData();
+                _cachedInjectableData.Add(commandType, data);
             }
 
-            return param != null;
+            return data.SignalParamEntries ??= new SignalParamEntryBuilder().Build(commandType);
         }
 
-        private static void LogSignalParamError(object command, Type paramType)
+        private static void LogSignalParamDiagnostic(SignalParamDiagnostic diagnostic)
         {
+            string reason = diagnostic.Kind switch
+            {
+                SignalParamDiagnosticKind.IndexOutOfRange =>
+                    $"[SignalParam({diagnostic.RequestedIndex})] asks for {diagnostic.PropertyType.Name} value {diagnostic.RequestedIndex}, but the signal carried {diagnostic.CandidateCount}.",
+                SignalParamDiagnosticKind.DuplicateClaim =>
+                    $"[SignalParam({diagnostic.RequestedIndex})] asks for a {diagnostic.PropertyType.Name} value that '{diagnostic.ClaimingPropertyName}' already took. Give the two properties different indices.",
+                _ =>
+                    $"No unclaimed {diagnostic.PropertyType.Name} value is left. The signal carried {diagnostic.CandidateCount} and {diagnostic.ClaimedCount} were already taken."
+            };
+
             FlowLogger.LogError(SystemLogType.CommandOperation,
-            "<b><color=#FF6666>► Signal Param is not found!</color></b>\n" +
-                "<b><color=#FF6666>► Command:</color><color=#FFEFD5> " + command.GetType().Name + "</color></b>\n" +
-                "<b><color=#FF6666>► ParamType:</color><color=#FFEFD5> " + paramType.Name + "</color></b>",
-            
-            "► Signal Param is not found!\n" +
-                "► Command: " + command.GetType().Name + "\n" +
-                "► ParamType: " + paramType.Name
-            );
+                "<b><color=#FF6666>► Signal Param could not be bound!</color></b>\n" +
+                "<b><color=#FF6666>► Command:</color><color=#FFEFD5> " + diagnostic.TargetType.Name + "</color></b>\n" +
+                "<b><color=#FF6666>► Property:</color><color=#FFEFD5> " + diagnostic.PropertyName + "</color></b>\n" +
+                "<b><color=#FF6666>► Type:</color><color=#FFEFD5> " + diagnostic.PropertyType.Name + "</color></b>\n" +
+                "<b><color=#FF6666>► Reason:</color><color=#FFEFD5> " + reason + "</color></b>",
+
+                "► Signal Param could not be bound!\n" +
+                "► Command: " + diagnostic.TargetType.Name + "\n" +
+                "► Property: " + diagnostic.PropertyName + "\n" +
+                "► Type: " + diagnostic.PropertyType.Name + "\n" +
+                "► Reason: " + reason);
         }
 
         #endregion

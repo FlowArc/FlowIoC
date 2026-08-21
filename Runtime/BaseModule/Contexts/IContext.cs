@@ -3,6 +3,7 @@ using FlowIoC.BaseModule.Controller.Binders;
 using FlowIoC.BaseModule.Injectable;
 using FlowIoC.BaseModule.Injectable.Binders;
 using FlowIoC.BaseModule.Injectable.CrossContext;
+using FlowIoC.BaseModule.Injectable.Utils;
 using UnityEngine;
 
 namespace FlowIoC.BaseModule.Contexts
@@ -24,6 +25,7 @@ namespace FlowIoC.BaseModule.Contexts
 
         internal void InjectAllInstances();
         internal void ExecutePostConstructMethods();
+        internal SignalParamResolver SignalParamResolver { get; }
         void SignalBindings();
         void InjectionBindings();
         void MediationBindings();

@@ -15,6 +15,7 @@ namespace FlowIoC.BaseModule.Contexts
     public class Context : IContext
     {
         private GameObject _gameObject;
+        private SignalParamResolver _signalParamResolver;
         public bool IsStarted { get; set; }
         public MediationBinder MediationBinder { get; set; }
         public InjectionBinder InjectionBinder { get; set; }
@@ -64,6 +65,9 @@ namespace FlowIoC.BaseModule.Contexts
                     binding.TryToInjectObject();
             }
         }
+
+        SignalParamResolver IContext.SignalParamResolver
+            => _signalParamResolver ??= new SignalParamResolver();
 
         void IContext.ExecutePostConstructMethods()
         {
