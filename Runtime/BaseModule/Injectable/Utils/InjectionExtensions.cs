@@ -409,7 +409,12 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             if (entries.Count == 0)
                 return;
 
-            SignalParamResolver resolver = context?.SignalParamResolver ?? new SignalParamResolver();
+            // A null context has no resolver to share, and a resolver already running is
+            // one this call must not disturb — a [SignalParam] setter that dispatches
+            // lands here while the outer Resolve is mid-flight.
+            SignalParamResolver resolver = context?.SignalParamResolver;
+            if (resolver == null || resolver.IsResolving)
+                resolver = new SignalParamResolver();
             resolver.Resolve(command, entries, signalParams);
 
             IReadOnlyList<SignalParamDiagnostic> diagnostics = resolver.Diagnostics;
@@ -433,11 +438,13 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             string reason = diagnostic.Kind switch
             {
                 SignalParamDiagnosticKind.IndexOutOfRange =>
-                    $"[SignalParam({diagnostic.RequestedIndex})] asks for {diagnostic.PropertyType.Name} value {diagnostic.RequestedIndex}, but the signal carried {diagnostic.CandidateCount}.",
+                    $"[SignalParam({diagnostic.RequestedIndex})] needs at least {diagnostic.RequestedIndex + 1} {diagnostic.PropertyType.Name} values in the payload because the index counts from zero, but the signal carried {diagnostic.CandidateCount}.",
                 SignalParamDiagnosticKind.DuplicateClaim =>
                     $"[SignalParam({diagnostic.RequestedIndex})] asks for a {diagnostic.PropertyType.Name} value that '{diagnostic.ClaimingPropertyName}' already took. Give the two properties different indices.",
+                SignalParamDiagnosticKind.NoFreeSlot =>
+                    $"No unclaimed {diagnostic.PropertyType.Name} value is left. The signal carried {diagnostic.CandidateCount} and {diagnostic.ClaimedCount} were already taken.",
                 _ =>
-                    $"No unclaimed {diagnostic.PropertyType.Name} value is left. The signal carried {diagnostic.CandidateCount} and {diagnostic.ClaimedCount} were already taken."
+                    $"The {diagnostic.PropertyType.Name} value for this property could not be bound."
             };
 
             FlowLogger.LogError(SystemLogType.CommandOperation,

@@ -17,7 +17,27 @@ namespace FlowIoC.BaseModule.Injectable.Utils
 
         public IReadOnlyList<SignalParamDiagnostic> Diagnostics => _diagnostics;
 
+        /// <summary>
+        /// True while <see cref="Resolve"/> is running. A [SignalParam] setter that
+        /// dispatches re-enters injection on the same context, which would otherwise
+        /// let the nested call clear the buffers of the one still in progress.
+        /// </summary>
+        public bool IsResolving { get; private set; }
+
         public void Resolve(object target, IReadOnlyList<SignalParamEntry> entries, object[] values)
+        {
+            IsResolving = true;
+            try
+            {
+                ResolveCore(target, entries, values);
+            }
+            finally
+            {
+                IsResolving = false;
+            }
+        }
+
+        private void ResolveCore(object target, IReadOnlyList<SignalParamEntry> entries, object[] values)
         {
             _diagnostics.Clear();
             _candidatesByType.Clear();
