@@ -484,6 +484,9 @@ public class SavePlayerCommand : Command<IPlayerModel>
 
 ### Reading signal parameters
 
+Each `[SignalParam]` property is filled from the payload of the signal that
+triggered the command.
+
 ```csharp
 public Signal<CurrencyType, int> DecreaseCurrency = new();
 ```
@@ -491,6 +494,32 @@ public Signal<CurrencyType, int> DecreaseCurrency = new();
 ```csharp
 [SignalParam] private CurrencyType _type   { get; set; }
 [SignalParam] private int          _amount { get; set; }
+```
+
+When a signal carries more than one value of the same type, write the index of the
+one you want. The index counts within that property's type, so inserting a
+parameter of some other type into the signal does not shift it.
+
+```csharp
+public Signal<string, int, int> Damage = new();   // Dispatch("sword", 12, 3)
+```
+
+```csharp
+[SignalParam]    private string _weapon { get; set; }   // "sword"
+[SignalParam(0)] private int    _amount { get; set; }   // 12
+[SignalParam(1)] private int    _crit   { get; set; }   // 3
+```
+
+A property with no index takes the first value of its type that no other property
+has claimed, so two same-typed properties also resolve correctly on their own:
+
+```csharp
+public Signal<int, int> Move = new();   // Dispatch(3, 7)
+```
+
+```csharp
+[SignalParam] private int _x { get; set; }   // 3
+[SignalParam] private int _y { get; set; }   // 7
 ```
 
 ### Command groups

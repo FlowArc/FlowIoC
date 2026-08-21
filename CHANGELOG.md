@@ -5,6 +5,37 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-21
+
+### Added
+
+- `[SignalParam]` accepts an index: `[SignalParam(1)]` binds to the second value of
+  that property's type in the signal payload. The index counts within the type, so
+  adding a parameter of another type to the signal does not shift it. Commands can
+  now read a `Signal<int, int>` or a `Signal<string, string>` correctly.
+- An EditMode test assembly at `Tests/Editor`, covering signal parameter resolution.
+
+### Changed
+
+- `[SignalParam]` properties are now discovered by walking the command's base-class
+  chain directly rather than through the assembly scan the other injection attributes
+  use. Two consequences for existing code: a `[SignalParam]` declared on a base class
+  that lives in a *different assembly* from the command now binds, where it was
+  previously skipped without a warning; and a `public` inherited `[SignalParam]` is
+  now recorded once rather than twice, so it no longer consumes two payload values.
+  `[Inject]` and `[InjectSignal]` discovery is unchanged.
+- A dispatched `null` no longer logs `Signal Param is not found!`. It binds to any
+  property whose type can hold it, which is the intended behaviour, but code that
+  treated that message as a signal-shape alarm will stop seeing it.
+
+### Fixed
+
+- A command with two `[SignalParam]` properties of the same type received the same
+  value in both. Properties without an index now take the next value of their type
+  that no other property has claimed.
+- Binding failures now name the command, the property and the reason instead of
+  logging only the parameter type.
+
 ## [1.0.1] - 2026-08-19
 
 ### Fixed

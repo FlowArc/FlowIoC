@@ -95,6 +95,30 @@ public class DecreaseCurrencyCommand : Command
 }
 ```
 
+Signals that carry two values of the same type need an index. It counts within the
+property's own type, not across the whole payload.
+
+```csharp
+// PlayerSignals.cs
+public Signal<string, int, int> Damage = new();   // Dispatch("sword", 12, 3)
+```
+
+```csharp
+public class ApplyDamageCommand : Command
+{
+    [SignalParam]    private string _weapon { get; set; }   // "sword"
+    [SignalParam(0)] private int    _amount { get; set; }   // 12
+    [SignalParam(1)] private int    _crit   { get; set; }   // 3
+
+    public override void Execute() { }
+}
+```
+
+Without an index a property takes the first value of its type that no other
+property has claimed, so `[SignalParam] int _x` followed by `[SignalParam] int _y`
+receives the first and second int. Use an explicit index when the declaration order
+is not obvious from reading the class.
+
 ### Finishing later — `Retain()` and `Release()`
 
 `Execute()` is expected to be finished when it returns. If your work continues past
@@ -615,10 +639,16 @@ command at all — that is what Models are for.
 
 ### The parameters arrive wrong
 
-`[SignalParam]` properties are filled positionally from the signal's generic
-arguments, and typed `Execute(...)` overloads are matched against what the previous
-step released. If either shape changes, update both ends. Two `[SignalParam]`
-properties of the same type in the wrong order will bind without complaint.
+`[SignalParam]` properties are filled from the signal's payload by type, and typed
+`Execute(...)` overloads are matched against what the previous step released. If
+either shape changes, update both ends.
+
+Two `[SignalParam]` properties of the same type are distinguished by their index:
+`[SignalParam(0)]` and `[SignalParam(1)]` take the first and second value of that
+type. Properties with no index take the next unclaimed value of their type, in
+declaration order. A property that cannot be bound — an index past the end, two
+properties claiming the same value, or no unclaimed value left — logs an error
+naming the command, the property and the reason.
 
 ### The steps run in an order you did not expect
 
