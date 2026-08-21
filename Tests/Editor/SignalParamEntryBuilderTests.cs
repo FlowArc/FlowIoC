@@ -28,6 +28,16 @@ namespace FlowIoC.Tests
             protected override string Value { get; set; }
         }
 
+        private class AnnotatedVirtualTarget
+        {
+            [SignalParam] protected virtual string Value { get; set; }
+        }
+
+        private class AnnotatedOverridingTarget : AnnotatedVirtualTarget
+        {
+            [SignalParam(1)] protected override string Value { get; set; }
+        }
+
         [Test]
         public void Build_lists_base_properties_before_derived_ones_in_source_order()
         {
@@ -76,6 +86,16 @@ namespace FlowIoC.Tests
 
             Assert.That(entries.Count, Is.EqualTo(1));
             Assert.That(entries[0].Property.DeclaringType, Is.EqualTo(typeof(VirtualTarget)));
+        }
+
+        [Test]
+        public void Build_records_a_property_once_even_when_the_override_is_also_annotated()
+        {
+            var entries = new SignalParamEntryBuilder().Build(typeof(AnnotatedOverridingTarget));
+
+            Assert.That(entries.Count, Is.EqualTo(1));
+            Assert.That(entries[0].Property.DeclaringType, Is.EqualTo(typeof(AnnotatedVirtualTarget)));
+            Assert.That(entries[0].HasIndex, Is.False);
         }
 
         [Test]
