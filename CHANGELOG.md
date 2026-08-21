@@ -23,7 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that lives in a *different assembly* from the command now binds, where it was
   previously skipped without a warning; and a `public` inherited `[SignalParam]` is
   now recorded once rather than twice, so it no longer consumes two payload values.
-  `[Inject]` and `[InjectSignal]` discovery is unchanged.
+  Both shifts ripple: unindexed properties take the next unclaimed value of their
+  type in declaration order, so a base-class property that newly joins the list — or
+  a duplicate that stops joining it — changes which value the properties after it
+  receive, and can leave the last one with none. `[Inject]` and `[InjectSignal]`
+  discovery is unchanged.
 - A dispatched `null` no longer logs `Signal Param is not found!`. It binds to any
   property whose type can hold it, which is the intended behaviour, but code that
   treated that message as a signal-shape alarm will stop seeing it.

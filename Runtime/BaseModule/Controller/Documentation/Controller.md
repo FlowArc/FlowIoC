@@ -76,7 +76,8 @@ module through a Connector without touching the command itself.
 
 ### Reading the signal's payload
 
-Each `[SignalParam]` property is filled from the dispatched signal, in order.
+Each `[SignalParam]` property is filled from the payload of the signal that triggered
+the command, matched by the property's type.
 
 ```csharp
 // PlayerSignals.cs
