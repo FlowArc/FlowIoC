@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The agent rules spell out how a Model relates to signals, which was previously left to
+  inference. A Model never subscribes to a signal: an incoming signal runs a Command and
+  the Command calls the Model. A Model may dispatch its own module's outgoing signals to
+  announce that a value it holds has changed — announcing is allowed, listening is not.
+  The **Who does what** table in the README says the same thing.
+
 ## [1.1.1] - 2026-08-23
 
 ### Fixed

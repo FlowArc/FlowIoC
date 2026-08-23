@@ -92,7 +92,7 @@ flowchart LR
 | **Signal** | Naming an event in the module's vocabulary, typed. `Incoming` is what the module accepts, `Outgoing` is what it announces. | Carry behaviour. A signal is a name and a payload, never a method call in disguise. |
 | **Command** | One unit of work triggered by a signal. Injects models and services, mutates state, dispatches outgoing signals. | Hold state between runs, touch another module's model, or return a value — use a Function for that. |
 | **Function** | An injectable method you call directly and get an answer from: a calculation, a lookup, a raycast. | Mutate state that a Command should own, or replace a Command in a flow you want visible in the console. |
-| **Model** | State, and the rules that keep that state valid. Injected wherever it is needed. | Know about Views, Commands, or any other module. |
+| **Model** | State, and the rules that keep that state valid. Injected wherever it is needed. May dispatch an outgoing signal to announce that a value it holds has changed. | Know about Views, Commands, or any other module. Subscribe to a signal — an incoming signal runs a Command, and the Command calls the Model. |
 | **Service** | Everything outside the module's own boundary: HTTP, storage, device APIs, vendor SDKs. | Contain game rules. A service moves data, it does not decide. |
 | **View** | Scene references and raw input. Exposes fields and callbacks. | Contain logic, or reach for a model. A View that has an `if` about game rules is doing the Mediator's job. |
 | **Mediator** | Driving one View: subscribes to signals in `OnRegister`, unsubscribes in `OnRemove`, and turns view callbacks into outgoing signals. | Do the work itself. A Mediator dispatches; a Command decides. |

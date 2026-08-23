@@ -21,6 +21,10 @@ so follow the rules below deliberately.
   Flow Console, write a Command, not a Function.
 - A Model owns state and the rules that keep it valid. It knows nothing about Views,
   Commands, or any other module.
+- A Model never subscribes to a signal. Nothing reaches in and changes its state: an
+  incoming signal runs a Command, and the Command calls the Model.
+- A Model may dispatch its own module's outgoing signals to announce that a value it
+  holds has changed. Announcing is allowed; listening is not.
 - A Service talks to the world outside the module - HTTP, storage, device APIs, vendor
   SDKs. It moves data; it does not decide.
 - A View holds scene references and raw input. A View with an `if` about game rules is
