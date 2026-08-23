@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   adding a parameter of another type to the signal does not shift it. Commands can
   now read a `Signal<int, int>` or a `Signal<string, string>` correctly.
 - An EditMode test assembly at `Tests/Editor`, covering signal parameter resolution.
+- A Scene Switcher dropdown on the main toolbar. It lists every scene under
+  `Assets/Modules` as `ModuleName/SceneName` and opens the picked one, prompting to save
+  the open scene in edit mode and loading through `SceneManager` in play mode. The main
+  toolbar API arrived in Unity 6000.3, so the feature compiles out on earlier editors
+  and the package minimum stays at 6000.0.
 
 ### Changed
 
