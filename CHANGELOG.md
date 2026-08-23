@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2026-08-23
 
+### Migrating from `com.flowioc.core`
+
+Renaming a package changes the asset path of every script it ships. Unity keeps the
+association between a script asset and its compiled type in `Library/`, and that
+association does not survive the change: `MonoScript.GetClass()` starts returning null
+for the package's scripts even though the types are compiled and loaded. Every
+`ScriptableObject` the package defines then fails to load, and FlowIoC's own recovery
+paths make that permanent — `FlowLogger` recreates `FlowConsoleSettings` from scratch,
+losing the auto-registered module log types, and the log type generator, finding no log
+types, deletes `Assets/FlowIoC/Generated`. `FlowLogType` disappears, every module that
+logs stops compiling, and the compile errors keep the script association broken, so the
+cycle repeats on each domain reload.
+
+**Do the migration with the Editor closed:**
+
+1. Close Unity.
+2. Edit `Packages/manifest.json`: remove `com.flowioc.core`, add
+   `"com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.1.0"`.
+3. Delete the project's `Library/` folder. It is derived and gitignored; Unity rebuilds
+   it on the next open, which is what re-establishes the script associations.
+4. Open the project. The first import takes a while.
+
+If you renamed with the Editor open and hit the loop above, the recovery is the same
+sequence: close Unity, restore `Assets/FlowIoC/Generated` and
+`Assets/Resources/FlowConsoleSettings.asset` from version control **while Unity is
+closed**, delete `Library/`, then reopen. Restoring them with the Editor running does not
+hold — the running Editor rewrites them before the next compile finishes.
+
+One smaller side effect: removing the old package strips the FlowIoC block from
+`AGENTS.md`, because as far as the Package Manager is concerned FlowIoC was uninstalled.
+Anything you wrote outside the block survives, and the new package offers to write the
+rules back on the next domain reload.
+
 ### Added
 
 - `Tools/FlowIoC/AI/Agent Rules` writes FlowIoC's architecture rules into the project's
@@ -38,10 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   name as its identity, so this is not an upgrade: remove `com.flowioc.core` from
   `Packages/manifest.json` and add `com.flowarc.flowioc.core` pointing at the new tag.
   Nothing else changes — assembly names, namespaces and the `FlowIoC` folder are untouched.
-  One side effect worth knowing: removing the old package strips the FlowIoC block from
-  `AGENTS.md`, because as far as the Package Manager is concerned FlowIoC was uninstalled.
-  Anything you wrote outside the block survives, and the new package offers to write the
-  rules back on the next domain reload.
+  **If you are upgrading an existing project, read the migration note below before you
+  start.** A fresh install needs none of it.
 - `[SignalParam]` properties are now discovered by walking the command's base-class
   chain directly rather than through the assembly scan the other injection attributes
   use. Two consequences for existing code: a `[SignalParam]` declared on a base class

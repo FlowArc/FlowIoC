@@ -160,6 +160,10 @@ Always pin a tag. Without `#<tag>` Unity resolves the tip of `master` and then l
 commit into `packages-lock.json`, so the package silently stops tracking new releases.
 To upgrade, change the tag and let Unity re-resolve.
 
+> **Upgrading from `com.flowioc.core`?** The package was renamed in 1.1.0. Do it with the
+> Editor closed and delete `Library/` before reopening — see the migration note in
+> [`CHANGELOG.md`](CHANGELOG.md).
+
 ### As a git submodule (for working on FlowIoC itself)
 
 ```bash
