@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Tools/FlowIoC/Help`, an Editor window that introduces the architecture without leaving
+  Unity. It opens on the module folder layout — every folder annotated with what belongs in
+  it — and the topics beside it walk one diagram at a time through the Root and Context, the
+  signal surface, commands and functions, models, views and mediators, and connectors. Each
+  step lights up a box, states the rule it stands for, and shows the code that rule produces.
+  The window teaches one worked example and never inspects the project it is opened in.
+
 ### Changed
 
 - The agent rules spell out how a Model relates to signals, which was previously left to

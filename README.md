@@ -831,6 +831,7 @@ Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Detect, fix, and cleanse module metadata; update namespace settings |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
+| `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor |
 | `Assets/FlowIoC/Create Assembly` | Assembly definition for the selected folder |
 | `Assets/FlowIoC/Update Module's Namespaces` | Rewrite namespaces after a move or rename |
 
