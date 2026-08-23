@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
+using FlowIoC.Editor.Migration;
 using UnityEditor;
 using UnityEngine;
 
@@ -44,6 +45,10 @@ namespace FlowIoC.Editor.Console
 
         public static void Generate()
         {
+            // Before anything is written at the new path. A copy of FlowLogType at the old path and
+            // one at the new path at the same time is a duplicate type definition, not clutter.
+            new FlowIoCPathMigrator().MigrateIfNeeded();
+
             var settings = FlowLogger.Settings;
             if (settings == null) return;
 
