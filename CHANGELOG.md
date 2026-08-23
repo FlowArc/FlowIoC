@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Tools/FlowIoC/AI/Agent Rules` writes FlowIoC's architecture rules into the project's
+  root `AGENTS.md` as a marked block and points `CLAUDE.md` at it, so AI coding
+  assistants follow the framework's conventions instead of guessing at them. Only the
+  text between the `FLOWIOC` markers is touched, so rules you wrote yourself survive, and
+  a malformed marker makes the tool refuse to write rather than guess. FlowIoC offers to
+  install the block on first open and to refresh it when the rules change — detected by
+  hashing the rule text, so edits that ship without a version bump are still caught — and
+  removes it again when the package is uninstalled through the Package Manager. The rule
+  text ships in `Documentation~/AgentRules.md`.
 - `[SignalParam]` accepts an index: `[SignalParam(1)]` binds to the second value of
   that property's type in the signal payload. The index counts within the type, so
   adding a parameter of another type to the signal does not shift it. Commands can
