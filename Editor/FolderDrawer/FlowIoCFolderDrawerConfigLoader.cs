@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using FlowIoC.BaseModule.ProjectPaths;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace FlowIoC.Editor.FolderDrawer
         /// Under Assets rather than in the package, so the colors travel with the project
         /// and not with FlowIoC.
         /// </summary>
-        public string ConfigPath { get; } = "Assets/Editor/FlowIoC/FolderDrawer/FlowIoCFolderDrawerConfig.asset";
+        public string ConfigPath { get; } = new FlowIoCProjectPaths().FolderDrawerConfig;
 
         public FlowIoCFolderDrawerConfig Load()
         {
@@ -95,10 +96,10 @@ namespace FlowIoC.Editor.FolderDrawer
         {
             return new FolderDrawerPathRule
             {
-                PathRule = new FolderDrawerPathMatch { Value = value, Type = type },
+                PathRule = new FolderDrawerPathMatch {Value = value, Type = type},
                 Visual = new FolderDrawerVisual
                 {
-                    ColorInfo = new FolderDrawerColor { StartColor = startColor, EndColor = endColor }
+                    ColorInfo = new FolderDrawerColor {StartColor = startColor, EndColor = endColor}
                 }
             };
         }

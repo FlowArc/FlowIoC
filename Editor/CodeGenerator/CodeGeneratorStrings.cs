@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using FlowIoC.BaseModule.ProjectPaths;
 using UnityEditor.PackageManager;
 using UnityEngine;
 
@@ -20,8 +21,11 @@ namespace FlowIoC.Editor.CodeGenerator
         private static readonly string PackageDiskRoot =
             Package != null ? Package.resolvedPath : Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC";
 
-        public const string CONFIG_PATH = "Assets/Editor/FlowIoC/CodeGenerator/CodeGeneratorSettings.asset";
-        internal const string CUSTOM_TYPES_FOLDER = "Assets/FlowIoC/Generated";
+        // One instance for the whole type: the paths object is stateless, and this class is
+        // already the package's static string table.
+        private static readonly FlowIoCProjectPaths Paths = new FlowIoCProjectPaths();
+
+        public static readonly string CONFIG_PATH = Paths.CodeGeneratorSettings;
 
         public static readonly string SCREEN_SERVICE_ROOT_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenServiceRoot.prefab";
         internal static readonly string SCREEN_MANAGER_PREFAB_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenManager.prefab";
@@ -54,7 +58,6 @@ namespace FlowIoC.Editor.CodeGenerator
                 ? path.Replace("$", "Runtime")
                 : path.Replace("$", parentFolderName);
         }
-
     }
 }
 #endif

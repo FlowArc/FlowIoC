@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.Editor.CodeGenerator.Extensions;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
@@ -39,12 +40,19 @@ namespace FlowIoC.Editor.CodeGenerator
             };
 
         [HideInInspector] [SerializeField] public SerializableDictionary<string, string> DirectoryStructureConfigPaths =
-            new SerializableDictionary<string, string>
+            CreateDefaultDirectoryStructureConfigPaths();
+
+        private static SerializableDictionary<string, string> CreateDefaultDirectoryStructureConfigPaths()
+        {
+            var paths = new FlowIoCProjectPaths();
+
+            return new SerializableDictionary<string, string>
             {
-                {"Main", "Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset"},
-                {"Screen", "Assets/Editor/FlowIoC/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset"},
-                {"Test", "Assets/Editor/FlowIoC/CodeGenerator/TestModuleDirectoryStructureConfig.asset"}
+                {"Main", paths.DirectoryStructureConfig("Main")},
+                {"Screen", paths.DirectoryStructureConfig("Screen")},
+                {"Test", paths.DirectoryStructureConfig("Test")}
             };
+        }
 
         /// <summary>
         /// The folder name for a type, falling back when the settings asset predates it.

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
 using UnityEditor;
 using UnityEngine;
@@ -13,9 +14,11 @@ namespace FlowIoC.Editor.Console
 {
     internal static class FlowLogTypeGenerator
     {
-        private const string GeneratedFolder = "Assets/FlowIoC/Generated";
-        private const string GeneratedFilePath = GeneratedFolder + "/FlowLogType.cs";
-        private const string AsmRefPath = GeneratedFolder + "/FlowIoC.Generated.asmref";
+        private static readonly FlowIoCProjectPaths Paths = new FlowIoCProjectPaths();
+
+        private static readonly string GeneratedFolder = Paths.GeneratedRoot;
+        private static readonly string GeneratedFilePath = Paths.FlowLogType;
+        private static readonly string AsmRefPath = Paths.GeneratedAsmRef;
 
         private static bool _generatePending;
 
@@ -73,7 +76,7 @@ namespace FlowIoC.Editor.Console
                     Debug.LogWarning(
                         "<color=cyan>FlowConsole:</color> the log type settings came back empty, which means the " +
                         "settings asset could not be loaded rather than that the project has no log types. " +
-                        "Assets/FlowIoC/Generated was left in place.");
+                        $"{GeneratedFolder} was left in place.");
                     return;
                 }
 
