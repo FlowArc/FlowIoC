@@ -802,7 +802,7 @@ you can watch every signal dispatch and command step without adding a single log
 line.
 
 For your own logs, Flow Console auto-registers one channel per module and
-regenerates `Assets/FlowIoC/Generated/FlowLogType.cs` with a constant for each:
+regenerates `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` with a constant for each:
 
 ```csharp
 using FlowIoC.ConsoleModule;
@@ -920,7 +920,7 @@ from the module config and can be renamed under
 them as the module needs them.
 
 > **`Systems` in a project that predates it.** The folder list lives in
-> `Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset`, which
+> `Assets/Plugins/FlowIoC/Editor/CodeGenerator/MainModuleDirectoryStructureConfig.asset`, which
 > is written once, in your project. Upgrading FlowIoC does not rewrite it, so a project
 > created before `Systems` existed keeps its old list and the generator will not produce
 > the folder. Add it in that asset's inspector, or delete the asset and let FlowIoC

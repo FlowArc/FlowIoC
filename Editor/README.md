@@ -137,7 +137,7 @@ Open it from `Tools/FlowIoC/Folder Drawer`. Edits repaint the Project window as 
 make them.
 
 The settings live in your project, at
-`Assets/Editor/FlowIoC/FolderDrawer/FlowIoCFolderDrawerConfig.asset`, not in the
+`Assets/Plugins/FlowIoC/Editor/FolderDrawer/FlowIoCFolderDrawerConfig.asset`, not in the
 package — so colours are per project, and are created with a sensible default set the
 first time the Editor opens.
 

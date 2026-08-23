@@ -684,7 +684,7 @@ To create custom templates:
 To customize the generator configuration:
 
 1. **Edit CodeGeneratorSettings**:
-   - Locate the settings asset at `Assets/Editor/FlowIoC/CodeGenerator/CodeGeneratorSettings.asset`
+   - Locate the settings asset at `Assets/Plugins/FlowIoC/Editor/CodeGenerator/CodeGeneratorSettings.asset`
    - Modify folder naming conventions
    - Update directory structure configurations
 
