@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they share, which is exactly what a Service may not do. Both dispatch outgoing signals,
   and a Command drives either the same way it drives a Model. Systems live in `Systems/`,
   as an interface and an implementation.
+- The rules name the exceptions to "a module never reaches into another module", which was
+  stated absolutely while the framework has always had three. A Service crosses directly —
+  reference its assembly, inject its interface, which is what makes a Service worth its own
+  module. A nested module may use the types of the module it sits in, one way only: a
+  module never knows what its own `z` folders hold. And a test module may reference
+  anything, in exchange for every script in it being wrapped in `#if UNITY_EDITOR`.
+  Systems are not on that list: two Systems in separate modules meet through a Connector,
+  never through an assembly reference.
 - `Create Module` produces a `Systems` folder in main modules. Screen and test modules are
   unchanged. The folder list is stored in your project's
   `MainModuleDirectoryStructureConfig.asset`, which an upgrade does not rewrite, so a

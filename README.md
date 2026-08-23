@@ -93,8 +93,8 @@ flowchart LR
 | **Command** | One unit of work triggered by a signal. Injects models and services, mutates state, dispatches outgoing signals. | Hold state between runs, touch another module's model, or return a value — use a Function for that. |
 | **Function** | An injectable method you call directly and get an answer from: a calculation, a lookup, a raycast. | Mutate state that a Command should own, or replace a Command in a flow you want visible in the console. |
 | **Model** | State, and the rules that keep that state valid. Injected wherever it is needed. May dispatch an outgoing signal to announce that a value it holds has changed. | Know about Views, Commands, or any other module. Subscribe to a signal — an incoming signal runs a Command, and the Command calls the Model. |
-| **Service** | A self-contained unit of work that answers the input it is given — a countdown, a parser, a storage wrapper. Reusable in any project. | Depend on anything outside itself, or wait on another module's signal. A Service more than one module needs gets its own module. |
-| **System** | The game-specific work a module owns. May lean on other Systems and Services: waiting on a signal they raise, or working from data they share. | Claim to be reusable. A System with no tie to this particular game is a Service that landed in the wrong folder. |
+| **Service** | A self-contained unit of work that answers the input it is given — a countdown, a parser, a storage wrapper. Reusable in any project, and the one thing another module may reference directly: add its assembly, inject its interface. | Depend on anything outside itself, or wait on another module's signal. A Service more than one module needs gets its own module. |
+| **System** | The game-specific work a module owns. May lean on other Systems and Services: waiting on a signal they raise, or working from data they share. | Appear in another module's assembly. Two Systems in separate modules meet through a Connector, never through a reference. |
 | **View** | Scene references and raw input. Exposes fields and callbacks. | Contain logic, or reach for a model. A View that has an `if` about game rules is doing the Mediator's job. |
 | **Mediator** | Driving one View: subscribes to signals in `OnRegister`, unsubscribes in `OnRemove`, and turns view callbacks into outgoing signals. | Do the work itself. A Mediator dispatches; a Command decides. |
 | **Connector** | Wiring one module's `Outgoing` signals to another's `Incoming` signals, in one readable place. | Transform game state. A converter that reshapes a payload is fine; a rule is not. |
@@ -935,6 +935,14 @@ with its own Context:
   and views travel together.
 - **`zTestModules/`** — an isolated test scene and context, marked `IsTest` so it
   never starts in a real build.
+
+A nested module may use the types of the module it sits in — a screen module reaching
+its parent's System, for instance. The direction is one way: a module never knows what
+its own `z` folders contain, so the parent's assembly never references theirs.
+
+`zTestModules` is exempt from all of it. Everything there is test code, so it may
+reference any module in the project; in exchange, every script in it is wrapped in
+`#if UNITY_EDITOR` and never reaches a build.
 
 Sub-contexts are attached from the Root's inspector (*Add Sub Context*), which
 lists every `Context` type in the project. Mark a context with

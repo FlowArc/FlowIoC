@@ -12,7 +12,19 @@ so follow the rules below deliberately.
 ### Rules that are not negotiable
 
 - A module never reaches into another module. No type from `Modules.A` appears in
-  `Modules.B`. The only crossing point is a Connector.
+  `Modules.B`, and the only crossing point is a Connector. The three exceptions that
+  follow are the whole list.
+- **A Service crosses directly.** Reference the Service module's assembly and inject its
+  interface, the way `OpenMatchBoardScreenCommand` injects `ICountdownService`. Being
+  usable this way is the point of a Service.
+- **A sub-module reaches the module it lives in.** A screen or sub module may use its
+  parent's types. The direction is one way: a module never knows what sits in its own
+  `zScreenModules` or `zSubModules`.
+- **A test module reaches anything.** Everything under `zTestModules` is test code, so it
+  may reference any module in the project. In exchange, every script in it is wrapped in
+  `#if UNITY_EDITOR`.
+- Systems are never added to one another's assemblies. Two Systems in separate modules
+  talk through signals wired in a Connector, like any other cross-module traffic.
 - A Context declares bindings and nothing else. If a Context needs an `if`, that decision
   belongs in a Command.
 - A Command does one unit of work, holds no state between runs, and returns no value. It
@@ -40,7 +52,8 @@ so follow the rules below deliberately.
 - A Mediator drives exactly one View. It listens to signals and dispatches them, and holds
   no game rules either.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
-  what it announces. A module's signals are its entire public surface.
+  what it announces. A module's signals are its public surface - together with the
+  interface of a Service, which is the one thing another module may reference directly.
 
 ### Injection targets properties, never fields
 
