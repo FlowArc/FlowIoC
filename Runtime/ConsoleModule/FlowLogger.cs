@@ -43,25 +43,41 @@ namespace FlowIoC.ConsoleModule
                         _settings.ResetToDefaults();
 
 #if UNITY_EDITOR
-                        UnityEditor.EditorApplication.delayCall += () => {
-                            string resourcesPath = "Assets/Resources";
+                        UnityEditor.EditorApplication.delayCall += () =>
+                        {
+                            const string resourcesPath = "Assets/Resources";
+                            const string fullPath = resourcesPath + "/FlowConsoleSettings.asset";
+
+                            bool fileExistsOnDisk = File.Exists(fullPath);
+                            var existing = UnityEditor.AssetDatabase.LoadAssetAtPath<FlowConsoleSettings>(fullPath);
+
+                            if (!new FlowConsoleSettingsCreationPolicy().ShouldCreate(existing != null, fileExistsOnDisk))
+                            {
+                                if (fileExistsOnDisk && existing == null)
+                                {
+                                    Debug.LogWarning(
+                                        "<color=cyan>FlowConsole:</color> FlowConsoleSettings.asset is on disk but " +
+                                        "could not be loaded, so it was left untouched rather than replaced. Scripts " +
+                                        "are probably not compiling, or the package's asset paths changed. Fix the " +
+                                        "compile errors - or close the Editor, delete Library/ and reopen - and the " +
+                                        "settings will load again with your log types intact.");
+                                }
+
+                                return;
+                            }
+
                             if (!Directory.Exists(resourcesPath))
                                 Directory.CreateDirectory(resourcesPath);
 
-                            string fullPath = $"{resourcesPath}/FlowConsoleSettings.asset";
-                            var existing = UnityEditor.AssetDatabase.LoadAssetAtPath<FlowConsoleSettings>(fullPath);
-
-                            if (existing == null)
-                            {
-                                UnityEditor.AssetDatabase.CreateAsset(_settings, fullPath);
-                                UnityEditor.AssetDatabase.SaveAssets();
-                                UnityEditor.AssetDatabase.Refresh();
-                                Debug.Log("<color=cyan>FlowConsoleLogger:</color> Created FlowConsoleSettings and verified FlowLogType.");
-                            }
+                            UnityEditor.AssetDatabase.CreateAsset(_settings, fullPath);
+                            UnityEditor.AssetDatabase.SaveAssets();
+                            UnityEditor.AssetDatabase.Refresh();
+                            Debug.Log("<color=cyan>FlowConsoleLogger:</color> Created FlowConsoleSettings and verified FlowLogType.");
                         };
 #endif
                     }
                 }
+
                 return _settings;
             }
         }
@@ -80,6 +96,7 @@ namespace FlowIoC.ConsoleModule
                 if (parts.Length >= 2)
                     return GetLogTypeValue(parts[1]);
             }
+
             return -1;
         }
 
@@ -90,6 +107,7 @@ namespace FlowIoC.ConsoleModule
                 if (string.Equals(type.Name, typeName, StringComparison.OrdinalIgnoreCase))
                     return type.Value;
             }
+
             return -1;
         }
 
@@ -195,7 +213,7 @@ namespace FlowIoC.ConsoleModule
                 return;
             }
 
-            int chunkCount = Mathf.CeilToInt((float)messageLength / MaxMessageLength);
+            int chunkCount = Mathf.CeilToInt((float) messageLength / MaxMessageLength);
 
             for (int i = 0; i < chunkCount; i++)
             {
@@ -245,16 +263,16 @@ namespace FlowIoC.ConsoleModule
 #if UNITY_EDITOR
             var log = CreateLogEntry(message, logType);
             log.SystemLogType = systemLogType;
-            log.LogTypeValue = (int)systemLogType;
+            log.LogTypeValue = (int) systemLogType;
 
-            if (Settings.TryGetLogType((int)systemLogType, out var typeInfo))
+            if (Settings.TryGetLogType((int) systemLogType, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
             Logs.Add(log);
             OnLogAdded?.Invoke(log);
 #endif
 
-            ForwardToUnityConsole((int)systemLogType, message, logType);
+            ForwardToUnityConsole((int) systemLogType, message, logType);
         }
 
         [HideInCallstack]

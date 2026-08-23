@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-08-23
+
+### Fixed
+
+- `FlowConsoleSettings.asset` is no longer replaced when it exists on disk but fails to load.
+  Unity returns null both for an absent asset and for one whose script cannot be resolved —
+  which happens while scripts are not compiling, or after the package's asset paths change —
+  and FlowIoC treated the second case as the first, writing a fresh settings asset over the
+  real one and taking every auto-registered module log type with it. The file on disk now
+  gets the benefit of the doubt and a warning explains what to fix.
+- `Assets/FlowIoC/Generated` is no longer deleted when the log type settings come back empty.
+  A settings asset loaded from disk always carries its mandatory channels, so an object with
+  none of them is a stand-in for one that failed to load, not a project with no log types.
+  Deleting `FlowLogType.cs` on its word broke compilation, and the compile errors then kept
+  the settings from loading — a loop that repeated on every domain reload.
+- Declining the agent rules startup notice is now remembered per project. `EditorPrefs` is
+  shared by every project opened with the same Editor, so "Do not ask again" used to silence
+  the notice everywhere on the machine. `Tools/FlowIoC/AI/Agent Rules` also gained a button to
+  switch the notice back on, which previously required the rules themselves to change.
+
 ## [1.1.0] - 2026-08-23
 
 ### Migrating from `com.flowioc.core`

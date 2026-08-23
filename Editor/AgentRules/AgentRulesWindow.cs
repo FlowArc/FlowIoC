@@ -20,9 +20,16 @@ namespace FlowIoC.Editor.AgentRules
             window.Show();
         }
 
-        private SyncFileState[] _states;
+        private readonly AgentRulesDismissal _dismissal = new AgentRulesDismissal();
 
-        private void OnEnable() => Refresh();
+        private SyncFileState[] _states;
+        private string _projectRoot;
+
+        private void OnEnable()
+        {
+            _projectRoot = new ProjectRoot().Resolve();
+            Refresh();
+        }
 
         private void OnFocus() => Refresh();
 
@@ -65,12 +72,23 @@ namespace FlowIoC.Editor.AgentRules
                 if (GUILayout.Button("Refresh", GUILayout.Height(28), GUILayout.Width(90)))
                     Refresh();
             }
+
+            if (!_dismissal.HasDismissal(_projectRoot))
+                return;
+
+            EditorGUILayout.Space();
+            EditorGUILayout.HelpBox(
+                "The startup notice is switched off for this project. It stays off until the rules change.",
+                MessageType.None);
+
+            if (GUILayout.Button("Re-enable the startup notice", GUILayout.Height(22)))
+                _dismissal.Clear(_projectRoot);
         }
 
         private void Refresh() => _states = NewSynchronizer().Inspect();
 
         private AgentRulesSynchronizer NewSynchronizer() =>
-            new AgentRulesSynchronizer(new ProjectRoot().Resolve(), new AgentRulesSource());
+            new AgentRulesSynchronizer(_projectRoot, new AgentRulesSource());
 
         private string Describe(SyncFileState state)
         {

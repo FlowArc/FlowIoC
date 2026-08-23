@@ -27,7 +27,8 @@ namespace FlowIoC.Editor.AgentRules
     internal class AgentRulesStartupNotice
     {
         private const string SessionKey = "FlowIoC.AgentRules.Checked";
-        private const string DismissedKey = "FlowIoC.AgentRules.DismissedHash";
+
+        private readonly AgentRulesDismissal _dismissal = new AgentRulesDismissal();
 
         internal void Run()
         {
@@ -44,11 +45,12 @@ namespace FlowIoC.Editor.AgentRules
             if (!source.TryRead(out string rules, out _))
                 return;
 
+            string projectRoot = new ProjectRoot().Resolve();
             string hash = new ManagedBlockWriter().ComputeHash(rules);
-            if (EditorPrefs.GetString(DismissedKey, string.Empty) == hash)
+
+            if (_dismissal.IsDismissed(projectRoot, hash))
                 return;
 
-            string projectRoot = new ProjectRoot().Resolve();
             var states = new AgentRulesSynchronizer(projectRoot, source).Inspect();
 
             if (!states.Any(s => s.Status == SyncStatus.Absent || s.Status == SyncStatus.Stale))
@@ -76,7 +78,7 @@ namespace FlowIoC.Editor.AgentRules
                     break;
 
                 case 2:
-                    EditorPrefs.SetString(DismissedKey, hash);
+                    _dismissal.Dismiss(projectRoot, hash);
                     break;
             }
         }

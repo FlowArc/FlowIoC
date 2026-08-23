@@ -66,6 +66,17 @@ namespace FlowIoC.Editor.Console
 
             if (defaultType == null && moduleTypes.Count == 0 && customTypes.Count == 0)
             {
+                // Nothing to generate is a legitimate state, but so is "the settings asset did not
+                // load and this object is an empty stand-in". Only the first one may delete source.
+                if (!new LogTypeSettingsGuard().IsTrustworthy(settings.LogTypes))
+                {
+                    Debug.LogWarning(
+                        "<color=cyan>FlowConsole:</color> the log type settings came back empty, which means the " +
+                        "settings asset could not be loaded rather than that the project has no log types. " +
+                        "Assets/FlowIoC/Generated was left in place.");
+                    return;
+                }
+
                 CleanupGeneratedFiles();
                 return;
             }
@@ -167,8 +178,8 @@ namespace FlowIoC.Editor.Console
                 name = "Unknown";
 
             var sanitized = name.Replace(' ', '_')
-                                .Replace('-', '_')
-                                .Replace('.', '_');
+                .Replace('-', '_')
+                .Replace('.', '_');
 
             sanitized = Regex.Replace(sanitized, @"[^\w]", "");
 
@@ -191,8 +202,8 @@ namespace FlowIoC.Editor.Console
         private static string EscapeXml(string text)
         {
             return text.Replace("&", "&amp;")
-                       .Replace("<", "&lt;")
-                       .Replace(">", "&gt;");
+                .Replace("<", "&lt;")
+                .Replace(">", "&gt;");
         }
 
         private static void EnsureDirectoryExists()
