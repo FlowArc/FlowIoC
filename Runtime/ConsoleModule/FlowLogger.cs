@@ -5,6 +5,9 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+#if UNITY_EDITOR
+using FlowIoC.BaseModule.ProjectPaths;
+#endif
 
 namespace FlowIoC.ConsoleModule
 {
@@ -45,8 +48,9 @@ namespace FlowIoC.ConsoleModule
 #if UNITY_EDITOR
                         UnityEditor.EditorApplication.delayCall += () =>
                         {
-                            const string resourcesPath = "Assets/Resources";
-                            const string fullPath = resourcesPath + "/FlowConsoleSettings.asset";
+                            var paths = new FlowIoCProjectPaths();
+                            string resourcesPath = paths.ResourcesRoot;
+                            string fullPath = paths.ConsoleSettings;
 
                             bool fileExistsOnDisk = File.Exists(fullPath);
                             var existing = UnityEditor.AssetDatabase.LoadAssetAtPath<FlowConsoleSettings>(fullPath);
