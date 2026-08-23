@@ -142,7 +142,7 @@ flowchart LR
 In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
 
 ```
-https://github.com/FlowIoC/FlowIoC.git#1.0.1
+https://github.com/FlowArc/FlowIoC.git#1.0.1
 ```
 
 Or add it to `Packages/manifest.json` directly:
@@ -150,7 +150,7 @@ Or add it to `Packages/manifest.json` directly:
 ```json
 {
   "dependencies": {
-    "com.flowioc.core": "https://github.com/FlowIoC/FlowIoC.git#1.0.1"
+    "com.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.0.1"
   }
 }
 ```
@@ -162,7 +162,7 @@ To upgrade, change the tag and let Unity re-resolve.
 ### As a git submodule (for working on FlowIoC itself)
 
 ```bash
-git submodule add https://github.com/FlowIoC/FlowIoC.git Packages/FlowIoC
+git submodule add https://github.com/FlowArc/FlowIoC.git Packages/FlowIoC
 git submodule update --init
 ```
 

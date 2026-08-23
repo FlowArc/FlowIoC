@@ -5,9 +5,9 @@
   "description": "Signal-driven IoC framework for Unity. Provides contexts, signals, commands, models and view/mediator binding, plus an editor code generator for scaffolding modules.",
   "unity": "6000.0",
   "license": "MIT",
-  "documentationUrl": "https://github.com/FlowIoC/FlowIoC#readme",
-  "changelogUrl": "https://github.com/FlowIoC/FlowIoC/blob/master/CHANGELOG.md",
-  "licensesUrl": "https://github.com/FlowIoC/FlowIoC/blob/master/LICENSE.md",
+  "documentationUrl": "https://github.com/FlowArc/FlowIoC#readme",
+  "changelogUrl": "https://github.com/FlowArc/FlowIoC/blob/master/CHANGELOG.md",
+  "licensesUrl": "https://github.com/FlowArc/FlowIoC/blob/master/LICENSE.md",
   "keywords": [
     "ioc",
     "dependency-injection",
@@ -19,7 +19,7 @@
   ],
   "author": {
     "name": "Cüneyt Taşkent (CNYT)",
-    "url": "https://github.com/FlowIoC"
+    "url": "https://github.com/FlowArc"
   },
   "dependencies": {
     "com.unity.addressables": "2.9.1",
