@@ -13,7 +13,6 @@ namespace FlowIoC.Editor.CodeGenerator
         public static List<Type> GetAllTypesFromAssemblies()
         {
             var assemblyList = AppDomain.CurrentDomain.GetAssemblies();
-            var codeGenerationSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>("Assets/Editor/MVCCodeGenerationSettings.asset");
 
             var result = new List<Type>();
 
@@ -82,7 +81,7 @@ namespace FlowIoC.Editor.CodeGenerator
         public static List<Type> GetAllTypesFromAssemblies(string assemblyName)
         {
             var assemblyList = AppDomain.CurrentDomain.GetAssemblies();
-            var codeGenerationSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>("Assets/Editor/MVCCodeGenerationSettings.asset");
+            var codeGenerationSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
 
             string transformedName = ParseAssemblyName(assemblyName);
 
@@ -97,10 +96,16 @@ namespace FlowIoC.Editor.CodeGenerator
 
             result.AddRange(mainAssembly.GetTypes());
 
-            if (codeGenerationSettings != null)
+            // Null checks that were never reached while this settings asset was looked up at a path
+            // that does not exist: the list is absent from assets serialized by older versions, and
+            // an entry goes null when the asmdef it pointed at is deleted.
+            if (codeGenerationSettings != null && codeGenerationSettings.AssemblyDefinitions != null)
             {
                 foreach (var assemblyDefinitionAsset in codeGenerationSettings.AssemblyDefinitions)
                 {
+                    if (assemblyDefinitionAsset == null)
+                        continue;
+
                     var assembly = assemblyList.FirstOrDefault(x => x.FullName.StartsWith(assemblyDefinitionAsset.name));
                     if (assembly == null)
                         continue;
