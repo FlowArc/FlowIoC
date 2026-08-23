@@ -37,7 +37,7 @@ namespace FlowIoC.Tests
         [Test]
         public void HandleRemoval_strips_the_block_when_FlowIoC_is_removed()
         {
-            NewWatcher().HandleRemoval(new[] { "com.unity.addressables", "com.flowioc.core" });
+            NewWatcher().HandleRemoval(new[] { "com.unity.addressables", "com.flowarc.flowioc.core" });
 
             StringAssert.DoesNotContain("FLOWIOC:BEGIN", Agents());
             StringAssert.Contains("Use tabs.", Agents());

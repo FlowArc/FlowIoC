@@ -1,7 +1,7 @@
 ## FlowIoC
 
 These rules apply only while FlowIoC is installed. If `Packages/manifest.json` contains no
-`com.flowioc.core` and `Packages/FlowIoC/` does not exist, ignore this block and delete it
+`com.flowarc.flowioc.core` and `Packages/FlowIoC/` does not exist, ignore this block and delete it
 from `AGENTS.md`.
 
 FlowIoC is a signal-driven IoC framework for Unity. A game is split into modules that own

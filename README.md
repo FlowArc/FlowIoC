@@ -128,7 +128,7 @@ flowchart LR
 
 | | |
 |---|---|
-| Package name | `com.flowioc.core` |
+| Package name | `com.flowarc.flowioc.core` |
 | Minimum Unity | `6000.0` (declared in `package.json`) |
 | Actively developed against | Unity 6 (`6000.3`) |
 | Dependencies | `com.unity.addressables` 2.9.1+, `com.unity.render-pipelines.core` 17.0.0+ (resolved automatically) |
@@ -143,7 +143,7 @@ flowchart LR
 In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
 
 ```
-https://github.com/FlowArc/FlowIoC.git#1.0.1
+https://github.com/FlowArc/FlowIoC.git#1.1.0
 ```
 
 Or add it to `Packages/manifest.json` directly:
@@ -151,7 +151,7 @@ Or add it to `Packages/manifest.json` directly:
 ```json
 {
   "dependencies": {
-    "com.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.0.1"
+    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.1.0"
   }
 }
 ```
@@ -169,7 +169,7 @@ git submodule update --init
 
 Any folder under `Packages/` containing a `package.json` is treated by Unity as an *embedded*
 package: it is writable, so you can edit and commit the framework straight from the consuming
-project, and it takes precedence over any registry or Git version of `com.flowioc.core`.
+project, and it takes precedence over any registry or Git version of `com.flowarc.flowioc.core`.
 
 Anyone cloning a project that uses the submodule must run `git submodule update --init`,
 otherwise `Packages/FlowIoC` stays empty and the project will not compile.
@@ -853,7 +853,7 @@ Claude Code, Codex, Cursor, Zed and Gemini CLI all read — and points `CLAUDE.m
 that file. The rules land inside a marked block:
 
 ```
-<!-- FLOWIOC:BEGIN version=1.0.1 hash=8362830e | ... -->
+<!-- FLOWIOC:BEGIN version=<installed> hash=<rule text> | ... -->
 ...
 <!-- FLOWIOC:END -->
 ```

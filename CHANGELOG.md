@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-23
+
 ### Added
 
 - `Tools/FlowIoC/AI/Agent Rules` writes FlowIoC's architecture rules into the project's
@@ -31,6 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Package name is now `com.flowarc.flowioc.core`** (was `com.flowioc.core`), matching the
+  FlowArc organisation the repository lives under. The Package Manager treats a package
+  name as its identity, so this is not an upgrade: remove `com.flowioc.core` from
+  `Packages/manifest.json` and add `com.flowarc.flowioc.core` pointing at the new tag.
+  Nothing else changes — assembly names, namespaces and the `FlowIoC` folder are untouched.
+  One side effect worth knowing: removing the old package strips the FlowIoC block from
+  `AGENTS.md`, because as far as the Package Manager is concerned FlowIoC was uninstalled.
+  Anything you wrote outside the block survives, and the new package offers to write the
+  rules back on the next domain reload.
 - `[SignalParam]` properties are now discovered by walking the command's base-class
   chain directly rather than through the assembly scan the other injection attributes
   use. Two consequences for existing code: a `[SignalParam]` declared on a base class

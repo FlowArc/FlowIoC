@@ -29,7 +29,7 @@ namespace FlowIoC.Editor.AgentRules
     /// </summary>
     internal class AgentRulesRemovalWatcher
     {
-        internal const string PackageName = "com.flowioc.core";
+        internal const string PackageName = "com.flowarc.flowioc.core";
 
         private readonly string _projectRoot;
         private readonly AgentRulesSource _source;
