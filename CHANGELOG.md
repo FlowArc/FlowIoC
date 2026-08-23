@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the Command calls the Model. A Model may dispatch its own module's outgoing signals to
   announce that a value it holds has changed — announcing is allowed, listening is not.
   The **Who does what** table in the README says the same thing.
+- A Service is now defined by what it depends on rather than by what it talks to. The old
+  wording made a Service the module's boundary with HTTP, storage and vendor SDKs, and
+  forbade it from deciding anything. A Service is a self-contained unit of work that
+  answers the input it is given, is not specific to the game around it, and is free to
+  decide whatever its own job requires. A Service several modules need gets its own module.
+- **System** joins the vocabulary: the game-specific counterpart to a Service. A System may
+  lean on other Systems and Services, waiting on a signal they raise or working from data
+  they share, which is exactly what a Service may not do. Both dispatch outgoing signals,
+  and a Command drives either the same way it drives a Model. Systems live in `Systems/`,
+  as an interface and an implementation.
 
 ## [1.1.1] - 2026-08-23
 

@@ -25,8 +25,16 @@ so follow the rules below deliberately.
   incoming signal runs a Command, and the Command calls the Model.
 - A Model may dispatch its own module's outgoing signals to announce that a value it
   holds has changed. Announcing is allowed; listening is not.
-- A Service talks to the world outside the module - HTTP, storage, device APIs, vendor
-  SDKs. It moves data; it does not decide.
+- A Service is a self-contained unit of work. It is not specific to the game it sits in and
+  depends on nothing outside itself: it answers the input it is given. A countdown, a
+  parser, a storage wrapper. A Service that more than one module needs gets its own module.
+- A System is specific to this game. It may lean on other Systems and Services - waiting on
+  a signal they raise, or working from data they share - which is exactly what a Service
+  may not do.
+- Systems and Services both dispatch outgoing signals when they have something to announce,
+  and a Command drives their work the same way it drives a Model's.
+- A Service lives in `Services/`, a System in `Systems/`. Both are an interface and an
+  implementation, the way a Model is: `ICountdownService` and `CountdownService`.
 - A View holds scene references and raw input. A View with an `if` about game rules is
   doing the Mediator's job.
 - A Mediator drives exactly one View. It listens to signals and dispatches them, and holds
@@ -70,8 +78,9 @@ Modules/
             ├── Functions/
             ├── Models/
             ├── RootsContexts/
-            ├── Services/
+            ├── Services/            # self-contained, reusable
             ├── Signals/
+            ├── Systems/             # specific to this game
             └── ViewsMediators/
 ```
 
@@ -85,6 +94,8 @@ own. Prefer them over writing files by hand.
 | Signal container | `PlayerSignals`, with nested `PlayerSignalsIncoming` and `PlayerSignalsOutgoing` |
 | Command | `AddCurrencyCommand` |
 | Model | `IPlayerModel` and `PlayerModel` |
+| Service | `ICountdownService` and `CountdownService` |
+| System | `IMapSystem` and `MapSystem` |
 | Value object | `PlayerStateVO` |
 | View and Mediator | `HudView` and `HudMediator` |
 | Function | `CalculateDamageFunction` |
