@@ -242,7 +242,7 @@ types differ by taking a converter as its second argument.
 
 ### Never hand-edit
 
-`Assets/FlowIoC/Generated/FlowLogType.cs` is generated from the modules present in the
+`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` is generated from the modules present in the
 project. Change the modules, not the file.
 
 ### Logging

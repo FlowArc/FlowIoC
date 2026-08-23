@@ -40,7 +40,7 @@ You never write to these — they are the framework narrating itself. You toggle
 in the console window.
 
 **Project channels** are yours: one per module, auto-registered, and regenerated into
-`Assets/FlowIoC/Generated/FlowLogType.cs` as `const int` fields.
+`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` as `const int` fields.
 
 ```csharp
 namespace FlowIoC.ConsoleModule
@@ -285,7 +285,7 @@ toggle in the window; and whether `ENABLE_LOG` is defined. Without the define ev
 The generated file is out of date. It is regenerated when the console registers
 module channels — open the Flow Console window once after adding a module, or run
 *Tools ▸ FlowIoC ▸ Module Configuration ▸ Detect & Fix Module Infos*. Never edit
-`Assets/FlowIoC/Generated/FlowLogType.cs` by hand; it is overwritten.
+`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` by hand; it is overwritten.
 
 ### `FlowLogger.Log(SystemLogType.Signal, ...)` does not compile
 
