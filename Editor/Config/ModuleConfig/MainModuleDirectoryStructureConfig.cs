@@ -8,7 +8,8 @@ using UnityEngine;
 
 namespace FlowIoC.Editor.Config.ModuleConfig
 {
-    [CreateAssetMenu(fileName = "MainModuleDirectoryStructureConfig", menuName = "FlowIoC/Editor/CodeGenerator/MainModule Directory Structure Config")]
+    [CreateAssetMenu(fileName = "MainModuleDirectoryStructureConfig",
+        menuName = "FlowIoC/Editor/CodeGenerator/MainModule Directory Structure Config")]
     public class MainModuleDirectoryStructureConfig : DirectoryStructureConfig
     {
         [field: SerializeReference]
@@ -37,7 +38,8 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 {
                     new FolderConfig()
                     {
-                        FolderName = "ScreenConfigs", Type = FolderConfig.FolderType.ScreenConfigs, IsMandatory = false, IsOptional = true,IsNamespaceProvider = true
+                        FolderName = "ScreenConfigs", Type = FolderConfig.FolderType.ScreenConfigs, IsMandatory = false, IsOptional = true,
+                        IsNamespaceProvider = true
                     }
                 }
             },
@@ -58,11 +60,13 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                                 {
                                     new FolderConfig
                                     {
-                                        FolderName = "UnityObjects", Type = FolderConfig.FolderType.UnityObjects, IsMandatory = true,IsNamespaceProvider = true
+                                        FolderName = "UnityObjects", Type = FolderConfig.FolderType.UnityObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
                                     },
                                     new FolderConfig
                                     {
-                                        FolderName = "ValueObjects", Type = FolderConfig.FolderType.ValueObjects, IsMandatory = true,IsNamespaceProvider = true
+                                        FolderName = "ValueObjects", Type = FolderConfig.FolderType.ValueObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
                                     }
                                 },
                                 Type = FolderConfig.FolderType.Folder,
@@ -132,6 +136,14 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             },
                             new FolderConfig
                             {
+                                FolderName = "Systems",
+                                Type = FolderConfig.FolderType.Systems,
+                                IsMandatory = false,
+                                IsOptional = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderConfig
+                            {
                                 FolderName = "Constants",
                                 Type = FolderConfig.FolderType.Folder,
                                 IsMandatory = false,
@@ -166,18 +178,21 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 IsMandatory = true,
                 IsNamespaceProvider = false
             },
-            
+
             new FolderConfig
             {
-                FolderName = "zSubModules", Type = FolderConfig.FolderType.SubModules, IsMandatory = false, IsOptional = true, IsNamespaceProvider = false
+                FolderName = "zSubModules", Type = FolderConfig.FolderType.SubModules, IsMandatory = false, IsOptional = true,
+                IsNamespaceProvider = false
             },
             new FolderConfig
             {
-                FolderName = "zTestModules", Type = FolderConfig.FolderType.TestModules, IsMandatory = false, IsOptional = true, IsNamespaceProvider = false
+                FolderName = "zTestModules", Type = FolderConfig.FolderType.TestModules, IsMandatory = false, IsOptional = true,
+                IsNamespaceProvider = false
             },
             new FolderConfig
             {
-                FolderName = "zScreenModules", Type = FolderConfig.FolderType.ScreenModules, IsMandatory = false, IsOptional = true, IsNamespaceProvider = false
+                FolderName = "zScreenModules", Type = FolderConfig.FolderType.ScreenModules, IsMandatory = false, IsOptional = true,
+                IsNamespaceProvider = false
             }
         };
 
@@ -238,47 +253,66 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             RootFolders = new List<FolderConfig>
             {
                 CreateFolder("Art", FolderConfig.FolderType.Folder, null, false, true),
-                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Prefabs], FolderConfig.FolderType.Prefabs, null, true),
-                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Resources], FolderConfig.FolderType.Resources, null, false, true),
-                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Scenes], FolderConfig.FolderType.Scenes, null, false, true),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Prefabs], FolderConfig.FolderType.Prefabs, null,
+                    true),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Resources], FolderConfig.FolderType.Resources, null,
+                    false, true),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Scenes], FolderConfig.FolderType.Scenes, null, false,
+                    true),
                 CreateFolder("Scriptables", FolderConfig.FolderType.Folder, new List<FolderConfig>
                 {
-                    CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenConfigs], FolderConfig.FolderType.ScreenConfigs, null, false, true)
-                },false, true, true),
+                    CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenConfigs],
+                        FolderConfig.FolderType.ScreenConfigs, null, false, true)
+                }, false, true, true),
                 CreateFolder("Scripts", FolderConfig.FolderType.Folder, new List<FolderConfig>
                 {
                     CreateFolder("Runtime", FolderConfig.FolderType.Folder, new List<FolderConfig>
                     {
                         CreateFolder("Datas", FolderConfig.FolderType.Folder, new List<FolderConfig>
                         {
-                            CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.UnityObjects], FolderConfig.FolderType.UnityObjects, null, true),
-                            CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ValueObjects], FolderConfig.FolderType.ValueObjects, null, true),
+                            CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.UnityObjects],
+                                FolderConfig.FolderType.UnityObjects, null, true),
+                            CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ValueObjects],
+                                FolderConfig.FolderType.ValueObjects, null, true),
                         }, true),
-                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models], FolderConfig.FolderType.Models, null, true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models], FolderConfig.FolderType.Models,
+                            null, true),
                         CreateFolder("Enums", FolderConfig.FolderType.Folder, null, false, true),
-                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.RootsAndContexts], FolderConfig.FolderType.RootsAndContexts, null, true,
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.RootsAndContexts],
+                            FolderConfig.FolderType.RootsAndContexts, null, true,
                             isNamespaceProvider: true),
                         CreateFolder("Signals", FolderConfig.FolderType.Folder, null, false, true),
-                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators], FolderConfig.FolderType.ViewsAndMediators, new List<FolderConfig>
-                        {
-                            CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenViews], FolderConfig.FolderType.ScreenViews, null, true)
-                        }, true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators],
+                            FolderConfig.FolderType.ViewsAndMediators, new List<FolderConfig>
+                            {
+                                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenViews],
+                                    FolderConfig.FolderType.ScreenViews, null, true)
+                            }, true),
                         CreateFolder("Functions", FolderConfig.FolderType.Folder, null, true, isNamespaceProvider: true),
-                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Services], FolderConfig.FolderType.Services, null, false, true, isNamespaceProvider: true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Services], FolderConfig.FolderType.Services,
+                            null, false, true, isNamespaceProvider: true),
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Systems, "Systems"), FolderConfig.FolderType.Systems,
+                            null, false, true, isNamespaceProvider: true),
                         CreateFolder("Constants", FolderConfig.FolderType.Folder, null, false, true, isNamespaceProvider: true),
-                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Controllers], FolderConfig.FolderType.Controllers, null, true, isNamespaceProvider: true),
+                        CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Controllers],
+                            FolderConfig.FolderType.Controllers, null, true, isNamespaceProvider: true),
                         CreateFolder("Entities", FolderConfig.FolderType.Folder, null, true, isNamespaceProvider: true)
-                    }, true,false, false),
-                    CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Editor], FolderConfig.FolderType.Editor, null, true)
-                }, true,false, false),
-                
-                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules], FolderConfig.FolderType.SubModules, null, false, true,false),
-                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules], FolderConfig.FolderType.TestModules, null, false, true,false),
-                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules], FolderConfig.FolderType.ScreenModules, null, false, true,false)
+                    }, true, false, false),
+                    CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Editor], FolderConfig.FolderType.Editor, null,
+                        true)
+                }, true, false, false),
+
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules], FolderConfig.FolderType.SubModules,
+                    null, false, true, false),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules], FolderConfig.FolderType.TestModules,
+                    null, false, true, false),
+                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules],
+                    FolderConfig.FolderType.ScreenModules, null, false, true, false)
             };
         }
 
-        protected override FolderConfig CreateFolder(string folderName, FolderConfig.FolderType folderType, List<FolderConfig> subFolders = null, bool isMandatory = false, bool isOptional = false,
+        protected override FolderConfig CreateFolder(string folderName, FolderConfig.FolderType folderType, List<FolderConfig> subFolders = null,
+            bool isMandatory = false, bool isOptional = false,
             bool isNamespaceProvider = true)
         {
             base.CreateFolder(folderName, folderType, subFolders);

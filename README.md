@@ -910,13 +910,21 @@ Modules/
 ```
 
 The generator creates the module folder, the assembly definition, the managed
-folders (`Controllers`, `Models`, `RootsContexts`, `Services`, `ViewsMediators`,
-`ScreenViews`, `UnityObjects`, `ValueObjects`, `ScreenConfigs`, `Editor`,
-`Resources`, `Prefabs`, `Scenes`, and the three `z` folders) and — optionally — the
-`Root` / `Context` pair. Their names are not hard-coded; they come from the module
-config and can be renamed under *Tools ▸ FlowIoC ▸ Module Configuration*.
-`Constants`, `Datas`, `Entities`, `Enums`, `Functions` and `Signals` are team
-convention rather than generator output — add them as the module needs them.
+folders (`Controllers`, `Models`, `RootsContexts`, `Services`, `Systems`,
+`ViewsMediators`, `ScreenViews`, `UnityObjects`, `ValueObjects`, `ScreenConfigs`,
+`Editor`, `Resources`, `Prefabs`, `Scenes`, and the three `z` folders) and —
+optionally — the `Root` / `Context` pair. Their names are not hard-coded; they come
+from the module config and can be renamed under
+*Tools ▸ FlowIoC ▸ Module Configuration*. `Constants`, `Datas`, `Entities`, `Enums`,
+`Functions` and `Signals` are team convention rather than generator output — add
+them as the module needs them.
+
+> **`Systems` in a project that predates it.** The folder list lives in
+> `Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset`, which
+> is written once, in your project. Upgrading FlowIoC does not rewrite it, so a project
+> created before `Systems` existed keeps its old list and the generator will not produce
+> the folder. Add it in that asset's inspector, or delete the asset and let FlowIoC
+> recreate it — deleting also discards any folder renames you made.
 
 The three `z`-prefixed folders sort to the bottom and each holds a nested module
 with its own Context:

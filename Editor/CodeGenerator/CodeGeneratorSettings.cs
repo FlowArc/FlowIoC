@@ -15,37 +15,51 @@ namespace FlowIoC.Editor.CodeGenerator
     public class CodeGeneratorSettings : ScriptableObject
     {
         public List<AssemblyDefinitionAsset> AssemblyDefinitions;
-        
-        [HideInInspector] [SerializeField] 
-        public SerializableDictionary<FolderConfig.FolderType, string> DirectoryStructureConfigMap = 
-            new SerializableDictionary<FolderConfig.FolderType, string>
-        {
-            {FolderConfig.FolderType.SubModules, "zSubModules"},
-            {FolderConfig.FolderType.TestModules, "zTestModules"},
-            {FolderConfig.FolderType.ScreenModules, "zScreenModules"},
-            {FolderConfig.FolderType.ViewsAndMediators, "ViewsMediators"},
-            {FolderConfig.FolderType.ScreenConfigs, "ScreenConfigs"},
-            {FolderConfig.FolderType.ScreenViews, "ScreenViews"},
-            {FolderConfig.FolderType.RootsAndContexts, "RootsContexts"},
-            {FolderConfig.FolderType.Services, "Services"},
-            {FolderConfig.FolderType.Controllers, "Controllers"},
-            {FolderConfig.FolderType.Models, "Models"},
-            {FolderConfig.FolderType.UnityObjects, "UnityObjects"},
-            {FolderConfig.FolderType.ValueObjects, "ValueObjects"},
-            {FolderConfig.FolderType.Editor, "Editor"},
-            {FolderConfig.FolderType.Resources, "Resources"},
-            {FolderConfig.FolderType.Prefabs, "Prefabs"},
-            {FolderConfig.FolderType.Scenes, "Scenes"}
-        };
 
-        [HideInInspector] [SerializeField] 
-        public SerializableDictionary<string, string> DirectoryStructureConfigPaths = 
+        [HideInInspector] [SerializeField] public SerializableDictionary<FolderConfig.FolderType, string> DirectoryStructureConfigMap =
+            new SerializableDictionary<FolderConfig.FolderType, string>
+            {
+                {FolderConfig.FolderType.SubModules, "zSubModules"},
+                {FolderConfig.FolderType.TestModules, "zTestModules"},
+                {FolderConfig.FolderType.ScreenModules, "zScreenModules"},
+                {FolderConfig.FolderType.ViewsAndMediators, "ViewsMediators"},
+                {FolderConfig.FolderType.ScreenConfigs, "ScreenConfigs"},
+                {FolderConfig.FolderType.ScreenViews, "ScreenViews"},
+                {FolderConfig.FolderType.RootsAndContexts, "RootsContexts"},
+                {FolderConfig.FolderType.Services, "Services"},
+                {FolderConfig.FolderType.Systems, "Systems"},
+                {FolderConfig.FolderType.Controllers, "Controllers"},
+                {FolderConfig.FolderType.Models, "Models"},
+                {FolderConfig.FolderType.UnityObjects, "UnityObjects"},
+                {FolderConfig.FolderType.ValueObjects, "ValueObjects"},
+                {FolderConfig.FolderType.Editor, "Editor"},
+                {FolderConfig.FolderType.Resources, "Resources"},
+                {FolderConfig.FolderType.Prefabs, "Prefabs"},
+                {FolderConfig.FolderType.Scenes, "Scenes"}
+            };
+
+        [HideInInspector] [SerializeField] public SerializableDictionary<string, string> DirectoryStructureConfigPaths =
             new SerializableDictionary<string, string>
+            {
+                {"Main", "Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset"},
+                {"Screen", "Assets/Editor/FlowIoC/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset"},
+                {"Test", "Assets/Editor/FlowIoC/CodeGenerator/TestModuleDirectoryStructureConfig.asset"}
+            };
+
+        /// <summary>
+        /// The folder name for a type, falling back when the settings asset predates it.
+        /// This asset lives in the consuming project and is serialized once, so a folder type
+        /// added in a later FlowIoC version is simply absent from every existing project's
+        /// copy. Indexing the dictionary directly throws there and takes module creation down
+        /// with it, so every newly added type must be read through here.
+        /// </summary>
+        public string FolderNameFor(FolderConfig.FolderType folderType, string fallback)
         {
-            {"Main", "Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset"},
-            {"Screen", "Assets/Editor/FlowIoC/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset"},
-            {"Test", "Assets/Editor/FlowIoC/CodeGenerator/TestModuleDirectoryStructureConfig.asset"}
-        };
+            return DirectoryStructureConfigMap.TryGetValue(folderType, out string folderName)
+                   && !string.IsNullOrEmpty(folderName)
+                ? folderName
+                : fallback;
+        }
 
         public static void CreateConfig()
         {
@@ -64,7 +78,7 @@ namespace FlowIoC.Editor.CodeGenerator
 
             Debug.Log($"CodeGeneratorSettings asset created at: {CodeGeneratorStrings.CONFIG_PATH}");
         }
-        
+
         public void UpdateLockedFolderInfoFiles()
         {
             string modulesPath = Path.Combine(Application.dataPath, "Modules");
@@ -111,7 +125,7 @@ namespace FlowIoC.Editor.CodeGenerator
         }
 
         private void CollectFolderOperations(
-            string currentPath, 
+            string currentPath,
             List<(string oldPath, string newPath, FolderConfig.FolderType type)> operations
         )
         {

@@ -17,8 +17,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         public bool IsOptional = false;
         public bool IsNamespaceProvider = true;
 
-        [SerializeReference]
-        public List<FolderConfig> SubFolders;
+        [SerializeReference] public List<FolderConfig> SubFolders;
 
         public enum FolderType
         {
@@ -39,6 +38,11 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             Resources,
             Prefabs,
             Scenes,
+
+            // Append only. These values are serialized by ordinal into the directory
+            // structure config assets in every consumer project, so inserting a member
+            // above this line silently reassigns every folder that follows it.
+            Systems,
         }
     }
 }

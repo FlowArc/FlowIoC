@@ -24,6 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they share, which is exactly what a Service may not do. Both dispatch outgoing signals,
   and a Command drives either the same way it drives a Model. Systems live in `Systems/`,
   as an interface and an implementation.
+- `Create Module` produces a `Systems` folder in main modules. Screen and test modules are
+  unchanged. The folder list is stored in your project's
+  `MainModuleDirectoryStructureConfig.asset`, which an upgrade does not rewrite, so a
+  project created before this release keeps its old list — add `Systems` in that asset's
+  inspector, or delete the asset and let FlowIoC recreate it.
+
+### Fixed
+
+- Reading a folder name for a type the project's `CodeGeneratorSettings.asset` has never
+  heard of no longer throws `KeyNotFoundException`. That asset is written once in the
+  consuming project, so any folder type added by a later FlowIoC version is missing from
+  every existing copy, and indexing the dictionary directly took module creation down with
+  it. Names now fall back to the built-in default.
 
 ## [1.1.1] - 2026-08-23
 
