@@ -158,7 +158,7 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
                 "Sub" => "_submodules_info.txt",
                 "Test" => "_testmodules_info.txt",
                 "Screen" => "_screenmodules_info.txt",
-                "Main" => "mainmodules_info.txt",
+                "Main" => "_mainmodules_info.txt",
                 _ => null
             };
         }
