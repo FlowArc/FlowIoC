@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.BaseModule.ProjectPaths;
+using FlowIoC.Editor.Migration;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,6 +28,10 @@ namespace FlowIoC.Editor.FolderDrawer
 
         public FlowIoCFolderDrawerConfig EnsureConfig()
         {
+            // Before Load, so a project that has not migrated yet finds its existing config at the
+            // new path instead of getting a fresh default and losing its colors.
+            new FlowIoCPathMigrator().MigrateIfNeeded();
+
             FlowIoCFolderDrawerConfig config = Load();
             if (config != null) return config;
 

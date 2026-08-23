@@ -6,6 +6,7 @@ using System.Linq;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.Editor.CodeGenerator.Extensions;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Migration;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -71,6 +72,8 @@ namespace FlowIoC.Editor.CodeGenerator
 
         public static void CreateConfig()
         {
+            new FlowIoCPathMigrator().MigrateIfNeeded();
+
             string fullPath = Path.GetDirectoryName(CodeGeneratorStrings.CONFIG_PATH);
             if (!Directory.Exists(fullPath))
             {

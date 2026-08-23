@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator;
+using FlowIoC.Editor.Migration;
 using UnityEditor;
 using UnityEngine;
 
@@ -198,6 +199,8 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 
         public static DirectoryStructureConfig GetOrCreateConfig(string configKey)
         {
+            new FlowIoCPathMigrator().MigrateIfNeeded();
+
             string settingsPath = CodeGeneratorStrings.CONFIG_PATH;
             var settings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(settingsPath);
             if (settings == null)
