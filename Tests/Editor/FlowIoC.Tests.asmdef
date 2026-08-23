@@ -3,6 +3,7 @@
     "rootNamespace": "FlowIoC.Tests",
     "references": [
         "FlowIoC",
+        "FlowIoC.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
