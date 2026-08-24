@@ -41,6 +41,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private bool _createRoot;
         private bool _createContext;
         private bool _createScene;
+        private bool _makeRootSingleton;
         private bool _excludeFromHierarchy;
         private string _selectedModuleName = string.Empty;
         private List<string> _actionNames = new();
@@ -59,6 +60,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _generationState = GenerationState.Idle;
             _createRoot = true;
             _createContext = true;
+            _makeRootSingleton = false;
             _actionNames = new List<string>();
             _excludeFromHierarchy = false;
         }
