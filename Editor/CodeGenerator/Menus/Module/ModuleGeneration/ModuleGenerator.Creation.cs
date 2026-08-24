@@ -16,7 +16,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
             bool createRoot,
             bool createContext,
-            bool createScreen
+            bool createScreen,
+            bool makeRootSingleton
         )
         {
             string rootsAndContextsPath = directoryConfigMap[selectedModuleType]
@@ -26,7 +27,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             {
                 if (createRoot)
                 {
-                    CreateRoot(rootsAndContextsPath, modulePath, moduleName, selectedModuleType == ModuleType.Test);
+                    CreateRoot(rootsAndContextsPath, modulePath, moduleName, selectedModuleType == ModuleType.Test, makeRootSingleton);
                 }
 
                 if (createContext)
@@ -48,7 +49,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             }
         }
 
-        private static void CreateRoot(string path, string modulePath, string moduleName, bool isTest)
+        private static void CreateRoot(string path, string modulePath, string moduleName, bool isTest, bool makeSingleton)
         {
             string suffix = isTest ? "" : "";
             string rootName = moduleName + suffix + "Root";
@@ -57,13 +58,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
             string rootsAndContextsNamespace = $"{moduleNamespace}.RootsContexts";
 
+            string tempRootName = makeSingleton ? "TempSingletonRoot" : "TempRoot";
+            string tempRootPath = makeSingleton ? CodeGeneratorStrings.TempSingletonRootPath : CodeGeneratorStrings.TempRootPath;
+
             CodeGeneratorUtils.CreateRoot(
                 rootName,
                 contextName,
                 "TempContext",
-                "TempRoot",
+                tempRootName,
                 path,
-                CodeGeneratorStrings.TempRootPath,
+                tempRootPath,
                 rootsAndContextsNamespace,
                 isTest
             );

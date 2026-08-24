@@ -92,6 +92,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     ModuleType.Screen => true,
                     _ => _createScene
                 };
+
+                // Screen roots derive from BaseScreenRoot and are owned by the ScreenManager,
+                // so the singleton variant is only offered where a plain Root is generated.
+                _makeRootSingleton = _selectedModuleType switch
+                {
+                    ModuleType.Main or ModuleType.Test => EditorGUILayout.ToggleLeft("Make Root Singleton", _makeRootSingleton, GUILayout.Width(155)),
+                    _ => false
+                };
+            }
+            else
+            {
+                _makeRootSingleton = false;
             }
 
             _excludeFromHierarchy = EditorGUILayout.ToggleLeft("Exclude from Hierarchy", _excludeFromHierarchy, GUILayout.Width(140));
@@ -117,7 +129,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             GUI.backgroundColor = Color.white;
 
             _scrollPosition =
-                EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(70), GUILayout.MaxHeight(_selectedModuleType == ModuleType.Screen ? 190 : 200));
+                EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(70),
+                    GUILayout.MaxHeight(_selectedModuleType == ModuleType.Screen ? 190 : 200));
             EditorGUILayout.BeginVertical();
             DrawModulesHierarchy();
             EditorGUILayout.EndVertical();
@@ -158,7 +171,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             EditorGUILayout.EndHorizontal();
 
-            ModuleHierarchyDrawer.DrawModuleHierarchy(MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath, ref _selectedModuleName, _selectedModuleType);
+            ModuleHierarchyDrawer.DrawModuleHierarchy(MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath, ref _selectedModuleName,
+                _selectedModuleType);
         }
 
         private void DisplayCreateModuleButton()
@@ -200,6 +214,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _createRoot,
                     _createContext,
                     _createScene,
+                    _makeRootSingleton,
                     screenConfigData,
                     _excludeFromHierarchy
                 );
