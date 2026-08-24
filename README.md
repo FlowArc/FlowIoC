@@ -829,11 +829,18 @@ Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 | `Tools/FlowIoC/Folder Drawer` | Colour Project window folders by path or by folder |
 | `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
-| `Tools/FlowIoC/Module Configuration/…` | Detect, fix, and cleanse module metadata; update namespace settings |
+| `Tools/FlowIoC/Module Configuration/…` | Detect, fix, and cleanse module metadata; update namespace settings and the solution code style |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
 | `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor |
 | `Assets/FlowIoC/Create Assembly` | Assembly definition for the selected folder |
 | `Assets/FlowIoC/Update Module's Namespaces` | Rewrite namespaces after a move or rename |
+
+`Update Namespace Settings` also writes `<Solution>.sln.DotSettings`, the ReSharper and Rider
+code style FlowIoC ships: naming rules, the `_` prefix on private members, the `VO` suffix
+family, spacing. Rider only reads a settings file named after the solution, which differs per
+project, so the file is generated rather than shipped. Only the keys FlowIoC owns are written -
+anything else in the file survives - and the result belongs in version control, unlike the
+`.sln.DotSettings.user` file beside it.
 
 Attributes that affect the editor: `[CustomClassHeader]` colors a Root or Context
 header, `[ShowInModelViewer]` / `[HideInModelViewer]` control Model Viewer output,

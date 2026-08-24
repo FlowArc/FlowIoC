@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A shared code style. `Tools/FlowIoC/Module Configuration/Update Namespace Settings` now also
+  writes `<Solution>.sln.DotSettings`, so every project FlowIoC is installed in gets the same
+  ReSharper and Rider naming rules, prefixes and spacing. Rider reads only a settings file named
+  after the solution and that name differs per project, so the file is generated rather than
+  shipped. Only the keys FlowIoC owns are written; anything else in the file survives, and a
+  settings file left behind by a renamed solution is removed. The agent rules point at the file
+  so agents write code that matches it.
+
 - `Tools/FlowIoC/Help`, an Editor window that introduces the architecture without leaving
   Unity. It opens on the module folder layout — every folder annotated with what belongs in
   it — and the topics beside it walk one diagram at a time through the Root and Context, the

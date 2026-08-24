@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
+using FlowIoC.Editor.CodeStyle;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
 using UnityEngine;
@@ -48,9 +49,28 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
             }
 
             CleanupOrphanedFiles(projectRoot);
+            UpdateSolutionCodeStyle(projectRoot);
 
             AssetDatabase.Refresh();
             Debug.Log("All module-based .DotSettings files updated successfully.");
+        }
+
+        private static void UpdateSolutionCodeStyle(string projectRoot)
+        {
+            var writer = new SolutionDotSettingsWriter(projectRoot, new PackageCodeStyleTemplate().Resolve());
+
+            foreach (string removed in writer.CleanupOrphaned())
+            {
+                Debug.Log($"[Cleanup] Orphaned solution DotSettings deleted: {Path.GetFileName(removed)}");
+            }
+
+            if (writer.TryWrite(out string path, out string error))
+            {
+                Debug.Log($"Solution code style updated: {path}");
+                return;
+            }
+
+            Debug.LogError(error);
         }
 
         private static void CleanupOrphanedFiles(string projectRoot)
@@ -133,13 +153,13 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
 
             return modulePaths;
         }
-        
+
         private static void AddNamespaceEntriesForModule_New(XmlDocument doc, string modulePath)
         {
             string moduleInfoPath = Path.Combine(modulePath, MODULE_INFO_FILE);
             if (!File.Exists(moduleInfoPath))
                 return;
-            
+
             string moduleTypeString = NamespaceUtility.GetModuleTypeFromInfoFile(moduleInfoPath);
             if (!Enum.TryParse(moduleTypeString, out ModuleType moduleType))
             {
@@ -155,10 +175,10 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
                 Debug.LogError($"[NEW] Could not find directory structure config for module type {moduleType}");
                 return;
             }
-            
+
             List<string> nonNamespaceFolders = new List<string>();
             CollectNonNamespaceFolders(modulePath, config.RootFolders, nonNamespaceFolders);
-            
+
             foreach (string folderPath in nonNamespaceFolders)
             {
                 NamespaceUtility.AddNamespaceFolderToSkip(doc, folderPath);
