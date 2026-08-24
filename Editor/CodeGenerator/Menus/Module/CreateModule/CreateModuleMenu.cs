@@ -42,7 +42,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private bool _createContext;
         private bool _createScene;
         private bool _makeRootSingleton;
-        private bool _excludeFromHierarchy;
         private string _selectedModuleName = string.Empty;
         private List<string> _actionNames = new();
         private Vector2 _actionScrollPosition;
@@ -62,7 +61,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _createContext = true;
             _makeRootSingleton = false;
             _actionNames = new List<string>();
-            _excludeFromHierarchy = false;
         }
 
         private void OnGUI()

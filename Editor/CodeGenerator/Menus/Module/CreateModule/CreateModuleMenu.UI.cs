@@ -106,8 +106,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 _makeRootSingleton = false;
             }
 
-            _excludeFromHierarchy = EditorGUILayout.ToggleLeft("Exclude from Hierarchy", _excludeFromHierarchy, GUILayout.Width(140));
-
             GUI.backgroundColor = Color.white;
         }
 
@@ -215,8 +213,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _createContext,
                     _createScene,
                     _makeRootSingleton,
-                    screenConfigData,
-                    _excludeFromHierarchy
+                    screenConfigData
                 );
 
                 _generationState = GenerationState.Idle;
