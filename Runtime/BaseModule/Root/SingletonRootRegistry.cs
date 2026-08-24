@@ -1,38 +1,50 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace FlowIoC.BaseModule.Root
 {
-    internal static class SingletonRootRegistry
+    // Owned by RootsManager rather than held statically: the manager already has the
+    // lifetime a singleton claim needs - one instance per play session, recreated by
+    // RootsManagerFactory - so the registry needs no domain reload reset of its own.
+    internal class SingletonRootRegistry
     {
-        private static readonly Dictionary<Type, RootBase> _instances = new();
+        private readonly Dictionary<Type, RootBase> _instances = new();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Reset() => _instances.Clear();
-
-        public static bool TryClaim(RootBase root)
+        public bool TryClaim(RootBase root)
         {
-            Type type = root.GetType();
+            Type key = GetSingletonKey(root);
 
-            if (_instances.TryGetValue(type, out RootBase existing) && existing != null && existing != root)
+            if (_instances.TryGetValue(key, out RootBase existing) && existing != null && existing != root)
                 return false;
 
-            _instances[type] = root;
+            _instances[key] = root;
             return true;
         }
 
-        public static bool IsClaimedBy(RootBase root)
+        public void Release(RootBase root)
         {
-            return _instances.TryGetValue(root.GetType(), out RootBase existing) && existing == root;
+            Type key = GetSingletonKey(root);
+
+            if (_instances.TryGetValue(key, out RootBase existing) && existing == root)
+                _instances.Remove(key);
         }
 
-        public static void Release(RootBase root)
+        // The claim belongs to the type that declares itself a singleton, not to the concrete
+        // type in the scene. Without this, DebugAudioRoot : AudioRoot would claim its own slot
+        // and both Roots would survive.
+        private Type GetSingletonKey(RootBase root)
         {
             Type type = root.GetType();
 
-            if (_instances.TryGetValue(type, out RootBase existing) && existing == root)
-                _instances.Remove(type);
+            while (type != null && type.BaseType != null)
+            {
+                if (type.BaseType.IsGenericType && type.BaseType.GetGenericTypeDefinition() == typeof(SingletonRoot<>))
+                    return type;
+
+                type = type.BaseType;
+            }
+
+            return root.GetType();
         }
     }
 }

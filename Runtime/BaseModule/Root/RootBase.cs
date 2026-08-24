@@ -60,10 +60,18 @@ namespace FlowIoC.BaseModule.Root
                 }
 
                 IContext context = (IContext) Activator.CreateInstance(contextType);
-                FlowLogger.Log(SystemLogType.Context, "Sub | "  + subContextData.ContextName + " | Initialized");
-                context.Initialize(gameObject, initializeOrder, _rootsManager.InjectionBinderCrossContext, new List<IContext>(), subContextData.IsTest);
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.ContextName + " | Initialized");
+                context.Initialize(gameObject, initializeOrder, _rootsManager.InjectionBinderCrossContext, new List<IContext>(),
+                    subContextData.IsTest);
                 _subContexts.Add(context, subContextData);
             }
+        }
+
+        // Returning false aborts the whole Awake pass: no Context is built and the Root is never
+        // registered. SingletonRoot uses it to stand a duplicate down before it can touch anything.
+        protected virtual bool CanCreateContext()
+        {
+            return true;
         }
 
         protected virtual void BeforeCreateContext()
@@ -93,7 +101,7 @@ namespace FlowIoC.BaseModule.Root
             if (signalsBound)
                 return;
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name +" | Bind Signals!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Bind Signals!");
             Context.SignalBindings();
             signalsBound = true;
         }
@@ -109,7 +117,7 @@ namespace FlowIoC.BaseModule.Root
             if (injectionsBound)
                 return;
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name +" | Bind Injections!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Bind Injections!");
             Context.InjectionBindings();
             injectionsBound = true;
         }
@@ -125,7 +133,7 @@ namespace FlowIoC.BaseModule.Root
             if (mediationsBound)
                 return;
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name +" | Bind Mediations!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Bind Mediations!");
             Context.MediationBindings();
             mediationsBound = true;
         }
@@ -141,7 +149,7 @@ namespace FlowIoC.BaseModule.Root
             if (commandsBound)
                 return;
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name +" | Bind Commands!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Bind Commands!");
             Context.CommandBindings();
             commandsBound = true;
         }
@@ -174,7 +182,7 @@ namespace FlowIoC.BaseModule.Root
             if (hasSetuped)
                 return;
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name +" | Setup! ");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Setup! ");
             Context.Setup();
             hasSetuped = true;
 

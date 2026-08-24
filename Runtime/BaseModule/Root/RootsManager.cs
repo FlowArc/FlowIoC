@@ -16,11 +16,13 @@ namespace FlowIoC.BaseModule.Root
         public MediatorCreatorController MediatorCreatorController { get; private set; }
         public BindingPoolController BindingPoolController { get; private set; }
 
+        internal SingletonRootRegistry SingletonRootRegistry { get; private set; }
+
         public Action<IContext> OnContextReady;
 
         private readonly List<IRoot> _contextRootList = new List<IRoot>();
-        private readonly Dictionary<string,IRoot> _contextRootMap = new ();
-        
+        private readonly Dictionary<string, IRoot> _contextRootMap = new();
+
         public IRoot GetRootByName(string name) => _contextRootMap[name];
 
         public void Initialize()
@@ -30,25 +32,38 @@ namespace FlowIoC.BaseModule.Root
             BindingPoolController = new BindingPoolController();
             InjectionBinderCrossContext = new InjectionBinderCrossContext();
             MediatorCreatorController = new MediatorCreatorController();
+            SingletonRootRegistry = new SingletonRootRegistry();
 
             FlowLogger.Log(SystemLogType.Context, "RootsManager | Initialize Completed!");
         }
 
         public void Register(IRoot root)
         {
-            if (!_contextRootList.Contains(root))
+            if (_contextRootList.Contains(root))
+                return;
+
+            if (_contextRootMap.TryGetValue(root.Name, out IRoot sameName) && sameName != root)
             {
-                _contextRootList.Add(root);
-                _contextRootMap[root.Name] = root;
-                FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " is Registered!");
+                FlowLogger.LogWarning(
+                    SystemLogType.Context,
+                    "RootsManager | Two Roots share the GameObject name '" + root.Name +
+                    "'. GetRootByName will only ever return the one registered last."
+                );
             }
+
+            _contextRootList.Add(root);
+            _contextRootMap[root.Name] = root;
+            FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " is Registered!");
         }
 
         public void UnRegister(IRoot root)
         {
-            if (_contextRootMap.Remove(root.Name)) 
-                FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " is Unregistered!");
-            if (_contextRootList.Remove(root)) 
+            // The map is keyed by name, so removing by key alone would evict whichever Root answers
+            // to that name - not necessarily the one being unregistered.
+            if (_contextRootMap.TryGetValue(root.Name, out IRoot mapped) && mapped == root)
+                _contextRootMap.Remove(root.Name);
+
+            if (_contextRootList.Remove(root))
                 FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " is Unregistered!");
         }
 
