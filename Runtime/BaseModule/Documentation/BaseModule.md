@@ -89,7 +89,7 @@ public class AudioRoot  : SingletonRoot<AudioContext> { }   // survives scene lo
 | | `Root<TContext>` | `SingletonRoot<TContext>` |
 |---|---|---|
 | Scene lifetime | Destroyed with the scene | `DontDestroyOnLoad`, reparented to the scene root |
-| Duplicates | Each instance gets its own Context | The second instance destroys itself |
+| Duplicates | Each instance gets its own Context | The second instance removes its own component and never builds a Context |
 | Use for | Gameplay, a level, a match, a test scene | Audio, analytics, player profile, anything app-wide |
 
 The inspector exposes the switches that matter:
@@ -679,10 +679,15 @@ console logs `Context Type couldn't find!`. Re-add it from the inspector, or run
 
 ### A second copy of a singleton module appears
 
-`SingletonRoot` destroys duplicates, but only once `Awake` runs. A prefab that
+`SingletonRoot` stands duplicates down, but only once `Awake` runs. A prefab that
 carries a `SingletonRoot` and is instantiated during a load screen will briefly exist
 twice. Keep singleton Roots in a bootstrap scene rather than in prefabs that get
 spawned.
+
+The duplicate removes its own component and stops there: it builds no Context, never
+registers with the `RootsManager`, and leaves the GameObject it was sitting on — and
+anything else attached to it — alone. The Flow Console logs the removal on the
+`Context` channel.
 
 ---
 

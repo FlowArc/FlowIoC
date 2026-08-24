@@ -22,18 +22,29 @@ namespace FlowIoC.BaseModule.Root
                 return;
 
             _rootsManager = RootsManagerFactory.GetRootsManager() as RootsManager;
+
+            if (!CanCreateContext())
+                return;
+
             CreateContext();
             _rootsManager.Register(this);
         }
 
         private void Start()
         {
+            // A Root that stood itself down in Awake owns no Context and takes no part in the run.
+            if (_context == null)
+                return;
+
             if (!_context.IsStarted)
                 _rootsManager.StartContexts();
         }
 
         private void OnDestroy()
         {
+            if (_context == null)
+                return;
+
             DestroyContext();
         }
 
@@ -58,6 +69,9 @@ namespace FlowIoC.BaseModule.Root
 
         public override void StartContext(bool forceToStart = false)
         {
+            if (_context == null)
+                return;
+
             if (!AutoInitialize && !forceToStart)
                 return;
 
@@ -102,13 +116,13 @@ namespace FlowIoC.BaseModule.Root
 
             FlowLogger.Log(SystemLogType.Context, _context.GetType().Name + " | Executed Post Construct Methods!");
             _context.ExecutePostConstructMethods();
-            
+
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
             {
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.Key.GetType().Name + " | Executed Post Construct Methods!");
                 subContextData.Key.ExecutePostConstructMethods();
             }
-            
+
             AfterStarBeforeLaunchContext();
 
             _rootsManager.OnContextReady?.Invoke(Context);
@@ -120,7 +134,7 @@ namespace FlowIoC.BaseModule.Root
 
             FlowLogger.Log(SystemLogType.Context, GetType().Name + " | DestroyContext!");
             _context.DestroyContext();
-            
+
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
             {
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.Key.GetType().Name + " | DestroyContext!");
@@ -136,7 +150,7 @@ namespace FlowIoC.BaseModule.Root
         {
             FlowLogger.Log(SystemLogType.Context, GetType().Name + " | PauseContext!");
             _context.PauseContext();
-            
+
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
             {
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.Key.GetType().Name + " | PauseContext!");
@@ -148,7 +162,7 @@ namespace FlowIoC.BaseModule.Root
         {
             FlowLogger.Log(SystemLogType.Context, GetType().Name + " | ResumeContext!");
             _context.ResumeContext();
-            
+
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
             {
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.Key.GetType().Name + " | ResumeContext!");

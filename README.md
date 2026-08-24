@@ -240,8 +240,9 @@ inspector. Each phase can also be toggled off per-Root (`AutoInitialize`,
 can be driven manually in a test scene.
 
 `SingletonRoot<TContext>` additionally reparents itself to the scene root, calls
-`DontDestroyOnLoad`, and destroys duplicates — use it for application-wide modules
-such as audio, analytics, or player profile.
+`DontDestroyOnLoad`, and stands duplicates down — a second Root of the same type
+removes its own component without building a Context. Use it for application-wide
+modules such as audio, analytics, or player profile.
 
 ---
 
