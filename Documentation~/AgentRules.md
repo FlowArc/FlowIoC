@@ -240,10 +240,19 @@ public class HeroConnectorSubContext : Context
 `Connect` also accepts a plain delegate, and can adapt between signals whose parameter
 types differ by taking a converter as its second argument.
 
+### Code style
+
+The code style is declared in `<Solution>.sln.DotSettings` at the project root - naming rules,
+prefixes and suffixes, spacing. Read it before writing C# and follow what it says.
+
 ### Never hand-edit
 
 `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` is generated from the modules present in the
 project. Change the modules, not the file.
+
+`<Solution>.sln.DotSettings` and the `*.csproj.DotSettings` files beside it are written by
+`Tools/FlowIoC/Module Configuration/Update Namespace Settings`. Run the menu item rather than
+editing them.
 
 ### Logging
 
