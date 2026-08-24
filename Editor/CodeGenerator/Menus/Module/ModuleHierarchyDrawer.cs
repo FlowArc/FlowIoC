@@ -30,11 +30,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 string moduleInfoPath = Path.Combine(directory, MODULE_INFO_FILE);
                 if (File.Exists(moduleInfoPath))
                 {
-                    if (IsModuleExcluded(moduleInfoPath))
-                    {
-                        continue;
-                    }
-
                     string directoryName = Path.GetFileName(directory);
                     string moduleTypePostfix = GetModuleTypePostfix(moduleInfoPath);
                     string displayName = directoryName + moduleTypePostfix;
@@ -42,7 +37,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                     moduleExpandedState.TryAdd(directory, false);
 
                     EditorGUILayout.BeginHorizontal("box");
-                    
+
                     GUILayout.Space(indentLevel * 10);
                     GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout) {richText = true};
                     moduleExpandedState[directory] = EditorGUILayout.Foldout(moduleExpandedState[directory], displayName, true, foldoutStyle);
@@ -83,23 +78,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             }
         }
 
-        private static bool IsModuleExcluded(string moduleInfoPath)
-        {
-            var lines = File.ReadAllLines(moduleInfoPath);
-            foreach (var line in lines)
-            {
-                if (line.StartsWith("Exclude: "))
-                {
-                    string excludeValue = line.Substring("Exclude: ".Length).Trim();
-                    if (excludeValue.Equals("True", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         private static bool CanSelect(string moduleInfoPath, ModuleType selectedModuleType)
         {
             string moduleType = GetModuleTypeFromInfoFile(moduleInfoPath);
@@ -124,6 +102,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                     return line.Substring("ModuleType: ".Length).Trim();
                 }
             }
+
             return "Main";
         }
 
@@ -138,9 +117,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                     {
                         return moduleName.Substring(0, moduleName.Length - "Module".Length).Trim();
                     }
+
                     return moduleName;
                 }
             }
+
             return string.Empty;
         }
 
@@ -159,6 +140,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                     }
                 }
             }
+
             return postfix;
         }
 
@@ -193,11 +175,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 {
                     string moduleInfoPath = Path.Combine(subDirectory, MODULE_INFO_FILE);
                     if (!File.Exists(moduleInfoPath)) continue;
-
-                    if (IsModuleExcluded(moduleInfoPath))
-                    {
-                        continue;
-                    }
 
                     string directoryName = Path.GetFileName(subDirectory);
                     string moduleTypePostfix = GetModuleTypePostfix(moduleInfoPath);
@@ -235,7 +212,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
                     if (moduleExpandedState[subDirectory])
                     {
-                        DrawSubModulesRecursively(subDirectory, indentLevel + 1, ref moduleExpandedState, ref parentModulePath, ref selectedModuleName, selectedModuleType);
+                        DrawSubModulesRecursively(subDirectory, indentLevel + 1, ref moduleExpandedState, ref parentModulePath,
+                            ref selectedModuleName, selectedModuleType);
                     }
                 }
             }

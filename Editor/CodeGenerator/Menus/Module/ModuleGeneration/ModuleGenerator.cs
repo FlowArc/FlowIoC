@@ -51,8 +51,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createContext,
             bool createScreen,
             bool makeRootSingleton,
-            ScreenConfigData screenConfigData = null,
-            bool excludeFromHierarchy = false
+            ScreenConfigData screenConfigData = null
         )
         {
             EditorPrefs.SetBool(MODULE_GENERATION_WORKING, true);
@@ -103,7 +102,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             File.WriteAllText(
                 $"{modulePath}/{MODULE_INFO_FILE}",
-                $"ModuleName: {moduleName}Module\nModuleType: {moduleTypeForInfoFile}\nExclude: {excludeFromHierarchy}"
+                $"ModuleName: {moduleName}Module\nModuleType: {moduleTypeForInfoFile}"
             );
 
             CreateAndUpdateModules(

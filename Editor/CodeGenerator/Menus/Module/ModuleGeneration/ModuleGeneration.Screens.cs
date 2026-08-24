@@ -36,7 +36,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             AddNamespaceExceptions(directoryConfigMap[ModuleType.Screen], modulePath);
 
             File.WriteAllText($"{testModulePath}/{MODULE_INFO_FILE}",
-                $"ModuleName: {moduleName}TestModule\nModuleType: Test\nExclude: false");
+                $"ModuleName: {moduleName}TestModule\nModuleType: Test");
 
             string testAsmdefName = moduleName + "TestModule";
             string testAsmdefPath = Path.Combine(testModulePath, testAsmdefName + ".asmdef");
