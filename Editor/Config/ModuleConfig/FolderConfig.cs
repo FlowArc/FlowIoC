@@ -38,14 +38,8 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             Resources,
             Prefabs,
             Scenes,
-
-            // Append only. These values are serialized by ordinal into the directory
-            // structure config assets in every consumer project, so inserting a member
-            // above this line silently reassigns every folder that follows it. They are
-            // also the keys of ModuleDescriptor.FolderGuids, which ModuleIndexBuilder
-            // carries forward unchanged, so the same insertion would silently re-key
-            // every folder GUID already on record.
             Systems,
+            Signals
         }
     }
 }

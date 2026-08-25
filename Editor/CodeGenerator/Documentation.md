@@ -31,7 +31,7 @@ Name the module, pick a type, and choose which optional folders you want.
 | Type | For | Produces |
 |---|---|---|
 | `Main` | A feature or service — gameplay, economy, audio | `Assets/Modules/<Name>Module/` with the standard tree, `Modules.<Name>.asmdef`, `<Name>Root` and `<Name>Context` |
-| `Screen` | One UI screen | The above plus a `ScreenView` / `ScreenMediator` pair, the screen config, and optionally a scene |
+| `Screen` | One UI screen | The above plus a `ScreenView` / `ScreenMediator` pair, a `<Name>ScreenSignals` holder, the screen config, and optionally a scene |
 | `Test` | An isolated test harness for another module | The above, wrapped in editor-only preprocessor directives so it never ships |
 
 ### Options
@@ -39,6 +39,7 @@ Name the module, pick a type, and choose which optional folders you want.
 | Option | Effect |
 |---|---|
 | `Create Root` / `Create Context` | Generate the pair. Leave both on unless you are adding a module that will only ever be a sub-context. |
+| `Create Signals` | Write the module's `<Name>Signals` holder with its empty `Incoming` and `Outgoing` classes, and bind it in the Context's `SignalBindings`. On by default; forced on for a Screen module, which has no Context of its own and so reaches the outside world only through its holder. Not offered for a Test module, which wires other modules' signals rather than owning any. |
 | `Create Scene` | Add a scene, so the module can be opened and played on its own |
 | `Make Root Singleton` | Derive the Root from `SingletonRoot<TContext>` instead of `Root<TContext>`, so it survives scene loads and refuses duplicates. For app-wide modules — audio, analytics, player profile. |
 | Actions (Screen only) | Names such as `OnBackButtonClicked`. Each becomes a callback on the View and a handler on the Mediator. |
@@ -49,9 +50,12 @@ Name the module, pick a type, and choose which optional folders you want.
 ```
 Assets/Modules/EconomyModule/
 ├── Modules.Economy.asmdef
-└── Scripts/Runtime/RootsContexts/
-    ├── EconomyRoot.cs
-    └── EconomyContext.cs
+└── Scripts/Runtime/
+    ├── RootsContexts/
+    │   ├── EconomyRoot.cs
+    │   └── EconomyContext.cs
+    └── Signals/
+        └── EconomySignals.cs
 ```
 
 Plus whichever optional folders you selected. The module is registered in the

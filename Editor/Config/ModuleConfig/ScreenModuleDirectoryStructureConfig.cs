@@ -97,9 +97,8 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             new FolderConfig
                             {
                                 FolderName = "Signals",
-                                Type = FolderConfig.FolderType.Folder,
-                                IsMandatory = false,
-                                IsOptional = true,
+                                Type = FolderConfig.FolderType.Signals,
+                                IsMandatory = true,
                                 IsNamespaceProvider = true
                             },
                             new FolderConfig
@@ -274,7 +273,8 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         CreateFolder("Enums", FolderConfig.FolderType.Folder, null, false, true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.RootsAndContexts],
                             FolderConfig.FolderType.RootsAndContexts, null, true),
-                        CreateFolder("Signals", FolderConfig.FolderType.Folder, null, false, true),
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Signals, "Signals"),
+                            FolderConfig.FolderType.Signals, null, true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators],
                             FolderConfig.FolderType.ViewsAndMediators, new List<FolderConfig>
                             {

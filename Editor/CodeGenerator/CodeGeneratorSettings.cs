@@ -31,6 +31,7 @@ namespace FlowIoC.Editor.CodeGenerator
                 {FolderConfig.FolderType.RootsAndContexts, "RootsContexts"},
                 {FolderConfig.FolderType.Services, "Services"},
                 {FolderConfig.FolderType.Systems, "Systems"},
+                {FolderConfig.FolderType.Signals, "Signals"},
                 {FolderConfig.FolderType.Controllers, "Controllers"},
                 {FolderConfig.FolderType.Models, "Models"},
                 {FolderConfig.FolderType.UnityObjects, "UnityObjects"},

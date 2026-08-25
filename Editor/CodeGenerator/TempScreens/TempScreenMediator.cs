@@ -7,6 +7,7 @@ namespace FlowIoC.Editor.CodeGenerator.TempScreens
     internal class TempScreenMediator : IMediator
     {
         [Inject] private TempScreenView _view { get; set; }
+        //@Signals
         
         public virtual void OnRegister()
         {

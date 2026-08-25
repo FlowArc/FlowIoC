@@ -14,6 +14,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private const string MODULE_GENERATION_WORKING = "module_generation_working";
 
         private const string ROOTS_CONTEXTS_WARNING = "Roots&Contexts folder not found!";
+        private const string SIGNALS_WARNING = "Signals folder not found!";
         private const string PARENT_MODULE_REQUIRED_TITLE = "Parent Module Required";
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
 
@@ -43,6 +44,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             List<string> actionNames,
             bool createRoot,
             bool createContext,
+            bool createSignals,
             bool createScreen,
             bool makeRootSingleton,
             ScreenConfigData screenConfigData = null
@@ -99,6 +101,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 actionNames,
                 createRoot,
                 createContext,
+                createSignals,
                 createScreen,
                 makeRootSingleton,
                 screenConfigData,
@@ -116,6 +119,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             List<string> actionNames,
             bool createRoot,
             bool createContext,
+            bool createSignals,
             bool createScreen,
             bool makeRootSingleton,
             ScreenConfigData screenConfigData,
@@ -161,6 +165,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     directoryConfigMap,
                     createRoot,
                     createContext,
+                    createSignals,
                     createScreen,
                     makeRootSingleton
                 );
