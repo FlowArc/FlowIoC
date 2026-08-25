@@ -95,13 +95,13 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// The window's first job is to explain the folder tree, so that is where it opens - not
-        /// on whichever page happens to be first.
+        /// The window opens on the introduction, not on whichever page happens to be first and
+        /// not on a topic folded away inside a category.
         /// </summary>
         [Test]
-        public void The_window_opens_on_the_folder_layout()
+        public void The_window_opens_on_the_introduction()
         {
-            Assert.AreEqual("Folder Layout", _catalog.OpeningPage.Title);
+            Assert.AreEqual("Welcome", _catalog.OpeningPage.Title);
         }
 
         [Test]

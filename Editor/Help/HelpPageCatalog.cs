@@ -45,7 +45,7 @@ namespace FlowIoC.Editor.Help
                 pages.AddRange(section.Pages);
 
             Pages = pages;
-            OpeningPage = Find("Folder Layout");
+            OpeningPage = Find("Welcome");
         }
 
         public IReadOnlyList<HelpSection> Sections { get; }
@@ -54,8 +54,8 @@ namespace FlowIoC.Editor.Help
         public IReadOnlyList<IHelpPage> Pages { get; }
 
         /// <summary>
-        /// Where the window opens. The folder tree is the first thing worth explaining, so the
-        /// window lands there rather than on whichever page happens to be first.
+        /// Where the window opens. The introduction, so a reader who has never seen FlowIoC
+        /// meets what it is before meeting how its folders are arranged.
         /// </summary>
         public IHelpPage OpeningPage { get; }
 

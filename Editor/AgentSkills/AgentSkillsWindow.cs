@@ -36,9 +36,10 @@ namespace FlowIoC.Editor.AgentSkills
         {
             EditorGUILayout.LabelField("FlowIoC agent skills", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Copies the skills FlowIoC ships into this project's " + AgentSkillsInstaller.TargetFolder
-                + " folder, so an AI coding assistant can load them on demand. One folder per skill; "
-                + "skills you wrote yourself are left alone.",
+                "FlowIoC installs the skills it ships into this project's " + AgentSkillsInstaller.TargetFolder
+                + " folder when the Editor opens, so an AI coding assistant can load them on demand. "
+                + "This window is for checking what is there and for putting a deleted one back. "
+                + "One folder per skill; skills you wrote yourself are left alone.",
                 MessageType.Info);
 
             EditorGUILayout.Space();

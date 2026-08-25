@@ -889,10 +889,12 @@ reaches for when one particular kind of work comes up, and it can afford to be l
 
 > **Tools ▸ FlowIoC ▸ AI ▸ Agent Skills**
 
-The window copies each skill the package ships into the project's `.claude/skills` folder, one
-folder per skill, and reports which of them are missing or out of date. Only the files the
-package owns are compared, so a skill you wrote yourself is never touched, and a note left
-beside a shipped skill survives an install.
+You do not have to ask for them. FlowIoC writes each skill it ships into the project's
+`.claude/skills` folder when the Editor opens — one folder per skill, logged to the console so
+the folder is never a mystery — and refreshes one that the package has since changed. Only the
+files the package owns are compared, so a skill you wrote yourself is never touched, and a note
+left beside a shipped skill survives. The window above is for seeing what is installed and for
+putting a deleted skill back without waiting for the next Editor session.
 
 | Skill | Covers |
 |---|---|

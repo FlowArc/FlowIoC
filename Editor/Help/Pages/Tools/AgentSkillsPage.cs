@@ -20,8 +20,10 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "FlowIoC ships its conventions as skills so the rule block stays short and the "
                 + "detail is there when it is needed.");
             painter.Paragraph(
-                "The window copies each shipped skill into this project's .claude/skills folder, "
-                + "one folder per skill, and tells you which of them are missing or out of date.");
+                "You do not have to ask for them. FlowIoC writes each shipped skill into this "
+                + "project's .claude/skills folder when the Editor opens, one folder per skill, and "
+                + "logs what it wrote. The window is for seeing what is there and for putting a "
+                + "deleted one back - which the next Editor session would do anyway.");
 
             painter.SubHeading("What ships today");
             painter.Bullet(
