@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
                 {
                     EditorUtility.SetDirty(_settings);
 
-                    // UpdateLockedFolderInfoFiles runs first deliberately. Its fallback locates an
+                    // ApplyConfiguredFolderNames runs first deliberately. Its fallback locates an
                     // unrecorded module's folder by the name still baked into each
                     // DirectoryStructureConfig's RootFolders - the folder's *current* name, since
                     // nothing has renamed it on disk yet. UpdateDirectoryStructureConfigs resyncs
@@ -90,7 +90,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
                     // costs nothing for an already-recorded module - the GUID path never reads
                     // RootFolders - and still lets this same click resync the folder labels
                     // afterward.
-                    _settings.UpdateLockedFolderInfoFiles();
+                    _settings.ApplyConfiguredFolderNames();
                     UpdateDirectoryStructureConfigs();
                     AssetDatabase.SaveAssets();
                     NamespaceProvider.UpdateNamespaceSettings();
@@ -214,7 +214,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
                             "Do you want to update all module folder names with this new value?",
                             "Yes", "No"))
                     {
-                        _settings.UpdateLockedFolderInfoFiles();
+                        _settings.ApplyConfiguredFolderNames();
                         AssetDatabase.SaveAssets();
                     }
                 }

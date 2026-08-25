@@ -168,9 +168,9 @@ namespace FlowIoC.Editor.Modules
         /// </summary>
         internal int BackfillFolderGuids()
         {
-            new ModuleIndexRebuilder().Rebuild();
+            FlowIoCModuleIndex index = new ModuleIndexRebuilder().Rebuild();
+            if (index == null) return 0;
 
-            FlowIoCModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
             IAssetPaths assetPaths = new AssetDatabasePaths();
             var registry = new ModuleRegistry(index, assetPaths);
             var pathResolver = new ModuleAssetPathResolver();
@@ -198,25 +198,24 @@ namespace FlowIoC.Editor.Modules
             // over the same folder types.
             var directoryConfigByKey = new Dictionary<string, DirectoryStructureConfig>();
 
+            var configProvider = new DirectoryStructureConfigProvider();
+
             DirectoryStructureConfig ResolveDirectoryConfig(ModuleKind kind)
             {
-                string configKey = kind == ModuleKind.Screen ? "Screen" : kind == ModuleKind.Test ? "Test" : "Main";
+                string configKey = configProvider.ConfigKeyOf(kind);
 
                 if (directoryConfigByKey.TryGetValue(configKey, out DirectoryStructureConfig cached)) return cached;
 
                 if (settings.DirectoryStructureConfigPaths == null || !settings.DirectoryStructureConfigPaths.ContainsKey(configKey))
                 {
                     Debug.LogWarning($"<color=cyan>FlowIoC:</color> the code generator settings have no " +
-                                      $"'{configKey}' directory structure config path recorded, so folder " +
-                                      "GUIDs were not backfilled for its modules.");
+                                     $"'{configKey}' directory structure config path recorded, so folder " +
+                                     "GUIDs were not backfilled for its modules.");
                     directoryConfigByKey[configKey] = null;
                     return null;
                 }
 
-                DirectoryStructureConfig resolved;
-                if (configKey == "Screen") resolved = ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen");
-                else if (configKey == "Test") resolved = TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test");
-                else resolved = MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main");
+                DirectoryStructureConfig resolved = configProvider.ConfigFor(kind);
 
                 directoryConfigByKey[configKey] = resolved;
                 return resolved;

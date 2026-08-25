@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.CodeGenerator
             Debug.Log($"CodeGeneratorSettings asset created at: {CodeGeneratorStrings.CONFIG_PATH}");
         }
 
-        public void UpdateLockedFolderInfoFiles()
+        public void ApplyConfiguredFolderNames()
         {
             string modulesPath = Path.Combine(Application.dataPath, "Modules");
             if (!Directory.Exists(modulesPath)) return;
@@ -140,10 +140,11 @@ namespace FlowIoC.Editor.CodeGenerator
         /// A folder's type used to be decided by probing it for a marker file. Now every module
         /// in the index is asked directly: for each FolderType, a recorded FolderGuid is resolved
         /// through the AssetDatabase and compared to the configured name, because a GUID is the
-        /// one thing that survives a rename a name lookup cannot follow. Only when no GUID has
-        /// been recorded yet does this fall back to finding the folder by its configured name -
-        /// which cannot detect a pending rename, only heal the map for the next one - and record
-        /// what it finds so the same module never needs the fallback again.
+        /// one thing that survives a rename a name lookup cannot follow. When no GUID has been
+        /// recorded yet, or the one on record no longer resolves, this falls back to finding the
+        /// folder by its configured name - which cannot detect a pending rename, only heal the
+        /// map for the next one - and records what it finds so the same module never needs the
+        /// fallback again.
         /// </summary>
         private void CollectFolderOperations(List<(string oldPath, string newPath, FolderConfig.FolderType type)> operations)
         {
@@ -152,14 +153,7 @@ namespace FlowIoC.Editor.CodeGenerator
             ModuleRegistry registry = new ModuleRegistry(index, assetPaths);
             ModuleAssetPathResolver pathResolver = new ModuleAssetPathResolver();
             FolderRenamePlanner renamePlanner = new FolderRenamePlanner();
-
-            Dictionary<ModuleKind, DirectoryStructureConfig> directoryConfigsByKind = new Dictionary<ModuleKind, DirectoryStructureConfig>
-            {
-                {ModuleKind.Main, MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main")},
-                {ModuleKind.Sub, MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main")},
-                {ModuleKind.Screen, ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen")},
-                {ModuleKind.Test, TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test")}
-            };
+            DirectoryStructureConfigProvider configProvider = new DirectoryStructureConfigProvider();
 
             string dataPath = Application.dataPath.Replace('\\', '/');
             bool indexDirty = false;
@@ -172,7 +166,7 @@ namespace FlowIoC.Editor.CodeGenerator
                 string modulePath = pathResolver.ToAbsolutePath(moduleAssetPath);
                 if (string.IsNullOrEmpty(modulePath)) continue;
 
-                directoryConfigsByKind.TryGetValue(module.Kind, out DirectoryStructureConfig directoryConfig);
+                DirectoryStructureConfig directoryConfig = configProvider.ConfigFor(module.Kind);
 
                 foreach (KeyValuePair<FolderConfig.FolderType, string> kvp in DirectoryStructureConfigMap)
                 {
@@ -180,31 +174,48 @@ namespace FlowIoC.Editor.CodeGenerator
                     string configuredName = kvp.Value;
                     if (string.IsNullOrEmpty(configuredName)) continue;
 
+                    bool guidWentStale = false;
+
                     if (module.TryGetFolderGuid(type, out string guid))
                     {
                         string currentAssetPath = assetPaths.PathOf(guid);
-                        if (string.IsNullOrEmpty(currentAssetPath)) continue;
-
-                        string currentAbsolutePath = pathResolver.ToAbsolutePath(currentAssetPath);
-                        if (renamePlanner.TryPlanRename(currentAbsolutePath, configuredName, out string newAbsolutePath))
+                        if (!string.IsNullOrEmpty(currentAssetPath))
                         {
-                            operations.Add((currentAbsolutePath, newAbsolutePath, type));
+                            string currentAbsolutePath = pathResolver.ToAbsolutePath(currentAssetPath);
+                            if (renamePlanner.TryPlanRename(currentAbsolutePath, configuredName, out string newAbsolutePath))
+                            {
+                                operations.Add((currentAbsolutePath, newAbsolutePath, type));
+                            }
+
+                            continue;
                         }
 
-                        continue;
+                        // A recorded GUID that no longer resolves - the folder deleted, or moved out
+                        // of the project outside Unity - used to skip this type outright, which took
+                        // the fallback below with it and left the map dead for good. Falling through
+                        // instead lets the name lookup find the folder again and RecordFolderGuid
+                        // overwrite the dead entry.
+                        guidWentStale = true;
                     }
 
                     if (directoryConfig == null) continue;
 
-                    string expectedAbsolutePath = directoryConfig.FindFullFolderPathByID(type, modulePath);
+                    string expectedAbsolutePath = directoryConfig.FindFullFolderPathByID(type, modulePath, out bool isOptional);
                     if (string.IsNullOrEmpty(expectedAbsolutePath)) continue;
 
                     if (!Directory.Exists(expectedAbsolutePath))
                     {
-                        LogFallbackMiss(module, type,
-                            $"expected at '{expectedAbsolutePath}' but nothing exists there. A later rename of " +
-                            "this folder type will not follow it until it is found - if it was never created " +
-                            "for this module, this can be ignored.");
+                        // About half the tracked folder types are optional, and a module that never
+                        // had one is the normal case rather than a fault. Warning for each of them on
+                        // every pass would bury the misses that do mean something.
+                        if (isOptional) continue;
+
+                        LogFallbackMiss(module, type, guidWentStale
+                            ? "its recorded GUID no longer resolves to a folder and nothing exists at " +
+                              $"'{expectedAbsolutePath}' either, so the folder cannot be found again."
+                            : $"expected at '{expectedAbsolutePath}' but nothing exists there. A later rename of " +
+                              "this folder type will not follow it until it is found - if it was never created " +
+                              "for this module, this can be ignored.");
                         continue;
                     }
 
@@ -246,7 +257,9 @@ namespace FlowIoC.Editor.CodeGenerator
         /// <summary>
         /// The fallback exists to heal a module whose GUID was never recorded, and a heal that
         /// silently never happens is indistinguishable from one that had nothing to do. This is
-        /// unconditional (not FlowLogger, which compiles out) so the gap is visible by default.
+        /// unconditional (not FlowLogger, which compiles out) so the gap is visible by default -
+        /// which is also why the caller keeps quiet about folder types marked optional, whose
+        /// absence is ordinary rather than a gap.
         /// </summary>
         private void LogFallbackMiss(ModuleDescriptor module, FolderConfig.FolderType type, string detail)
         {

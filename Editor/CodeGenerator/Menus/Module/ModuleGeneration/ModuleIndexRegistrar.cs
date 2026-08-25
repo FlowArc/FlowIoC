@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.Config.ModuleConfig;
@@ -17,32 +18,85 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     /// </summary>
     internal class ModuleIndexRegistrar
     {
+        private readonly IAssetPaths _assetPaths;
+
+        public ModuleIndexRegistrar() : this(new AssetDatabasePaths())
+        {
+        }
+
+        /// <summary>
+        /// This writes the only index data a rebuild cannot regenerate, so it goes through the
+        /// IAssetPaths seam the rest of the module code uses rather than calling AssetDatabase
+        /// directly - which is what lets <see cref="RecordFolderGuids"/> be exercised without a
+        /// live Editor.
+        /// </summary>
+        internal ModuleIndexRegistrar(IAssetPaths assetPaths)
+        {
+            _assetPaths = assetPaths;
+        }
+
         public void Register(
             string modulePath,
             DirectoryStructureConfig directoryConfig,
             IEnumerable<FolderConfig.FolderType> folderTypes)
         {
-            new ModuleIndexRebuilder().Rebuild();
+            // Without the rebuild the new module has no descriptor to record folder GUIDs on, and
+            // an index loaded independently would hand back an empty one - so the lookup below
+            // would miss and the mapping a rebuild cannot regenerate would be lost silently.
+            FlowIoCModuleIndex index = new ModuleIndexRebuilder().Rebuild();
+            if (index == null) return;
 
-            FlowIoCModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
+            string ResolveFolderAssetPath(FolderConfig.FolderType type)
+            {
+                string folderPath = directoryConfig.FindFullFolderPathByID(type, modulePath);
+                if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) return string.Empty;
 
-            string moduleGuid = AssetDatabase.AssetPathToGUID(NamespaceUtility.GetUnityAssetPath(modulePath));
+                return NamespaceUtility.GetUnityAssetPath(folderPath);
+            }
+
+            bool recorded = RecordFolderGuids(
+                index, NamespaceUtility.GetUnityAssetPath(modulePath), folderTypes, ResolveFolderAssetPath);
+
+            if (!recorded) return;
+
+            EditorUtility.SetDirty(index);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Records the GUID of every folder <paramref name="resolveFolderAssetPath"/> can name for
+        /// the module at <paramref name="moduleAssetPath"/>. Returns false when the module itself
+        /// is not in the index, which is the one case where there is nothing to write and nothing
+        /// to save.
+        ///
+        /// Folder path resolution is a parameter rather than a call into DirectoryStructureConfig
+        /// here, because that walk ends in a Directory.Exists check and this method is the part
+        /// that has to stay testable without folders on disk.
+        /// </summary>
+        internal bool RecordFolderGuids(
+            FlowIoCModuleIndex index,
+            string moduleAssetPath,
+            IEnumerable<FolderConfig.FolderType> folderTypes,
+            Func<FolderConfig.FolderType, string> resolveFolderAssetPath)
+        {
+            if (index == null || folderTypes == null || resolveFolderAssetPath == null) return false;
+
+            string moduleGuid = _assetPaths.GuidOf(moduleAssetPath);
             if (string.IsNullOrEmpty(moduleGuid) || !index.TryGetByFolderGuid(moduleGuid, out ModuleDescriptor descriptor))
-                return;
+                return false;
 
             foreach (FolderConfig.FolderType type in folderTypes)
             {
-                string folderPath = directoryConfig.FindFullFolderPathByID(type, modulePath);
-                if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) continue;
+                string folderAssetPath = resolveFolderAssetPath(type);
+                if (string.IsNullOrEmpty(folderAssetPath)) continue;
 
-                string guid = AssetDatabase.AssetPathToGUID(NamespaceUtility.GetUnityAssetPath(folderPath));
+                string guid = _assetPaths.GuidOf(folderAssetPath);
                 if (string.IsNullOrEmpty(guid)) continue;
 
                 descriptor.RecordFolderGuid(type, guid);
             }
 
-            EditorUtility.SetDirty(index);
-            AssetDatabase.SaveAssets();
+            return true;
         }
     }
 }

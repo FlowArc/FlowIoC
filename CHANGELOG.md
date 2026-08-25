@@ -60,11 +60,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Unity's own folder GUIDs already do without help. Both are gone: a module's whole identity
   now lives in one `FlowIoCModuleIndex.asset`, next to the code generator settings, keyed on
   folder GUID rather than name or path. The index is a cache, not a source of truth — name,
-  kind and nesting are read back off the folder tree on every rebuild, so a stale or deleted
-  index is repaired by rebuilding it, never by hand-editing it. A project upgrading from an
-  earlier version has its markers swept away the first time it opens after upgrading, once
-  every pre-existing module's folder GUIDs are safely on record — 74 files (37 markers and
-  their `.meta` siblings) in this template's three modules.
+  kind and nesting are read back off the folder tree on every rebuild, so a stale entry is
+  repaired by rebuilding it, never by hand-editing it. Each module's folder-type GUID map is
+  the exception: it is durable state, carried forward rather than read back off the tree and
+  healed only lazily, so deleting the asset outright is not the same as rebuilding it. A
+  project upgrading from an earlier version has its markers swept away the first time it opens
+  after upgrading, once every pre-existing module's folder GUIDs are safely on record — 74
+  files (37 markers and their `.meta` siblings) in this template's three modules.
 - The Create Command window now lists modules. Its own copy of the marker filename was
   `module_info.txt`, missing FlowIoC's leading underscore, so its probe never matched a real
   `_module_info.txt` and the module tree came up empty. `Create Model` and `Create View` used
@@ -79,6 +81,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   module's own folder. Removal only ever targets auto-registered channels, and only runs when
   the scan actually found at least one module, so a failed scan is never mistaken for a
   project with no modules and cannot wipe every channel.
+- *Module Configuration ▸ Detect & Fix Module Infos* is now *Detect & Fix Module Index*. It has
+  rebuilt the index rather than repaired info files since info files stopped existing, and the
+  menu was the last place still saying otherwise.
+- Folder types a module is not required to have no longer warn when they are missing. About half
+  the tracked types are optional, so the warning that a folder could not be found fired several
+  times per pass on a project that was perfectly healthy, which is exactly how a warning that
+  matters gets ignored.
 
 ### Removed
 
@@ -94,6 +103,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   consuming project, so any folder type added by a later FlowIoC version is missing from
   every existing copy, and indexing the dictionary directly took module creation down with
   it. Names now fall back to the built-in default.
+- A rebuild that could not run no longer leaves its callers working from an empty index. The
+  rebuild returned nothing and each caller loaded the index itself, which created an empty one
+  and looked exactly like a project with no modules: a newly created module's folder GUIDs went
+  unrecorded without a word, and log type detection would have proposed removing every
+  auto-registered channel. The rebuild now hands back the index it built, or nothing at all.
+- A recorded folder GUID that no longer resolves is looked for by name again. Deleting a folder
+  or moving it outside Unity used to skip that folder type for good, because the name fallback
+  only ran for a type that had never been recorded at all.
+- Deleting the last module out of a renamed container folder now removes the emptied container.
+  `zSubModules`, `zTestModules` and `zScreenModules` are configurable names, and the cleanup
+  matched the hardcoded ones.
 
 ## [1.1.1] - 2026-08-23
 

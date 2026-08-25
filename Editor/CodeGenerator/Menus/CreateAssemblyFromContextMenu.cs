@@ -30,7 +30,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 assetPath = parentFolder;
             }
 
-            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            ModuleRegistry registry = new ModuleRegistryFactory().FromProject();
             return registry.IsModule(assetPath);
         }
 
@@ -43,7 +43,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 assetPath = Path.GetDirectoryName(assetPath);
             }
 
-            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            ModuleRegistry registry = new ModuleRegistryFactory().FromProject();
             if (!registry.TryGetModule(assetPath, out ModuleDescriptor module))
             {
                 Debug.LogError($"'{assetPath}' is not a module.");
@@ -65,21 +65,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             CreateDotSettingsFileInNewFormat(fullPath, moduleName);
 
-            ModuleType modType = module.Kind switch
-            {
-                ModuleKind.Main => ModuleType.Main,
-                ModuleKind.Screen => ModuleType.Screen,
-                ModuleKind.Test => ModuleType.Test,
-                // Sub-modules are laid out exactly like a Main module; there is no separate
-                // DirectoryStructureConfig for Sub.
-                ModuleKind.Sub => ModuleType.Main,
-                _ => ModuleType.Main
-            };
-
-            DirectoryStructureConfig config = GetDirectoryStructureConfigFor(modType);
+            DirectoryStructureConfig config = new DirectoryStructureConfigProvider().ConfigFor(module.Kind);
             if (config == null)
             {
-                Debug.LogError($"No directory structure config found for '{modType}'. Skipping provider setup.");
+                Debug.LogError($"No directory structure config found for '{module.Kind}'. Skipping provider setup.");
             }
             else
             {
@@ -94,21 +83,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             AssetDatabase.Refresh();
             Debug.Log($"Assembly & namespace update done in: {assetPath}");
-        }
-
-        private static DirectoryStructureConfig GetDirectoryStructureConfigFor(ModuleType moduleType)
-        {
-            switch (moduleType)
-            {
-                case ModuleType.Main:
-                    return MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main");
-                case ModuleType.Screen:
-                    return ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen");
-                case ModuleType.Test:
-                    return TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test");
-            }
-
-            return null;
         }
 
         private static void TraverseFoldersAndSetProviders(string basePath,

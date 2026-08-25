@@ -934,7 +934,7 @@ module folder's Unity GUID rather than its name or path, so renaming or moving a
 module in the Project window does not desynchronise the tools from what is actually
 on disk. The index is a cache: name, kind and nesting are all read back off the
 folder tree, so a stale or missing entry is fixed by rebuilding it — *Module
-Configuration ▸ Detect & Fix Module Infos*, or just reopening the project — rather
+Configuration ▸ Detect & Fix Module Index*, or just reopening the project — rather
 than by editing the asset.
 
 > **`Systems` in a project that predates it.** The folder list lives in

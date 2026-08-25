@@ -173,7 +173,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 IsExpanded = true
             };
 
-            var registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            var registry = new ModuleRegistryFactory().FromProject();
             var pathResolver = new ModuleAssetPathResolver();
 
             LoadModulesRecursive(registry, pathResolver, null, _rootNode);
@@ -299,18 +299,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             CreateDotSettingsFileInNewFormat(moduleFullPath, moduleName);
 
-            ModuleType modType = moduleKind switch
-            {
-                ModuleKind.Main => ModuleType.Main,
-                ModuleKind.Screen => ModuleType.Screen,
-                ModuleKind.Test => ModuleType.Test,
-                // Sub-modules are laid out exactly like a Main module; there is no separate
-                // DirectoryStructureConfig for Sub.
-                ModuleKind.Sub => ModuleType.Main,
-                _ => ModuleType.Main
-            };
-
-            DirectoryStructureConfig config = GetDirectoryStructureConfigFor(modType);
+            DirectoryStructureConfig config = new DirectoryStructureConfigProvider().ConfigFor(moduleKind);
             if (config != null)
             {
                 var finalAssemblyName = GetParsedAssemblyName(moduleName);
@@ -349,21 +338,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                     }
                 }
             }
-        }
-
-        private DirectoryStructureConfig GetDirectoryStructureConfigFor(ModuleType modType)
-        {
-            switch (modType)
-            {
-                case ModuleType.Main:
-                    return MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main");
-                case ModuleType.Screen:
-                    return ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen");
-                case ModuleType.Test:
-                    return TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test");
-            }
-
-            return null;
         }
 
         private void TraverseFoldersAndSetProviders(string basePath, List<FolderConfig> folders, string dotSettingsPath)

@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
+using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
 using UnityEngine;
 
@@ -70,10 +72,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             if (string.IsNullOrEmpty(parentPath)) return;
 
             string parentName = Path.GetFileName(parentPath);
-            if (!parentName.StartsWith("zSub", StringComparison.OrdinalIgnoreCase) &&
-                !parentName.StartsWith("zTest", StringComparison.OrdinalIgnoreCase) &&
-                !parentName.StartsWith("zScreen", StringComparison.OrdinalIgnoreCase))
-                return;
+            if (!IsModuleContainerFolder(parentName)) return;
 
             if (!Directory.Exists(parentPath)) return;
 
@@ -94,6 +93,36 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             }
 
             Log($"Empty parent folder deleted: {parentName}", deletedItems);
+        }
+
+        /// <summary>
+        /// The three container folder names are configurable, and this used to test for the
+        /// hardcoded "zSub" / "zTest" / "zScreen" prefixes instead: renaming zSubModules in the
+        /// code generator settings left the emptied container behind after the last sub-module in
+        /// it was deleted. The hardcoded names stay only as the fallback for a project whose
+        /// settings asset cannot be loaded.
+        /// </summary>
+        private static bool IsModuleContainerFolder(string folderName)
+        {
+            CodeGeneratorSettings settings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(
+                new FlowIoCProjectPaths().CodeGeneratorSettings);
+
+            string[] containerNames = settings == null
+                ? new[] {"zSubModules", "zTestModules", "zScreenModules"}
+                : new[]
+                {
+                    settings.FolderNameFor(FolderConfig.FolderType.SubModules, "zSubModules"),
+                    settings.FolderNameFor(FolderConfig.FolderType.TestModules, "zTestModules"),
+                    settings.FolderNameFor(FolderConfig.FolderType.ScreenModules, "zScreenModules")
+                };
+
+            foreach (string containerName in containerNames)
+            {
+                if (string.Equals(folderName, containerName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
         }
 
         private static void RemoveFromIndex(string folderGuid, List<string> deletedItems)

@@ -64,7 +64,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _createContext = true;
             _makeRootSingleton = false;
             _actionNames = new List<string>();
-            _registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            _registry = new ModuleRegistryFactory().FromProject();
             _selectionRules = new ModuleSelectionRules();
         }
 

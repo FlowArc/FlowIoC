@@ -133,8 +133,10 @@ namespace FlowIoC.ConsoleModule
             if (removed.Count == 0)
                 return;
 
+            // No RebuildCache here, the same way the add path above does without one:
+            // SortProjectLogTypes drops both name and value caches itself, and every lookup
+            // rebuilds them on demand when it finds them null.
             settings.SortProjectLogTypes();
-            settings.RebuildCache();
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             FlowConsoleSettings.NotifyProjectLogTypesChanged();

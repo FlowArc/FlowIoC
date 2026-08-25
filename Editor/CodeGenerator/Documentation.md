@@ -140,7 +140,7 @@ after a move or a rename.
 
 | Item | Does |
 |---|---|
-| `Detect & Fix Module Infos` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
+| `Detect & Fix Module Index` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
 | `Update Namespace Settings` | Changes the namespace prefix the generators use for new code |
 
 Every module lives in one asset, `FlowIoCModuleIndex.asset`, beside the code
@@ -231,7 +231,7 @@ public class OnPurchaseSignalCommand : Command { }
 ### The generator writes into the wrong module
 
 The module index is stale — usually after a folder move. Run *Module Configuration ▸
-Detect & Fix Module Infos* to rebuild it.
+Detect & Fix Module Index* to rebuild it.
 
 ### A new module does not appear in the sub-context picker
 

@@ -71,7 +71,7 @@ module does not reference that module" is a rule nobody enforces.
 
 | Item | Does |
 |---|---|
-| `Detect & Fix Module Infos` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
+| `Detect & Fix Module Index` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
 | `Update Namespace Settings` | Changes the namespace prefix the generators use |
 
 Run *Detect & Fix* after moving folders around in the Project window. The symptom
