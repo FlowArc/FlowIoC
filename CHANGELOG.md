@@ -21,7 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Editor opens, one folder per skill, and refreshed when the package changes one. What gets
   written is logged rather than done silently, and a batch run installs nothing.
   `Tools/FlowIoC/AI/Agent Skills` shows what is there and puts a deleted skill back without
-  waiting for the next session.
+  waiting for the next session. Removing FlowIoC through the Package Manager takes the shipped
+  skills with it, file by file, so nothing the consumer wrote is caught up in it: a skill of
+  their own, or a note left beside a shipped one, keeps its folder.
   The agent rules are what an assistant is told on every task and so stay short; a skill is what
   it reaches for when one kind of work comes up and can afford the detail. The first is
   `flowioc-data-types`. Only the files the package owns are compared, so a skill you wrote

@@ -30,9 +30,15 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "flowioc-data-types - the CD_, RD_, PD_, ED_ and DD_ prefixes, the VO suffix family "
                 + "that goes with them, and which folder each kind belongs in.");
 
+            painter.SubHeading("On the way out");
+            painter.Paragraph(
+                "Removing FlowIoC through the Package Manager takes the shipped skills with it, "
+                + "file by file. Nobody asked for them, so nobody should be left explaining them.");
+
             painter.Note(
-                "Only the files the package owns are compared, so a skill you wrote yourself is "
-                + "never touched and a note left beside a shipped skill survives an install.");
+                "Only the files the package owns are ever compared, written or deleted. A skill "
+                + "you wrote yourself is never touched, and a note left beside a shipped skill "
+                + "survives both an install and an uninstall - it keeps its folder alive.");
         }
     }
 }
