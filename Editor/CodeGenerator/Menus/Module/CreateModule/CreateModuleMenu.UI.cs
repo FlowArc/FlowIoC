@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -169,8 +170,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             EditorGUILayout.EndHorizontal();
 
-            ModuleHierarchyDrawer.DrawModuleHierarchy(MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath, ref _selectedModuleName,
-                _selectedModuleType);
+            ModuleHierarchyDrawer.DrawModuleHierarchy(_registry, MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath,
+                ref _selectedModuleName, parent => _selectionRules.CanHost(ToModuleKind(_selectedModuleType), parent));
+        }
+
+        /// <summary>
+        /// CreateModuleMenu's own ModuleType has no Sub value; Main/Test/Screen map straight
+        /// across to their ModuleKind counterparts, and a nested Sub module is never a value
+        /// this dropdown offers, so it never needs to appear on this side of the conversion.
+        /// </summary>
+        private ModuleKind ToModuleKind(ModuleType moduleType)
+        {
+            switch (moduleType)
+            {
+                case ModuleType.Test: return ModuleKind.Test;
+                case ModuleType.Screen: return ModuleKind.Screen;
+                default: return ModuleKind.Main;
+            }
         }
 
         private void DisplayCreateModuleButton()

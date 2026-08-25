@@ -8,13 +8,12 @@ using UnityEditor;
 using UnityEngine;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus
 {
     public static class UpdateNamespaceFromContextMenu
     {
-        private const string MODULE_INFO_FILE = "_module_info.txt";
-
         [MenuItem("Assets/FlowIoC/Update Module's Namespaces", true)]
         private static bool ValidateUpdateNamespace()
         {
@@ -31,9 +30,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 assetPath = parentFolder;
             }
 
-            string fullPath = Path.Combine(Application.dataPath, assetPath.Replace("Assets/", ""));
-            string moduleInfoPath = Path.Combine(fullPath, MODULE_INFO_FILE);
-            return File.Exists(moduleInfoPath);
+            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            return registry.TryGetModule(assetPath, out _);
         }
 
         [MenuItem("Assets/FlowIoC/Update Module's Namespaces", priority = 20)]
@@ -43,6 +41,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             if (!AssetDatabase.IsValidFolder(assetPath))
             {
                 assetPath = Path.GetDirectoryName(assetPath);
+            }
+
+            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            if (!registry.TryGetModule(assetPath, out ModuleDescriptor module))
+            {
+                Debug.LogError($"'{assetPath}' is not a module.");
+                return;
             }
 
             string moduleFullPath = Path.Combine(Application.dataPath, assetPath.Replace("Assets/", ""));
@@ -65,10 +70,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 Debug.Log($".DotSettings file created: {dotSettingsPath}");
             }
 
-            string moduleInfoFile = Path.Combine(moduleFullPath, MODULE_INFO_FILE);
-            string moduleTypeString = NamespaceUtility.GetModuleTypeFromInfoFile(moduleInfoFile);
-            ModuleType modType;
-            if (!Enum.TryParse(moduleTypeString, out modType)) modType = ModuleType.Main;
+            ModuleType modType = module.Kind switch
+            {
+                ModuleKind.Main => ModuleType.Main,
+                ModuleKind.Screen => ModuleType.Screen,
+                ModuleKind.Test => ModuleType.Test,
+                // Sub-modules are laid out exactly like a Main module; there is no separate
+                // DirectoryStructureConfig for Sub.
+                ModuleKind.Sub => ModuleType.Main,
+                _ => ModuleType.Main
+            };
 
             DirectoryStructureConfig config = GetDirectoryStructureConfigFor(modType);
             if (config == null)

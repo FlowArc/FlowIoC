@@ -10,18 +10,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 {
     internal static class ModuleDeleter
     {
-        public static void DeleteModule(string moduleName, string modulePath, string parentInfoFile)
+        public static void DeleteModule(string moduleName, string modulePath, string folderGuid)
         {
             var deletedItems = new List<string>();
 
             Debug.Log($"<color=cyan>[ModuleDeleter]</color> Deleting module '{moduleName}'...");
 
-            RemoveFromParentInfoFile(moduleName, parentInfoFile, deletedItems);
             RemoveLogType(moduleName, deletedItems);
             RemoveDotSettingsFile(moduleName, deletedItems);
             RemoveCsprojFile(moduleName, deletedItems);
             DeleteModuleFolder(modulePath, deletedItems);
             CleanupEmptyParentFolder(modulePath, deletedItems);
+            RemoveFromIndex(folderGuid, deletedItems);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -96,42 +96,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             Log($"Empty parent folder deleted: {parentName}", deletedItems);
         }
 
-        private static void RemoveFromParentInfoFile(string moduleName, string parentInfoFile, List<string> deletedItems)
+        private static void RemoveFromIndex(string folderGuid, List<string> deletedItems)
         {
-            if (string.IsNullOrEmpty(parentInfoFile) || !File.Exists(parentInfoFile)) return;
+            if (string.IsNullOrEmpty(folderGuid)) return;
 
-            string[] lines = File.ReadAllLines(parentInfoFile);
-            var updatedLines = new List<string>();
-            bool found = false;
-
-            foreach (string line in lines)
-            {
-                if (line.Trim().Equals(moduleName, StringComparison.OrdinalIgnoreCase))
-                {
-                    found = true;
-                    continue;
-                }
-                updatedLines.Add(line);
-            }
-
-            if (found)
-            {
-                bool hasModuleEntries = updatedLines.Exists(l => !string.IsNullOrWhiteSpace(l) && !l.TrimEnd(':').Equals("Modules", StringComparison.OrdinalIgnoreCase));
-
-                if (hasModuleEntries)
-                {
-                    File.WriteAllLines(parentInfoFile, updatedLines);
-                    Log($"Removed from: {Path.GetFileName(parentInfoFile)}", deletedItems);
-                }
-                else
-                {
-                    File.Delete(parentInfoFile);
-                    string metaFile = parentInfoFile + ".meta";
-                    if (File.Exists(metaFile))
-                        File.Delete(metaFile);
-                    Log($"Info file deleted (empty): {Path.GetFileName(parentInfoFile)}", deletedItems);
-                }
-            }
+            new ModuleIndexDeregistrar().Deregister(folderGuid);
+            Log("Removed from module index", deletedItems);
         }
 
         private static void RemoveLogType(string moduleName, List<string> deletedItems)
@@ -180,11 +150,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                 string coreName = rawName.Substring(0, rawName.Length - "ScreenModule".Length);
                 return prefix + coreName + ".Screen";
             }
+
             if (rawName.EndsWith("TestModule", StringComparison.OrdinalIgnoreCase))
             {
                 string coreName = rawName.Substring(0, rawName.Length - "TestModule".Length);
                 return prefix + coreName + ".Test";
             }
+
             if (rawName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
             {
                 string coreName = rawName.Substring(0, rawName.Length - "Module".Length);

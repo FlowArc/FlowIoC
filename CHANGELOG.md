@@ -54,6 +54,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `MainModuleDirectoryStructureConfig.asset`, which an upgrade does not rewrite, so a
   project created before this release keeps its old list — add `Systems` in that asset's
   inspector, or delete the asset and let FlowIoC recreate it.
+- Modules are no longer marked with text files. `_module_info.txt` held a module's name and
+  kind, both already implied by the folder itself — its own name, and its parent's — and
+  `_<foldertype>_info.txt` marked a container folder so a rename could be followed, which
+  Unity's own folder GUIDs already do without help. Both are gone: a module's whole identity
+  now lives in one `FlowIoCModuleIndex.asset`, next to the code generator settings, keyed on
+  folder GUID rather than name or path. The index is a cache, not a source of truth — name,
+  kind and nesting are read back off the folder tree on every rebuild, so a stale or deleted
+  index is repaired by rebuilding it, never by hand-editing it. A project upgrading from an
+  earlier version has its markers swept away the first time it opens after upgrading, once
+  every pre-existing module's folder GUIDs are safely on record — 74 files (37 markers and
+  their `.meta` siblings) in this template's three modules.
+- The Create Command window now lists modules. Its own copy of the marker filename was
+  `module_info.txt`, missing FlowIoC's leading underscore, so its probe never matched a real
+  `_module_info.txt` and the module tree came up empty. `Create Model` and `Create View` used
+  the correct name and were never affected.
+- A module's kind is decided in one place. `ModuleAutoDetector` compared the parent folder
+  against the configured folder names, `DeleteModuleMenu` matched hardcoded `zTest` / `zScreen`
+  / `zSub` prefixes and ignored the settings, and `NamespaceProvider` parsed a string out of a
+  marker file and silently mapped anything it did not recognise to `Main`. Renaming
+  `zScreenModules` in the settings used to make those three disagree with each other.
+- Log types for deleted modules are removed. Registration only ever added a channel, so a
+  module's channel and its constant in the generated `FlowLogType.cs` used to outlive the
+  module's own folder. Removal only ever targets auto-registered channels, and only runs when
+  the scan actually found at least one module, so a failed scan is never mistaken for a
+  project with no modules and cannot wipe every channel.
+
+### Removed
+
+- `ModuleCleaner`, and with it *Module Configuration ▸ Cleanse Module Infos*. Its only job was
+  pruning stale module names out of the container-folder marker files; rebuilding the index
+  makes that pruning automatic, since a module missing from the folder tree is simply missing
+  from the next rebuild.
 
 ### Fixed
 

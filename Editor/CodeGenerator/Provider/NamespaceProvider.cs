@@ -7,6 +7,7 @@ using System.Xml;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.CodeStyle;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,11 +16,11 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
     internal static class NamespaceProvider
     {
         private const string MODULES_PATH = "Modules";
-        private const string MODULE_INFO_FILE = "_module_info.txt";
 
         public static void UpdateNamespaceSettings()
         {
-            List<string> modulePaths = GetAllModulePaths();
+            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            List<string> modulePaths = GetAllModulePaths(registry);
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
 
             foreach (string modulePath in modulePaths)
@@ -42,7 +43,7 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
                 XmlDocument doc = new XmlDocument();
                 doc.Load(finalDotSettingsPath);
 
-                AddNamespaceEntriesForModule_New(doc, modulePath);
+                AddNamespaceEntriesForModule_New(registry, doc, modulePath);
 
                 NamespaceUtility.SaveDotSettings(doc, finalDotSettingsPath);
                 Debug.Log($"[{moduleFolderName}] => .DotSettings updated: {finalDotSettingsPath}");
@@ -133,41 +134,56 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
             return names;
         }
 
-        private static List<string> GetAllModulePaths()
+        private static List<string> GetAllModulePaths(ModuleRegistry registry)
         {
-            List<string> modulePaths = new List<string>();
-            string modulesFullPath = Path.Combine(Application.dataPath, MODULES_PATH);
+            var pathResolver = new ModuleAssetPathResolver();
+            var modulePaths = new List<string>();
 
-            if (!Directory.Exists(modulesFullPath))
-                return modulePaths;
-
-            string[] allDirectories = Directory.GetDirectories(modulesFullPath, "*", SearchOption.AllDirectories);
-            foreach (string directory in allDirectories)
+            foreach (ModuleDescriptor module in registry.Modules)
             {
-                string moduleInfoPath = Path.Combine(directory, MODULE_INFO_FILE);
-                if (File.Exists(moduleInfoPath))
+                string absolutePath = pathResolver.ToAbsolutePath(registry.PathOf(module));
+
+                // PathOf is empty when a descriptor's FolderGuid no longer resolves - the
+                // folder was deleted or moved outside the tool and the index hasn't caught up.
+                // The old directory-scan version of this method could never see a phantom like
+                // that, so skipping it here keeps that same behaviour instead of crashing the
+                // whole run on one stale entry.
+                if (string.IsNullOrEmpty(absolutePath))
                 {
-                    modulePaths.Add(directory);
+                    Debug.LogWarning($"[NamespaceProvider] Skipping '{module.Name}': its folder GUID no longer resolves to a path.");
+                    continue;
                 }
+
+                modulePaths.Add(absolutePath);
             }
 
             return modulePaths;
         }
 
-        private static void AddNamespaceEntriesForModule_New(XmlDocument doc, string modulePath)
+        private static string ToAssetPath(string absolutePath)
         {
-            string moduleInfoPath = Path.Combine(modulePath, MODULE_INFO_FILE);
-            if (!File.Exists(moduleInfoPath))
+            string normalized = absolutePath.Replace('\\', '/');
+            string dataPath = Application.dataPath;
+            return normalized.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase)
+                ? "Assets" + normalized.Substring(dataPath.Length)
+                : normalized;
+        }
+
+        private static void AddNamespaceEntriesForModule_New(ModuleRegistry registry, XmlDocument doc, string modulePath)
+        {
+            if (!registry.TryGetModule(ToAssetPath(modulePath), out ModuleDescriptor module))
                 return;
 
-            string moduleTypeString = NamespaceUtility.GetModuleTypeFromInfoFile(moduleInfoPath);
-            if (!Enum.TryParse(moduleTypeString, out ModuleType moduleType))
+            ModuleType moduleType = module.Kind switch
             {
-                if (moduleTypeString == "Sub")
-                    moduleType = ModuleType.Main;
-                else
-                    moduleType = ModuleType.Main;
-            }
+                ModuleKind.Main => ModuleType.Main,
+                ModuleKind.Screen => ModuleType.Screen,
+                ModuleKind.Test => ModuleType.Test,
+                // Sub-modules are laid out exactly like a Main module; there is no separate
+                // DirectoryStructureConfig for Sub.
+                ModuleKind.Sub => ModuleType.Main,
+                _ => ModuleType.Main
+            };
 
             DirectoryStructureConfig config = GetDirectoryStructureConfig(moduleType);
             if (config == null)

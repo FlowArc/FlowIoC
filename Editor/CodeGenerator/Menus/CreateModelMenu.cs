@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -13,7 +15,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
     {
         private const string MODULES_PATH = "Modules";
 
-        private const string MODULE_INFO_FILE = "_module_info.txt";
         private const string MODEL_NAME_LABEL = "Model Name: ";
         private const string CREATE_MODEL_BUTTON = "Create Model";
         private const string ADD_INJECTABLE_BUTTON = "Add Injectable";
@@ -31,6 +32,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private static string _modelName;
         private string _parentModulePath;
         private Dictionary<string, bool> _moduleExpandedState;
+        private ModuleRegistry _registry;
         private Vector2 _scrollPosition;
         private Dictionary<ModuleType, DirectoryStructureConfig> _directoryConfigMap;
         private Vector2 _injectablesScrollPosition;
@@ -63,6 +65,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             InitializeConfigMap();
             LoadCodeGeneratorSettings();
             _generationState = GenerationState.Idle;
+            _registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
         }
 
         private void InitializeConfigMap()
@@ -114,7 +117,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.LabelField(PARENT_MODULE_LABEL);
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(200));
             EditorGUILayout.BeginVertical("box");
-            DrawModuleHierarchy(MODULES_PATH, 0);
+
+            // CreateModelMenu never restricted which module kind could host a model.
+            ModuleHierarchyDrawer.DrawModuleHierarchy(_registry, MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath,
+                ref _selectedModuleName, _ => true);
+
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
             EditorGUILayout.Space(20);
@@ -177,184 +184,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             GUI.backgroundColor = Color.white;
         }
 
-        private void DrawModuleHierarchy(string path, int indentLevel)
-        {
-            if (!Directory.Exists(Application.dataPath + "/" + path)) return;
-            string[] directories = Directory.GetDirectories(Application.dataPath + "/" + path);
-            foreach (string directory in directories)
-            {
-                string moduleInfoPath = Path.Combine(directory, MODULE_INFO_FILE);
-                if (File.Exists(moduleInfoPath))
-                {
-                    string directoryName = Path.GetFileName(directory);
-                    string moduleTypePostfix = GetModuleTypePostfix(moduleInfoPath);
-                    string displayName = directoryName + moduleTypePostfix;
-                    _moduleExpandedState.TryAdd(directory, false);
-
-                    EditorGUILayout.BeginHorizontal();
-                    GUILayout.Space(indentLevel * 10);
-                    _moduleExpandedState[directory] = EditorGUILayout.Foldout(_moduleExpandedState[directory], displayName, true, new GUIStyle(EditorStyles.foldout) {richText = true});
-
-                    GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
-                    {
-                        normal = {textColor = _parentModulePath == directory ? Color.green : GUI.skin.button.normal.textColor}
-                    };
-                    string buttonText = _parentModulePath == directory ? "Selected" : "Select";
-
-                    EditorGUI.BeginDisabledGroup(!CanSelect());
-                    if (GUILayout.Button(buttonText, buttonStyle, GUILayout.Width(60)))
-                    {
-                        if (_parentModulePath == directory)
-                        {
-                            _parentModulePath = string.Empty;
-                            _selectedModuleName = string.Empty;
-                            _selectedModuleType = ModuleType.Main;
-                        }
-                        else
-                        {
-                            _parentModulePath = directory;
-                            _selectedModuleName = GetModuleNameFromInfoFile(moduleInfoPath);
-                        }
-                    }
-
-                    EditorGUI.EndDisabledGroup();
-
-                    EditorGUILayout.EndHorizontal();
-
-                    if (_moduleExpandedState[directory])
-                    {
-                        EditorGUI.indentLevel++;
-                        DrawModuleHierarchy(path + "/" + directoryName, indentLevel + 1);
-                        DrawSubModulesRecursively(directory, indentLevel + 1);
-                        EditorGUI.indentLevel--;
-                    }
-                }
-            }
-        }
-
-        private string GetModuleNameFromInfoFile(string moduleInfoPath)
-        {
-            foreach (string line in File.ReadAllLines(moduleInfoPath))
-            {
-                if (line.StartsWith("ModuleName: "))
-                {
-                    string moduleName = line.Substring("ModuleName: ".Length).Trim();
-
-                    if (moduleName.EndsWith("Module"))
-                    {
-                        return moduleName.Substring(0, moduleName.Length - "Module".Length).Trim();
-                    }
-
-                    return moduleName;
-                }
-            }
-
-            return string.Empty;
-        }
-
-        private bool CanSelect()
-        {
-            return true;
-        }
-
-
-        private void DrawSubModulesRecursively(string modulePath, int indentLevel)
-        {
-            string[] subModulePaths =
-            {
-                _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules], _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules],
-                _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules]
-            };
-            foreach (string subPath in subModulePaths)
-            {
-                string subDirectoryPath = Path.Combine(modulePath, subPath);
-                if (Directory.Exists(subDirectoryPath))
-                {
-                    string[] subDirectories = Directory.GetDirectories(subDirectoryPath);
-                    foreach (string subDirectory in subDirectories)
-                    {
-                        string moduleInfoPath = Path.Combine(subDirectory, MODULE_INFO_FILE);
-                        if (File.Exists(moduleInfoPath))
-                        {
-                            string directoryName = Path.GetFileName(subDirectory);
-                            string moduleTypePostfix = GetModuleTypePostfix(moduleInfoPath);
-                            string displayName = directoryName + moduleTypePostfix;
-                            _moduleExpandedState.TryAdd(subDirectory, false);
-                            EditorGUILayout.BeginHorizontal();
-                            GUILayout.Space(indentLevel * 15);
-                            _moduleExpandedState[subDirectory] = EditorGUILayout.Foldout(_moduleExpandedState[subDirectory], displayName, true, new GUIStyle(EditorStyles.foldout) {richText = true});
-
-                            GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
-                            {
-                                normal = {textColor = _parentModulePath == subDirectory ? Color.green : GUI.skin.button.normal.textColor}
-                            };
-                            string buttonText = _parentModulePath == subDirectory ? "Selected" : "Select";
-
-                            EditorGUI.BeginDisabledGroup(!CanSelect());
-                            if (GUILayout.Button(buttonText, buttonStyle, GUILayout.Width(60)))
-                            {
-                                if (_parentModulePath == subDirectory)
-                                {
-                                    _parentModulePath = string.Empty;
-                                    _selectedModuleName = string.Empty;
-                                    _selectedModuleType = ModuleType.Main;
-                                }
-                                else
-                                {
-                                    _parentModulePath = subDirectory;
-                                    _selectedModuleName = GetModuleNameFromInfoFile(moduleInfoPath);
-                                }
-                            }
-
-                            EditorGUI.EndDisabledGroup();
-
-                            EditorGUILayout.EndHorizontal();
-
-                            if (_moduleExpandedState[subDirectory])
-                            {
-                                DrawSubModulesRecursively(subDirectory, indentLevel + 1);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private string GetModuleTypePostfix(string moduleInfoPath)
-        {
-            string moduleTypePostfix = string.Empty;
-            foreach (string line in File.ReadAllLines(moduleInfoPath))
-            {
-                if (line.StartsWith("ModuleType: "))
-                {
-                    string typeString = line.Substring("ModuleType: ".Length);
-                    if (Enum.TryParse(typeString, out ModuleType moduleType))
-                    {
-                        moduleTypePostfix = $" <b>({moduleType})</b>";
-                    }
-                }
-            }
-
-            return moduleTypePostfix;
-        }
-
-        private ModuleType GetModuleTypeFromInfoFile(string moduleInfoPath)
-        {
-            foreach (string line in File.ReadAllLines(moduleInfoPath))
-            {
-                if (line.StartsWith("ModuleType: "))
-                {
-                    string typeString = line.Substring("ModuleType: ".Length).Trim();
-                    if (Enum.TryParse(typeString, out ModuleType moduleType))
-                    {
-                        return moduleType;
-                    }
-                }
-            }
-
-            return ModuleType.Main;
-        }
-
         private void CreateModuleStructureForModelGeneration()
         {
             if (_selectedModuleType != ModuleType.Main && string.IsNullOrEmpty(_parentModulePath))
@@ -388,8 +217,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 : Path.Combine(baseModulePath, subDirectory);
 
             string modelPath = _directoryConfigMap[_selectedModuleType].FindFullFolderPathByID(FolderConfig.FolderType.Models, modulePath);
-            string rootsAndContextsPath = _directoryConfigMap[_selectedModuleType].FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
-            string moduleNamespace = GetModuleNamespace(modulePath);
+            string rootsAndContextsPath = _directoryConfigMap[_selectedModuleType]
+                .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
+            string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 
             CreateModel(modelPath, moduleNamespace);
             string contextFileName = GetContextFileName(_selectedModuleName, _selectedModuleType);
@@ -439,7 +269,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EnsureNamespaceImport(modelName, path, "Models", moduleNamespace);
         }
 
-        private void BindModelInContext(string contextPath, string modelName, string iModelName, string dummyModelName, string moduleNamespace, bool useDummyBinding)
+        private void BindModelInContext(string contextPath, string modelName, string iModelName, string dummyModelName, string moduleNamespace,
+            bool useDummyBinding)
         {
             CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
@@ -466,73 +297,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 _generationState = GenerationState.Completed;
             }
         }
-
-        private string GetModuleNamespace(string modulePath)
-        {
-            List<string> moduleNames = new List<string>();
-
-            string currentPath = modulePath;
-
-            while (true)
-            {
-                string moduleInfoPath = Path.Combine(currentPath, MODULE_INFO_FILE);
-                if (File.Exists(moduleInfoPath))
-                {
-                    string moduleName = "";
-                    string moduleType = "";
-
-                    foreach (string line in File.ReadAllLines(moduleInfoPath))
-                    {
-                        if (line.StartsWith("ModuleName: "))
-                        {
-                            moduleName = line.Substring("ModuleName: ".Length).Trim();
-
-                            if (moduleName.EndsWith("Module"))
-                            {
-                                moduleName = moduleName.Substring(0, moduleName.Length - "Module".Length).Trim();
-                            }
-                        }
-                        else if (line.StartsWith("ModuleType: "))
-                        {
-                            moduleType = line.Substring("ModuleType: ".Length).Trim();
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(moduleName))
-                    {
-                        moduleNames.Insert(0, moduleName + "Module");
-                    }
-
-                    if (moduleType == "Main")
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        DirectoryInfo parentDir = Directory.GetParent(currentPath);
-                        if (parentDir == null || string.IsNullOrEmpty(parentDir.FullName))
-                        {
-                            break;
-                        }
-
-                        currentPath = parentDir.FullName;
-                    }
-                }
-                else
-                {
-                    DirectoryInfo parentDir = Directory.GetParent(currentPath);
-                    if (parentDir == null || string.IsNullOrEmpty(parentDir.FullName))
-                    {
-                        break;
-                    }
-
-                    currentPath = parentDir.FullName;
-                }
-            }
-
-            return "Modules." + string.Join(".", moduleNames);
-        }
-
 
         [DidReloadScripts]
         private static void OnScriptsReloaded()

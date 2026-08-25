@@ -28,25 +28,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string testModulePath = Path.Combine(modulePath, testModulesFolderName, $"{moduleName}TestModule");
 
             CreateFoldersRecursively(testModulePath, directoryConfigMap[ModuleType.Test].RootFolders, selectedOptionalFolders);
-            ProcessLockedFoldersRecursively(testModulePath, codeGenSettings);
 
             string screenAsmdefName = moduleName + "Module";
             string screenAsmdefPath = Path.Combine(modulePath, screenAsmdefName + ".asmdef");
             CreateAssemblyDefinitionFile(screenAsmdefPath, screenAsmdefName);
             AddNamespaceExceptions(directoryConfigMap[ModuleType.Screen], modulePath);
 
-            File.WriteAllText($"{testModulePath}/{MODULE_INFO_FILE}",
-                $"ModuleName: {moduleName}TestModule\nModuleType: Test");
-
             string testAsmdefName = moduleName + "TestModule";
             string testAsmdefPath = Path.Combine(testModulePath, testAsmdefName + ".asmdef");
             CreateAssemblyDefinitionFile(testAsmdefPath, testAsmdefName, GetParsedAssemblyName(screenAsmdefName));
             AddNamespaceExceptions(directoryConfigMap[ModuleType.Test], testModulePath);
 
-            CreateInfoFiles(testModulePath, ModuleType.Test, selectedOptionalFolders, directoryConfigMap);
-            string testParentInfoFilePath = Path.Combine(modulePath, testModulesFolderName);
-            UpdateParentModuleInfo(testParentInfoFilePath, testModulePath, "Test");
             AssetDatabase.Refresh();
+            new ModuleIndexRegistrar().Register(
+                testModulePath,
+                directoryConfigMap[ModuleType.Test],
+                codeGenSettings.DirectoryStructureConfigMap.Keys
+            );
 
             string viewsAndMediatorsPath = directoryConfigMap[ModuleType.Screen]
                 .FindFullFolderPathByID(FolderConfig.FolderType.ScreenViews, modulePath);

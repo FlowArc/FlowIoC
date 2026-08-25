@@ -13,12 +13,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     {
         private const string MODULE_GENERATION_WORKING = "module_generation_working";
 
-        private const string MODULE_INFO_FILE = "_module_info.txt";
-        private const string MAIN_MODULES_INFO_FILE = "_mainmodules_info.txt";
-        private const string SCREENMODULES_INFO_FILE = "_screenmodules_info.txt";
-        private const string TESTMODULES_INFO_FILE = "_testmodules_info.txt";
-        private const string SUBMODULES_INFO_FILE = "_submodules_info.txt";
-
         private const string ROOTS_CONTEXTS_WARNING = "Roots&Contexts folder not found!";
         private const string PARENT_MODULE_REQUIRED_TITLE = "Parent Module Required";
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
@@ -93,23 +87,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 ? Path.Combine(parentModulePath, $"{moduleName}Module")
                 : Path.Combine(parentModulePath, subDirectory, $"{moduleName}Module");
 
-            string parentInfoFilePath = string.IsNullOrEmpty(subDirectory)
-                ? parentModulePath
-                : Path.Combine(parentModulePath, subDirectory);
-
             CreateFoldersRecursively(modulePath, directoryConfigMap[selectedModuleType].RootFolders, selectedOptionalFolders);
-            ProcessLockedFoldersRecursively(modulePath, codeGenSettings);
-
-            File.WriteAllText(
-                $"{modulePath}/{MODULE_INFO_FILE}",
-                $"ModuleName: {moduleName}Module\nModuleType: {moduleTypeForInfoFile}"
-            );
 
             CreateAndUpdateModules(
                 moduleName,
                 modulePath,
-                parentInfoFilePath,
-                moduleTypeForInfoFile,
                 selectedModuleType,
                 selectedOptionalFolders,
                 directoryConfigMap,
@@ -127,8 +109,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private static void CreateAndUpdateModules(
             string moduleName,
             string modulePath,
-            string parentInfoFilePath,
-            string moduleTypeForInfoFile,
             ModuleType selectedModuleType,
             List<FolderConfig> selectedOptionalFolders,
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
@@ -151,9 +131,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             AddNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath);
 
-            CreateInfoFiles(modulePath, selectedModuleType, selectedOptionalFolders, directoryConfigMap);
-            UpdateParentModuleInfo(parentInfoFilePath, modulePath, moduleTypeForInfoFile);
             AssetDatabase.Refresh();
+            new ModuleIndexRegistrar().Register(
+                modulePath,
+                directoryConfigMap[selectedModuleType],
+                codeGenSettings.DirectoryStructureConfigMap.Keys
+            );
 
             if (selectedModuleType == ModuleType.Screen)
             {

@@ -11,7 +11,7 @@ namespace FlowIoC.ConsoleModule
 {
     public static class FlowLogTypeManager
     {
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         public static void AddFlowLogTypesBatch(List<(string Name, int Value, Color LogColor)> newTypes)
         {
             if (newTypes == null || newTypes.Count == 0)
@@ -19,7 +19,7 @@ namespace FlowIoC.ConsoleModule
 
             var usedValues = new HashSet<int>();
             foreach (SystemLogType st in Enum.GetValues(typeof(SystemLogType)))
-                usedValues.Add((int)st);
+                usedValues.Add((int) st);
 
             var settings = FlowLogger.Settings;
             foreach (var lt in settings.LogTypes)
@@ -47,9 +47,11 @@ namespace FlowIoC.ConsoleModule
                             logType.IsAutoRegistered = true;
                             updatedCount++;
                         }
+
                         break;
                     }
                 }
+
                 if (existsInSettings) continue;
 
                 int value;
@@ -66,6 +68,7 @@ namespace FlowIoC.ConsoleModule
                         value++;
                     nextAutoValue = value + autoStep;
                 }
+
                 usedValues.Add(value);
 
                 resolved.Add((entry.Name, value, entry.LogColor));
@@ -101,6 +104,44 @@ namespace FlowIoC.ConsoleModule
             string names = string.Join(", ", resolved.Select(r => r.Name));
             Debug.Log($"<color=cyan>FlowConsole:</color> Auto-registered {resolved.Count} module log type(s): {names}");
         }
-        #endif
+
+        /// <summary>
+        /// Only ever removes what module detection itself added: a mandatory or hand-added
+        /// channel is never touched, whatever the caller passes.
+        /// </summary>
+        public static void RemoveFlowLogTypesBatch(List<string> names)
+        {
+            if (names == null || names.Count == 0)
+                return;
+
+            var namesToRemove = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+
+            var settings = FlowLogger.Settings;
+            var removed = new List<string>();
+
+            for (int i = settings.LogTypes.Count - 1; i >= 0; i--)
+            {
+                var logType = settings.LogTypes[i];
+                if (!namesToRemove.Contains(logType.Name)) continue;
+                if (!logType.IsAutoRegistered) continue;
+                if (logType.IsMandatory) continue;
+
+                removed.Add(logType.Name);
+                settings.LogTypes.RemoveAt(i);
+            }
+
+            if (removed.Count == 0)
+                return;
+
+            settings.SortProjectLogTypes();
+            settings.RebuildCache();
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+            FlowConsoleSettings.NotifyProjectLogTypesChanged();
+
+            string removedNames = string.Join(", ", removed);
+            Debug.Log($"<color=cyan>FlowConsole:</color> Removed {removed.Count} module log type(s): {removedNames}");
+        }
+#endif
     }
 }

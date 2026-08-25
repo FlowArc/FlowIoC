@@ -24,6 +24,7 @@ namespace FlowIoC.BaseModule.ProjectPaths
         public string ResourcesRoot => Root + "/Resources";
 
         public string CodeGeneratorSettings => CodeGeneratorRoot + "/CodeGeneratorSettings.asset";
+        public string ModuleIndex => CodeGeneratorRoot + "/FlowIoCModuleIndex.asset";
         public string FolderDrawerConfig => FolderDrawerRoot + "/FlowIoCFolderDrawerConfig.asset";
         public string FlowLogType => GeneratedRoot + "/FlowLogType.cs";
         public string GeneratedAsmRef => GeneratedRoot + "/FlowIoC.Generated.asmref";

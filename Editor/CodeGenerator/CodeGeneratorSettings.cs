@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.Editor.CodeGenerator.Extensions;
+using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.Migration;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -96,7 +97,7 @@ namespace FlowIoC.Editor.CodeGenerator
             if (!Directory.Exists(modulesPath)) return;
 
             var folderOperations = new List<(string oldPath, string newPath, FolderConfig.FolderType type)>();
-            CollectFolderOperations(modulesPath, folderOperations);
+            CollectFolderOperations(folderOperations);
             AssetDatabase.Refresh();
 
             foreach (var operation in folderOperations)
@@ -135,57 +136,122 @@ namespace FlowIoC.Editor.CodeGenerator
             return "Assets" + absolutePath.Substring(Application.dataPath.Length);
         }
 
-        private void CollectFolderOperations(
-            string currentPath,
-            List<(string oldPath, string newPath, FolderConfig.FolderType type)> operations
-        )
+        /// <summary>
+        /// A folder's type used to be decided by probing it for a marker file. Now every module
+        /// in the index is asked directly: for each FolderType, a recorded FolderGuid is resolved
+        /// through the AssetDatabase and compared to the configured name, because a GUID is the
+        /// one thing that survives a rename a name lookup cannot follow. Only when no GUID has
+        /// been recorded yet does this fall back to finding the folder by its configured name -
+        /// which cannot detect a pending rename, only heal the map for the next one - and record
+        /// what it finds so the same module never needs the fallback again.
+        /// </summary>
+        private void CollectFolderOperations(List<(string oldPath, string newPath, FolderConfig.FolderType type)> operations)
         {
-            if (!Directory.Exists(currentPath)) return;
+            FlowIoCModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
+            IAssetPaths assetPaths = new AssetDatabasePaths();
+            ModuleRegistry registry = new ModuleRegistry(index, assetPaths);
+            ModuleAssetPathResolver pathResolver = new ModuleAssetPathResolver();
+            FolderRenamePlanner renamePlanner = new FolderRenamePlanner();
 
-            foreach (KeyValuePair<FolderConfig.FolderType, string> kvp in DirectoryStructureConfigMap)
+            Dictionary<ModuleKind, DirectoryStructureConfig> directoryConfigsByKind = new Dictionary<ModuleKind, DirectoryStructureConfig>
             {
-                string[] possibleFolders = Directory.GetDirectories(currentPath);
-                string oldFolderPath = possibleFolders.FirstOrDefault(f =>
-                {
-                    string infoFilePath = Path.Combine(f, $"_{kvp.Key.ToString().ToLower()}_info.txt");
-                    return File.Exists(infoFilePath);
-                });
+                {ModuleKind.Main, MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main")},
+                {ModuleKind.Sub, MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main")},
+                {ModuleKind.Screen, ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen")},
+                {ModuleKind.Test, TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test")}
+            };
 
-                if (!string.IsNullOrEmpty(oldFolderPath))
-                {
-                    string newFolderPath = Path.Combine(Path.GetDirectoryName(oldFolderPath), kvp.Value);
-                    if (!string.Equals(oldFolderPath, newFolderPath, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        operations.Add((oldFolderPath, newFolderPath, kvp.Key));
-                    }
+            string dataPath = Application.dataPath.Replace('\\', '/');
+            bool indexDirty = false;
 
-                    string[] subDirs = Directory.GetDirectories(oldFolderPath);
-                    foreach (string subDir in subDirs)
-                    {
-                        CollectFolderOperations(subDir, operations);
-                    }
-                }
-            }
-
-            string[] remainingSubDirs = Directory.GetDirectories(currentPath);
-            foreach (string subDir in remainingSubDirs)
+            foreach (ModuleDescriptor module in registry.Modules)
             {
-                bool isProcessed = false;
+                string moduleAssetPath = registry.PathOf(module);
+                if (string.IsNullOrEmpty(moduleAssetPath)) continue;
+
+                string modulePath = pathResolver.ToAbsolutePath(moduleAssetPath);
+                if (string.IsNullOrEmpty(modulePath)) continue;
+
+                directoryConfigsByKind.TryGetValue(module.Kind, out DirectoryStructureConfig directoryConfig);
+
                 foreach (KeyValuePair<FolderConfig.FolderType, string> kvp in DirectoryStructureConfigMap)
                 {
-                    string infoFilePath = Path.Combine(subDir, $"_{kvp.Key.ToString().ToLower()}_info.txt");
-                    if (File.Exists(infoFilePath))
-                    {
-                        isProcessed = true;
-                        break;
-                    }
-                }
+                    FolderConfig.FolderType type = kvp.Key;
+                    string configuredName = kvp.Value;
+                    if (string.IsNullOrEmpty(configuredName)) continue;
 
-                if (!isProcessed)
-                {
-                    CollectFolderOperations(subDir, operations);
+                    if (module.TryGetFolderGuid(type, out string guid))
+                    {
+                        string currentAssetPath = assetPaths.PathOf(guid);
+                        if (string.IsNullOrEmpty(currentAssetPath)) continue;
+
+                        string currentAbsolutePath = pathResolver.ToAbsolutePath(currentAssetPath);
+                        if (renamePlanner.TryPlanRename(currentAbsolutePath, configuredName, out string newAbsolutePath))
+                        {
+                            operations.Add((currentAbsolutePath, newAbsolutePath, type));
+                        }
+
+                        continue;
+                    }
+
+                    if (directoryConfig == null) continue;
+
+                    string expectedAbsolutePath = directoryConfig.FindFullFolderPathByID(type, modulePath);
+                    if (string.IsNullOrEmpty(expectedAbsolutePath)) continue;
+
+                    if (!Directory.Exists(expectedAbsolutePath))
+                    {
+                        LogFallbackMiss(module, type,
+                            $"expected at '{expectedAbsolutePath}' but nothing exists there. A later rename of " +
+                            "this folder type will not follow it until it is found - if it was never created " +
+                            "for this module, this can be ignored.");
+                        continue;
+                    }
+
+                    // NamespaceUtility.GetUnityAssetPath only resolves paths under Assets/. An
+                    // embedded-package module (ModuleIndexRebuilder also scans Packages/*/Modules)
+                    // would otherwise be misread as the Assets root and have that folder's GUID
+                    // recorded by mistake, so skip healing it here rather than risk corrupting the
+                    // index over it.
+                    if (!expectedAbsolutePath.Replace('\\', '/').StartsWith(dataPath, StringComparison.Ordinal))
+                    {
+                        LogFallbackMiss(module, type,
+                            $"'{expectedAbsolutePath}' sits outside the Assets folder (an embedded package " +
+                            "module), which this fallback does not resolve.");
+                        continue;
+                    }
+
+                    string expectedAssetPath = NamespaceUtility.GetUnityAssetPath(expectedAbsolutePath);
+                    string foundGuid = assetPaths.GuidOf(expectedAssetPath);
+                    if (string.IsNullOrEmpty(foundGuid))
+                    {
+                        LogFallbackMiss(module, type,
+                            $"the AssetDatabase has no GUID yet for '{expectedAbsolutePath}'. Try again after " +
+                            "an AssetDatabase.Refresh().");
+                        continue;
+                    }
+
+                    module.RecordFolderGuid(type, foundGuid);
+                    indexDirty = true;
                 }
             }
+
+            if (indexDirty)
+            {
+                EditorUtility.SetDirty(index);
+                AssetDatabase.SaveAssets();
+            }
+        }
+
+        /// <summary>
+        /// The fallback exists to heal a module whose GUID was never recorded, and a heal that
+        /// silently never happens is indistinguishable from one that had nothing to do. This is
+        /// unconditional (not FlowLogger, which compiles out) so the gap is visible by default.
+        /// </summary>
+        private void LogFallbackMiss(ModuleDescriptor module, FolderConfig.FolderType type, string detail)
+        {
+            Debug.LogWarning($"<color=cyan>FlowIoC:</color> could not record a GUID for the '{type}' folder of " +
+                             $"module '{module.Name}' - {detail}");
         }
     }
 }

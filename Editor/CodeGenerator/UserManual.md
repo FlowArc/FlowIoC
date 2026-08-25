@@ -18,7 +18,7 @@
 4. [Directory Structure Management](#directory-structure-management)
    - [Understanding the Module Structure](#understanding-the-module-structure)
    - [Required vs Optional Folders](#required-vs-optional-folders)
-   - [Managing Module Info Files](#managing-module-info-files)
+   - [Managing the Module Index](#managing-the-module-index)
 5. [Namespace Management](#namespace-management)
    - [Namespace Conventions](#namespace-conventions)
    - [Assembly Definition Files](#assembly-definition-files)
@@ -96,7 +96,7 @@ To create a Main module (for game systems, services, etc.):
 The system will generate:
 - A complete directory structure in `Assets/Modules/YourModuleName/`
 - Root and Context classes in the `Scripts/Runtime/RootsContexts/` folder
-- Module info file (`_module_info.txt`) with module configuration
+- Registration in the project's module index (`FlowIoCModuleIndex.asset`), which is how the tools recognise this folder as a module
 - Assembly definition file (`Modules.YourModuleName.asmdef`)
 
 ### Screen Module Creation
@@ -138,7 +138,7 @@ To create a Test module:
 The system will generate:
 - A complete directory structure in `Assets/Modules/YourNameTest/`
 - Test-specific Root and Context classes with appropriate preprocessor directives
-- Test module info and assembly definition files
+- An assembly definition file, and registration in the project's module index
 
 ### Module Configuration Options
 
@@ -352,7 +352,6 @@ Each module follows a standardized directory structure:
 
 ```
 ModuleName/
-├── _module_info.txt             # Module configuration
 ├── Modules.ModuleName.asmdef    # Assembly definition
 ├── Art/                         # Art assets
 ├── Prefabs/                     # Prefab assets
@@ -391,23 +390,23 @@ Optional folders can be selected during module creation:
 - Scriptables
 - And others based on your configuration
 
-### Managing Module Info Files
+### Managing the Module Index
 
-Each module has an info file (`_module_info.txt`) that defines its configuration:
+Every module is recorded as an entry in one project asset,
+`Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset`. An entry's name
+and type are not stored opinions — they are read back off the folder tree each time the
+index rebuilds, keyed on the module folder's own Unity GUID so a rename or a move in the
+Project window does not desynchronise the tools from what is actually on disk.
 
-```
-ModuleName: GameplayModule
-ModuleType: Main
-```
-
-This file is used by the system to:
+The index is used by the system to:
 - Identify the module type
 - Determine namespace conventions
 - Control visibility in tools and hierarchy views
 
-You can manage module info files through:
+Because it is a cache rather than something you maintain, there is nothing to
+hand-edit. A stale or missing entry is fixed by rebuilding it:
 - Tools > FlowIoC > Module Configuration > Detect & Fix Module Infos
-- Tools > FlowIoC > Module Configuration > Cleanse Module Infos
+- Or simply reopen the project — the same rebuild runs automatically on load
 
 ## Namespace Management
 
@@ -612,7 +611,7 @@ Manage dependencies effectively:
 1. **Namespace Errors**: If you see namespace errors:
    - Ensure the assembly reference is set in your asmdef file
    - Check the namespace follows the convention (`Modules.ModuleName.SubNamespace`)
-   - Verify the module info file is correctly configured
+   - Verify the module is registered correctly — run Detect & Fix Module Infos to rebuild the index
 
 2. **Missing Bindings**: If bindings are not being generated:
    - Check the context file structure follows the template pattern
@@ -632,9 +631,9 @@ To diagnose issues with the Code Generator:
    - Run Tools > FlowIoC > Module Configuration > Detect & Fix Module Infos
    - This will identify and repair common structure issues
 
-2. **Check Module Info Files**:
-   - Ensure each module has a valid `_module_info.txt` file
-   - Verify the ModuleName and ModuleType are correct
+2. **Check the Module Index**:
+   - Open `FlowIoCModuleIndex.asset` in the Inspector to see every module FlowIoC has found
+   - A missing or wrong entry means the index is stale — rebuild it rather than editing it
 
 3. **Assembly Definition Validation**:
    - Check that assembly definitions have the correct references
@@ -644,18 +643,16 @@ To diagnose issues with the Code Generator:
 
 If a module becomes corrupted or inconsistent:
 
-1. **Fix Module Infos**:
+1. **Rebuild the Module Index**:
    - Run Tools > FlowIoC > Module Configuration > Detect & Fix Module Infos
+   - A module that no longer exists on disk is simply absent from the rebuilt index —
+     there is no separate cleanup step
 
-2. **Cleanse Module Data**:
-   - Run Tools > FlowIoC > Module Configuration > Cleanse Module Infos
-   - This removes obsolete entries and repairs configuration issues
-
-3. **Update Namespace Settings**:
+2. **Update Namespace Settings**:
    - Run Tools > FlowIoC > Module Configuration > Update Namespace Settings
    - This synchronizes namespace configuration with the current module structure
 
-4. **Manual Repair** (for severe issues):
+3. **Manual Repair** (for severe issues):
    - Create a new module with the same name and type
    - Copy your custom code to the new module
    - Delete the corrupted module

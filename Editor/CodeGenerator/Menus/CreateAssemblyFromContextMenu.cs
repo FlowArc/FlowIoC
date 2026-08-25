@@ -6,12 +6,12 @@ using UnityEditor;
 using UnityEngine;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus
 {
     public static class CreateAssemblyFromContextMenu
     {
-        private const string MODULE_INFO_FILE = "_module_info.txt";
         private const string ASMDEF_EXT = ".asmdef";
 
         [MenuItem("Assets/FlowIoC/Create Assembly", true)]
@@ -30,9 +30,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 assetPath = parentFolder;
             }
 
-            string fullPath = Path.Combine(Application.dataPath, assetPath.Replace("Assets/", ""));
-            string moduleInfoPath = Path.Combine(fullPath, MODULE_INFO_FILE);
-            return File.Exists(moduleInfoPath);
+            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            return registry.IsModule(assetPath);
         }
 
         [MenuItem("Assets/FlowIoC/Create Assembly", priority = 20)]
@@ -43,15 +42,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             {
                 assetPath = Path.GetDirectoryName(assetPath);
             }
-            string fullPath = Path.Combine(Application.dataPath, assetPath.Replace("Assets/", ""));
-            
-            string moduleName = GetModuleName(fullPath);
-            if (string.IsNullOrEmpty(moduleName))
+
+            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            if (!registry.TryGetModule(assetPath, out ModuleDescriptor module))
             {
-                Debug.LogError($"Module name not found in {MODULE_INFO_FILE}. Aborting.");
+                Debug.LogError($"'{assetPath}' is not a module.");
                 return;
             }
-            
+
+            string fullPath = new ModuleAssetPathResolver().ToAbsolutePath(assetPath);
+            string moduleName = module.Name;
+
             string asmdefPath = Path.Combine(fullPath, moduleName + ASMDEF_EXT);
             if (!File.Exists(asmdefPath))
             {
@@ -61,15 +62,19 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             {
                 Debug.LogWarning($".asmdef file already exists at: {asmdefPath}");
             }
-            
+
             CreateDotSettingsFileInNewFormat(fullPath, moduleName);
-            
-            string moduleInfoFile = Path.Combine(fullPath, MODULE_INFO_FILE);
-            string moduleTypeString = NamespaceUtility.GetModuleTypeFromInfoFile(moduleInfoFile);
-            if (!Enum.TryParse(moduleTypeString, out ModuleType modType))
+
+            ModuleType modType = module.Kind switch
             {
-                modType = ModuleType.Main;
-            }
+                ModuleKind.Main => ModuleType.Main,
+                ModuleKind.Screen => ModuleType.Screen,
+                ModuleKind.Test => ModuleType.Test,
+                // Sub-modules are laid out exactly like a Main module; there is no separate
+                // DirectoryStructureConfig for Sub.
+                ModuleKind.Sub => ModuleType.Main,
+                _ => ModuleType.Main
+            };
 
             DirectoryStructureConfig config = GetDirectoryStructureConfigFor(modType);
             if (config == null)
@@ -84,7 +89,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 TraverseFoldersAndSetProviders(fullPath, config.RootFolders, newDotSettingsPath);
                 NamespaceUtility.SetNamespaceProvider(fullPath, true, newDotSettingsPath);
             }
-            
+
             UpdateAllScriptsNamespaceInFolder(fullPath);
 
             AssetDatabase.Refresh();
@@ -102,10 +107,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 case ModuleType.Test:
                     return TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test");
             }
+
             return null;
         }
 
-        private static void TraverseFoldersAndSetProviders(string basePath, 
+        private static void TraverseFoldersAndSetProviders(string basePath,
             System.Collections.Generic.List<FolderConfig> folders, string dotSettingsPath)
         {
             foreach (var folder in folders)
@@ -115,7 +121,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 {
                     bool isProvider = folder.IsNamespaceProvider;
                     NamespaceUtility.SetNamespaceProvider(folderPath, isProvider, dotSettingsPath);
-                    
+
                     if (folder.SubFolders != null && folder.SubFolders.Count > 0)
                     {
                         TraverseFoldersAndSetProviders(folderPath, folder.SubFolders, dotSettingsPath);
@@ -123,7 +129,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 }
             }
         }
-        
+
         private static void UpdateAllScriptsNamespaceInFolder(string folderPath)
         {
             var csFiles = Directory.GetFiles(folderPath, "*.cs", SearchOption.AllDirectories);
@@ -133,11 +139,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             {
                 if (file.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
                     continue;
-                
+
                 string fileDirectory = Path.GetDirectoryName(file);
                 if (!NamespaceUtility.IsFolderNamespaceProvider(fileDirectory))
                     continue;
-                
+
                 string finalNamespace = NamespaceUtility.GetFullNamespaceForFile(file);
 
                 string content = File.ReadAllText(file);
@@ -152,29 +158,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 }
             }
         }
-        
-        private static string GetModuleName(string folderPath)
-        {
-            string moduleInfoPath = Path.Combine(folderPath, MODULE_INFO_FILE);
-            if (!File.Exists(moduleInfoPath))
-            {
-                Debug.LogError($"[GetModuleName] File not found => {moduleInfoPath}");
-                return null;
-            }
 
-            string[] lines = File.ReadAllLines(moduleInfoPath);
-            foreach (var rawLine in lines)
-            {
-                string line = rawLine.TrimStart();
-                if (line.StartsWith("ModuleName: "))
-                {
-                    string val = line.Substring("ModuleName: ".Length).Trim();
-                    return val;
-                }
-            }
-            return null;
-        }
-        
         private static string GetParsedAssemblyName(string rawAssemblyName)
         {
             const string prefix = "Modules.";
@@ -205,7 +189,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             return prefix + moduleName + suffix;
         }
-        
+
         private static void CreateAssemblyDefinitionFile(string oldFilePath, string rawAssemblyName)
         {
             var finalAssemblyName = GetParsedAssemblyName(rawAssemblyName);
@@ -232,7 +216,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             File.WriteAllText(newFilePath, asmdefContent);
             Debug.LogError($"Assembly Definition created at: {newFilePath} (Name: {finalAssemblyName}, references: FlowIoC)");
-            
+
             if (!oldFilePath.Equals(newFilePath, StringComparison.OrdinalIgnoreCase) && File.Exists(oldFilePath))
             {
                 File.Delete(oldFilePath);
@@ -243,14 +227,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             AssetDatabase.Refresh();
         }
-        
+
         private static void CreateDotSettingsFileInNewFormat(string fullPath, string rawAssemblyName)
         {
             string oldDotSettingsPath = Path.Combine(fullPath, rawAssemblyName + ".csproj.DotSettings");
 
             var finalAssemblyName = GetParsedAssemblyName(rawAssemblyName);
             string newDotSettingsPath = Path.Combine(fullPath, finalAssemblyName + ".csproj.DotSettings");
-            
+
             if (!File.Exists(newDotSettingsPath))
             {
                 NamespaceUtility.CreateDotSettingsFile(newDotSettingsPath);
@@ -260,7 +244,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             {
                 Debug.LogWarning($"DotSettings file already exists: {newDotSettingsPath}");
             }
-            
+
             if (!oldDotSettingsPath.Equals(newDotSettingsPath, StringComparison.OrdinalIgnoreCase) &&
                 File.Exists(oldDotSettingsPath))
             {
