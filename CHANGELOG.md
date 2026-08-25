@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The data type convention is written down. A module's data carries its origin in its name:
+  `CD_` for config a designer authors, `RD_` for what play produces, `PD_` for what the save
+  system keeps, `ED_` for editor tooling and `DD_` for a copy of what a backend owns, each
+  with the matching `CVO`, `RVO`, `PVO`, `EVO` and `DVO` suffix on the value objects inside
+  it. A value object that carries two kinds at once - an authored half and a runtime half in
+  one place - is named after neither and keeps the lettered suffixes on its parts. The rule is
+  in the agent rules, in the README, and on a new *Data Types* page in the Help window.
+
+- `Tools/FlowIoC/AI/Agent Skills`, which copies the skills FlowIoC ships into the project's
+  `.claude/skills` folder, one folder per skill, and reports which are missing or out of date.
+  The agent rules are what an assistant is told on every task and so stay short; a skill is what
+  it reaches for when one kind of work comes up and can afford the detail. The first is
+  `flowioc-data-types`. Only the files the package owns are compared, so a skill you wrote
+  yourself is never touched and a note left beside a shipped one survives an install.
+
 - *Create Module* writes a module's signal holder. `Signals` is a folder type of its own now
   rather than a plain folder, so the generator can find it; a new `TempSignals` template
   produces `<Name>Signals` with its `Incoming` and `Outgoing` classes, the Context declares
@@ -46,6 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.gitignore` does not untrack what git already tracks.
 
 ### Changed
+
+- The Help window sidebar folds *Folder Layout* into a *Wiki* category, alongside the new
+  *Data Types* page. The window still opens on the folder layout, with the category open.
 
 - The agent rules spell out how a Model relates to signals, which was previously left to
   inference. A Model never subscribes to a signal: an incoming signal runs a Command and
@@ -126,6 +144,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the next rebuild.
 
 ### Fixed
+
+- The shipped code style declares `PD_` a legal type prefix. `CD_`, `RD_`, `ED_` and `DD_` were
+  all there and the matching `PVO` suffix was too, so a player data asset was the one kind whose
+  name Rider flagged.
 
 - Reading a folder name for a type the project's `CodeGeneratorSettings.asset` has never
   heard of no longer throws `KeyNotFoundException`. That asset is written once in the

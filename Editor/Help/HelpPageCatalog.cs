@@ -7,9 +7,9 @@ using FlowIoC.Editor.Help.Pages.Tools;
 namespace FlowIoC.Editor.Help
 {
     /// <summary>
-    /// What the sidebar shows, in reading order: two topics on their own, then the architecture
-    /// folded into one category and the Editor's own tools into another. Adding a topic is one
-    /// class and one line here.
+    /// What the sidebar shows, in reading order: the introduction on its own, then the reference
+    /// topics folded into one category, the architecture into another and the Editor's own tools
+    /// into a third. Adding a topic is one class and one line here.
     /// </summary>
     internal class HelpPageCatalog
     {
@@ -18,7 +18,9 @@ namespace FlowIoC.Editor.Help
             Sections = new List<HelpSection>
             {
                 new HelpSection(new WelcomePage()),
-                new HelpSection(new FolderLayoutPage()),
+                new HelpSection("Wiki", "TextAsset Icon",
+                    new FolderLayoutPage(),
+                    new DataTypesPage()),
                 new HelpSection("Structure", "UnityEditor.SceneHierarchyWindow",
                     new RootContextPage(),
                     new SignalsPage(),
@@ -33,7 +35,8 @@ namespace FlowIoC.Editor.Help
                     new ModelViewerPage(),
                     new FolderDrawerPage(),
                     new ScreenConfigManagerPage(),
-                    new AgentRulesPage())
+                    new AgentRulesPage(),
+                    new AgentSkillsPage())
             };
 
             var pages = new List<IHelpPage>();

@@ -84,8 +84,8 @@ Modules/
             ├── Constants/
             ├── Controllers/        # commands
             ├── Datas/
-            │   ├── UnityObjects/   # ScriptableObject configs
-            │   └── ValueObjects/   # plain data, suffixed VO
+            │   ├── UnityObjects/   # ScriptableObjects: CD_, RD_, PD_, ED_, DD_
+            │   └── ValueObjects/   # plain data: VO, CVO, RVO, PVO, EVO, DVO
             ├── Entities/
             ├── Enums/
             ├── Functions/
@@ -100,6 +100,31 @@ Modules/
 `Create Command`, `Create Model` and `Create View` place their files correctly on their
 own. Prefer them over writing files by hand.
 
+### Data types
+
+Data lives in two folders, and its name says which kind it is. `Datas/UnityObjects/` holds the
+ScriptableObject assets, prefixed by where their contents come from. `Datas/ValueObjects/` holds
+the plain `[Serializable]` classes those assets are built out of, suffixed to match.
+
+| Prefix | Means | Value objects inside |
+|---|---|---|
+| `CD_` | Config data. Authored in the Editor, constant at runtime. | `MapCVO` |
+| `RD_` | Runtime data. Produced during play, not persisted. | `MapRVO` |
+| `PD_` | Player data. Loaded at startup, saved again whenever it changes. | `MapPVO` |
+| `ED_` | Editor data. Read by editor tooling only. | `MapEVO` |
+| `DD_` | Database data. Filled from an external backend. | `MapDVO` |
+
+So `CD_Maps` is the config asset and its entries are `MapCVO`; `PD_Maps` is the saved asset and its
+entries are `MapPVO`. A plain `MapVO` is the right name when the data belongs to no one kind in
+particular, and a project may add a family of its own the same way.
+
+One value object may carry two kinds at once, and is then named after neither of them. A
+`GameHexVO` that holds a `GameHexCVO` for what the level author placed and a `GameHexRVO` for
+what play produced is named for the hex, because both halves are wanted in the same place.
+
+Which prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`; what each one
+means is the table above.
+
 ### Naming
 
 | Thing | Name |
@@ -109,7 +134,8 @@ own. Prefer them over writing files by hand.
 | Model | `IPlayerModel` and `PlayerModel` |
 | Service | `ICountdownService` and `CountdownService` |
 | System | `IMapSystem` and `MapSystem` |
-| Value object | `PlayerStateVO` |
+| Data asset | `CD_Maps`, `RD_Maps`, `PD_Maps` |
+| Value object | `PlayerStateVO`, `MapCVO`, `MapRVO` |
 | View and Mediator | `HudView` and `HudMediator` |
 | Function | `CalculateDamageFunction` |
 | Connector sub-context | `HeroConnectorSubContext` |
