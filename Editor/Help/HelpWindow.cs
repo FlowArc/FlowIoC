@@ -56,6 +56,13 @@ namespace FlowIoC.Editor.Help
             _painter = new HelpPainter(_theme);
             _selected = _catalog.OpeningPage;
             _openCategories.Clear();
+
+            // The window opens on a topic that sits inside a category, so that category starts
+            // folded open - otherwise the selected page is not on screen to begin with.
+            HelpSection opening = _catalog.SectionOf(_selected);
+
+            if (opening != null && opening.IsCategory)
+                _openCategories.Add(opening.Title);
         }
 
         private void OnGUI()

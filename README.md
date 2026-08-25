@@ -119,6 +119,7 @@ flowchart LR
 - [Editor Tools](#editor-tools)
 - [AI Agent Rules](#ai-agent-rules)
 - [Module Layout Convention](#module-layout-convention)
+- [Data Types](#data-types)
 - [Samples](#samples)
 - [Documentation Index](#documentation-index)
 - [License](#license)
@@ -831,6 +832,7 @@ Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Rebuild the module index and its log types; update namespace settings and the solution code style |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
+| `Tools/FlowIoC/AI/Agent Skills` | Install the skills FlowIoC ships into the project's `.claude/skills` |
 | `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor |
 | `Assets/FlowIoC/Create Assembly` | Assembly definition for the selected folder |
 | `Assets/FlowIoC/Update Module's Namespaces` | Rewrite namespaces after a move or rename |
@@ -880,6 +882,24 @@ block with it.
 
 The rule text ships in `Documentation~/AgentRules.md`.
 
+### Agent Skills
+
+The rules are what an assistant is told on every task, so they stay short. A skill is what it
+reaches for when one particular kind of work comes up, and it can afford to be longer.
+
+> **Tools ▸ FlowIoC ▸ AI ▸ Agent Skills**
+
+The window copies each skill the package ships into the project's `.claude/skills` folder, one
+folder per skill, and reports which of them are missing or out of date. Only the files the
+package owns are compared, so a skill you wrote yourself is never touched, and a note left
+beside a shipped skill survives an install.
+
+| Skill | Covers |
+|---|---|
+| `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, and which folder each kind belongs in. |
+
+The skills ship in `Documentation~/Skills/`.
+
 ---
 
 ## Module Layout Convention
@@ -900,8 +920,8 @@ Modules/
     │       ├── Constants/         # constant strings and keys
     │       ├── Controllers/       # commands
     │       ├── Datas/
-    │       │   ├── UnityObjects/  # ScriptableObject configs
-    │       │   └── ValueObjects/  # plain data (…VO)
+    │       │   ├── UnityObjects/  # ScriptableObjects (CD_, RD_, PD_, ED_, DD_)
+    │       │   └── ValueObjects/  # plain data (…VO, …CVO, …RVO, …PVO)
     │       ├── Entities/          # MonoBehaviours owned by the module
     │       ├── Enums/
     │       ├── Functions/
@@ -977,6 +997,66 @@ reference any module in the project; in exchange, every script in it is wrapped 
 Sub-contexts are attached from the Root's inspector (*Add Sub Context*), which
 lists every `Context` type in the project. Mark a context with
 `[ExcludeFromContextWindow]` to keep it out of that list.
+
+---
+
+## Data Types
+
+A module keeps its data in two folders, and the name of a type says which kind of data it is
+before you open it. `Datas/UnityObjects/` holds the ScriptableObject assets; `Datas/ValueObjects/`
+holds the plain `[Serializable]` classes those assets are built out of.
+
+The prefix on an asset says where its contents come from, and the value objects it carries take
+the matching suffix:
+
+| Prefix | What it holds | Filled by | Value objects inside |
+|---|---|---|---|
+| `CD_` | Config data. Constant: the same in every session, on every device. | Whoever authors the game, in the Editor. | `MapCVO` |
+| `RD_` | Runtime data. Produced while the game runs, gone when it stops. | Play. | `MapRVO` |
+| `PD_` | Player data. This one player's state: loaded at startup, written back to the save system whenever it changes. | Play, through the save system. | `MapPVO` |
+| `ED_` | Editor data. Settings and caches only editor tooling reads. | Editor tools. | `MapEVO` |
+| `DD_` | Database data. A copy of something a backend owns. | A download. | `MapDVO` |
+
+So a level catalogue authored by hand is `CD_Maps` and its entries are `MapCVO`; that player's
+progress through the same levels is `PD_Maps`, made of `MapPVO`. Reading the two names side by
+side tells you which one is safe to regenerate and which one has to survive a restart.
+
+```csharp
+[CreateAssetMenu(fileName = "CD_Maps", menuName = "Game/Data/CD_Maps")]
+internal class CD_Maps : ScriptableObject
+{
+    public List<MapCVO> Maps = new();
+}
+
+[Serializable]
+public class MapCVO
+{
+    public string Id;
+    public int    StarTarget;
+}
+```
+
+A plain `VO` suffix is the right name when the data belongs to no one kind in particular - a
+payload passed between commands, the shape a Function returns. And a value object that carries
+two kinds at once is named after neither of them:
+
+```csharp
+[Serializable]
+public class GameHexVO
+{
+    public GameHexCVO Config;   // what the level author placed
+    public GameHexRVO Runtime;  // what play produced
+}
+```
+
+Calling it `GameHexCVO` would be a lie about half its contents, so it is named for the hex. A
+project that needs a family of its own adds one the same way: a new prefix, a matching suffix,
+both declared in the code style.
+
+Which prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`, written by
+*Tools ▸ FlowIoC ▸ Module Configuration ▸ Update Namespace Settings*. What each one means is the
+table above, and the agent rules carry a short version of it so an AI assistant names data the
+same way.
 
 ---
 

@@ -35,19 +35,29 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// What the sidebar shows at rest: two topics on their own, then the two categories.
+        /// What the sidebar shows at rest: the introduction on its own, then the three categories.
         /// </summary>
         [Test]
-        public void The_sidebar_lists_two_topics_and_two_categories()
+        public void The_sidebar_lists_one_topic_and_three_categories()
         {
             List<string> titles = _catalog.Sections.Select(section => section.Title).ToList();
 
-            CollectionAssert.AreEqual(new[] {"Welcome", "Folder Layout", "Structure", "Editor Tools"}, titles);
+            CollectionAssert.AreEqual(new[] {"Welcome", "Wiki", "Structure", "Editor Tools"}, titles);
 
             Assert.IsFalse(_catalog.Sections[0].IsCategory);
-            Assert.IsFalse(_catalog.Sections[1].IsCategory);
+            Assert.IsTrue(_catalog.Sections[1].IsCategory);
             Assert.IsTrue(_catalog.Sections[2].IsCategory);
             Assert.IsTrue(_catalog.Sections[3].IsCategory);
+        }
+
+        /// <summary>
+        /// The Wiki category is the reference half of the window: the conventions a project
+        /// follows, as opposed to the architecture the Structure category walks through.
+        /// </summary>
+        [Test]
+        public void The_wiki_category_covers_the_conventions()
+        {
+            CollectionAssert.AreEqual(new[] {"Folder Layout", "Data Types"}, Titles("Wiki"));
         }
 
         [Test]
@@ -79,7 +89,8 @@ namespace FlowIoC.Tests
                 "Model Viewer",
                 "Folder Drawer",
                 "Screen Config Manager",
-                "Agent Rules"
+                "Agent Rules",
+                "Agent Skills"
             }, titles);
         }
 
