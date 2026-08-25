@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- *Create Module* writes a module's signal holder. `Signals` is a folder type of its own now
+  rather than a plain folder, so the generator can find it; a new `TempSignals` template
+  produces `<Name>Signals` with its `Incoming` and `Outgoing` classes, the Context declares
+  and binds it in `SignalBindings`, and a screen Mediator gets it injected. Mandatory for a
+  Screen module, which has no Context of its own and so reaches the outside world only
+  through its holder; a `Create Signals` toggle for Main and Sub modules, on by default;
+  never offered for a Test module. A project whose `DirectoryStructureConfig` assets predate
+  the folder type has its `Signals` folder still typed as a plain folder — retype it in the
+  asset's inspector, or the generator cannot resolve it.
+
 - A shared code style. `Tools/FlowIoC/Module Configuration/Update Namespace Settings` now also
   writes `<Solution>.sln.DotSettings`, so every project FlowIoC is installed in gets the same
   ReSharper and Rider naming rules, prefixes and spacing. Rider reads only a settings file named
@@ -101,6 +111,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   matters gets ignored.
 
 ### Removed
+
+- `SingletonRoot<TContext>`, its duplicate registry, and the *Make Root Singleton* option in
+  *Create Module*. A Root that has to outlive a scene load now says so itself by overriding
+  `BeforeCreateContext` and calling `DontDestroyOnLoad` there, which is all the base type did
+  beyond standing duplicates down. **Breaking:** a project with `SingletonRoot` Roots must
+  rebase them on `Root<TContext>` and add that override where the lifetime mattered. Nothing
+  deduplicates Roots any more, so a Root that survives scene loads belongs in a bootstrap
+  scene and nowhere else.
 
 - `ModuleCleaner`, and with it *Module Configuration ▸ Cleanse Module Infos*. Its only job was
   pruning stale module names out of the container-folder marker files; rebuilding the index

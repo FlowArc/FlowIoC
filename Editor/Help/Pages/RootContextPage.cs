@@ -33,7 +33,7 @@ namespace FlowIoC.Editor.Help.Pages
             var nodes = new List<HelpGraphNode>
             {
                 new HelpGraphNode("scene", "Scene", "the module is present", 0, 0),
-                new HelpGraphNode("root", "PlayerRoot", "SingletonRoot<PlayerContext>", 0, 1),
+                new HelpGraphNode("root", "PlayerRoot", "Root<PlayerContext>", 0, 1),
                 new HelpGraphNode("context", "PlayerContext", "declares the bindings", 0, 2),
                 new HelpGraphNode("signals", "SignalBindings", "the module's signal holder", 1, 0),
                 new HelpGraphNode("injection", "InjectionBindings", "models, services, systems", 1, 1),
@@ -60,7 +60,7 @@ namespace FlowIoC.Editor.Help.Pages
                     "// Drop PlayerRoot onto a GameObject in the scene."),
                 new HelpGraphStep("root",
                     "A Root is the module's presence in the scene, normally an empty class.",
-                    "public class PlayerRoot : SingletonRoot<PlayerContext> { }"),
+                    "public class PlayerRoot : Root<PlayerContext> { }"),
                 new HelpGraphStep("context",
                     "A Context declares bindings and nothing else.",
                     "public class PlayerContext : Context\n{\n    private PlayerSignals _signals;\n}"),

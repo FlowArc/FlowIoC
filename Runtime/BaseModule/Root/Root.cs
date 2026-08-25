@@ -22,17 +22,12 @@ namespace FlowIoC.BaseModule.Root
                 return;
 
             _rootsManager = RootsManagerFactory.GetRootsManager() as RootsManager;
-
-            if (!CanCreateContext())
-                return;
-
             CreateContext();
             _rootsManager.Register(this);
         }
 
         private void Start()
         {
-            // A Root that stood itself down in Awake owns no Context and takes no part in the run.
             if (_context == null)
                 return;
 

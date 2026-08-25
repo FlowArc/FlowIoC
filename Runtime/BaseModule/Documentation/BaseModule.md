@@ -30,7 +30,7 @@ a module:
 
 ```csharp
 // The scene presence. Almost always empty.
-public class PlayerRoot : SingletonRoot<PlayerContext> { }
+public class PlayerRoot : Root<PlayerContext> { }
 ```
 
 ```csharp
@@ -82,15 +82,26 @@ A Root is a `MonoBehaviour`. Drop it on a GameObject and the module exists; dele
 the GameObject and the module is gone.
 
 ```csharp
-public class MatchRoot : Root<MatchContext> { }             // dies with its scene
-public class AudioRoot  : SingletonRoot<AudioContext> { }   // survives scene loads
+public class MatchRoot : Root<MatchContext> { }
 ```
 
-| | `Root<TContext>` | `SingletonRoot<TContext>` |
-|---|---|---|
-| Scene lifetime | Destroyed with the scene | `DontDestroyOnLoad`, reparented to the scene root |
-| Duplicates | Each instance gets its own Context | The second instance removes its own component and never builds a Context |
-| Use for | Gameplay, a level, a match, a test scene | Audio, analytics, player profile, anything app-wide |
+Every Root is destroyed with its scene, and every instance gets its own Context. A
+module that has to outlive a scene load — audio, analytics, player profile — says so
+on its own Root:
+
+```csharp
+public class AudioRoot : Root<AudioContext>
+{
+    protected override void BeforeCreateContext()
+    {
+        transform.SetParent(null);
+        DontDestroyOnLoad(gameObject);
+    }
+}
+```
+
+Keep that Root in a bootstrap scene rather than in a prefab that gets spawned:
+nothing stands a second copy down for you, so two instances mean two Contexts.
 
 The inspector exposes the switches that matter:
 
@@ -601,15 +612,15 @@ public class MatchModel : IMatchModel
 ### One Root per module, and let `initializeOrder` do the ordering
 
 ```csharp
-// ✅ Independent Roots. AudioRoot survives scene loads; MatchRoot does not.
-public class AudioRoot : SingletonRoot<AudioContext> { }
+// ✅ Independent Roots, one module each.
+public class AudioRoot : Root<AudioContext> { }
 public class MatchRoot : Root<MatchContext> { }
 ```
 
 ```csharp
 // ❌ One Root owning two unrelated modules. Neither can be tested, reused, or
 //    unloaded on its own.
-public class GameRoot : SingletonRoot<EverythingContext> { }
+public class GameRoot : Root<EverythingContext> { }
 ```
 
 ### A Mediator wires; it does not decide
@@ -677,17 +688,12 @@ moved the Context class, the stored `ContextFullName` no longer resolves and the
 console logs `Context Type couldn't find!`. Re-add it from the inspector, or run
 *Tools ▸ FlowIoC ▸ Module Configuration ▸ Detect & Fix Module Index*.
 
-### A second copy of a singleton module appears
+### A second copy of an app-wide module appears
 
-`SingletonRoot` stands duplicates down, but only once `Awake` runs. A prefab that
-carries a `SingletonRoot` and is instantiated during a load screen will briefly exist
-twice. Keep singleton Roots in a bootstrap scene rather than in prefabs that get
-spawned.
-
-The duplicate removes its own component and stops there: it builds no Context, never
-registers with the `RootsManager`, and leaves the GameObject it was sitting on — and
-anything else attached to it — alone. The Flow Console logs the removal on the
-`Context` channel.
+Nothing deduplicates Roots. A Root that calls `DontDestroyOnLoad` and also sits in a
+prefab that gets spawned will exist twice, and each copy builds its own Context and
+registers with the `RootsManager` under the same name. Keep a Root that outlives its
+scene in a bootstrap scene, and nowhere else.
 
 ---
 

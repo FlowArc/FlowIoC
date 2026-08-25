@@ -67,13 +67,6 @@ namespace FlowIoC.BaseModule.Root
             }
         }
 
-        // Returning false aborts the whole Awake pass: no Context is built and the Root is never
-        // registered. SingletonRoot uses it to stand a duplicate down before it can touch anything.
-        protected virtual bool CanCreateContext()
-        {
-            return true;
-        }
-
         protected virtual void BeforeCreateContext()
         {
         }
