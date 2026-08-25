@@ -19,7 +19,7 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
 
         public static void UpdateNamespaceSettings()
         {
-            ModuleRegistry registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            ModuleRegistry registry = new ModuleRegistryFactory().FromProject();
             List<string> modulePaths = GetAllModulePaths(registry);
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
 
@@ -160,35 +160,16 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
             return modulePaths;
         }
 
-        private static string ToAssetPath(string absolutePath)
-        {
-            string normalized = absolutePath.Replace('\\', '/');
-            string dataPath = Application.dataPath;
-            return normalized.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase)
-                ? "Assets" + normalized.Substring(dataPath.Length)
-                : normalized;
-        }
-
         private static void AddNamespaceEntriesForModule_New(ModuleRegistry registry, XmlDocument doc, string modulePath)
         {
-            if (!registry.TryGetModule(ToAssetPath(modulePath), out ModuleDescriptor module))
+            string moduleAssetPath = new ModuleAssetPathResolver().ToAssetPath(modulePath);
+            if (!registry.TryGetModule(moduleAssetPath, out ModuleDescriptor module))
                 return;
 
-            ModuleType moduleType = module.Kind switch
-            {
-                ModuleKind.Main => ModuleType.Main,
-                ModuleKind.Screen => ModuleType.Screen,
-                ModuleKind.Test => ModuleType.Test,
-                // Sub-modules are laid out exactly like a Main module; there is no separate
-                // DirectoryStructureConfig for Sub.
-                ModuleKind.Sub => ModuleType.Main,
-                _ => ModuleType.Main
-            };
-
-            DirectoryStructureConfig config = GetDirectoryStructureConfig(moduleType);
+            DirectoryStructureConfig config = new DirectoryStructureConfigProvider().ConfigFor(module.Kind);
             if (config == null)
             {
-                Debug.LogError($"[NEW] Could not find directory structure config for module type {moduleType}");
+                Debug.LogError($"[NEW] Could not find directory structure config for module kind {module.Kind}");
                 return;
             }
 
@@ -201,21 +182,6 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
             }
 
             AddAncestorSkipFolders(modulePath, doc);
-        }
-
-        private static DirectoryStructureConfig GetDirectoryStructureConfig(ModuleType moduleType)
-        {
-            switch (moduleType)
-            {
-                case ModuleType.Main:
-                    return MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main");
-                case ModuleType.Screen:
-                    return ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen");
-                case ModuleType.Test:
-                    return TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test");
-                default:
-                    return null;
-            }
         }
 
         private static void AddAncestorSkipFolders(string modulePath, XmlDocument doc)

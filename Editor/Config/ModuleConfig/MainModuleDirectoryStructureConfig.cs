@@ -330,26 +330,21 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             };
         }
 
-        protected internal override string FindFullFolderPathByID(FolderConfig.FolderType folderName, string basePath)
+        protected override string FindFolderPathByID(FolderConfig.FolderType folderID, List<FolderConfig> folders, string basePath,
+            out bool isOptional)
         {
-            base.FindFullFolderPathByID(folderName, basePath);
-            return FindFolderPathByID(folderName, RootFolders, basePath);
-        }
-
-        protected override string FindFolderPathByID(FolderConfig.FolderType folderID, List<FolderConfig> folders, string basePath)
-        {
-            base.FindFolderPathByID(folderID, folders, basePath);
             foreach (FolderConfig folder in folders)
             {
                 string currentPath = Path.Combine(basePath, folder.FolderName);
 
                 if (folder.Type.ToString().Equals(folderID.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
+                    isOptional = folder.IsOptional;
                     return currentPath;
                 }
                 else if (folder.SubFolders != null && folder.SubFolders.Count > 0)
                 {
-                    string subFolderPath = FindFolderPathByID(folderID, folder.SubFolders, currentPath);
+                    string subFolderPath = FindFolderPathByID(folderID, folder.SubFolders, currentPath, out isOptional);
                     if (!string.IsNullOrEmpty(subFolderPath))
                     {
                         return subFolderPath;
@@ -357,6 +352,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 }
             }
 
+            isOptional = false;
             return string.Empty;
         }
     }

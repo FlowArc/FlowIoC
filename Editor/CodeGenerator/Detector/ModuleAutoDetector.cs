@@ -41,9 +41,11 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
 
         private void DetectAndRegisterModules()
         {
-            new ModuleIndexRebuilder().Rebuild();
-
-            FlowIoCModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
+            // A rebuild that could not run has already said so. Carrying on with an index loaded
+            // independently would read an empty module list out of it and propose removing every
+            // auto-registered log type, on the strength of a scan that never happened.
+            FlowIoCModuleIndex index = new ModuleIndexRebuilder().Rebuild();
+            if (index == null) return;
 
             IEnumerable<string> registeredAutoTypes = FlowLogger.Settings.LogTypes
                 .Where(logType => logType.IsAutoRegistered && !logType.IsMandatory)

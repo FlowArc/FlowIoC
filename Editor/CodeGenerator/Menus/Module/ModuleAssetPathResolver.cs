@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.IO;
 using UnityEngine;
 
@@ -32,6 +33,22 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             return Path.GetFullPath(Path.Combine(projectRoot, assetPath));
+        }
+
+        /// <summary>
+        /// The other direction: ModuleRegistry works in asset paths ("Assets/Modules/HeroModule"),
+        /// while the drawers and the namespace provider work in the absolute paths
+        /// Directory.GetDirectories hands back. A path that is already rooted somewhere else - an
+        /// embedded package module - is handed back unchanged rather than forced under "Assets".
+        /// </summary>
+        public string ToAssetPath(string absolutePath)
+        {
+            string normalized = absolutePath.Replace('\\', '/');
+            string dataPath = Application.dataPath;
+
+            return normalized.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase)
+                ? "Assets" + normalized.Substring(dataPath.Length)
+                : normalized;
         }
     }
 }

@@ -14,7 +14,6 @@ namespace FlowIoC.Editor.Modules
     {
         string GuidOf(string assetPath);
         string PathOf(string guid);
-        bool IsValidFolder(string assetPath);
     }
 
     internal class AssetDatabasePaths : IAssetPaths
@@ -22,7 +21,6 @@ namespace FlowIoC.Editor.Modules
         public string GuidOf(string assetPath) =>
             AssetDatabase.AssetPathToGUID(assetPath, AssetPathToGUIDOptions.OnlyExistingAssets);
         public string PathOf(string guid) => AssetDatabase.GUIDToAssetPath(guid);
-        public bool IsValidFolder(string assetPath) => AssetDatabase.IsValidFolder(assetPath);
     }
 
     internal class ModuleIndexProvider

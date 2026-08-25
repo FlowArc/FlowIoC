@@ -95,7 +95,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
         private void ScanModules()
         {
-            var registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            var registry = new ModuleRegistryFactory().FromProject();
             var pathResolver = new ModuleAssetPathResolver();
 
             _modules = registry.Modules

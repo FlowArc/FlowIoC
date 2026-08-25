@@ -405,7 +405,7 @@ The index is used by the system to:
 
 Because it is a cache rather than something you maintain, there is nothing to
 hand-edit. A stale or missing entry is fixed by rebuilding it:
-- Tools > FlowIoC > Module Configuration > Detect & Fix Module Infos
+- Tools > FlowIoC > Module Configuration > Detect & Fix Module Index
 - Or simply reopen the project — the same rebuild runs automatically on load
 
 ## Namespace Management
@@ -611,7 +611,7 @@ Manage dependencies effectively:
 1. **Namespace Errors**: If you see namespace errors:
    - Ensure the assembly reference is set in your asmdef file
    - Check the namespace follows the convention (`Modules.ModuleName.SubNamespace`)
-   - Verify the module is registered correctly — run Detect & Fix Module Infos to rebuild the index
+   - Verify the module is registered correctly — run Detect & Fix Module Index to rebuild the index
 
 2. **Missing Bindings**: If bindings are not being generated:
    - Check the context file structure follows the template pattern
@@ -628,7 +628,7 @@ Manage dependencies effectively:
 To diagnose issues with the Code Generator:
 
 1. **Verify Module Structure**:
-   - Run Tools > FlowIoC > Module Configuration > Detect & Fix Module Infos
+   - Run Tools > FlowIoC > Module Configuration > Detect & Fix Module Index
    - This will identify and repair common structure issues
 
 2. **Check the Module Index**:
@@ -644,7 +644,7 @@ To diagnose issues with the Code Generator:
 If a module becomes corrupted or inconsistent:
 
 1. **Rebuild the Module Index**:
-   - Run Tools > FlowIoC > Module Configuration > Detect & Fix Module Infos
+   - Run Tools > FlowIoC > Module Configuration > Detect & Fix Module Index
    - A module that no longer exists on disk is simply absent from the rebuilt index —
      there is no separate cleanup step
 

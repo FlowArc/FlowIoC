@@ -332,7 +332,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         public static string GetModuleNamespace(string modulePath)
         {
-            return GetModuleNamespace(CreateRegistry(), modulePath);
+            return GetModuleNamespace(new ModuleRegistryFactory().FromProject(), modulePath);
         }
 
         /// <summary>
@@ -374,7 +374,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 return "Modules";
             }
 
-            ModuleRegistry registry = CreateRegistry();
+            ModuleRegistry registry = new ModuleRegistryFactory().FromProject();
 
             string moduleFolder = FindNearestModuleFolder(registry, fileDirectory);
             if (string.IsNullOrEmpty(moduleFolder))
@@ -437,17 +437,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 return string.Empty;
 
             return new ModuleAssetPathResolver().ToAbsolutePath(registry.PathOf(module));
-        }
-
-        /// <summary>
-        /// One registry per call. NamespaceUtility is called from many independent entry points -
-        /// menu items, the create-command/model/view windows, ModuleGenerator - so there is no
-        /// single natural place to build one and share it; the index load this hits is a cheap
-        /// AssetDatabase lookup, not a rescan.
-        /// </summary>
-        private static ModuleRegistry CreateRegistry()
-        {
-            return new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
         }
     }
 }

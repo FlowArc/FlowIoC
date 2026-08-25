@@ -40,21 +40,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private Dictionary<string, bool> _moduleExpandedState;
         private ModuleRegistry _registry;
         private Vector2 _scrollPosition;
-        private Dictionary<ModuleType, DirectoryStructureConfig> _directoryConfigMap;
+        private readonly DirectoryStructureConfigProvider _configProvider = new DirectoryStructureConfigProvider();
         private Vector2 _injectablesScrollPosition;
         private List<string> _injectableNames = new List<string>();
-        private ModuleType _selectedModuleType;
+        private ModuleKind _selectedModuleKind;
         private static GenerationState _generationState;
         private string _selectedModuleName = string.Empty;
         private CodeGeneratorSettings _codeGenSettings;
-
-        private enum ModuleType
-        {
-            Main,
-            Sub,
-            Test,
-            Screen
-        }
 
         private enum GenerationState
         {
@@ -67,21 +59,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             _moduleExpandedState = new Dictionary<string, bool>();
             _parentModulePath = string.Empty;
-            InitializeConfigMap();
+            CodeGeneratorSettings.CreateConfig();
             LoadCodeGeneratorSettings();
             _generationState = GenerationState.Idle;
-            _registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
-        }
-
-        private void InitializeConfigMap()
-        {
-            CodeGeneratorSettings.CreateConfig();
-            _directoryConfigMap = new Dictionary<ModuleType, DirectoryStructureConfig>
-            {
-                {ModuleType.Main, MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main")},
-                {ModuleType.Screen, ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen")},
-                {ModuleType.Test, TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test")}
-            };
+            _registry = new ModuleRegistryFactory().FromProject();
         }
 
         private bool LoadCodeGeneratorSettings()
@@ -233,7 +214,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void CreateModuleStructureForCommandGeneration()
         {
-            if (_selectedModuleType != ModuleType.Main && string.IsNullOrEmpty(_parentModulePath))
+            if (_selectedModuleKind != ModuleKind.Main && string.IsNullOrEmpty(_parentModulePath))
             {
                 EditorUtility.DisplayDialog(PARENT_MODULE_REQUIRED_TITLE, PARENT_MODULE_REQUIRED_MESSAGE, "OK");
                 _generationState = GenerationState.Idle;
@@ -251,11 +232,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             Debug.Log($"[CreateModuleStructureForCommandGeneration] Base Module Path: {baseModulePath}");
 
-            string subDirectory = _selectedModuleType switch
+            string subDirectory = _selectedModuleKind switch
             {
-                ModuleType.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules],
-                ModuleType.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules],
-                ModuleType.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules],
+                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules],
+                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules],
+                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules],
                 _ => string.Empty
             };
 
@@ -263,8 +244,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 ? baseModulePath
                 : Path.Combine(baseModulePath, subDirectory);
 
-            string commandPath = _directoryConfigMap[_selectedModuleType].FindFullFolderPathByID(FolderConfig.FolderType.Controllers, modulePath);
-            string rootsAndContextsPath = _directoryConfigMap[_selectedModuleType]
+            string commandPath = _configProvider.ConfigFor(_selectedModuleKind)
+                .FindFullFolderPathByID(FolderConfig.FolderType.Controllers, modulePath);
+            string rootsAndContextsPath = _configProvider.ConfigFor(_selectedModuleKind)
                 .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 

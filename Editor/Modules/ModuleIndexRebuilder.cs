@@ -51,14 +51,21 @@ namespace FlowIoC.Editor.Modules
     {
         private readonly FlowIoCProjectPaths _paths = new FlowIoCProjectPaths();
 
-        public void Rebuild()
+        /// <summary>
+        /// The rebuilt index, or null when the code generator settings could not be loaded and
+        /// the index was left as it is. Returning it rather than leaving callers to load the
+        /// index themselves is what keeps a failed rebuild distinguishable from a successful
+        /// one: a caller that loaded it independently would get an empty index either way, and
+        /// go on to write into it as though the rebuild had happened.
+        /// </summary>
+        public FlowIoCModuleIndex Rebuild()
         {
             var settings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(_paths.CodeGeneratorSettings);
             if (settings == null)
             {
                 Debug.LogWarning("<color=cyan>FlowIoC:</color> the code generator settings could not be " +
                                  "loaded, so the module index was left as it is.");
-                return;
+                return null;
             }
 
             var resolver = new ModuleKindResolver(
@@ -79,6 +86,8 @@ namespace FlowIoC.Editor.Modules
 
             EditorUtility.SetDirty(index);
             AssetDatabase.SaveAssets();
+
+            return index;
         }
 
         private IEnumerable<string> EmbeddedPackageModuleRoots()

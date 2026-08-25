@@ -28,11 +28,10 @@ namespace FlowIoC.Tests
             public string PathOf(string guid)
             {
                 foreach (var pair in _guidByPath)
-                    if (pair.Value == guid) return pair.Key;
+                    if (pair.Value == guid)
+                        return pair.Key;
                 return string.Empty;
             }
-
-            public bool IsValidFolder(string assetPath) => _guidByPath.ContainsKey(assetPath);
         }
 
         private FlowIoCModuleIndex _index;
@@ -40,6 +39,7 @@ namespace FlowIoC.Tests
 
         private const string CameraPath = "Assets/Modules/CameraModule";
         private const string HudPath = "Assets/Modules/CameraModule/zScreenModules/HudModule";
+
         private const string HudTestPath =
             "Assets/Modules/CameraModule/zScreenModules/HudModule/zTestModules/HudTestModule";
 
@@ -55,9 +55,9 @@ namespace FlowIoC.Tests
 
             _index.Replace(new[]
             {
-                new ModuleDescriptor { Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid" },
-                new ModuleDescriptor { Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid" },
-                new ModuleDescriptor { Name = "HudTestModule", Kind = ModuleKind.Test, FolderGuid = "hud-test-guid" }
+                new ModuleDescriptor {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
+                new ModuleDescriptor {Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid"},
+                new ModuleDescriptor {Name = "HudTestModule", Kind = ModuleKind.Test, FolderGuid = "hud-test-guid"}
             });
         }
 
@@ -155,7 +155,7 @@ namespace FlowIoC.Tests
             _index.TryGetByName("HudTestModule", out ModuleDescriptor hudTest);
 
             CollectionAssert.AreEqual(
-                new[] { "HudModule", "CameraModule" },
+                new[] {"HudModule", "CameraModule"},
                 NewRegistry().AncestorsOf(hudTest).Select(m => m.Name).ToArray());
         }
 

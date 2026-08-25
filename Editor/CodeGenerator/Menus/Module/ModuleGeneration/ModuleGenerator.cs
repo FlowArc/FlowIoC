@@ -69,7 +69,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string testModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules];
             string screenModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules];
 
-            string moduleTypeForInfoFile = selectedModuleType switch
+            string resolvedModuleKind = selectedModuleType switch
             {
                 ModuleType.Main when parentModulePath != Path.Combine(Application.dataPath, "Modules") => "Sub",
                 ModuleType.Main when parentModulePath == Path.Combine(Application.dataPath, "Modules") => "Main",
@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             {
                 ModuleType.Test => testModulesFolderName,
                 ModuleType.Screen => screenModulesFolderName,
-                _ => moduleTypeForInfoFile == "Sub" ? subModulesFolderName : string.Empty
+                _ => resolvedModuleKind == "Sub" ? subModulesFolderName : string.Empty
             };
 
             string modulePath = string.IsNullOrEmpty(subDirectory)

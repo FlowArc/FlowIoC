@@ -44,8 +44,8 @@ namespace FlowIoC.Editor.CodeGenerator
             EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
         }
 
-        [MenuItem("Tools/FlowIoC/Module Configuration/Detect & Fix Module Infos", false, 51)]
-        private static void FixModuleInfos()
+        [MenuItem("Tools/FlowIoC/Module Configuration/Detect & Fix Module Index", false, 51)]
+        private static void FixModuleIndex()
         {
             ModuleAutoDetector.DetectAndRegisterModulesOnStartup();
         }

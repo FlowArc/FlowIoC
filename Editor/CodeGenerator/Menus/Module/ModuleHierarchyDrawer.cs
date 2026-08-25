@@ -24,11 +24,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             string fullPath = Path.Combine(Application.dataPath, path);
             if (!Directory.Exists(fullPath)) return;
 
+            var pathResolver = new ModuleAssetPathResolver();
+
             string[] directories = Directory.GetDirectories(fullPath);
             for (var index = 0; index < directories.Length; index++)
             {
                 var directory = directories[index];
-                if (!registry.TryGetModule(ToAssetPath(directory), out ModuleDescriptor module)) continue;
+                if (!registry.TryGetModule(pathResolver.ToAssetPath(directory), out ModuleDescriptor module)) continue;
 
                 string directoryName = Path.GetFileName(directory);
                 string moduleTypePostfix = GetModuleTypePostfix(module.Kind);
@@ -152,21 +154,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         }
 
         /// <summary>
-        /// ModuleRegistry works in asset paths ("Assets/Modules/CameraModule"); this drawer still
-        /// works in the absolute filesystem paths Directory.GetDirectories hands back. Convert at
-        /// the boundary rather than push absolute paths into the registry.
-        /// </summary>
-        private static string ToAssetPath(string absolutePath)
-        {
-            string normalized = absolutePath.Replace('\\', '/');
-            string dataPath = Application.dataPath;
-            return normalized.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase)
-                ? "Assets" + normalized.Substring(dataPath.Length)
-                : normalized;
-        }
-
-        /// <summary>
-        /// The inverse of ToAssetPath, kept byte-for-byte identical in separator style to what
+        /// The inverse of ModuleAssetPathResolver.ToAssetPath, kept byte-for-byte identical in separator style to what
         /// Directory.GetDirectories used to hand back (forward slashes through Application.dataPath,
         /// platform separators after). ModuleGenerator still compares parentModulePath against
         /// Path.Combine(Application.dataPath, "Modules") by plain string equality, so drifting the
