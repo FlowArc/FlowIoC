@@ -20,17 +20,43 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
         public static void UpdateNamespaceSettings()
         {
             ModuleRegistry registry = new ModuleRegistryFactory().FromProject();
-            List<string> modulePaths = GetAllModulePaths(registry);
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
 
-            foreach (string modulePath in modulePaths)
-            {
-                string moduleFolderName = Path.GetFileName(modulePath);
+            ModuleFolders folders = new ModuleFolderPaths().Resolve(registry);
 
+            foreach (SkippedModule skipped in folders.Skipped)
+            {
+                Debug.LogWarning($"[NamespaceProvider] Skipping '{skipped.Name}': {skipped.Reason}. "
+                                 + "Rebuild the module index if that is unexpected.");
+            }
+
+            foreach (string modulePath in folders.Paths)
+            {
+                UpdateModuleDotSettings(registry, modulePath, projectRoot);
+            }
+
+            RunGuarded("orphan cleanup", () => CleanupOrphanedFiles(projectRoot));
+            RunGuarded("solution code style", () => UpdateSolutionCodeStyle(projectRoot));
+
+            AssetDatabase.Refresh();
+            Debug.Log("All module-based .DotSettings files updated successfully.");
+        }
+
+        /// <summary>
+        /// One module's settings file. A module that fails is reported and stepped over: the run
+        /// also clears orphaned files and writes the solution code style, and none of that is
+        /// worth losing over a single module the index is wrong about.
+        /// </summary>
+        private static void UpdateModuleDotSettings(ModuleRegistry registry, string modulePath, string projectRoot)
+        {
+            string moduleFolderName = Path.GetFileName(modulePath);
+
+            try
+            {
                 string[] asmdefFiles = Directory.GetFiles(modulePath, "*.asmdef", SearchOption.TopDirectoryOnly);
                 if (asmdefFiles.Length == 0)
                 {
-                    continue;
+                    return;
                 }
 
                 string asmdefFileName = Path.GetFileNameWithoutExtension(asmdefFiles[0]);
@@ -48,12 +74,26 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
                 NamespaceUtility.SaveDotSettings(doc, finalDotSettingsPath);
                 Debug.Log($"[{moduleFolderName}] => .DotSettings updated: {finalDotSettingsPath}");
             }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[NamespaceProvider] '{moduleFolderName}' was skipped: {exception.Message}");
+            }
+        }
 
-            CleanupOrphanedFiles(projectRoot);
-            UpdateSolutionCodeStyle(projectRoot);
-
-            AssetDatabase.Refresh();
-            Debug.Log("All module-based .DotSettings files updated successfully.");
+        /// <summary>
+        /// The two steps that close a run are independent of each other and of the modules, so
+        /// neither is allowed to stop the other from happening.
+        /// </summary>
+        private static void RunGuarded(string what, Action step)
+        {
+            try
+            {
+                step();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"[NamespaceProvider] The {what} step failed: {exception.Message}");
+            }
         }
 
         private static void UpdateSolutionCodeStyle(string projectRoot)
@@ -132,32 +172,6 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
             }
 
             return names;
-        }
-
-        private static List<string> GetAllModulePaths(ModuleRegistry registry)
-        {
-            var pathResolver = new ModuleAssetPathResolver();
-            var modulePaths = new List<string>();
-
-            foreach (ModuleDescriptor module in registry.Modules)
-            {
-                string absolutePath = pathResolver.ToAbsolutePath(registry.PathOf(module));
-
-                // PathOf is empty when a descriptor's FolderGuid no longer resolves - the
-                // folder was deleted or moved outside the tool and the index hasn't caught up.
-                // The old directory-scan version of this method could never see a phantom like
-                // that, so skipping it here keeps that same behaviour instead of crashing the
-                // whole run on one stale entry.
-                if (string.IsNullOrEmpty(absolutePath))
-                {
-                    Debug.LogWarning($"[NamespaceProvider] Skipping '{module.Name}': its folder GUID no longer resolves to a path.");
-                    continue;
-                }
-
-                modulePaths.Add(absolutePath);
-            }
-
-            return modulePaths;
         }
 
         private static void AddNamespaceEntriesForModule_New(ModuleRegistry registry, XmlDocument doc, string modulePath)
