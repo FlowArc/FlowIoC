@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The extension methods that lived in the separate FlowIoC-addons package now ship with the
+  core package, under `Runtime/ExtensionModule` and the `FlowIoC.ExtensionModule` namespace:
+  vector and float maths, enum flag enumeration, list conversion and UTC time formatting.
+  `SafeSerializedScriptableObject` and the enum modifier built on it need Odin Inspector, so
+  they compile only where `ODIN_INSPECTOR` is defined and the package gains no dependency of
+  its own. The addons package keeps its copies under `FlowIoC.Addons.Extensions`, so a project
+  that has both installed still compiles.
+
 - The data type convention is written down. A module's data carries its origin in its name:
   `CD_` for config a designer authors, `RD_` for what play produces, `PD_` for what the save
   system keeps, `ED_` for editor tooling and `DD_` for a copy of what a backend owns, each
