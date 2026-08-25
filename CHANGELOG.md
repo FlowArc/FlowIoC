@@ -145,6 +145,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- *Update Namespace Settings* survives a module the index is wrong about. The index is a cache,
+  and `AssetDatabase.GUIDToAssetPath` answers for a deleted folder with the last path it knew
+  rather than with nothing, so the path looked usable and the first `Directory.GetFiles` on it
+  threw `DirectoryNotFoundException` - taking the whole run down, including the orphan cleanup
+  and the solution code style, which have nothing to do with that module. A folder that is not
+  on disk is now reported and stepped over the way an unresolvable folder GUID already was, a
+  module that fails no longer stops the ones after it, and the two closing steps run whatever
+  happened before them.
+
 - The shipped code style declares `PD_` a legal type prefix. `CD_`, `RD_`, `ED_` and `DD_` were
   all there and the matching `PVO` suffix was too, so a player data asset was the one kind whose
   name Rider flagged.
