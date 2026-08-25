@@ -901,6 +901,10 @@ nobody asked for them, so nobody is left with folders they cannot explain. A not
 shipped skill survives that — the shipped file goes, the note stays, and the folder it lives in
 stays with it.
 
+A package removed some other way — `manifest.json` edited by hand, or the folder deleted —
+raises no event for FlowIoC to act on. Every shipped skill opens by saying so: it applies only
+while FlowIoC is installed, and names the check and the folder to delete if it is not.
+
 | Skill | Covers |
 |---|---|
 | `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, and which folder each kind belongs in. |

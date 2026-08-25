@@ -23,7 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Tools/FlowIoC/AI/Agent Skills` shows what is there and puts a deleted skill back without
   waiting for the next session. Removing FlowIoC through the Package Manager takes the shipped
   skills with it, file by file, so nothing the consumer wrote is caught up in it: a skill of
-  their own, or a note left beside a shipped one, keeps its folder.
+  their own, or a note left beside a shipped one, keeps its folder. A removal that raises no
+  event - `manifest.json` edited by hand, the folder deleted - is covered the way the rule block
+  covers it: every shipped skill opens by saying it applies only while FlowIoC is installed.
   The agent rules are what an assistant is told on every task and so stay short; a skill is what
   it reaches for when one kind of work comes up and can afford the detail. The first is
   `flowioc-data-types`. Only the files the package owns are compared, so a skill you wrote

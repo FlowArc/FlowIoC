@@ -5,6 +5,10 @@ description: Use when adding or naming data in a FlowIoC Unity project - a Scrip
 
 # FlowIoC Data Types
 
+This skill applies only while FlowIoC is installed. If `Packages/manifest.json` contains no
+`com.flowarc.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
+is in: FlowIoC put it there and is no longer in the project.
+
 ## Overview
 
 In a FlowIoC project the name of a data type says where its contents come from, so a
