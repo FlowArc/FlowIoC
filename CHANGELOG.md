@@ -17,8 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one place - is named after neither and keeps the lettered suffixes on its parts. The rule is
   in the agent rules, in the README, and on a new *Data Types* page in the Help window.
 
-- `Tools/FlowIoC/AI/Agent Skills`, which copies the skills FlowIoC ships into the project's
-  `.claude/skills` folder, one folder per skill, and reports which are missing or out of date.
+- The skills FlowIoC ships are installed into the project's `.claude/skills` folder when the
+  Editor opens, one folder per skill, and refreshed when the package changes one. What gets
+  written is logged rather than done silently, and a batch run installs nothing.
+  `Tools/FlowIoC/AI/Agent Skills` shows what is there and puts a deleted skill back without
+  waiting for the next session.
   The agent rules are what an assistant is told on every task and so stay short; a skill is what
   it reaches for when one kind of work comes up and can afford the detail. The first is
   `flowioc-data-types`. Only the files the package owns are compared, so a skill you wrote
@@ -63,7 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The Help window sidebar folds *Folder Layout* into a *Wiki* category, alongside the new
-  *Data Types* page. The window still opens on the folder layout, with the category open.
+  *Data Types* page, and the window now opens on *Welcome* rather than on the folder layout - a
+  reader who has never seen FlowIoC meets what it is before meeting how its folders are arranged.
 
 - The agent rules spell out how a Model relates to signals, which was previously left to
   inference. A Model never subscribes to a signal: an incoming signal runs a Command and
