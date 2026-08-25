@@ -151,6 +151,13 @@ the same way on its own. Each module's folder-type GUID map is durable state
 instead — carried forward rather than read back off the tree, and healed only
 lazily, not on every rebuild.
 
+Being a cache, it is not committed: FlowIoC writes a `.gitignore` beside it covering
+the asset and its `.meta`, so two branches adding modules never meet in the same
+serialized file. Your own lines in that file are left alone — only what sits between
+`FLOWIOC:BEGIN` and `FLOWIOC:END` is rewritten. A project that already committed the
+asset has to untrack it once with
+`git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset*`.
+
 The symptom that you needed *Detect & Fix* is a generator writing into the wrong
 folder, or a Root whose sub-context list has gone empty after a move.
 

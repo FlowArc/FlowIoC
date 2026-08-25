@@ -24,6 +24,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   step lights up a box, states the rule it stands for, and shows the code that rule produces.
   The window teaches one worked example and never inspects the project it is opened in.
 
+- `FlowIoCModuleIndex.asset` is kept out of version control. FlowIoC writes a `.gitignore` next
+  to the asset covering it and its `.meta`. The index is a cache the next rebuild reproduces, so
+  two people adding modules on separate branches were meeting in the same serialized file for
+  nothing. The rule goes in that folder rather than in the project's root `.gitignore`, which
+  belongs to the project: a `.gitignore` only reaches the directory it sits in and below, and
+  this is the folder FlowIoC owns and the path migrator can move. Lines outside the
+  `FLOWIOC:BEGIN`/`FLOWIOC:END` markers are left alone, the same way the agent rules block works.
+  A project that already committed the asset keeps committing it until it runs
+  `git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset*` once —
+  `.gitignore` does not untrack what git already tracks.
+
 ### Changed
 
 - The agent rules spell out how a Model relates to signals, which was previously left to
