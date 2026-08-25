@@ -35,16 +35,17 @@ The one you use first. Pick a name and a module type:
 | `Screen` | A screen module: view, mediator, screen config and optional scene |
 | `Test` | An isolated test module, wrapped in editor-only preprocessor directives |
 
-It writes the folder tree, `Modules.<Name>.asmdef`, a `_module_info.txt` describing
-the module, and — if you leave the toggles on — the `Root` / `Context` pair.
+It writes the folder tree, `Modules.<Name>.asmdef`, and — if you leave the toggles
+on — the `Root` / `Context` pair, and registers the module in the project's module
+index the moment its folder exists.
 
 For a Screen module you can also list the screen's actions up front
 (`OnBackButtonClicked`, `OnSettingsClicked`) and the generator puts them on both the
 View and the Mediator.
 
 Use this rather than copying a folder. A copied module carries the source module's
-namespace, its asmdef name and its `_module_info.txt`, and the other tools will keep
-finding the original.
+namespace and its asmdef name, and Unity refuses the resulting duplicate assembly
+name rather than telling you which copy is at fault.
 
 ### Create Command / Create Model / Create View
 
@@ -70,8 +71,7 @@ module does not reference that module" is a rule nobody enforces.
 
 | Item | Does |
 |---|---|
-| `Detect & Fix Module Infos` | Scans for modules whose `_module_info.txt` is missing, stale or pointing at a renamed folder, and repairs them |
-| `Cleanse Module Infos` | Removes orphaned metadata for modules that no longer exist |
+| `Detect & Fix Module Infos` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
 | `Update Namespace Settings` | Changes the namespace prefix the generators use |
 
 Run *Detect & Fix* after moving folders around in the Project window. The symptom

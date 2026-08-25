@@ -15,14 +15,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Paragraph(
-                "Every module carries a _module_info.txt describing where it lives and what "
-                + "namespace it uses. Moving folders in the Project window leaves that description "
-                + "behind, and the generators then write into the wrong place. These entries put it "
-                + "back in step.");
+                "Every module is recorded in one project asset, FlowIoCModuleIndex.asset, keyed "
+                + "on its folder's own Unity GUID rather than its name or path. A rename or a move "
+                + "made outside the Editor can still leave that index stale, and the generators "
+                + "then write into the wrong place. These entries put it back in step.");
 
             painter.SubHeading("Tools > FlowIoC > Module Configuration");
-            painter.Bullet("Detect & Fix Module Infos - finds modules whose metadata is missing, stale or pointing at a renamed folder, and repairs them.");
-            painter.Bullet("Cleanse Module Infos - removes orphaned metadata for modules that no longer exist.");
+            painter.Bullet(
+                "Detect & Fix Module Infos - rescans the folder tree and rebuilds the module index, so every module's name, kind and location match what is actually on disk.");
             painter.Bullet("Update Namespace Settings - changes the namespace prefix the generators use.");
             painter.Note(
                 "Run Detect & Fix after moving folders around. The symptom that you needed it is a "

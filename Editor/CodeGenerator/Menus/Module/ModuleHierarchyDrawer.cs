@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,15 +10,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 {
     internal static class ModuleHierarchyDrawer
     {
-        private const string MODULE_INFO_FILE = "_module_info.txt";
+        private const string MODULE_SUFFIX = "Module";
 
         public static void DrawModuleHierarchy(
+            ModuleRegistry registry,
             string path,
             int indentLevel,
             ref Dictionary<string, bool> moduleExpandedState,
             ref string parentModulePath,
             ref string selectedModuleName,
-            ModuleType selectedModuleType)
+            Func<ModuleKind, bool> canSelectParent)
         {
             string fullPath = Path.Combine(Application.dataPath, path);
             if (!Directory.Exists(fullPath)) return;
@@ -27,158 +28,89 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             for (var index = 0; index < directories.Length; index++)
             {
                 var directory = directories[index];
-                string moduleInfoPath = Path.Combine(directory, MODULE_INFO_FILE);
-                if (File.Exists(moduleInfoPath))
+                if (!registry.TryGetModule(ToAssetPath(directory), out ModuleDescriptor module)) continue;
+
+                string directoryName = Path.GetFileName(directory);
+                string moduleTypePostfix = GetModuleTypePostfix(module.Kind);
+                string displayName = directoryName + moduleTypePostfix;
+
+                moduleExpandedState.TryAdd(directory, false);
+
+                EditorGUILayout.BeginHorizontal("box");
+
+                GUILayout.Space(indentLevel * 10);
+                GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout) {richText = true};
+                moduleExpandedState[directory] = EditorGUILayout.Foldout(moduleExpandedState[directory], displayName, true, foldoutStyle);
+
+                bool isSelected = parentModulePath == directory;
+                string buttonText = isSelected ? "Selected" : "Select";
+                GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
                 {
-                    string directoryName = Path.GetFileName(directory);
-                    string moduleTypePostfix = GetModuleTypePostfix(moduleInfoPath);
-                    string displayName = directoryName + moduleTypePostfix;
+                    normal = {textColor = isSelected ? Color.cyan : GUI.skin.button.normal.textColor},
+                    hover = {textColor = isSelected ? Color.cyan : Color.yellow}
+                };
 
-                    moduleExpandedState.TryAdd(directory, false);
-
-                    EditorGUILayout.BeginHorizontal("box");
-
-                    GUILayout.Space(indentLevel * 10);
-                    GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout) {richText = true};
-                    moduleExpandedState[directory] = EditorGUILayout.Foldout(moduleExpandedState[directory], displayName, true, foldoutStyle);
-
-                    bool isSelected = parentModulePath == directory;
-                    string buttonText = isSelected ? "Selected" : "Select";
-                    GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
+                if (canSelectParent(module.Kind))
+                {
+                    if (GUILayout.Button(buttonText, buttonStyle, GUILayout.Width(60)))
                     {
-                        normal = {textColor = isSelected ? Color.cyan : GUI.skin.button.normal.textColor},
-                        hover = {textColor = isSelected ? Color.cyan : Color.yellow}
-                    };
-
-                    if (CanSelect(moduleInfoPath, selectedModuleType))
-                    {
-                        if (GUILayout.Button(buttonText, buttonStyle, GUILayout.Width(60)))
-                        {
-                            parentModulePath = directory;
-                            selectedModuleName = GetModuleNameFromInfoFile(moduleInfoPath);
-                        }
+                        parentModulePath = directory;
+                        selectedModuleName = TrimModuleSuffix(module.Name);
                     }
-                    else
-                    {
-                        GUILayout.Space(70);
-                    }
+                }
+                else
+                {
+                    GUILayout.Space(70);
+                }
 
-                    EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndHorizontal();
 
-                    if (moduleExpandedState[directory])
-                    {
-                        EditorGUI.indentLevel++;
-                        DrawModuleHierarchy(path + "/" + directoryName, indentLevel + 1, ref moduleExpandedState, ref parentModulePath,
-                            ref selectedModuleName, selectedModuleType);
-                        DrawSubModulesRecursively(directory, indentLevel + 1, ref moduleExpandedState, ref parentModulePath, ref selectedModuleName,
-                            selectedModuleType);
-                        EditorGUI.indentLevel--;
-                    }
+                if (moduleExpandedState[directory])
+                {
+                    EditorGUI.indentLevel++;
+                    DrawModuleHierarchy(registry, path + "/" + directoryName, indentLevel + 1, ref moduleExpandedState, ref parentModulePath,
+                        ref selectedModuleName, canSelectParent);
+                    DrawSubModulesRecursively(registry, module, indentLevel + 1, ref moduleExpandedState, ref parentModulePath,
+                        ref selectedModuleName, canSelectParent);
+                    EditorGUI.indentLevel--;
                 }
             }
         }
 
-        private static bool CanSelect(string moduleInfoPath, ModuleType selectedModuleType)
+        private static string TrimModuleSuffix(string moduleName)
         {
-            string moduleType = GetModuleTypeFromInfoFile(moduleInfoPath);
-
-            switch (selectedModuleType)
-            {
-                case ModuleType.Test when moduleType == "Test":
-                case ModuleType.Screen when moduleType == "Test":
-                case ModuleType.Main when moduleType == "Screen" || moduleType == "Test":
-                    return false;
-                default:
-                    return true;
-            }
+            if (string.IsNullOrEmpty(moduleName) || !moduleName.EndsWith(MODULE_SUFFIX)) return moduleName;
+            return moduleName.Substring(0, moduleName.Length - MODULE_SUFFIX.Length).Trim();
         }
 
-        private static string GetModuleTypeFromInfoFile(string moduleInfoPath)
+        private static string GetModuleTypePostfix(ModuleKind moduleKind)
         {
-            foreach (string line in File.ReadAllLines(moduleInfoPath))
+            switch (moduleKind)
             {
-                if (line.StartsWith("ModuleType: "))
-                {
-                    return line.Substring("ModuleType: ".Length).Trim();
-                }
+                case ModuleKind.Screen: return " <b>(Screen)</b>";
+                case ModuleKind.Test: return " <b>(Test)</b>";
+                default: return string.Empty;
             }
-
-            return "Main";
-        }
-
-        private static string GetModuleNameFromInfoFile(string moduleInfoPath)
-        {
-            foreach (string line in File.ReadAllLines(moduleInfoPath))
-            {
-                if (line.StartsWith("ModuleName: "))
-                {
-                    string moduleName = line.Substring("ModuleName: ".Length).Trim();
-                    if (moduleName.EndsWith("Module"))
-                    {
-                        return moduleName.Substring(0, moduleName.Length - "Module".Length).Trim();
-                    }
-
-                    return moduleName;
-                }
-            }
-
-            return string.Empty;
-        }
-
-        private static string GetModuleTypePostfix(string moduleInfoPath)
-        {
-            string postfix = string.Empty;
-            foreach (string line in File.ReadAllLines(moduleInfoPath))
-            {
-                if (line.StartsWith("ModuleType: "))
-                {
-                    string typeString = line.Substring("ModuleType: ".Length).Trim();
-                    if (Enum.TryParse(typeString, out ModuleType moduleType))
-                    {
-                        if (moduleType == ModuleType.Screen || moduleType == ModuleType.Test)
-                            postfix = $" <b>({moduleType})</b>";
-                    }
-                }
-            }
-
-            return postfix;
         }
 
         private static void DrawSubModulesRecursively(
-            string modulePath,
+            ModuleRegistry registry,
+            ModuleDescriptor parentModule,
             int indentLevel,
             ref Dictionary<string, bool> moduleExpandedState,
             ref string parentModulePath,
             ref string selectedModuleName,
-            ModuleType selectedModuleType)
+            Func<ModuleKind, bool> canSelectParent)
         {
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
-            if (codeGenSettings == null)
+            ModuleKind[] subModuleKinds = {ModuleKind.Sub, ModuleKind.Test, ModuleKind.Screen};
+
+            foreach (ModuleKind kind in subModuleKinds)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found at {CodeGeneratorStrings.CONFIG_PATH}.");
-                return;
-            }
-
-            string subModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules];
-            string testModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules];
-            string screenModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules];
-
-            string[] subModulePaths = {subModulesFolderName, testModulesFolderName, screenModulesFolderName};
-
-            foreach (string subPath in subModulePaths)
-            {
-                string subDirectoryPath = Path.Combine(modulePath, subPath);
-                if (!Directory.Exists(subDirectoryPath)) continue;
-
-                string[] subDirectories = Directory.GetDirectories(subDirectoryPath);
-                foreach (string subDirectory in subDirectories)
+                foreach (ModuleDescriptor childModule in registry.ChildrenOf(parentModule, kind))
                 {
-                    string moduleInfoPath = Path.Combine(subDirectory, MODULE_INFO_FILE);
-                    if (!File.Exists(moduleInfoPath)) continue;
-
-                    string directoryName = Path.GetFileName(subDirectory);
-                    string moduleTypePostfix = GetModuleTypePostfix(moduleInfoPath);
-                    string displayName = directoryName + moduleTypePostfix;
+                    string subDirectory = ToAbsolutePath(registry.PathOf(childModule));
+                    string moduleTypePostfix = GetModuleTypePostfix(childModule.Kind);
+                    string displayName = childModule.Name + moduleTypePostfix;
 
                     moduleExpandedState.TryAdd(subDirectory, false);
 
@@ -195,12 +127,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                         hover = {textColor = isSelected ? Color.cyan : Color.yellow}
                     };
 
-                    if (CanSelect(moduleInfoPath, selectedModuleType))
+                    if (canSelectParent(childModule.Kind))
                     {
                         if (GUILayout.Button(buttonText, buttonStyle, GUILayout.Width(60)))
                         {
                             parentModulePath = subDirectory;
-                            selectedModuleName = GetModuleNameFromInfoFile(moduleInfoPath);
+                            selectedModuleName = TrimModuleSuffix(childModule.Name);
                         }
                     }
                     else
@@ -212,11 +144,38 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
                     if (moduleExpandedState[subDirectory])
                     {
-                        DrawSubModulesRecursively(subDirectory, indentLevel + 1, ref moduleExpandedState, ref parentModulePath,
-                            ref selectedModuleName, selectedModuleType);
+                        DrawSubModulesRecursively(registry, childModule, indentLevel + 1, ref moduleExpandedState, ref parentModulePath,
+                            ref selectedModuleName, canSelectParent);
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// ModuleRegistry works in asset paths ("Assets/Modules/CameraModule"); this drawer still
+        /// works in the absolute filesystem paths Directory.GetDirectories hands back. Convert at
+        /// the boundary rather than push absolute paths into the registry.
+        /// </summary>
+        private static string ToAssetPath(string absolutePath)
+        {
+            string normalized = absolutePath.Replace('\\', '/');
+            string dataPath = Application.dataPath;
+            return normalized.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase)
+                ? "Assets" + normalized.Substring(dataPath.Length)
+                : normalized;
+        }
+
+        /// <summary>
+        /// The inverse of ToAssetPath, kept byte-for-byte identical in separator style to what
+        /// Directory.GetDirectories used to hand back (forward slashes through Application.dataPath,
+        /// platform separators after). ModuleGenerator still compares parentModulePath against
+        /// Path.Combine(Application.dataPath, "Modules") by plain string equality, so drifting the
+        /// format here would silently break parent-module detection downstream.
+        /// </summary>
+        private static string ToAbsolutePath(string assetPath)
+        {
+            string relative = assetPath.Substring("Assets".Length).Replace('/', Path.DirectorySeparatorChar);
+            return Application.dataPath + relative;
         }
     }
 }

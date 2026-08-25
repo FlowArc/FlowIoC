@@ -1,19 +1,19 @@
 # Code Generator
 
-FlowIoC modules have a fixed shape: a folder tree, an assembly definition, a
-`_module_info.txt`, a namespace derived from the path, and a `Root` / `Context` pair.
+FlowIoC modules have a fixed shape: a folder tree, an assembly definition, a namespace
+derived from the path, and a `Root` / `Context` pair. Every module the generator creates
+is also registered in the project's module index, keyed on the folder's own Unity GUID.
 The generators create all of that correctly and keep it correct when things move.
 
 The rule of thumb: **never create a module, view or screen by copying an existing
-one.** A copy carries the source module's namespace, its asmdef name and its module
-info, and every tool downstream — the diagram, the sub-context picker, the console's
-log channels — keeps finding the original.
+one.** A copy carries the source module's namespace and its asmdef name, and Unity
+refuses the resulting duplicate assembly name — see Pitfalls, below.
 
 - [Create Module](#create-module)
 - [Create View](#create-view)
 - [Create Command](#create-command)
 - [Create Model](#create-model)
-- [Namespaces and Module Info](#namespaces-and-module-info)
+- [Namespaces and the Module Index](#namespaces-and-the-module-index)
 - [Delete Module](#delete-module)
 - [Scenarios](#scenarios)
 - [Pitfalls](#pitfalls)
@@ -49,14 +49,14 @@ Name the module, pick a type, and choose which optional folders you want.
 ```
 Assets/Modules/EconomyModule/
 ├── Modules.Economy.asmdef
-├── _module_info.txt
 └── Scripts/Runtime/RootsContexts/
     ├── EconomyRoot.cs
     └── EconomyContext.cs
 ```
 
-Plus whichever optional folders you selected. `_module_info.txt` is what the other
-tools read to know this folder is a module and what kind — do not delete it.
+Plus whichever optional folders you selected. The module is registered in the
+project's module index the moment its folder exists — there is no marker file on
+disk to keep in sync or to accidentally delete.
 
 Naming a Screen module: give it the screen's name (`Settings`, `DailyReward`), not
 `SettingsScreenScreen`. The generator adds the suffix.
@@ -127,7 +127,7 @@ genuinely read, and every one of those is a coupling you will have to maintain.
 
 ---
 
-## Namespaces and Module Info
+## Namespaces and the Module Index
 
 Namespaces are derived from the module's path, so moving a folder in the Project
 window desynchronises the code from its location. Two tools fix it:
@@ -140,9 +140,16 @@ after a move or a rename.
 
 | Item | Does |
 |---|---|
-| `Detect & Fix Module Infos` | Finds modules whose `_module_info.txt` is missing, stale or pointing at an old path, and repairs them |
-| `Cleanse Module Infos` | Removes metadata left behind by modules that no longer exist |
+| `Detect & Fix Module Infos` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
 | `Update Namespace Settings` | Changes the namespace prefix the generators use for new code |
+
+Every module lives in one asset, `FlowIoCModuleIndex.asset`, beside the code
+generator settings. It is a cache, not something you hand-edit: name, kind and
+nesting are all read back off the folder tree on every rebuild, so a stale entry is
+fixed by running *Detect & Fix* — or just reopening the project, which rebuilds it
+the same way on its own. Each module's folder-type GUID map is durable state
+instead — carried forward rather than read back off the tree, and healed only
+lazily, not on every rebuild.
 
 The symptom that you needed *Detect & Fix* is a generator writing into the wrong
 folder, or a Root whose sub-context list has gone empty after a move.
@@ -172,13 +179,13 @@ when the project compiles.
 
 ```
 ✅ Tools ▸ FlowIoC ▸ Create Module → "Inventory", type Main.
-   Correct namespace, correct asmdef name, correct module info.
+   Correct namespace, correct asmdef name, registered as its own module.
 ```
 
 ```
 ❌ Duplicate EconomyModule, rename the folder to InventoryModule, find-and-replace
-   the namespaces. The asmdef is still named Modules.Economy, _module_info.txt still
-   describes Economy, and the sub-context picker still lists the wrong contexts.
+   the namespaces by hand. The asmdef is still named Modules.Economy, so Unity
+   refuses the duplicate assembly name — see Pitfalls, below.
 ```
 
 ### Fix namespaces at the moment you move something
@@ -223,8 +230,8 @@ public class OnPurchaseSignalCommand : Command { }
 
 ### The generator writes into the wrong module
 
-`_module_info.txt` is stale — usually after a folder move. Run *Module Configuration ▸
-Detect & Fix Module Infos*.
+The module index is stale — usually after a folder move. Run *Module Configuration ▸
+Detect & Fix Module Infos* to rebuild it.
 
 ### A new module does not appear in the sub-context picker
 

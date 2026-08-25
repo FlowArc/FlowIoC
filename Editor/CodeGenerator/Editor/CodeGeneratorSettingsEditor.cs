@@ -79,8 +79,19 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
                         "Yes", "No"))
                 {
                     EditorUtility.SetDirty(_settings);
-                    UpdateDirectoryStructureConfigs();
+
+                    // UpdateLockedFolderInfoFiles runs first deliberately. Its fallback locates an
+                    // unrecorded module's folder by the name still baked into each
+                    // DirectoryStructureConfig's RootFolders - the folder's *current* name, since
+                    // nothing has renamed it on disk yet. UpdateDirectoryStructureConfigs resyncs
+                    // those RootFolders entries to the *new* configured name; running it first
+                    // would make the fallback search for a name nothing on disk carries yet, so an
+                    // unrecorded module would never be found and never heal. Reversing the order
+                    // costs nothing for an already-recorded module - the GUID path never reads
+                    // RootFolders - and still lets this same click resync the folder labels
+                    // afterward.
                     _settings.UpdateLockedFolderInfoFiles();
+                    UpdateDirectoryStructureConfigs();
                     AssetDatabase.SaveAssets();
                     NamespaceProvider.UpdateNamespaceSettings();
                     AssetDatabase.SaveAssets();
@@ -286,14 +297,14 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
         private void UpdateFolderNames(List<FolderConfig> folders)
         {
             if (folders == null) return;
-            
+
             foreach (var folder in folders)
             {
                 if (_settings.DirectoryStructureConfigMap.TryGetValue(folder.Type, out string newName))
                 {
                     folder.FolderName = newName;
                 }
-                
+
                 if (folder.SubFolders != null && folder.SubFolders.Count > 0)
                 {
                     UpdateFolderNames(folder.SubFolders);

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using UnityEditor;
@@ -31,6 +32,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private static string _moduleName;
         private string _parentModulePath;
         private Dictionary<string, bool> _moduleExpandedState;
+        private ModuleRegistry _registry;
+        private ModuleSelectionRules _selectionRules;
         private Vector2 _scrollPosition;
         private Vector2 _folderPreviewScrollPosition;
         private Dictionary<ModuleType, DirectoryStructureConfig> _directoryConfigMap;
@@ -61,6 +64,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _createContext = true;
             _makeRootSingleton = false;
             _actionNames = new List<string>();
+            _registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            _selectionRules = new ModuleSelectionRules();
         }
 
         private void OnGUI()

@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,14 +14,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 {
     internal static class NamespaceUtility
     {
-        private const string MODULE_INFO_FILE = "_module_info.txt";
         internal const string XAML_NAMESPACE = "http://schemas.microsoft.com/winfx/2006/xaml";
         internal const string XAML_ASSEMBLY = "clr-namespace:System;assembly=mscorlib";
         internal const string XAML_PRESENTATION = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         internal const string JETBRAINS_SETTINGS_STORAGE = "urn:shemas-jetbrains-com:settings-storage-xaml";
         private const string LEGACY_CODE_GENERATED_SECTION = "CodeGeneratedEntries";
         private static readonly CultureInfo TurkishCulture = new CultureInfo("tr-TR");
-        internal static readonly string[] SkipFolderNames = { "zScreenModules", "zSubModules", "zTestModules" };
+        internal static readonly string[] SkipFolderNames = {"zScreenModules", "zSubModules", "zTestModules"};
 
         public static bool IsFolderNamespaceProvider(string folderPath)
         {
@@ -63,7 +64,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             string dotSettingsFilePath
         )
         {
-            Debug.Log($"SetNamespaceProvider => folderPath = {assetFolderPath}, isNamespaceProvider = {isNamespaceProvider}, dotSettingsFilePath = {dotSettingsFilePath}");
+            Debug.Log(
+                $"SetNamespaceProvider => folderPath = {assetFolderPath}, isNamespaceProvider = {isNamespaceProvider}, dotSettingsFilePath = {dotSettingsFilePath}");
             string fileName = string.IsNullOrEmpty(dotSettingsFilePath)
                 ? "Project.DotSettings"
                 : Path.GetFileName(dotSettingsFilePath);
@@ -118,7 +120,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             try
             {
                 SaveDotSettings(doc, finalDotSettingsPath);
-                Debug.Log($"NamespaceProvider for '{assetFolderPath}' set to {(isNamespaceProvider ? "ENABLED" : "SKIPPED")} in '{finalDotSettingsPath}'.");
+                Debug.Log(
+                    $"NamespaceProvider for '{assetFolderPath}' set to {(isNamespaceProvider ? "ENABLED" : "SKIPPED")} in '{finalDotSettingsPath}'.");
 
                 AssetDatabase.Refresh();
             }
@@ -182,7 +185,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 }
                 else if (c > 127)
                 {
-                    sb.AppendFormat("_{0:X4}", (int)c);
+                    sb.AppendFormat("_{0:X4}", (int) c);
                 }
                 else if (c == '-')
                 {
@@ -248,6 +251,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 {
                     doc.DocumentElement.AppendChild(legacySection.FirstChild);
                 }
+
                 legacySection.ParentNode.RemoveChild(legacySection);
             }
 
@@ -328,67 +332,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         public static string GetModuleNamespace(string modulePath)
         {
-            List<string> moduleNames = new List<string>();
-            string currentPath = modulePath;
-
-            while (true)
-            {
-                string moduleInfoPath = Path.Combine(currentPath, MODULE_INFO_FILE);
-                if (File.Exists(moduleInfoPath))
-                {
-                    string moduleName = "";
-                    string moduleType = "";
-
-                    foreach (string line in File.ReadAllLines(moduleInfoPath))
-                    {
-                        if (line.StartsWith("ModuleName: "))
-                        {
-                            moduleName = line.Substring("ModuleName: ".Length).Trim();
-                            if (moduleName.EndsWith("Module"))
-                            {
-                                moduleName = moduleName.Substring(0, moduleName.Length - "Module".Length).Trim();
-                            }
-                        }
-                        else if (line.StartsWith("ModuleType: "))
-                        {
-                            moduleType = line.Substring("ModuleType: ".Length).Trim();
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(moduleName))
-                    {
-                        moduleNames.Insert(0, moduleName + "Module");
-                    }
-
-                    if (moduleType == "Main")
-                        break;
-
-                    DirectoryInfo parentDir = Directory.GetParent(currentPath);
-                    if (parentDir == null) break;
-                    currentPath = parentDir.FullName;
-                }
-                else
-                {
-                    DirectoryInfo parentDir = Directory.GetParent(currentPath);
-                    if (parentDir == null) break;
-                    currentPath = parentDir.FullName;
-                }
-            }
-
-            return "Modules." + string.Join(".", moduleNames);
+            return GetModuleNamespace(CreateRegistry(), modulePath);
         }
 
-        public static string GetModuleTypeFromInfoFile(string moduleInfoPath)
+        /// <summary>
+        /// Builds "Modules.Outer.Inner" from the module chain modulePath sits in.
+        /// AncestorsOf comes back nearest first, so ModuleNamespaceBuilder is the piece that
+        /// puts them root-first with the module itself last.
+        /// </summary>
+        private static string GetModuleNamespace(ModuleRegistry registry, string modulePath)
         {
-            foreach (string line in File.ReadAllLines(moduleInfoPath))
-            {
-                if (line.StartsWith("ModuleType: "))
-                {
-                    return line.Substring("ModuleType: ".Length).Trim();
-                }
-            }
+            registry.TryGetNearestModule(GetUnityAssetPath(modulePath), out ModuleDescriptor module);
 
-            return "Main";
+            IEnumerable<string> ancestorNames = module == null
+                ? Enumerable.Empty<string>()
+                : registry.AncestorsOf(module).Select(ancestor => ancestor.Name);
+
+            return new ModuleNamespaceBuilder().Build(ancestorNames, module?.Name);
         }
 
         public static string GetUnityAssetPath(string fullPath)
@@ -414,13 +374,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 return "Modules";
             }
 
-            string moduleFolder = FindNearestModuleFolder(fileDirectory);
+            ModuleRegistry registry = CreateRegistry();
+
+            string moduleFolder = FindNearestModuleFolder(registry, fileDirectory);
             if (string.IsNullOrEmpty(moduleFolder))
             {
                 return "Modules";
             }
 
-            string baseNamespace = GetModuleNamespace(moduleFolder);
+            string baseNamespace = GetModuleNamespace(registry, moduleFolder);
 
             string relativeSubPath = "";
             try
@@ -469,25 +431,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             return baseNamespace;
         }
 
-        private static string FindNearestModuleFolder(string startDirectory)
+        private static string FindNearestModuleFolder(ModuleRegistry registry, string startDirectory)
         {
-            string currentPath = startDirectory;
-            while (!string.IsNullOrEmpty(currentPath))
-            {
-                string moduleInfo = Path.Combine(currentPath, MODULE_INFO_FILE);
-                if (File.Exists(moduleInfo))
-                {
-                    return currentPath;
-                }
+            if (!registry.TryGetNearestModule(GetUnityAssetPath(startDirectory), out ModuleDescriptor module))
+                return string.Empty;
 
-                DirectoryInfo parent = Directory.GetParent(currentPath);
-                if (parent == null)
-                    break;
+            return new ModuleAssetPathResolver().ToAbsolutePath(registry.PathOf(module));
+        }
 
-                currentPath = parent.FullName;
-            }
-
-            return string.Empty;
+        /// <summary>
+        /// One registry per call. NamespaceUtility is called from many independent entry points -
+        /// menu items, the create-command/model/view windows, ModuleGenerator - so there is no
+        /// single natural place to build one and share it; the index load this hits is a cheap
+        /// AssetDatabase lookup, not a rescan.
+        /// </summary>
+        private static ModuleRegistry CreateRegistry()
+        {
+            return new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
         }
     }
 }

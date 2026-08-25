@@ -1,5 +1,4 @@
 ﻿#if UNITY_EDITOR
-using FlowIoC.Editor.CodeGenerator.Cleaner;
 using FlowIoC.Editor.CodeGenerator.Detector;
 using FlowIoC.Editor.CodeGenerator.Menus;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
@@ -49,12 +48,6 @@ namespace FlowIoC.Editor.CodeGenerator
         private static void FixModuleInfos()
         {
             ModuleAutoDetector.DetectAndRegisterModulesOnStartup();
-        }
-
-        [MenuItem("Tools/FlowIoC/Module Configuration/Cleanse Module Infos", false, 52)]
-        private static void CleanseModuleInfos()
-        {
-            ModuleCleaner.CleanObsoleteEntries();
         }
 
         [MenuItem("Tools/FlowIoC/Module Configuration/Update Namespace Settings", false, 53)]

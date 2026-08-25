@@ -74,5 +74,13 @@ namespace FlowIoC.Tests
         {
             Assert.AreEqual("Assets/Plugins/FlowIoC", new FlowIoCProjectPaths().Root);
         }
+
+        [Test]
+        public void The_module_index_sits_beside_the_code_generator_settings()
+        {
+            Assert.AreEqual(
+                "Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset",
+                new FlowIoCProjectPaths().ModuleIndex);
+        }
     }
 }

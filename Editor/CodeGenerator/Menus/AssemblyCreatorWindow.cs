@@ -2,17 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus
 {
     public class AssemblyCreatorWindow : EditorWindow
     {
-        private const string MODULE_INFO_FILE = "_module_info.txt";
         private const string ASMDEF_EXT = ".asmdef";
 
         private ModuleNode _rootNode;
@@ -172,51 +173,55 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 IsExpanded = true
             };
 
-            string modulesRootPath = Path.Combine(Application.dataPath, "Modules");
-            if (!Directory.Exists(modulesRootPath))
-            {
-                Debug.LogWarning("No 'Assets/Modules' folder found.");
-                return;
-            }
+            var registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            var pathResolver = new ModuleAssetPathResolver();
 
-            LoadModulesRecursive(modulesRootPath, _rootNode);
+            LoadModulesRecursive(registry, pathResolver, null, _rootNode);
         }
 
-        private void LoadModulesRecursive(string folderPath, ModuleNode parentNode)
+        /// <summary>
+        /// Walks the registry rather than the filesystem: the top-level call (parentModule null)
+        /// takes every module with no module ancestor, and each recursive call takes the direct
+        /// Sub/Screen/Test children of the module just added, mirroring ModuleHierarchyDrawer.
+        /// </summary>
+        private void LoadModulesRecursive(
+            ModuleRegistry registry,
+            ModuleAssetPathResolver pathResolver,
+            ModuleDescriptor parentModule,
+            ModuleNode parentNode)
         {
-            string[] dirs = Directory.GetDirectories(folderPath);
-            foreach (var dir in dirs)
+            ModuleKind[] nestedModuleKinds = {ModuleKind.Sub, ModuleKind.Test, ModuleKind.Screen};
+
+            IEnumerable<ModuleDescriptor> modules = parentModule == null
+                ? registry.Modules.Where(module => !registry.AncestorsOf(module).Any())
+                : nestedModuleKinds.SelectMany(kind => registry.ChildrenOf(parentModule, kind));
+
+            foreach (ModuleDescriptor module in modules)
             {
-                string moduleInfoPath = Path.Combine(dir, MODULE_INFO_FILE);
-
-                if (File.Exists(moduleInfoPath))
+                string fullPath = pathResolver.ToAbsolutePath(registry.PathOf(module));
+                if (string.IsNullOrEmpty(fullPath))
                 {
-                    bool hasAsmdef = Directory.GetFiles(dir, "*.asmdef", SearchOption.TopDirectoryOnly).Length > 0;
-
-                    string moduleName = GetModuleName(moduleInfoPath);
-                    string displayName = string.IsNullOrEmpty(moduleName)
-                        ? Path.GetFileName(dir)
-                        : moduleName;
-
-                    var node = new ModuleNode
-                    {
-                        Name = moduleName,
-                        DisplayName = displayName,
-                        FullPath = dir,
-                        HasAsmdef = hasAsmdef,
-                        Selected = false,
-                        IsExpanded = false,
-                        Children = new List<ModuleNode>()
-                    };
-
-                    LoadModulesRecursive(dir, node);
-
-                    parentNode.Children.Add(node);
+                    Debug.LogWarning($"[AssemblyCreatorWindow] Skipping '{module.Name}': its folder GUID no longer resolves to a path.");
+                    continue;
                 }
-                else
+
+                bool hasAsmdef = Directory.GetFiles(fullPath, "*.asmdef", SearchOption.TopDirectoryOnly).Length > 0;
+
+                var node = new ModuleNode
                 {
-                    LoadModulesRecursive(dir, parentNode);
-                }
+                    Name = module.Name,
+                    DisplayName = module.Name,
+                    FullPath = fullPath,
+                    Kind = module.Kind,
+                    HasAsmdef = hasAsmdef,
+                    Selected = false,
+                    IsExpanded = false,
+                    Children = new List<ModuleNode>()
+                };
+
+                LoadModulesRecursive(registry, pathResolver, module, node);
+
+                parentNode.Children.Add(node);
             }
         }
 
@@ -271,7 +276,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                         Debug.LogWarning($".asmdef already exists at: {asmdefPath}");
                     }
 
-                    UpdateDotSettingsAndNamespace(node.FullPath, node.DisplayName);
+                    UpdateDotSettingsAndNamespace(node.FullPath, node.DisplayName, node.Kind);
 
                     createdCount++;
                     Debug.Log($"Assembly + Namespace updated for: {node.DisplayName}");
@@ -290,28 +295,20 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             AssetDatabase.Refresh();
         }
 
-        private void UpdateDotSettingsAndNamespace(string moduleFullPath, string moduleName)
+        private void UpdateDotSettingsAndNamespace(string moduleFullPath, string moduleName, ModuleKind moduleKind)
         {
             CreateDotSettingsFileInNewFormat(moduleFullPath, moduleName);
-            
-            string moduleInfoFile = Path.Combine(moduleFullPath, MODULE_INFO_FILE);
-            var moduleTypeString = "Main";
-            if (File.Exists(moduleInfoFile))
-            {
-                foreach (string line in File.ReadAllLines(moduleInfoFile))
-                {
-                    if (line.StartsWith("ModuleType: "))
-                    {
-                        moduleTypeString = line.Substring("ModuleType: ".Length).Trim();
-                        break;
-                    }
-                }
-            }
 
-            if (!Enum.TryParse(moduleTypeString, out ModuleType modType))
+            ModuleType modType = moduleKind switch
             {
-                modType = ModuleType.Main;
-            }
+                ModuleKind.Main => ModuleType.Main,
+                ModuleKind.Screen => ModuleType.Screen,
+                ModuleKind.Test => ModuleType.Test,
+                // Sub-modules are laid out exactly like a Main module; there is no separate
+                // DirectoryStructureConfig for Sub.
+                ModuleKind.Sub => ModuleType.Main,
+                _ => ModuleType.Main
+            };
 
             DirectoryStructureConfig config = GetDirectoryStructureConfigFor(modType);
             if (config != null)
@@ -387,21 +384,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             }
         }
 
-        private string GetModuleName(string moduleInfoPath)
-        {
-            var lines = File.ReadAllLines(moduleInfoPath);
-            foreach (var raw in lines)
-            {
-                string line = raw.TrimStart();
-                if (line.StartsWith("ModuleName: "))
-                {
-                    return line.Substring("ModuleName: ".Length).Trim();
-                }
-            }
-
-            return "";
-        }
-
         private Texture2D MakeColorTexture(Color color)
         {
             Texture2D texture = new Texture2D(2, 2);
@@ -456,7 +438,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             return prefix + moduleName + suffix;
         }
-        
+
         private static void CreateAssemblyDefinitionFile(string oldFilePath, string rawAssemblyName)
         {
             var finalAssemblyName = GetParsedAssemblyName(rawAssemblyName);
@@ -494,7 +476,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             AssetDatabase.Refresh();
         }
-        
+
         private static void CreateDotSettingsFileInNewFormat(string moduleFullPath, string rawAssemblyName)
         {
             string oldDotSettingsPath = Path.Combine(moduleFullPath, rawAssemblyName + ".csproj.DotSettings");
@@ -525,17 +507,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             public string Name;
             public string DisplayName;
             public string FullPath;
+            public ModuleKind Kind;
             public bool HasAsmdef;
             public bool Selected;
             public bool IsExpanded;
             public List<ModuleNode> Children = new List<ModuleNode>();
-        }
-
-        public enum ModuleType
-        {
-            Main,
-            Screen,
-            Test
         }
     }
 }

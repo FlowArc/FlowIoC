@@ -1,7 +1,8 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             public string Name;
             public string Path;
             public string Type;
-            public string ParentInfoFile;
+            public string FolderGuid;
         }
 
         private void OnEnable()
@@ -33,7 +34,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             EditorGUILayout.HelpBox(
                 "Select a module to delete. This will remove the module folder, " +
                 "its assembly definition, namespace settings, log type registration, " +
-                "and parent info file entries.",
+                "and its entry in the module index.",
                 MessageType.Warning);
 
             EditorGUILayout.Space();
@@ -72,17 +73,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                 if (GUILayout.Button("Delete", GUILayout.Width(60)))
                 {
                     if (EditorUtility.DisplayDialog(
-                        "Delete Module",
-                        $"Are you sure you want to delete '{module.Name}'?\n\n" +
-                        $"Path: {module.Path}\n\n" +
-                        "This action cannot be undone!",
-                        "Delete", "Cancel"))
+                            "Delete Module",
+                            $"Are you sure you want to delete '{module.Name}'?\n\n" +
+                            $"Path: {module.Path}\n\n" +
+                            "This action cannot be undone!",
+                            "Delete", "Cancel"))
                     {
-                        ModuleDeleter.DeleteModule(module.Name, module.Path, module.ParentInfoFile);
+                        ModuleDeleter.DeleteModule(module.Name, module.Path, module.FolderGuid);
                         ScanModules();
                         GUIUtility.ExitGUI();
                     }
                 }
+
                 GUI.backgroundColor = Color.white;
 
                 EditorGUILayout.EndHorizontal();
@@ -93,76 +95,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
         private void ScanModules()
         {
-            _modules = new List<ModuleEntry>();
+            var registry = new ModuleRegistry(new ModuleIndexProvider().LoadOrCreate(), new AssetDatabasePaths());
+            var pathResolver = new ModuleAssetPathResolver();
 
-            string modulesPath = Path.Combine(Application.dataPath, "Modules");
-            if (Directory.Exists(modulesPath))
-                ScanDirectory(modulesPath);
+            _modules = registry.Modules
+                .Select(module => ToEntry(module, registry, pathResolver))
+                .Where(entry => !string.IsNullOrEmpty(entry.Path))
+                .ToList();
         }
 
-        private void ScanDirectory(string directory)
+        private static ModuleEntry ToEntry(ModuleDescriptor module, ModuleRegistry registry, ModuleAssetPathResolver pathResolver)
         {
-            string[] subDirs = Directory.GetDirectories(directory, "*", SearchOption.TopDirectoryOnly);
-
-            foreach (string subDir in subDirs)
+            return new ModuleEntry
             {
-                string dirName = Path.GetFileName(subDir);
-
-                if (dirName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
-                {
-                    string moduleType = DetermineModuleType(subDir);
-                    string parentInfoFile = FindParentInfoFile(subDir, moduleType);
-
-                    _modules.Add(new ModuleEntry
-                    {
-                        Name = dirName,
-                        Path = subDir,
-                        Type = moduleType,
-                        ParentInfoFile = parentInfoFile
-                    });
-                }
-
-                ScanDirectory(subDir);
-            }
-        }
-
-        private static string DetermineModuleType(string modulePath)
-        {
-            DirectoryInfo parent = Directory.GetParent(modulePath);
-            if (parent == null) return "Main";
-
-            string parentName = parent.Name;
-
-            if (parentName.Equals("Modules", StringComparison.OrdinalIgnoreCase))
-                return "Main";
-            if (parentName.StartsWith("zTest", StringComparison.OrdinalIgnoreCase))
-                return "Test";
-            if (parentName.StartsWith("zScreen", StringComparison.OrdinalIgnoreCase))
-                return "Screen";
-            if (parentName.StartsWith("zSub", StringComparison.OrdinalIgnoreCase))
-                return "Sub";
-
-            return "Main";
-        }
-
-        private static string FindParentInfoFile(string modulePath, string moduleType)
-        {
-            DirectoryInfo parent = Directory.GetParent(modulePath);
-            if (parent == null) return null;
-
-            string infoFileName = moduleType switch
-            {
-                "Main" => "_mainmodules_info.txt",
-                "Sub" => "_submodules_info.txt",
-                "Test" => "_testmodules_info.txt",
-                "Screen" => "_screenmodules_info.txt",
-                _ => null
+                Name = module.Name,
+                Path = pathResolver.ToAbsolutePath(registry.PathOf(module)),
+                Type = module.Kind.ToString(),
+                FolderGuid = module.FolderGuid
             };
-
-            if (infoFileName == null) return null;
-
-            string infoFilePath = Path.Combine(parent.FullName, infoFileName);
-            return File.Exists(infoFilePath) ? infoFilePath : null;
         }
     }
 }

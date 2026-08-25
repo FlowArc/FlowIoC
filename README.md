@@ -830,7 +830,7 @@ Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 | `Tools/FlowIoC/Folder Drawer` | Colour Project window folders by path or by folder |
 | `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
-| `Tools/FlowIoC/Module Configuration/…` | Detect, fix, and cleanse module metadata; update namespace settings and the solution code style |
+| `Tools/FlowIoC/Module Configuration/…` | Rebuild the module index and its log types; update namespace settings and the solution code style |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
 | `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor |
 | `Assets/FlowIoC/Create Assembly` | Assembly definition for the selected folder |
@@ -927,6 +927,15 @@ from the module config and can be renamed under
 *Tools ▸ FlowIoC ▸ Module Configuration*. `Constants`, `Datas`, `Entities`, `Enums`,
 `Functions` and `Signals` are team convention rather than generator output — add
 them as the module needs them.
+
+Every module the generator creates is recorded in one project asset —
+`Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset` — keyed on the
+module folder's Unity GUID rather than its name or path, so renaming or moving a
+module in the Project window does not desynchronise the tools from what is actually
+on disk. The index is a cache: name, kind and nesting are all read back off the
+folder tree, so a stale or missing entry is fixed by rebuilding it — *Module
+Configuration ▸ Detect & Fix Module Infos*, or just reopening the project — rather
+than by editing the asset.
 
 > **`Systems` in a project that predates it.** The folder list lives in
 > `Assets/Plugins/FlowIoC/Editor/CodeGenerator/MainModuleDirectoryStructureConfig.asset`, which
