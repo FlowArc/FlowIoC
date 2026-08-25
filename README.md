@@ -937,6 +937,19 @@ folder tree, so a stale or missing entry is fixed by rebuilding it — *Module
 Configuration ▸ Detect & Fix Module Index*, or just reopening the project — rather
 than by editing the asset.
 
+Because it is a cache, FlowIoC keeps it out of version control: a `.gitignore` next to
+the asset ignores it and its `.meta`. Two people adding modules on separate branches
+would otherwise meet in the same serialized file, resolving by hand something the next
+rebuild reproduces anyway. The rule sits in that folder rather than in your project's
+root `.gitignore`, which is yours; your own lines in it are left alone, and everything
+outside the `FLOWIOC:BEGIN`/`FLOWIOC:END` markers survives.
+
+> **A project that already committed the index.** `.gitignore` does not untrack what git
+> is already tracking. Untrack it once, keeping the file on disk:
+> ```
+> git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset*
+> ```
+
 > **`Systems` in a project that predates it.** The folder list lives in
 > `Assets/Plugins/FlowIoC/Editor/CodeGenerator/MainModuleDirectoryStructureConfig.asset`, which
 > is written once, in your project. Upgrading FlowIoC does not rewrite it, so a project
