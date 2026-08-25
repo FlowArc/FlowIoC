@@ -892,9 +892,14 @@ reaches for when one particular kind of work comes up, and it can afford to be l
 You do not have to ask for them. FlowIoC writes each skill it ships into the project's
 `.claude/skills` folder when the Editor opens — one folder per skill, logged to the console so
 the folder is never a mystery — and refreshes one that the package has since changed. Only the
-files the package owns are compared, so a skill you wrote yourself is never touched, and a note
-left beside a shipped skill survives. The window above is for seeing what is installed and for
-putting a deleted skill back without waiting for the next Editor session.
+files the package owns are ever compared, written or deleted, so a skill you wrote yourself is
+never touched. The window above is for seeing what is installed and for putting a deleted skill
+back without waiting for the next Editor session.
+
+Removing FlowIoC through the Package Manager takes the shipped skills with it, file by file:
+nobody asked for them, so nobody is left with folders they cannot explain. A note left beside a
+shipped skill survives that — the shipped file goes, the note stays, and the folder it lives in
+stays with it.
 
 | Skill | Covers |
 |---|---|

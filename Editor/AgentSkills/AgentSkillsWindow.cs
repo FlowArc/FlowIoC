@@ -39,7 +39,8 @@ namespace FlowIoC.Editor.AgentSkills
                 "FlowIoC installs the skills it ships into this project's " + AgentSkillsInstaller.TargetFolder
                 + " folder when the Editor opens, so an AI coding assistant can load them on demand. "
                 + "This window is for checking what is there and for putting a deleted one back. "
-                + "One folder per skill; skills you wrote yourself are left alone.",
+                + "One folder per skill; skills you wrote yourself are left alone, and removing "
+                + "FlowIoC takes the shipped ones with it.",
                 MessageType.Info);
 
             EditorGUILayout.Space();
