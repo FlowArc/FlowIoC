@@ -26,6 +26,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private void OnModuleTypeChanged()
         {
+            // Each module type has its own config, so the Signals entry the toggle reads is a
+            // different object per type and the new one starts unselected.
+            SelectSignalsFolderByDefault();
+
             if (_selectedModuleType == ModuleType.Screen)
             {
                 CreatePreviewScreenConfig();

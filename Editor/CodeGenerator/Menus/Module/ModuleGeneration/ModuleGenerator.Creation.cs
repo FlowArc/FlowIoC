@@ -16,6 +16,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
             bool createRoot,
             bool createContext,
+            bool createSignals,
             bool createScreen,
             bool makeRootSingleton
         )
@@ -38,6 +39,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             else
             {
                 Debug.LogWarning(ROOTS_CONTEXTS_WARNING);
+            }
+
+            if (createSignals)
+            {
+                string signalsPath = directoryConfigMap[selectedModuleType]
+                    .FindFullFolderPathByID(FolderConfig.FolderType.Signals, modulePath);
+
+                if (!string.IsNullOrEmpty(signalsPath))
+                {
+                    string signalsName = CreateSignals(signalsPath, modulePath, moduleName, out string signalsNamespace);
+
+                    if (createContext && !string.IsNullOrEmpty(rootsAndContextsPath))
+                    {
+                        CodeGeneratorUtils.BindSignalsInContext(
+                            rootsAndContextsPath + "/" + moduleName + "Context.cs", signalsName, signalsNamespace);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning(SIGNALS_WARNING);
+                }
             }
 
             if (createScreen)
@@ -92,6 +114,30 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 isTest
             );
             EditorPrefs.SetString(KEY_CONTEXT_NAMESPACE, rootsAndContextsNamespace);
+        }
+
+        /// <summary>
+        /// Writes the module's signal holder and hands back the class name and the namespace it
+        /// landed in. The namespace segment is read off the folder the config resolved rather than
+        /// hardcoded, because the Signals folder can be renamed from the code generator settings
+        /// like any other tracked folder.
+        /// </summary>
+        private static string CreateSignals(string path, string modulePath, string moduleName, out string signalsNamespace)
+        {
+            string signalsName = moduleName + "Signals";
+
+            string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
+            signalsNamespace = $"{moduleNamespace}.{Path.GetFileName(path)}";
+
+            CodeGeneratorUtils.CreateSignals(
+                signalsName,
+                "TempSignals",
+                path,
+                CodeGeneratorStrings.TempSignalsPath,
+                signalsNamespace
+            );
+
+            return signalsName;
         }
 
         private static void CreateFoldersRecursively(string basePath, List<FolderConfig> folders, List<FolderConfig> selectedOptionalFolders)

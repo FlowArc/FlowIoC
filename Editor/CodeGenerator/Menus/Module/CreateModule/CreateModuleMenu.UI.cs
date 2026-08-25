@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.IO;
+using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
@@ -108,6 +110,91 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             }
 
             GUI.backgroundColor = Color.white;
+        }
+
+        /// <summary>
+        /// The signals toggle sits on its own row and is the same state as the Signals entry in
+        /// the folder preview, so ticking either one cannot leave a module holding an empty
+        /// Signals folder. Where the config marks the folder mandatory - the Screen config does,
+        /// because a screen module generates no Context and its holder is the only way in - the
+        /// toggle is shown on and disabled rather than hidden.
+        /// </summary>
+        private void CreateSignalsToggle()
+        {
+            FolderConfig signalsFolder = FindSignalsFolder();
+
+            // A test module wires other modules' signals rather than owning a public surface of
+            // its own, so it is the one module type never offered a holder.
+            if (signalsFolder == null || _selectedModuleType == ModuleType.Test)
+            {
+                _createSignals = false;
+                return;
+            }
+
+            GUI.backgroundColor = new Color(.6f, .7f, 1f);
+
+            if (!signalsFolder.IsOptional)
+            {
+                _createSignals = true;
+
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.ToggleLeft(CREATE_SIGNALS_LABEL, true, GUILayout.Width(125));
+                }
+            }
+            else
+            {
+                bool wasSelected = _selectedOptionalFolders.Contains(signalsFolder);
+                bool nowSelected = EditorGUILayout.ToggleLeft(CREATE_SIGNALS_LABEL, wasSelected, GUILayout.Width(125));
+
+                if (nowSelected && !wasSelected)
+                {
+                    _selectedOptionalFolders.Add(signalsFolder);
+                }
+                else if (!nowSelected && wasSelected)
+                {
+                    _selectedOptionalFolders.Remove(signalsFolder);
+                }
+
+                _createSignals = nowSelected;
+            }
+
+            GUI.backgroundColor = Color.white;
+        }
+
+        private void SelectSignalsFolderByDefault()
+        {
+            FolderConfig signalsFolder = FindSignalsFolder();
+
+            if (signalsFolder == null || !signalsFolder.IsOptional) return;
+            if (_selectedModuleType == ModuleType.Test) return;
+            if (_selectedOptionalFolders.Contains(signalsFolder)) return;
+
+            _selectedOptionalFolders.Add(signalsFolder);
+        }
+
+        private FolderConfig FindSignalsFolder()
+        {
+            if (_directoryConfigMap == null) return null;
+
+            return _directoryConfigMap.TryGetValue(_selectedModuleType, out DirectoryStructureConfig config) && config != null
+                ? FindFolderByType(config.RootFolders, FolderConfig.FolderType.Signals)
+                : null;
+        }
+
+        private FolderConfig FindFolderByType(List<FolderConfig> folders, FolderConfig.FolderType folderType)
+        {
+            if (folders == null) return null;
+
+            foreach (FolderConfig folder in folders)
+            {
+                if (folder.Type == folderType) return folder;
+
+                FolderConfig found = FindFolderByType(folder.SubFolders, folderType);
+                if (found != null) return found;
+            }
+
+            return null;
         }
 
         private void DisplayParentModuleSelection()
@@ -227,6 +314,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _actionNames,
                     _createRoot,
                     _createContext,
+                    _createSignals,
                     _createScene,
                     _makeRootSingleton,
                     screenConfigData

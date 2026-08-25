@@ -63,7 +63,8 @@ namespace FlowIoC.Editor.CodeGenerator
         }
 
         public static void CreateMediator(string mediatorName, string viewName, string tempClassName,
-            string mediatorPath, string tempClassPath, string namespaceName, List<string> actionsList, bool isTest)
+            string mediatorPath, string tempClassPath, string namespaceName, List<string> actionsList, bool isTest,
+            string signalsClassName = null, string signalsNamespace = null)
         {
             var newMediatorPath = mediatorPath + "/" + mediatorName + ".cs";
 
@@ -88,6 +89,15 @@ namespace FlowIoC.Editor.CodeGenerator
                 else if (content.Contains("[Inject]"))
                 {
                     content = "\t\t[Inject] private " + viewName + " _view { get; set; }";
+                }
+                else if (content.Contains("//@Signals"))
+                {
+                    if (!string.IsNullOrEmpty(signalsClassName))
+                    {
+                        newMediatorContent.Add("\t\t[InjectSignal] private " + signalsClassName + " _signals { get; set; }");
+                    }
+
+                    continue;
                 }
                 else if (content.Contains("//@Register"))
                 {
@@ -129,6 +139,9 @@ namespace FlowIoC.Editor.CodeGenerator
 
             if (isTest)
                 newMediatorContent.Add("#endif");
+
+            if (!string.IsNullOrEmpty(signalsClassName))
+                InsertUsing(newMediatorContent, signalsNamespace);
 
             if (!Directory.Exists(mediatorPath)) Directory.CreateDirectory(mediatorPath);
 
@@ -357,6 +370,116 @@ namespace FlowIoC.Editor.CodeGenerator
             AssetDatabase.Refresh();
         }
 
+        /// <summary>
+        /// Writes a module's signal holder from the TempSignals template. Unlike the other
+        /// generators the template name is replaced on every line rather than only on the class
+        /// declaration, because the holder names its own Incoming and Outgoing classes in field
+        /// declarations too - and those lines carry no marker to key off.
+        /// </summary>
+        public static void CreateSignals(string signalsName, string tempClassName, string signalsPath,
+            string tempClassPath, string namespaceName)
+        {
+            string newSignalsPath = signalsPath + "/" + signalsName + ".cs";
+
+            string[] tempSignalsContent = File.ReadAllLines(tempClassPath);
+            List<string> newSignalsContent = new List<string>();
+
+            foreach (string line in tempSignalsContent)
+            {
+                string content = line;
+                if (content.Contains("namespace "))
+                {
+                    content = "namespace " + namespaceName;
+                }
+                else
+                {
+                    content = content.Replace("internal class", "public class");
+                    content = content.Replace(tempClassName, signalsName);
+                }
+
+                newSignalsContent.Add(content);
+            }
+
+            if (!Directory.Exists(signalsPath)) Directory.CreateDirectory(signalsPath);
+
+            File.WriteAllLines(newSignalsPath, newSignalsContent.ToArray());
+            AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// Declares the module's own signal holder on a Context and binds it in SignalBindings.
+        /// A Context that owns its signals holds it as a plain field rather than an injected one -
+        /// it is the thing doing the binding, so there is nothing to inject it from.
+        /// </summary>
+        public static void BindSignalsInContext(string contextPath, string signalsClassName, string signalsNamespace)
+        {
+            if (!File.Exists(contextPath)) return;
+
+            List<string> contextLines = File.ReadAllLines(contextPath).ToList();
+
+            if (contextLines.Any(line => line.Contains($"InjectionBinderCrossContext.Bind<{signalsClassName}>()"))) return;
+
+            string fieldName = ResolveSignalFieldName(contextLines, signalsClassName, "_signals");
+            bool fieldDeclared = contextLines.Any(line => line.Contains($"{signalsClassName} {fieldName}"));
+
+            List<string> newContextContent = new List<string>();
+
+            foreach (string line in contextLines)
+            {
+                if (!fieldDeclared && line.Contains("public override void SignalBindings()"))
+                {
+                    newContextContent.Add($"\t\tprivate {signalsClassName} {fieldName};");
+                    newContextContent.Add("");
+                    fieldDeclared = true;
+                }
+
+                newContextContent.Add(line);
+
+                if (line.Contains("base.SignalBindings();"))
+                {
+                    newContextContent.Add($"\t\t\t{fieldName} = InjectionBinderCrossContext.Bind<{signalsClassName}>();");
+                }
+            }
+
+            InsertUsing(newContextContent, signalsNamespace);
+
+            File.WriteAllLines(contextPath, newContextContent.ToArray());
+            AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// The name the context already knows a signal holder by, or <paramref name="defaultFieldName"/>
+        /// when it does not know one yet. A context that owns its holder declares it as
+        /// <c>_signals</c>, so the command generator has to write that name into the bindings it
+        /// appends rather than the one it would have picked for itself.
+        /// </summary>
+        private static string ResolveSignalFieldName(IEnumerable<string> contextLines, string signalClassName,
+            string defaultFieldName = null)
+        {
+            Match match = contextLines
+                .Select(line => Regex.Match(line, $@"\b{Regex.Escape(signalClassName)}\s+(_\w+)"))
+                .FirstOrDefault(candidate => candidate.Success);
+
+            if (match != null) return match.Groups[1].Value;
+
+            return string.IsNullOrEmpty(defaultFieldName) ? "_" + signalClassName.ToLower() : defaultFieldName;
+        }
+
+        /// <summary>
+        /// Adds a using to generated content, after the leading <c>#if UNITY_EDITOR</c> when the
+        /// file has one - a test-only using written above the guard would break player builds.
+        /// </summary>
+        private static void InsertUsing(List<string> content, string namespaceName)
+        {
+            if (string.IsNullOrEmpty(namespaceName)) return;
+
+            string usingLine = $"using {namespaceName};";
+            if (content.Any(line => line.Trim() == usingLine)) return;
+
+            int insertIndex = content.Count > 0 && content[0].TrimStart().StartsWith("#if") ? 1 : 0;
+            content.Insert(insertIndex, usingLine);
+        }
+
         public static void BindMediationInContext(string contextPath, string viewName, string mediationName, string viewNamespace)
         {
             var contextLines = File.ReadAllLines(contextPath);
@@ -425,7 +548,8 @@ namespace FlowIoC.Editor.CodeGenerator
             AssetDatabase.Refresh();
         }
 
-        public static void BindModelInContext(string contextPath, string modelName, string iModelName, string dummyModelName, string modelNamespace, bool useDummyBinding = false)
+        public static void BindModelInContext(string contextPath, string modelName, string iModelName, string dummyModelName, string modelNamespace,
+            bool useDummyBinding = false)
         {
             var contextLines = File.ReadAllLines(contextPath);
             var newRootContent = new List<string>();
@@ -481,9 +605,12 @@ namespace FlowIoC.Editor.CodeGenerator
                 usingsToAdd.Add($"using {injectableNamespace};");
             }
 
+            // A context that binds the holder itself already declares it as a plain field, so the
+            // match is on the declaration rather than on the [Inject] that only one of the two
+            // shapes carries - otherwise a second field of the same type lands beside it and the
+            // bindings written below would name a field nothing ever assigns.
             bool alreadyInjected = contextLines.Any(line =>
-                line.Contains($"[Inject] private {signalClassName}")
-                || line.Contains($"[Inject]private {signalClassName}")
+                Regex.IsMatch(line, $@"\b{Regex.Escape(signalClassName)}\s+_\w+")
             );
 
             for (int ii = 0; ii < contextLines.Length; ii++)
@@ -536,7 +663,7 @@ namespace FlowIoC.Editor.CodeGenerator
             List<string> blockLines = new List<string>();
             bool foundAnyBlock = false;
 
-            string fullSignal = $"_{signalClassName.ToLower()}.{signalName}";
+            string fullSignal = $"{ResolveSignalFieldName(allLines, signalClassName)}.{signalName}";
 
             for (int i = 0; i < allLines.Count; i++)
             {

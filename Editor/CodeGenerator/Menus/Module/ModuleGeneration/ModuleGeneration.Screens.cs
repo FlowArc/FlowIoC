@@ -60,8 +60,25 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
             string testRootsAndContextsPath = directoryConfigMap[ModuleType.Test]
                 .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, testModulePath);
+            string signalsPath = directoryConfigMap[ModuleType.Screen]
+                .FindFullFolderPathByID(FolderConfig.FolderType.Signals, modulePath);
 
-            CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames, false);
+            // A screen's signals are not optional the way another module's are: the screen module
+            // generates no Context of its own, so the holder is the only surface anything outside
+            // the screen has to talk to it through.
+            string signalsName = null;
+            string signalsNamespace = null;
+
+            if (!string.IsNullOrEmpty(signalsPath))
+            {
+                signalsName = CreateSignals(signalsPath, modulePath, moduleName, out signalsNamespace);
+            }
+            else
+            {
+                Debug.LogWarning(SIGNALS_WARNING);
+            }
+
+            CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames, false, signalsName, signalsNamespace);
 
             if (createScreen)
             {
@@ -73,6 +90,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             CreateScreenRootAndContext(testRootsAndContextsPath, testModulePath, moduleName, true);
             BindScreenMediationInTestContext(testRootsAndContextsPath, modulePath, moduleName);
+
+            if (!string.IsNullOrEmpty(signalsName))
+            {
+                CodeGeneratorUtils.BindSignalsInContext(
+                    testRootsAndContextsPath + "/" + moduleName + "TestContext.cs", signalsName, signalsNamespace);
+            }
+
             ShowScreenInLaunch(testRootsAndContextsPath, moduleName + "TestContext", moduleName, "Runtime");
         }
 
@@ -81,7 +105,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string modulePath,
             string moduleName,
             List<string> actionNames,
-            bool isTest
+            bool isTest,
+            string signalsName = null,
+            string signalsNamespace = null
         )
         {
             string suffix = isTest ? "" : "";
@@ -109,7 +135,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 CodeGeneratorStrings.TempScreenMediatorPath,
                 mediatorNamespace,
                 actionNames,
-                isTest
+                isTest,
+                signalsName,
+                signalsNamespace
             );
 
             EnsureNamespaceImport(mediatorName, path, "ViewsMediators");

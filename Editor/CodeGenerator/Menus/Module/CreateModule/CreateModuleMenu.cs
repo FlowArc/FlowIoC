@@ -21,6 +21,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string DIRECTORY_CONFIG_ERROR = "Directory config map could not be initialized.";
         private const string FOLDER_STRUCTURE_PREVIEW = "Folder Structure Preview:";
 
+        private const string CREATE_SIGNALS_LABEL = "Create Signals";
+
         private const string NEW_ACTION = "NewAction";
         private const string ADD_ACTION = "Add Action";
         private const string MODULE_TYPE_LABEL = " Module Type:";
@@ -43,6 +45,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private bool _createRoot;
         private bool _createContext;
+        private bool _createSignals;
         private bool _createScene;
         private bool _makeRootSingleton;
         private string _selectedModuleName = string.Empty;
@@ -62,10 +65,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _generationState = GenerationState.Idle;
             _createRoot = true;
             _createContext = true;
+            _createSignals = true;
             _makeRootSingleton = false;
             _actionNames = new List<string>();
             _registry = new ModuleRegistryFactory().FromProject();
             _selectionRules = new ModuleSelectionRules();
+            SelectSignalsFolderByDefault();
         }
 
         private void OnGUI()
@@ -109,6 +114,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             EditorGUILayout.Space(10);
             EditorGUILayout.BeginHorizontal(GUILayout.Width(400));
             CreateToggles();
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal(GUILayout.Width(400));
+            CreateSignalsToggle();
             EditorGUILayout.EndHorizontal();
 
             if (_selectedModuleType == ModuleType.Screen)
