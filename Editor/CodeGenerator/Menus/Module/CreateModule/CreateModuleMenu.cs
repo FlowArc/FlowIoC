@@ -47,7 +47,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private bool _createContext;
         private bool _createSignals;
         private bool _createScene;
-        private bool _makeRootSingleton;
         private string _selectedModuleName = string.Empty;
         private List<string> _actionNames = new();
         private Vector2 _actionScrollPosition;
@@ -66,7 +65,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _createRoot = true;
             _createContext = true;
             _createSignals = true;
-            _makeRootSingleton = false;
             _actionNames = new List<string>();
             _registry = new ModuleRegistryFactory().FromProject();
             _selectionRules = new ModuleSelectionRules();

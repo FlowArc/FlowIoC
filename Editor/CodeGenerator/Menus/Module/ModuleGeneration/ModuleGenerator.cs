@@ -46,7 +46,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createContext,
             bool createSignals,
             bool createScreen,
-            bool makeRootSingleton,
             ScreenConfigData screenConfigData = null
         )
         {
@@ -103,7 +102,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 createContext,
                 createSignals,
                 createScreen,
-                makeRootSingleton,
                 screenConfigData,
                 testModulesFolderName
             );
@@ -121,7 +119,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createContext,
             bool createSignals,
             bool createScreen,
-            bool makeRootSingleton,
             ScreenConfigData screenConfigData,
             string testModulesFolderName
         )
@@ -166,8 +163,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     createRoot,
                     createContext,
                     createSignals,
-                    createScreen,
-                    makeRootSingleton
+                    createScreen
                 );
             }
 

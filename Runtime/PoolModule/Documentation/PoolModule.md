@@ -359,8 +359,8 @@ on, so a `Get` can hand back the other group's prefab. Either namespace your key
 
 `PoolConfigAdapterView` with `UnregisterWhenViewDestroyed` on tears the group down
 with its GameObject. That is usually what you want — but if the pool must outlive the
-scene that registered it, put the adapter on an object owned by a `SingletonRoot`
-instead.
+scene that registered it, put the adapter on an object owned by a Root that calls
+`DontDestroyOnLoad` in `BeforeCreateContext`.
 
 ---
 

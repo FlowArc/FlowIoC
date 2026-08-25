@@ -185,7 +185,7 @@ otherwise `Packages/FlowIoC` stays empty and the project will not compile.
 
 | Concept | Base type | Responsibility |
 |---|---|---|
-| **Root** | `Root<TContext>`, `SingletonRoot<TContext>` | The `MonoBehaviour` that lives in the scene and owns a Context. Drives the whole lifecycle. |
+| **Root** | `Root<TContext>` | The `MonoBehaviour` that lives in the scene and owns a Context. Drives the whole lifecycle. |
 | **Context** | `Context` | Declares every binding of a module: signals, injections, mediations, commands. |
 | **Signal** | `Signal`, `Signal<T1..T4>` | A typed event. The only thing a module exposes to the outside world. |
 | **Command** | `Command`, `Command<T1..T4>` | A unit of logic triggered by a Signal. Sequential or parallel, retainable. |
@@ -239,10 +239,9 @@ inspector. Each phase can also be toggled off per-Root (`AutoInitialize`,
 `AutoBindInjections`, `AutoBindMediations`, `AutoSetup`, `AutoLaunch`) so a context
 can be driven manually in a test scene.
 
-`SingletonRoot<TContext>` additionally reparents itself to the scene root, calls
-`DontDestroyOnLoad`, and stands duplicates down — a second Root of the same type
-removes its own component without building a Context. Use it for application-wide
-modules such as audio, analytics, or player profile.
+A Root lives and dies with its scene. A module that has to outlive one — audio,
+analytics, player profile — overrides `BeforeCreateContext` on its own Root and calls
+`DontDestroyOnLoad` there, after reparenting itself to the scene root.
 
 ---
 
@@ -393,7 +392,7 @@ using FlowIoC.BaseModule.Root;
 
 namespace Modules.PlayerModule.RootsContexts
 {
-    public class PlayerRoot : SingletonRoot<PlayerContext> { }
+    public class PlayerRoot : Root<PlayerContext> { }
 }
 ```
 

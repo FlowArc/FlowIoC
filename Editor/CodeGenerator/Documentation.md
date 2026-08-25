@@ -41,7 +41,6 @@ Name the module, pick a type, and choose which optional folders you want.
 | `Create Root` / `Create Context` | Generate the pair. Leave both on unless you are adding a module that will only ever be a sub-context. |
 | `Create Signals` | Write the module's `<Name>Signals` holder with its empty `Incoming` and `Outgoing` classes, and bind it in the Context's `SignalBindings`. On by default; forced on for a Screen module, which has no Context of its own and so reaches the outside world only through its holder. Not offered for a Test module, which wires other modules' signals rather than owning any. |
 | `Create Scene` | Add a scene, so the module can be opened and played on its own |
-| `Make Root Singleton` | Derive the Root from `SingletonRoot<TContext>` instead of `Root<TContext>`, so it survives scene loads and refuses duplicates. For app-wide modules — audio, analytics, player profile. |
 | Actions (Screen only) | Names such as `OnBackButtonClicked`. Each becomes a callback on the View and a handler on the Mediator. |
 | Optional folders | `Resources`, `Editor`, `Scenes`, `Prefabs` and the rest — add what the module needs |
 

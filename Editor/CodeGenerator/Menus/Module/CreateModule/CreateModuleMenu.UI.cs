@@ -95,18 +95,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     ModuleType.Screen => true,
                     _ => _createScene
                 };
-
-                // Screen roots derive from BaseScreenRoot and are owned by the ScreenManager,
-                // so the singleton variant is only offered where a plain Root is generated.
-                _makeRootSingleton = _selectedModuleType switch
-                {
-                    ModuleType.Main or ModuleType.Test => EditorGUILayout.ToggleLeft("Make Root Singleton", _makeRootSingleton, GUILayout.Width(155)),
-                    _ => false
-                };
-            }
-            else
-            {
-                _makeRootSingleton = false;
             }
 
             GUI.backgroundColor = Color.white;
@@ -316,7 +304,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _createContext,
                     _createSignals,
                     _createScene,
-                    _makeRootSingleton,
                     screenConfigData
                 );
 

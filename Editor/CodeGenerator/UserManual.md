@@ -147,8 +147,6 @@ When creating modules, you can configure various options:
 - **Create Root**: Generates a Root class for the module (recommended)
 - **Create Context**: Generates a Context class for the module (recommended)
 - **Create Scene**: Creates a Unity scene file for the module
-- **Make Root Singleton**: Derives the Root from `SingletonRoot<TContext>` so it survives
-  scene loads and refuses duplicates
 - **Optional Folders**: Select additional directories to include in the module:
   - Resources: For assets loaded at runtime
   - Editor: For editor-only scripts

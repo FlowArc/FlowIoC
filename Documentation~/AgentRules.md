@@ -212,7 +212,7 @@ public class PlayerContext : Context
 Root - the module's presence in the scene, normally an empty class:
 
 ```csharp
-public class PlayerRoot : SingletonRoot<PlayerContext> { }
+public class PlayerRoot : Root<PlayerContext> { }
 ```
 
 ### Crossing between modules

@@ -15,9 +15,6 @@ namespace FlowIoC.BaseModule.Root
         public InjectionBinderCrossContext InjectionBinderCrossContext { get; private set; }
         public MediatorCreatorController MediatorCreatorController { get; private set; }
         public BindingPoolController BindingPoolController { get; private set; }
-
-        internal SingletonRootRegistry SingletonRootRegistry { get; private set; }
-
         public Action<IContext> OnContextReady;
 
         private readonly List<IRoot> _contextRootList = new List<IRoot>();
@@ -32,7 +29,6 @@ namespace FlowIoC.BaseModule.Root
             BindingPoolController = new BindingPoolController();
             InjectionBinderCrossContext = new InjectionBinderCrossContext();
             MediatorCreatorController = new MediatorCreatorController();
-            SingletonRootRegistry = new SingletonRootRegistry();
 
             FlowLogger.Log(SystemLogType.Context, "RootsManager | Initialize Completed!");
         }
