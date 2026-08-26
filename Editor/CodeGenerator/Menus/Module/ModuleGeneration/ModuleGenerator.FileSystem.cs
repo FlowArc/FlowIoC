@@ -39,7 +39,35 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (!File.Exists(assemblyFilePath))
                 return;
 
-            string dotSettingsFileName = finalAssemblyName + ".csproj.DotSettings";
+            WriteNamespaceExceptions(config, modulePath, finalAssemblyName);
+        }
+
+        /// <summary>
+        /// The same entries again, written under the Shared assembly's name.
+        ///
+        /// A .csproj.DotSettings only applies to the project it is named after, and Scripts/Shared
+        /// is a project of its own - so the module's own file cannot tell Rider to skip the Scripts
+        /// folder on the Shared assembly's behalf. Without this a shared value object would land in
+        /// Modules.PlayerModule.Scripts.Shared.Datas.ValueObjects, carrying the Scripts folder in
+        /// the middle of its namespace.
+        /// </summary>
+        private static void AddSharedNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string sharedAssemblyName)
+        {
+            if (string.IsNullOrEmpty(sharedAssemblyName))
+                return;
+
+            WriteNamespaceExceptions(config, modulePath, sharedAssemblyName);
+        }
+
+        /// <summary>
+        /// Both projects skip the same folders: the ones the config marks as no namespace provider,
+        /// and the z folders the module hangs under. The Shared project holds no file under Runtime
+        /// or the z folders, so the entries it has no use for cost it nothing, and writing the same
+        /// set keeps the two files reading alike.
+        /// </summary>
+        private static void WriteNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string assemblyName)
+        {
+            string dotSettingsFileName = assemblyName + ".csproj.DotSettings";
             string dotSettingsFilePath = Path.Combine(modulePath, dotSettingsFileName);
 
             if (!File.Exists(dotSettingsFilePath))
@@ -55,7 +83,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private static void AddParentPathNamespaceExceptions(string modulePath, string dotSettingsFilePath)
         {
             string assetsRelativePath = modulePath.Replace(Application.dataPath, "").TrimStart('/', '\\');
-            string[] pathSegments = assetsRelativePath.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
+            string[] pathSegments = assetsRelativePath.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
+                StringSplitOptions.RemoveEmptyEntries);
 
             if (pathSegments.Length <= 1)
                 return;

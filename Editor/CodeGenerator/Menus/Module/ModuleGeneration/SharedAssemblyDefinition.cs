@@ -14,10 +14,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     /// every file to the nearest asmdef above it - so the module has to reference the Shared
     /// assembly to reach its own shared data.
     ///
-    /// It also puts the namespace where it belongs: Rider roots a project's namespaces at the
-    /// folder its asmdef sits in, so a value object under Scripts/Shared/Datas/ValueObjects lands
-    /// in Modules.Player.Shared.Datas.ValueObjects and cannot collide with the Runtime type of the
-    /// same name in Modules.Player.Datas.ValueObjects.
+    /// It also puts the namespace where it belongs: a value object under
+    /// Scripts/Shared/Datas/ValueObjects lands in Modules.PlayerModule.Shared.Datas.ValueObjects
+    /// and cannot collide with the Runtime type of the same name in
+    /// Modules.PlayerModule.Datas.ValueObjects. That needs a .csproj.DotSettings of its own -
+    /// see ModuleGenerator.AddSharedNamespaceExceptions - because such a file only applies to
+    /// the project it is named after.
     /// </summary>
     internal class SharedAssemblyDefinition
     {

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
+using FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration;
 using FlowIoC.Editor.CodeStyle;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.Modules;
@@ -59,25 +60,56 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
                     return;
                 }
 
+                DirectoryStructureConfig config = ConfigFor(registry, modulePath);
+
                 string asmdefFileName = Path.GetFileNameWithoutExtension(asmdefFiles[0]);
-                string dotSettingsFileName = asmdefFileName + ".csproj.DotSettings";
-                string finalDotSettingsPath = Path.Combine(projectRoot, dotSettingsFileName);
+                WriteDotSettings(registry, modulePath, projectRoot, asmdefFileName, moduleFolderName);
 
-                // Always recreate with correct Rider-native format
-                NamespaceUtility.CreateDotSettingsFile(finalDotSettingsPath);
-
-                XmlDocument doc = new XmlDocument();
-                doc.Load(finalDotSettingsPath);
-
-                AddNamespaceEntriesForModule_New(registry, doc, modulePath);
-
-                NamespaceUtility.SaveDotSettings(doc, finalDotSettingsPath);
-                Debug.Log($"[{moduleFolderName}] => .DotSettings updated: {finalDotSettingsPath}");
+                // Scripts/Shared is a project of its own, and a .csproj.DotSettings only applies to
+                // the project it is named after - so the module's file cannot skip the Scripts
+                // folder on the Shared assembly's behalf. Its entries are the same, only the file
+                // name differs.
+                string sharedAssemblyName = new SharedAssemblyDefinition().FindIn(modulePath, config);
+                if (!string.IsNullOrEmpty(sharedAssemblyName))
+                {
+                    WriteDotSettings(registry, modulePath, projectRoot, sharedAssemblyName, moduleFolderName);
+                }
             }
             catch (Exception exception)
             {
                 Debug.LogError($"[NamespaceProvider] '{moduleFolderName}' was skipped: {exception.Message}");
             }
+        }
+
+        private static void WriteDotSettings(
+            ModuleRegistry registry, string modulePath, string projectRoot, string assemblyName, string moduleFolderName)
+        {
+            string finalDotSettingsPath = Path.Combine(projectRoot, assemblyName + ".csproj.DotSettings");
+
+            // Always recreate with correct Rider-native format
+            NamespaceUtility.CreateDotSettingsFile(finalDotSettingsPath);
+
+            XmlDocument doc = new XmlDocument();
+            doc.Load(finalDotSettingsPath);
+
+            AddNamespaceEntriesForModule_New(registry, doc, modulePath);
+
+            NamespaceUtility.SaveDotSettings(doc, finalDotSettingsPath);
+            Debug.Log($"[{moduleFolderName}] => .DotSettings updated: {finalDotSettingsPath}");
+        }
+
+        /// <summary>
+        /// The folder layout the module at <paramref name="modulePath"/> was built from, or null
+        /// when the index does not know the module - the same miss
+        /// <see cref="AddNamespaceEntriesForModule_New"/> already steps over quietly.
+        /// </summary>
+        private static DirectoryStructureConfig ConfigFor(ModuleRegistry registry, string modulePath)
+        {
+            string moduleAssetPath = new ModuleAssetPathResolver().ToAssetPath(modulePath);
+
+            return registry.TryGetModule(moduleAssetPath, out ModuleDescriptor module)
+                ? new DirectoryStructureConfigProvider().ConfigFor(module.Kind)
+                : null;
         }
 
         /// <summary>

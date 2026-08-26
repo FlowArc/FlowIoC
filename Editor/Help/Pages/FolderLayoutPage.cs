@@ -85,6 +85,12 @@ namespace FlowIoC.Editor.Help.Pages
                 + "PlayerModel or AddCurrencyCommand. Tick Shared when creating a main module and "
                 + "Create Module writes the reference for you - into the module's own assembly, and "
                 + "into every screen, sub and test module created under it afterwards.");
+            painter.Paragraph(
+                "Namespaces follow the folder here too: a value object under "
+                + "Scripts/Shared/Datas/ValueObjects is in "
+                + "Modules.PlayerModule.Shared.Datas.ValueObjects, so it cannot collide with the "
+                + "Runtime type of the same name. The generator writes a "
+                + "Modules.Player.Shared.csproj.DotSettings for that, beside the module's own.");
             painter.Note(
                 "Shared is offered on main modules only. If two modules need the same data and "
                 + "neither owns it, that data belongs in a module of its own - the same answer as "

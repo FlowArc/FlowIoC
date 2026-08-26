@@ -972,6 +972,15 @@ The parent references its own Shared assembly as well: the asmdef inside
 `Scripts/Shared/` carves that folder out of `Modules.Player`, so the reference is
 what lets the module read the data it publishes.
 
+Namespaces follow the folder, as they already do for a module: a value object under
+`Scripts/Shared/Datas/ValueObjects/` is in
+`Modules.PlayerModule.Shared.Datas.ValueObjects`, so it cannot collide with the
+Runtime type of the same name in `Modules.PlayerModule.Datas.ValueObjects`. The
+generator writes `Modules.Player.Shared.csproj.DotSettings` alongside the module's
+own — a `.csproj.DotSettings` applies only to the project it is named after, so the
+module's file cannot skip the `Scripts` folder on the Shared assembly's behalf.
+*Tools ▸ FlowIoC ▸ Module Configuration ▸ Update Namespace Settings* rewrites both.
+
 Shared is offered on main modules only. If two modules need the same data and
 neither owns it, that data belongs in a module of its own — the same answer as for
 a Service more than one module needs.

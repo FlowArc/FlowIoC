@@ -131,6 +131,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string parentSharedAssemblyName =
                 new SharedAssemblyDefinition().FindIn(parentModulePath, directoryConfigMap[ModuleType.Main]);
 
+            string sharedAssemblyName = null;
+
             if (selectedModuleType == ModuleType.Main || selectedModuleType == ModuleType.Test)
             {
                 string finalModuleName = moduleName + "Module";
@@ -140,13 +142,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 // has to reference it at all: the asmdef inside Scripts/Shared takes that folder
                 // out of the module's own assembly, so without this a module could not read the
                 // data it publishes.
-                string sharedAssemblyName = new SharedAssemblyDefinition()
+                sharedAssemblyName = new SharedAssemblyDefinition()
                     .CreateFor(modulePath, directoryConfigMap[selectedModuleType], GetParsedAssemblyName(finalModuleName));
 
                 CreateAssemblyDefinitionFile(asmdefPath, finalModuleName, sharedAssemblyName, parentSharedAssemblyName);
             }
 
             AddNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath);
+            AddSharedNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath, sharedAssemblyName);
 
             AssetDatabase.Refresh();
             new ModuleIndexRegistrar().Register(
