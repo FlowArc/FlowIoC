@@ -931,7 +931,7 @@ Modules/
     │   ├── Runtime/
     │   │   ├── Constants/         # constant strings and keys
     │   │   ├── Controllers/       # commands
-    │   │   ├── Datas/
+    │   │   ├── Data/
     │   │   │   ├── UnityObjects/  # ScriptableObjects (CD_, RD_, PD_, ED_, DD_)
     │   │   │   └── ValueObjects/  # plain data (…VO, …CVO, …RVO, …PVO)
     │   │   ├── Entities/          # MonoBehaviours owned by the module
@@ -946,7 +946,7 @@ Modules/
     │   │   └── ViewsMediators/
     │   └── Shared/                # optional — Modules.Player.Shared.asmdef
     │       ├── Constants/
-    │       ├── Datas/
+    │       ├── Data/
     │       │   ├── UnityObjects/
     │       │   └── ValueObjects/
     │       └── Enums/
@@ -973,9 +973,9 @@ The parent references its own Shared assembly as well: the asmdef inside
 what lets the module read the data it publishes.
 
 Namespaces follow the folder, as they already do for a module: a value object under
-`Scripts/Shared/Datas/ValueObjects/` is in
-`Modules.PlayerModule.Shared.Datas.ValueObjects`, so it cannot collide with the
-Runtime type of the same name in `Modules.PlayerModule.Datas.ValueObjects`. The
+`Scripts/Shared/Data/ValueObjects/` is in
+`Modules.PlayerModule.Shared.Data.ValueObjects`, so it cannot collide with the
+Runtime type of the same name in `Modules.PlayerModule.Data.ValueObjects`. The
 generator writes `Modules.Player.Shared.csproj.DotSettings` alongside the module's
 own — a `.csproj.DotSettings` applies only to the project it is named after, so the
 module's file cannot skip the `Scripts` folder on the Shared assembly's behalf.
@@ -991,7 +991,7 @@ folders (`Controllers`, `Models`, `RootsContexts`, `Services`, `Systems`,
 `Editor`, `Resources`, `Prefabs`, `Scenes`, and the three `z` folders) and —
 optionally — the `Root` / `Context` pair. Their names are not hard-coded; they come
 from the module config and can be renamed under
-*Tools ▸ FlowIoC ▸ Module Configuration*. `Constants`, `Datas`, `Entities`, `Enums`,
+*Tools ▸ FlowIoC ▸ Module Configuration*. `Constants`, `Data`, `Entities`, `Enums`,
 `Functions` and `Signals` are team convention rather than generator output — add
 them as the module needs them.
 
@@ -1051,7 +1051,7 @@ lists every `Context` type in the project. Mark a context with
 ## Data Types
 
 A module keeps its data in two folders, and the name of a type says which kind of data it is
-before you open it. `Datas/UnityObjects/` holds the ScriptableObject assets; `Datas/ValueObjects/`
+before you open it. `Data/UnityObjects/` holds the ScriptableObject assets; `Data/ValueObjects/`
 holds the plain `[Serializable]` classes those assets are built out of.
 
 The prefix on an asset says where its contents come from, and the value objects it carries take

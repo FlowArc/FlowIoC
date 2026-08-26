@@ -83,7 +83,7 @@ Modules/
         ├── Runtime/
         │   ├── Constants/
         │   ├── Controllers/        # commands
-        │   ├── Datas/
+        │   ├── Data/
         │   │   ├── UnityObjects/   # ScriptableObjects: CD_, RD_, PD_, ED_, DD_
         │   │   └── ValueObjects/   # plain data: VO, CVO, RVO, PVO, EVO, DVO
         │   ├── Entities/
@@ -97,7 +97,7 @@ Modules/
         │   └── ViewsMediators/
         └── Shared/                  # optional - Modules.Player.Shared.asmdef
             ├── Constants/
-            ├── Datas/
+            ├── Data/
             │   ├── UnityObjects/
             │   └── ValueObjects/
             └── Enums/
@@ -127,17 +127,17 @@ module reads; if two modules need the same data and neither owns it, that data b
 a module of its own, the way a shared Service does.
 
 Namespaces follow the folder, the way they already do for a module: a value object under
-`Scripts/Shared/Datas/ValueObjects/` is in `Modules.PlayerModule.Shared.Datas.ValueObjects`,
+`Scripts/Shared/Data/ValueObjects/` is in `Modules.PlayerModule.Shared.Data.ValueObjects`,
 which is why it cannot collide with the Runtime type of the same name in
-`Modules.PlayerModule.Datas.ValueObjects`. `Create Module` writes
+`Modules.PlayerModule.Data.ValueObjects`. `Create Module` writes
 `Modules.Player.Shared.csproj.DotSettings` for this: a `.csproj.DotSettings` only applies to
 the project it is named after, so the module's own file cannot tell Rider to skip `Scripts`
 on the Shared assembly's behalf.
 
 ### Data types
 
-Data lives in two folders, and its name says which kind it is. `Datas/UnityObjects/` holds the
-ScriptableObject assets, prefixed by where their contents come from. `Datas/ValueObjects/` holds
+Data lives in two folders, and its name says which kind it is. `Data/UnityObjects/` holds the
+ScriptableObject assets, prefixed by where their contents come from. `Data/ValueObjects/` holds
 the plain `[Serializable]` classes those assets are built out of, suffixed to match.
 
 | Prefix | Means | Value objects inside |

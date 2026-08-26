@@ -18,7 +18,7 @@ namespace FlowIoC.Editor.Help.Pages
         /// Exposed for the same reason the folder tree is: a test can check the names here against
         /// the prefixes and suffixes the shipped code style declares legal.
         /// </summary>
-        public HelpTreeNode Root { get; } = new HelpTreeNode("Datas", "everything a module stores",
+        public HelpTreeNode Root { get; } = new HelpTreeNode("Data", "everything a module stores",
             new HelpTreeNode("UnityObjects", "the ScriptableObject assets",
                 new HelpTreeNode("CD_Maps", "config data - authored in the Editor, constant at runtime"),
                 new HelpTreeNode("RD_MapPool", "runtime data - produced by play, gone when it stops"),
@@ -42,8 +42,8 @@ namespace FlowIoC.Editor.Help.Pages
         {
             painter.Paragraph(
                 "A module keeps its data in two folders, and the name of a type says which kind of "
-                + "data it is before you open the file. Datas/UnityObjects holds the ScriptableObject "
-                + "assets; Datas/ValueObjects holds the plain [Serializable] classes those assets are "
+                + "data it is before you open the file. Data/UnityObjects holds the ScriptableObject "
+                + "assets; Data/ValueObjects holds the plain [Serializable] classes those assets are "
                 + "built out of.");
             painter.Paragraph(
                 "The prefix on an asset says where its contents come from. The value objects it "
@@ -113,7 +113,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("MapData, MapConfig, MapSO. A descriptive name says nothing about lifetime; the suffix family is the convention.");
             painter.Bullet("Writing to a CD_ asset at runtime. Config is constant - if it changes during play it is RD_, and if it must survive a restart it is PD_.");
             painter.Bullet("A CVO list inside a PD_ asset. The suffix has to match the asset it lives in.");
-            painter.Bullet("A data class dropped anywhere. It belongs in Datas/UnityObjects or Datas/ValueObjects; the generators and the namespace tools depend on it.");
+            painter.Bullet("A data class dropped anywhere. It belongs in Data/UnityObjects or Data/ValueObjects; the generators and the namespace tools depend on it.");
 
             painter.Space();
             painter.Note(

@@ -28,7 +28,7 @@ namespace FlowIoC.Editor.Help.Pages
                 new HelpTreeNode("Runtime", "",
                     new HelpTreeNode("Constants", "values that never change"),
                     new HelpTreeNode("Controllers", "commands - one unit of work each"),
-                    new HelpTreeNode("Datas", "",
+                    new HelpTreeNode("Data", "",
                         new HelpTreeNode("UnityObjects", "ScriptableObject assets - CD_, RD_, PD_, ED_, DD_"),
                         new HelpTreeNode("ValueObjects", "plain data - VO, CVO, RVO, PVO, EVO, DVO")),
                     new HelpTreeNode("Entities", "runtime objects the module owns"),
@@ -42,7 +42,7 @@ namespace FlowIoC.Editor.Help.Pages
                     new HelpTreeNode("ViewsMediators", "scene references, and the mediator that drives them")),
                 new HelpTreeNode("Shared", "optional - an assembly of its own, holding the data this module publishes",
                     new HelpTreeNode("Constants", "constants the shared data needs"),
-                    new HelpTreeNode("Datas", "",
+                    new HelpTreeNode("Data", "",
                         new HelpTreeNode("UnityObjects", "shared ScriptableObject assets"),
                         new HelpTreeNode("ValueObjects", "shared plain data")),
                     new HelpTreeNode("Enums", "enumerations the shared data needs"))),
@@ -87,8 +87,8 @@ namespace FlowIoC.Editor.Help.Pages
                 + "into every screen, sub and test module created under it afterwards.");
             painter.Paragraph(
                 "Namespaces follow the folder here too: a value object under "
-                + "Scripts/Shared/Datas/ValueObjects is in "
-                + "Modules.PlayerModule.Shared.Datas.ValueObjects, so it cannot collide with the "
+                + "Scripts/Shared/Data/ValueObjects is in "
+                + "Modules.PlayerModule.Shared.Data.ValueObjects, so it cannot collide with the "
                 + "Runtime type of the same name. The generator writes a "
                 + "Modules.Player.Shared.csproj.DotSettings for that, beside the module's own.");
             painter.Note(
