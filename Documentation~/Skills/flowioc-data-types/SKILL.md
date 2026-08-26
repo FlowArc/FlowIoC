@@ -32,12 +32,12 @@ the shape a Function returns.
 ## Where the files go
 
 ```
-Scripts/Runtime/Datas/
+Scripts/Runtime/Data/
 ├── UnityObjects/    # CD_Maps.cs, PD_Maps.cs, RD_MapPool.cs
 └── ValueObjects/    # MapVO.cs, MapCVO.cs, MapPVO.cs
 ```
 
-Data another module reads goes in `Scripts/Shared/Datas/` instead, under the same two
+Data another module reads goes in `Scripts/Shared/Data/` instead, under the same two
 folders and the same naming. Shared is an assembly of its own - `Modules.Player.Shared` -
 so a screen or sub module can reference the data without reaching the module's Models and
 Commands. The naming does not change with the folder; only who can see it does.
@@ -45,14 +45,14 @@ Commands. The naming does not change with the folder; only who can see it does.
 ## Example
 
 ```csharp
-// Datas/UnityObjects/CD_Maps.cs
+// Data/UnityObjects/CD_Maps.cs
 [CreateAssetMenu(fileName = "CD_Maps", menuName = "Game/Data/CD_Maps")]
 internal class CD_Maps : ScriptableObject
 {
     public List<MapCVO> Maps = new();
 }
 
-// Datas/ValueObjects/MapCVO.cs
+// Data/ValueObjects/MapCVO.cs
 [Serializable]
 public class MapCVO
 {
@@ -96,7 +96,7 @@ declaring both in `<Solution>.sln.DotSettings`.
 | Writing to a `CD_` asset at runtime | Config is constant. If it changes during play it is `RD_`, and if it must survive a restart it is `PD_`. |
 | A `CVO` list inside a `PD_` asset | The suffix has to match the asset it lives in, or the name stops predicting the lifetime. |
 | Naming a mixed holder `GameHexCVO` | Name a two-kind holder plain `VO` and keep the lettered suffixes on its parts. |
-| A new `.cs` file dropped anywhere | Data lives in `Datas/UnityObjects/` or `Datas/ValueObjects/`; the generators and namespace tools depend on it. |
+| A new `.cs` file dropped anywhere | Data lives in `Data/UnityObjects/` or `Data/ValueObjects/`; the generators and namespace tools depend on it. |
 
 ## Related
 

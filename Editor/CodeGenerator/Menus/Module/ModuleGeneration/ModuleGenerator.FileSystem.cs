@@ -48,7 +48,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// A .csproj.DotSettings only applies to the project it is named after, and Scripts/Shared
         /// is a project of its own - so the module's own file cannot tell Rider to skip the Scripts
         /// folder on the Shared assembly's behalf. Without this a shared value object would land in
-        /// Modules.PlayerModule.Scripts.Shared.Datas.ValueObjects, carrying the Scripts folder in
+        /// Modules.PlayerModule.Scripts.Shared.Data.ValueObjects, carrying the Scripts folder in
         /// the middle of its namespace.
         /// </summary>
         private static void AddSharedNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string sharedAssemblyName)

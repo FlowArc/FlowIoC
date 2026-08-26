@@ -56,7 +56,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         {
                             new FolderConfig
                             {
-                                FolderName = "Datas",
+                                FolderName = "Data",
                                 SubFolders = new List<FolderConfig>
                                 {
                                     new FolderConfig
@@ -181,7 +181,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         {
                             new FolderConfig
                             {
-                                FolderName = "Datas",
+                                FolderName = "Data",
                                 SubFolders = new List<FolderConfig>
                                 {
                                     new FolderConfig
@@ -322,7 +322,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Shared, "Shared"), FolderConfig.FolderType.Shared,
                     new List<FolderConfig>
                     {
-                        CreateFolder("Datas", FolderConfig.FolderType.Folder, new List<FolderConfig>
+                        CreateFolder("Data", FolderConfig.FolderType.Folder, new List<FolderConfig>
                         {
                             CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"),
                                 FolderConfig.FolderType.SharedUnityObjects, null, true),
@@ -435,7 +435,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 {
                     CreateFolder("Runtime", FolderConfig.FolderType.Folder, new List<FolderConfig>
                     {
-                        CreateFolder("Datas", FolderConfig.FolderType.Folder, new List<FolderConfig>
+                        CreateFolder("Data", FolderConfig.FolderType.Folder, new List<FolderConfig>
                         {
                             CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.UnityObjects],
                                 FolderConfig.FolderType.UnityObjects, null, true),
@@ -472,12 +472,12 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     // becomes its own assembly: what a module wants to publish to a screen or a
                     // sub module is the data, not the Models and Commands that Runtime holds.
                     // Unlike Runtime it is a namespace provider, so a shared value object lands in
-                    // <Module>.Shared.Datas.ValueObjects and cannot collide with the Runtime type
-                    // of the same name sitting in <Module>.Datas.ValueObjects.
+                    // <Module>.Shared.Data.ValueObjects and cannot collide with the Runtime type
+                    // of the same name sitting in <Module>.Data.ValueObjects.
                     CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Shared, "Shared"), FolderConfig.FolderType.Shared,
                         new List<FolderConfig>
                         {
-                            CreateFolder("Datas", FolderConfig.FolderType.Folder, new List<FolderConfig>
+                            CreateFolder("Data", FolderConfig.FolderType.Folder, new List<FolderConfig>
                             {
                                 CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"),
                                     FolderConfig.FolderType.SharedUnityObjects, null, true),
@@ -536,7 +536,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         // A folder is only as mandatory as the branch it hangs off. The Shared
                         // subfolders are each mandatory within Shared - ticking Shared lays all of
                         // them down at once - but Shared itself is optional, so a module created
-                        // without it has no Datas/UnityObjects under Shared and that is ordinary
+                        // without it has no Data/UnityObjects under Shared and that is ordinary
                         // rather than a fault. Without this the caller that warns about a missing
                         // folder would warn once per Shared subfolder for every such module.
                         isOptional |= folder.IsOptional;

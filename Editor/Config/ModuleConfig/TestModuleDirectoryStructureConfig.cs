@@ -56,7 +56,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         {
                             new FolderConfig
                             {
-                                FolderName = "Datas",
+                                FolderName = "Data",
                                 SubFolders = new List<FolderConfig>
                                 {
                                     new FolderConfig
@@ -259,7 +259,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 {
                     CreateFolder("Runtime", FolderConfig.FolderType.Folder, new List<FolderConfig>
                     {
-                        CreateFolder("Datas", FolderConfig.FolderType.Folder, new List<FolderConfig>
+                        CreateFolder("Data", FolderConfig.FolderType.Folder, new List<FolderConfig>
                         {
                             CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.UnityObjects],
                                 FolderConfig.FolderType.UnityObjects, null, true),

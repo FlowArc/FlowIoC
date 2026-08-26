@@ -15,9 +15,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     /// assembly to reach its own shared data.
     ///
     /// It also puts the namespace where it belongs: a value object under
-    /// Scripts/Shared/Datas/ValueObjects lands in Modules.PlayerModule.Shared.Datas.ValueObjects
+    /// Scripts/Shared/Data/ValueObjects lands in Modules.PlayerModule.Shared.Data.ValueObjects
     /// and cannot collide with the Runtime type of the same name in
-    /// Modules.PlayerModule.Datas.ValueObjects. That needs a .csproj.DotSettings of its own -
+    /// Modules.PlayerModule.Data.ValueObjects. That needs a .csproj.DotSettings of its own -
     /// see ModuleGenerator.AddSharedNamespaceExceptions - because such a file only applies to
     /// the project it is named after.
     /// </summary>

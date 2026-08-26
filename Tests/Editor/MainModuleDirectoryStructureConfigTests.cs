@@ -132,7 +132,7 @@ namespace FlowIoC.Tests
 
             string path = _config.FindFullFolderPathByID(FolderConfig.FolderType.SharedUnityObjects, "base");
 
-            Assert.AreEqual(Path.Combine("base", "Scripts", "Shared", "Datas", "UnityObjects"), path);
+            Assert.AreEqual(Path.Combine("base", "Scripts", "Shared", "Data", "UnityObjects"), path);
         }
 
         /// <summary>
