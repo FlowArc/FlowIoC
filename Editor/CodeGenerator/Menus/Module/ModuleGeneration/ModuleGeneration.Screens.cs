@@ -22,7 +22,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             CodeGeneratorSettings codeGenSettings,
             List<string> actionNames,
             bool createScreen,
-            ScreenConfigData screenConfigData
+            ScreenConfigData screenConfigData,
+            string parentSharedAssemblyName
         )
         {
             string testModulePath = Path.Combine(modulePath, testModulesFolderName, $"{moduleName}TestModule");
@@ -31,12 +32,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             string screenAsmdefName = moduleName + "Module";
             string screenAsmdefPath = Path.Combine(modulePath, screenAsmdefName + ".asmdef");
-            CreateAssemblyDefinitionFile(screenAsmdefPath, screenAsmdefName);
+
+            // The parent's Shared assembly, not the parent itself: a screen reads the data its
+            // module publishes and stays out of that module's Models and Commands. The screen
+            // layout has no Shared folder of its own, so this is the only Shared reference it
+            // ever gets.
+            CreateAssemblyDefinitionFile(screenAsmdefPath, screenAsmdefName, parentSharedAssemblyName);
             AddNamespaceExceptions(directoryConfigMap[ModuleType.Screen], modulePath);
 
             string testAsmdefName = moduleName + "TestModule";
             string testAsmdefPath = Path.Combine(testModulePath, testAsmdefName + ".asmdef");
-            CreateAssemblyDefinitionFile(testAsmdefPath, testAsmdefName, GetParsedAssemblyName(screenAsmdefName));
+            CreateAssemblyDefinitionFile(testAsmdefPath, testAsmdefName, GetParsedAssemblyName(screenAsmdefName),
+                parentSharedAssemblyName);
             AddNamespaceExceptions(directoryConfigMap[ModuleType.Test], testModulePath);
 
             AssetDatabase.Refresh();

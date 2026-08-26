@@ -93,6 +93,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             CreateAndUpdateModules(
                 moduleName,
                 modulePath,
+                parentModulePath,
                 selectedModuleType,
                 selectedOptionalFolders,
                 directoryConfigMap,
@@ -110,6 +111,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private static void CreateAndUpdateModules(
             string moduleName,
             string modulePath,
+            string parentModulePath,
             ModuleType selectedModuleType,
             List<FolderConfig> selectedOptionalFolders,
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
@@ -123,11 +125,25 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string testModulesFolderName
         )
         {
+            // The module this one lives in, if any. A top level module is parented to
+            // Assets/Modules, which has no Shared folder, so the lookup simply finds nothing there
+            // and no special case is needed for it.
+            string parentSharedAssemblyName =
+                new SharedAssemblyDefinition().FindIn(parentModulePath, directoryConfigMap[ModuleType.Main]);
+
             if (selectedModuleType == ModuleType.Main || selectedModuleType == ModuleType.Test)
             {
                 string finalModuleName = moduleName + "Module";
                 string asmdefPath = Path.Combine(modulePath, finalModuleName + ".asmdef");
-                CreateAssemblyDefinitionFile(asmdefPath, finalModuleName);
+
+                // The Shared assembly has to exist before the module references it, and the module
+                // has to reference it at all: the asmdef inside Scripts/Shared takes that folder
+                // out of the module's own assembly, so without this a module could not read the
+                // data it publishes.
+                string sharedAssemblyName = new SharedAssemblyDefinition()
+                    .CreateFor(modulePath, directoryConfigMap[selectedModuleType], GetParsedAssemblyName(finalModuleName));
+
+                CreateAssemblyDefinitionFile(asmdefPath, finalModuleName, sharedAssemblyName, parentSharedAssemblyName);
             }
 
             AddNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath);
@@ -150,7 +166,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     codeGenSettings,
                     actionNames,
                     createScreen,
-                    screenConfigData
+                    screenConfigData,
+                    parentSharedAssemblyName
                 );
             }
             else

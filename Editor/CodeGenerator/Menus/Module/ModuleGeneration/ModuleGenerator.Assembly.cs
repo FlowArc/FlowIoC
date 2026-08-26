@@ -57,19 +57,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             return prefix + moduleName + suffix;
         }
 
-        private static void CreateAssemblyDefinitionFile(string oldFilePath, string rawAssemblyName, string referenceAssembly = null)
+        /// <summary>
+        /// A module can need more than one reference now - its own Shared assembly and the Shared
+        /// assembly of the module it lives in - so the references arrive as a list. Entries that
+        /// are null or empty are dropped by the template rather than by the caller, because most
+        /// callers are passing the result of a lookup that legitimately finds nothing.
+        /// </summary>
+        private static void CreateAssemblyDefinitionFile(string oldFilePath, string rawAssemblyName, params string[] referenceAssemblies)
         {
             var finalAssemblyName = GetParsedAssemblyName(rawAssemblyName);
 
-            string asmdefContent;
-            if (string.IsNullOrEmpty(referenceAssembly))
-            {
-                asmdefContent = CreateAssemblyWithEmptyReference(finalAssemblyName);
-            }
-            else
-            {
-                asmdefContent = CreateAssemblyWithReference(referenceAssembly, finalAssemblyName);
-            }
+            string asmdefContent = new AssemblyDefinitionTemplate().Build(finalAssemblyName, referenceAssemblies);
 
             string directory = Path.GetDirectoryName(oldFilePath) ?? "";
             string newFileName = finalAssemblyName + ".asmdef";
@@ -86,49 +84,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             }
 
             AssetDatabase.Refresh();
-        }
-
-        private static string CreateAssemblyWithReference(string referenceAssembly, string finalAssemblyName)
-        {
-            string asmdefContent;
-            asmdefContent = $@"{{
-  ""name"": ""{finalAssemblyName}"",
-  ""references"": [
-    ""FlowIoC"",
-""{referenceAssembly}""
-  ],
-  ""includePlatforms"": [],
-  ""excludePlatforms"": [],
-  ""allowUnsafeCode"": false,
-  ""overrideReferences"": false,
-  ""precompiledReferences"": [],
-  ""autoReferenced"": true,
-  ""defineConstraints"": [],
-  ""versionDefines"": [],
-  ""noEngineReferences"": false
-}}";
-            return asmdefContent;
-        }
-
-        private static string CreateAssemblyWithEmptyReference(string finalAssemblyName)
-        {
-            string asmdefContent;
-            asmdefContent = $@"{{
-  ""name"": ""{finalAssemblyName}"",
-  ""references"": [
-    ""FlowIoC""
-  ],
-  ""includePlatforms"": [],
-  ""excludePlatforms"": [],
-  ""allowUnsafeCode"": false,
-  ""overrideReferences"": false,
-  ""precompiledReferences"": [],
-  ""autoReferenced"": true,
-  ""defineConstraints"": [],
-  ""versionDefines"": [],
-  ""noEngineReferences"": false
-}}";
-            return asmdefContent;
         }
     }
 }

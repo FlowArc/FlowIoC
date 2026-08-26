@@ -333,6 +333,11 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     string subFolderPath = FindFolderPathByID(folderID, folder.SubFolders, currentPath, out isOptional);
                     if (!string.IsNullOrEmpty(subFolderPath))
                     {
+                        // A folder is only as mandatory as the branch it hangs off: one marked
+                        // mandatory inside an optional parent is still absent from every module
+                        // that was created without the parent, which is ordinary rather than a
+                        // fault the caller should warn about.
+                        isOptional |= folder.IsOptional;
                         return subFolderPath;
                     }
                 }

@@ -928,26 +928,53 @@ Modules/
     ├── Scenes/
     ├── Scripts/
     │   ├── Editor/
-    │   └── Runtime/
-    │       ├── Constants/         # constant strings and keys
-    │       ├── Controllers/       # commands
+    │   ├── Runtime/
+    │   │   ├── Constants/         # constant strings and keys
+    │   │   ├── Controllers/       # commands
+    │   │   ├── Datas/
+    │   │   │   ├── UnityObjects/  # ScriptableObjects (CD_, RD_, PD_, ED_, DD_)
+    │   │   │   └── ValueObjects/  # plain data (…VO, …CVO, …RVO, …PVO)
+    │   │   ├── Entities/          # MonoBehaviours owned by the module
+    │   │   ├── Enums/
+    │   │   ├── Functions/
+    │   │   ├── Models/
+    │   │   ├── RootsContexts/     # PlayerRoot, PlayerContext, sub-contexts
+    │   │   ├── Services/          # self-contained, reusable in any project
+    │   │   ├── Signals/           # PlayerSignals, PlayerSignalsInternal
+    │   │   ├── Systems/           # this game's own logic
+    │   │   ├── ScreenViews/
+    │   │   └── ViewsMediators/
+    │   └── Shared/                # optional — Modules.Player.Shared.asmdef
+    │       ├── Constants/
     │       ├── Datas/
-    │       │   ├── UnityObjects/  # ScriptableObjects (CD_, RD_, PD_, ED_, DD_)
-    │       │   └── ValueObjects/  # plain data (…VO, …CVO, …RVO, …PVO)
-    │       ├── Entities/          # MonoBehaviours owned by the module
-    │       ├── Enums/
-    │       ├── Functions/
-    │       ├── Models/
-    │       ├── RootsContexts/     # PlayerRoot, PlayerContext, sub-contexts
-    │       ├── Services/          # self-contained, reusable in any project
-    │       ├── Signals/           # PlayerSignals, PlayerSignalsInternal
-    │       ├── Systems/           # this game's own logic
-    │       ├── ScreenViews/
-    │       └── ViewsMediators/
+    │       │   ├── UnityObjects/
+    │       │   └── ValueObjects/
+    │       └── Enums/
     ├── zScreenModules/
     ├── zSubModules/
     └── zTestModules/
 ```
+
+### Publishing data through `Shared`
+
+`Scripts/Shared/` is an assembly of its own — `Modules.Player.Shared`, beside
+`Modules.Player` — and it is how a module hands data to another module without
+handing over its logic. Only data belongs there: value objects, the
+ScriptableObjects built out of them, and the enums and constants those need.
+
+Whoever reads that data references `Modules.Player.Shared`, never `Modules.Player`.
+A `PlayerScreenModule` can read `CD_PlayerRules` and still has no way to reach
+`PlayerModel` or `AddCurrencyCommand`. Tick **Shared** when creating a main module
+and `Create Module` writes the reference for you — into the module's own assembly,
+and into every screen, sub and test module created under it afterwards.
+
+The parent references its own Shared assembly as well: the asmdef inside
+`Scripts/Shared/` carves that folder out of `Modules.Player`, so the reference is
+what lets the module read the data it publishes.
+
+Shared is offered on main modules only. If two modules need the same data and
+neither owns it, that data belongs in a module of its own — the same answer as for
+a Service more than one module needs.
 
 The generator creates the module folder, the assembly definition, the managed
 folders (`Controllers`, `Models`, `RootsContexts`, `Services`, `Systems`,

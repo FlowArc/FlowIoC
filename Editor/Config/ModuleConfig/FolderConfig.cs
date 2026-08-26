@@ -39,7 +39,21 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             Prefabs,
             Scenes,
             Systems,
-            Signals
+            Signals,
+
+            // The Shared branch mirrors a few of the Runtime folders above but has to carry types
+            // of its own. A FolderType resolves to exactly one path per module
+            // (FindFullFolderPathByID) and to exactly one GUID per module
+            // (ModuleDescriptor.FolderGuids), so reusing UnityObjects or ValueObjects here would
+            // make both lookups ambiguous - and MainModuleDirectoryStructureConfigEditor already
+            // reports a locked type used twice as an error. New values are appended rather than
+            // inserted because every FolderConfig and CodeGeneratorSettings asset already on disk
+            // serializes these as ints.
+            Shared,
+            SharedUnityObjects,
+            SharedValueObjects,
+            SharedEnums,
+            SharedConstants
         }
     }
 }
