@@ -24,6 +24,7 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _treeName;
         private GUIStyle _treeComment;
         private GUIStyle _edgeLabel;
+        private GUIStyle _caption;
         private GUIStyle _sidebarButton;
         private GUIStyle _sidebarLabel;
         private GUIStyle _bannerTab;
@@ -132,6 +133,27 @@ namespace FlowIoC.Editor.Help
         {
             alignment = TextAnchor.MiddleCenter
         };
+
+        /// <summary>
+        /// The caption under a screenshot. Muted and centred, so it reads as a label on the
+        /// picture rather than as another paragraph of the page.
+        /// </summary>
+        public GUIStyle Caption => _caption ??= new GUIStyle(EditorStyles.miniLabel)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            wordWrap = true,
+            fontStyle = FontStyle.Italic,
+            margin = new RectOffset(0, 0, 2, 8)
+        };
+
+        /// <summary>The hairline drawn around a screenshot, so it reads as a picture and not as page.</summary>
+        public Color ImageBorder => _pro ? new Color(0.35f, 0.35f, 0.38f) : new Color(0.68f, 0.68f, 0.72f);
+
+        /// <summary>
+        /// What a screenshot leaves to the page around it: the sidebar the window draws beside the
+        /// content, plus room for the scroll bar and the margins on either side.
+        /// </summary>
+        public float ImageMargin => 300f;
 
         /// <summary>
         /// The text on a topic row. The window draws it into a rectangle of its own, so this

@@ -52,12 +52,14 @@ namespace FlowIoC.Tests
 
         /// <summary>
         /// The Wiki category is the reference half of the window: the conventions a project
-        /// follows, as opposed to the architecture the Structure category walks through.
+        /// follows, as opposed to the architecture the Structure category walks through. Creating
+        /// a module comes first because it is what a reader does before any convention applies.
         /// </summary>
         [Test]
         public void The_wiki_category_covers_the_conventions()
         {
-            CollectionAssert.AreEqual(new[] {"Folder Layout", "Data Types"}, Titles("Wiki"));
+            CollectionAssert.AreEqual(new[] {"Creating a Module", "Folder Layout", "Data Types"},
+                Titles("Wiki"));
         }
 
         [Test]

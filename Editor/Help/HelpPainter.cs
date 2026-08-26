@@ -99,6 +99,42 @@ namespace FlowIoC.Editor.Help
             EditorGUILayout.SelectableLabel(code, _theme.Code, GUILayout.Height(height));
         }
 
+        /// <summary>
+        /// A screenshot, scaled down to the page width when it is wider and left at its own size
+        /// when it is not - an editor window blown up past its pixels reads as a blurred mistake.
+        /// A picture the project no longer ships draws nothing rather than a magenta rectangle:
+        /// the page is still worth reading without it.
+        /// </summary>
+        public void Image(Texture2D image, string caption = null)
+        {
+            if (image == null)
+                return;
+
+            float available = EditorGUIUtility.currentViewWidth - _theme.ImageMargin;
+            float width = Mathf.Min(image.width, available);
+            float height = width * image.height / image.width;
+
+            Rect rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false));
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                GUI.DrawTexture(rect, image, ScaleMode.ScaleToFit);
+
+                Handles.BeginGUI();
+                Handles.color = _theme.ImageBorder;
+                Handles.DrawAAPolyLine(1.5f,
+                    new Vector3(rect.xMin, rect.yMin), new Vector3(rect.xMax, rect.yMin),
+                    new Vector3(rect.xMax, rect.yMax), new Vector3(rect.xMin, rect.yMax),
+                    new Vector3(rect.xMin, rect.yMin));
+                Handles.EndGUI();
+            }
+
+            if (!string.IsNullOrEmpty(caption))
+                EditorGUILayout.LabelField(caption, _theme.Caption, GUILayout.Width(width));
+
+            Space();
+        }
+
         public void Tree(HelpTreeNode root) => DrawTree(root, 0);
 
         public void Graph(HelpGraph graph, HelpGraphStepper stepper)
