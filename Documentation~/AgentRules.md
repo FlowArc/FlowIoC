@@ -126,9 +126,13 @@ Shared is offered on main modules only. A screen or test module holds nothing an
 module reads; if two modules need the same data and neither owns it, that data belongs in
 a module of its own, the way a shared Service does.
 
-Namespaces follow the folder: a value object under `Scripts/Shared/Datas/ValueObjects/`
-is in `Modules.Player.Shared.Datas.ValueObjects`, which is why it cannot collide with the
-Runtime type of the same name in `Modules.Player.Datas.ValueObjects`.
+Namespaces follow the folder, the way they already do for a module: a value object under
+`Scripts/Shared/Datas/ValueObjects/` is in `Modules.PlayerModule.Shared.Datas.ValueObjects`,
+which is why it cannot collide with the Runtime type of the same name in
+`Modules.PlayerModule.Datas.ValueObjects`. `Create Module` writes
+`Modules.Player.Shared.csproj.DotSettings` for this: a `.csproj.DotSettings` only applies to
+the project it is named after, so the module's own file cannot tell Rider to skip `Scripts`
+on the Shared assembly's behalf.
 
 ### Data types
 
