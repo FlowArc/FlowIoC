@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The Help window's Wiki opens on a new *Creating a Module* page, ahead of the folder layout
+  and the data types, because generating the module is what a reader does before either
+  convention applies. It carries a screenshot of `Tools > FlowIoC > Create Module`, says why a
+  module is generated rather than made by hand, and explains what the Main, Screen and Test
+  types each produce, where they are allowed to sit and what the toggles beside them decide.
+  Help pages can show a picture now: screenshots live in `Editor/Help/Images` and are drawn
+  through `HelpPainter.Image`, scaled down to the page and captioned.
+
 - The extension methods that lived in the separate FlowIoC-addons package now ship with the
   core package, under `Runtime/ExtensionModule` and the `FlowIoC.ExtensionModule` namespace:
   vector and float maths, enum flag enumeration, list conversion and UTC time formatting.

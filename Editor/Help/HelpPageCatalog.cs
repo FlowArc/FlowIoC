@@ -19,6 +19,7 @@ namespace FlowIoC.Editor.Help
             {
                 new HelpSection(new WelcomePage()),
                 new HelpSection("Wiki", "TextAsset Icon",
+                    new CreatingModulePage(),
                     new FolderLayoutPage(),
                     new DataTypesPage()),
                 new HelpSection("Structure", "UnityEditor.SceneHierarchyWindow",
