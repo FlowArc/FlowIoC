@@ -825,6 +825,7 @@ Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 | `Tools/FlowIoC/Create Command` | Generate a command |
 | `Tools/FlowIoC/Create Model` | Generate an `IXModel` / `XModel` pair |
 | `Tools/FlowIoC/Create View` | Generate a View, a Mediator, and the prefab |
+| `Tools/FlowIoC/Add Shared Data` | Give an existing module a `Scripts/Shared` assembly and wire the references to it |
 | `Tools/FlowIoC/Delete Module` | Remove a module and its references |
 | `Tools/FlowIoC/Console/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
