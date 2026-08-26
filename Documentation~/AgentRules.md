@@ -118,6 +118,11 @@ Whoever reads that data references `Modules.Player.Shared` and never `Modules.Pl
 `AddCurrencyCommand`. `Create Module` writes the reference for you: tick Shared on a main
 module, and every screen, sub and test module created under it afterwards points at it.
 
+For a module that already exists, use `Tools/FlowIoC/Add Shared Data` rather than making
+the folders by hand. It lays down the same folders, writes the assembly and its settings
+file, and adds the reference to the module and to every screen, sub and test module already
+under it.
+
 The parent module references its own Shared assembly too. The asmdef inside
 `Scripts/Shared/` takes that folder out of `Modules.Player`, so without the reference a
 module could not read the data it publishes.

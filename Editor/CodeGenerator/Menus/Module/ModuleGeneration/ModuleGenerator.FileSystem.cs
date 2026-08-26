@@ -51,7 +51,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// Modules.PlayerModule.Scripts.Shared.Data.ValueObjects, carrying the Scripts folder in
         /// the middle of its namespace.
         /// </summary>
-        private static void AddSharedNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string sharedAssemblyName)
+        internal static void AddSharedNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string sharedAssemblyName)
         {
             if (string.IsNullOrEmpty(sharedAssemblyName))
                 return;
