@@ -39,7 +39,12 @@ namespace FlowIoC.Editor.CodeGenerator
                 {FolderConfig.FolderType.Editor, "Editor"},
                 {FolderConfig.FolderType.Resources, "Resources"},
                 {FolderConfig.FolderType.Prefabs, "Prefabs"},
-                {FolderConfig.FolderType.Scenes, "Scenes"}
+                {FolderConfig.FolderType.Scenes, "Scenes"},
+                {FolderConfig.FolderType.Shared, "Shared"},
+                {FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"},
+                {FolderConfig.FolderType.SharedValueObjects, "ValueObjects"},
+                {FolderConfig.FolderType.SharedEnums, "Enums"},
+                {FolderConfig.FolderType.SharedConstants, "Constants"}
             };
 
         [HideInInspector] [SerializeField] public SerializableDictionary<string, string> DirectoryStructureConfigPaths =

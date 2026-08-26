@@ -80,25 +80,55 @@ Modules/
     ├── Scenes/
     └── Scripts/
         ├── Editor/
-        └── Runtime/
+        ├── Runtime/
+        │   ├── Constants/
+        │   ├── Controllers/        # commands
+        │   ├── Datas/
+        │   │   ├── UnityObjects/   # ScriptableObjects: CD_, RD_, PD_, ED_, DD_
+        │   │   └── ValueObjects/   # plain data: VO, CVO, RVO, PVO, EVO, DVO
+        │   ├── Entities/
+        │   ├── Enums/
+        │   ├── Functions/
+        │   ├── Models/
+        │   ├── RootsContexts/
+        │   ├── Services/            # self-contained, reusable
+        │   ├── Signals/
+        │   ├── Systems/             # specific to this game
+        │   └── ViewsMediators/
+        └── Shared/                  # optional - Modules.Player.Shared.asmdef
             ├── Constants/
-            ├── Controllers/        # commands
             ├── Datas/
-            │   ├── UnityObjects/   # ScriptableObjects: CD_, RD_, PD_, ED_, DD_
-            │   └── ValueObjects/   # plain data: VO, CVO, RVO, PVO, EVO, DVO
-            ├── Entities/
-            ├── Enums/
-            ├── Functions/
-            ├── Models/
-            ├── RootsContexts/
-            ├── Services/            # self-contained, reusable
-            ├── Signals/
-            ├── Systems/             # specific to this game
-            └── ViewsMediators/
+            │   ├── UnityObjects/
+            │   └── ValueObjects/
+            └── Enums/
 ```
 
 `Create Command`, `Create Model` and `Create View` place their files correctly on their
 own. Prefer them over writing files by hand.
+
+### Publishing data through Shared
+
+A module that has to hand data to another module puts it in `Scripts/Shared/`, which is
+an assembly of its own - `Modules.Player.Shared` beside `Modules.Player`. Only data lives
+there: value objects, the ScriptableObjects built out of them, and the enums and constants
+those need. No Model, no Command, no View.
+
+Whoever reads that data references `Modules.Player.Shared` and never `Modules.Player`. So
+`PlayerScreenModule` can read `CD_PlayerRules` without gaining access to `PlayerModel` or
+`AddCurrencyCommand`. `Create Module` writes the reference for you: tick Shared on a main
+module, and every screen, sub and test module created under it afterwards points at it.
+
+The parent module references its own Shared assembly too. The asmdef inside
+`Scripts/Shared/` takes that folder out of `Modules.Player`, so without the reference a
+module could not read the data it publishes.
+
+Shared is offered on main modules only. A screen or test module holds nothing another
+module reads; if two modules need the same data and neither owns it, that data belongs in
+a module of its own, the way a shared Service does.
+
+Namespaces follow the folder: a value object under `Scripts/Shared/Datas/ValueObjects/`
+is in `Modules.Player.Shared.Datas.ValueObjects`, which is why it cannot collide with the
+Runtime type of the same name in `Modules.Player.Datas.ValueObjects`.
 
 ### Data types
 

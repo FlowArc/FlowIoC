@@ -173,6 +173,51 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     new FolderConfig
                     {
                         FolderName = "Editor", Type = FolderConfig.FolderType.Folder, IsMandatory = true
+                    },
+                    new FolderConfig
+                    {
+                        FolderName = "Shared",
+                        SubFolders = new List<FolderConfig>
+                        {
+                            new FolderConfig
+                            {
+                                FolderName = "Datas",
+                                SubFolders = new List<FolderConfig>
+                                {
+                                    new FolderConfig
+                                    {
+                                        FolderName = "UnityObjects", Type = FolderConfig.FolderType.SharedUnityObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    },
+                                    new FolderConfig
+                                    {
+                                        FolderName = "ValueObjects", Type = FolderConfig.FolderType.SharedValueObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    }
+                                },
+                                Type = FolderConfig.FolderType.Folder,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderConfig
+                            {
+                                FolderName = "Enums",
+                                Type = FolderConfig.FolderType.SharedEnums,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderConfig
+                            {
+                                FolderName = "Constants",
+                                Type = FolderConfig.FolderType.SharedConstants,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            }
+                        },
+                        Type = FolderConfig.FolderType.Shared,
+                        IsMandatory = false,
+                        IsOptional = true,
+                        IsNamespaceProvider = true
                     }
                 },
                 Type = FolderConfig.FolderType.Folder,
@@ -238,7 +283,126 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 Debug.Log($"DirectoryStructureConfig created at: {configPath}");
             }
 
+            if (config.EnsureSharedBranch(settings))
+            {
+                EditorUtility.SetDirty(config);
+                AssetDatabase.SaveAssets();
+            }
+
             return config;
+        }
+
+        /// <summary>
+        /// Adds the Shared branch to a config asset written before the branch existed, and returns
+        /// whether it changed anything.
+        ///
+        /// The structure above is only the default a brand new asset is stamped with; every
+        /// project that already ran the code generator has its own serialized copy, which
+        /// <see cref="GetOrCreateConfig"/> loads untouched. Without this the Shared folder would
+        /// never appear in an existing project, and asking people to delete the asset to get it
+        /// would throw away whatever they had customized in the inspector. So this only ever
+        /// appends, and only when the project has no Shared folder at all.
+        /// </summary>
+        internal bool EnsureSharedBranch(CodeGeneratorSettings codeGenSettings)
+        {
+            if (codeGenSettings == null || RootFolders == null) return false;
+            if (ContainsFolderType(RootFolders, FolderConfig.FolderType.Shared)) return false;
+
+            FolderConfig scripts = FindFolderByName(RootFolders, "Scripts");
+            if (scripts == null)
+            {
+                Debug.LogWarning("<color=cyan>FlowIoC:</color> the main module directory structure has no 'Scripts' folder, so the " +
+                                 "Shared branch could not be added to it. Add a Shared folder to the config asset by hand if this " +
+                                 "module layout is meant to have one.");
+                return false;
+            }
+
+            scripts.SubFolders ??= new List<FolderConfig>();
+            scripts.SubFolders.Add(
+                CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Shared, "Shared"), FolderConfig.FolderType.Shared,
+                    new List<FolderConfig>
+                    {
+                        CreateFolder("Datas", FolderConfig.FolderType.Folder, new List<FolderConfig>
+                        {
+                            CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"),
+                                FolderConfig.FolderType.SharedUnityObjects, null, true),
+                            CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedValueObjects, "ValueObjects"),
+                                FolderConfig.FolderType.SharedValueObjects, null, true)
+                        }, true),
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedEnums, "Enums"),
+                            FolderConfig.FolderType.SharedEnums, null, true),
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedConstants, "Constants"),
+                            FolderConfig.FolderType.SharedConstants, null, true)
+                    }, false, true));
+
+            RegisterSharedFolderNames(codeGenSettings);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Puts the Shared folder types into the settings map, which is what makes their folders
+        /// rename-tracked: ModuleIndexRegistrar records a GUID per type in that map, and
+        /// ApplyConfiguredFolderNames renames per type in it. A settings asset written before
+        /// these types existed has none of them, so the branch this method accompanies would
+        /// otherwise be created but never followed through a rename.
+        ///
+        /// This runs only on the pass that adds the branch, never on every load. Removing an entry
+        /// from the settings inspector is a deliberate act, and a heal that ran unconditionally
+        /// would put it straight back.
+        /// </summary>
+        private void RegisterSharedFolderNames(CodeGeneratorSettings codeGenSettings)
+        {
+            var defaults = new Dictionary<FolderConfig.FolderType, string>
+            {
+                {FolderConfig.FolderType.Shared, "Shared"},
+                {FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"},
+                {FolderConfig.FolderType.SharedValueObjects, "ValueObjects"},
+                {FolderConfig.FolderType.SharedEnums, "Enums"},
+                {FolderConfig.FolderType.SharedConstants, "Constants"}
+            };
+
+            bool added = false;
+
+            foreach (KeyValuePair<FolderConfig.FolderType, string> entry in defaults)
+            {
+                if (codeGenSettings.DirectoryStructureConfigMap.ContainsKey(entry.Key)) continue;
+
+                codeGenSettings.DirectoryStructureConfigMap.Add(entry.Key, entry.Value);
+                added = true;
+            }
+
+            if (!added) return;
+
+            EditorUtility.SetDirty(codeGenSettings);
+        }
+
+        private bool ContainsFolderType(List<FolderConfig> folders, FolderConfig.FolderType folderType)
+        {
+            if (folders == null) return false;
+
+            foreach (FolderConfig folder in folders)
+            {
+                if (folder.Type == folderType) return true;
+                if (ContainsFolderType(folder.SubFolders, folderType)) return true;
+            }
+
+            return false;
+        }
+
+        private FolderConfig FindFolderByName(List<FolderConfig> folders, string folderName)
+        {
+            if (folders == null) return null;
+
+            foreach (FolderConfig folder in folders)
+            {
+                if (string.Equals(folder.FolderName, folderName, StringComparison.OrdinalIgnoreCase)) return folder;
+
+                FolderConfig found = FindFolderByName(folder.SubFolders, folderName);
+                if (found != null) return found;
+            }
+
+            return null;
         }
 
 
@@ -303,7 +467,28 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         CreateFolder("Entities", FolderConfig.FolderType.Folder, null, true, isNamespaceProvider: true)
                     }, true, false, false),
                     CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Editor], FolderConfig.FolderType.Editor, null,
-                        true)
+                        true),
+                    // Shared is a sibling of Runtime rather than a folder inside it because it
+                    // becomes its own assembly: what a module wants to publish to a screen or a
+                    // sub module is the data, not the Models and Commands that Runtime holds.
+                    // Unlike Runtime it is a namespace provider, so a shared value object lands in
+                    // <Module>.Shared.Datas.ValueObjects and cannot collide with the Runtime type
+                    // of the same name sitting in <Module>.Datas.ValueObjects.
+                    CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Shared, "Shared"), FolderConfig.FolderType.Shared,
+                        new List<FolderConfig>
+                        {
+                            CreateFolder("Datas", FolderConfig.FolderType.Folder, new List<FolderConfig>
+                            {
+                                CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"),
+                                    FolderConfig.FolderType.SharedUnityObjects, null, true),
+                                CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedValueObjects, "ValueObjects"),
+                                    FolderConfig.FolderType.SharedValueObjects, null, true)
+                            }, true),
+                            CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedEnums, "Enums"),
+                                FolderConfig.FolderType.SharedEnums, null, true),
+                            CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedConstants, "Constants"),
+                                FolderConfig.FolderType.SharedConstants, null, true)
+                        }, false, true)
                 }, true, false, false),
 
                 CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules], FolderConfig.FolderType.SubModules,
@@ -348,6 +533,13 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     string subFolderPath = FindFolderPathByID(folderID, folder.SubFolders, currentPath, out isOptional);
                     if (!string.IsNullOrEmpty(subFolderPath))
                     {
+                        // A folder is only as mandatory as the branch it hangs off. The Shared
+                        // subfolders are each mandatory within Shared - ticking Shared lays all of
+                        // them down at once - but Shared itself is optional, so a module created
+                        // without it has no Datas/UnityObjects under Shared and that is ordinary
+                        // rather than a fault. Without this the caller that warns about a missing
+                        // folder would warn once per Shared subfolder for every such module.
+                        isOptional |= folder.IsOptional;
                         return subFolderPath;
                     }
                 }

@@ -37,6 +37,11 @@ Scripts/Runtime/Datas/
 └── ValueObjects/    # MapVO.cs, MapCVO.cs, MapPVO.cs
 ```
 
+Data another module reads goes in `Scripts/Shared/Datas/` instead, under the same two
+folders and the same naming. Shared is an assembly of its own - `Modules.Player.Shared` -
+so a screen or sub module can reference the data without reaching the module's Models and
+Commands. The naming does not change with the folder; only who can see it does.
+
 ## Example
 
 ```csharp

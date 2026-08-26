@@ -39,7 +39,13 @@ namespace FlowIoC.Editor.Help.Pages
                     new HelpTreeNode("Services", "self-contained work, reusable in any game"),
                     new HelpTreeNode("Signals", "the module's whole public surface"),
                     new HelpTreeNode("Systems", "specific to this game, may lean on other systems"),
-                    new HelpTreeNode("ViewsMediators", "scene references, and the mediator that drives them"))),
+                    new HelpTreeNode("ViewsMediators", "scene references, and the mediator that drives them")),
+                new HelpTreeNode("Shared", "optional - an assembly of its own, holding the data this module publishes",
+                    new HelpTreeNode("Constants", "constants the shared data needs"),
+                    new HelpTreeNode("Datas", "",
+                        new HelpTreeNode("UnityObjects", "shared ScriptableObject assets"),
+                        new HelpTreeNode("ValueObjects", "shared plain data")),
+                    new HelpTreeNode("Enums", "enumerations the shared data needs"))),
             new HelpTreeNode("zScreenModules", "screens of this module - each one a module of its own"),
             new HelpTreeNode("zSubModules", "sub modules, which may use their parent's types"),
             new HelpTreeNode("zTestModules", "test code, wrapped in #if UNITY_EDITOR, may reference anything"));
@@ -66,6 +72,23 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "A screen or a sub module may use its parent's types. The direction is one way: a "
                 + "module never knows what sits in its own zScreenModules or zSubModules.");
+
+            painter.SubHeading("Publishing data through Shared");
+            painter.Paragraph(
+                "Scripts/Shared is an assembly of its own - Modules.Player.Shared, beside "
+                + "Modules.Player - and it is how a module hands data to another module without "
+                + "handing over its logic. Only data belongs there: value objects, the "
+                + "ScriptableObjects built out of them, and the enums and constants those need.");
+            painter.Paragraph(
+                "Whoever reads that data references Modules.Player.Shared, never Modules.Player. A "
+                + "PlayerScreenModule can read CD_PlayerRules and still has no way to reach "
+                + "PlayerModel or AddCurrencyCommand. Tick Shared when creating a main module and "
+                + "Create Module writes the reference for you - into the module's own assembly, and "
+                + "into every screen, sub and test module created under it afterwards.");
+            painter.Note(
+                "Shared is offered on main modules only. If two modules need the same data and "
+                + "neither owns it, that data belongs in a module of its own - the same answer as "
+                + "for a Service more than one module needs.");
         }
     }
 }
