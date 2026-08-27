@@ -145,7 +145,7 @@ flowchart LR
 In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
 
 ```
-https://github.com/FlowArc/FlowIoC.git#1.1.1
+https://github.com/FlowArc/FlowIoC.git#1.2.0
 ```
 
 Or add it to `Packages/manifest.json` directly:
@@ -153,7 +153,7 @@ Or add it to `Packages/manifest.json` directly:
 ```json
 {
   "dependencies": {
-    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.1.1"
+    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.2.0"
   }
 }
 ```
