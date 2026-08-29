@@ -5,6 +5,19 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The code style FlowIoC ships now reaches a project on its own. The naming rules that decide what
+  a `CD_` asset or a `PVO` value object may be called live in the solution level settings file, and
+  `Tools/FlowIoC/Module Configuration/Update Namespace Settings` was the only thing that ever wrote
+  it - so a project that installed the package and generated a module had every convention
+  documented and none of them enforced. The file is written when the Editor opens now, the way the
+  agent rules and the skills already are. Only the keys FlowIoC ships are touched, so a team's own
+  settings survive, and a session that finds the file already correct writes nothing and says
+  nothing.
+
 ## [1.2.0] - 2026-08-27
 
 ### Added

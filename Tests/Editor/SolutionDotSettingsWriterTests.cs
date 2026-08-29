@@ -102,6 +102,26 @@ namespace FlowIoC.Tests
         }
 
         [Test]
+        public void TryWrite_reports_a_change_when_the_file_is_not_there_yet()
+        {
+            Writer().TryWrite(out _, out string error, out bool changed);
+
+            Assert.IsTrue(changed, error);
+        }
+
+        [Test]
+        public void TryWrite_reports_no_change_when_the_file_already_matches()
+        {
+            Writer().TryWrite(out string path, out _, out _);
+            string first = File.ReadAllText(path);
+
+            Writer().TryWrite(out _, out string error, out bool changed);
+
+            Assert.IsFalse(changed, error);
+            Assert.AreEqual(first, File.ReadAllText(path));
+        }
+
+        [Test]
         public void CleanupOrphaned_deletes_settings_whose_solution_is_gone()
         {
             File.WriteAllText(Path.Combine(_root, "MyGame.sln"), string.Empty);
