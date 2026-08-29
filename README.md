@@ -32,7 +32,6 @@ touching the rest of the game.
 - [AI Agent Rules](#ai-agent-rules)
 - [Module Layout Convention](#module-layout-convention)
 - [Data Types](#data-types)
-- [Samples](#samples)
 - [Documentation Index](#documentation-index)
 - [License](#license)
 
@@ -1162,14 +1161,6 @@ Which prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings
 *Tools ▸ FlowIoC ▸ Module Configuration ▸ Update Namespace Settings*. What each one means is the
 table above, and the agent rules carry a short version of it so an AI assistant names data the
 same way.
-
----
-
-## Samples
-
-Import **Command Execution Test Module** from the package's Samples tab. It is a
-runnable reference for sequence, parallel, retain/release, and command-group
-execution, and logs each step so the order is visible in the console.
 
 ---
 
