@@ -1,6 +1,6 @@
 {
     "name": "FlowIoC.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "FlowIoC.Editor",
     "references": [
         "GUID:c03b5dbe494e3dd4aac1d7b85a31b51e",
         "GUID:69448af7b92c7f342b298e06a37122aa",
