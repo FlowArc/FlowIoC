@@ -80,6 +80,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the step that is easiest to get wrong, where the `.csproj.DotSettings` files land and why, and
   how to drive the generators from a terminal against an open Editor.
 
+### Removed
+
+- The Command Execution Test Module sample, and the Samples tab it was imported from. Ready-made
+  modules cover the same ground better: they install from the Help window, land somewhere a game
+  can actually use them rather than under `Assets/Samples/<package>/<version>/`, and arrive
+  registered instead of as loose files.
+
 ## [1.2.0] - 2026-08-27
 
 ### Added

@@ -25,12 +25,5 @@
     "com.unity.addressables": "2.9.1",
     "com.unity.render-pipelines.core": "17.0.0"
   },
-  "samples": [
-    {
-      "displayName": "Command Execution Test Module",
-      "description": "Demonstrates command execution patterns with parallel and sequential commands",
-      "path": "Samples~/CommandExecutionTestModule"
-    }
-  ],
   "hideInEditor": false
 }
