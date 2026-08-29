@@ -31,6 +31,9 @@ namespace FlowIoC.Editor.Help
 
         public HelpGraph Graph { get; }
 
+        /// <summary>A page offers nothing to do unless it says otherwise.</summary>
+        public virtual HelpAction Action => null;
+
         protected HelpGraphStepper Stepper { get; }
 
         /// <summary>What the first tab is called. The body of the page is what it shows.</summary>

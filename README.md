@@ -847,6 +847,31 @@ Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 
 ---
 
+## Ready-Made Modules
+
+The bundled modules above are part of the framework and are always there. A ready-made module is
+different: it is an ordinary FlowIoC module that FlowIoC happens to ship, and installing it copies
+it into your own `Assets/Modules/` folder, where it is yours — read it, change it, delete the half
+you do not want.
+
+| Module | Injected as | What it does |
+|---|---|---|
+| **CountdownServiceModule** | `ICountdownService` | Named countdowns with once-a-second callbacks: seconds left or 0..1, several listeners per id, counting up as well as down, and a pluggable time source so a server clock can replace the device one. |
+
+Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its
+page. Copying the files is only part of it — the installer also registers the module in the module
+index, gives it its `FlowLogType` channel, and writes the `.csproj.DotSettings` its namespaces
+need, which is exactly what copying the folder by hand would miss.
+
+A module already in `Assets/Modules/` is never overwritten. The copy in your project is the one you
+have been editing, so the button reads *Installed* and does nothing; delete the folder first if you
+want the shipped version back.
+
+The payload lives in `Modules~/` inside the package. Unity does not import a folder whose name ends
+in a tilde, so the modules carry their own asmdefs without compiling until they are installed.
+
+---
+
 ## Editor Tools
 
 | Menu | Purpose |

@@ -28,6 +28,7 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _sidebarButton;
         private GUIStyle _sidebarLabel;
         private GUIStyle _bannerTab;
+        private GUIStyle _actionButton;
 
         public Color NodeFill => _pro ? new Color(0.24f, 0.24f, 0.26f) : new Color(0.90f, 0.90f, 0.92f);
         public Color NodeFillActive => _pro ? new Color(0.18f, 0.31f, 0.43f) : new Color(0.76f, 0.87f, 0.98f);
@@ -52,6 +53,16 @@ namespace FlowIoC.Editor.Help
         public float BannerTabWidth => 104f;
 
         /// <summary>
+        /// The green a page's own action wears. Dark enough that white text sits on it, and far
+        /// enough from the banner's purple that the button does not read as part of the bar.
+        /// </summary>
+        public Color Action => new Color(.29f, .74f, .38f);
+
+        public float ActionWidth => 108f;
+
+        public float ActionHeight => 30f;
+
+        /// <summary>
         /// A reading of the page, as a button on the banner. Larger than a toolbar button, because
         /// this is the one control on the page a reader has to notice.
         /// </summary>
@@ -62,6 +73,24 @@ namespace FlowIoC.Editor.Help
             fontStyle = FontStyle.Bold,
             padding = new RectOffset(10, 10, 4, 4),
             margin = new RectOffset(0, 0, 0, 0)
+        };
+
+        /// <summary>
+        /// A page's own action. Bigger type than the tabs beside it, and white in both skins:
+        /// the button carries its own colour, so the Editor's text colour has nothing to do with
+        /// what it is sitting on.
+        /// </summary>
+        public GUIStyle ActionButton => _actionButton ??= new GUIStyle(GUI.skin.button)
+        {
+            fixedHeight = 0f,
+            fontSize = 13,
+            fontStyle = FontStyle.Bold,
+            padding = new RectOffset(10, 10, 4, 4),
+            margin = new RectOffset(0, 0, 0, 0),
+            normal = {textColor = Color.white},
+            hover = {textColor = Color.white},
+            active = {textColor = Color.white},
+            focused = {textColor = Color.white}
         };
 
         /// <summary>

@@ -35,38 +35,42 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// What the sidebar shows at rest: the introduction on its own, then the three categories.
+        /// What the sidebar shows with nothing opened: the introduction, everything there is to
+        /// know about FlowIoC, and the modules that ship with it. A reader picks which of the
+        /// three they are here for before picking a topic inside it.
         /// </summary>
         [Test]
-        public void The_sidebar_lists_one_topic_and_three_categories()
+        public void The_sidebar_rests_on_one_topic_and_two_categories()
         {
             List<string> titles = _catalog.Sections.Select(section => section.Title).ToList();
 
-            CollectionAssert.AreEqual(new[] {"Welcome", "Wiki", "Structure", "Editor Tools"}, titles);
+            CollectionAssert.AreEqual(new[] {"Welcome", "Wiki", "Modules"}, titles);
 
             Assert.IsFalse(_catalog.Sections[0].IsCategory);
             Assert.IsTrue(_catalog.Sections[1].IsCategory);
             Assert.IsTrue(_catalog.Sections[2].IsCategory);
-            Assert.IsTrue(_catalog.Sections[3].IsCategory);
         }
 
         /// <summary>
-        /// The Wiki category is the reference half of the window: the conventions a project
-        /// follows, as opposed to the architecture the Structure category walks through. Creating
-        /// a module comes first because it is what a reader does before any convention applies.
+        /// Wiki is the whole reference. Its own topics come first, because they are what a reader
+        /// does before any of the rest applies, and the two categories that go deeper follow.
         /// </summary>
         [Test]
-        public void The_wiki_category_covers_the_conventions()
+        public void The_wiki_category_opens_on_its_topics_and_holds_the_deeper_categories()
         {
-            CollectionAssert.AreEqual(new[] {"Creating a Module", "Folder Layout", "Data Types"},
-                Titles("Wiki"));
+            CollectionAssert.AreEqual(new[]
+            {
+                "Creating a Module",
+                "Folder Layout",
+                "Data Types",
+                "Structure",
+                "Editor Tools"
+            }, ChildTitles("Wiki"));
         }
 
         [Test]
         public void The_structure_category_covers_the_architecture()
         {
-            List<string> titles = Titles("Structure");
-
             CollectionAssert.AreEqual(new[]
             {
                 "Root & Context",
@@ -75,14 +79,12 @@ namespace FlowIoC.Tests
                 "Model",
                 "View & Mediator",
                 "Connectors"
-            }, titles);
+            }, ChildTitles("Structure"));
         }
 
         [Test]
         public void The_editor_tools_category_covers_every_window_the_package_adds()
         {
-            List<string> titles = Titles("Editor Tools");
-
             CollectionAssert.AreEqual(new[]
             {
                 "Code Generators",
@@ -93,7 +95,36 @@ namespace FlowIoC.Tests
                 "Screen Config Manager",
                 "Agent Rules",
                 "Agent Skills"
-            }, titles);
+            }, ChildTitles("Editor Tools"));
+        }
+
+        [Test]
+        public void The_modules_category_lists_the_modules_that_ship()
+        {
+            CollectionAssert.AreEqual(new[] {"Countdown Service"}, ChildTitles("Modules"));
+        }
+
+        /// <summary>
+        /// The categories nest, and the window remembers which are open by the path down to them.
+        /// A page two levels deep has to name both of them or it could never be reached.
+        /// </summary>
+        [Test]
+        public void A_nested_page_names_every_category_above_it()
+        {
+            IHelpPage page = _catalog.Pages.First(candidate => candidate.Title == "Signals");
+
+            CollectionAssert.AreEqual(new[] {"Wiki", "Structure"},
+                _catalog.CategoriesContaining(page).Select(section => section.Title).ToList());
+        }
+
+        /// <summary>
+        /// The introduction sits at the top level, so the sidebar has nothing to fold open when
+        /// the window opens - which is what leaves it resting on its three entries.
+        /// </summary>
+        [Test]
+        public void The_opening_page_sits_inside_no_category()
+        {
+            CollectionAssert.IsEmpty(_catalog.CategoriesContaining(_catalog.OpeningPage).ToList());
         }
 
         /// <summary>
@@ -123,8 +154,16 @@ namespace FlowIoC.Tests
             }
         }
 
-        private List<string> Titles(string category) =>
-            _catalog.Sections.First(section => section.Title == category)
-                .Pages.Select(page => page.Title).ToList();
+        /// <summary>
+        /// What one category shows when it folds open, in order - topics and sub categories
+        /// alike. The category is looked up anywhere in the tree, because Structure and Editor
+        /// Tools live inside Wiki rather than beside it.
+        /// </summary>
+        private List<string> ChildTitles(string category) =>
+            _catalog.Sections
+                .SelectMany(section => section.Descendants())
+                .First(section => section.Title == category)
+                .Children.Select(child => child.Title)
+                .ToList();
     }
 }
