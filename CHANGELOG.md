@@ -42,7 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   while a batch script, an editor test or a tool driving the Editor can delete a module without a
   modal blocking the Editor until somebody clicks it.
 
+### Changed
+
+- The Help window's sidebar nests. A category holds sections rather than pages, so Structure and
+  Editor Tools fold out inside Wiki instead of competing with it at the top level. Closed, the
+  sidebar is now three entries - Welcome, Wiki, Modules - and a reader picks the part of FlowIoC
+  they want before picking a topic in it. Which categories are open is remembered by the path down
+  to them rather than by their name, so two modules may both bring a category called Usage.
+
 ### Added
+
+- A Modules category in the Help window, and the first page in it: Countdown Service, with what the
+  module does, a Usage tab of worked calls, and a Time Source tab on swapping the device clock for
+  a clock the player cannot move.
 
 - A second agent skill, `flowioc-scaffolding`, installed into `.claude/skills` alongside
   `flowioc-data-types`. The agent rules say not to lay a module out by hand; this is the part that

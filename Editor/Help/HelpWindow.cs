@@ -57,13 +57,30 @@ namespace FlowIoC.Editor.Help
             _selected = _catalog.OpeningPage;
             _openCategories.Clear();
 
-            // The window opens on a topic that sits inside a category, so that category starts
-            // folded open - otherwise the selected page is not on screen to begin with.
-            HelpSection opening = _catalog.SectionOf(_selected);
-
-            if (opening != null && opening.IsCategory)
-                _openCategories.Add(opening.Title);
+            // Every category above the opening topic starts folded open, or the page the window
+            // opens on would not be on screen. The introduction sits at the top level and is
+            // inside none of them, so the sidebar opens closed: Welcome, Wiki, Modules.
+            OpenCategoriesTo(_selected);
         }
+
+        private void OpenCategoriesTo(IHelpPage page)
+        {
+            var path = string.Empty;
+
+            foreach (HelpSection category in _catalog.CategoriesContaining(page))
+            {
+                path = KeyOf(path, category);
+                _openCategories.Add(path);
+            }
+        }
+
+        /// <summary>
+        /// What the open categories are remembered by. Two categories may share a title once
+        /// modules bring categories of their own, so the path down to one is the key rather than
+        /// its name.
+        /// </summary>
+        private static string KeyOf(string parentPath, HelpSection section) =>
+            string.IsNullOrEmpty(parentPath) ? section.Title : parentPath + "/" + section.Title;
 
         private void OnGUI()
         {
@@ -87,19 +104,27 @@ namespace FlowIoC.Editor.Help
                     _sidebarScroll = sidebar.scrollPosition;
 
                     foreach (HelpSection section in _catalog.Sections)
-                        DrawSection(section);
+                        DrawSection(section, string.Empty, 0);
 
                     GUILayout.FlexibleSpace();
                 }
             }
         }
 
-        private void DrawSection(HelpSection section)
+        /// <summary>
+        /// One sidebar entry and, when it is an open category, everything under it. Depth decides
+        /// how far the row is indented and how tall it is: a top level entry reads as a place to
+        /// go, and anything inside a category is a shorter row set in from it.
+        /// </summary>
+        private void DrawSection(HelpSection section, string parentPath, int depth)
         {
+            float height = depth == 0 ? SidebarButtonHeight : ChildRowHeight;
+            float indent = depth * SidebarIndent;
+
             if (!section.IsCategory)
             {
                 if (DrawRow(Label(section.Title, section.Subtitle), section.Icon, section.Featured,
-                        _selected == section.Page, SidebarButtonHeight, 0f, null))
+                        _selected == section.Page, height, indent, null))
                 {
                     Select(section.Page);
                 }
@@ -107,14 +132,15 @@ namespace FlowIoC.Editor.Help
                 return;
             }
 
-            bool open = _openCategories.Contains(section.Title);
+            string key = KeyOf(parentPath, section);
+            bool open = _openCategories.Contains(key);
 
-            if (DrawRow(section.Title, section.Icon, false, false, SidebarButtonHeight, 0f, open))
+            if (DrawRow(section.Title, section.Icon, false, false, height, indent, open))
             {
                 if (open)
-                    _openCategories.Remove(section.Title);
+                    _openCategories.Remove(key);
                 else
-                    _openCategories.Add(section.Title);
+                    _openCategories.Add(key);
 
                 GUI.FocusControl(null);
             }
@@ -122,14 +148,8 @@ namespace FlowIoC.Editor.Help
             if (!open)
                 return;
 
-            foreach (IHelpPage page in section.Pages)
-            {
-                if (DrawRow(page.Title, page.Icon, false, _selected == page, ChildRowHeight,
-                        SidebarIndent, null))
-                {
-                    Select(page);
-                }
-            }
+            foreach (HelpSection child in section.Children)
+                DrawSection(child, key, depth + 1);
         }
 
         private void Select(IHelpPage page)

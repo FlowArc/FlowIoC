@@ -2,14 +2,18 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Pages;
+using FlowIoC.Editor.Help.Pages.Modules;
 using FlowIoC.Editor.Help.Pages.Tools;
 
 namespace FlowIoC.Editor.Help
 {
     /// <summary>
-    /// What the sidebar shows, in reading order: the introduction on its own, then the reference
-    /// topics folded into one category, the architecture into another and the Editor's own tools
-    /// into a third. Adding a topic is one class and one line here.
+    /// What the sidebar shows, in reading order. Closed, it is three entries: the introduction,
+    /// everything there is to know about FlowIoC itself, and the modules that ship with it.
+    /// Wiki is where the reference lives, so the architecture topics and the Editor's own tools
+    /// fold out inside it rather than competing with it at the top level.
+    ///
+    /// Adding a topic is one class and one line here. Adding a module is a page under Modules.
     /// </summary>
     internal class HelpPageCatalog
     {
@@ -19,25 +23,27 @@ namespace FlowIoC.Editor.Help
             {
                 new HelpSection(new WelcomePage()),
                 new HelpSection("Wiki", "TextAsset Icon",
-                    new CreatingModulePage(),
-                    new FolderLayoutPage(),
-                    new DataTypesPage()),
-                new HelpSection("Structure", "UnityEditor.SceneHierarchyWindow",
-                    new RootContextPage(),
-                    new SignalsPage(),
-                    new ControllersPage(),
-                    new ModelPage(),
-                    new ViewMediatorPage(),
-                    new ConnectorsPage()),
-                new HelpSection("Editor Tools", "Settings",
-                    new CodeGeneratorsPage(),
-                    new ModuleConfigurationPage(),
-                    new FlowConsolePage(),
-                    new ModelViewerPage(),
-                    new FolderDrawerPage(),
-                    new ScreenConfigManagerPage(),
-                    new AgentRulesPage(),
-                    new AgentSkillsPage())
+                    new HelpSection(new CreatingModulePage()),
+                    new HelpSection(new FolderLayoutPage()),
+                    new HelpSection(new DataTypesPage()),
+                    new HelpSection("Structure", "UnityEditor.SceneHierarchyWindow",
+                        new RootContextPage(),
+                        new SignalsPage(),
+                        new ControllersPage(),
+                        new ModelPage(),
+                        new ViewMediatorPage(),
+                        new ConnectorsPage()),
+                    new HelpSection("Editor Tools", "Settings",
+                        new CodeGeneratorsPage(),
+                        new ModuleConfigurationPage(),
+                        new FlowConsolePage(),
+                        new ModelViewerPage(),
+                        new FolderDrawerPage(),
+                        new ScreenConfigManagerPage(),
+                        new AgentRulesPage(),
+                        new AgentSkillsPage())),
+                new HelpSection("Modules", "Prefab Icon",
+                    new CountdownServiceModulePage())
             };
 
             var pages = new List<IHelpPage>();
@@ -60,15 +66,42 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         public IHelpPage OpeningPage { get; }
 
-        public HelpSection SectionOf(IHelpPage page)
+        /// <summary>
+        /// Every category a page sits inside, outermost first. A topic two levels down needs both
+        /// of them folded open before it is on screen, so the caller gets the whole chain rather
+        /// than only the category immediately above the page.
+        /// </summary>
+        public IReadOnlyList<HelpSection> CategoriesContaining(IHelpPage page)
         {
+            var chain = new List<HelpSection>();
+
             foreach (HelpSection section in Sections)
             {
-                if (section.Contains(page))
-                    return section;
+                if (TryBuildChain(section, page, chain))
+                    break;
+
+                chain.Clear();
             }
 
-            return null;
+            return chain;
+        }
+
+        private static bool TryBuildChain(HelpSection section, IHelpPage page, List<HelpSection> chain)
+        {
+            if (!section.IsCategory)
+                return ReferenceEquals(section.Page, page);
+
+            chain.Add(section);
+
+            foreach (HelpSection child in section.Children)
+            {
+                if (TryBuildChain(child, page, chain))
+                    return true;
+            }
+
+            chain.RemoveAt(chain.Count - 1);
+
+            return false;
         }
 
         private IHelpPage Find(string title)
