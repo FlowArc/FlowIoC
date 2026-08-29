@@ -12,7 +12,12 @@ namespace FlowIoC.Editor.Help
     /// </summary>
     internal class HelpWindow : EditorWindow
     {
-        private const float SidebarWidth = 180f;
+        /// <summary>
+        /// Wide enough that a topic two categories deep still fits its name on one line. The
+        /// indent eats into the text on every level, so the width is set by the deepest row
+        /// rather than by the top one.
+        /// </summary>
+        private const float SidebarWidth = 240f;
 
         /// <summary>
         /// Three times the height of an ordinary mini button, so a topic reads as a place to go
@@ -97,8 +102,12 @@ namespace FlowIoC.Editor.Help
             {
                 // GUIStyle.none for the horizontal bar: the rows are as wide as the view, so a
                 // horizontal scrollbar would only ever be a stripe along the bottom.
+                //
+                // The vertical one is always shown. Letting it appear only when it is needed
+                // narrows every row the moment it does, which rewraps the titles and shunts the
+                // list down under the reader's cursor.
                 using (EditorGUILayout.ScrollViewScope sidebar = new EditorGUILayout.ScrollViewScope(
-                           _sidebarScroll, false, false,
+                           _sidebarScroll, false, true,
                            GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none))
                 {
                     _sidebarScroll = sidebar.scrollPosition;
@@ -123,7 +132,12 @@ namespace FlowIoC.Editor.Help
 
             if (!section.IsCategory)
             {
-                if (DrawRow(Label(section.Title, section.Subtitle), section.Icon, section.Featured,
+                // The gloss under a title is only worth its line on a top level entry, which has
+                // the height for it. Inside a category the rows are short, and a subtitle there
+                // wraps the name onto a second line to make room for a third.
+                string label = depth == 0 ? Label(section.Title, section.Subtitle) : section.Title;
+
+                if (DrawRow(label, section.Icon, section.Featured,
                         _selected == section.Page, height, indent, null))
                 {
                     Select(section.Page);
@@ -228,7 +242,8 @@ namespace FlowIoC.Editor.Help
             {
                 // The banner is drawn outside the scroll view, so the page title and its tabs stay
                 // put while the reader scrolls the body under them.
-                _selected.SelectedTab = _painter.Banner(_selected.Title, _selected.Tabs, _selected.SelectedTab);
+                _selected.SelectedTab = _painter.Banner(_selected.Title, _selected.Tabs,
+                    _selected.SelectedTab, _selected.Action);
 
                 using (EditorGUILayout.ScrollViewScope scroll = new EditorGUILayout.ScrollViewScope(_scroll))
                 {

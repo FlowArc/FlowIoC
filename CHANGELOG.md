@@ -48,13 +48,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Editor Tools fold out inside Wiki instead of competing with it at the top level. Closed, the
   sidebar is now three entries - Welcome, Wiki, Modules - and a reader picks the part of FlowIoC
   they want before picking a topic in it. Which categories are open is remembered by the path down
-  to them rather than by their name, so two modules may both bring a category called Usage.
+  to them rather than by their name, so two modules may both bring a category called Usage. The
+  sidebar is wider and keeps its scrollbar's width reserved, so a topic two levels down fits its
+  name on one line and the list no longer shifts under the cursor the moment the scrollbar appears.
 
 ### Added
+
+- Ready-made modules, installed from the Help window. A module the package ships lives in
+  `Modules~/`, which Unity does not import, and the Install button on its Help page copies it into
+  `Assets/Modules/` - then registers it in the module index, gives it its `FlowLogType` channel and
+  writes the `.csproj.DotSettings` its namespaces need. Copying the folder by hand gets the files
+  and none of the other three. A module already in the project is never overwritten: the copy there
+  is the one the game has been editing.
+
+- The first of them: **CountdownServiceModule**. Named countdowns with once-a-second callbacks,
+  seconds left or 0..1, several listeners on one id, counting up as well as down, and an
+  `ITimeSource` behind it so a server clock can replace the device one without touching a call site.
+  It ships with its test module, which is also the worked example.
 
 - A Modules category in the Help window, and the first page in it: Countdown Service, with what the
   module does, a Usage tab of worked calls, and a Time Source tab on swapping the device clock for
   a clock the player cannot move.
+
+- A page in the Help window can offer one action, drawn as a button on the right of its banner.
+  Install is the first; the tabs beside it change what you are reading, and this changes the
+  project.
 
 - A second agent skill, `flowioc-scaffolding`, installed into `.claude/skills` alongside
   `flowioc-data-types`. The agent rules say not to lay a module out by hand; this is the part that

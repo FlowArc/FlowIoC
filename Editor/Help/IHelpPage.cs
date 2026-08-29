@@ -44,6 +44,12 @@ namespace FlowIoC.Editor.Help
         /// <summary>Which of those readings is open. The window drives it from the banner.</summary>
         int SelectedTab { get; set; }
 
+        /// <summary>
+        /// The one thing this page can do, drawn as a button on the right of its banner. Null for
+        /// a page that only explains something, which is most of them.
+        /// </summary>
+        HelpAction Action { get; }
+
         void Draw(HelpPainter painter);
     }
 }

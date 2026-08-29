@@ -1,17 +1,33 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.AgentRules;
+using FlowIoC.Editor.ModuleInstall;
+using UnityEditor;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
     /// <summary>
-    /// The countdown service module: what it does, how a game calls it, and where the time it
-    /// counts with comes from.
+    /// The countdown service module: what it does, how a game calls it, where the time it counts
+    /// with comes from, and the button that puts it in the project.
     /// </summary>
     internal class CountdownServiceModulePage : HelpPage
     {
+        private const string ModuleFolderName = "CountdownServiceModule";
+
+        private readonly ModuleInstaller _installer =
+            new ModuleInstaller(new ProjectRoot().Resolve(), new ModulesSource());
+
+        private readonly HelpAction _install;
+
         public CountdownServiceModulePage() : base(null)
         {
+            // The label and the enabled state are read every repaint rather than fixed here, so
+            // the button turns itself off the moment the module lands in the project.
+            _install = new HelpAction(
+                () => _installer.IsInstalled(ModuleFolderName) ? "Installed" : "Install",
+                () => !_installer.IsInstalled(ModuleFolderName),
+                Install);
         }
 
         public override string Title => "Countdown Service";
@@ -20,11 +36,30 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string Icon => "UnityEditor.AnimationWindow";
 
+        public override HelpAction Action => _install;
+
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Usage", DrawUsage),
             new HelpTab("Time Source", DrawTimeSource)
         };
+
+        private void Install()
+        {
+            if (_installer.TryInstall(ModuleFolderName, out string error))
+            {
+                EditorUtility.DisplayDialog(
+                    "Countdown Service installed",
+                    $"The module is now at {ModuleInstaller.TargetFolder}/{ModuleFolderName}.\n\n"
+                    + "It is yours to edit from here - the copy in the package is only the one "
+                    + "installs are made from.",
+                    "OK");
+
+                return;
+            }
+
+            EditorUtility.DisplayDialog("Countdown Service", error, "OK");
+        }
 
         protected override void DrawBody(HelpPainter painter)
         {
@@ -62,7 +97,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "The module ships with a test module beside it. Run "
-                + "Tools > FlowIoC > Test Modules > Build Countdown Test Scene and press Play: a "
+                + "Tools > FlowIoC > Modules > Countdown Service > Build Test Scene and press Play: a "
                 + "Start and a Stop button, a countdown, and the elapsed time next to it.");
         }
 

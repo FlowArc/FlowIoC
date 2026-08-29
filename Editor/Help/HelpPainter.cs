@@ -27,7 +27,7 @@ namespace FlowIoC.Editor.Help
         /// buttons on the right. The window draws this outside the scroll view, so the title and
         /// the tabs stay put while the page scrolls under them.
         /// </summary>
-        public int Banner(string title, IReadOnlyList<HelpTab> tabs, int selected)
+        public int Banner(string title, IReadOnlyList<HelpTab> tabs, int selected, HelpAction action = null)
         {
             Color previous = GUI.backgroundColor;
             GUI.backgroundColor = _theme.Banner;
@@ -62,11 +62,40 @@ namespace FlowIoC.Editor.Help
 
                     GUI.backgroundColor = _theme.Banner;
                 }
+
+                DrawAction(action);
             }
 
             GUI.backgroundColor = previous;
 
             return chosen;
+        }
+
+        /// <summary>
+        /// The page's own action, at the far right of the banner. It is drawn last so it sits
+        /// outside the tabs: the tabs change what you are reading, this changes the project.
+        /// </summary>
+        private void DrawAction(HelpAction action)
+        {
+            if (action == null)
+                return;
+
+            GUILayout.Space(8f);
+
+            Color previous = GUI.backgroundColor;
+            GUI.backgroundColor = _theme.Action;
+
+            using (new EditorGUI.DisabledScope(!action.Enabled))
+            {
+                if (GUILayout.Button(action.Label, _theme.ActionButton,
+                        GUILayout.Width(_theme.ActionWidth),
+                        GUILayout.Height(_theme.ActionHeight)))
+                {
+                    action.Perform();
+                }
+            }
+
+            GUI.backgroundColor = previous;
         }
 
         public void SubHeading(string text) => EditorGUILayout.LabelField(text, _theme.SubHeading);
