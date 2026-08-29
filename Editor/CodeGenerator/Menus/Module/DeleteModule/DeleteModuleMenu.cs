@@ -79,7 +79,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                             "This action cannot be undone!",
                             "Delete", "Cancel"))
                     {
-                        ModuleDeleter.DeleteModule(module.Name, module.Path, module.FolderGuid);
+                        IReadOnlyList<string> deleted =
+                            ModuleDeleter.DeleteModule(module.Name, module.Path, module.FolderGuid);
+
+                        // The deleter reports rather than announces, so the summary dialog belongs
+                        // here, where there is already a user looking at a window.
+                        EditorUtility.DisplayDialog(
+                            "Module Deleted",
+                            $"'{module.Name}' has been deleted.\n\n{string.Join("\n", deleted)}",
+                            "OK");
+
                         ScanModules();
                         GUIUtility.ExitGUI();
                     }

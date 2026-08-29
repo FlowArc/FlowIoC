@@ -940,6 +940,7 @@ while FlowIoC is installed, and names the check and the folder to delete if it i
 | Skill | Covers |
 |---|---|
 | `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, and which folder each kind belongs in. |
+| `flowioc-scaffolding` | Which menu item lays a module out and what to fill in, why the optional folders are the step that is easiest to get wrong, where the `.csproj.DotSettings` files land, and how to drive the generators from a terminal against an open Editor. |
 
 The skills ship in `Documentation~/Skills/`.
 

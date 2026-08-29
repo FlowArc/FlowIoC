@@ -375,14 +375,21 @@ namespace FlowIoC.Editor.CodeGenerator
         /// generators the template name is replaced on every line rather than only on the class
         /// declaration, because the holder names its own Incoming and Outgoing classes in field
         /// declarations too - and those lines carry no marker to key off.
+        ///
+        /// A test module compiles only in the Editor, so its holder is wrapped the way its Root and
+        /// Context already are. One unwrapped file in zTestModules would carry the whole test module
+        /// into a player build.
         /// </summary>
         public static void CreateSignals(string signalsName, string tempClassName, string signalsPath,
-            string tempClassPath, string namespaceName)
+            string tempClassPath, string namespaceName, bool isTest)
         {
             string newSignalsPath = signalsPath + "/" + signalsName + ".cs";
 
             string[] tempSignalsContent = File.ReadAllLines(tempClassPath);
             List<string> newSignalsContent = new List<string>();
+
+            if (isTest)
+                newSignalsContent.Add("#if UNITY_EDITOR");
 
             foreach (string line in tempSignalsContent)
             {
@@ -399,6 +406,9 @@ namespace FlowIoC.Editor.CodeGenerator
 
                 newSignalsContent.Add(content);
             }
+
+            if (isTest)
+                newSignalsContent.Add("#endif");
 
             if (!Directory.Exists(signalsPath)) Directory.CreateDirectory(signalsPath);
 
