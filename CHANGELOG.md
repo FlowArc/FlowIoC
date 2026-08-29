@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   settings survive, and a session that finds the file already correct writes nothing and says
   nothing.
 
+- The package's own assemblies declare their root namespace, so an IDE stops reporting every
+  file in FlowIoC as living in the wrong namespace. Rider derives the expected namespace from
+  the folder path below the assembly definition and had nothing to put in front of it, so
+  `FlowIoC.BaseModule.Controller` read as one segment too long. A registry install cannot be
+  fixed the way an embedded one was - the folder rules a project keeps name a path, and under
+  `Library/PackageCache` that path carries a hash that changes with every version - so the
+  answer belongs in the assembly definition, which travels with the package.
+
 ## [1.2.0] - 2026-08-27
 
 ### Added
