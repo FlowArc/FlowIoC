@@ -49,8 +49,19 @@ namespace FlowIoC.Editor.CodeStyle
 
         internal bool TryWrite(out string path, out string error)
         {
+            return TryWrite(out path, out error, out _);
+        }
+
+        /// <summary>
+        /// <paramref name="changed"/> tells a caller that runs on its own whether anything was
+        /// actually written. The file the merge produces is usually the file already on disk, and
+        /// a run that says so can stay silent instead of announcing a rewrite of the same bytes.
+        /// </summary>
+        internal bool TryWrite(out string path, out string error, out bool changed)
+        {
             path = null;
             error = null;
+            changed = false;
 
             if (!File.Exists(_templatePath))
             {
@@ -71,7 +82,14 @@ namespace FlowIoC.Editor.CodeStyle
                     entries[shipped.Key] = shipped.Value;
                 }
 
-                Write(path, entries);
+                string content = Compose(entries);
+
+                changed = !File.Exists(path)
+                          || !string.Equals(File.ReadAllText(path), content, StringComparison.Ordinal);
+
+                if (changed)
+                    File.WriteAllText(path, content);
+
                 return true;
             }
             catch (Exception exception)
@@ -179,7 +197,7 @@ namespace FlowIoC.Editor.CodeStyle
             return entries;
         }
 
-        private void Write(string filePath, IDictionary<string, SettingsEntry> entries)
+        private string Compose(IDictionary<string, SettingsEntry> entries)
         {
             var builder = new StringBuilder();
 
@@ -207,7 +225,7 @@ namespace FlowIoC.Editor.CodeStyle
 
             builder.Append("</wpf:ResourceDictionary>\n");
 
-            File.WriteAllText(filePath, builder.ToString());
+            return builder.ToString();
         }
 
         private string Escape(string value)
