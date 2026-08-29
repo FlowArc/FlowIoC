@@ -1,5 +1,7 @@
 # FlowIoC
 
+[![openupm](https://img.shields.io/npm/v/com.flowarc.flowioc.core?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.flowarc.flowioc.core/)
+
 **A signal-driven IoC container and modular MVC framework for the Unity Engine.**
 
 FlowIoC splits a game into self-contained **modules**. Each module owns its data
@@ -9,10 +11,119 @@ internals — they are wired together declaratively by **Connectors**. The resul
 a codebase where a feature can be added, tested in isolation, or deleted without
 touching the rest of the game.
 
-> FlowIoC is the successor to `mvc-base`. If you are migrating, note that the
-> editor menus moved from `Tools/MVC/*` to `Tools/FlowIoC/*` and the command
-> binding API changed from `.To<A>().To<B>().InSequence()` to
-> `.ToSequence<A>().ToSequence<B>()`.
+---
+
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [FlowIoC at a Glance](#flowioc-at-a-glance)
+- [Core Concepts](#core-concepts)
+- [Application Lifecycle](#application-lifecycle)
+- [Quick Start](#quick-start)
+- [Signals](#signals)
+- [Commands](#commands)
+- [Injection](#injection)
+- [Views and Mediators](#views-and-mediators)
+- [Connectors](#connectors)
+- [Functions](#functions)
+- [Bundled Modules](#bundled-modules)
+- [Editor Tools](#editor-tools)
+- [AI Agent Rules](#ai-agent-rules)
+- [Module Layout Convention](#module-layout-convention)
+- [Data Types](#data-types)
+- [Samples](#samples)
+- [Documentation Index](#documentation-index)
+- [License](#license)
+
+---
+
+## Requirements
+
+| | |
+|---|---|
+| Package name | `com.flowarc.flowioc.core` |
+| Minimum Unity | `6000.0` (declared in `package.json`) |
+| Actively developed against | Unity 6 (`6000.3`) |
+| Dependencies | `com.unity.addressables` 2.9.1+, `com.unity.render-pipelines.core` 17.0.0+ (resolved automatically) |
+| Assemblies | `FlowIoC` (runtime), `FlowIoC.Editor` (editor) |
+
+---
+
+## Installation
+
+### From OpenUPM (recommended)
+
+FlowIoC is published on
+[OpenUPM](https://openupm.com/packages/com.flowarc.flowioc.core/). With the
+[openupm-cli](https://github.com/openupm/openupm-cli) installed:
+
+```bash
+openupm add com.flowarc.flowioc.core
+```
+
+Or declare the scoped registry yourself in `Packages/manifest.json`:
+
+```json
+{
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.flowarc"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.flowarc.flowioc.core": "1.2.0"
+  }
+}
+```
+
+Either way the package shows up in the Package Manager under **My Registries**, together
+with every release from 1.1.0 onwards, so an upgrade is a version number rather than a new
+URL.
+
+### From a Git URL
+
+In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
+
+```
+https://github.com/FlowArc/FlowIoC.git#1.2.0
+```
+
+Or add it to `Packages/manifest.json` directly:
+
+```json
+{
+  "dependencies": {
+    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.2.0"
+  }
+}
+```
+
+Always pin a tag. Without `#<tag>` Unity resolves the tip of `master` and then locks that
+commit into `packages-lock.json`, so the package silently stops tracking new releases.
+To upgrade, change the tag and let Unity re-resolve.
+
+> **Upgrading from `com.flowioc.core`?** The package was renamed in 1.1.0. Do it with the
+> Editor closed and delete `Library/` before reopening — see the migration note in
+> [`CHANGELOG.md`](CHANGELOG.md).
+
+### As a git submodule (for working on FlowIoC itself)
+
+```bash
+git submodule add https://github.com/FlowArc/FlowIoC.git Packages/FlowIoC
+git submodule update --init
+```
+
+Any folder under `Packages/` containing a `package.json` is treated by Unity as an *embedded*
+package: it is writable, so you can edit and commit the framework straight from the consuming
+project, and it takes precedence over any registry or Git version of `com.flowarc.flowioc.core`.
+
+Anyone cloning a project that uses the submodule must run `git submodule update --init`,
+otherwise `Packages/FlowIoC` stays empty and the project will not compile.
 
 ---
 
@@ -98,87 +209,6 @@ flowchart LR
 | **View** | Scene references and raw input. Exposes fields and callbacks. | Contain logic, or reach for a model. A View that has an `if` about game rules is doing the Mediator's job. |
 | **Mediator** | Driving one View: subscribes to signals in `OnRegister`, unsubscribes in `OnRemove`, and turns view callbacks into outgoing signals. | Do the work itself. A Mediator dispatches; a Command decides. |
 | **Connector** | Wiring one module's `Outgoing` signals to another's `Incoming` signals, in one readable place. | Transform game state. A converter that reshapes a payload is fine; a rule is not. |
-
----
-
-## Table of Contents
-
-- [FlowIoC at a Glance](#flowioc-at-a-glance)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Core Concepts](#core-concepts)
-- [Application Lifecycle](#application-lifecycle)
-- [Quick Start](#quick-start)
-- [Signals](#signals)
-- [Commands](#commands)
-- [Injection](#injection)
-- [Views and Mediators](#views-and-mediators)
-- [Connectors](#connectors)
-- [Functions](#functions)
-- [Bundled Modules](#bundled-modules)
-- [Editor Tools](#editor-tools)
-- [AI Agent Rules](#ai-agent-rules)
-- [Module Layout Convention](#module-layout-convention)
-- [Data Types](#data-types)
-- [Samples](#samples)
-- [Documentation Index](#documentation-index)
-- [License](#license)
-
----
-
-## Requirements
-
-| | |
-|---|---|
-| Package name | `com.flowarc.flowioc.core` |
-| Minimum Unity | `6000.0` (declared in `package.json`) |
-| Actively developed against | Unity 6 (`6000.3`) |
-| Dependencies | `com.unity.addressables` 2.9.1+, `com.unity.render-pipelines.core` 17.0.0+ (resolved automatically) |
-| Assemblies | `FlowIoC` (runtime), `FlowIoC.Editor` (editor) |
-
----
-
-## Installation
-
-### As a UPM package (recommended)
-
-In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
-
-```
-https://github.com/FlowArc/FlowIoC.git#1.2.0
-```
-
-Or add it to `Packages/manifest.json` directly:
-
-```json
-{
-  "dependencies": {
-    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.2.0"
-  }
-}
-```
-
-Always pin a tag. Without `#<tag>` Unity resolves the tip of `master` and then locks that
-commit into `packages-lock.json`, so the package silently stops tracking new releases.
-To upgrade, change the tag and let Unity re-resolve.
-
-> **Upgrading from `com.flowioc.core`?** The package was renamed in 1.1.0. Do it with the
-> Editor closed and delete `Library/` before reopening — see the migration note in
-> [`CHANGELOG.md`](CHANGELOG.md).
-
-### As a git submodule (for working on FlowIoC itself)
-
-```bash
-git submodule add https://github.com/FlowArc/FlowIoC.git Packages/FlowIoC
-git submodule update --init
-```
-
-Any folder under `Packages/` containing a `package.json` is treated by Unity as an *embedded*
-package: it is writable, so you can edit and commit the framework straight from the consuming
-project, and it takes precedence over any registry or Git version of `com.flowarc.flowioc.core`.
-
-Anyone cloning a project that uses the submodule must run `git submodule update --init`,
-otherwise `Packages/FlowIoC` stays empty and the project will not compile.
 
 ---
 
