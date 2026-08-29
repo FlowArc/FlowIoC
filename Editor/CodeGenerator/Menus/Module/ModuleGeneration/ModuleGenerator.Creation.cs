@@ -47,7 +47,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
                 if (!string.IsNullOrEmpty(signalsPath))
                 {
-                    string signalsName = CreateSignals(signalsPath, modulePath, moduleName, out string signalsNamespace);
+                    string signalsName = CreateSignals(signalsPath, modulePath, moduleName,
+                        selectedModuleType == ModuleType.Test, out string signalsNamespace);
 
                     if (createContext && !string.IsNullOrEmpty(rootsAndContextsPath))
                     {
@@ -118,7 +119,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// hardcoded, because the Signals folder can be renamed from the code generator settings
         /// like any other tracked folder.
         /// </summary>
-        private static string CreateSignals(string path, string modulePath, string moduleName, out string signalsNamespace)
+        private static string CreateSignals(string path, string modulePath, string moduleName, bool isTest,
+            out string signalsNamespace)
         {
             string signalsName = moduleName + "Signals";
 
@@ -130,7 +132,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 "TempSignals",
                 path,
                 CodeGeneratorStrings.TempSignalsPath,
-                signalsNamespace
+                signalsNamespace,
+                isTest
             );
 
             return signalsName;

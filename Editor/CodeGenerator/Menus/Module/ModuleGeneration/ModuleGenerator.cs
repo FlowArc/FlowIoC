@@ -145,7 +145,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 sharedAssemblyName = new SharedAssemblyDefinition()
                     .CreateFor(modulePath, directoryConfigMap[selectedModuleType], GetParsedAssemblyName(finalModuleName));
 
-                CreateAssemblyDefinitionFile(asmdefPath, finalModuleName, sharedAssemblyName, parentSharedAssemblyName);
+                // A test module exists to exercise the module it sits under, and is allowed to
+                // reach anything, so it is wired to its parent outright rather than only to the
+                // data that parent publishes through Shared. Every other module type gets Shared
+                // and nothing more - reaching a neighbour's Models and Commands is the one thing
+                // the architecture does not allow.
+                string parentAssemblyName = selectedModuleType == ModuleType.Test
+                    ? ParentModuleAssemblyName(parentModulePath)
+                    : null;
+
+                CreateAssemblyDefinitionFile(
+                    asmdefPath, finalModuleName, sharedAssemblyName, parentSharedAssemblyName, parentAssemblyName);
             }
 
             AddNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath);

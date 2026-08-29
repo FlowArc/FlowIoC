@@ -12,7 +12,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 {
     internal static class ModuleDeleter
     {
-        public static void DeleteModule(string moduleName, string modulePath, string folderGuid)
+        /// <summary>
+        /// Deletes the module and hands back what was removed, one line per item.
+        ///
+        /// Nothing here opens a dialog. A modal dialog is the window's job, and putting one at the
+        /// end of this method would make the deleter unusable from anything without a user in front
+        /// of it - a batch script, an editor test, an agent driving the Editor - because a modal
+        /// blocks the Editor until somebody clicks it.
+        /// </summary>
+        public static IReadOnlyList<string> DeleteModule(string moduleName, string modulePath, string folderGuid)
         {
             var deletedItems = new List<string>();
 
@@ -28,13 +36,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            string summary = string.Join("\n", deletedItems);
-            EditorUtility.DisplayDialog(
-                "Module Deleted",
-                $"'{moduleName}' has been deleted.\n\n{summary}",
-                "OK");
+            Debug.Log($"<color=cyan>[ModuleDeleter]</color> Deleted module '{moduleName}':\n"
+                      + string.Join("\n", deletedItems));
 
-            Debug.Log($"<color=cyan>[ModuleDeleter]</color> Deleted module '{moduleName}':\n{summary}");
+            return deletedItems;
         }
 
         private static void Log(string message, List<string> deletedItems)

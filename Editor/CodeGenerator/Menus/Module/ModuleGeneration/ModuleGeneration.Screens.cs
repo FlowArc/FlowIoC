@@ -78,7 +78,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             if (!string.IsNullOrEmpty(signalsPath))
             {
-                signalsName = CreateSignals(signalsPath, modulePath, moduleName, out signalsNamespace);
+                // The holder belongs to the screen module itself, which ships in a build, so it is
+                // never the Editor-only kind - the test module beside it has its own.
+                signalsName = CreateSignals(signalsPath, modulePath, moduleName, false, out signalsNamespace);
             }
             else
             {

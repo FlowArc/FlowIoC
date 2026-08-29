@@ -58,6 +58,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         }
 
         /// <summary>
+        /// The assembly of the module at <paramref name="parentModulePath"/>, or null when nothing
+        /// there is a module - which is the case for Assets/Modules itself, the folder every top
+        /// level module is parented to.
+        ///
+        /// The name is read off the asmdef that is actually on disk rather than derived from the
+        /// folder name, so a module whose assembly was renamed by hand is still found. Only the
+        /// module's own asmdef sits at this level; its Shared one lives under Scripts/Shared.
+        /// </summary>
+        private static string ParentModuleAssemblyName(string parentModulePath)
+        {
+            if (string.IsNullOrEmpty(parentModulePath) || !Directory.Exists(parentModulePath)) return null;
+
+            string[] asmdefFiles = Directory.GetFiles(parentModulePath, "*.asmdef", SearchOption.TopDirectoryOnly);
+
+            return asmdefFiles.Length == 1 ? Path.GetFileNameWithoutExtension(asmdefFiles[0]) : null;
+        }
+
+        /// <summary>
         /// A module can need more than one reference now - its own Shared assembly and the Shared
         /// assembly of the module it lives in - so the references arrive as a list. Entries that
         /// are null or empty are dropped by the template rather than by the caller, because most

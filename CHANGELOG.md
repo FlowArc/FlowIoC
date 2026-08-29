@@ -26,6 +26,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Library/PackageCache` that path carries a hash that changes with every version - so the
   answer belongs in the assembly definition, which travels with the package.
 
+- A test module is wired to the module it sits under. `Create Module` gave a test module a
+  reference to FlowIoC and to its parent's Shared assembly, but not to the parent itself, so the
+  first thing a test module tried to test would not compile until somebody edited the asmdef by
+  hand. A test module is the one kind allowed to reach anything, so it now gets the reference
+  outright. Every other module type is unchanged: reaching a neighbour's Models and Commands is
+  still the thing the architecture does not allow, and Shared is still how data crosses.
+
+- A test module's generated signal holder is wrapped in `#if UNITY_EDITOR`, the way its Root and
+  Context already were. It was the one file `Create Module` left unguarded, which was enough to
+  carry the whole test module into a player build.
+
+- `ModuleDeleter.DeleteModule` no longer opens a dialog of its own. It returns the list of what it
+  removed and leaves announcing to the caller, so the Delete Module window still shows its summary
+  while a batch script, an editor test or a tool driving the Editor can delete a module without a
+  modal blocking the Editor until somebody clicks it.
+
+### Added
+
+- A second agent skill, `flowioc-scaffolding`, installed into `.claude/skills` alongside
+  `flowioc-data-types`. The agent rules say not to lay a module out by hand; this is the part that
+  did not fit in them - which menu item does what, what to fill in, why the optional folders are
+  the step that is easiest to get wrong, where the `.csproj.DotSettings` files land and why, and
+  how to drive the generators from a terminal against an open Editor.
+
 ## [1.2.0] - 2026-08-27
 
 ### Added
