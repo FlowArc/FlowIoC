@@ -31,7 +31,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         {
             string rawFolderName = Path.GetFileName(modulePath);
 
-            string finalAssemblyName = ConvertToModuleAssemblyName(rawFolderName);
+            string finalAssemblyName = GetParsedAssemblyName(rawFolderName);
 
             string assemblyFileName = finalAssemblyName + ".asmdef";
             string assemblyFilePath = Path.Combine(modulePath, assemblyFileName);

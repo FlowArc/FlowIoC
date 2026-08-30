@@ -8,54 +8,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 {
     internal partial class ModuleGenerator
     {
-        private static string ConvertToModuleAssemblyName(string rawName)
-        {
-            const string prefix = "Modules.";
-
-            if (rawName.EndsWith("ScreenModule", StringComparison.OrdinalIgnoreCase))
-            {
-                string coreName = rawName.Substring(0, rawName.Length - "ScreenModule".Length);
-                return prefix + coreName + ".Screen";
-            }
-            else if (rawName.EndsWith("TestModule", StringComparison.OrdinalIgnoreCase))
-            {
-                string coreName = rawName.Substring(0, rawName.Length - "TestModule".Length);
-                return prefix + coreName + ".Test";
-            }
-            else if (rawName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
-            {
-                string coreName = rawName.Substring(0, rawName.Length - "Module".Length);
-                return prefix + coreName;
-            }
-
-            return prefix + rawName;
-        }
-
-        private static string GetParsedAssemblyName(string rawAssemblyName)
-        {
-            const string prefix = "Modules.";
-            string moduleName = rawAssemblyName;
-            string suffix = string.Empty;
-
-            if (rawAssemblyName.EndsWith("ScreenModule", StringComparison.OrdinalIgnoreCase))
-            {
-                suffix = ".Screen";
-                moduleName = rawAssemblyName.Substring(0, rawAssemblyName.Length - 12);
-            }
-            else if (rawAssemblyName.EndsWith("TestModule", StringComparison.OrdinalIgnoreCase))
-            {
-                suffix = ".Test";
-                moduleName = rawAssemblyName.Substring(0, rawAssemblyName.Length - 10);
-            }
-            else if (rawAssemblyName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
-            {
-                moduleName = rawAssemblyName.Substring(0, rawAssemblyName.Length - 6);
-            }
-
-            moduleName = moduleName.Trim();
-
-            return prefix + moduleName + suffix;
-        }
+        private static string GetParsedAssemblyName(string rawAssemblyName) =>
+            new ModuleAssemblyName().From(rawAssemblyName);
 
         /// <summary>
         /// The assembly of the module at <paramref name="parentModulePath"/>, or null when nothing

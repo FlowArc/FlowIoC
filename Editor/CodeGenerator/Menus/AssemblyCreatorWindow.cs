@@ -382,36 +382,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             return style;
         }
 
-        private static string GetParsedAssemblyName(string rawAssemblyName)
-        {
-            const string prefix = "Modules.";
-            string moduleName = rawAssemblyName;
-            string suffix = string.Empty;
-
-            if (rawAssemblyName.EndsWith("ScreenTestModule", StringComparison.OrdinalIgnoreCase))
-            {
-                suffix = ".Screen.Test";
-                moduleName = rawAssemblyName.Substring(0, rawAssemblyName.Length - 12);
-            }
-            else if (rawAssemblyName.EndsWith("ScreenModule", StringComparison.OrdinalIgnoreCase))
-            {
-                suffix = ".Screen";
-                moduleName = rawAssemblyName.Substring(0, rawAssemblyName.Length - 12);
-            }
-            else if (rawAssemblyName.EndsWith("TestModule", StringComparison.OrdinalIgnoreCase))
-            {
-                suffix = ".Test";
-                moduleName = rawAssemblyName.Substring(0, rawAssemblyName.Length - 10);
-            }
-            else if (rawAssemblyName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
-            {
-                moduleName = rawAssemblyName.Substring(0, rawAssemblyName.Length - 6);
-            }
-
-            moduleName = moduleName.Trim();
-
-            return prefix + moduleName + suffix;
-        }
+        private static string GetParsedAssemblyName(string rawAssemblyName) =>
+            new ModuleAssemblyName().From(rawAssemblyName);
 
         private static void CreateAssemblyDefinitionFile(string oldFilePath, string rawAssemblyName)
         {
