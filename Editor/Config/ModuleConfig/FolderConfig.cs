@@ -23,7 +23,13 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         {
             Folder,
             ViewsAndMediators,
+
+            // Retired: a screen's View and Mediator are generated straight into ViewsMediators,
+            // so no config lays this folder down any more. The value stays because every
+            // FolderConfig, CodeGeneratorSettings and ModuleDescriptor asset already on disk
+            // serializes these as ints - removing it would silently renumber everything below.
             ScreenViews,
+
             RootsAndContexts,
             Services,
             Controllers,
@@ -53,7 +59,12 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             SharedUnityObjects,
             SharedValueObjects,
             SharedEnums,
-            SharedConstants
+            SharedConstants,
+
+            // The module's public signal holder lives here, beside the data it publishes, so a
+            // Connector reaches it through Modules.X.Shared and no module assembly has to
+            // reference another. Signals above keeps its name and now holds the internal holder.
+            SharedSignals
         }
     }
 }

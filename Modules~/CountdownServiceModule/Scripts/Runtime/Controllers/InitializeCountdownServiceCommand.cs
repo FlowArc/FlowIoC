@@ -4,7 +4,7 @@ using FlowIoC.ConsoleModule;
 using Modules.CountdownServiceModule.Data.ValueObjects;
 using Modules.CountdownServiceModule.Models;
 using Modules.CountdownServiceModule.Services;
-using Modules.CountdownServiceModule.Signals;
+using Modules.CountdownServiceModule.Shared.Signals;
 using UnityEngine;
 
 namespace Modules.CountdownServiceModule.Controllers

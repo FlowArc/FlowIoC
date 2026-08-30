@@ -41,6 +41,24 @@ namespace FlowIoC.Editor.Help.Pages
                 "The ViewInjector component on the GameObject resolves which Context each IView "
                 + "belongs to. Registration happens as soon as that Context starts, and OnRemove runs "
                 + "when the object is destroyed.");
+
+            painter.Space();
+            painter.SubHeading("Screen views are pooled");
+            painter.Paragraph(
+                "Start is fine for a View that lives and dies with its GameObject. A ScreenView does "
+                + "not: hiding it deactivates the object and opening it again shows that same "
+                + "instance, so Awake and Start run once while the screen opens many times. Wire its "
+                + "buttons in OnEnable and drop them in OnDisable.");
+            painter.Code(
+                "private void OnEnable()\n"
+                + "{\n"
+                + "    _buyButton.onClick.AddListener(() => Buy?.Invoke());\n"
+                + "}\n"
+                + "\n"
+                + "private void OnDisable()\n"
+                + "{\n"
+                + "    _buyButton.onClick.RemoveAllListeners();\n"
+                + "}");
         }
 
         private static HelpGraph Build()

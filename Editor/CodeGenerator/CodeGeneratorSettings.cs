@@ -27,7 +27,6 @@ namespace FlowIoC.Editor.CodeGenerator
                 {FolderConfig.FolderType.ScreenModules, "zScreenModules"},
                 {FolderConfig.FolderType.ViewsAndMediators, "ViewsMediators"},
                 {FolderConfig.FolderType.ScreenConfigs, "ScreenConfigs"},
-                {FolderConfig.FolderType.ScreenViews, "ScreenViews"},
                 {FolderConfig.FolderType.RootsAndContexts, "RootsContexts"},
                 {FolderConfig.FolderType.Services, "Services"},
                 {FolderConfig.FolderType.Systems, "Systems"},
@@ -44,7 +43,8 @@ namespace FlowIoC.Editor.CodeGenerator
                 {FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"},
                 {FolderConfig.FolderType.SharedValueObjects, "ValueObjects"},
                 {FolderConfig.FolderType.SharedEnums, "Enums"},
-                {FolderConfig.FolderType.SharedConstants, "Constants"}
+                {FolderConfig.FolderType.SharedConstants, "Constants"},
+                {FolderConfig.FolderType.SharedSignals, "Signals"}
             };
 
         [HideInInspector] [SerializeField] public SerializableDictionary<string, string> DirectoryStructureConfigPaths =

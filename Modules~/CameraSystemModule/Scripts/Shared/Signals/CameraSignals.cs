@@ -1,9 +1,9 @@
 using FlowIoC.BaseModule.Signals;
-using Modules.CameraSystemModule.Data.ValueObjects;
+using Modules.CameraSystemModule.Shared.Data.ValueObjects;
 using Modules.CameraSystemModule.Shared.Enums;
 using UnityEngine;
 
-namespace Modules.CameraSystemModule.Signals
+namespace Modules.CameraSystemModule.Shared.Signals
 {
     public class CameraSignals : ISignalHolder
     {

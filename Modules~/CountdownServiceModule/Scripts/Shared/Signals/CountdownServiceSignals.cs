@@ -1,6 +1,6 @@
 using FlowIoC.BaseModule.Signals;
 
-namespace Modules.CountdownServiceModule.Signals
+namespace Modules.CountdownServiceModule.Shared.Signals
 {
     public class CountdownServiceSignals : ISignalHolder
     {

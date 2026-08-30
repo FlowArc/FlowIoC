@@ -1,7 +1,8 @@
 {
   "name": "Modules.CameraSystem.Shared",
   "references": [
-    "FlowIoC"
+    "FlowIoC",
+    "Unity.Cinemachine"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

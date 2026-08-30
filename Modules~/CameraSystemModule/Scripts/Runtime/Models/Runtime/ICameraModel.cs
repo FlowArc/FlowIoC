@@ -1,4 +1,4 @@
-using Modules.CameraSystemModule.Data.ValueObjects;
+using Modules.CameraSystemModule.Shared.Data.ValueObjects;
 using Modules.CameraSystemModule.Shared.Enums;
 using Unity.Cinemachine;
 using UnityEngine;

@@ -59,13 +59,25 @@ public class SettingsScreenView : ScreenView
     public Action<bool> MusicToggled;
     public Action       CloseClicked;
 
-    private void Start()
+    private void OnEnable()
     {
         _musicToggle.onValueChanged.AddListener(v => MusicToggled?.Invoke(v));
         _closeButton.onClick.AddListener(() => CloseClicked?.Invoke());
     }
+
+    private void OnDisable()
+    {
+        _musicToggle.onValueChanged.RemoveAllListeners();
+        _closeButton.onClick.RemoveAllListeners();
+    }
 }
 ```
+
+`OnEnable` and `OnDisable`, not `Awake` or `Start`. A screen is pooled: hiding it deactivates
+the GameObject and parks it, and opening it again shows that same instance. `Awake` and `Start`
+run once for a screen that opens fifty times, so a listener added there is added once and never
+removed — which looks fine until you subscribe again somewhere else and every click fires twice.
+Wiring on enable and unwiring on disable keeps one listener per open.
 
 Its mediator is a normal `IMediator` — the screen module does not introduce a
 different kind:

@@ -2,7 +2,8 @@
   "name": "Modules.CountdownService.Test",
   "references": [
     "FlowIoC",
-    "Modules.CountdownService"
+    "Modules.CountdownService",
+    "Modules.CountdownService.Shared"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

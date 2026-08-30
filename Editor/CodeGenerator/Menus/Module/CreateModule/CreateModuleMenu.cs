@@ -70,6 +70,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _registry = new ModuleRegistryFactory().FromProject();
             _selectionRules = new ModuleSelectionRules();
             SelectSignalsFolderByDefault();
+            SelectSharedFolderByDefault();
         }
 
         private void OnGUI()

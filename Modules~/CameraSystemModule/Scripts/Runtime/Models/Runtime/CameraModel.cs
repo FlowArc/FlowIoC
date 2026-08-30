@@ -5,7 +5,7 @@ using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Constructables;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
-using Modules.CameraSystemModule.Data.ValueObjects;
+using Modules.CameraSystemModule.Shared.Data.ValueObjects;
 using Modules.CameraSystemModule.RootsContexts;
 using Modules.CameraSystemModule.Shared.Enums;
 using Unity.Cinemachine;

@@ -51,9 +51,21 @@ so follow the rules below deliberately.
   doing the Mediator's job.
 - A Mediator drives exactly one View. It listens to signals and dispatches them, and holds
   no game rules either.
+- A `ScreenView` wires its buttons in `OnEnable` and drops them in `OnDisable`, never in
+  `Awake` or `Start`. A screen is pooled: hiding it deactivates the object and reopening it
+  shows the same instance, so `Awake` runs once while the screen opens many times.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
   what it announces. A module's signals are its public surface - together with the
   interface of a Service, which is the one thing another module may reference directly.
+- The public signal holder lives in `Scripts/Shared/Signals/`, so it compiles into the
+  module's Shared assembly. A Connector reaches a module's signals through
+  `Modules.Player.Shared` and never through `Modules.Player`, which is what keeps one
+  module's assembly from having to reference another's. Whatever a public signal carries
+  lives in Shared too.
+- `Scripts/Runtime/Signals/` holds the module's **internal** holder,
+  `PlayerInternalSignals`: what the module says to its own commands, dispatched by nothing
+  outside its own assembly. It has no `Incoming` and no `Outgoing` - those two halves
+  describe a boundary, and an internal signal never crosses one.
 
 ### Injection targets properties, never fields
 
@@ -92,15 +104,16 @@ Modules/
         │   ├── Models/
         │   ├── RootsContexts/
         │   ├── Services/            # self-contained, reusable
-        │   ├── Signals/
+        │   ├── Signals/             # PlayerInternalSignals - the module's own traffic
         │   ├── Systems/             # specific to this game
         │   └── ViewsMediators/
-        └── Shared/                  # optional - Modules.Player.Shared.asmdef
+        └── Shared/                  # Modules.Player.Shared.asmdef - ticked by default
             ├── Constants/
             ├── Data/
             │   ├── UnityObjects/
             │   └── ValueObjects/
-            └── Enums/
+            ├── Enums/
+            └── Signals/             # PlayerSignals - the module's public surface
 ```
 
 `Create Command`, `Create Model` and `Create View` place their files correctly on their
@@ -108,10 +121,14 @@ own. Prefer them over writing files by hand.
 
 ### Publishing data through Shared
 
-A module that has to hand data to another module puts it in `Scripts/Shared/`, which is
-an assembly of its own - `Modules.Player.Shared` beside `Modules.Player`. Only data lives
-there: value objects, the ScriptableObjects built out of them, and the enums and constants
-those need. No Model, no Command, no View.
+Everything a module offers the rest of the project goes in `Scripts/Shared/`, which is an
+assembly of its own - `Modules.Player.Shared` beside `Modules.Player`. That is the public
+signal holder, the value objects and ScriptableObjects the module publishes, and the enums
+and constants those need. No Model, no Command, no View.
+
+Because the holder lives there, a public signal may only carry a type that lives there too.
+A `Signal<CameraCVO>` means `CameraCVO` belongs in `Shared/Data/ValueObjects/`, not in the
+Runtime folder of the same name.
 
 Whoever reads that data references `Modules.Player.Shared` and never `Modules.Player`. So
 `PlayerScreenModule` can read `CD_PlayerRules` without gaining access to `PlayerModel` or
@@ -127,9 +144,10 @@ The parent module references its own Shared assembly too. The asmdef inside
 `Scripts/Shared/` takes that folder out of `Modules.Player`, so without the reference a
 module could not read the data it publishes.
 
-Shared is offered on main modules only. A screen or test module holds nothing another
-module reads; if two modules need the same data and neither owns it, that data belongs in
-a module of its own, the way a shared Service does.
+Shared is offered on main, sub and screen modules, and starts ticked. A test module is the
+one kind without it: it holds nothing another module reads, and it is allowed to reference
+anything directly anyway. If two modules need the same data and neither owns it, that data
+belongs in a module of its own, the way a shared Service does.
 
 Namespaces follow the folder, the way they already do for a module: a value object under
 `Scripts/Shared/Data/ValueObjects/` is in `Modules.PlayerModule.Shared.Data.ValueObjects`,
@@ -182,7 +200,7 @@ means is the table above.
 
 ### The smallest complete flow
 
-Signals - the module's whole public surface:
+Signals - the module's whole public surface, in `Scripts/Shared/Signals/`:
 
 ```csharp
 public class PlayerSignals : ISignalHolder
@@ -200,6 +218,17 @@ public class PlayerSignalsIncoming
 public class PlayerSignalsOutgoing
 {
     public Signal<double> CurrencyChanged = new();
+}
+```
+
+Internal signals - what the module says to itself, in `Scripts/Runtime/Signals/`. No
+`Incoming`, no `Outgoing`, and internal so nothing outside the assembly can dispatch them:
+
+```csharp
+internal class PlayerInternalSignals : ISignalHolder
+{
+    public Signal Tick = new(hideCommandLog: true);
+    public Signal<double> RecalculateInterest = new();
 }
 ```
 

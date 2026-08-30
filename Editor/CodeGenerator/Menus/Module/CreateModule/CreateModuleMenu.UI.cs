@@ -109,10 +109,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 FolderConfig.FolderType.Signals, CREATE_SIGNALS_LABEL, ModuleType.Test);
 
         /// <summary>
-        /// The Shared assembly a module publishes its data through. Only the main module layout
-        /// carries the folder, so the toggle draws itself for main modules and nowhere else
-        /// without having to name the other types. It starts off: a module that hands nothing to
-        /// its neighbours has no use for a second assembly.
+        /// The Shared assembly a module publishes its data and its signal holder through. The main
+        /// and screen layouts carry the folder and the test layout does not, so the toggle draws
+        /// itself where it belongs without having to name the types. It starts ticked, because a
+        /// module created without Shared has nowhere to put its public surface.
         /// </summary>
         private void CreateSharedToggle() =>
             OptionalFolderToggle(FolderConfig.FolderType.Shared, CREATE_SHARED_LABEL);
@@ -184,6 +184,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             if (_selectedOptionalFolders.Contains(signalsFolder)) return;
 
             _selectedOptionalFolders.Add(signalsFolder);
+        }
+
+        /// <summary>
+        /// Shared starts ticked. It stays a toggle - a module that publishes nothing can still be
+        /// left without one - but the public signal holder lives in that assembly now, so a module
+        /// created without Shared has nowhere to put the surface every other module talks to it
+        /// through.
+        /// </summary>
+        private void SelectSharedFolderByDefault()
+        {
+            FolderConfig sharedFolder = FindFolderInConfig(FolderConfig.FolderType.Shared);
+
+            if (sharedFolder == null || !sharedFolder.IsOptional) return;
+            if (_selectedModuleType == ModuleType.Test) return;
+            if (_selectedOptionalFolders.Contains(sharedFolder)) return;
+
+            _selectedOptionalFolders.Add(sharedFolder);
         }
 
         private FolderConfig FindSignalsFolder() => FindFolderInConfig(FolderConfig.FolderType.Signals);

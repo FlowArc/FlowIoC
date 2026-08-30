@@ -1,7 +1,7 @@
 using System;
 using Unity.Cinemachine;
 
-namespace Modules.CameraSystemModule.Data.ValueObjects
+namespace Modules.CameraSystemModule.Shared.Data.ValueObjects
 {
     [Serializable]
     public struct CameraCVO

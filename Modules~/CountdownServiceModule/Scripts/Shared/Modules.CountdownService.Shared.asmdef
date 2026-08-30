@@ -1,8 +1,7 @@
 {
-  "name": "Modules.CountdownService",
+  "name": "Modules.CountdownService.Shared",
   "references": [
-    "FlowIoC",
-    "Modules.CountdownService.Shared"
+    "FlowIoC"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

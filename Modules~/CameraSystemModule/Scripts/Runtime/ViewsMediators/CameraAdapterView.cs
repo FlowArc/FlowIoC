@@ -1,7 +1,7 @@
 using System;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.ViewsMediators.View;
-using Modules.CameraSystemModule.Data.ValueObjects;
+using Modules.CameraSystemModule.Shared.Data.ValueObjects;
 using Modules.CameraSystemModule.Shared.Enums;
 using UnityEngine;
 using UnityEngine.Rendering;
