@@ -75,7 +75,7 @@ Or declare the scoped registry yourself in `Packages/manifest.json`:
     }
   ],
   "dependencies": {
-    "com.flowarc.flowioc.core": "1.2.0"
+    "com.flowarc.flowioc.core": "1.3.0"
   }
 }
 ```
@@ -89,7 +89,7 @@ URL.
 In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
 
 ```
-https://github.com/FlowArc/FlowIoC.git#1.2.0
+https://github.com/FlowArc/FlowIoC.git#1.3.0
 ```
 
 Or add it to `Packages/manifest.json` directly:
@@ -97,7 +97,7 @@ Or add it to `Packages/manifest.json` directly:
 ```json
 {
   "dependencies": {
-    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.2.0"
+    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.3.0"
   }
 }
 ```

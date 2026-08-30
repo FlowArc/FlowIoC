@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-08-31
+
 ### Fixed
+
+- Module assembly names are built in one tested place. Four hand-rolled copies read the suffix off
+  a module folder without asking what stood in front of it, so a module named exactly
+  `ScreenModule` matched the screen rule with an empty parent and came out as `Modules..Screen`.
+  An empty parent falls through to the plain module rule now, and the `ScreenTestModule` branch no
+  longer strips twelve characters of a sixteen character suffix.
 
 - The code style FlowIoC ships now reaches a project on its own. The naming rules that decide what
   a `CD_` asset or a `PVO` value object may be called live in the solution level settings file, and
@@ -44,6 +52,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A module publishes its signals through Shared. The public holder lives in
+  `Scripts/Shared/Signals/` and compiles into the module's Shared assembly, so a Connector reaches
+  a module through `Modules.X.Shared` alone and no module's assembly ever has to reference
+  another's. What a public signal carries moves to Shared with it. The module's own traffic gets a
+  second holder, `XInternalSignals` in `Scripts/Runtime/Signals/`, with no `Incoming` and no
+  `Outgoing`: those two halves describe a boundary, and an internal signal never crosses one.
+  Screen modules therefore get a Shared assembly of their own, and the Create Shared toggle starts
+  ticked for them.
+
+- Screen views and mediators are generated straight into `ViewsMediators/`; the `ScreenViews`
+  folder is gone. A generated screen view wires its buttons in `OnEnable` and drops them in
+  `OnDisable` rather than in `Awake`, because a screen is pooled - `Awake` runs once while the
+  screen opens many times.
+
 - The Help window's sidebar nests. A category holds sections rather than pages, so Structure and
   Editor Tools fold out inside Wiki instead of competing with it at the top level. Closed, the
   sidebar is now three entries - Welcome, Wiki, Modules - and a reader picks the part of FlowIoC
@@ -53,6 +75,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   name on one line and the list no longer shifts under the cursor the moment the scrollbar appears.
 
 ### Added
+
+- **The setup modules.** A project that gets FlowIoC and has no modules of its own is given the six
+  a game starts with, the first time the Editor opens on it: `MainModule` launches the game and
+  owns `MainScene`, `ScreenModule` holds the ScreenManager and the layers screens open into,
+  `ConnectorModule` is where the modules meet, `GameplayModule` is the game, and
+  `MainScreenModule` and `GameplayScreenModule` sit inside their parents. Together they are a flow
+  that already runs - the game launches, the main screen opens, picking Easy, Medium or Hard closes
+  it and opens the gameplay screen with the difficulty carried as a signal parameter - so a reader
+  can see how FlowIoC is wired rather than be told.
+
+  There is no button and no dialog. The set arrives registered: the module index, the `FlowLogType`
+  channels, the `.csproj.DotSettings`, the Addressables entries for both screens, and `MainScene`
+  at the front of the build list and open. It installs all of it or none - the payload holds GUID
+  references that cross module boundaries, so half a set is a set that does not work, and every
+  target is checked before anything is written.
+
+  It happens once. `ProjectSettings/FlowIoCSetup.json` records that it did and belongs in source
+  control, so delete one of the modules and it stays deleted. A project that already had modules of
+  its own when FlowIoC arrived is marked and left alone - having them is a decision - and can still
+  take the set from the button on the Setup Modules page in the Help window. A batch run writes
+  nothing at all.
+
+- **CameraSystemModule.** Named Cinemachine cameras switched by signal, per-camera last positions
+  and custom blends as data, with two adapters that register a rig's cameras on their own.
+  Installing it copies its own folder and nothing else, so its Help page carries the connector
+  sub-context to write by hand. Its assemblies reference Cinemachine and the render pipeline core,
+  which a project may not have: what is absent is worked out and added first, and the intent
+  survives the domain reload the resolve usually triggers.
+
+- Shared has a toggle of its own in `Create Module`, beside Create Signals, rather than only being
+  reachable by ticking its folder in the preview tree. It starts off for a plain module - one that
+  hands nothing to its neighbours has no use for a second assembly - and ticked for a screen
+  module, which publishes its signals through Shared. `Tools/FlowIoC/Help` becomes Welcome, Wiki
+  and Modules, each opening the window on the first topic of that section rather than always on the
+  introduction.
 
 - Ready-made modules, installed from the Help window. A module the package ships lives in
   `Modules~/`, which Unity does not import, and the Install button on its Help page copies it into
