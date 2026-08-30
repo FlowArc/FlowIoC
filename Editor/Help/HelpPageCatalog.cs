@@ -43,7 +43,8 @@ namespace FlowIoC.Editor.Help
                         new AgentRulesPage(),
                         new AgentSkillsPage())),
                 new HelpSection("Modules", "Prefab Icon",
-                    new CountdownServiceModulePage())
+                    new CountdownServiceModulePage(),
+                    new CameraSystemModulePage())
             };
 
             var pages = new List<IHelpPage>();
