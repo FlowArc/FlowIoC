@@ -104,15 +104,6 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             new FolderConfig
                             {
                                 FolderName = "ViewsMediators",
-                                SubFolders = new List<FolderConfig>
-                                {
-                                    new FolderConfig
-                                    {
-                                        FolderName = "Screens",
-                                        Type = FolderConfig.FolderType.ScreenViews,
-                                        IsMandatory = true
-                                    },
-                                },
                                 Type = FolderConfig.FolderType.ViewsAndMediators,
                                 IsMandatory = true,
                                 IsNamespaceProvider = true
@@ -162,6 +153,61 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     new FolderConfig
                     {
                         FolderName = "Editor", Type = FolderConfig.FolderType.Editor, IsMandatory = true, IsNamespaceProvider = true
+                    },
+                    // A screen module publishes its signal holder the way any other module does, and
+                    // a Connector reaches that holder through this assembly rather than through the
+                    // screen's own. Shared is no longer a main module privilege for that reason.
+                    new FolderConfig
+                    {
+                        FolderName = "Shared",
+                        SubFolders = new List<FolderConfig>
+                        {
+                            new FolderConfig
+                            {
+                                FolderName = "Data",
+                                SubFolders = new List<FolderConfig>
+                                {
+                                    new FolderConfig
+                                    {
+                                        FolderName = "UnityObjects", Type = FolderConfig.FolderType.SharedUnityObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    },
+                                    new FolderConfig
+                                    {
+                                        FolderName = "ValueObjects", Type = FolderConfig.FolderType.SharedValueObjects, IsMandatory = true,
+                                        IsNamespaceProvider = true
+                                    }
+                                },
+                                Type = FolderConfig.FolderType.Folder,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderConfig
+                            {
+                                FolderName = "Enums",
+                                Type = FolderConfig.FolderType.SharedEnums,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderConfig
+                            {
+                                FolderName = "Constants",
+                                Type = FolderConfig.FolderType.SharedConstants,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            },
+                            new FolderConfig
+                            {
+                                FolderName = "Signals",
+                                Type = FolderConfig.FolderType.SharedSignals,
+                                IsMandatory = true,
+                                IsNamespaceProvider = true
+                            }
+                        },
+                        Type = FolderConfig.FolderType.Shared,
+                        IsMandatory = false,
+                        IsOptional = true,
+                        IsNamespaceProvider = true
                     }
                 },
                 Type = FolderConfig.FolderType.Folder,
@@ -228,6 +274,15 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 Debug.Log($"DirectoryStructureConfig created at: {configPath}");
             }
 
+            bool healed = config.EnsureSharedBranch(settings);
+            healed |= config.EnsureSharedSignalsFolder(settings);
+
+            if (healed)
+            {
+                EditorUtility.SetDirty(config);
+                AssetDatabase.SaveAssets();
+            }
+
             return config;
         }
 
@@ -276,11 +331,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Signals, "Signals"),
                             FolderConfig.FolderType.Signals, null, true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators],
-                            FolderConfig.FolderType.ViewsAndMediators, new List<FolderConfig>
-                            {
-                                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenViews],
-                                    FolderConfig.FolderType.ScreenViews, null, true)
-                            }, true, isNamespaceProvider: true),
+                            FolderConfig.FolderType.ViewsAndMediators, null, true, isNamespaceProvider: true),
                         CreateFolder("Functions", FolderConfig.FolderType.Folder, null, true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Services], FolderConfig.FolderType.Services,
                             null, false, true),
@@ -290,7 +341,8 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         CreateFolder("Entities", FolderConfig.FolderType.Folder, null, true)
                     }, true, false, false),
                     CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Editor], FolderConfig.FolderType.Editor, null,
-                        true)
+                        true),
+                    BuildSharedBranch(codeGenSettings)
                 }, true, false, false),
                 CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules], FolderConfig.FolderType.SubModules,
                     null, false, true, false),

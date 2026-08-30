@@ -42,24 +42,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             if (createSignals)
             {
-                string signalsPath = directoryConfigMap[selectedModuleType]
-                    .FindFullFolderPathByID(FolderConfig.FolderType.Signals, modulePath);
-
-                if (!string.IsNullOrEmpty(signalsPath))
-                {
-                    string signalsName = CreateSignals(signalsPath, modulePath, moduleName,
-                        selectedModuleType == ModuleType.Test, out string signalsNamespace);
-
-                    if (createContext && !string.IsNullOrEmpty(rootsAndContextsPath))
-                    {
-                        CodeGeneratorUtils.BindSignalsInContext(
-                            rootsAndContextsPath + "/" + moduleName + "Context.cs", signalsName, signalsNamespace);
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning(SIGNALS_WARNING);
-                }
+                WriteSignalHolders(
+                    moduleName, modulePath, selectedModuleType, directoryConfigMap, createContext, rootsAndContextsPath);
             }
 
             if (createScreen)
@@ -114,26 +98,83 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         }
 
         /// <summary>
-        /// Writes the module's signal holder and hands back the class name and the namespace it
-        /// landed in. The namespace segment is read off the folder the config resolved rather than
-        /// hardcoded, because the Signals folder can be renamed from the code generator settings
-        /// like any other tracked folder.
+        /// Writes the module's two signal holders and binds whichever of them landed into the
+        /// Context.
+        ///
+        /// The public holder goes into Scripts/Shared/Signals so it compiles into the module's
+        /// Shared assembly: a Connector reaches a module's signals through Modules.X.Shared and
+        /// never through the assembly holding its Models and Commands. A module created without
+        /// Shared has no such folder, and the holder falls back to Scripts/Runtime/Signals so the
+        /// module still works - it just cannot be wired to from outside without a direct reference.
+        ///
+        /// The internal holder always goes into Scripts/Runtime/Signals, because it is the module
+        /// talking to its own commands and nothing outside the module may dispatch it.
         /// </summary>
-        private static string CreateSignals(string path, string modulePath, string moduleName, bool isTest,
-            out string signalsNamespace)
+        private static void WriteSignalHolders(
+            string moduleName,
+            string modulePath,
+            ModuleType selectedModuleType,
+            Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
+            bool createContext,
+            string rootsAndContextsPath)
         {
-            string signalsName = moduleName + "Signals";
+            bool isTest = selectedModuleType == ModuleType.Test;
+            DirectoryStructureConfig config = directoryConfigMap[selectedModuleType];
 
-            string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
-            signalsNamespace = $"{moduleNamespace}.{Path.GetFileName(path)}";
+            string signalsPath = config.FindFullFolderPathByID(FolderConfig.FolderType.Signals, modulePath);
+            string sharedSignalsPath = config.FindFullFolderPathByID(FolderConfig.FolderType.SharedSignals, modulePath);
+
+            if (!string.IsNullOrEmpty(sharedSignalsPath) && !Directory.Exists(sharedSignalsPath))
+                sharedSignalsPath = null;
+
+            string publicSignalsPath = string.IsNullOrEmpty(sharedSignalsPath) ? signalsPath : sharedSignalsPath;
+
+            if (string.IsNullOrEmpty(publicSignalsPath))
+            {
+                Debug.LogWarning(SIGNALS_WARNING);
+                return;
+            }
+
+            string contextPath = rootsAndContextsPath + "/" + moduleName + "Context.cs";
+            bool bindInContext = createContext && !string.IsNullOrEmpty(rootsAndContextsPath);
+
+            string signalsName = CreateSignals(publicSignalsPath, moduleName + "Signals", "TempSignals",
+                CodeGeneratorStrings.TempSignalsPath, isTest, true, out string signalsNamespace);
+
+            if (bindInContext)
+                CodeGeneratorUtils.BindSignalsInContext(contextPath, signalsName, signalsNamespace);
+
+            if (string.IsNullOrEmpty(signalsPath)) return;
+
+            string internalName = CreateSignals(signalsPath, moduleName + "InternalSignals", "TempInternalSignals",
+                CodeGeneratorStrings.TempInternalSignalsPath, isTest, false, out string internalNamespace);
+
+            if (bindInContext)
+                CodeGeneratorUtils.BindSignalsInContext(contextPath, internalName, internalNamespace, "_internalSignals");
+        }
+
+        /// <summary>
+        /// Writes one signal holder and hands back the class name and the namespace it landed in.
+        /// The namespace segment is read off the folder the config resolved rather than hardcoded,
+        /// because a Signals folder can be renamed from the code generator settings like any other
+        /// tracked folder.
+        /// </summary>
+        private static string CreateSignals(string path, string signalsName, string tempClassName,
+            string tempClassPath, bool isTest, bool makePublic, out string signalsNamespace)
+        {
+            // Read off the folder rather than assembled from the module namespace and one segment:
+            // the public holder sits two namespace providers deep, under Shared and then Signals,
+            // and this is the lookup that already knows which folders provide a namespace at all.
+            signalsNamespace = NamespaceUtility.GetFullNamespaceForFile(Path.Combine(path, signalsName + ".cs"));
 
             CodeGeneratorUtils.CreateSignals(
                 signalsName,
-                "TempSignals",
+                tempClassName,
                 path,
-                CodeGeneratorStrings.TempSignalsPath,
+                tempClassPath,
                 signalsNamespace,
-                isTest
+                isTest,
+                makePublic
             );
 
             return signalsName;

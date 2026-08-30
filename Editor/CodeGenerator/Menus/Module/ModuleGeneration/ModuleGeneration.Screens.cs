@@ -33,17 +33,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string screenAsmdefName = moduleName + "Module";
             string screenAsmdefPath = Path.Combine(modulePath, screenAsmdefName + ".asmdef");
 
-            // The parent's Shared assembly, not the parent itself: a screen reads the data its
-            // module publishes and stays out of that module's Models and Commands. The screen
-            // layout has no Shared folder of its own, so this is the only Shared reference it
-            // ever gets.
-            CreateAssemblyDefinitionFile(screenAsmdefPath, screenAsmdefName, parentSharedAssemblyName);
+            // Two Shared assemblies are in play. The parent's, because a screen reads the data its
+            // module publishes and stays out of that module's Models and Commands. And the
+            // screen's own, because that is where its signal holder lives - a Connector reaches a
+            // screen the same way it reaches any other module, through Modules.X.Shared.
+            string screenSharedAssemblyName = new SharedAssemblyDefinition()
+                .CreateFor(modulePath, directoryConfigMap[ModuleType.Screen], GetParsedAssemblyName(screenAsmdefName));
+
+            CreateAssemblyDefinitionFile(screenAsmdefPath, screenAsmdefName, screenSharedAssemblyName, parentSharedAssemblyName);
             AddNamespaceExceptions(directoryConfigMap[ModuleType.Screen], modulePath);
+            AddSharedNamespaceExceptions(directoryConfigMap[ModuleType.Screen], modulePath, screenSharedAssemblyName);
 
             string testAsmdefName = moduleName + "TestModule";
             string testAsmdefPath = Path.Combine(testModulePath, testAsmdefName + ".asmdef");
+            // The screen's own Shared assembly is listed as well as the screen's: asmdef references
+            // are not transitive, so a test module that only names the screen could not see the
+            // signal holder the screen publishes.
             CreateAssemblyDefinitionFile(testAsmdefPath, testAsmdefName, GetParsedAssemblyName(screenAsmdefName),
-                parentSharedAssemblyName);
+                screenSharedAssemblyName, parentSharedAssemblyName);
             AddNamespaceExceptions(directoryConfigMap[ModuleType.Test], testModulePath);
 
             AssetDatabase.Refresh();
@@ -54,9 +61,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             );
 
             string viewsAndMediatorsPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderConfig.FolderType.ScreenViews, modulePath);
+                .FindFullFolderPathByID(FolderConfig.FolderType.ViewsAndMediators, modulePath);
             string testViewsAndMediatorsPath = directoryConfigMap[ModuleType.Test]
-                .FindFullFolderPathByID(FolderConfig.FolderType.ScreenViews, testModulePath);
+                .FindFullFolderPathByID(FolderConfig.FolderType.ViewsAndMediators, testModulePath);
             string scenePath = directoryConfigMap[ModuleType.Test]
                 .FindFullFolderPathByID(FolderConfig.FolderType.Scenes, testModulePath);
             string screenPrefabPath = directoryConfigMap[ModuleType.Screen]
@@ -70,21 +77,37 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string signalsPath = directoryConfigMap[ModuleType.Screen]
                 .FindFullFolderPathByID(FolderConfig.FolderType.Signals, modulePath);
 
+            string sharedSignalsPath = directoryConfigMap[ModuleType.Screen]
+                .FindFullFolderPathByID(FolderConfig.FolderType.SharedSignals, modulePath);
+
+            if (!string.IsNullOrEmpty(sharedSignalsPath) && !Directory.Exists(sharedSignalsPath))
+                sharedSignalsPath = null;
+
             // A screen's signals are not optional the way another module's are: the screen module
             // generates no Context of its own, so the holder is the only surface anything outside
-            // the screen has to talk to it through.
+            // the screen has to talk to it through. It goes in Shared, so a Connector can reach it
+            // without referencing the screen's own assembly.
+            string publicSignalsPath = string.IsNullOrEmpty(sharedSignalsPath) ? signalsPath : sharedSignalsPath;
+
             string signalsName = null;
             string signalsNamespace = null;
 
-            if (!string.IsNullOrEmpty(signalsPath))
+            if (!string.IsNullOrEmpty(publicSignalsPath))
             {
                 // The holder belongs to the screen module itself, which ships in a build, so it is
                 // never the Editor-only kind - the test module beside it has its own.
-                signalsName = CreateSignals(signalsPath, modulePath, moduleName, false, out signalsNamespace);
+                signalsName = CreateSignals(publicSignalsPath, moduleName + "Signals", "TempSignals",
+                    CodeGeneratorStrings.TempSignalsPath, false, true, out signalsNamespace);
             }
             else
             {
                 Debug.LogWarning(SIGNALS_WARNING);
+            }
+
+            if (!string.IsNullOrEmpty(signalsPath))
+            {
+                CreateSignals(signalsPath, moduleName + "InternalSignals", "TempInternalSignals",
+                    CodeGeneratorStrings.TempInternalSignalsPath, false, false, out _);
             }
 
             CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames, false, signalsName, signalsNamespace);

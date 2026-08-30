@@ -453,11 +453,25 @@ _signals.Incoming.AddCurrency.RemoveListener(OnCurrencyAdded);
 _signals.Incoming.AddCurrency.Dispatch(100d);
 ```
 
-Grouping signals in an `ISignalHolder` with `Incoming` / `Outgoing` nested classes
-is a convention, not a framework requirement — but it is what makes Connectors
-readable, so it is strongly recommended. Signals that must never leave the module
-belong in a separate `…SignalsInternal` holder bound with the plain
-`InjectionBinder`.
+A module keeps two holders, and where each one lives decides who can reach it.
+
+`PlayerSignals`, with its `Incoming` and `Outgoing` nested classes, is the module's
+public surface and lives in `Scripts/Shared/Signals/` — inside the module's Shared
+assembly. A Connector references `Modules.Player.Shared` and never `Modules.Player`,
+which is what keeps one module's assembly out of another's. Whatever a public signal
+carries has to live in Shared too.
+
+`PlayerInternalSignals` lives in `Scripts/Runtime/Signals/` and is what the module
+says to its own commands. It is `internal`, so nothing outside the module's assembly
+can dispatch it, and it has no `Incoming` or `Outgoing`: those two halves describe a
+boundary, and an internal signal never crosses one.
+
+```csharp
+internal class PlayerInternalSignals : ISignalHolder
+{
+    public Signal Tick = new(hideCommandLog: true);
+}
+```
 
 Every dispatch is logged to the Flow Console unless the signal was constructed
 with `hideCommandLog: true`.
@@ -675,6 +689,11 @@ public override void MediationBindings()
     MediationBinder.Bind<ConnectionFailView>().To<ConnectionFailMediator>();
 }
 ```
+
+`Start` is fine for a View that lives and dies with its GameObject. A `ScreenView` is
+pooled — hiding it deactivates the object and reopening it shows the same instance — so
+wire its buttons in `OnEnable` and drop them in `OnDisable` instead. See
+[Screens](Runtime/ScreenModule/Documentation/ScreenModule.md).
 
 The `ViewInjector` component lists every `IView` on the GameObject and resolves
 which Context each one belongs to — by bubbling up the hierarchy, by an explicit
@@ -996,16 +1015,16 @@ Modules/
     │   │   ├── Models/
     │   │   ├── RootsContexts/     # PlayerRoot, PlayerContext, sub-contexts
     │   │   ├── Services/          # self-contained, reusable in any project
-    │   │   ├── Signals/           # PlayerSignals, PlayerSignalsInternal
+    │   │   ├── Signals/           # PlayerInternalSignals — the module's own traffic
     │   │   ├── Systems/           # this game's own logic
-    │   │   ├── ScreenViews/
     │   │   └── ViewsMediators/
-    │   └── Shared/                # optional — Modules.Player.Shared.asmdef
+    │   └── Shared/                # Modules.Player.Shared.asmdef — ticked by default
     │       ├── Constants/
     │       ├── Data/
     │       │   ├── UnityObjects/
     │       │   └── ValueObjects/
-    │       └── Enums/
+    │       ├── Enums/
+    │       └── Signals/           # PlayerSignals — the module's public surface
     ├── zScreenModules/
     ├── zSubModules/
     └── zTestModules/
@@ -1043,7 +1062,7 @@ a Service more than one module needs.
 
 The generator creates the module folder, the assembly definition, the managed
 folders (`Controllers`, `Models`, `RootsContexts`, `Services`, `Systems`,
-`ViewsMediators`, `ScreenViews`, `UnityObjects`, `ValueObjects`, `ScreenConfigs`,
+`ViewsMediators`, `UnityObjects`, `ValueObjects`, `ScreenConfigs`,
 `Editor`, `Resources`, `Prefabs`, `Scenes`, and the three `z` folders) and —
 optionally — the `Root` / `Context` pair. Their names are not hard-coded; they come
 from the module config and can be renamed under

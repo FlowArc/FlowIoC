@@ -2,6 +2,7 @@ using System;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using Modules.CountdownServiceModule.Data.ValueObjects;
 using Modules.CountdownServiceModule.Models;
+using Modules.CountdownServiceModule.Shared.Signals;
 using Modules.CountdownServiceModule.Signals;
 
 namespace Modules.CountdownServiceModule.Services
@@ -14,7 +15,7 @@ namespace Modules.CountdownServiceModule.Services
     public class CountdownService : ICountdownService
     {
         [Inject] private ICountdownModel _countdownModel { get; set; }
-        [InjectSignal] private CountdownServiceSignalsInternal _signals { get; set; }
+        [InjectSignal] private CountdownServiceInternalSignals _signals { get; set; }
 
         public bool IsActive() => _countdownModel.IsActive;
 

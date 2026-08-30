@@ -1,7 +1,7 @@
 using FlowIoC.BaseModule.Contexts;
 using Modules.CameraSystemModule.Controllers;
 using Modules.CameraSystemModule.Models.Runtime;
-using Modules.CameraSystemModule.Signals;
+using Modules.CameraSystemModule.Shared.Signals;
 using Modules.CameraSystemModule.ViewsMediators;
 
 namespace Modules.CameraSystemModule.RootsContexts

@@ -1,6 +1,6 @@
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
-using Modules.CameraSystemModule.Data.ValueObjects;
+using Modules.CameraSystemModule.Shared.Data.ValueObjects;
 using Modules.CameraSystemModule.Models.Runtime;
 using Modules.CameraSystemModule.Shared.Enums;
 

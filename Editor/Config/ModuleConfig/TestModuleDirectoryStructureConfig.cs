@@ -107,15 +107,6 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             new FolderConfig
                             {
                                 FolderName = "ViewsMediators",
-                                SubFolders = new List<FolderConfig>
-                                {
-                                    new FolderConfig
-                                    {
-                                        FolderName = "Screens",
-                                        Type = FolderConfig.FolderType.ScreenViews,
-                                        IsMandatory = true
-                                    },
-                                },
                                 Type = FolderConfig.FolderType.ViewsAndMediators,
                                 IsMandatory = true,
                                 IsNamespaceProvider = true
@@ -274,11 +265,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Signals, "Signals"),
                             FolderConfig.FolderType.Signals, null, false, true, isNamespaceProvider: true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators],
-                            FolderConfig.FolderType.ViewsAndMediators, new List<FolderConfig>
-                            {
-                                CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenViews],
-                                    FolderConfig.FolderType.ScreenViews, null, true)
-                            }, true, isNamespaceProvider: true),
+                            FolderConfig.FolderType.ViewsAndMediators, null, true, isNamespaceProvider: true),
                         CreateFolder("Functions", FolderConfig.FolderType.Folder, null, true, isNamespaceProvider: true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Services], FolderConfig.FolderType.Services,
                             null, false, true, isNamespaceProvider: true),

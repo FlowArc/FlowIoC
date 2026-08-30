@@ -380,8 +380,14 @@ namespace FlowIoC.Editor.CodeGenerator
         /// Context already are. One unwrapped file in zTestModules would carry the whole test module
         /// into a player build.
         /// </summary>
+        /// <summary>
+        /// Writes a signal holder from a template. <paramref name="makePublic"/> is what separates
+        /// the two a module gets: the public holder in Shared is what every other module talks to
+        /// it through, while the internal one stays internal because nothing outside the module's
+        /// own assembly has any business dispatching it.
+        /// </summary>
         public static void CreateSignals(string signalsName, string tempClassName, string signalsPath,
-            string tempClassPath, string namespaceName, bool isTest)
+            string tempClassPath, string namespaceName, bool isTest, bool makePublic = true)
         {
             string newSignalsPath = signalsPath + "/" + signalsName + ".cs";
 
@@ -400,7 +406,9 @@ namespace FlowIoC.Editor.CodeGenerator
                 }
                 else
                 {
-                    content = content.Replace("internal class", "public class");
+                    if (makePublic)
+                        content = content.Replace("internal class", "public class");
+
                     content = content.Replace(tempClassName, signalsName);
                 }
 
@@ -421,7 +429,8 @@ namespace FlowIoC.Editor.CodeGenerator
         /// A Context that owns its signals holds it as a plain field rather than an injected one -
         /// it is the thing doing the binding, so there is nothing to inject it from.
         /// </summary>
-        public static void BindSignalsInContext(string contextPath, string signalsClassName, string signalsNamespace)
+        public static void BindSignalsInContext(string contextPath, string signalsClassName, string signalsNamespace,
+            string defaultFieldName = "_signals")
         {
             if (!File.Exists(contextPath)) return;
 
@@ -429,7 +438,7 @@ namespace FlowIoC.Editor.CodeGenerator
 
             if (contextLines.Any(line => line.Contains($"InjectionBinderCrossContext.Bind<{signalsClassName}>()"))) return;
 
-            string fieldName = ResolveSignalFieldName(contextLines, signalsClassName, "_signals");
+            string fieldName = ResolveSignalFieldName(contextLines, signalsClassName, defaultFieldName);
             bool fieldDeclared = contextLines.Any(line => line.Contains($"{signalsClassName} {fieldName}"));
 
             List<string> newContextContent = new List<string>();

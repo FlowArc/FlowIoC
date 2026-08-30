@@ -2,6 +2,7 @@ using FlowIoC.BaseModule.Contexts;
 using Modules.CountdownServiceModule.Controllers;
 using Modules.CountdownServiceModule.Models;
 using Modules.CountdownServiceModule.Services;
+using Modules.CountdownServiceModule.Shared.Signals;
 using Modules.CountdownServiceModule.Signals;
 
 namespace Modules.CountdownServiceModule.RootsContexts
@@ -9,14 +10,14 @@ namespace Modules.CountdownServiceModule.RootsContexts
     public class CountdownServiceContext : Context
     {
         private CountdownServiceSignals _signals;
-        private CountdownServiceSignalsInternal _internalSignals;
+        private CountdownServiceInternalSignals _internalSignals;
 
         public override void SignalBindings()
         {
             base.SignalBindings();
 
             _signals = InjectionBinderCrossContext.Bind<CountdownServiceSignals>();
-            _internalSignals = InjectionBinderCrossContext.Bind<CountdownServiceSignalsInternal>();
+            _internalSignals = InjectionBinderCrossContext.Bind<CountdownServiceInternalSignals>();
         }
 
         public override void InjectionBindings()

@@ -111,12 +111,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         }
 
         /// <summary>
-        /// Main and sub modules share one folder layout, and it is the only one with a Shared
-        /// folder in it. A screen or test module would have nowhere to put it.
+        /// Every layout with a Shared folder in it. A screen module has one now that its public
+        /// signal holder lives there; a test module still does not, because it holds nothing
+        /// another module reads.
         /// </summary>
         private bool CanSelect(ModuleKind kind)
         {
-            return kind == ModuleKind.Main || kind == ModuleKind.Sub;
+            return kind == ModuleKind.Main || kind == ModuleKind.Sub || kind == ModuleKind.Screen;
         }
 
         private void DisplayAddButton()

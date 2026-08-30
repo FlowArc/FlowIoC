@@ -45,9 +45,23 @@ namespace FlowIoC.Editor.Help.Pages
                 + "_signals.Incoming.AddCurrency.RemoveListener(OnCurrencyAdded);\n"
                 + "\n"
                 + "_signals.Incoming.AddCurrency.Dispatch(100d);");
-            painter.Note(
-                "A signal that must never leave the module belongs in a separate PlayerSignalsInternal "
-                + "holder, bound with the plain InjectionBinder rather than the cross-context one.");
+            painter.Space();
+            painter.SubHeading("Two holders, two folders");
+            painter.Paragraph(
+                "PlayerSignals is the module's public surface and lives in Scripts/Shared/Signals, "
+                + "inside the module's Shared assembly. A Connector references Modules.Player.Shared "
+                + "and never Modules.Player, which is what keeps one module's assembly out of "
+                + "another's. Whatever a public signal carries has to live in Shared too.");
+            painter.Paragraph(
+                "A signal that must never leave the module goes in PlayerInternalSignals, in "
+                + "Scripts/Runtime/Signals. It is internal, so nothing outside the module's assembly "
+                + "can dispatch it, and it carries no Incoming and no Outgoing: those two halves "
+                + "describe a boundary, and an internal signal never crosses one.");
+            painter.Code(
+                "internal class PlayerInternalSignals : ISignalHolder\n"
+                + "{\n"
+                + "    public Signal Tick = new(hideCommandLog: true);\n"
+                + "}");
         }
 
         private static HelpGraph Build()

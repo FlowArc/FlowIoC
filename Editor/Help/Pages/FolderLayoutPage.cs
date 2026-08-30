@@ -37,15 +37,16 @@ namespace FlowIoC.Editor.Help.Pages
                     new HelpTreeNode("Models", "state and the rules that keep it valid"),
                     new HelpTreeNode("RootsContexts", "the Root in the scene and the Context that binds"),
                     new HelpTreeNode("Services", "self-contained work, reusable in any game"),
-                    new HelpTreeNode("Signals", "the module's whole public surface"),
+                    new HelpTreeNode("Signals", "PlayerInternalSignals - what the module says to itself"),
                     new HelpTreeNode("Systems", "specific to this game, may lean on other systems"),
                     new HelpTreeNode("ViewsMediators", "scene references, and the mediator that drives them")),
-                new HelpTreeNode("Shared", "optional - an assembly of its own, holding the data this module publishes",
+                new HelpTreeNode("Shared", "an assembly of its own, holding everything this module publishes",
                     new HelpTreeNode("Constants", "constants the shared data needs"),
                     new HelpTreeNode("Data", "",
                         new HelpTreeNode("UnityObjects", "shared ScriptableObject assets"),
                         new HelpTreeNode("ValueObjects", "shared plain data")),
-                    new HelpTreeNode("Enums", "enumerations the shared data needs"))),
+                    new HelpTreeNode("Enums", "enumerations the shared data needs"),
+                    new HelpTreeNode("Signals", "PlayerSignals - the module's whole public surface"))),
             new HelpTreeNode("zScreenModules", "screens of this module - each one a module of its own"),
             new HelpTreeNode("zSubModules", "sub modules, which may use their parent's types"),
             new HelpTreeNode("zTestModules", "test code, wrapped in #if UNITY_EDITOR, may reference anything"));
@@ -76,9 +77,11 @@ namespace FlowIoC.Editor.Help.Pages
             painter.SubHeading("Publishing data through Shared");
             painter.Paragraph(
                 "Scripts/Shared is an assembly of its own - Modules.Player.Shared, beside "
-                + "Modules.Player - and it is how a module hands data to another module without "
-                + "handing over its logic. Only data belongs there: value objects, the "
-                + "ScriptableObjects built out of them, and the enums and constants those need.");
+                + "Modules.Player - and it is everything a module offers the rest of the project "
+                + "without handing over its logic: the public signal holder, the value objects and "
+                + "ScriptableObjects it publishes, and the enums and constants those need. Because "
+                + "the holder lives there, a public signal may only carry a type that lives there "
+                + "too.");
             painter.Paragraph(
                 "Whoever reads that data references Modules.Player.Shared, never Modules.Player. A "
                 + "PlayerScreenModule can read CD_PlayerRules and still has no way to reach "
@@ -92,7 +95,8 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Runtime type of the same name. The generator writes a "
                 + "Modules.Player.Shared.csproj.DotSettings for that, beside the module's own.");
             painter.Note(
-                "Shared is offered on main modules only. If two modules need the same data and "
+                "Shared is offered on main, sub and screen modules, and starts ticked. A test "
+                + "module is the one kind without it. If two modules need the same data and "
                 + "neither owns it, that data belongs in a module of its own - the same answer as "
                 + "for a Service more than one module needs.");
         }

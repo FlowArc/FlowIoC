@@ -1,9 +1,9 @@
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ConsoleModule;
-using Modules.CameraSystemModule.Data.ValueObjects;
+using Modules.CameraSystemModule.Shared.Data.ValueObjects;
 using Modules.CameraSystemModule.Shared.Enums;
-using Modules.CameraSystemModule.Signals;
+using Modules.CameraSystemModule.Shared.Signals;
 using UnityEngine.Rendering;
 
 namespace Modules.CameraSystemModule.ViewsMediators
