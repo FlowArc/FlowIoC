@@ -8,6 +8,7 @@ namespace FlowIoC.Tests
     public class ModuleInstallerTests
     {
         private const string ModuleName = "CountdownServiceModule";
+        private const string AssemblyName = "Modules.CountdownService";
 
         private string _package;
         private string _project;
@@ -111,6 +112,62 @@ namespace FlowIoC.Tests
                 File.ReadAllText(Installed("Scripts/Runtime/Services/CountdownService.cs")));
         }
 
+        /// <summary>
+        /// Once installed the folder belongs to the game, which may rename it. The check has to
+        /// follow, or the button offers to install a second copy - and two asmdefs claiming one
+        /// assembly name stop the whole project compiling.
+        /// </summary>
+        [Test]
+        public void A_renamed_module_is_still_found()
+        {
+            ModuleInstaller installer = NewInstaller();
+            installer.TryInstall(ModuleName, out _);
+
+            Directory.Move(
+                Path.Combine(_project, ModuleInstaller.TargetFolder, ModuleName),
+                Path.Combine(_project, ModuleInstaller.TargetFolder, "TimerModule"));
+
+            Assert.IsTrue(installer.IsInstalled(ModuleName));
+            Assert.IsFalse(installer.TryInstall(ModuleName, out string error));
+            StringAssert.Contains("TimerModule", error);
+        }
+
+        /// <summary>
+        /// And which may move it somewhere that suits the project better than Assets/Modules.
+        /// </summary>
+        [Test]
+        public void A_module_moved_elsewhere_under_assets_is_still_found()
+        {
+            ModuleInstaller installer = NewInstaller();
+            installer.TryInstall(ModuleName, out _);
+
+            string elsewhere = Path.Combine(_project, "Assets", "Game", "Systems", ModuleName);
+            Directory.CreateDirectory(Path.GetDirectoryName(elsewhere));
+            Directory.Move(Path.Combine(_project, ModuleInstaller.TargetFolder, ModuleName), elsewhere);
+
+            Assert.IsTrue(installer.IsInstalled(ModuleName));
+            StringAssert.Contains("Systems", installer.InstalledAt(ModuleName));
+        }
+
+        /// <summary>
+        /// A folder in the way that is not the module. Copying into it would mix two things
+        /// together, so it is refused - but with a different reason than "already installed".
+        /// </summary>
+        [Test]
+        public void A_foreign_folder_on_the_target_path_is_refused_without_being_touched()
+        {
+            string target = Path.Combine(_project, ModuleInstaller.TargetFolder, ModuleName);
+            Directory.CreateDirectory(target);
+            File.WriteAllText(Path.Combine(target, "SomethingElse.cs"), "// not the module");
+
+            ModuleInstaller installer = NewInstaller();
+
+            Assert.IsFalse(installer.IsInstalled(ModuleName));
+            Assert.IsFalse(installer.TryInstall(ModuleName, out string error));
+            StringAssert.Contains(AssemblyName, error);
+            Assert.IsFalse(File.Exists(Path.Combine(target, "Modules.CountdownService.asmdef")));
+        }
+
         [Test]
         public void A_module_the_package_does_not_ship_is_reported_rather_than_installed()
         {
@@ -131,7 +188,8 @@ namespace FlowIoC.Tests
 
             Directory.CreateDirectory(services);
 
-            File.WriteAllText(Path.Combine(root, "Modules.CountdownService.asmdef"), "{}");
+            File.WriteAllText(Path.Combine(root, "Modules.CountdownService.asmdef"),
+                "{\n  \"name\": \"" + AssemblyName + "\",\n  \"references\": [\"FlowIoC\"]\n}");
             File.WriteAllText(Path.Combine(root, "Modules.CountdownService.asmdef.meta"),
                 "fileFormatVersion: 2\nguid: 0123456789abcdef0123456789abcdef");
             File.WriteAllText(Path.Combine(services, "CountdownService.cs"), "// shipped");
