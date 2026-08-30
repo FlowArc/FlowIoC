@@ -101,7 +101,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_modules_category_lists_the_modules_that_ship()
         {
-            CollectionAssert.AreEqual(new[] {"Countdown Service"}, ChildTitles("Modules"));
+            CollectionAssert.AreEqual(new[] {"Countdown Service", "Camera System"}, ChildTitles("Modules"));
         }
 
         /// <summary>
