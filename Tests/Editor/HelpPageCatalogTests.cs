@@ -101,7 +101,8 @@ namespace FlowIoC.Tests
         [Test]
         public void The_modules_category_lists_the_modules_that_ship()
         {
-            CollectionAssert.AreEqual(new[] {"Countdown Service", "Camera System"}, ChildTitles("Modules"));
+            CollectionAssert.AreEqual(
+                new[] {"Setup Modules", "Countdown Service", "Camera System"}, ChildTitles("Modules"));
         }
 
         /// <summary>
@@ -163,7 +164,7 @@ namespace FlowIoC.Tests
         public void A_category_starts_at_the_first_topic_inside_it()
         {
             Assert.AreEqual("Creating a Module", _catalog.FirstPageOf("Wiki")?.Title);
-            Assert.AreEqual("Countdown Service", _catalog.FirstPageOf("Modules")?.Title);
+            Assert.AreEqual("Setup Modules", _catalog.FirstPageOf("Modules")?.Title);
         }
 
         [Test]

@@ -21,23 +21,41 @@ namespace FlowIoC.Editor.ModuleInstall
     {
         internal const string ModulesFolder = "Modules~";
 
-        private readonly string _packageRootPath;
+        /// <summary>
+        /// The setup modules sit in a folder of their own rather than under Modules~ with a marker
+        /// on them. TryList is what fills the Help window's list of modules with an Install button,
+        /// and a set member listed there would draw a button nobody should press. Two folders and
+        /// two lists cost less than a rule that filters one list into the other.
+        /// </summary>
+        internal const string SetupModulesFolder = "SetupModules~";
 
-        internal ModulesSource()
+        private readonly string _packageRootPath;
+        private readonly string _modulesFolder;
+
+        internal ModulesSource() : this(ResolvePackageRoot(), ModulesFolder)
+        {
+        }
+
+        internal ModulesSource(string packageRootPath) : this(packageRootPath, ModulesFolder)
+        {
+        }
+
+        internal ModulesSource(string packageRootPath, string modulesFolder)
+        {
+            _packageRootPath = packageRootPath;
+            _modulesFolder = modulesFolder;
+        }
+
+        private static string ResolvePackageRoot()
         {
             var info = PackageInfo.FindForAssembly(typeof(ModulesSource).Assembly);
 
-            _packageRootPath = info != null
+            return info != null
                 ? info.resolvedPath
                 : Path.Combine(new ProjectRoot().Resolve(), "Packages", "FlowIoC");
         }
 
-        internal ModulesSource(string packageRootPath)
-        {
-            _packageRootPath = packageRootPath;
-        }
-
-        internal string Root => Path.Combine(_packageRootPath, ModulesFolder);
+        internal string Root => Path.Combine(_packageRootPath, _modulesFolder);
 
         internal string PathOf(string moduleFolderName) => Path.Combine(Root, moduleFolderName);
 
@@ -54,7 +72,7 @@ namespace FlowIoC.Editor.ModuleInstall
             if (!Directory.Exists(Root))
             {
                 error = $"FlowIoC could not find its modules at '{Root}'. "
-                        + $"Expected {ModulesFolder}/ inside the package.";
+                        + $"Expected {_modulesFolder}/ inside the package.";
                 return false;
             }
 

@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Main.Screen.Test",
+  "references": [
+    "FlowIoC",
+    "Modules.Main.Screen",
+    "Modules.Main.Screen.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

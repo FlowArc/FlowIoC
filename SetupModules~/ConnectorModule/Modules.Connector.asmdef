@@ -1,0 +1,20 @@
+{
+    "name": "Modules.Connector",
+    "rootNamespace": "",
+    "references": [
+        "FlowIoC",
+        "Modules.Main.Shared",
+        "Modules.Main.Screen.Shared",
+        "Modules.Gameplay.Shared",
+        "Modules.Gameplay.Screen.Shared"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

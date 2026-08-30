@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Gameplay.Screen",
+  "references": [
+    "FlowIoC",
+    "Modules.Gameplay.Shared",
+    "Modules.Gameplay.Screen.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

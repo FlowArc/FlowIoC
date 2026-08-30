@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a50a75e32add964aa138f2a6fba2a38, type: 3}
+  m_Name: MainScreenConfig
+  m_EditorClassIdentifier: FlowIoC::FlowIoC.ScreenModule.Data.ScreenConfig
+  _defaultLayer: 2
+  _loadType: 0
+  _directPrefab: {fileID: 0}
+  _screenTag: 0
+  _resourcePath: 
+  _addressableKey: MainScreen
+  _hasShowAnimation: 0
+  _hasHideAnimation: 0
+  _viewTypeName: MainScreenView
+  _mediatorTypeName: MainScreenMediator
