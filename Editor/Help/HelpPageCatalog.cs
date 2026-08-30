@@ -68,6 +68,33 @@ namespace FlowIoC.Editor.Help
         public IHelpPage OpeningPage { get; }
 
         /// <summary>
+        /// Where the window opens when a reader asks for one of the top level sections by name -
+        /// the Tools/FlowIoC/Help menu has an entry per section and each has to land somewhere.
+        /// A category answers with the first topic inside it, however deep that topic sits; a
+        /// section that is a topic answers with itself.
+        ///
+        /// Only the top level is searched. A category nested inside one is on the sidebar but is
+        /// not offered a menu entry, so being unable to name it here is the point rather than a
+        /// gap. An unknown title answers null, and the caller opens the window where it would
+        /// have opened anyway.
+        /// </summary>
+        public IHelpPage FirstPageOf(string sectionTitle)
+        {
+            foreach (HelpSection section in Sections)
+            {
+                if (section.Title != sectionTitle)
+                    continue;
+
+                foreach (IHelpPage page in section.Pages)
+                    return page;
+
+                return null;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Every category a page sits inside, outermost first. A topic two levels down needs both
         /// of them folded open before it is on screen, so the caller gets the whole chain rather
         /// than only the category immediately above the page.

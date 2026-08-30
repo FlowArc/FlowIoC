@@ -90,6 +90,12 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet(
                 "Create Scene adds a scene of the module's own. Useful for a Screen module, "
                 + "unnecessary for a module that only holds state.");
+            painter.Bullet(
+                "Create Shared adds the second assembly a module publishes its data through, so a "
+                + "neighbour can read a config asset it authored without gaining access to its "
+                + "Models and Commands. Offered on main modules and off by default: a module that "
+                + "hands nothing to anyone has no use for it. Tools > FlowIoC > Add Shared Data "
+                + "does the same to a module that already exists.");
 
             painter.SubHeading("Parent Module");
             painter.Paragraph(
