@@ -1,107 +1,45 @@
 #if UNITY_EDITOR
+using System.Linq;
+using FlowIoC.Editor.Addressables;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 {
     internal partial class ModuleGenerator
     {
+        /// <summary>
+        /// The registration a generated screen needs, done by the one class that knows how. The
+        /// installer that brings the ready made setup modules calls the same pair, so a screen the
+        /// generator wrote and a screen that arrived with the set are addressable in exactly the
+        /// same way.
+        ///
+        /// This is the second of the two calls, so it is where the settings asset is written back
+        /// out. ScreenAddressables leaves saving to its caller: the installer registers four
+        /// entries in a row and saves once at the end.
+        /// </summary>
         private static void MakeScreenConfigAddressable(string createdConfigPath, string prefabName)
         {
-            createdConfigPath = createdConfigPath.Replace(Application.dataPath, "Assets");
+            ScreenAddressableEntry entry = new ScreenAddressableEntries()
+                .For(prefabName)
+                .First(candidate => candidate.GroupName == ScreenAddressableEntries.ConfigGroup);
 
-            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
-            if (settings == null)
-            {
-                Debug.LogError("AddressableAssetSettings could not be found. Please set up Addressables properly.");
-                return;
-            }
+            entry.AssetPath = createdConfigPath.Replace(Application.dataPath, "Assets");
 
-            string guid = AssetDatabase.AssetPathToGUID(createdConfigPath);
-            if (string.IsNullOrEmpty(guid))
-            {
-                Debug.LogError($"No valid GUID found for the screen config: {createdConfigPath}");
-                return;
-            }
-
-            AddressableAssetGroup group = settings.FindGroup("Local_Screen-Configs");
-            if (group == null)
-            {
-                group = settings.CreateGroup(
-                    "Local_Screen-Configs",
-                    false,
-                    false,
-                    false,
-                    settings.DefaultGroup.Schemas
-                );
-            }
-
-            AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, readOnly: false);
-            if (entry == null)
-            {
-                Debug.LogError($"Failed to create or move the addressable entry: {createdConfigPath}");
-                return;
-            }
-
-            entry.SetAddress(prefabName + "Config");
-            entry.SetLabel("ScreenConfig", true, true);
-
-            EditorUtility.SetDirty(settings);
-            settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
+            new ScreenAddressables().Register(entry);
 
             AssetDatabase.SaveAssets();
-            Debug.Log($"ScreenConfig '{prefabName}Config' is now Addressable with address: {entry.address}");
         }
 
         private static void MakePrefabAddressable(string prefabPath, string prefabName)
         {
-            prefabPath = "Assets/" + prefabPath.Replace(Application.dataPath, "");
+            ScreenAddressableEntry entry = new ScreenAddressableEntries()
+                .For(prefabName)
+                .First(candidate => candidate.GroupName != ScreenAddressableEntries.ConfigGroup);
 
-            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
-            if (settings == null)
-            {
-                Debug.LogError("AddressableAssetSettings could not be found. Please set up Addressables properly.");
-                return;
-            }
+            entry.AssetPath = prefabPath.Replace(Application.dataPath, "Assets");
 
-            string guid = AssetDatabase.AssetPathToGUID(prefabPath);
-            if (string.IsNullOrEmpty(guid))
-            {
-                Debug.LogError($"No valid GUID found for the prefab: {prefabPath}");
-                return;
-            }
-
-            string newPrefabName = prefabName.Replace("Screen", "");
-
-            AddressableAssetGroup group = settings.FindGroup($"Local_Screen-{newPrefabName}");
-            if (group == null)
-            {
-                group = settings.CreateGroup(
-                    $"Local_Screen-{newPrefabName}",
-                    false,
-                    false,
-                    false,
-                    settings.DefaultGroup.Schemas
-                );
-            }
-
-            AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, readOnly: false);
-            if (entry == null)
-            {
-                Debug.LogError($"Failed to create or move the addressable entry: {prefabPath}");
-                return;
-            }
-
-            entry.SetAddress(prefabName);
-            entry.SetLabel("ScreenPrefab", true, true);
-
-            EditorUtility.SetDirty(settings);
-            settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
-
-            AssetDatabase.SaveAssets();
-            Debug.Log($"Prefab '{prefabName}' is now Addressable with address: {entry.address}");
+            new ScreenAddressables().Register(entry);
         }
     }
 }
