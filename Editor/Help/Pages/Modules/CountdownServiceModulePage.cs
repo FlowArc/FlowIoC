@@ -20,13 +20,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private readonly HelpAction _install;
 
+        private bool _isInstalled;
+        private double _checkedAt = double.NegativeInfinity;
+
         public CountdownServiceModulePage() : base(null)
         {
             // The label and the enabled state are read every repaint rather than fixed here, so
             // the button turns itself off the moment the module lands in the project.
             _install = new HelpAction(
-                () => _installer.IsInstalled(ModuleFolderName) ? "Installed" : "Install",
-                () => !_installer.IsInstalled(ModuleFolderName),
+                () => IsInstalled() ? "Installed" : "Install",
+                () => !IsInstalled(),
                 Install);
         }
 
@@ -44,8 +47,29 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             new HelpTab("Time Source", DrawTimeSource)
         };
 
+        /// <summary>
+        /// Whether the module is in the project, answered from a cache that goes stale after a
+        /// second. The underlying check walks every asmdef under Assets, and the banner asks twice
+        /// per repaint - often enough that doing the walk each time would cost real frames. A
+        /// second is far below noticing, and installing clears the cache outright.
+        /// </summary>
+        private bool IsInstalled()
+        {
+            if (EditorApplication.timeSinceStartup - _checkedAt < 1d)
+                return _isInstalled;
+
+            _isInstalled = _installer.IsInstalled(ModuleFolderName);
+            _checkedAt = EditorApplication.timeSinceStartup;
+
+            return _isInstalled;
+        }
+
         private void Install()
         {
+            // Whatever happened, what the cache holds is now a guess about a project that has
+            // changed underneath it.
+            _checkedAt = double.NegativeInfinity;
+
             if (_installer.TryInstall(ModuleFolderName, out string error))
             {
                 EditorUtility.DisplayDialog(

@@ -58,7 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Modules~/`, which Unity does not import, and the Install button on its Help page copies it into
   `Assets/Modules/` - then registers it in the module index, gives it its `FlowLogType` channel and
   writes the `.csproj.DotSettings` its namespaces need. Copying the folder by hand gets the files
-  and none of the other three. A module already in the project is never overwritten: the copy there
+  and none of the other three. Whether a module is already installed is decided by the assembly it
+  declares rather than by the folder it landed in, so renaming that folder or moving it out of
+  `Assets/Modules/` - which a game is free to do, the module being its code now - does not offer to
+  install a second copy on top of it. A module already in the project is never overwritten: the copy there
   is the one the game has been editing.
 
 - The first of them: **CountdownServiceModule**. Named countdowns with once-a-second callbacks,

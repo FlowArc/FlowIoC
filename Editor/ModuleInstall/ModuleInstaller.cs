@@ -48,7 +48,96 @@ namespace FlowIoC.Editor.ModuleInstall
             Path.Combine(_projectRoot, TargetFolder, moduleFolderName);
 
         internal bool IsInstalled(string moduleFolderName) =>
-            Directory.Exists(TargetOf(moduleFolderName));
+            InstalledAt(moduleFolderName) != null;
+
+        /// <summary>
+        /// The folder the module sits in inside this project, or null when it is not here.
+        ///
+        /// The lookup is by assembly name, not by folder name. Once installed the folder belongs
+        /// to the game, which is free to rename it or move it somewhere that suits the project
+        /// better - and a check that only looked for the name the module shipped under would call
+        /// that "not installed" and offer to install a second copy. Two copies means two asmdefs
+        /// claiming one assembly name, which stops the whole project compiling. The assembly name
+        /// is what would collide, so it is what is compared.
+        /// </summary>
+        internal string InstalledAt(string moduleFolderName)
+        {
+            string assemblyName = ShippedAssemblyName(moduleFolderName);
+
+            if (string.IsNullOrEmpty(assemblyName))
+                return null;
+
+            string assets = Path.Combine(_projectRoot, "Assets");
+
+            if (!Directory.Exists(assets))
+                return null;
+
+            foreach (string asmdef in Directory.GetFiles(assets, "*.asmdef", SearchOption.AllDirectories))
+            {
+                if (assemblyName.Equals(AssemblyNameIn(asmdef), StringComparison.Ordinal))
+                    return Path.GetDirectoryName(asmdef);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// The assembly the shipped module declares. A module folder holds exactly one asmdef at
+        /// its top - the ones for its Shared and test assemblies sit deeper - so anything else is
+        /// a payload this installer does not understand and is reported as nothing.
+        /// </summary>
+        private string ShippedAssemblyName(string moduleFolderName)
+        {
+            string root = _source.PathOf(moduleFolderName);
+
+            if (!Directory.Exists(root))
+                return null;
+
+            string[] asmdefs = Directory.GetFiles(root, "*.asmdef", SearchOption.TopDirectoryOnly);
+
+            return asmdefs.Length == 1 ? AssemblyNameIn(asmdefs[0]) : null;
+        }
+
+        /// <summary>
+        /// The name out of an asmdef, or null when the file cannot be read or does not declare
+        /// one. An unreadable asmdef is somebody else's problem to report: here it only means
+        /// this file is not the module being looked for.
+        /// </summary>
+        private static string AssemblyNameIn(string asmdefPath)
+        {
+            try
+            {
+                var declaration = JsonUtility.FromJson<AssemblyDefinitionName>(File.ReadAllText(asmdefPath));
+
+                return declaration == null || string.IsNullOrEmpty(declaration.name) ? null : declaration.name;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Just enough of an asmdef to read its assembly name. The field is lower case because
+        /// that is what the file says and JsonUtility matches on the field name - renaming it to
+        /// match the project's style would simply stop it reading anything.
+        /// </summary>
+        [Serializable]
+        private class AssemblyDefinitionName
+        {
+            public string name;
+        }
+
+        /// <summary>A path written from the project root, for a message a reader has to act on.</summary>
+        private string ProjectRelative(string fullPath)
+        {
+            string root = _projectRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            return fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+                ? fullPath.Substring(root.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    .Replace(Path.DirectorySeparatorChar, '/')
+                : fullPath;
+        }
 
         /// <summary>
         /// Installs the module, or explains why it could not. A module already in the project is
@@ -67,13 +156,26 @@ namespace FlowIoC.Editor.ModuleInstall
                 return false;
             }
 
-            string target = TargetOf(moduleFolderName);
+            string installedAt = InstalledAt(moduleFolderName);
 
-            if (Directory.Exists(target))
+            if (installedAt != null)
             {
                 error = $"'{moduleFolderName}' is already in this project, at "
-                        + $"{TargetFolder}/{moduleFolderName}. Delete it first if you want the "
-                        + "shipped copy back.";
+                        + $"{ProjectRelative(installedAt)}. Delete it first if you want the shipped "
+                        + "copy back.";
+                return false;
+            }
+
+            string target = TargetOf(moduleFolderName);
+
+            // Nothing declares the module's assembly, and yet the folder it installs to is taken.
+            // Copying into it would either fail halfway or mix two modules together, so it is left
+            // for whoever put it there to sort out.
+            if (Directory.Exists(target))
+            {
+                error = $"{TargetFolder}/{moduleFolderName} already exists but declares no "
+                        + $"'{ShippedAssemblyName(moduleFolderName)}' assembly. Move or delete it "
+                        + "before installing.";
                 return false;
             }
 
