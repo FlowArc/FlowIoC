@@ -22,6 +22,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string FOLDER_STRUCTURE_PREVIEW = "Folder Structure Preview:";
 
         private const string CREATE_SIGNALS_LABEL = "Create Signals";
+        private const string CREATE_SHARED_LABEL = "Create Shared";
 
         private const string NEW_ACTION = "NewAction";
         private const string ADD_ACTION = "Add Action";
@@ -109,13 +110,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             EditorGUILayout.EndHorizontal();
 
+            // One row, wide enough for all five toggles: Context, Root and Scene at 125 each leave
+            // nothing over in the 400 this used to be, which is the only reason Signals ever sat
+            // on a row of its own.
             EditorGUILayout.Space(10);
-            EditorGUILayout.BeginHorizontal(GUILayout.Width(400));
+            EditorGUILayout.BeginHorizontal(GUILayout.Width(640));
             CreateToggles();
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal(GUILayout.Width(400));
             CreateSignalsToggle();
+            CreateSharedToggle();
             EditorGUILayout.EndHorizontal();
 
             if (_selectedModuleType == ModuleType.Screen)

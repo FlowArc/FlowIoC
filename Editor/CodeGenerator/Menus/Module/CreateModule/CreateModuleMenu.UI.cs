@@ -101,53 +101,78 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         }
 
         /// <summary>
-        /// The signals toggle sits on its own row and is the same state as the Signals entry in
-        /// the folder preview, so ticking either one cannot leave a module holding an empty
-        /// Signals folder. Where the config marks the folder mandatory - the Screen config does,
-        /// because a screen module generates no Context and its holder is the only way in - the
-        /// toggle is shown on and disabled rather than hidden.
+        /// The signals holder. A test module wires other modules' signals rather than owning a
+        /// public surface of its own, so it is the one module type never offered one.
         /// </summary>
-        private void CreateSignalsToggle()
-        {
-            FolderConfig signalsFolder = FindSignalsFolder();
+        private void CreateSignalsToggle() =>
+            _createSignals = OptionalFolderToggle(
+                FolderConfig.FolderType.Signals, CREATE_SIGNALS_LABEL, ModuleType.Test);
 
-            // A test module wires other modules' signals rather than owning a public surface of
-            // its own, so it is the one module type never offered a holder.
-            if (signalsFolder == null || _selectedModuleType == ModuleType.Test)
-            {
-                _createSignals = false;
-                return;
-            }
+        /// <summary>
+        /// The Shared assembly a module publishes its data through. Only the main module layout
+        /// carries the folder, so the toggle draws itself for main modules and nowhere else
+        /// without having to name the other types. It starts off: a module that hands nothing to
+        /// its neighbours has no use for a second assembly.
+        /// </summary>
+        private void CreateSharedToggle() =>
+            OptionalFolderToggle(FolderConfig.FolderType.Shared, CREATE_SHARED_LABEL);
+
+        /// <summary>
+        /// Draws the toggle for one of the layout's optional folders and answers whether the
+        /// folder is to be created. It is the same state as that folder's entry in the preview
+        /// below, so ticking either one cannot leave a module holding a folder the other says it
+        /// should not have.
+        ///
+        /// A folder the layout marks mandatory - the Screen layout does that to Signals, because a
+        /// screen module generates no Context and its holder is the only way in - is shown ticked
+        /// and disabled rather than hidden, so the reader can see what they are getting.
+        /// </summary>
+        private bool OptionalFolderToggle(
+            FolderConfig.FolderType folderType,
+            string label,
+            params ModuleType[] withheldFrom)
+        {
+            FolderConfig folder = FindFolderInConfig(folderType);
+
+            OptionalFolderToggleState state =
+                new OptionalFolderToggleRule().For(folder, _selectedModuleType, withheldFrom);
+
+            if (state == OptionalFolderToggleState.Hidden)
+                return false;
 
             GUI.backgroundColor = new Color(.6f, .7f, 1f);
 
-            if (!signalsFolder.IsOptional)
-            {
-                _createSignals = true;
+            bool isSelected;
 
+            if (state == OptionalFolderToggleState.ForcedOn)
+            {
                 using (new EditorGUI.DisabledScope(true))
                 {
-                    EditorGUILayout.ToggleLeft(CREATE_SIGNALS_LABEL, true, GUILayout.Width(125));
+                    EditorGUILayout.ToggleLeft(label, true, GUILayout.Width(125));
                 }
+
+                isSelected = true;
             }
             else
             {
-                bool wasSelected = _selectedOptionalFolders.Contains(signalsFolder);
-                bool nowSelected = EditorGUILayout.ToggleLeft(CREATE_SIGNALS_LABEL, wasSelected, GUILayout.Width(125));
+                bool wasSelected = _selectedOptionalFolders.Contains(folder);
+                bool nowSelected = EditorGUILayout.ToggleLeft(label, wasSelected, GUILayout.Width(125));
 
                 if (nowSelected && !wasSelected)
                 {
-                    _selectedOptionalFolders.Add(signalsFolder);
+                    _selectedOptionalFolders.Add(folder);
                 }
                 else if (!nowSelected && wasSelected)
                 {
-                    _selectedOptionalFolders.Remove(signalsFolder);
+                    _selectedOptionalFolders.Remove(folder);
                 }
 
-                _createSignals = nowSelected;
+                isSelected = nowSelected;
             }
 
             GUI.backgroundColor = Color.white;
+
+            return isSelected;
         }
 
         private void SelectSignalsFolderByDefault()
@@ -161,12 +186,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _selectedOptionalFolders.Add(signalsFolder);
         }
 
-        private FolderConfig FindSignalsFolder()
+        private FolderConfig FindSignalsFolder() => FindFolderInConfig(FolderConfig.FolderType.Signals);
+
+        /// <summary>
+        /// The selected module type's layout entry for <paramref name="folderType"/>, or null when
+        /// that layout has none - which is how a toggle knows to stay out of the way.
+        /// </summary>
+        private FolderConfig FindFolderInConfig(FolderConfig.FolderType folderType)
         {
             if (_directoryConfigMap == null) return null;
 
             return _directoryConfigMap.TryGetValue(_selectedModuleType, out DirectoryStructureConfig config) && config != null
-                ? FindFolderByType(config.RootFolders, FolderConfig.FolderType.Signals)
+                ? FindFolderByType(config.RootFolders, folderType)
                 : null;
         }
 

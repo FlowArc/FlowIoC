@@ -155,6 +155,35 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
+        /// The Tools/FlowIoC/Help menu has an entry per top level section, and each opens the
+        /// window somewhere a reader can start from. A category opens on the first topic inside
+        /// it, however deep that topic sits.
+        /// </summary>
+        [Test]
+        public void A_category_starts_at_the_first_topic_inside_it()
+        {
+            Assert.AreEqual("Creating a Module", _catalog.FirstPageOf("Wiki")?.Title);
+            Assert.AreEqual("Countdown Service", _catalog.FirstPageOf("Modules")?.Title);
+        }
+
+        [Test]
+        public void A_section_that_is_a_topic_starts_at_itself()
+        {
+            Assert.AreEqual("Welcome", _catalog.FirstPageOf("Welcome")?.Title);
+        }
+
+        /// <summary>
+        /// Only the top level is offered a menu entry, so a category nested inside one is not
+        /// found here even though the sidebar shows it.
+        /// </summary>
+        [Test]
+        public void A_section_that_is_not_at_the_top_level_has_no_starting_page()
+        {
+            Assert.IsNull(_catalog.FirstPageOf("Structure"));
+            Assert.IsNull(_catalog.FirstPageOf("Nothing By This Name"));
+        }
+
+        /// <summary>
         /// What one category shows when it folds open, in order - topics and sub categories
         /// alike. The category is looked up anywhere in the tree, because Structure and Editor
         /// Tools live inside Wiki rather than beside it.

@@ -38,12 +38,52 @@ namespace FlowIoC.Editor.Help
 
         private const float SidebarIndent = 12f;
 
-        [MenuItem("Tools/FlowIoC/Help", false, 200)]
-        internal static void Open()
+        /// <summary>
+        /// One menu entry per top level section, so a reader picks what they are here for before
+        /// the window is even up. There is deliberately no plain Help entry: Unity draws a
+        /// submenu or an item at a path, never both, and three named ways in beat one that always
+        /// lands on the introduction.
+        /// </summary>
+        [MenuItem("Tools/FlowIoC/Help/Welcome", false, 200)]
+        private static void OpenWelcome() => Open("Welcome");
+
+        [MenuItem("Tools/FlowIoC/Help/Wiki", false, 201)]
+        private static void OpenWiki() => Open("Wiki");
+
+        [MenuItem("Tools/FlowIoC/Help/Modules", false, 202)]
+        private static void OpenModules() => Open("Modules");
+
+        internal static void Open() => Open(null);
+
+        /// <summary>
+        /// Opens the window on the first topic of <paramref name="sectionTitle"/>. The selection
+        /// is made here rather than in OnEnable, because a window that is already open does not
+        /// run OnEnable again and would otherwise ignore which entry was clicked.
+        /// </summary>
+        internal static void Open(string sectionTitle)
         {
             HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
             window.minSize = new Vector2(900f, 560f);
             window.Show();
+
+            if (!string.IsNullOrEmpty(sectionTitle))
+                window.GoTo(sectionTitle);
+        }
+
+        /// <summary>
+        /// Selects the section's first topic and folds open every category above it, so the
+        /// sidebar shows where the reader has landed rather than a closed tree.
+        /// </summary>
+        private void GoTo(string sectionTitle)
+        {
+            IHelpPage page = _catalog.FirstPageOf(sectionTitle);
+
+            if (page == null)
+                return;
+
+            Select(page);
+            OpenCategoriesTo(page);
+            Repaint();
         }
 
         private HelpPageCatalog _catalog;
