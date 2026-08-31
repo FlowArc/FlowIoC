@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System;
-using FlowIoC.Editor.CodeGenerator.Extensions;
 using FlowIoC.Editor.Config.ModuleConfig;
+using UnityEngine.Rendering;
 
 namespace FlowIoC.Editor.Modules
 {
@@ -18,8 +18,8 @@ namespace FlowIoC.Editor.Modules
         public ModuleKind Kind;
         public string FolderGuid;
 
-        public SerializableDictionary<FolderConfig.FolderType, string> FolderGuids =
-            new SerializableDictionary<FolderConfig.FolderType, string>();
+        public SerializedDictionary<FolderConfig.FolderType, string> FolderGuids =
+            new SerializedDictionary<FolderConfig.FolderType, string>();
 
         public bool TryGetFolderGuid(FolderConfig.FolderType type, out string guid)
         {
@@ -31,7 +31,7 @@ namespace FlowIoC.Editor.Modules
 
         public void RecordFolderGuid(FolderConfig.FolderType type, string guid)
         {
-            FolderGuids ??= new SerializableDictionary<FolderConfig.FolderType, string>();
+            FolderGuids ??= new SerializedDictionary<FolderConfig.FolderType, string>();
             FolderGuids[type] = guid;
         }
     }

@@ -151,15 +151,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// </summary>
         protected void RegisterSharedFolderNames(CodeGeneratorSettings codeGenSettings)
         {
-            var defaults = new Dictionary<FolderConfig.FolderType, string>
-            {
-                {FolderConfig.FolderType.Shared, "Shared"},
-                {FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"},
-                {FolderConfig.FolderType.SharedValueObjects, "ValueObjects"},
-                {FolderConfig.FolderType.SharedEnums, "Enums"},
-                {FolderConfig.FolderType.SharedConstants, "Constants"},
-                {FolderConfig.FolderType.SharedSignals, "Signals"}
-            };
+            IReadOnlyDictionary<FolderConfig.FolderType, string> defaults = new CodeGeneratorDefaults().SharedFolderNames;
 
             bool added = false;
 

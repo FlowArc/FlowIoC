@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using FlowIoC.BaseModule.ProjectPaths;
-using FlowIoC.Editor.CodeGenerator.Extensions;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.Migration;
@@ -11,6 +9,7 @@ using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace FlowIoC.Editor.CodeGenerator
 {
@@ -19,47 +18,63 @@ namespace FlowIoC.Editor.CodeGenerator
     {
         public List<AssemblyDefinitionAsset> AssemblyDefinitions;
 
-        [HideInInspector] [SerializeField] public SerializableDictionary<FolderConfig.FolderType, string> DirectoryStructureConfigMap =
-            new SerializableDictionary<FolderConfig.FolderType, string>
-            {
-                {FolderConfig.FolderType.SubModules, "zSubModules"},
-                {FolderConfig.FolderType.TestModules, "zTestModules"},
-                {FolderConfig.FolderType.ScreenModules, "zScreenModules"},
-                {FolderConfig.FolderType.ViewsAndMediators, "ViewsMediators"},
-                {FolderConfig.FolderType.ScreenConfigs, "ScreenConfigs"},
-                {FolderConfig.FolderType.RootsAndContexts, "RootsContexts"},
-                {FolderConfig.FolderType.Services, "Services"},
-                {FolderConfig.FolderType.Systems, "Systems"},
-                {FolderConfig.FolderType.Signals, "Signals"},
-                {FolderConfig.FolderType.Controllers, "Controllers"},
-                {FolderConfig.FolderType.Models, "Models"},
-                {FolderConfig.FolderType.UnityObjects, "UnityObjects"},
-                {FolderConfig.FolderType.ValueObjects, "ValueObjects"},
-                {FolderConfig.FolderType.Editor, "Editor"},
-                {FolderConfig.FolderType.Resources, "Resources"},
-                {FolderConfig.FolderType.Prefabs, "Prefabs"},
-                {FolderConfig.FolderType.Scenes, "Scenes"},
-                {FolderConfig.FolderType.Shared, "Shared"},
-                {FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"},
-                {FolderConfig.FolderType.SharedValueObjects, "ValueObjects"},
-                {FolderConfig.FolderType.SharedEnums, "Enums"},
-                {FolderConfig.FolderType.SharedConstants, "Constants"},
-                {FolderConfig.FolderType.SharedSignals, "Signals"}
-            };
+        [HideInInspector] [SerializeField] public SerializedDictionary<FolderConfig.FolderType, string> DirectoryStructureConfigMap =
+            CreateDefaultDirectoryStructureConfigMap();
 
-        [HideInInspector] [SerializeField] public SerializableDictionary<string, string> DirectoryStructureConfigPaths =
+        [HideInInspector] [SerializeField] public SerializedDictionary<string, string> DirectoryStructureConfigPaths =
             CreateDefaultDirectoryStructureConfigPaths();
 
-        private static SerializableDictionary<string, string> CreateDefaultDirectoryStructureConfigPaths()
+        private static SerializedDictionary<FolderConfig.FolderType, string> CreateDefaultDirectoryStructureConfigMap()
         {
-            var paths = new FlowIoCProjectPaths();
+            var map = new SerializedDictionary<FolderConfig.FolderType, string>();
 
-            return new SerializableDictionary<string, string>
+            foreach (KeyValuePair<FolderConfig.FolderType, string> entry in new CodeGeneratorDefaults().FolderNames)
+                map[entry.Key] = entry.Value;
+
+            return map;
+        }
+
+        private static SerializedDictionary<string, string> CreateDefaultDirectoryStructureConfigPaths()
+        {
+            var configPaths = new SerializedDictionary<string, string>();
+
+            foreach (KeyValuePair<string, string> entry in new CodeGeneratorDefaults().ConfigPaths)
+                configPaths[entry.Key] = entry.Value;
+
+            return configPaths;
+        }
+
+        /// <summary>
+        /// A dictionary that comes back with nothing in it is an asset serialized by a FlowIoC old
+        /// enough to have written these two under different field names, which Unity drops on load
+        /// rather than reporting. Refilling from the defaults is safe because empty is the one
+        /// state the inspector does not leave behind: it removes entries one at a time, and
+        /// removing one is deliberate. So the heal is all or nothing - a map still holding
+        /// anything is the reader's, entry by entry, and is left exactly as it is.
+        /// </summary>
+        public bool RestoreDefaultsIfEmpty()
+        {
+            bool restored = false;
+
+            if (DirectoryStructureConfigMap == null || DirectoryStructureConfigMap.Count == 0)
             {
-                {"Main", paths.DirectoryStructureConfig("Main")},
-                {"Screen", paths.DirectoryStructureConfig("Screen")},
-                {"Test", paths.DirectoryStructureConfig("Test")}
-            };
+                DirectoryStructureConfigMap = CreateDefaultDirectoryStructureConfigMap();
+                restored = true;
+            }
+
+            if (DirectoryStructureConfigPaths == null || DirectoryStructureConfigPaths.Count == 0)
+            {
+                DirectoryStructureConfigPaths = CreateDefaultDirectoryStructureConfigPaths();
+                restored = true;
+            }
+
+            return restored;
+        }
+
+        private void OnEnable()
+        {
+            if (RestoreDefaultsIfEmpty())
+                EditorUtility.SetDirty(this);
         }
 
         /// <summary>
