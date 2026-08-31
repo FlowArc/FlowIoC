@@ -269,9 +269,24 @@ inspector. Each phase can also be toggled off per-Root (`AutoInitialize`,
 `AutoBindInjections`, `AutoBindMediations`, `AutoSetup`, `AutoLaunch`) so a context
 can be driven manually in a test scene.
 
-A Root lives and dies with its scene. A module that has to outlive one — audio,
-analytics, player profile — overrides `BeforeCreateContext` on its own Root and calls
-`DontDestroyOnLoad` there, after reparenting itself to the scene root.
+A GameObject the module needs in the scene goes under its Root. The Root is the module's one
+presence there, so an EventSystem, an adapter, anything the module owns hangs off it rather
+than sitting loose beside it.
+
+A Root otherwise lives and dies with its scene. A module whose work outlives one — input,
+audio, analytics — makes its Root persistent in `BeforeCreateContext`, which runs just before
+the context is built:
+
+```csharp
+protected override void BeforeCreateContext()
+{
+    transform.SetParent(null);
+    DontDestroyOnLoad(gameObject);
+}
+```
+
+The reparenting is not decoration: Unity marks only root level objects as do not destroy, so a
+Root authored under something else has to detach itself before it can survive.
 
 ---
 
