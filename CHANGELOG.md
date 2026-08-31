@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-08-31
+
+### Added
+
+- **An Input module, installed from the Help window.** It turns the pointer into signals -
+  `PointerPressed`, `PointerDragged` and `PointerReleased`, each carrying the screen position - so
+  nothing in a game has to read the Input System itself. Dragged is announced only while the
+  pointer is down, because a signal per mouse move would be a dispatch per frame for something
+  almost no game wants. `SetActionMapEnabled` turns a map on or off by name, which silences input
+  at the source rather than leaving it to be ignored downstream. The module brings an action asset
+  of its own with a Pointer map bound to mouse and to touch, read from the prefab rather than from
+  the project wide actions, so a game can point it at an asset it owns. It is a ready-made module
+  rather than part of the setup set: a scene's EventSystem is an ordinary Unity component, not a
+  reason to install a module.
+
+### Fixed
+
+- **The setup set had no `EventSystem`, so nothing in `MainScene` could be pressed.** uGUI received
+  no pointer input at all, which is why the three difficulty buttons did nothing. `MainScene`
+  carries an ordinary EventSystem now. The component beside it matters as much: the generated test
+  scenes used `StandaloneInputModule`, which reads through the legacy `UnityEngine.Input` and throws
+  in a project whose active input handling is the Input System alone - what a new Unity 6 project is
+  set to. FlowIoC looks the Input System's own module up by name, so no package reference is added
+  to the Editor assembly and a project without `com.unity.inputsystem` still compiles, and falls
+  back to the legacy module when the package is absent.
+
+- **The setup modules could not install into a project that had never had FlowIoC in it.** Without
+  a `CodeGeneratorSettings` asset - which until now only the generator menus created - the module
+  index was left empty, `FlowLogType` was written with no channels, and every module the set had
+  just installed referred to a channel that did not exist. The project would not compile and the
+  Editor would not enter play mode. The settings asset is created before the set is registered now.
+
+### Changed
+
+- **A module ships whatever it hands the reader, and adds nothing to the `Tools/FlowIoC` menu.**
+  The countdown module's test scene was built by a menu item; it is an ordinary asset in the
+  payload now, the way `MainScene` already was, and the `Tools/FlowIoC/Modules` branch that held
+  that one item is gone. The payload carries a `.meta` beside every script it references, so the
+  scene's references resolve in a consuming project.
+
+- **The Editor's own `SerializableDictionary` is gone**, replaced by
+  `UnityEngine.Rendering.SerializedDictionary`, which the package already depended on. The two
+  types serialize under different field names, so a settings asset written by an earlier FlowIoC
+  arrives with its maps empty; `CodeGeneratorSettings` refills a map that comes back empty from the
+  defaults and leaves one that still holds anything alone, because removing a single entry in the
+  inspector is a considered act.
+
+- **`MainScene` no longer brings a Global Volume**, and `GameplayRoot`'s initialize order lives on
+  the prefab rather than as an override on the scene instance.
+
+- **Two rules were added to the agent rules, the README and the Help window.** A GameObject a
+  module needs in the scene goes under that module's Root; and a module whose work outlives a scene
+  detaches its Root and marks it do-not-destroy in `BeforeCreateContext`, where the reparenting is
+  not decoration - Unity marks only root level objects as do not destroy.
+
 ## [1.3.0] - 2026-08-31
 
 ### Fixed
