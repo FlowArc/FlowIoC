@@ -45,7 +45,8 @@ namespace FlowIoC.Editor.Help
                 new HelpSection("Modules", "Prefab Icon",
                     new SetupModulesPage(),
                     new CountdownServiceModulePage(),
-                    new CameraSystemModulePage())
+                    new CameraSystemModulePage(),
+                    new InputModulePage())
             };
 
             var pages = new List<IHelpPage>();
