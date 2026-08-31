@@ -888,6 +888,11 @@ want the shipped version back.
 The payload lives in `Modules~/` inside the package. Unity does not import a folder whose name ends
 in a tilde, so the modules carry their own asmdefs without compiling until they are installed.
 
+A ready-made module adds no branch to the **Tools > FlowIoC** menu. Everything it offers arrives
+with it, its test scene included: open the scene under the test module's `Scenes` folder and press
+Play. The scene is an ordinary asset in the payload, and the `.meta` of every script it references
+ships beside it, so the GUIDs resolve in your project exactly as they do in ours.
+
 ---
 
 ## Editor Tools
