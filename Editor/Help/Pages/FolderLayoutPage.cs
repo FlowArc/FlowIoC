@@ -74,6 +74,13 @@ namespace FlowIoC.Editor.Help.Pages
                 "A screen or a sub module may use its parent's types. The direction is one way: a "
                 + "module never knows what sits in its own zScreenModules or zSubModules.");
 
+            painter.SubHeading("What a module carries with it");
+            painter.Paragraph(
+                "Everything a module offers arrives with the module. A test module brings the scene "
+                + "it runs in, already built, rather than a menu item that builds it, so installing "
+                + "the module is the only step there is. Nothing a module owns belongs on the "
+                + "Tools > FlowIoC menu, which stays the framework's own.");
+
             painter.SubHeading("Publishing data through Shared");
             painter.Paragraph(
                 "Scripts/Shared is an assembly of its own - Modules.Player.Shared, beside "

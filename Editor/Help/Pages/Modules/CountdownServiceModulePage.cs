@@ -120,9 +120,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("Trying it out");
             painter.Paragraph(
-                "The module ships with a test module beside it. Run "
-                + "Tools > FlowIoC > Modules > Countdown Service > Build Test Scene and press Play: a "
-                + "Start and a Stop button, a countdown, and the elapsed time next to it.");
+                "The module ships with a test module beside it, and the scene it runs in arrives with "
+                + "it. Open CountdownServiceTestScene under the test module's Scenes folder and press "
+                + "Play: a Start and a Stop button, a countdown, and the elapsed time next to it.");
         }
 
         private void DrawUsage(HelpPainter painter)

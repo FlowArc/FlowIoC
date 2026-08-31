@@ -66,6 +66,10 @@ so follow the rules below deliberately.
   `PlayerInternalSignals`: what the module says to its own commands, dispatched by nothing
   outside its own assembly. It has no `Incoming` and no `Outgoing` - those two halves
   describe a boundary, and an internal signal never crosses one.
+- A module adds nothing to the `Tools/FlowIoC` menu. Whatever it hands the reader ships
+  inside the module instead: a test module brings the scene it runs in, already built, so
+  installing the module is the only step there is. That holds for the modules FlowIoC ships
+  and for the ones a game writes.
 
 ### Injection targets properties, never fields
 
