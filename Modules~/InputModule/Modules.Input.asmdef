@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Input",
+  "references": [
+    "FlowIoC",
+    "Modules.Input.Shared",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
