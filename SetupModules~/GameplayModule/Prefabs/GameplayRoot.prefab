@@ -49,7 +49,7 @@ MonoBehaviour:
     ContextName: GameplayScreenContext
     AutoSetup: 1
     IsTest: 0
-  initializeOrder: 100
+  initializeOrder: 0
   AutoBindInjections: 1
   AutoBindMediations: 1
   AutoInitialize: 1
