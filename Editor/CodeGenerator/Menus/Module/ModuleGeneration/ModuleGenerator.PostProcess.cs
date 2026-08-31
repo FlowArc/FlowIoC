@@ -190,7 +190,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             GameObject eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
-            eventSystem.AddComponent<StandaloneInputModule>();
+            eventSystem.AddComponent(new UiInputModuleType().Resolve());
 
             ViewInjector viewInjector = screenGameObject.AddComponent<ViewInjector>();
             screenGameObject.AddComponent(screenType);
