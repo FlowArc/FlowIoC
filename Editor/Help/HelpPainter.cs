@@ -10,13 +10,17 @@ namespace FlowIoC.Editor.Help
     /// <summary>
     /// Every mark the help window makes. Pages call these and nothing else, which is what keeps
     /// eight pages looking like one window.
+    ///
+    /// The class is public because a private module in another package writes its page against
+    /// it. Only the marks are public: the constructor, the banner, the tree and the graph take
+    /// types the package does not publish and belong to the window rather than to a page.
     /// </summary>
-    internal class HelpPainter
+    public class HelpPainter
     {
         private readonly HelpTheme _theme;
         private readonly HelpGraphPainter _graphPainter;
 
-        public HelpPainter(HelpTheme theme)
+        internal HelpPainter(HelpTheme theme)
         {
             _theme = theme;
             _graphPainter = new HelpGraphPainter(theme);
@@ -27,7 +31,7 @@ namespace FlowIoC.Editor.Help
         /// buttons on the right. The window draws this outside the scroll view, so the title and
         /// the tabs stay put while the page scrolls under them.
         /// </summary>
-        public int Banner(string title, IReadOnlyList<HelpTab> tabs, int selected, HelpAction action = null)
+        internal int Banner(string title, IReadOnlyList<HelpTab> tabs, int selected, HelpAction action = null)
         {
             Color previous = GUI.backgroundColor;
             GUI.backgroundColor = _theme.Banner;
@@ -164,9 +168,9 @@ namespace FlowIoC.Editor.Help
             Space();
         }
 
-        public void Tree(HelpTreeNode root) => DrawTree(root, 0);
+        internal void Tree(HelpTreeNode root) => DrawTree(root, 0);
 
-        public void Graph(HelpGraph graph, HelpGraphStepper stepper)
+        internal void Graph(HelpGraph graph, HelpGraphStepper stepper)
         {
             if (graph == null)
                 return;

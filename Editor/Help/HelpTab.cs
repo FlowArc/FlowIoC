@@ -9,7 +9,7 @@ namespace FlowIoC.Editor.Help
     /// The introduction says what a thing is; a tab beside it can carry the rules, the corner
     /// cases, or a longer worked example without crowding the first thing a reader sees.
     /// </summary>
-    internal class HelpTab
+    public class HelpTab
     {
         private readonly Action<HelpPainter> _draw;
 
