@@ -24,6 +24,23 @@ namespace FlowIoC.Editor.Help.Pages
                 "The Context is where the module declares what it is made of - and nothing else. A "
                 + "Context that needs an if is making a decision, and a decision belongs in a Command.");
 
+            painter.SubHeading("What hangs off a Root");
+            painter.Paragraph(
+                "A GameObject the module needs in the scene goes under its Root. The Root is the "
+                + "module's one presence there, so an EventSystem, an adapter, anything the module "
+                + "owns hangs off it rather than sitting loose beside it.");
+            painter.Paragraph(
+                "A Root otherwise lives and dies with its scene. A module whose work outlives one - "
+                + "input, audio, analytics - makes its Root persistent in BeforeCreateContext, which "
+                + "runs just before the context is built. The reparenting is not decoration: Unity "
+                + "marks only root level objects as do not destroy.");
+            painter.Code(
+                "protected override void BeforeCreateContext()\n"
+                + "{\n"
+                + "    transform.SetParent(null);\n"
+                + "    DontDestroyOnLoad(gameObject);\n"
+                + "}");
+
             painter.Space();
             painter.Graph(Graph, Stepper);
         }

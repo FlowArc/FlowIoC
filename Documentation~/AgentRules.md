@@ -70,6 +70,22 @@ so follow the rules below deliberately.
   inside the module instead: a test module brings the scene it runs in, already built, so
   installing the module is the only step there is. That holds for the modules FlowIoC ships
   and for the ones a game writes.
+- A GameObject a module needs in the scene goes under that module's Root. The Root is the
+  module's one presence in the scene, so an EventSystem, an adapter, or anything else the
+  module owns hangs off it rather than sitting loose beside it.
+- A module whose work outlives a scene makes its Root persistent in `BeforeCreateContext`,
+  which runs just before the context is built:
+
+  ```csharp
+  protected override void BeforeCreateContext()
+  {
+      transform.SetParent(null);
+      DontDestroyOnLoad(gameObject);
+  }
+  ```
+
+  The `SetParent` is not decoration: Unity marks only root level objects as do not destroy,
+  so a Root authored under something else has to detach itself before it can survive.
 
 ### Injection targets properties, never fields
 
