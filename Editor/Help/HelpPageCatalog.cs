@@ -42,11 +42,7 @@ namespace FlowIoC.Editor.Help
                         new ScreenConfigManagerPage(),
                         new AgentRulesPage(),
                         new AgentSkillsPage())),
-                new HelpSection("Modules", "Prefab Icon",
-                    new SetupModulesPage(),
-                    new CountdownServiceModulePage(),
-                    new CameraSystemModulePage(),
-                    new InputModulePage())
+                new HelpSection("Modules", "Prefab Icon", ModuleSections())
             };
 
             var pages = new List<IHelpPage>();
@@ -56,6 +52,29 @@ namespace FlowIoC.Editor.Help
 
             Pages = pages;
             OpeningPage = Find("Welcome");
+        }
+
+        /// <summary>
+        /// The modules the package ships, and after them the ones a private package brings. The
+        /// private category is absent rather than empty when there is no private package, so a
+        /// project without one sees the sidebar it has always seen.
+        /// </summary>
+        private HelpSection[] ModuleSections()
+        {
+            var sections = new List<HelpSection>
+            {
+                new HelpSection(new SetupModulesPage()),
+                new HelpSection(new CountdownServiceModulePage()),
+                new HelpSection(new CameraSystemModulePage()),
+                new HelpSection(new InputModulePage())
+            };
+
+            HelpSection privateModules = new PrivateModuleSections().Category();
+
+            if (privateModules != null)
+                sections.Add(privateModules);
+
+            return sections.ToArray();
         }
 
         public IReadOnlyList<HelpSection> Sections { get; }
