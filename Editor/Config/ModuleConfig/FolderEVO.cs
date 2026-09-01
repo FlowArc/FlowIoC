@@ -2,9 +2,21 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace FlowIoC.Editor.Config.ModuleConfig
 {
+    /// <summary>
+    /// This type is written through [SerializeReference], which records its full type name in the
+    /// asset rather than a GUID. Renaming it to FolderEVO therefore orphaned the entries in every
+    /// directory structure asset already on disk: Unity could not resolve FolderConfig, handed
+    /// back a list of nulls, and Create Module threw on the first one before it could open.
+    ///
+    /// [MovedFrom] is what teaches Unity the old name. It has to stay for as long as an asset
+    /// written before the rename might still be out there, which in a published package is
+    /// indefinitely. Renaming this class again means adding another entry, not editing this one.
+    /// </summary>
+    [MovedFrom(true, "FlowIoC.Editor.Config.ModuleConfig", "FlowIoC.Editor", "FolderConfig")]
     [Serializable]
     public class FolderEVO
     {
