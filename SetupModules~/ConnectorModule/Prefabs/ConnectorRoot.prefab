@@ -49,7 +49,7 @@ MonoBehaviour:
     ContextName: MainConnectorSubContext
     AutoSetup: 1
     IsTest: 0
-  initializeOrder: 101
+  initializeOrder: 98
   AutoBindInjections: 1
   AutoBindMediations: 1
   AutoInitialize: 1

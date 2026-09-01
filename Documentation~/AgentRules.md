@@ -25,8 +25,20 @@ so follow the rules below deliberately.
   `#if UNITY_EDITOR`.
 - Systems are never added to one another's assemblies. Two Systems in separate modules
   talk through signals wired in a Connector, like any other cross-module traffic.
+- A Connector gets signal holders, it never binds them:
+  `InjectionBinderCrossContext.GetInstance<PlayerSignals>()` in `Setup`, never `Bind`. The
+  module that owns a holder is the one that binds it, and a Connector that binds instead
+  quietly creates a second holder nobody dispatches when the owning module is absent.
+  Failing to get one is the report that the module's Root is not in the scene - put the Root
+  back rather than binding around it.
 - A Context declares bindings and nothing else. If a Context needs an `if`, that decision
   belongs in a Command.
+- The binding phases declare, `Setup` initialises, `Launch` starts. `SignalBindings`,
+  `InjectionBindings`, `MediationBindings` and `CommandBindings` only say what the module is
+  made of. `Setup` runs once **every** Root in the scene has finished binding, so that is where
+  a module readies its Models if they need readying, and the only phase that may reach across
+  modules - which is what a Connector does there. `Launch` runs after every `Setup` and
+  dispatches the module's first signal.
 - A Command does one unit of work, holds no state between runs, and returns no value. It
   injects models and services, mutates state, and dispatches outgoing signals.
 - A Function returns a value and does not orchestrate. If you want the step visible in the
@@ -86,6 +98,13 @@ so follow the rules below deliberately.
 
   The `SetParent` is not decoration: Unity marks only root level objects as do not destroy,
   so a Root authored under something else has to detach itself before it can survive.
+- A Root's Initialize Order follows the bands the shipped scene uses: Services take negative
+  numbers because they depend on nothing (`-10000` asset, `-99` screen, `-2` pool), the game's
+  own modules and Systems take `0` to `97`, `ConnectorRoot` takes `98` so the wiring reads after
+  the modules it wires, `ScreenRoot` takes `99`, and `MainRoot` takes `100` because its `Launch`
+  is the entry point. Author the Hierarchy in the same order. The number decides binding order
+  and the order of the `Setup` and `Launch` passes; it is not what makes crossing modules safe.
+  `Setup` runs a frame after every Root has finished binding, and that barrier is.
 
 ### Injection targets properties, never fields
 
@@ -331,8 +350,9 @@ public class PlayerRoot : Root<PlayerContext> { }
 
 ### Crossing between modules
 
-Two modules meet in a Connector sub-context and nowhere else. It binds both signal
-holders and wires one module's `Outgoing` to another's `Incoming`:
+Two modules meet in a Connector sub-context and nowhere else. It takes both signal
+holders as the modules bound them and wires one module's `Outgoing` to another's
+`Incoming`:
 
 ```csharp
 public class HeroConnectorSubContext : Context
@@ -342,8 +362,8 @@ public class HeroConnectorSubContext : Context
 
     public override void Setup()
     {
-        _heroSignals          = InjectionBinderCrossContext.Bind<HeroSignals>();
-        _playerProfileSignals = InjectionBinderCrossContext.Bind<PlayerProfileSignals>();
+        _heroSignals          = InjectionBinderCrossContext.GetInstance<HeroSignals>();
+        _playerProfileSignals = InjectionBinderCrossContext.GetInstance<PlayerProfileSignals>();
 
         _heroSignals.Outgoing.DecreaseCurrency
             .Connect(_playerProfileSignals.Incoming.DecreaseCurrency);

@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Initialize Order is a documented convention rather than a number people guess at.** The Roots
+  the package ships fall into bands - Services take negative numbers because they depend on
+  nothing, the game's own modules take `0` to `97`, `ConnectorRoot` takes `98` so the wiring reads
+  after the modules it wires, `ScreenRoot` takes `99`, and `MainRoot` takes `100` because its
+  `Launch` is the entry point. The bands are now written down in the agent rules, in the README's
+  lifecycle section, in a new **Ordering Roots** page in the Help window - with a picture of
+  `MainScene` showing the Hierarchy authored in the same order - and in a `flowioc-root-order`
+  skill installed alongside the others. The page's numbers are checked against the
+  `initializeOrder` actually serialised into the shipped prefabs, so the two cannot drift apart.
+- **What each lifecycle phase is for, written down.** The binding phases declare, `Setup`
+  initialises - it does not run until every Root in the scene has finished binding, so it is where
+  a module readies its Models and the only phase that may reach across modules - and `Launch`
+  dispatches the first signal. In the agent rules, the README, and the Help window's Root & Context
+  page.
+- **A `flowioc-connectors` skill**, covering the shape of a Connector sub-context, the `Connect`
+  overloads, connection groups, and what to check when a signal is dispatched but never arrives.
+
+### Changed
+
+- **A Connector now gets signal holders instead of binding them.** `InjectionBinderCrossContext`
+  `.GetInstance<PlayerSignals>()` rather than `.Bind<PlayerSignals>()`, in the shipped
+  `ConnectorModule` and in every example. `Bind` is get-or-create, so a Connector wiring a module
+  whose Root is missing from the scene used to receive a fresh holder, connect to that, and
+  silently deliver every signal to nobody. Module Contexts still bind their own holder as before.
+- **`InjectionBinder.GetInstance<T>` reports a missing binding instead of throwing.** It used to
+  index the container directly and hand the caller a bare `KeyNotFoundException`; it now names the
+  type - and the name it was asked for, if any - and returns the default.
+- **`ConnectorRoot` moved from `101` to `98`.** The frame barrier already guarantees that every
+  signal holder is bound before any `Setup` runs, so the Connector never needed to be last; `98`
+  places it after the modules it wires and before the screen host and the entry point.
+
 ## [1.3.1] - 2026-08-31
 
 ### Added

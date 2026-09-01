@@ -26,6 +26,7 @@ namespace FlowIoC.Editor.Help
                     new HelpSection(new CreatingModulePage()),
                     new HelpSection(new FolderLayoutPage()),
                     new HelpSection(new DataTypesPage()),
+                    new HelpSection(new OrderingRootsPage()),
                     new HelpSection("Structure", "UnityEditor.SceneHierarchyWindow",
                         new RootContextPage(),
                         new SignalsPage(),
