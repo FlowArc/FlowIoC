@@ -20,6 +20,13 @@ namespace FlowIoC.Editor.Help
         private const float SidebarWidth = 240f;
 
         /// <summary>
+        /// Width kept clear for the sidebar's vertical scrollbar. The bar itself only appears
+        /// when the list is taller than the view, but the space is held either way, so a list
+        /// that grows past the bottom does not narrow every row the moment the bar arrives.
+        /// </summary>
+        private const float SidebarScrollbarReserve = 14f;
+
+        /// <summary>
         /// Three times the height of an ordinary mini button, so a topic reads as a place to go
         /// rather than as a row in a list.
         /// </summary>
@@ -63,7 +70,7 @@ namespace FlowIoC.Editor.Help
         internal static void Open(string sectionTitle)
         {
             HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
-            window.minSize = new Vector2(900f, 560f);
+            window.minSize = new Vector2(1120f, 600f);
             window.Show();
 
             if (!string.IsNullOrEmpty(sectionTitle))
@@ -143,17 +150,24 @@ namespace FlowIoC.Editor.Help
                 // GUIStyle.none for the horizontal bar: the rows are as wide as the view, so a
                 // horizontal scrollbar would only ever be a stripe along the bottom.
                 //
-                // The vertical one is always shown. Letting it appear only when it is needed
-                // narrows every row the moment it does, which rewraps the titles and shunts the
-                // list down under the reader's cursor.
+                // The vertical one appears only when the list outgrows the view. The rows are
+                // laid out to a width that already excludes the bar, so the moment it arrives
+                // nothing rewraps and the list does not shift under the reader's cursor.
                 using (EditorGUILayout.ScrollViewScope sidebar = new EditorGUILayout.ScrollViewScope(
-                           _sidebarScroll, false, true,
+                           _sidebarScroll, false, false,
                            GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none))
                 {
                     _sidebarScroll = sidebar.scrollPosition;
 
-                    foreach (HelpSection section in _catalog.Sections)
-                        DrawSection(section, string.Empty, 0);
+                    float rowWidth = SidebarWidth
+                                     - EditorStyles.helpBox.padding.horizontal
+                                     - SidebarScrollbarReserve;
+
+                    using (new EditorGUILayout.VerticalScope(GUILayout.Width(rowWidth)))
+                    {
+                        foreach (HelpSection section in _catalog.Sections)
+                            DrawSection(section, string.Empty, 0);
+                    }
 
                     GUILayout.FlexibleSpace();
                 }
