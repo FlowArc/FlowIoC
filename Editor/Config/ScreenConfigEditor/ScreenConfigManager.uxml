@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="root" class="scm-root">
+
+        <uie:Toolbar name="toolbar" class="scm-toolbar">
+            <uie:ToolbarSearchField name="search" class="scm-toolbar__search" />
+            <ui:VisualElement name="filters" class="scm-toolbar__filters" />
+            <ui:VisualElement class="scm-spacer" />
+            <ui:Label name="count" class="scm-toolbar__count" />
+            <uie:ToolbarButton name="refresh" text="Refresh" tooltip="Rescan the project for screen configs." />
+        </uie:Toolbar>
+
+        <ui:MultiColumnListView name="table" class="scm-table"
+                                virtualization-method="FixedHeight"
+                                fixed-item-height="22"
+                                selection-type="Single"
+                                show-alternating-row-backgrounds="ContentOnly"
+                                reorderable="false" />
+
+        <ui:VisualElement name="empty" class="scm-empty">
+            <ui:Label name="empty-label" class="scm-empty__label" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
