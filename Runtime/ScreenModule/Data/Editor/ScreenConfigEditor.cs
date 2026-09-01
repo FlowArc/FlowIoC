@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace FlowIoC.ScreenModule.Data.Editor
 {
-    [CustomEditor(typeof(ScreenConfig))]
+    [CustomEditor(typeof(CD_Screen))]
     internal class ScreenConfigEditor : UnityEditor.Editor
     {
         private SerializedProperty _defaultLayerProp;
@@ -57,7 +57,7 @@ namespace FlowIoC.ScreenModule.Data.Editor
             if (isPreview)
             {
                 EditorGUILayout.HelpBox(
-                    "This is an in-memory preview of ScreenConfig. Some validations (OnValidate) may not apply.",
+                    "This is an in-memory preview of CD_Screen. Some validations (OnValidate) may not apply.",
                     MessageType.Info
                 );
 

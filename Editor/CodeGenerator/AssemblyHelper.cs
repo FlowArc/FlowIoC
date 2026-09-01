@@ -81,7 +81,7 @@ namespace FlowIoC.Editor.CodeGenerator
         public static List<Type> GetAllTypesFromAssemblies(string assemblyName)
         {
             var assemblyList = AppDomain.CurrentDomain.GetAssemblies();
-            var codeGenerationSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            var codeGenerationSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
 
             string transformedName = ParseAssemblyName(assemblyName);
 

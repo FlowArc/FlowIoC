@@ -241,7 +241,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 GameObject createdPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(relativePrefabPath);
 
                 string relativeConfigPath = createdConfigPath.Substring(createdConfigPath.IndexOf("Assets"));
-                ScreenConfig screenConfig = AssetDatabase.LoadAssetAtPath<ScreenConfig>(relativeConfigPath);
+                CD_Screen screenConfig = AssetDatabase.LoadAssetAtPath<CD_Screen>(relativeConfigPath);
 
                 screenManager.AddScreenToConfig(screenConfig);
                 EditorUtility.SetDirty(screenManager);
@@ -260,7 +260,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
                     EditorUtility.SetDirty(screenConfig);
                     AssetDatabase.SaveAssets();
-                    Debug.Log($"DirectPrefab '{createdPrefabPath}' assigned to ScreenConfig '{createdConfigPath}'.");
+                    Debug.Log($"DirectPrefab '{createdPrefabPath}' assigned to CD_Screen '{createdConfigPath}'.");
                 }
             }
         }

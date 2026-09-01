@@ -1,7 +1,7 @@
 namespace FlowIoC.ConsoleModule
 {
     /// <summary>
-    /// Decides whether a missing <see cref="FlowConsoleSettings"/> should be written to disk.
+    /// Decides whether a missing <see cref="CD_FlowConsole"/> should be written to disk.
     /// A settings asset that fails to load is not the same thing as a settings asset that is
     /// absent: Unity returns null for both, but the first happens whenever the script behind
     /// the asset cannot be resolved - during a compile failure, or after the package's asset

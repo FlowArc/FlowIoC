@@ -15,11 +15,11 @@ namespace FlowIoC.ScreenModule.ViewsMediators.Manager
         public bool IsRegistered { get; set; }
         public ScreenManagerVO ManagerData = new ();
 
-        public Action<List<ScreenConfig>> UnRegisterScreenConfig = delegate { };
+        public Action<List<CD_Screen>> UnRegisterScreenConfig = delegate { };
 
-        [SerializeField] private List<ScreenConfig> _screenConfigs = new List<ScreenConfig>();
+        [SerializeField] private List<CD_Screen> _screenConfigs = new List<CD_Screen>();
 
-        public List<ScreenConfig> GetScreenConfigs()
+        public List<CD_Screen> GetScreenConfigs()
         {
             if (_screenConfigs == null || _screenConfigs.Count <= 0) return _screenConfigs;
             return _screenConfigs;
@@ -27,7 +27,7 @@ namespace FlowIoC.ScreenModule.ViewsMediators.Manager
 
         public void UnregisterScreenConfig() => UnRegisterScreenConfig.Invoke(_screenConfigs);
         
-        public void AddScreenToConfig(ScreenConfig screenConfig)
+        public void AddScreenToConfig(CD_Screen screenConfig)
         {
             _screenConfigs.Add(screenConfig);
         }

@@ -15,7 +15,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Paragraph(
-                "Every module is recorded in one project asset, FlowIoCModuleIndex.asset, keyed "
+                "Every module is recorded in one project asset, ED_ModuleIndex.asset, keyed "
                 + "on its folder's own Unity GUID rather than its name or path. A rename or a move "
                 + "made outside the Editor can still leave that index stale, and the generators "
                 + "then write into the wrong place. These entries put it back in step.");

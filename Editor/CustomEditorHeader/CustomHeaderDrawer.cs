@@ -7,21 +7,21 @@ namespace FlowIoC.Editor.CustomEditorHeader
 {
     public static class CustomHeaderDrawer
     {
-        private static HeaderConfig _defaultConfig;
+        private static ED_Header _defaultConfig;
         
-        private static HeaderConfig DefaultConfig
+        private static ED_Header DefaultConfig
         {
             get
             {
                 if (_defaultConfig == null)
                 {
-                    _defaultConfig = ScriptableObject.CreateInstance<HeaderConfig>();
+                    _defaultConfig = ScriptableObject.CreateInstance<ED_Header>();
                 }
                 return _defaultConfig;
             }
         }
 
-        public static void DrawHeader(string title, HeaderConfig config = null)
+        public static void DrawHeader(string title, ED_Header config = null)
         {
             var headerConfig = config ?? DefaultConfig;
             DrawHeaderInternal(title, headerConfig.HeaderBackgroundColor, headerConfig.HeaderBackgroundColor, 

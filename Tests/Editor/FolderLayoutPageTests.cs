@@ -10,10 +10,10 @@ namespace FlowIoC.Tests
 {
     public class FolderLayoutPageTests
     {
-        private MainModuleDirectoryStructureConfig _config;
+        private ED_MainModuleDirectoryStructure _config;
 
         [SetUp]
-        public void SetUp() => _config = ScriptableObject.CreateInstance<MainModuleDirectoryStructureConfig>();
+        public void SetUp() => _config = ScriptableObject.CreateInstance<ED_MainModuleDirectoryStructure>();
 
         [TearDown]
         public void TearDown() => Object.DestroyImmediate(_config);
@@ -69,9 +69,9 @@ namespace FlowIoC.Tests
             }
         }
 
-        private IEnumerable<string> Flatten(IEnumerable<FolderConfig> folders)
+        private IEnumerable<string> Flatten(IEnumerable<FolderEVO> folders)
         {
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 yield return folder.FolderName;
 

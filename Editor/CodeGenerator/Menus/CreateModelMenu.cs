@@ -41,7 +41,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private static GenerationState _generationState;
         private string _selectedModuleName = string.Empty;
         private bool _useDummyBinding;
-        private CodeGeneratorSettings _codeGenSettings;
+        private ED_CodeGenerator _codeGenSettings;
 
         private enum GenerationState
         {
@@ -54,7 +54,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             _moduleExpandedState = new Dictionary<string, bool>();
             _parentModulePath = string.Empty;
-            CodeGeneratorSettings.CreateConfig();
+            ED_CodeGenerator.CreateConfig();
             LoadCodeGeneratorSettings();
             _generationState = GenerationState.Idle;
             _registry = new ModuleRegistryFactory().FromProject();
@@ -62,10 +62,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private bool LoadCodeGeneratorSettings()
         {
-            _codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            _codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (_codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return true;
             }
 
@@ -187,9 +187,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             string subDirectory = _selectedModuleKind switch
             {
-                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules],
-                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules],
-                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules],
+                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
+                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules],
+                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
                 _ => string.Empty
             };
 
@@ -197,9 +197,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 ? baseModulePath
                 : Path.Combine(baseModulePath, subDirectory);
 
-            string modelPath = _configProvider.ConfigFor(_selectedModuleKind).FindFullFolderPathByID(FolderConfig.FolderType.Models, modulePath);
+            string modelPath = _configProvider.ConfigFor(_selectedModuleKind).FindFullFolderPathByID(FolderEVO.FolderType.Models, modulePath);
             string rootsAndContextsPath = _configProvider.ConfigFor(_selectedModuleKind)
-                .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 
             CreateModel(modelPath, moduleNamespace);
@@ -232,20 +232,20 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             string dummyModelName = _modelName + "DummyModel";
             string modelInterfaceName = $"I{_modelName}" + "Model";
 
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
 
             CodeGeneratorUtils.CreateModel(modelName, "TempModel", path, CodeGeneratorStrings.TempModelPath,
-                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models]}", _injectableNames, false);
+                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", _injectableNames, false);
             if (_useDummyBinding)
                 CodeGeneratorUtils.CreateModel(dummyModelName, "TempModel", path, CodeGeneratorStrings.TempModelPath,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models]}", _injectableNames, true);
+                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", _injectableNames, true);
             CodeGeneratorUtils.CreateModelInterface(modelInterfaceName, "ITempModel", path, CodeGeneratorStrings.TempIModelPath,
-                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models]}");
+                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}");
 
             EnsureNamespaceImport(modelName, path, "Models", moduleNamespace);
         }
@@ -253,15 +253,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void BindModelInContext(string contextPath, string modelName, string iModelName, string dummyModelName, string moduleNamespace,
             bool useDummyBinding)
         {
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
 
             CodeGeneratorUtils.BindModelInContext(contextPath, modelName, iModelName, dummyModelName,
-                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models]}", useDummyBinding);
+                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", useDummyBinding);
         }
 
         private void EnsureNamespaceImport(string className, string path, string type, string moduleNamespace)

@@ -32,7 +32,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_config_joins_the_shared_config_group_and_carries_the_label()
         {
-            ScreenAddressableEntry config = _entries.For("MainScreen").First(e => e.Address == "MainScreenConfig");
+            ScreenAddressableEntry config = _entries.For("MainScreen").First(e => e.Address == "CD_MainScreen");
 
             Assert.AreEqual("Local_Screen-Configs", config.GroupName);
             Assert.AreEqual("ScreenConfig", config.Label);

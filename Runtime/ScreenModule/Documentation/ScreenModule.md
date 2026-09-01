@@ -1,7 +1,7 @@
 # Screens
 
 The Screen Module opens, stacks, pools and unloads UI. You describe each screen once
-in a `ScreenConfig` asset, then ask for it by type:
+in a `CD_Screen` asset, then ask for it by type:
 
 ```csharp
 await _screenService.Open<SettingsScreenView>().Show();
@@ -39,7 +39,7 @@ scene once. Every module then injects the service:
 ### 2. A `ScreenManager` in the scene
 
 `ScreenManager` is the MonoBehaviour that owns a canvas, a set of layers, and the list
-of `ScreenConfig` assets it is allowed to open. Its `ManagerID` is what the
+of `CD_Screen` assets it is allowed to open. Its `ManagerID` is what the
 `managerId` parameter on every service call refers to — `0` is the default.
 
 Use more than one manager when you have genuinely separate UI surfaces: a world-space
@@ -105,9 +105,9 @@ public class SettingsScreenMediator : IMediator
 }
 ```
 
-### 4. A `ScreenConfig` asset
+### 4. A `CD_Screen` asset
 
-One `ScreenConfig` per screen tells the module where the prefab lives and how it
+One `CD_Screen` per screen tells the module where the prefab lives and how it
 behaves by default. Edit them through *Tools ▸ FlowIoC ▸ Screen Config Manager*.
 
 | Field | Meaning |
@@ -528,7 +528,7 @@ In order of likelihood:
 
 1. The target layer is occupied and you did not pass `ForceOpenAtFullLayer()`.
 2. The screen is already open and you did not pass `ForceOpenAtDuplication()`.
-3. The `ScreenConfig` is not registered with the manager you are opening from.
+3. The `CD_Screen` is not registered with the manager you are opening from.
 4. The load failed — wrong `AddressableKey`, wrong `ResourcePath`, or a missing
    `DirectPrefab` reference.
 

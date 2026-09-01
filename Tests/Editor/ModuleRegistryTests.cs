@@ -34,7 +34,7 @@ namespace FlowIoC.Tests
             }
         }
 
-        private FlowIoCModuleIndex _index;
+        private ED_ModuleIndex _index;
         private FakeAssetPaths _paths;
 
         private const string CameraPath = "Assets/Modules/CameraModule";
@@ -46,7 +46,7 @@ namespace FlowIoC.Tests
         [SetUp]
         public void SetUp()
         {
-            _index = ScriptableObject.CreateInstance<FlowIoCModuleIndex>();
+            _index = ScriptableObject.CreateInstance<ED_ModuleIndex>();
             _paths = new FakeAssetPaths();
 
             _paths.Add(CameraPath, "camera-guid");
@@ -55,9 +55,9 @@ namespace FlowIoC.Tests
 
             _index.Replace(new[]
             {
-                new ModuleDescriptor {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
-                new ModuleDescriptor {Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid"},
-                new ModuleDescriptor {Name = "HudTestModule", Kind = ModuleKind.Test, FolderGuid = "hud-test-guid"}
+                new ModuleDescriptorEVO {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
+                new ModuleDescriptorEVO {Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid"},
+                new ModuleDescriptorEVO {Name = "HudTestModule", Kind = ModuleKind.Test, FolderGuid = "hud-test-guid"}
             });
         }
 
@@ -89,7 +89,7 @@ namespace FlowIoC.Tests
             _paths.Add("Assets/Modules/CameraModule/Scripts/Runtime/Models", "models-guid");
 
             Assert.IsTrue(NewRegistry().TryGetNearestModule(
-                "Assets/Modules/CameraModule/Scripts/Runtime/Models", out ModuleDescriptor module));
+                "Assets/Modules/CameraModule/Scripts/Runtime/Models", out ModuleDescriptorEVO module));
             Assert.AreEqual("CameraModule", module.Name);
         }
 
@@ -102,7 +102,7 @@ namespace FlowIoC.Tests
         {
             _paths.Add(HudPath + "/Scripts", "hud-scripts-guid");
 
-            NewRegistry().TryGetNearestModule(HudPath + "/Scripts", out ModuleDescriptor module);
+            NewRegistry().TryGetNearestModule(HudPath + "/Scripts", out ModuleDescriptorEVO module);
 
             Assert.AreEqual("HudModule", module.Name);
         }
@@ -118,7 +118,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_path_of_a_module_is_resolved_from_its_guid()
         {
-            _index.TryGetByName("HudModule", out ModuleDescriptor hud);
+            _index.TryGetByName("HudModule", out ModuleDescriptorEVO hud);
 
             Assert.AreEqual(HudPath, NewRegistry().PathOf(hud));
         }
@@ -130,8 +130,8 @@ namespace FlowIoC.Tests
         [Test]
         public void The_screen_modules_of_a_module_are_its_screen_kind_children()
         {
-            _index.TryGetByName("CameraModule", out ModuleDescriptor camera);
-            _index.TryGetByName("HudModule", out ModuleDescriptor hud);
+            _index.TryGetByName("CameraModule", out ModuleDescriptorEVO camera);
+            _index.TryGetByName("HudModule", out ModuleDescriptorEVO hud);
 
             Assert.AreEqual("HudModule", NewRegistry().ChildrenOf(camera, ModuleKind.Screen).Single().Name);
             Assert.AreEqual("HudTestModule", NewRegistry().ChildrenOf(hud, ModuleKind.Test).Single().Name);
@@ -140,7 +140,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_module_with_no_children_of_that_kind_yields_nothing()
         {
-            _index.TryGetByName("CameraModule", out ModuleDescriptor camera);
+            _index.TryGetByName("CameraModule", out ModuleDescriptorEVO camera);
 
             Assert.IsEmpty(NewRegistry().ChildrenOf(camera, ModuleKind.Test));
         }
@@ -152,7 +152,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_ancestors_of_a_nested_module_come_back_nearest_first()
         {
-            _index.TryGetByName("HudTestModule", out ModuleDescriptor hudTest);
+            _index.TryGetByName("HudTestModule", out ModuleDescriptorEVO hudTest);
 
             CollectionAssert.AreEqual(
                 new[] {"HudModule", "CameraModule"},
@@ -162,7 +162,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_top_level_module_has_no_ancestors()
         {
-            _index.TryGetByName("CameraModule", out ModuleDescriptor camera);
+            _index.TryGetByName("CameraModule", out ModuleDescriptorEVO camera);
 
             Assert.IsEmpty(NewRegistry().AncestorsOf(camera));
         }

@@ -6,11 +6,11 @@ namespace FlowIoC.Tests
 {
     public class OptionalFolderToggleRuleTests
     {
-        private static FolderConfig Optional() =>
-            new FolderConfig {Type = FolderConfig.FolderType.Signals, IsOptional = true, IsMandatory = false};
+        private static FolderEVO Optional() =>
+            new FolderEVO {Type = FolderEVO.FolderType.Signals, IsOptional = true, IsMandatory = false};
 
-        private static FolderConfig Mandatory() =>
-            new FolderConfig {Type = FolderConfig.FolderType.Signals, IsOptional = false, IsMandatory = true};
+        private static FolderEVO Mandatory() =>
+            new FolderEVO {Type = FolderEVO.FolderType.Signals, IsOptional = false, IsMandatory = true};
 
         /// <summary>
         /// The screen and test layouts carry no Shared folder at all, so the toggle for it has

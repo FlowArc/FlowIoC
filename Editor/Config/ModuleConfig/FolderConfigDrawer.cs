@@ -6,11 +6,11 @@ using UnityEngine;
 
 namespace FlowIoC.Editor.Config.ModuleConfig
 {
-    [CustomPropertyDrawer(typeof(FolderConfig))]
+    [CustomPropertyDrawer(typeof(FolderEVO))]
     public class FolderConfigDrawer : PropertyDrawer
     {
-        private static Dictionary<string, FolderConfig.FolderType> _previousTypeByPath
-            = new Dictionary<string, FolderConfig.FolderType>();
+        private static Dictionary<string, FolderEVO.FolderType> _previousTypeByPath
+            = new Dictionary<string, FolderEVO.FolderType>();
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -33,7 +33,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             SerializedProperty isNamespaceProviderProp = property.FindPropertyRelative("IsNamespaceProvider");
             SerializedProperty subFoldersProp = property.FindPropertyRelative("SubFolders");
 
-            FolderConfig.FolderType currentType = (FolderConfig.FolderType)typeProp.enumValueIndex;
+            FolderEVO.FolderType currentType = (FolderEVO.FolderType)typeProp.enumValueIndex;
 
             if (!_previousTypeByPath.TryGetValue(property.propertyPath, out var oldType))
             {
@@ -46,12 +46,12 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             EditorGUI.PropertyField(typeRect, typeProp, new GUIContent("Folder Type"));
             if (EditorGUI.EndChangeCheck())
             {
-                currentType = (FolderConfig.FolderType)typeProp.enumValueIndex;
+                currentType = (FolderEVO.FolderType)typeProp.enumValueIndex;
                 if (oldType != currentType)
                 {
-                    if (currentType != FolderConfig.FolderType.Folder)
+                    if (currentType != FolderEVO.FolderType.Folder)
                     {
-                        CodeGeneratorSettings settings = TryGetCodeGeneratorSettings();
+                        ED_CodeGenerator settings = TryGetCodeGeneratorSettings();
                         if (settings != null
                             && settings.DirectoryStructureConfigMap.TryGetValue(currentType, out string lockedName))
                         {
@@ -69,7 +69,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 
             yOffset += lineHeight + spacing;
 
-            bool isFolder = currentType == FolderConfig.FolderType.Folder;
+            bool isFolder = currentType == FolderEVO.FolderType.Folder;
             Rect folderNameRect = new Rect(position.x, yOffset, position.width, lineHeight);
             using (new EditorGUI.DisabledGroupScope(!isFolder))
             {
@@ -120,9 +120,9 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             return total;
         }
 
-        private CodeGeneratorSettings TryGetCodeGeneratorSettings()
+        private ED_CodeGenerator TryGetCodeGeneratorSettings()
         {
-            return AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            return AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
         }
     }
 }

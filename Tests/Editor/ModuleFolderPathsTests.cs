@@ -38,14 +38,14 @@ namespace FlowIoC.Tests
         private const string CameraPath = "Assets/Modules/CameraModule";
         private const string HudPath = "Assets/Modules/CameraModule/zScreenModules/HudModule";
 
-        private FlowIoCModuleIndex _index;
+        private ED_ModuleIndex _index;
         private FakeAssetPaths _paths;
         private HashSet<string> _onDisk;
 
         [SetUp]
         public void SetUp()
         {
-            _index = ScriptableObject.CreateInstance<FlowIoCModuleIndex>();
+            _index = ScriptableObject.CreateInstance<ED_ModuleIndex>();
             _paths = new FakeAssetPaths();
             _onDisk = new HashSet<string> {CameraPath, HudPath};
 
@@ -54,8 +54,8 @@ namespace FlowIoC.Tests
 
             _index.Replace(new[]
             {
-                new ModuleDescriptor {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
-                new ModuleDescriptor {Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid"}
+                new ModuleDescriptorEVO {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
+                new ModuleDescriptorEVO {Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid"}
             });
         }
 
@@ -94,8 +94,8 @@ namespace FlowIoC.Tests
         {
             _index.Replace(new[]
             {
-                new ModuleDescriptor {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
-                new ModuleDescriptor {Name = "GhostModule", Kind = ModuleKind.Main, FolderGuid = "no-such-guid"}
+                new ModuleDescriptorEVO {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
+                new ModuleDescriptorEVO {Name = "GhostModule", Kind = ModuleKind.Main, FolderGuid = "no-such-guid"}
             });
 
             ModuleFolders folders = Resolve();
@@ -116,9 +116,9 @@ namespace FlowIoC.Tests
             _paths.Add("Assets/Modules/AaaModule", "aaa-guid");
             _index.Replace(new[]
             {
-                new ModuleDescriptor {Name = "AaaModule", Kind = ModuleKind.Main, FolderGuid = "aaa-guid"},
-                new ModuleDescriptor {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
-                new ModuleDescriptor {Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid"}
+                new ModuleDescriptorEVO {Name = "AaaModule", Kind = ModuleKind.Main, FolderGuid = "aaa-guid"},
+                new ModuleDescriptorEVO {Name = "CameraModule", Kind = ModuleKind.Main, FolderGuid = "camera-guid"},
+                new ModuleDescriptorEVO {Name = "HudModule", Kind = ModuleKind.Screen, FolderGuid = "hud-guid"}
             });
 
             ModuleFolders folders = Resolve();
@@ -130,7 +130,7 @@ namespace FlowIoC.Tests
         [Test]
         public void An_empty_index_resolves_to_nothing_rather_than_failing()
         {
-            _index.Replace(new ModuleDescriptor[0]);
+            _index.Replace(new ModuleDescriptorEVO[0]);
 
             ModuleFolders folders = Resolve();
 

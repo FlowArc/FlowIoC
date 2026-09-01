@@ -20,7 +20,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
             UnloadByLoadType(config, screenBody);   
         }
 
-        private void UnloadByLoadType( ScreenConfig config, IScreenBody screenBody)
+        private void UnloadByLoadType( CD_Screen config, IScreenBody screenBody)
         {
             switch (config.LoadType)
             {

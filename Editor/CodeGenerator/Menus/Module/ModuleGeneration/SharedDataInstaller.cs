@@ -34,12 +34,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             _references = references;
         }
 
-        public SharedDataReport Install(ModuleRegistry registry, ModuleDescriptor module, string modulePath, DirectoryStructureConfig config)
+        public SharedDataReport Install(ModuleRegistry registry, ModuleDescriptorEVO module, string modulePath, DirectoryStructureConfig config)
         {
             var report = new SharedDataReport();
 
-            FolderConfig sharedFolder = FindFolderByType(config?.RootFolders, FolderConfig.FolderType.Shared);
-            string sharedPath = config?.FindFullFolderPathByID(FolderConfig.FolderType.Shared, modulePath);
+            FolderEVO sharedFolder = FindFolderByType(config?.RootFolders, FolderEVO.FolderType.Shared);
+            string sharedPath = config?.FindFullFolderPathByID(FolderEVO.FolderType.Shared, modulePath);
 
             if (sharedFolder == null || string.IsNullOrEmpty(sharedPath))
             {
@@ -86,7 +86,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// selection and all of them land at once - the same thing ticking Shared in Create Module
         /// does.
         /// </summary>
-        private void CreateFolders(string sharedPath, FolderConfig sharedFolder, SharedDataReport report)
+        private void CreateFolders(string sharedPath, FolderEVO sharedFolder, SharedDataReport report)
         {
             bool existed = Directory.Exists(sharedPath);
 
@@ -112,7 +112,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// parent that already publishes. A grandchild reaches its own parent, not this one.
         /// </summary>
         private void AddReferenceToChildren(
-            ModuleRegistry registry, ModuleDescriptor module, string sharedAssemblyName, SharedDataReport report)
+            ModuleRegistry registry, ModuleDescriptorEVO module, string sharedAssemblyName, SharedDataReport report)
         {
             if (registry == null || module == null) return;
 
@@ -120,7 +120,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             foreach (ModuleKind kind in new[] {ModuleKind.Sub, ModuleKind.Test, ModuleKind.Screen})
             {
-                foreach (ModuleDescriptor child in registry.ChildrenOf(module, kind))
+                foreach (ModuleDescriptorEVO child in registry.ChildrenOf(module, kind))
                 {
                     string childPath = pathResolver.ToAbsolutePath(registry.PathOf(child));
                     if (string.IsNullOrEmpty(childPath)) continue;
@@ -155,15 +155,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             return files.Length == 0 ? null : files[0];
         }
 
-        private FolderConfig FindFolderByType(List<FolderConfig> folders, FolderConfig.FolderType folderType)
+        private FolderEVO FindFolderByType(List<FolderEVO> folders, FolderEVO.FolderType folderType)
         {
             if (folders == null) return null;
 
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (folder.Type == folderType) return folder;
 
-                FolderConfig found = FindFolderByType(folder.SubFolders, folderType);
+                FolderEVO found = FindFolderByType(folder.SubFolders, folderType);
                 if (found != null) return found;
             }
 

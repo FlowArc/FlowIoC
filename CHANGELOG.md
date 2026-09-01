@@ -28,6 +28,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING: every ScriptableObject the package ships now carries the data-type prefix its own
+  rules ask for.** `CD_PoolGroup` already followed the table; the rest did not. The editor-only
+  assets became `ED_CodeGenerator`, `ED_ModuleIndex`, `ED_FolderDrawer`, `ED_Header` and
+  `ED_MainModuleDirectoryStructure` / `ED_ScreenModuleDirectoryStructure` /
+  `ED_TestModuleDirectoryStructure`, and the two configs a game reads at runtime became
+  `CD_FlowConsole` and `CD_Screen`. The serializable classes they are built out of took the
+  matching suffixes: `FolderEVO`, `ModuleDescriptorEVO`, the nine `FolderDrawer*EVO` rule types,
+  and `CD_FlowConsole.FlowConsoleLogTypeCVO`.
+
+  `ScreenConfig` and `FlowConsoleSettings` were public, so code that names either type has to be
+  updated to `CD_Screen` and `CD_FlowConsole`. Nothing else about them changed.
+
+  The asset files were renamed with the types. The assets FlowIoC writes into a project are moved
+  by the path migrator on the first editor tick after the upgrade, keeping their GUIDs and
+  everything configured in them, so a project keeps its log types, folder colors and generator
+  settings. A game's own screen config assets keep working untouched - a `ScreenManager` holds
+  them by GUID - and `Create Module` names new ones `CD_<Screen>.asset` from here on. The
+  Addressables label on screen config entries is deliberately still `ScreenConfig`: it is a
+  project-side identifier rather than a type name, and renaming it would orphan every entry
+  already labelled.
+
 - **A Connector now gets signal holders instead of binding them.** `InjectionBinderCrossContext`
   `.GetInstance<PlayerSignals>()` rather than `.Bind<PlayerSignals>()`, in the shipped
   `ConnectorModule` and in every example. `Bind` is get-or-create, so a Connector wiring a module

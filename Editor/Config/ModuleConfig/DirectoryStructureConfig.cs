@@ -9,45 +9,45 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 {
     public abstract class DirectoryStructureConfig : ScriptableObject
     {
-        [field: NonSerialized] protected internal virtual List<FolderConfig> RootFolders { get; protected set; } = new List<FolderConfig>();
+        [field: NonSerialized] protected internal virtual List<FolderEVO> RootFolders { get; protected set; } = new List<FolderEVO>();
 
         protected virtual void InitializeDefaultFolderStructure()
         {
-            RootFolders = new List<FolderConfig> { };
+            RootFolders = new List<FolderEVO> { };
         }
 
-        protected virtual FolderConfig CreateFolder(string folderName, FolderConfig.FolderType folderType, List<FolderConfig> subFolders = null,
+        protected virtual FolderEVO CreateFolder(string folderName, FolderEVO.FolderType folderType, List<FolderEVO> subFolders = null,
             bool isMandatory = false, bool isOptional = false,
             bool isNamespaceProvider = true)
         {
-            return new FolderConfig
+            return new FolderEVO
             {
                 FolderName = folderName,
                 Type = folderType,
-                SubFolders = subFolders ?? new List<FolderConfig>(),
+                SubFolders = subFolders ?? new List<FolderEVO>(),
                 IsMandatory = isMandatory,
                 IsOptional = isOptional,
                 IsNamespaceProvider = isNamespaceProvider
             };
         }
 
-        protected internal virtual string FindFullFolderPathByID(FolderConfig.FolderType folderName, string basePath)
+        protected internal virtual string FindFullFolderPathByID(FolderEVO.FolderType folderName, string basePath)
         {
             return FindFullFolderPathByID(folderName, basePath, out _);
         }
 
         /// <summary>
-        /// The same lookup, plus whether the <see cref="FolderConfig"/> it landed on is marked
+        /// The same lookup, plus whether the <see cref="FolderEVO"/> it landed on is marked
         /// optional. The flag rides along on the walk that already finds the node rather than
         /// costing a second one, so a caller that warns about a folder missing from disk can
         /// stay quiet about the ones a module was never required to have in the first place.
         /// </summary>
-        protected internal virtual string FindFullFolderPathByID(FolderConfig.FolderType folderName, string basePath, out bool isOptional)
+        protected internal virtual string FindFullFolderPathByID(FolderEVO.FolderType folderName, string basePath, out bool isOptional)
         {
             return FindFolderPathByID(folderName, RootFolders, basePath, out isOptional);
         }
 
-        protected virtual string FindFolderPathByID(FolderConfig.FolderType folderID, List<FolderConfig> folders, string basePath,
+        protected virtual string FindFolderPathByID(FolderEVO.FolderType folderID, List<FolderEVO> folders, string basePath,
             out bool isOptional)
         {
             isOptional = false;
@@ -65,12 +65,12 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// it would throw away whatever they had customized in the inspector. So this only ever
         /// appends, and only when the project has no Shared folder at all.
         /// </summary>
-        internal bool EnsureSharedBranch(CodeGeneratorSettings codeGenSettings)
+        internal bool EnsureSharedBranch(ED_CodeGenerator codeGenSettings)
         {
             if (codeGenSettings == null || RootFolders == null) return false;
-            if (ContainsFolderType(RootFolders, FolderConfig.FolderType.Shared)) return false;
+            if (ContainsFolderType(RootFolders, FolderEVO.FolderType.Shared)) return false;
 
-            FolderConfig scripts = FindFolderByName(RootFolders, "Scripts");
+            FolderEVO scripts = FindFolderByName(RootFolders, "Scripts");
             if (scripts == null)
             {
                 Debug.LogWarning($"<color=cyan>FlowIoC:</color> the {GetType().Name} directory structure has no 'Scripts' folder, so the " +
@@ -79,7 +79,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 return false;
             }
 
-            scripts.SubFolders ??= new List<FolderConfig>();
+            scripts.SubFolders ??= new List<FolderEVO>();
             scripts.SubFolders.Add(BuildSharedBranch(codeGenSettings));
 
             RegisterSharedFolderNames(codeGenSettings);
@@ -95,18 +95,18 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// so a project that adopted Shared while it still held data alone would never grow the
         /// folder its signals now belong in. This is the same append-only heal, one level down.
         /// </summary>
-        internal bool EnsureSharedSignalsFolder(CodeGeneratorSettings codeGenSettings)
+        internal bool EnsureSharedSignalsFolder(ED_CodeGenerator codeGenSettings)
         {
             if (codeGenSettings == null || RootFolders == null) return false;
-            if (ContainsFolderType(RootFolders, FolderConfig.FolderType.SharedSignals)) return false;
+            if (ContainsFolderType(RootFolders, FolderEVO.FolderType.SharedSignals)) return false;
 
-            FolderConfig shared = FindFolderByType(RootFolders, FolderConfig.FolderType.Shared);
+            FolderEVO shared = FindFolderByType(RootFolders, FolderEVO.FolderType.Shared);
             if (shared == null) return false;
 
-            shared.SubFolders ??= new List<FolderConfig>();
+            shared.SubFolders ??= new List<FolderEVO>();
             shared.SubFolders.Add(
-                CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedSignals, "Signals"),
-                    FolderConfig.FolderType.SharedSignals, null, true));
+                CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedSignals, "Signals"),
+                    FolderEVO.FolderType.SharedSignals, null, true));
 
             RegisterSharedFolderNames(codeGenSettings);
 
@@ -117,24 +117,24 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// The Shared folder as every layout that has one lays it out: the data a module publishes,
         /// the enums and constants that data needs, and the module's public signal holder.
         /// </summary>
-        protected FolderConfig BuildSharedBranch(CodeGeneratorSettings codeGenSettings)
+        protected FolderEVO BuildSharedBranch(ED_CodeGenerator codeGenSettings)
         {
-            return CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.Shared, "Shared"), FolderConfig.FolderType.Shared,
-                new List<FolderConfig>
+            return CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.Shared, "Shared"), FolderEVO.FolderType.Shared,
+                new List<FolderEVO>
                 {
-                    CreateFolder("Data", FolderConfig.FolderType.Folder, new List<FolderConfig>
+                    CreateFolder("Data", FolderEVO.FolderType.Folder, new List<FolderEVO>
                     {
-                        CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"),
-                            FolderConfig.FolderType.SharedUnityObjects, null, true),
-                        CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedValueObjects, "ValueObjects"),
-                            FolderConfig.FolderType.SharedValueObjects, null, true)
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedUnityObjects, "UnityObjects"),
+                            FolderEVO.FolderType.SharedUnityObjects, null, true),
+                        CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedValueObjects, "ValueObjects"),
+                            FolderEVO.FolderType.SharedValueObjects, null, true)
                     }, true),
-                    CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedEnums, "Enums"),
-                        FolderConfig.FolderType.SharedEnums, null, true),
-                    CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedConstants, "Constants"),
-                        FolderConfig.FolderType.SharedConstants, null, true),
-                    CreateFolder(codeGenSettings.FolderNameFor(FolderConfig.FolderType.SharedSignals, "Signals"),
-                        FolderConfig.FolderType.SharedSignals, null, true)
+                    CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedEnums, "Enums"),
+                        FolderEVO.FolderType.SharedEnums, null, true),
+                    CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedConstants, "Constants"),
+                        FolderEVO.FolderType.SharedConstants, null, true),
+                    CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedSignals, "Signals"),
+                        FolderEVO.FolderType.SharedSignals, null, true)
                 }, false, true);
         }
 
@@ -149,13 +149,13 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// from the settings inspector is a deliberate act, and a heal that ran unconditionally
         /// would put it straight back.
         /// </summary>
-        protected void RegisterSharedFolderNames(CodeGeneratorSettings codeGenSettings)
+        protected void RegisterSharedFolderNames(ED_CodeGenerator codeGenSettings)
         {
-            IReadOnlyDictionary<FolderConfig.FolderType, string> defaults = new CodeGeneratorDefaults().SharedFolderNames;
+            IReadOnlyDictionary<FolderEVO.FolderType, string> defaults = new CodeGeneratorDefaults().SharedFolderNames;
 
             bool added = false;
 
-            foreach (KeyValuePair<FolderConfig.FolderType, string> entry in defaults)
+            foreach (KeyValuePair<FolderEVO.FolderType, string> entry in defaults)
             {
                 if (codeGenSettings.DirectoryStructureConfigMap.ContainsKey(entry.Key)) continue;
 
@@ -168,11 +168,11 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             EditorUtility.SetDirty(codeGenSettings);
         }
 
-        protected bool ContainsFolderType(List<FolderConfig> folders, FolderConfig.FolderType folderType)
+        protected bool ContainsFolderType(List<FolderEVO> folders, FolderEVO.FolderType folderType)
         {
             if (folders == null) return false;
 
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (folder.Type == folderType) return true;
                 if (ContainsFolderType(folder.SubFolders, folderType)) return true;
@@ -181,30 +181,30 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             return false;
         }
 
-        protected FolderConfig FindFolderByName(List<FolderConfig> folders, string folderName)
+        protected FolderEVO FindFolderByName(List<FolderEVO> folders, string folderName)
         {
             if (folders == null) return null;
 
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (string.Equals(folder.FolderName, folderName, StringComparison.OrdinalIgnoreCase)) return folder;
 
-                FolderConfig found = FindFolderByName(folder.SubFolders, folderName);
+                FolderEVO found = FindFolderByName(folder.SubFolders, folderName);
                 if (found != null) return found;
             }
 
             return null;
         }
 
-        protected FolderConfig FindFolderByType(List<FolderConfig> folders, FolderConfig.FolderType folderType)
+        protected FolderEVO FindFolderByType(List<FolderEVO> folders, FolderEVO.FolderType folderType)
         {
             if (folders == null) return null;
 
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (folder.Type == folderType) return folder;
 
-                FolderConfig found = FindFolderByType(folder.SubFolders, folderType);
+                FolderEVO found = FindFolderByType(folder.SubFolders, folderType);
                 if (found != null) return found;
             }
 

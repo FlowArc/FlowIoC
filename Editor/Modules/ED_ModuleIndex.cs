@@ -11,13 +11,13 @@ namespace FlowIoC.Editor.Modules
     /// of truth: everything in it except the folder GUIDs is derivable from the folder tree, so
     /// a stale or conflicted index is fixed by rebuilding it rather than by hand-editing.
     /// </summary>
-    internal class FlowIoCModuleIndex : ScriptableObject
+    internal class ED_ModuleIndex : ScriptableObject
     {
-        [SerializeField] private List<ModuleDescriptor> _modules = new List<ModuleDescriptor>();
+        [SerializeField] private List<ModuleDescriptorEVO> _modules = new List<ModuleDescriptorEVO>();
 
-        public IReadOnlyList<ModuleDescriptor> Modules => _modules;
+        public IReadOnlyList<ModuleDescriptorEVO> Modules => _modules;
 
-        public bool TryGetByFolderGuid(string folderGuid, out ModuleDescriptor module)
+        public bool TryGetByFolderGuid(string folderGuid, out ModuleDescriptorEVO module)
         {
             module = string.IsNullOrEmpty(folderGuid)
                 ? null
@@ -26,7 +26,7 @@ namespace FlowIoC.Editor.Modules
             return module != null;
         }
 
-        public bool TryGetByName(string name, out ModuleDescriptor module)
+        public bool TryGetByName(string name, out ModuleDescriptorEVO module)
         {
             module = string.IsNullOrEmpty(name)
                 ? null
@@ -35,9 +35,9 @@ namespace FlowIoC.Editor.Modules
             return module != null;
         }
 
-        public void Replace(IEnumerable<ModuleDescriptor> descriptors)
+        public void Replace(IEnumerable<ModuleDescriptorEVO> descriptors)
         {
-            _modules = descriptors == null ? new List<ModuleDescriptor>() : descriptors.ToList();
+            _modules = descriptors == null ? new List<ModuleDescriptorEVO>() : descriptors.ToList();
         }
 
         public void Remove(string folderGuid)

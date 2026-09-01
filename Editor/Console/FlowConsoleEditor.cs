@@ -58,7 +58,7 @@ namespace FlowIoC.Editor.Console
         private static readonly SystemLogType[] SystemLogTypeValues =
             (SystemLogType[]) Enum.GetValues(typeof(SystemLogType));
 
-        private FlowConsoleSettings _settings;
+        private CD_FlowConsole _settings;
         private GUIStyle _richTextStyle;
         private GUIStyle _detailRichTextStyle;
         private GUIStyle _linkStyle;
@@ -90,7 +90,7 @@ namespace FlowIoC.Editor.Console
             _logsDirty = true;
 
             FlowLogger.OnLogAdded += OnLogAdded;
-            FlowConsoleSettings.OnSettingsValidated += OnSettingsValidated;
+            CD_FlowConsole.OnSettingsValidated += OnSettingsValidated;
 
             _settings = FlowLogger.Settings;
 
@@ -115,7 +115,7 @@ namespace FlowIoC.Editor.Console
         private void OnDisable()
         {
             FlowLogger.OnLogAdded -= OnLogAdded;
-            FlowConsoleSettings.OnSettingsValidated -= OnSettingsValidated;
+            CD_FlowConsole.OnSettingsValidated -= OnSettingsValidated;
         }
 
         private void OnGUI()

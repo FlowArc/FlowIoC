@@ -17,9 +17,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string moduleName,
             string modulePath,
             string testModulesFolderName,
-            List<FolderConfig> selectedOptionalFolders,
+            List<FolderEVO> selectedOptionalFolders,
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
-            CodeGeneratorSettings codeGenSettings,
+            ED_CodeGenerator codeGenSettings,
             List<string> actionNames,
             bool createScreen,
             ScreenConfigData screenConfigData,
@@ -61,24 +61,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             );
 
             string viewsAndMediatorsPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderConfig.FolderType.ViewsAndMediators, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.ViewsAndMediators, modulePath);
             string testViewsAndMediatorsPath = directoryConfigMap[ModuleType.Test]
-                .FindFullFolderPathByID(FolderConfig.FolderType.ViewsAndMediators, testModulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.ViewsAndMediators, testModulePath);
             string scenePath = directoryConfigMap[ModuleType.Test]
-                .FindFullFolderPathByID(FolderConfig.FolderType.Scenes, testModulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.Scenes, testModulePath);
             string screenPrefabPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderConfig.FolderType.Prefabs, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.Prefabs, modulePath);
             string screenConfigPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderConfig.FolderType.ScreenConfigs, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.ScreenConfigs, modulePath);
             string rootsAndContextsPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
             string testRootsAndContextsPath = directoryConfigMap[ModuleType.Test]
-                .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, testModulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, testModulePath);
             string signalsPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderConfig.FolderType.Signals, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.Signals, modulePath);
 
             string sharedSignalsPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderConfig.FolderType.SharedSignals, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.SharedSignals, modulePath);
 
             if (!string.IsNullOrEmpty(sharedSignalsPath) && !Directory.Exists(sharedSignalsPath))
                 sharedSignalsPath = null;

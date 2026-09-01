@@ -106,7 +106,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// </summary>
         private void CreateSignalsToggle() =>
             _createSignals = OptionalFolderToggle(
-                FolderConfig.FolderType.Signals, CREATE_SIGNALS_LABEL, ModuleType.Test);
+                FolderEVO.FolderType.Signals, CREATE_SIGNALS_LABEL, ModuleType.Test);
 
         /// <summary>
         /// The Shared assembly a module publishes its data and its signal holder through. The main
@@ -115,7 +115,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// module created without Shared has nowhere to put its public surface.
         /// </summary>
         private void CreateSharedToggle() =>
-            OptionalFolderToggle(FolderConfig.FolderType.Shared, CREATE_SHARED_LABEL);
+            OptionalFolderToggle(FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL);
 
         /// <summary>
         /// Draws the toggle for one of the layout's optional folders and answers whether the
@@ -128,11 +128,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// and disabled rather than hidden, so the reader can see what they are getting.
         /// </summary>
         private bool OptionalFolderToggle(
-            FolderConfig.FolderType folderType,
+            FolderEVO.FolderType folderType,
             string label,
             params ModuleType[] withheldFrom)
         {
-            FolderConfig folder = FindFolderInConfig(folderType);
+            FolderEVO folder = FindFolderInConfig(folderType);
 
             OptionalFolderToggleState state =
                 new OptionalFolderToggleRule().For(folder, _selectedModuleType, withheldFrom);
@@ -177,7 +177,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private void SelectSignalsFolderByDefault()
         {
-            FolderConfig signalsFolder = FindSignalsFolder();
+            FolderEVO signalsFolder = FindSignalsFolder();
 
             if (signalsFolder == null || !signalsFolder.IsOptional) return;
             if (_selectedModuleType == ModuleType.Test) return;
@@ -194,7 +194,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// </summary>
         private void SelectSharedFolderByDefault()
         {
-            FolderConfig sharedFolder = FindFolderInConfig(FolderConfig.FolderType.Shared);
+            FolderEVO sharedFolder = FindFolderInConfig(FolderEVO.FolderType.Shared);
 
             if (sharedFolder == null || !sharedFolder.IsOptional) return;
             if (_selectedModuleType == ModuleType.Test) return;
@@ -203,13 +203,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _selectedOptionalFolders.Add(sharedFolder);
         }
 
-        private FolderConfig FindSignalsFolder() => FindFolderInConfig(FolderConfig.FolderType.Signals);
+        private FolderEVO FindSignalsFolder() => FindFolderInConfig(FolderEVO.FolderType.Signals);
 
         /// <summary>
         /// The selected module type's layout entry for <paramref name="folderType"/>, or null when
         /// that layout has none - which is how a toggle knows to stay out of the way.
         /// </summary>
-        private FolderConfig FindFolderInConfig(FolderConfig.FolderType folderType)
+        private FolderEVO FindFolderInConfig(FolderEVO.FolderType folderType)
         {
             if (_directoryConfigMap == null) return null;
 
@@ -218,15 +218,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 : null;
         }
 
-        private FolderConfig FindFolderByType(List<FolderConfig> folders, FolderConfig.FolderType folderType)
+        private FolderEVO FindFolderByType(List<FolderEVO> folders, FolderEVO.FolderType folderType)
         {
             if (folders == null) return null;
 
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (folder.Type == folderType) return folder;
 
-                FolderConfig found = FindFolderByType(folder.SubFolders, folderType);
+                FolderEVO found = FindFolderByType(folder.SubFolders, folderType);
                 if (found != null) return found;
             }
 

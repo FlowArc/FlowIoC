@@ -58,9 +58,9 @@ namespace FlowIoC.Editor.Modules
         /// one: a caller that loaded it independently would get an empty index either way, and
         /// go on to write into it as though the rebuild had happened.
         /// </summary>
-        public FlowIoCModuleIndex Rebuild()
+        public ED_ModuleIndex Rebuild()
         {
-            var settings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(_paths.CodeGeneratorSettings);
+            var settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(_paths.CodeGeneratorSettings);
             if (settings == null)
             {
                 Debug.LogWarning("<color=cyan>FlowIoC:</color> the code generator settings could not be " +
@@ -69,9 +69,9 @@ namespace FlowIoC.Editor.Modules
             }
 
             var resolver = new ModuleKindResolver(
-                settings.FolderNameFor(FolderConfig.FolderType.SubModules, "zSubModules"),
-                settings.FolderNameFor(FolderConfig.FolderType.ScreenModules, "zScreenModules"),
-                settings.FolderNameFor(FolderConfig.FolderType.TestModules, "zTestModules"));
+                settings.FolderNameFor(FolderEVO.FolderType.SubModules, "zSubModules"),
+                settings.FolderNameFor(FolderEVO.FolderType.ScreenModules, "zScreenModules"),
+                settings.FolderNameFor(FolderEVO.FolderType.TestModules, "zTestModules"));
 
             var scanner = new ModuleTreeScanner(resolver);
             var scanned = new List<ScannedModule>();
@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.Modules
             foreach (string modulesRoot in EmbeddedPackageModuleRoots())
                 scanned.AddRange(scanner.Scan(modulesRoot));
 
-            FlowIoCModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
+            ED_ModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
 
             index.Replace(new ModuleIndexBuilder().Build(scanned, GuidOfAbsolutePath, index.Modules));
 

@@ -35,7 +35,7 @@ namespace FlowIoC.ScreenModule.ViewsMediators.Manager
             var context = viewInjector.GetContextOfView(_view);
             _screenServiceInternalSignals.RegisterManager.Dispatch(manager, context);
 
-            List<ScreenConfig> configs = _view.GetScreenConfigs();
+            List<CD_Screen> configs = _view.GetScreenConfigs();
             if (configs == null || configs.Count == 0)
             {
                 FlowLogger.LogWarning(SystemLogType.Screen, $"Screen manager {manager.ManagerID} has no screen configs!");
@@ -48,7 +48,7 @@ namespace FlowIoC.ScreenModule.ViewsMediators.Manager
             }
         }
 
-        private void UnRegisterScreenConfig(List<ScreenConfig> configs)
+        private void UnRegisterScreenConfig(List<CD_Screen> configs)
         {
             try
             {

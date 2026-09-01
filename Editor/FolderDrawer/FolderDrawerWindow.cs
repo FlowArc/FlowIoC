@@ -9,12 +9,12 @@ namespace FlowIoC.Editor.FolderDrawer
     /// Edits the project local folder drawer config. Every change is written straight to
     /// the asset and repainted in the Project window, so the colors update as you type.
     /// </summary>
-    internal class FlowIoCFolderDrawerWindow : EditorWindow
+    internal class FolderDrawerWindow : EditorWindow
     {
         [MenuItem("Tools/FlowIoC/Folder Drawer", false, 150)]
         internal static void Open()
         {
-            FlowIoCFolderDrawerWindow window = GetWindow<FlowIoCFolderDrawerWindow>("Folder Drawer");
+            FolderDrawerWindow window = GetWindow<FolderDrawerWindow>("Folder Drawer");
             window.minSize = new Vector2(380, 320);
             window.Show();
         }
@@ -27,7 +27,7 @@ namespace FlowIoC.Editor.FolderDrawer
             "Folder Rules",
             "Colors one specific folder asset. Takes priority over the path rules.");
 
-        private FlowIoCFolderDrawerConfig _config;
+        private ED_FolderDrawer _config;
         private SerializedObject _serializedConfig;
         private Vector2 _scroll;
 
@@ -49,7 +49,7 @@ namespace FlowIoC.Editor.FolderDrawer
 
         private void BindConfig()
         {
-            _config = FlowIoCFolderDrawerBootstrap.Drawer.EnsureConfig();
+            _config = FolderDrawerBootstrap.Drawer.EnsureConfig();
             _serializedConfig = _config == null ? null : new SerializedObject(_config);
         }
 
@@ -100,7 +100,7 @@ namespace FlowIoC.Editor.FolderDrawer
         private void DrawMissingConfig()
         {
             EditorGUILayout.HelpBox(
-                $"No config found at {FlowIoCFolderDrawerBootstrap.Drawer.ConfigPath}.",
+                $"No config found at {FolderDrawerBootstrap.Drawer.ConfigPath}.",
                 MessageType.Warning);
 
             if (GUILayout.Button("Create Config")) BindConfig();
@@ -108,7 +108,7 @@ namespace FlowIoC.Editor.FolderDrawer
 
         private void RepaintFolders()
         {
-            FlowIoCFolderDrawerBootstrap.Drawer.Apply();
+            FolderDrawerBootstrap.Drawer.Apply();
             EditorApplication.RepaintProjectWindow();
         }
     }

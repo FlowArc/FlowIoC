@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         /// rather than owning a public surface of its own, so it is withheld the Signals holder.
         /// </summary>
         public OptionalFolderToggleState For(
-            FolderConfig folder,
+            FolderEVO folder,
             ModuleType moduleType,
             IReadOnlyCollection<ModuleType> withheldFrom)
         {

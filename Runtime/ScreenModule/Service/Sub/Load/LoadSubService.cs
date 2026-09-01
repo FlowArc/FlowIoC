@@ -22,13 +22,13 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         public async void All(bool isTest = false, Action completeCallback = null, Action<int,int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.All]");
-            List<ScreenConfig> allConfigs = _configModel.GetAllRegisteredConfigs();
+            List<CD_Screen> allConfigs = _configModel.GetAllRegisteredConfigs();
             await LoadByConfigList(allConfigs, isTest, completeCallback, loadingProgressCallback);
         }
         public async void ScreensAtManager(int managerId = 0, bool isTest = false, Action completeCallback = null, Action<int,int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.ScreensAtManager]");
-            List<ScreenConfig> allConfigs = _configModel.GetManagerConfigs(managerId);
+            List<CD_Screen> allConfigs = _configModel.GetManagerConfigs(managerId);
             await LoadByConfigList(allConfigs, isTest, completeCallback, loadingProgressCallback);
         }
         public async void ByTag(ScreenTag tag, bool isTest = false, Action completeCallback = null, Action<int,int> loadingProgressCallback = null)
@@ -37,7 +37,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
             var tagConfigs = _configModel.GetTagConfigs(tag);
             await LoadByConfigList(tagConfigs, isTest, completeCallback, loadingProgressCallback);
         }
-        private async Task LoadByConfigList(List<ScreenConfig> configs, bool isTest, 
+        private async Task LoadByConfigList(List<CD_Screen> configs, bool isTest, 
             Action completeCallback, Action<int,int> loadingProgressCallback)
         {
             for (var index = 0; index < configs.Count; index++)
@@ -65,11 +65,11 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
             var config = _configModel.GetScreenConfig(screenData.ManagerId, screenData.ScreenType);
             return await LoadScreenByType(config);
         }
-        private async Task<IScreenBody> LoadScreenByConfig(ScreenConfig config)
+        private async Task<IScreenBody> LoadScreenByConfig(CD_Screen config)
         {
             return await LoadScreenByType(config);
         }
-        private async Task<IScreenBody> LoadScreenByType(ScreenConfig config)
+        private async Task<IScreenBody> LoadScreenByType(CD_Screen config)
         {
             switch (config.LoadType)
             {

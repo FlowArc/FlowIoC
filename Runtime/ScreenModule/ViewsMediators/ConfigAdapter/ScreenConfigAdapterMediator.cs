@@ -38,7 +38,7 @@ namespace FlowIoC.ScreenModule.ViewsMediators.ConfigAdapter
             }
         }
 
-        private void UnRegisterScreenConfig(int managerID, List<ScreenConfig> configs)
+        private void UnRegisterScreenConfig(int managerID, List<CD_Screen> configs)
         {
             if (configs == null || configs.Count == 0)
             {

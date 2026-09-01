@@ -14,7 +14,7 @@ namespace FlowIoC.Editor.Console
     /// </summary>
     internal class LogTypeSettingsGuard
     {
-        internal bool IsTrustworthy(IEnumerable<FlowConsoleSettings.FlowConsoleLogType> logTypes)
+        internal bool IsTrustworthy(IEnumerable<CD_FlowConsole.FlowConsoleLogTypeCVO> logTypes)
         {
             return logTypes != null && logTypes.Any(logType => logType != null && logType.IsMandatory);
         }

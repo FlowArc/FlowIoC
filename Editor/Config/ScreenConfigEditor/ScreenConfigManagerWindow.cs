@@ -21,9 +21,9 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         }
 
         private const float cellPadding = 8f;
-        private List<ScreenConfig> _allScreenConfigs = new List<ScreenConfig>();
-        private List<ScreenConfig> _filteredScreenConfigs = new List<ScreenConfig>();
-        private List<ScreenConfig> _selectedScreenConfigs = new List<ScreenConfig>();
+        private List<CD_Screen> _allScreenConfigs = new List<CD_Screen>();
+        private List<CD_Screen> _filteredScreenConfigs = new List<CD_Screen>();
+        private List<CD_Screen> _selectedScreenConfigs = new List<CD_Screen>();
         private List<ScreenTag> _availableTags = new List<ScreenTag>();
 
         private int _selectedFilterType = 0;
@@ -102,7 +102,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
             FindAllScreenConfigs();
             FindAllTags();
 
-            _filteredScreenConfigs = new List<ScreenConfig>(_allScreenConfigs);
+            _filteredScreenConfigs = new List<CD_Screen>(_allScreenConfigs);
             _showFilterOptions = EditorPrefs.GetBool("ScreenConfigManager_ShowFilters", true);
             _showBulkEditOptions = EditorPrefs.GetBool("ScreenConfigManager_ShowEditPanel", false);
 
@@ -303,19 +303,19 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         private void FindAllScreenConfigs()
         {
             _allScreenConfigs.Clear();
-            string[] guids = AssetDatabase.FindAssets("t:ScreenConfig");
+            string[] guids = AssetDatabase.FindAssets("t:CD_Screen");
 
             foreach (string guid in guids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-                ScreenConfig config = AssetDatabase.LoadAssetAtPath<ScreenConfig>(path);
+                CD_Screen config = AssetDatabase.LoadAssetAtPath<CD_Screen>(path);
                 if (config != null)
                 {
                     _allScreenConfigs.Add(config);
                 }
             }
 
-            _filteredScreenConfigs = new List<ScreenConfig>(_allScreenConfigs);
+            _filteredScreenConfigs = new List<CD_Screen>(_allScreenConfigs);
             SortConfigs();
         }
 
@@ -973,7 +973,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
 
                 for (int i = 0; i < _filteredScreenConfigs.Count; i++)
                 {
-                    ScreenConfig config = _filteredScreenConfigs[i];
+                    CD_Screen config = _filteredScreenConfigs[i];
                     bool isSelected = _selectedScreenConfigs.Contains(config);
                     bool isAlternateRow = i % 2 == 1;
                     bool isHovered = i == _hoveredRowIndex;
@@ -1154,7 +1154,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
 
         private void ApplyFilters()
         {
-            _filteredScreenConfigs = new List<ScreenConfig>(_allScreenConfigs);
+            _filteredScreenConfigs = new List<CD_Screen>(_allScreenConfigs);
 
             if (!string.IsNullOrEmpty(_searchText))
             {
@@ -1225,7 +1225,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
             }
         }
 
-        private string GetSortPathKey(ScreenConfig config)
+        private string GetSortPathKey(CD_Screen config)
         {
             switch (config.LoadType)
             {
@@ -1240,7 +1240,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
             }
         }
 
-        private int GetAnimationSortValue(ScreenConfig config)
+        private int GetAnimationSortValue(CD_Screen config)
         {
             int value = 0;
             if (config.HasShowAnimation) value += 1;
@@ -1252,7 +1252,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         {
             Undo.RecordObjects(_selectedScreenConfigs.ToArray(), "Bulk Edit Layer");
 
-            foreach (ScreenConfig config in _selectedScreenConfigs)
+            foreach (CD_Screen config in _selectedScreenConfigs)
             {
                 SerializedObject serializedObject = new SerializedObject(config);
                 SerializedProperty layerProperty = serializedObject.FindProperty("_defaultLayer");
@@ -1267,7 +1267,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         {
             Undo.RecordObjects(_selectedScreenConfigs.ToArray(), "Bulk Edit LoadByTag Type");
 
-            foreach (ScreenConfig config in _selectedScreenConfigs)
+            foreach (CD_Screen config in _selectedScreenConfigs)
             {
                 SerializedObject serializedObject = new SerializedObject(config);
                 SerializedProperty loadTypeProperty = serializedObject.FindProperty("_loadType");
@@ -1282,7 +1282,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         {
             Undo.RecordObjects(_selectedScreenConfigs.ToArray(), "Bulk Edit Tag");
 
-            foreach (ScreenConfig config in _selectedScreenConfigs)
+            foreach (CD_Screen config in _selectedScreenConfigs)
             {
                 SerializedObject serializedObject = new SerializedObject(config);
                 SerializedProperty tagProperty = serializedObject.FindProperty("_screenTag");
@@ -1297,7 +1297,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         {
             Undo.RecordObjects(_selectedScreenConfigs.ToArray(), "Bulk Edit Resource Path");
 
-            foreach (ScreenConfig config in _selectedScreenConfigs)
+            foreach (CD_Screen config in _selectedScreenConfigs)
             {
                 SerializedObject serializedObject = new SerializedObject(config);
                 SerializedProperty pathProperty = serializedObject.FindProperty("_resourcePath");
@@ -1312,7 +1312,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         {
             Undo.RecordObjects(_selectedScreenConfigs.ToArray(), "Bulk Edit Addressable Key");
 
-            foreach (ScreenConfig config in _selectedScreenConfigs)
+            foreach (CD_Screen config in _selectedScreenConfigs)
             {
                 SerializedObject serializedObject = new SerializedObject(config);
                 SerializedProperty keyProperty = serializedObject.FindProperty("_addressableKey");
@@ -1327,7 +1327,7 @@ namespace FlowIoC.Editor.Config.ScreenConfigEditor
         {
             Undo.RecordObjects(_selectedScreenConfigs.ToArray(), "Bulk Edit Animations");
 
-            foreach (ScreenConfig config in _selectedScreenConfigs)
+            foreach (CD_Screen config in _selectedScreenConfigs)
             {
                 SerializedObject serializedObject = new SerializedObject(config);
                 SerializedProperty openAnimProperty = serializedObject.FindProperty("_hasOpenAnimation");

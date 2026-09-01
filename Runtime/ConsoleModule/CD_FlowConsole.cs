@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace FlowIoC.ConsoleModule
 {
-    [CreateAssetMenu(fileName = "FlowConsoleSettings", menuName = "FlowIoC/Flow Console Settings")]
-    public class FlowConsoleSettings : ScriptableObject
+    [CreateAssetMenu(fileName = "CD_FlowConsole", menuName = "FlowIoC/Flow Console Settings")]
+    public class CD_FlowConsole : ScriptableObject
     {
         [Header("Log Settings")]
         [Tooltip("If true, the entire FlowConsole logging system is active. If false, no logs will be processed or displayed.")]
@@ -39,15 +39,15 @@ namespace FlowIoC.ConsoleModule
         [Header("Log Types")]
         [Tooltip("All log types (system and custom)")]
         [SerializeField]
-        private List<FlowConsoleLogType> _logTypes = new();
+        private List<FlowConsoleLogTypeCVO> _logTypes = new();
 
-        public List<FlowConsoleLogType> LogTypes
+        public List<FlowConsoleLogTypeCVO> LogTypes
         {
             get
             {
                 if (_logTypes == null)
                 {
-                    _logTypes = new List<FlowConsoleLogType>();
+                    _logTypes = new List<FlowConsoleLogTypeCVO>();
                     ResetToDefaults();
                 }
                 return _logTypes;
@@ -56,7 +56,7 @@ namespace FlowIoC.ConsoleModule
         }
 
         [Serializable]
-        public class FlowConsoleLogType
+        public class FlowConsoleLogTypeCVO
         {
             public string Name;
             public int Value;
@@ -74,7 +74,7 @@ namespace FlowIoC.ConsoleModule
 
             public override bool Equals(object obj)
             {
-                if (obj is FlowConsoleLogType other)
+                if (obj is FlowConsoleLogTypeCVO other)
                 {
                     return Value == other.Value || string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
                 }
@@ -173,7 +173,7 @@ namespace FlowIoC.ConsoleModule
 
         private void Reset()
         {
-            _logTypes ??= new List<FlowConsoleLogType>();
+            _logTypes ??= new List<FlowConsoleLogTypeCVO>();
             ResetToDefaults();
             EnsureDefaultProjectLogTypeExists();
             _logProfiles ??= new List<FlowLogProfileData>();
@@ -182,11 +182,11 @@ namespace FlowIoC.ConsoleModule
 
         private void EnsureSystemLogTypesExist()
         {
-            _logTypes ??= new List<FlowConsoleLogType>();
+            _logTypes ??= new List<FlowConsoleLogTypeCVO>();
             bool needsUpdate = false;
             var existingValues = new HashSet<int>();
             var existingNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var existingLogTypes = new Dictionary<string, FlowConsoleLogType>(StringComparer.OrdinalIgnoreCase);
+            var existingLogTypes = new Dictionary<string, FlowConsoleLogTypeCVO>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var logType in _logTypes)
             {
@@ -218,7 +218,7 @@ namespace FlowIoC.ConsoleModule
                 }
                 else
                 {
-                    _logTypes.Add(new FlowConsoleLogType
+                    _logTypes.Add(new FlowConsoleLogTypeCVO
                     {
                         Name = name,
                         Value = value,
@@ -240,7 +240,7 @@ namespace FlowIoC.ConsoleModule
 
         private void EnsureDefaultProjectLogTypeExists()
         {
-            _logTypes ??= new List<FlowConsoleLogType>();
+            _logTypes ??= new List<FlowConsoleLogTypeCVO>();
 
             foreach (var logType in _logTypes)
             {
@@ -258,7 +258,7 @@ namespace FlowIoC.ConsoleModule
                     break;
             }
 
-            _logTypes.Insert(insertIndex, new FlowConsoleLogType
+            _logTypes.Insert(insertIndex, new FlowConsoleLogTypeCVO
             {
                 Name = "Default",
                 Value = 100,
@@ -318,7 +318,7 @@ namespace FlowIoC.ConsoleModule
         {
             var usedValues = new HashSet<int>();
             var usedNames = new HashSet<string>();
-            var validLogTypes = new List<FlowConsoleLogType>();
+            var validLogTypes = new List<FlowConsoleLogTypeCVO>();
 
             foreach (var logType in _logTypes)
             {
@@ -351,9 +351,9 @@ namespace FlowIoC.ConsoleModule
         {
             if (_logTypes == null || _logTypes.Count <= 1) return;
 
-            var systemTypes = new List<FlowConsoleLogType>();
-            FlowConsoleLogType defaultType = null;
-            var projectTypes = new List<FlowConsoleLogType>();
+            var systemTypes = new List<FlowConsoleLogTypeCVO>();
+            FlowConsoleLogTypeCVO defaultType = null;
+            var projectTypes = new List<FlowConsoleLogTypeCVO>();
 
             foreach (var lt in _logTypes)
             {
@@ -417,7 +417,7 @@ namespace FlowIoC.ConsoleModule
 
             foreach (SystemLogType defaultType in Enum.GetValues(typeof(SystemLogType)))
             {
-                _logTypes.Add(new FlowConsoleLogType
+                _logTypes.Add(new FlowConsoleLogTypeCVO
                 {
                     Name = defaultType.ToString(),
                     Value = (int)defaultType,
@@ -449,13 +449,13 @@ namespace FlowIoC.ConsoleModule
             }
         }
 
-        private Dictionary<int, FlowConsoleLogType> _logTypeByValue;
-        private Dictionary<string, FlowConsoleLogType> _logTypeByName;
+        private Dictionary<int, FlowConsoleLogTypeCVO> _logTypeByValue;
+        private Dictionary<string, FlowConsoleLogTypeCVO> _logTypeByName;
 
         public void RebuildCache()
         {
-            _logTypeByValue = new Dictionary<int, FlowConsoleLogType>(_logTypes.Count);
-            _logTypeByName = new Dictionary<string, FlowConsoleLogType>(_logTypes.Count, StringComparer.OrdinalIgnoreCase);
+            _logTypeByValue = new Dictionary<int, FlowConsoleLogTypeCVO>(_logTypes.Count);
+            _logTypeByName = new Dictionary<string, FlowConsoleLogTypeCVO>(_logTypes.Count, StringComparer.OrdinalIgnoreCase);
             foreach (var lt in _logTypes)
             {
                 _logTypeByValue[lt.Value] = lt;
@@ -464,7 +464,7 @@ namespace FlowIoC.ConsoleModule
             }
         }
 
-        public bool TryGetLogType(int logTypeValue, out FlowConsoleLogType result)
+        public bool TryGetLogType(int logTypeValue, out FlowConsoleLogTypeCVO result)
         {
             if (_logTypeByValue == null) RebuildCache();
             return _logTypeByValue.TryGetValue(logTypeValue, out result);
@@ -482,7 +482,7 @@ namespace FlowIoC.ConsoleModule
             return !_logTypeByName.TryGetValue(typeName, out var type) || type.IsVisible;
         }
 
-        public FlowConsoleLogType AddLogType(string name, int value = -1, Color? color = null)
+        public FlowConsoleLogTypeCVO AddLogType(string name, int value = -1, Color? color = null)
         {
 
             if (string.IsNullOrWhiteSpace(name))
@@ -527,7 +527,7 @@ namespace FlowIoC.ConsoleModule
                 }
             }
 
-            var newLogType = new FlowConsoleLogType
+            var newLogType = new FlowConsoleLogTypeCVO
             {
                 Name = name,
                 Value = value,

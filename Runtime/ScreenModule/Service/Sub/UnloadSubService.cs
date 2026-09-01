@@ -41,9 +41,9 @@ namespace FlowIoC.ScreenModule.Service.Sub
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Close.AllScreensAtManager][isForce({isForce}) tag:({tag.ToString()})]");
 
-            List<ScreenConfig> tagConfigs = _configModel.GetTagConfigs(tag);
+            List<CD_Screen> tagConfigs = _configModel.GetTagConfigs(tag);
 
-            foreach (ScreenConfig config in tagConfigs)
+            foreach (CD_Screen config in tagConfigs)
             {
                 if (_configModel.IsScreenLoaded(config, out var screenBody))
                 {

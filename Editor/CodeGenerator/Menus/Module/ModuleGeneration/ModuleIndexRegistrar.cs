@@ -12,7 +12,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     /// What ProcessLockedFoldersRecursively used to do by writing a marker file into every
     /// locked folder it found. A rebuild can recover a module's own entry by rescanning the
     /// folder tree, but it cannot recover which folder on disk corresponds to which
-    /// FolderConfig.FolderType - that mapping only exists at the moment generation itself lays
+    /// FolderEVO.FolderType - that mapping only exists at the moment generation itself lays
     /// the folder down, which is why this runs from ModuleGenerator right after the folders it
     /// is about to record get their Unity GUIDs.
     /// </summary>
@@ -38,15 +38,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         public void Register(
             string modulePath,
             DirectoryStructureConfig directoryConfig,
-            IEnumerable<FolderConfig.FolderType> folderTypes)
+            IEnumerable<FolderEVO.FolderType> folderTypes)
         {
             // Without the rebuild the new module has no descriptor to record folder GUIDs on, and
             // an index loaded independently would hand back an empty one - so the lookup below
             // would miss and the mapping a rebuild cannot regenerate would be lost silently.
-            FlowIoCModuleIndex index = new ModuleIndexRebuilder().Rebuild();
+            ED_ModuleIndex index = new ModuleIndexRebuilder().Rebuild();
             if (index == null) return;
 
-            string ResolveFolderAssetPath(FolderConfig.FolderType type)
+            string ResolveFolderAssetPath(FolderEVO.FolderType type)
             {
                 string folderPath = directoryConfig.FindFullFolderPathByID(type, modulePath);
                 if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) return string.Empty;
@@ -74,18 +74,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// that has to stay testable without folders on disk.
         /// </summary>
         internal bool RecordFolderGuids(
-            FlowIoCModuleIndex index,
+            ED_ModuleIndex index,
             string moduleAssetPath,
-            IEnumerable<FolderConfig.FolderType> folderTypes,
-            Func<FolderConfig.FolderType, string> resolveFolderAssetPath)
+            IEnumerable<FolderEVO.FolderType> folderTypes,
+            Func<FolderEVO.FolderType, string> resolveFolderAssetPath)
         {
             if (index == null || folderTypes == null || resolveFolderAssetPath == null) return false;
 
             string moduleGuid = _assetPaths.GuidOf(moduleAssetPath);
-            if (string.IsNullOrEmpty(moduleGuid) || !index.TryGetByFolderGuid(moduleGuid, out ModuleDescriptor descriptor))
+            if (string.IsNullOrEmpty(moduleGuid) || !index.TryGetByFolderGuid(moduleGuid, out ModuleDescriptorEVO descriptor))
                 return false;
 
-            foreach (FolderConfig.FolderType type in folderTypes)
+            foreach (FolderEVO.FolderType type in folderTypes)
             {
                 string folderAssetPath = resolveFolderAssetPath(type);
                 if (string.IsNullOrEmpty(folderAssetPath)) continue;

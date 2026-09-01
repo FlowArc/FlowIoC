@@ -30,7 +30,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             for (var index = 0; index < directories.Length; index++)
             {
                 var directory = directories[index];
-                if (!registry.TryGetModule(pathResolver.ToAssetPath(directory), out ModuleDescriptor module)) continue;
+                if (!registry.TryGetModule(pathResolver.ToAssetPath(directory), out ModuleDescriptorEVO module)) continue;
 
                 string directoryName = Path.GetFileName(directory);
                 string moduleTypePostfix = GetModuleTypePostfix(module.Kind);
@@ -97,7 +97,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         private static void DrawSubModulesRecursively(
             ModuleRegistry registry,
-            ModuleDescriptor parentModule,
+            ModuleDescriptorEVO parentModule,
             int indentLevel,
             ref Dictionary<string, bool> moduleExpandedState,
             ref string parentModulePath,
@@ -108,7 +108,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
             foreach (ModuleKind kind in subModuleKinds)
             {
-                foreach (ModuleDescriptor childModule in registry.ChildrenOf(parentModule, kind))
+                foreach (ModuleDescriptorEVO childModule in registry.ChildrenOf(parentModule, kind))
                 {
                     string subDirectory = ToAbsolutePath(registry.PathOf(childModule));
                     string moduleTypePostfix = GetModuleTypePostfix(childModule.Kind);

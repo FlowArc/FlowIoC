@@ -18,41 +18,41 @@ namespace FlowIoC.Editor.CodeGenerator
     {
         public CodeGeneratorDefaults()
         {
-            FolderNames = new Dictionary<FolderConfig.FolderType, string>
+            FolderNames = new Dictionary<FolderEVO.FolderType, string>
             {
-                {FolderConfig.FolderType.SubModules, "zSubModules"},
-                {FolderConfig.FolderType.TestModules, "zTestModules"},
-                {FolderConfig.FolderType.ScreenModules, "zScreenModules"},
-                {FolderConfig.FolderType.ViewsAndMediators, "ViewsMediators"},
-                {FolderConfig.FolderType.ScreenConfigs, "ScreenConfigs"},
-                {FolderConfig.FolderType.RootsAndContexts, "RootsContexts"},
-                {FolderConfig.FolderType.Services, "Services"},
-                {FolderConfig.FolderType.Systems, "Systems"},
-                {FolderConfig.FolderType.Signals, "Signals"},
-                {FolderConfig.FolderType.Controllers, "Controllers"},
-                {FolderConfig.FolderType.Models, "Models"},
-                {FolderConfig.FolderType.UnityObjects, "UnityObjects"},
-                {FolderConfig.FolderType.ValueObjects, "ValueObjects"},
-                {FolderConfig.FolderType.Editor, "Editor"},
-                {FolderConfig.FolderType.Resources, "Resources"},
-                {FolderConfig.FolderType.Prefabs, "Prefabs"},
-                {FolderConfig.FolderType.Scenes, "Scenes"},
-                {FolderConfig.FolderType.Shared, "Shared"},
-                {FolderConfig.FolderType.SharedUnityObjects, "UnityObjects"},
-                {FolderConfig.FolderType.SharedValueObjects, "ValueObjects"},
-                {FolderConfig.FolderType.SharedEnums, "Enums"},
-                {FolderConfig.FolderType.SharedConstants, "Constants"},
-                {FolderConfig.FolderType.SharedSignals, "Signals"}
+                {FolderEVO.FolderType.SubModules, "zSubModules"},
+                {FolderEVO.FolderType.TestModules, "zTestModules"},
+                {FolderEVO.FolderType.ScreenModules, "zScreenModules"},
+                {FolderEVO.FolderType.ViewsAndMediators, "ViewsMediators"},
+                {FolderEVO.FolderType.ScreenConfigs, "ScreenConfigs"},
+                {FolderEVO.FolderType.RootsAndContexts, "RootsContexts"},
+                {FolderEVO.FolderType.Services, "Services"},
+                {FolderEVO.FolderType.Systems, "Systems"},
+                {FolderEVO.FolderType.Signals, "Signals"},
+                {FolderEVO.FolderType.Controllers, "Controllers"},
+                {FolderEVO.FolderType.Models, "Models"},
+                {FolderEVO.FolderType.UnityObjects, "UnityObjects"},
+                {FolderEVO.FolderType.ValueObjects, "ValueObjects"},
+                {FolderEVO.FolderType.Editor, "Editor"},
+                {FolderEVO.FolderType.Resources, "Resources"},
+                {FolderEVO.FolderType.Prefabs, "Prefabs"},
+                {FolderEVO.FolderType.Scenes, "Scenes"},
+                {FolderEVO.FolderType.Shared, "Shared"},
+                {FolderEVO.FolderType.SharedUnityObjects, "UnityObjects"},
+                {FolderEVO.FolderType.SharedValueObjects, "ValueObjects"},
+                {FolderEVO.FolderType.SharedEnums, "Enums"},
+                {FolderEVO.FolderType.SharedConstants, "Constants"},
+                {FolderEVO.FolderType.SharedSignals, "Signals"}
             };
 
-            SharedFolderNames = new Dictionary<FolderConfig.FolderType, string>
+            SharedFolderNames = new Dictionary<FolderEVO.FolderType, string>
             {
-                {FolderConfig.FolderType.Shared, FolderNames[FolderConfig.FolderType.Shared]},
-                {FolderConfig.FolderType.SharedUnityObjects, FolderNames[FolderConfig.FolderType.SharedUnityObjects]},
-                {FolderConfig.FolderType.SharedValueObjects, FolderNames[FolderConfig.FolderType.SharedValueObjects]},
-                {FolderConfig.FolderType.SharedEnums, FolderNames[FolderConfig.FolderType.SharedEnums]},
-                {FolderConfig.FolderType.SharedConstants, FolderNames[FolderConfig.FolderType.SharedConstants]},
-                {FolderConfig.FolderType.SharedSignals, FolderNames[FolderConfig.FolderType.SharedSignals]}
+                {FolderEVO.FolderType.Shared, FolderNames[FolderEVO.FolderType.Shared]},
+                {FolderEVO.FolderType.SharedUnityObjects, FolderNames[FolderEVO.FolderType.SharedUnityObjects]},
+                {FolderEVO.FolderType.SharedValueObjects, FolderNames[FolderEVO.FolderType.SharedValueObjects]},
+                {FolderEVO.FolderType.SharedEnums, FolderNames[FolderEVO.FolderType.SharedEnums]},
+                {FolderEVO.FolderType.SharedConstants, FolderNames[FolderEVO.FolderType.SharedConstants]},
+                {FolderEVO.FolderType.SharedSignals, FolderNames[FolderEVO.FolderType.SharedSignals]}
             };
 
             var paths = new FlowIoCProjectPaths();
@@ -66,13 +66,13 @@ namespace FlowIoC.Editor.CodeGenerator
         }
 
         /// <summary>Every folder type the generators know, and the folder each one writes.</summary>
-        public IReadOnlyDictionary<FolderConfig.FolderType, string> FolderNames { get; }
+        public IReadOnlyDictionary<FolderEVO.FolderType, string> FolderNames { get; }
 
         /// <summary>
         /// The subset the Shared branch introduces. A settings asset written before Shared existed
         /// has none of these, and a folder is only rename-tracked while its type is in the map.
         /// </summary>
-        public IReadOnlyDictionary<FolderConfig.FolderType, string> SharedFolderNames { get; }
+        public IReadOnlyDictionary<FolderEVO.FolderType, string> SharedFolderNames { get; }
 
         /// <summary>Where each module kind's DirectoryStructureConfig asset lives.</summary>
         public IReadOnlyDictionary<string, string> ConfigPaths { get; }

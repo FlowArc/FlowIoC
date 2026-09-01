@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FlowIoC.Editor.Config.ModuleConfig
 {
     [Serializable]
-    public class FolderConfig
+    public class FolderEVO
     {
         public string FolderName;
 
@@ -17,7 +17,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         public bool IsOptional = false;
         public bool IsNamespaceProvider = true;
 
-        [SerializeReference] public List<FolderConfig> SubFolders;
+        [SerializeReference] public List<FolderEVO> SubFolders;
 
         public enum FolderType
         {
@@ -26,7 +26,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 
             // Retired: a screen's View and Mediator are generated straight into ViewsMediators,
             // so no config lays this folder down any more. The value stays because every
-            // FolderConfig, CodeGeneratorSettings and ModuleDescriptor asset already on disk
+            // FolderEVO, ED_CodeGenerator and ModuleDescriptorEVO asset already on disk
             // serializes these as ints - removing it would silently renumber everything below.
             ScreenViews,
 
@@ -50,10 +50,10 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             // The Shared branch mirrors a few of the Runtime folders above but has to carry types
             // of its own. A FolderType resolves to exactly one path per module
             // (FindFullFolderPathByID) and to exactly one GUID per module
-            // (ModuleDescriptor.FolderGuids), so reusing UnityObjects or ValueObjects here would
+            // (ModuleDescriptorEVO.FolderGuids), so reusing UnityObjects or ValueObjects here would
             // make both lookups ambiguous - and MainModuleDirectoryStructureConfigEditor already
             // reports a locked type used twice as an error. New values are appended rather than
-            // inserted because every FolderConfig and CodeGeneratorSettings asset already on disk
+            // inserted because every FolderEVO and ED_CodeGenerator asset already on disk
             // serializes these as ints.
             Shared,
             SharedUnityObjects,

@@ -10,30 +10,30 @@ namespace FlowIoC.Editor.FolderDrawer
     // Renaming a field drops whatever the user already configured, so keep them stable.
 
     [Serializable]
-    public class FolderDrawerPathRule
+    public class FolderDrawerPathRuleEVO
     {
-        public FolderDrawerPathMatch PathRule = new FolderDrawerPathMatch();
-        public FolderDrawerVisual Visual = new FolderDrawerVisual();
+        public FolderDrawerPathMatchEVO PathRule = new FolderDrawerPathMatchEVO();
+        public FolderDrawerVisualEVO Visual = new FolderDrawerVisualEVO();
     }
 
     [Serializable]
-    public class FolderDrawerFolderRule
+    public class FolderDrawerFolderRuleEVO
     {
-        public FolderDrawerFolderTarget FolderRule = new FolderDrawerFolderTarget();
-        public FolderDrawerVisual VisualConfig = new FolderDrawerVisual();
+        public FolderDrawerFolderTargetEVO FolderRule = new FolderDrawerFolderTargetEVO();
+        public FolderDrawerVisualEVO VisualConfig = new FolderDrawerVisualEVO();
     }
 
     [Serializable]
-    public class FolderDrawerVisual
+    public class FolderDrawerVisualEVO
     {
-        public FolderDrawerColor ColorInfo = new FolderDrawerColor();
-        public FolderDrawerSelection Selection = new FolderDrawerSelection();
-        public FolderDrawerLabel Text = new FolderDrawerLabel();
-        public FolderDrawerIcon Icon = new FolderDrawerIcon();
+        public FolderDrawerColorEVO ColorInfo = new FolderDrawerColorEVO();
+        public FolderDrawerSelectionEVO Selection = new FolderDrawerSelectionEVO();
+        public FolderDrawerLabelEVO Text = new FolderDrawerLabelEVO();
+        public FolderDrawerIconEVO Icon = new FolderDrawerIconEVO();
     }
 
     [Serializable]
-    public class FolderDrawerPathMatch
+    public class FolderDrawerPathMatchEVO
     {
         public string Value;
         public FolderDrawerPathCheckType Type;
@@ -47,7 +47,7 @@ namespace FlowIoC.Editor.FolderDrawer
     }
 
     [Serializable]
-    public class FolderDrawerFolderTarget
+    public class FolderDrawerFolderTargetEVO
     {
         public DefaultAsset Folder;
 
@@ -55,21 +55,21 @@ namespace FlowIoC.Editor.FolderDrawer
     }
 
     [Serializable]
-    public class FolderDrawerColor
+    public class FolderDrawerColorEVO
     {
         public Color StartColor;
         public Color EndColor;
     }
 
     [Serializable]
-    public class FolderDrawerSelection
+    public class FolderDrawerSelectionEVO
     {
         public bool OverrideSelectionColor;
         public Color Color;
     }
 
     [Serializable]
-    public class FolderDrawerLabel
+    public class FolderDrawerLabelEVO
     {
         public bool OverrideFont;
         public Color Color;
@@ -81,7 +81,7 @@ namespace FlowIoC.Editor.FolderDrawer
     }
 
     [Serializable]
-    public class FolderDrawerIcon
+    public class FolderDrawerIconEVO
     {
         public bool Enable;
         public Texture Texture;

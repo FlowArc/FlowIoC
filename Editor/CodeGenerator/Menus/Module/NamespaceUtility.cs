@@ -342,7 +342,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         /// </summary>
         private static string GetModuleNamespace(ModuleRegistry registry, string modulePath)
         {
-            registry.TryGetNearestModule(GetUnityAssetPath(modulePath), out ModuleDescriptor module);
+            registry.TryGetNearestModule(GetUnityAssetPath(modulePath), out ModuleDescriptorEVO module);
 
             IEnumerable<string> ancestorNames = module == null
                 ? Enumerable.Empty<string>()
@@ -433,7 +433,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         private static string FindNearestModuleFolder(ModuleRegistry registry, string startDirectory)
         {
-            if (!registry.TryGetNearestModule(GetUnityAssetPath(startDirectory), out ModuleDescriptor module))
+            if (!registry.TryGetNearestModule(GetUnityAssetPath(startDirectory), out ModuleDescriptorEVO module))
                 return string.Empty;
 
             return new ModuleAssetPathResolver().ToAbsolutePath(registry.PathOf(module));

@@ -16,12 +16,12 @@ namespace FlowIoC.Tests
     /// </summary>
     public class CodeGeneratorSettingsDefaultsTests
     {
-        private CodeGeneratorSettings _settings;
+        private ED_CodeGenerator _settings;
 
         [SetUp]
         public void SetUp()
         {
-            _settings = ScriptableObject.CreateInstance<CodeGeneratorSettings>();
+            _settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
         }
 
         [TearDown]
@@ -35,7 +35,7 @@ namespace FlowIoC.Tests
         {
             var defaults = new CodeGeneratorDefaults();
 
-            foreach (KeyValuePair<FolderConfig.FolderType, string> entry in defaults.FolderNames)
+            foreach (KeyValuePair<FolderEVO.FolderType, string> entry in defaults.FolderNames)
             {
                 Assert.IsTrue(_settings.DirectoryStructureConfigMap.ContainsKey(entry.Key), $"{entry.Key} is missing");
                 Assert.AreEqual(entry.Value, _settings.DirectoryStructureConfigMap[entry.Key]);
@@ -66,12 +66,12 @@ namespace FlowIoC.Tests
         public void A_map_that_still_holds_an_entry_is_left_alone()
         {
             _settings.DirectoryStructureConfigMap.Clear();
-            _settings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models] = "Brains";
+            _settings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models] = "Brains";
 
             Assert.IsFalse(_settings.RestoreDefaultsIfEmpty());
 
             Assert.AreEqual(1, _settings.DirectoryStructureConfigMap.Count);
-            Assert.AreEqual("Brains", _settings.DirectoryStructureConfigMap[FolderConfig.FolderType.Models]);
+            Assert.AreEqual("Brains", _settings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]);
         }
 
         [Test]

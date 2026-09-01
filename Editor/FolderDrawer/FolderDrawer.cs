@@ -9,18 +9,18 @@ namespace FlowIoC.Editor.FolderDrawer
 {
     /// <summary>
     /// Paints the Project window folder rows from the project local config.
-    /// <see cref="FlowIoCFolderDrawerBootstrap"/> owns the instance.
+    /// <see cref="FolderDrawerBootstrap"/> owns the instance.
     /// </summary>
-    public class FlowIoCFolderDrawer
+    public class FolderDrawer
     {
-        private readonly FlowIoCFolderDrawerConfigLoader _configLoader = new FlowIoCFolderDrawerConfigLoader();
-        private readonly Dictionary<string, FolderDrawerFolderRule> _folderRuleMap = new Dictionary<string, FolderDrawerFolderRule>();
+        private readonly FolderDrawerConfigLoader _configLoader = new FolderDrawerConfigLoader();
+        private readonly Dictionary<string, FolderDrawerFolderRuleEVO> _folderRuleMap = new Dictionary<string, FolderDrawerFolderRuleEVO>();
 
-        private FlowIoCFolderDrawerConfig _config;
+        private ED_FolderDrawer _config;
 
         internal string ConfigPath => _configLoader.ConfigPath;
 
-        internal FlowIoCFolderDrawerConfig EnsureConfig()
+        internal ED_FolderDrawer EnsureConfig()
         {
             return _configLoader.EnsureConfig();
         }
@@ -38,7 +38,7 @@ namespace FlowIoC.Editor.FolderDrawer
 
             if (_config.FolderRules != null)
             {
-                foreach (FolderDrawerFolderRule folderColorRule in _config.FolderRules)
+                foreach (FolderDrawerFolderRuleEVO folderColorRule in _config.FolderRules)
                 {
                     string path = folderColorRule?.FolderRule?.Path;
                     if (string.IsNullOrEmpty(path)) continue;
@@ -55,7 +55,7 @@ namespace FlowIoC.Editor.FolderDrawer
             string path = AssetDatabase.GUIDToAssetPath(guid);
             if (!AssetDatabase.IsValidFolder(path)) return;
 
-            if (_folderRuleMap.TryGetValue(path, out FolderDrawerFolderRule rule))
+            if (_folderRuleMap.TryGetValue(path, out FolderDrawerFolderRuleEVO rule))
             {
                 DrawWithVisualConfig(rule.VisualConfig, rect, guid, path);
             }
@@ -69,7 +69,7 @@ namespace FlowIoC.Editor.FolderDrawer
         {
             if (_config.PathRules == null) return;
 
-            foreach (FolderDrawerPathRule rule in _config.PathRules)
+            foreach (FolderDrawerPathRuleEVO rule in _config.PathRules)
             {
                 if (rule?.PathRule == null || string.IsNullOrEmpty(rule.PathRule.Value)) continue;
 
@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.FolderDrawer
             }
         }
 
-        private void DrawWithVisualConfig(FolderDrawerVisual visualRuleSet, Rect rect, string guid, string path)
+        private void DrawWithVisualConfig(FolderDrawerVisualEVO visualRuleSet, Rect rect, string guid, string path)
         {
             if (visualRuleSet == null) return;
 

@@ -26,8 +26,8 @@ namespace FlowIoC.Editor.Console
         [InitializeOnLoadMethod]
         private static void Initialize()
         {
-            FlowConsoleSettings.OnProjectLogTypesChanged -= OnProjectLogTypesChanged;
-            FlowConsoleSettings.OnProjectLogTypesChanged += OnProjectLogTypesChanged;
+            CD_FlowConsole.OnProjectLogTypesChanged -= OnProjectLogTypesChanged;
+            CD_FlowConsole.OnProjectLogTypesChanged += OnProjectLogTypesChanged;
 
             EditorApplication.delayCall += Generate;
         }
@@ -52,9 +52,9 @@ namespace FlowIoC.Editor.Console
             var settings = FlowLogger.Settings;
             if (settings == null) return;
 
-            FlowConsoleSettings.FlowConsoleLogType defaultType = null;
-            var moduleTypes = new List<FlowConsoleSettings.FlowConsoleLogType>();
-            var customTypes = new List<FlowConsoleSettings.FlowConsoleLogType>();
+            CD_FlowConsole.FlowConsoleLogTypeCVO defaultType = null;
+            var moduleTypes = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>();
+            var customTypes = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>();
 
             foreach (var logType in settings.LogTypes)
             {
@@ -114,9 +114,9 @@ namespace FlowIoC.Editor.Console
         }
 
         private static string GenerateClassContent(
-            FlowConsoleSettings.FlowConsoleLogType defaultType,
-            List<FlowConsoleSettings.FlowConsoleLogType> moduleTypes,
-            List<FlowConsoleSettings.FlowConsoleLogType> customTypes)
+            CD_FlowConsole.FlowConsoleLogTypeCVO defaultType,
+            List<CD_FlowConsole.FlowConsoleLogTypeCVO> moduleTypes,
+            List<CD_FlowConsole.FlowConsoleLogTypeCVO> customTypes)
         {
             var sb = new StringBuilder();
             var usedIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

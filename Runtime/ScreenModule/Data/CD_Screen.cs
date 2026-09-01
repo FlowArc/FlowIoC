@@ -7,8 +7,8 @@ using UnityEditor;
 #endif
 namespace FlowIoC.ScreenModule.Data
 {
-    [CreateAssetMenu(fileName = "ScreenConfig", menuName = "FlowIoC/Screen/Screen Config")]
-    public class ScreenConfig : ScriptableObject
+    [CreateAssetMenu(fileName = "CD_Screen", menuName = "FlowIoC/Screen/Screen Config")]
+    public class CD_Screen : ScriptableObject
     {
         [SerializeField] private int _defaultLayer;
         [SerializeField] private ScreenLoadType _loadType;

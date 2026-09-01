@@ -110,7 +110,7 @@ namespace FlowIoC.Editor.SetupModules
             // opened one yet. Without it the index stays empty, FlowLogType is written with no
             // channels, and the modules that just landed - every one of them logging on its own
             // channel - take the project down with them.
-            CodeGeneratorSettings.CreateConfig();
+            ED_CodeGenerator.CreateConfig();
 
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
             ModuleAutoDetector.RescanModules();

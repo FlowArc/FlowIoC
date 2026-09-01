@@ -6,14 +6,14 @@ using UnityEngine;
 namespace FlowIoC.Editor.FolderDrawer
 {
     /// <summary>
-    /// Plain data. It is created and read by <see cref="FlowIoCFolderDrawerConfigLoader"/>
+    /// Plain data. It is created and read by <see cref="FolderDrawerConfigLoader"/>
     /// and lives under Assets, so every project keeps its own colors.
     /// </summary>
-    class FlowIoCFolderDrawerConfig : ScriptableObject
+    class ED_FolderDrawer : ScriptableObject
     {
         public bool Enabled;
-        public List<FolderDrawerFolderRule> FolderRules;
-        public List<FolderDrawerPathRule> PathRules;
+        public List<FolderDrawerFolderRuleEVO> FolderRules;
+        public List<FolderDrawerPathRuleEVO> PathRules;
     }
 }
 

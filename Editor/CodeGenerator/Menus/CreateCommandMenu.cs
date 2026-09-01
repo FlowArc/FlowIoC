@@ -46,7 +46,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private ModuleKind _selectedModuleKind;
         private static GenerationState _generationState;
         private string _selectedModuleName = string.Empty;
-        private CodeGeneratorSettings _codeGenSettings;
+        private ED_CodeGenerator _codeGenSettings;
 
         private enum GenerationState
         {
@@ -59,7 +59,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             _moduleExpandedState = new Dictionary<string, bool>();
             _parentModulePath = string.Empty;
-            CodeGeneratorSettings.CreateConfig();
+            ED_CodeGenerator.CreateConfig();
             LoadCodeGeneratorSettings();
             _generationState = GenerationState.Idle;
             _registry = new ModuleRegistryFactory().FromProject();
@@ -67,10 +67,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private bool LoadCodeGeneratorSettings()
         {
-            _codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            _codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (_codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return true;
             }
 
@@ -234,9 +234,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             string subDirectory = _selectedModuleKind switch
             {
-                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules],
-                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules],
-                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules],
+                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
+                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules],
+                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
                 _ => string.Empty
             };
 
@@ -245,9 +245,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 : Path.Combine(baseModulePath, subDirectory);
 
             string commandPath = _configProvider.ConfigFor(_selectedModuleKind)
-                .FindFullFolderPathByID(FolderConfig.FolderType.Controllers, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.Controllers, modulePath);
             string rootsAndContextsPath = _configProvider.ConfigFor(_selectedModuleKind)
-                .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 
             CreateCommand(commandPath, moduleNamespace);
@@ -265,17 +265,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             string commandName = _commandName + "Command";
 
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
 
             CodeGeneratorUtils.CreateCommand(commandName, "TempCommand", path, CodeGeneratorStrings.TempCommandPath,
-                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Controllers]}", _injectableNames);
+                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}", _injectableNames);
 
-            EnsureNamespaceImport(commandName, path, $"{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.Controllers]}",
+            EnsureNamespaceImport(commandName, path, $"{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}",
                 moduleNamespace);
         }
 

@@ -44,7 +44,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             }
 
             ModuleRegistry registry = new ModuleRegistryFactory().FromProject();
-            if (!registry.TryGetModule(assetPath, out ModuleDescriptor module))
+            if (!registry.TryGetModule(assetPath, out ModuleDescriptorEVO module))
             {
                 Debug.LogError($"'{assetPath}' is not a module.");
                 return;
@@ -86,7 +86,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         }
 
         private static void TraverseFoldersAndSetProviders(string basePath,
-            System.Collections.Generic.List<FolderConfig> folders, string dotSettingsPath)
+            System.Collections.Generic.List<FolderEVO> folders, string dotSettingsPath)
         {
             foreach (var folder in folders)
             {

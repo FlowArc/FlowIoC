@@ -14,12 +14,12 @@ namespace FlowIoC.ScreenModule.ViewsMediators.ConfigAdapter
     {
         public bool IsRegistered { get; set; }
         public int ManagerIdToRegister => _managerIdToRegister;
-        public Action<int, List<ScreenConfig>> UnRegisterScreenConfig = delegate { };
+        public Action<int, List<CD_Screen>> UnRegisterScreenConfig = delegate { };
 
         [SerializeField] private int _managerIdToRegister;
-        [SerializeField] private List<ScreenConfig> _screenConfigs = new List<ScreenConfig>();
+        [SerializeField] private List<CD_Screen> _screenConfigs = new List<CD_Screen>();
         
-        public List<ScreenConfig> GetScreenConfigs()
+        public List<CD_Screen> GetScreenConfigs()
         {
             if (_screenConfigs == null || _screenConfigs.Count <= 0) return _screenConfigs;
             return _screenConfigs;

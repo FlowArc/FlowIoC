@@ -50,7 +50,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _selectedModulePath = string.Empty;
             _selectedModuleName = string.Empty;
             _lastResult = string.Empty;
-            CodeGeneratorSettings.CreateConfig();
+            ED_CodeGenerator.CreateConfig();
             _registry = new ModuleRegistryFactory().FromProject();
         }
 
@@ -138,7 +138,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             string moduleAssetPath = _pathResolver.ToAssetPath(_selectedModulePath);
 
-            if (!_registry.TryGetModule(moduleAssetPath, out ModuleDescriptor module))
+            if (!_registry.TryGetModule(moduleAssetPath, out ModuleDescriptorEVO module))
             {
                 _lastResult = $"'{moduleAssetPath}' is not in the module index. Run Module Configuration > Detect & Fix Module Index first.";
                 Debug.LogError($"<color=cyan>FlowIoC:</color> Add Shared Data - {_lastResult}");
@@ -159,9 +159,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             }
         }
 
-        private void RegisterFolders(ModuleDescriptor module, DirectoryStructureConfig config)
+        private void RegisterFolders(ModuleDescriptorEVO module, DirectoryStructureConfig config)
         {
-            var codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            var codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null) return;
 
             new ModuleIndexRegistrar().Register(_selectedModulePath, config, codeGenSettings.DirectoryStructureConfigMap.Keys);
