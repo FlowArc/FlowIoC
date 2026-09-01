@@ -30,11 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING: every ScriptableObject the package ships now carries the data-type prefix its own
   rules ask for.** `CD_PoolGroup` already followed the table; the rest did not. The editor-only
-  assets became `ED_CodeGenerator`, `ED_ModuleIndex`, `ED_FolderDrawer`, `ED_Header` and
+  assets became `ED_CodeGenerator`, `ED_ModuleIndex`, `ED_FolderPainter`, `ED_Header` and
   `ED_MainModuleDirectoryStructure` / `ED_ScreenModuleDirectoryStructure` /
   `ED_TestModuleDirectoryStructure`, and the two configs a game reads at runtime became
   `CD_FlowConsole` and `CD_Screen`. The serializable classes they are built out of took the
-  matching suffixes: `FolderEVO`, `ModuleDescriptorEVO`, the nine `FolderDrawer*EVO` rule types,
+  matching suffixes: `FolderEVO`, `ModuleDescriptorEVO`, the nine `FolderPainter*EVO` rule types,
   and `CD_FlowConsole.FlowConsoleLogTypeCVO`.
 
   `ScreenConfig` and `FlowConsoleSettings` were public, so code that names either type has to be
@@ -48,6 +48,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Addressables label on screen config entries is deliberately still `ScreenConfig`: it is a
   project-side identifier rather than a type name, and renaming it would orphan every entry
   already labelled.
+
+- **BREAKING: the Folder Drawer is now the Folder Painter.** The menu item is
+  `Tools/FlowIoC/Folder Painter`, the types are `FolderPainter`, `FolderPainterWindow`,
+  `ED_FolderPainter` and the nine `FolderPainter*EVO` rule classes, and the namespace is
+  `FlowIoC.Editor.FolderPainter`. Unity already calls a property drawer a drawer, and the tool
+  paints folders rather than drawing them, so the old name read as the wrong thing twice over.
+  The project-local config moves from `Editor/FolderDrawer/ED_FolderDrawer.asset` to
+  `Editor/FolderPainter/ED_FolderPainter.asset` on the first editor tick after the upgrade,
+  keeping its GUID and every rule configured in it.
 
 - **A Connector now gets signal holders instead of binding them.** `InjectionBinderCrossContext`
   `.GetInstance<PlayerSignals>()` rather than `.Bind<PlayerSignals>()`, in the shipped

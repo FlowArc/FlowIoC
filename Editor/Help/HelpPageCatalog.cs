@@ -39,7 +39,7 @@ namespace FlowIoC.Editor.Help
                         new ModuleConfigurationPage(),
                         new FlowConsolePage(),
                         new ModelViewerPage(),
-                        new FolderDrawerPage(),
+                        new FolderPainterPage(),
                         new ScreenConfigManagerPage(),
                         new AgentRulesPage(),
                         new AgentSkillsPage())),

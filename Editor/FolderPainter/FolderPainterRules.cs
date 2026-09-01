@@ -4,42 +4,42 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.Editor.FolderDrawer
+namespace FlowIoC.Editor.FolderPainter
 {
     // The field names below are the serialization keys of the config asset.
     // Renaming a field drops whatever the user already configured, so keep them stable.
 
     [Serializable]
-    public class FolderDrawerPathRuleEVO
+    public class FolderPainterPathRuleEVO
     {
-        public FolderDrawerPathMatchEVO PathRule = new FolderDrawerPathMatchEVO();
-        public FolderDrawerVisualEVO Visual = new FolderDrawerVisualEVO();
+        public FolderPainterPathMatchEVO PathRule = new FolderPainterPathMatchEVO();
+        public FolderPainterVisualEVO Visual = new FolderPainterVisualEVO();
     }
 
     [Serializable]
-    public class FolderDrawerFolderRuleEVO
+    public class FolderPainterFolderRuleEVO
     {
-        public FolderDrawerFolderTargetEVO FolderRule = new FolderDrawerFolderTargetEVO();
-        public FolderDrawerVisualEVO VisualConfig = new FolderDrawerVisualEVO();
+        public FolderPainterFolderTargetEVO FolderRule = new FolderPainterFolderTargetEVO();
+        public FolderPainterVisualEVO VisualConfig = new FolderPainterVisualEVO();
     }
 
     [Serializable]
-    public class FolderDrawerVisualEVO
+    public class FolderPainterVisualEVO
     {
-        public FolderDrawerColorEVO ColorInfo = new FolderDrawerColorEVO();
-        public FolderDrawerSelectionEVO Selection = new FolderDrawerSelectionEVO();
-        public FolderDrawerLabelEVO Text = new FolderDrawerLabelEVO();
-        public FolderDrawerIconEVO Icon = new FolderDrawerIconEVO();
+        public FolderPainterColorEVO ColorInfo = new FolderPainterColorEVO();
+        public FolderPainterSelectionEVO Selection = new FolderPainterSelectionEVO();
+        public FolderPainterLabelEVO Text = new FolderPainterLabelEVO();
+        public FolderPainterIconEVO Icon = new FolderPainterIconEVO();
     }
 
     [Serializable]
-    public class FolderDrawerPathMatchEVO
+    public class FolderPainterPathMatchEVO
     {
         public string Value;
-        public FolderDrawerPathCheckType Type;
+        public FolderPainterPathCheckType Type;
     }
 
-    public enum FolderDrawerPathCheckType
+    public enum FolderPainterPathCheckType
     {
         Contains,
         EndsWith,
@@ -47,7 +47,7 @@ namespace FlowIoC.Editor.FolderDrawer
     }
 
     [Serializable]
-    public class FolderDrawerFolderTargetEVO
+    public class FolderPainterFolderTargetEVO
     {
         public DefaultAsset Folder;
 
@@ -55,21 +55,21 @@ namespace FlowIoC.Editor.FolderDrawer
     }
 
     [Serializable]
-    public class FolderDrawerColorEVO
+    public class FolderPainterColorEVO
     {
         public Color StartColor;
         public Color EndColor;
     }
 
     [Serializable]
-    public class FolderDrawerSelectionEVO
+    public class FolderPainterSelectionEVO
     {
         public bool OverrideSelectionColor;
         public Color Color;
     }
 
     [Serializable]
-    public class FolderDrawerLabelEVO
+    public class FolderPainterLabelEVO
     {
         public bool OverrideFont;
         public Color Color;
@@ -81,7 +81,7 @@ namespace FlowIoC.Editor.FolderDrawer
     }
 
     [Serializable]
-    public class FolderDrawerIconEVO
+    public class FolderPainterIconEVO
     {
         public bool Enable;
         public Texture Texture;

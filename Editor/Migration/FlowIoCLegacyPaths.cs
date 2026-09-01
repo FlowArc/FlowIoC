@@ -24,10 +24,13 @@ namespace FlowIoC.Editor.Migration
             new LegacyAssetMove("Assets/FlowIoC/Generated/FlowLogType.cs", _paths.FlowLogType),
             new LegacyAssetMove("Assets/FlowIoC/Generated/FlowIoC.Generated.asmref", _paths.GeneratedAsmRef),
             new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/CodeGeneratorSettings.asset", _paths.CodeGeneratorSettings),
-            new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Main")),
-            new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Screen")),
-            new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/TestModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Test")),
-            new LegacyAssetMove("Assets/Editor/FlowIoC/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderDrawerConfig),
+            new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset",
+                _paths.DirectoryStructureConfig("Main")),
+            new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset",
+                _paths.DirectoryStructureConfig("Screen")),
+            new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/TestModuleDirectoryStructureConfig.asset",
+                _paths.DirectoryStructureConfig("Test")),
+            new LegacyAssetMove("Assets/Editor/FlowIoC/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderPainterConfig),
             new LegacyAssetMove("Assets/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings),
 
             // The assets FlowIoC writes took the CD_/ED_ data-type prefixes the rest of the
@@ -35,11 +38,19 @@ namespace FlowIoC.Editor.Migration
             // root but under the old file names, so the rename is a move like any other.
             new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/CodeGeneratorSettings.asset", _paths.CodeGeneratorSettings),
             new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset", _paths.ModuleIndex),
-            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/MainModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Main")),
-            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Screen")),
-            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/TestModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Test")),
-            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderDrawerConfig),
-            new LegacyAssetMove("Assets/Plugins/FlowIoC/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings)
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/MainModuleDirectoryStructureConfig.asset",
+                _paths.DirectoryStructureConfig("Main")),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset",
+                _paths.DirectoryStructureConfig("Screen")),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/TestModuleDirectoryStructureConfig.asset",
+                _paths.DirectoryStructureConfig("Test")),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderPainterConfig),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings),
+
+            // The folder drawer became the Folder Painter, which moved its folder and its asset
+            // in one go. A project installed between the ED_ prefixes and the rename holds the
+            // config under the old name in the old folder.
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/FolderDrawer/ED_FolderDrawer.asset", _paths.FolderPainterConfig)
         };
 
         /// <summary>
@@ -53,7 +64,8 @@ namespace FlowIoC.Editor.Migration
             "Assets/Editor/FlowIoC/FolderDrawer",
             "Assets/Editor/FlowIoC",
             "Assets/Editor",
-            "Assets/Resources"
+            "Assets/Resources",
+            "Assets/Plugins/FlowIoC/Editor/FolderDrawer"
         };
     }
 }

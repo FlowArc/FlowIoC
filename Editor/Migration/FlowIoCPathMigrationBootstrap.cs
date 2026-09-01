@@ -10,7 +10,7 @@ namespace FlowIoC.Editor.Migration
     /// where the AssetDatabase is writable.
     ///
     /// EditorApplication.update is used rather than delayCall for the same reason
-    /// FlowIoCFolderDrawerBootstrap uses it: delayCall is only pumped by the editor GUI loop and
+    /// FolderPainterBootstrap uses it: delayCall is only pumped by the editor GUI loop and
     /// never fires while the Editor sits unfocused or minimized.
     /// </summary>
     internal static class FlowIoCPathMigrationBootstrap

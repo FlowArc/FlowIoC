@@ -2,20 +2,20 @@
 
 using UnityEditor;
 
-namespace FlowIoC.Editor.FolderDrawer
+namespace FlowIoC.Editor.FolderPainter
 {
     /// <summary>
-    /// The only static surface of the folder drawer. Unity's load hook has to be static,
-    /// so this type holds the single drawer instance the editor callbacks need and does
-    /// nothing else; the behaviour lives on <see cref="FolderDrawer"/>.
+    /// The only static surface of the folder painter. Unity's load hook has to be static,
+    /// so this type holds the single painter instance the editor callbacks need and does
+    /// nothing else; the behaviour lives on <see cref="FolderPainter"/>.
     /// </summary>
-    internal static class FolderDrawerBootstrap
+    internal static class FolderPainterBootstrap
     {
-        private const string CONFIG_CHECKED_KEY = "FlowIoCFolderDrawer_ConfigChecked";
+        private const string CONFIG_CHECKED_KEY = "FlowIoCFolderPainter_ConfigChecked";
 
-        private static FolderDrawer _drawer;
+        private static FolderPainter _painter;
 
-        public static FolderDrawer Drawer => _drawer ??= new FolderDrawer();
+        public static FolderPainter Painter => _painter ??= new FolderPainter();
 
         [InitializeOnLoadMethod]
         private static void OnProjectLoad()
@@ -38,10 +38,10 @@ namespace FlowIoC.Editor.FolderDrawer
             if (!SessionState.GetBool(CONFIG_CHECKED_KEY, false))
             {
                 SessionState.SetBool(CONFIG_CHECKED_KEY, true);
-                Drawer.EnsureConfig();
+                Painter.EnsureConfig();
             }
 
-            Drawer.Apply();
+            Painter.Apply();
         }
     }
 }

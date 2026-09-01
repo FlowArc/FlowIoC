@@ -92,7 +92,7 @@ namespace FlowIoC.Tests
                 "Module Configuration",
                 "Flow Console",
                 "Model Viewer",
-                "Folder Drawer",
+                "Folder Painter",
                 "Screen Config Manager",
                 "Agent Rules",
                 "Agent Skills"

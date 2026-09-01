@@ -2,20 +2,20 @@
 
 namespace FlowIoC.Editor.Help.Pages.Tools
 {
-    internal class FolderDrawerPage : HelpPage
+    internal class FolderPainterPage : HelpPage
     {
-        public FolderDrawerPage() : base(null)
+        public FolderPainterPage() : base(null)
         {
         }
 
-        public override string Title => "Folder Drawer";
+        public override string Title => "Folder Painter";
 
         public override string Icon => "FolderOpened Icon";
 
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Paragraph(
-                "Tools > FlowIoC > Folder Drawer. Tints Project window folders so a large module "
+                "Tools > FlowIoC > Folder Painter. Tints Project window folders so a large module "
                 + "tree stays readable at a glance. Edits repaint the Project window as you make "
                 + "them.");
 

@@ -5,22 +5,22 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.Editor.FolderDrawer
+namespace FlowIoC.Editor.FolderPainter
 {
     /// <summary>
     /// Paints the Project window folder rows from the project local config.
-    /// <see cref="FolderDrawerBootstrap"/> owns the instance.
+    /// <see cref="FolderPainterBootstrap"/> owns the instance.
     /// </summary>
-    public class FolderDrawer
+    public class FolderPainter
     {
-        private readonly FolderDrawerConfigLoader _configLoader = new FolderDrawerConfigLoader();
-        private readonly Dictionary<string, FolderDrawerFolderRuleEVO> _folderRuleMap = new Dictionary<string, FolderDrawerFolderRuleEVO>();
+        private readonly FolderPainterConfigLoader _configLoader = new FolderPainterConfigLoader();
+        private readonly Dictionary<string, FolderPainterFolderRuleEVO> _folderRuleMap = new Dictionary<string, FolderPainterFolderRuleEVO>();
 
-        private ED_FolderDrawer _config;
+        private ED_FolderPainter _config;
 
         internal string ConfigPath => _configLoader.ConfigPath;
 
-        internal ED_FolderDrawer EnsureConfig()
+        internal ED_FolderPainter EnsureConfig()
         {
             return _configLoader.EnsureConfig();
         }
@@ -38,7 +38,7 @@ namespace FlowIoC.Editor.FolderDrawer
 
             if (_config.FolderRules != null)
             {
-                foreach (FolderDrawerFolderRuleEVO folderColorRule in _config.FolderRules)
+                foreach (FolderPainterFolderRuleEVO folderColorRule in _config.FolderRules)
                 {
                     string path = folderColorRule?.FolderRule?.Path;
                     if (string.IsNullOrEmpty(path)) continue;
@@ -55,7 +55,7 @@ namespace FlowIoC.Editor.FolderDrawer
             string path = AssetDatabase.GUIDToAssetPath(guid);
             if (!AssetDatabase.IsValidFolder(path)) return;
 
-            if (_folderRuleMap.TryGetValue(path, out FolderDrawerFolderRuleEVO rule))
+            if (_folderRuleMap.TryGetValue(path, out FolderPainterFolderRuleEVO rule))
             {
                 DrawWithVisualConfig(rule.VisualConfig, rect, guid, path);
             }
@@ -69,21 +69,21 @@ namespace FlowIoC.Editor.FolderDrawer
         {
             if (_config.PathRules == null) return;
 
-            foreach (FolderDrawerPathRuleEVO rule in _config.PathRules)
+            foreach (FolderPainterPathRuleEVO rule in _config.PathRules)
             {
                 if (rule?.PathRule == null || string.IsNullOrEmpty(rule.PathRule.Value)) continue;
 
-                if (rule.PathRule.Type == FolderDrawerPathCheckType.Contains && path.Contains(rule.PathRule.Value))
+                if (rule.PathRule.Type == FolderPainterPathCheckType.Contains && path.Contains(rule.PathRule.Value))
                 {
                     DrawWithVisualConfig(rule.Visual, rect, guid, path);
                     return;
                 }
-                else if (rule.PathRule.Type == FolderDrawerPathCheckType.EndsWith && path.EndsWith(rule.PathRule.Value))
+                else if (rule.PathRule.Type == FolderPainterPathCheckType.EndsWith && path.EndsWith(rule.PathRule.Value))
                 {
                     DrawWithVisualConfig(rule.Visual, rect, guid, path);
                     return;
                 }
-                else if (rule.PathRule.Type == FolderDrawerPathCheckType.StartsWith && path.StartsWith(rule.PathRule.Value))
+                else if (rule.PathRule.Type == FolderPainterPathCheckType.StartsWith && path.StartsWith(rule.PathRule.Value))
                 {
                     DrawWithVisualConfig(rule.Visual, rect, guid, path);
                     return;
@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.FolderDrawer
             }
         }
 
-        private void DrawWithVisualConfig(FolderDrawerVisualEVO visualRuleSet, Rect rect, string guid, string path)
+        private void DrawWithVisualConfig(FolderPainterVisualEVO visualRuleSet, Rect rect, string guid, string path)
         {
             if (visualRuleSet == null) return;
 

@@ -14,7 +14,7 @@ The tools keep those conventions correct so you do not have to.
 | `Tools/FlowIoC/Delete Module` | Remove a module and its registrations |
 | `Tools/FlowIoC/Console/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
-| `Tools/FlowIoC/Folder Drawer` | Colour Project window folders by path or by folder |
+| `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
 | `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Repair module metadata and namespace settings |
@@ -119,7 +119,7 @@ public class CameraModel : ICameraModel
 Because models are plain C# objects rather than `MonoBehaviour`s, the Unity Inspector
 cannot show them — this window is the replacement.
 
-### Folder Drawer
+### Folder Painter
 
 Tints Project window folders so a large module tree stays readable at a glance. Two
 kinds of rule:
@@ -133,11 +133,11 @@ kinds of rule:
 Each rule sets a gradient, and optionally a label override, a selection colour and an
 icon.
 
-Open it from `Tools/FlowIoC/Folder Drawer`. Edits repaint the Project window as you
+Open it from `Tools/FlowIoC/Folder Painter`. Edits repaint the Project window as you
 make them.
 
 The settings live in your project, at
-`Assets/Plugins/FlowIoC/Editor/FolderDrawer/FlowIoCFolderDrawerConfig.asset`, not in the
+`Assets/Plugins/FlowIoC/Editor/FolderPainter/FlowIoCFolderPainterConfig.asset`, not in the
 package — so colours are per project, and are created with a sensible default set the
 first time the Editor opens.
 
