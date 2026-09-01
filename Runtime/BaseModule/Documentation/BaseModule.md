@@ -339,8 +339,8 @@ public class ShopConnectorSubContext : Context
 
     public override void Setup()
     {
-        _shopSignals   = InjectionBinderCrossContext.Bind<ShopSignals>();
-        _playerSignals = InjectionBinderCrossContext.Bind<PlayerSignals>();
+        _shopSignals   = InjectionBinderCrossContext.GetInstance<ShopSignals>();
+        _playerSignals = InjectionBinderCrossContext.GetInstance<PlayerSignals>();
 
         _shopSignals.Outgoing.PurchaseRequested
             .Connect(_playerSignals.Incoming.SpendCurrency, Group);
@@ -563,11 +563,12 @@ _internal = InjectionBinderCrossContext.Bind<MatchSignalsInternal>();
 ### Wire modules in `Setup()`, not in a binding phase
 
 ```csharp
-// ✅ At Setup() time every module has finished binding, whatever the Root order is.
+// ✅ At Setup() time every module has finished binding, whatever the Root order is - so the
+//    Connector gets the holders that are there instead of binding ones of its own.
 public override void Setup()
 {
-    _shopSignals   = InjectionBinderCrossContext.Bind<ShopSignals>();
-    _playerSignals = InjectionBinderCrossContext.Bind<PlayerSignals>();
+    _shopSignals   = InjectionBinderCrossContext.GetInstance<ShopSignals>();
+    _playerSignals = InjectionBinderCrossContext.GetInstance<PlayerSignals>();
 
     _shopSignals.Outgoing.PurchaseRequested.Connect(_playerSignals.Incoming.SpendCurrency);
 }
@@ -664,6 +665,10 @@ Check whether the signal instance you dispatched is the one you bound. Two conte
 each calling `InjectionBinderCrossContext.Bind<FooSignals>()` get the *same*
 instance — that is the point — but a context that used `InjectionBinder.Bind<FooSignals>()`
 gets its own, and the two never meet.
+
+The same goes for a Connector that reached for `Bind` instead of `GetInstance`. If the
+module that owns the holder is not in the scene, `Bind` gives the Connector a holder of its
+own and every connection it makes is to a signal nobody dispatches.
 
 The Flow Console's `Signal` channel shows every dispatch. If the dispatch appears and
 no command follows, the binding is the problem.

@@ -264,10 +264,53 @@ finished binding, and `Launch()` does not run until every Root has finished
 exactly what Connector contexts do — and `Launch()` is where you dispatch the first
 signal.
 
+That gives each phase a job. The binding phases **declare**: they say what the module
+is made of and decide nothing. `Setup()` **initialises**: everything in the scene is
+bound by then, so a module readies its Models here if they need readying, and a
+Connector wires two modules together. `Launch()` **starts**: it dispatches the module's
+first signal, and the entry point's `Launch()` is what sets the game going.
+
 Roots are ordered among themselves by the `initializeOrder` field exposed in the
 inspector. Each phase can also be toggled off per-Root (`AutoInitialize`,
 `AutoBindInjections`, `AutoBindMediations`, `AutoSetup`, `AutoLaunch`) so a context
 can be driven manually in a test scene.
+
+### Ordering Roots
+
+Initialize Order is not a free number. It falls into bands, and placing a Root means
+picking the band it belongs to:
+
+| Order | Who sits there | Why |
+|---|---|---|
+| negative | Services | A Service depends on nothing else, so it comes up first and is ready for everyone. |
+| 0 – 97 | The game's own modules and Systems | Gameplay, input, camera - whatever this game is made of. |
+| 98 | `ConnectorRoot` | After every module it wires, so the scene reads as modules first and wiring after them. |
+| 99 | `ScreenRoot` | The screen manager owns the screen prefabs, so it is up before the flow that opens the first screen. |
+| 100 | `MainRoot` | The entry point. Its `Launch()` dispatches the first signal, last of all. |
+
+The shipped Roots use `-10000` for the asset service, `-99` for the screen service, `-2`
+for the pool service, `0` for gameplay and input, `1` for the camera system. Inside a band
+the exact number rarely matters - two modules that never touch can both sit at `0`.
+
+`MainScene` is authored in the same order, with separators between the bands, so the
+Hierarchy shows the boot order without opening an inspector:
+
+```
+MainScene
+├── ScreenServiceRoot          -99
+├── PoolServiceRoot             -2
+├── ------------------------
+├── GameplayRoot                 0
+├── ------------------------
+├── ConnectorRoot               98
+├── ScreenRoot                  99
+└── MainRoot                   100
+```
+
+The order decides who binds first and who is called first inside the `Setup()` and
+`Launch()` passes. It is not what makes reaching across modules safe - the barrier above
+is. `ConnectorRoot` at `98` is about reading order: it comes after every module it wires,
+and any other number in the band would work just as well.
 
 A GameObject the module needs in the scene goes under its Root. The Root is the module's one
 presence there, so an EventSystem, an adapter, anything the module owns hangs off it rather
@@ -729,8 +772,14 @@ _view.UnRegister();
 ## Connectors
 
 Connectors are what keep modules independent. A module dispatches its `Outgoing`
-signals without knowing who listens; a Connector context binds those to other
+signals without knowing who listens; a Connector context joins those to other
 modules' `Incoming` signals.
+
+A Connector **gets** the signal holders, it never binds them. Each module binds its own
+holder during its binding phase, and by the time any `Setup()` runs every one of them
+exists — so the Connector asks for what is there with `GetInstance` instead of `Bind`.
+`Bind` would hand it a holder of its own the moment the owning module is missing from
+the scene: nothing would fail, and nothing would ever arrive either.
 
 ```csharp
 using FlowIoC.BaseModule.Connectors;
@@ -744,16 +793,16 @@ public class HeroConnectorSubContext : Context
 
     public override void Setup()
     {
-        Bindings();
+        Signals();
         IncomingSignals();
         OutGoingSignals();
     }
 
-    private void Bindings()
+    private void Signals()
     {
-        _heroSignals                = InjectionBinderCrossContext.Bind<HeroSignals>();
-        _playerProfileSignals       = InjectionBinderCrossContext.Bind<PlayerProfileSignals>();
-        _heroSelectionScreenSignals = InjectionBinderCrossContext.Bind<HeroSelectionScreenSignals>();
+        _heroSignals                = InjectionBinderCrossContext.GetInstance<HeroSignals>();
+        _playerProfileSignals       = InjectionBinderCrossContext.GetInstance<PlayerProfileSignals>();
+        _heroSelectionScreenSignals = InjectionBinderCrossContext.GetInstance<HeroSelectionScreenSignals>();
     }
 
     private void IncomingSignals()

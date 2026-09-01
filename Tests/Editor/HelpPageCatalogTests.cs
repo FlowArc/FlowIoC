@@ -63,6 +63,7 @@ namespace FlowIoC.Tests
                 "Creating a Module",
                 "Folder Layout",
                 "Data Types",
+                "Ordering Roots",
                 "Structure",
                 "Editor Tools"
             }, ChildTitles("Wiki"));

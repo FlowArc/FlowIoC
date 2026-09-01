@@ -24,6 +24,18 @@ namespace FlowIoC.Editor.Help.Pages
                 "The Context is where the module declares what it is made of - and nothing else. A "
                 + "Context that needs an if is making a decision, and a decision belongs in a Command.");
 
+            painter.SubHeading("What each phase is for");
+            painter.Paragraph(
+                "The binding phases declare. SignalBindings, InjectionBindings, MediationBindings and "
+                + "CommandBindings say what the module is made of, and decide nothing.");
+            painter.Paragraph(
+                "Setup initialises. It does not run until every Root in the scene has finished binding, "
+                + "so this is where a module readies its Models if they need readying - and the only "
+                + "phase that may reach across modules, which is what a Connector does there.");
+            painter.Paragraph(
+                "Launch starts. It runs after every Setup and dispatches the module's first signal; the "
+                + "entry point's Launch is what sets the game going.");
+
             painter.SubHeading("What hangs off a Root");
             painter.Paragraph(
                 "A GameObject the module needs in the scene goes under its Root. The Root is the "

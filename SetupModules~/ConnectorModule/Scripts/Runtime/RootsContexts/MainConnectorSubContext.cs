@@ -16,9 +16,9 @@ namespace Modules.ConnectorModule.RootsContexts
         {
             base.Setup();
 
-            _mainSignals = InjectionBinderCrossContext.Bind<MainSignals>();
-            _mainScreenSignals = InjectionBinderCrossContext.Bind<MainScreenSignals>();
-            _gameplayScreenSignals = InjectionBinderCrossContext.Bind<GameplayScreenSignals>();
+            _mainSignals = InjectionBinderCrossContext.GetInstance<MainSignals>();
+            _mainScreenSignals = InjectionBinderCrossContext.GetInstance<MainScreenSignals>();
+            _gameplayScreenSignals = InjectionBinderCrossContext.GetInstance<GameplayScreenSignals>();
 
             IncomingSignals();
             OutGoingSignals();
