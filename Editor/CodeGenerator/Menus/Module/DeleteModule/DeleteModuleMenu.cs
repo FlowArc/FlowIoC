@@ -113,7 +113,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                 .ToList();
         }
 
-        private static ModuleEntry ToEntry(ModuleDescriptor module, ModuleRegistry registry, ModuleAssetPathResolver pathResolver)
+        private static ModuleEntry ToEntry(ModuleDescriptorEVO module, ModuleRegistry registry, ModuleAssetPathResolver pathResolver)
         {
             return new ModuleEntry
             {

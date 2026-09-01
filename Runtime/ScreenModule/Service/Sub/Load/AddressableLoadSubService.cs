@@ -19,7 +19,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         private Dictionary<string, AsyncOperationHandle<GameObject>> _loadedScreenHandles = new();
         private Dictionary<string, bool> _loadingScreens = new();
 
-        public async Task<IScreenBody> LoadScreen(ScreenConfig config)
+        public async Task<IScreenBody> LoadScreen(CD_Screen config)
         {
             try
             {
@@ -97,7 +97,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
             }
         }
 
-        public void UnloadScreen(ScreenConfig config, IScreenBody screenBody)
+        public void UnloadScreen(CD_Screen config, IScreenBody screenBody)
         {
             if (_loadedScreenHandles.TryGetValue(config.AddressableKey, out var handle))
             {

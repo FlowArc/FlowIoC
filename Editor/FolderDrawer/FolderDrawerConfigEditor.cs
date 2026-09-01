@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace FlowIoC.Editor.FolderDrawer
 {
-    [CustomEditor(typeof(FlowIoCFolderDrawerConfig))]
-    public class FlowIoCFolderDrawerConfigEditor : UnityEditor.Editor
+    [CustomEditor(typeof(ED_FolderDrawer))]
+    public class FolderDrawerConfigEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
@@ -16,13 +16,13 @@ namespace FlowIoC.Editor.FolderDrawer
 
             if (GUILayout.Button("Refresh", GUILayout.Height(40)))
             {
-                FlowIoCFolderDrawerBootstrap.Drawer.Apply();
+                FolderDrawerBootstrap.Drawer.Apply();
                 EditorApplication.RepaintProjectWindow();
             }
 
             if (GUILayout.Button("Open Folder Drawer Window"))
             {
-                FlowIoCFolderDrawerWindow.Open();
+                FolderDrawerWindow.Open();
             }
         }
     }

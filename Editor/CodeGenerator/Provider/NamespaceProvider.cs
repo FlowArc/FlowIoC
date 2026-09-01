@@ -107,7 +107,7 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
         {
             string moduleAssetPath = new ModuleAssetPathResolver().ToAssetPath(modulePath);
 
-            return registry.TryGetModule(moduleAssetPath, out ModuleDescriptor module)
+            return registry.TryGetModule(moduleAssetPath, out ModuleDescriptorEVO module)
                 ? new DirectoryStructureConfigProvider().ConfigFor(module.Kind)
                 : null;
         }
@@ -209,7 +209,7 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
         private static void AddNamespaceEntriesForModule_New(ModuleRegistry registry, XmlDocument doc, string modulePath)
         {
             string moduleAssetPath = new ModuleAssetPathResolver().ToAssetPath(modulePath);
-            if (!registry.TryGetModule(moduleAssetPath, out ModuleDescriptor module))
+            if (!registry.TryGetModule(moduleAssetPath, out ModuleDescriptorEVO module))
                 return;
 
             DirectoryStructureConfig config = new DirectoryStructureConfigProvider().ConfigFor(module.Kind);
@@ -251,9 +251,9 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
             }
         }
 
-        private static void CollectNonNamespaceFolders(string basePath, List<FolderConfig> folders, List<string> nonNamespaceFolders)
+        private static void CollectNonNamespaceFolders(string basePath, List<FolderEVO> folders, List<string> nonNamespaceFolders)
         {
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (!folder.IsMandatory && !folder.IsOptional)
                     continue;

@@ -61,7 +61,7 @@ namespace FlowIoC.Editor.Console
 
         private static bool IsAutoAddEnabled()
         {
-            var settings = Resources.Load<FlowConsoleSettings>("FlowConsoleSettings");
+            var settings = Resources.Load<CD_FlowConsole>("CD_FlowConsole");
             return settings == null || settings.AutoAddEnableLogDefine;
         }
     }

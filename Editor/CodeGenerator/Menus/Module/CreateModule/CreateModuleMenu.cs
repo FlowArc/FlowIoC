@@ -40,7 +40,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private Vector2 _scrollPosition;
         private Vector2 _folderPreviewScrollPosition;
         private Dictionary<ModuleType, DirectoryStructureConfig> _directoryConfigMap;
-        private readonly List<FolderConfig> _selectedOptionalFolders = new();
+        private readonly List<FolderEVO> _selectedOptionalFolders = new();
         private ModuleType _selectedModuleType;
         private static GenerationState _generationState;
 
@@ -52,7 +52,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private List<string> _actionNames = new();
         private Vector2 _actionScrollPosition;
 
-        private ScreenConfig _screenConfigPreview;
+        private CD_Screen _screenConfigPreview;
         private UnityEditor.Editor _screenConfigEditor;
 
         private void OnEnable()

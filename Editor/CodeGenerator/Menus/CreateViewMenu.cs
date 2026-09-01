@@ -40,7 +40,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private ModuleKind _selectedModuleKind;
         private static GenerationState _generationState;
         private string _selectedModuleName = string.Empty;
-        private CodeGeneratorSettings _codeGenSettings;
+        private ED_CodeGenerator _codeGenSettings;
 
         private enum GenerationState
         {
@@ -53,7 +53,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             _moduleExpandedState = new Dictionary<string, bool>();
             _parentModulePath = string.Empty;
-            CodeGeneratorSettings.CreateConfig();
+            ED_CodeGenerator.CreateConfig();
             LoadCodeGeneratorSettings();
             _generationState = GenerationState.Idle;
             _registry = new ModuleRegistryFactory().FromProject();
@@ -61,10 +61,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private bool LoadCodeGeneratorSettings()
         {
-            _codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            _codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (_codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return true;
             }
 
@@ -188,9 +188,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             string subDirectory = _selectedModuleKind switch
             {
-                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules],
-                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules],
-                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules],
+                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
+                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules],
+                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
                 _ => string.Empty
             };
 
@@ -199,9 +199,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 : Path.Combine(baseModulePath, subDirectory);
 
             string viewsAndMediatorsPath = _configProvider.ConfigFor(_selectedModuleKind)
-                .FindFullFolderPathByID(FolderConfig.FolderType.ViewsAndMediators, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.ViewsAndMediators, modulePath);
             string rootsAndContextsPath = _configProvider.ConfigFor(_selectedModuleKind)
-                .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 
 
@@ -218,35 +218,35 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             string viewName = _viewName + suffix + "View";
             string mediatorName = _viewName + suffix + "Mediator";
 
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
 
             if (isTest)
             {
                 CodeGeneratorUtils.CreateView(viewName, "TempView", path, CodeGeneratorStrings.TempViewPath,
-                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}",
+                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
                     _actionNames, true);
                 CodeGeneratorUtils.CreateMediator(mediatorName, viewName, "TempMediator", path, CodeGeneratorStrings.TempMediatorPath,
-                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}",
+                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
                     _actionNames, true);
             }
             else
             {
                 CodeGeneratorUtils.CreateView(viewName, "TempView", path, CodeGeneratorStrings.TempViewPath,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}", _actionNames,
+                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}", _actionNames,
                     false);
                 CodeGeneratorUtils.CreateMediator(mediatorName, viewName, "TempMediator", path, CodeGeneratorStrings.TempMediatorPath,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}",
+                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
                     _actionNames, false);
             }
 
             EnsureNamespaceImport(mediatorName, path, isTest,
-                $"{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}", moduleNamespace);
-            EnsureNamespaceImport(viewName, path, isTest, $"{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}",
+                $"{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}", moduleNamespace);
+            EnsureNamespaceImport(viewName, path, isTest, $"{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
                 moduleNamespace);
         }
 
@@ -257,22 +257,22 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             string mediatorName = _viewName + suffix + "Mediator";
             string contextName = _selectedModuleName + suffix + "Context";
 
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
 
             if (isTest)
             {
                 CodeGeneratorUtils.BindMediationInContext(contextPath + "/" + contextName + ".cs", viewName, mediatorName,
-                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}");
+                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}");
             }
             else
             {
                 CodeGeneratorUtils.BindMediationInContext(contextPath + "/" + contextName + ".cs", viewName, mediatorName,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ViewsAndMediators]}");
+                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}");
             }
         }
 

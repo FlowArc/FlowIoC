@@ -11,19 +11,19 @@ namespace FlowIoC.ScreenModule.Model.Config
     {
         void RegisterScreenManager(ScreenManagerVO manager, IContext registeredContext);
         IContext GetManagerRegisteredContext(int managerId);
-        void RegisterScreenConfig(int managerId, Type type, ScreenConfig config);
-        void UnRegisterScreenConfig(int managerId, Type type, ScreenConfig config);
+        void RegisterScreenConfig(int managerId, Type type, CD_Screen config);
+        void UnRegisterScreenConfig(int managerId, Type type, CD_Screen config);
         ScreenManagerVO GetScreenManager(int managerId);
-        List<ScreenConfig> GetAllRegisteredConfigs();
-        List<ScreenConfig> GetManagerConfigs(int managerId);
-        List<ScreenConfig> GetTagConfigs(ScreenTag tag);
-        ScreenConfig GetScreenConfig(int managerId, Type screenType);
-        void ConfigToScreen(ScreenConfig config, IScreenBody screen);
-        bool IsScreenLoaded(ScreenConfig config, out IScreenBody screen);
+        List<CD_Screen> GetAllRegisteredConfigs();
+        List<CD_Screen> GetManagerConfigs(int managerId);
+        List<CD_Screen> GetTagConfigs(ScreenTag tag);
+        CD_Screen GetScreenConfig(int managerId, Type screenType);
+        void ConfigToScreen(CD_Screen config, IScreenBody screen);
+        bool IsScreenLoaded(CD_Screen config, out IScreenBody screen);
         List<IScreenBody> GetAllLoadedScreens();
         List<IScreenBody> GetAllScreensAtManager(int managerId);
         void CopyDataFromConfig(ScreenVO screenData);
-        void CopyDataFromConfig(ScreenVO screenData, ScreenConfig config);
+        void CopyDataFromConfig(ScreenVO screenData, CD_Screen config);
         
     }
 }

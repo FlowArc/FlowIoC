@@ -8,7 +8,7 @@ namespace FlowIoC.ScreenModule.Signals
     internal class ScreenServiceInternalSignals : ISignalHolder
     {
         public Signal<ScreenManagerVO, IContext> RegisterManager = new();
-        public Signal<int, List<ScreenConfig>> RegisterConfigs = new();
-        public Signal<int, List<ScreenConfig>> UnRegisterConfigs = new();
+        public Signal<int, List<CD_Screen>> RegisterConfigs = new();
+        public Signal<int, List<CD_Screen>> UnRegisterConfigs = new();
     }
 }

@@ -35,7 +35,7 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// The container folder names live in CodeGeneratorSettings and a project may rename
+        /// The container folder names live in ED_CodeGenerator and a project may rename
         /// them. Matching on a hardcoded "z" prefix, which DeleteModuleMenu used to do, gets
         /// the kind wrong the moment a project renames zScreenModules to something else.
         /// </summary>

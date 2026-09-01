@@ -71,7 +71,7 @@ namespace FlowIoC.Editor.Modules
     }
 
     /// <summary>
-    /// The eager counterpart to <c>CodeGeneratorSettings</c>' lazy rename-healing fallback: this
+    /// The eager counterpart to <c>ED_CodeGenerator</c>' lazy rename-healing fallback: this
     /// walks every module the index already knows about, rather than waiting for someone to
     /// rename a folder type in the settings. The one rule that keeps it safe to run more than
     /// once is that a folder GUID already recorded is never touched - it was written by
@@ -88,20 +88,20 @@ namespace FlowIoC.Editor.Modules
         /// recorded.
         /// </summary>
         internal int Backfill(
-            IEnumerable<ModuleDescriptor> modules,
-            IEnumerable<FolderConfig.FolderType> types,
-            Func<ModuleDescriptor, FolderConfig.FolderType, string> resolveFolderGuid)
+            IEnumerable<ModuleDescriptorEVO> modules,
+            IEnumerable<FolderEVO.FolderType> types,
+            Func<ModuleDescriptorEVO, FolderEVO.FolderType, string> resolveFolderGuid)
         {
             int recorded = 0;
             if (modules == null || types == null || resolveFolderGuid == null) return recorded;
 
-            var typeList = new List<FolderConfig.FolderType>(types);
+            var typeList = new List<FolderEVO.FolderType>(types);
 
-            foreach (ModuleDescriptor module in modules)
+            foreach (ModuleDescriptorEVO module in modules)
             {
                 if (module == null) continue;
 
-                foreach (FolderConfig.FolderType type in typeList)
+                foreach (FolderEVO.FolderType type in typeList)
                 {
                     if (module.TryGetFolderGuid(type, out _)) continue;
 
@@ -157,7 +157,7 @@ namespace FlowIoC.Editor.Modules
 
         /// <summary>
         /// Steps 1-4 of the migration on their own: rebuild so every module on disk has a
-        /// descriptor, then record the folder GUID of every <see cref="FolderConfig.FolderType"/>
+        /// descriptor, then record the folder GUID of every <see cref="FolderEVO.FolderType"/>
         /// a module already has - found by its configured name under that module, the way
         /// <c>ModuleIndexRegistrar</c> resolves one module's folders at creation time - without
         /// overwriting a GUID that is already there. Returns how many were newly recorded.
@@ -168,15 +168,15 @@ namespace FlowIoC.Editor.Modules
         /// </summary>
         internal int BackfillFolderGuids()
         {
-            FlowIoCModuleIndex index = new ModuleIndexRebuilder().Rebuild();
+            ED_ModuleIndex index = new ModuleIndexRebuilder().Rebuild();
             if (index == null) return 0;
 
             IAssetPaths assetPaths = new AssetDatabasePaths();
             var registry = new ModuleRegistry(index, assetPaths);
             var pathResolver = new ModuleAssetPathResolver();
 
-            CodeGeneratorSettings settings =
-                AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(new FlowIoCProjectPaths().CodeGeneratorSettings);
+            ED_CodeGenerator settings =
+                AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(new FlowIoCProjectPaths().CodeGeneratorSettings);
 
             if (settings == null)
             {
@@ -190,11 +190,11 @@ namespace FlowIoC.Editor.Modules
             // Resolved lazily, per config key, the first time a module of that kind is actually
             // encountered - not eagerly for all four kinds up front. GetOrCreateConfig throws
             // when DirectoryStructureConfigPaths has no entry for the key, which
-            // CodeGeneratorSettings.cs documents as a real hazard on a project whose settings
+            // ED_CodeGenerator.cs documents as a real hazard on a project whose settings
             // asset predates a later FlowIoC version; a project with only Main modules must
             // never construct, or fail on, Screen/Test configs it will never use. Sub modules
             // share the Main directory structure, the same mapping
-            // CodeGeneratorSettings.CollectFolderOperations uses for its own, later, lazier pass
+            // ED_CodeGenerator.CollectFolderOperations uses for its own, later, lazier pass
             // over the same folder types.
             var directoryConfigByKey = new Dictionary<string, DirectoryStructureConfig>();
 
@@ -221,7 +221,7 @@ namespace FlowIoC.Editor.Modules
                 return resolved;
             }
 
-            string ResolveFolderGuid(ModuleDescriptor module, FolderConfig.FolderType type)
+            string ResolveFolderGuid(ModuleDescriptorEVO module, FolderEVO.FolderType type)
             {
                 DirectoryStructureConfig directoryConfig = ResolveDirectoryConfig(module.Kind);
                 if (directoryConfig == null) return string.Empty;
@@ -236,7 +236,7 @@ namespace FlowIoC.Editor.Modules
                 if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) return string.Empty;
 
                 // NamespaceUtility.GetUnityAssetPath only resolves paths under Assets/. An
-                // embedded-package module sits outside it; CodeGeneratorSettings' own fallback
+                // embedded-package module sits outside it; ED_CodeGenerator' own fallback
                 // draws the same boundary around this exact case, so this leaves it alone too
                 // rather than risk recording a GUID for the wrong folder.
                 if (!folderPath.Replace('\\', '/').StartsWith(dataPath, StringComparison.Ordinal))

@@ -39,7 +39,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string moduleName,
             string parentModulePath,
             ModuleType selectedModuleType,
-            List<FolderConfig> selectedOptionalFolders,
+            List<FolderEVO> selectedOptionalFolders,
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
             List<string> actionNames,
             bool createRoot,
@@ -59,16 +59,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 return;
             }
 
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
 
-            string subModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules];
-            string testModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules];
-            string screenModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules];
+            string subModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules];
+            string testModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules];
+            string screenModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules];
 
             string resolvedModuleKind = selectedModuleType switch
             {
@@ -113,9 +113,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string modulePath,
             string parentModulePath,
             ModuleType selectedModuleType,
-            List<FolderConfig> selectedOptionalFolders,
+            List<FolderEVO> selectedOptionalFolders,
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
-            CodeGeneratorSettings codeGenSettings,
+            ED_CodeGenerator codeGenSettings,
             List<string> actionNames,
             bool createRoot,
             bool createContext,

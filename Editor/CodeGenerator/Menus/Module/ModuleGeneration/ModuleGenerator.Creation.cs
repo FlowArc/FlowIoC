@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         )
         {
             string rootsAndContextsPath = directoryConfigMap[selectedModuleType]
-                .FindFullFolderPathByID(FolderConfig.FolderType.RootsAndContexts, modulePath);
+                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
 
             if (!string.IsNullOrEmpty(rootsAndContextsPath))
             {
@@ -49,7 +49,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (createScreen)
             {
                 string scenePath = directoryConfigMap[selectedModuleType]
-                    .FindFullFolderPathByID(FolderConfig.FolderType.Scenes, modulePath);
+                    .FindFullFolderPathByID(FolderEVO.FolderType.Scenes, modulePath);
                 CreateScene(scenePath, moduleName);
                 EditorPrefs.SetBool(BOOL_CREATE_SCREEN, true);
             }
@@ -121,8 +121,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool isTest = selectedModuleType == ModuleType.Test;
             DirectoryStructureConfig config = directoryConfigMap[selectedModuleType];
 
-            string signalsPath = config.FindFullFolderPathByID(FolderConfig.FolderType.Signals, modulePath);
-            string sharedSignalsPath = config.FindFullFolderPathByID(FolderConfig.FolderType.SharedSignals, modulePath);
+            string signalsPath = config.FindFullFolderPathByID(FolderEVO.FolderType.Signals, modulePath);
+            string sharedSignalsPath = config.FindFullFolderPathByID(FolderEVO.FolderType.SharedSignals, modulePath);
 
             if (!string.IsNullOrEmpty(sharedSignalsPath) && !Directory.Exists(sharedSignalsPath))
                 sharedSignalsPath = null;
@@ -180,9 +180,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             return signalsName;
         }
 
-        internal static void CreateFoldersRecursively(string basePath, List<FolderConfig> folders, List<FolderConfig> selectedOptionalFolders)
+        internal static void CreateFoldersRecursively(string basePath, List<FolderEVO> folders, List<FolderEVO> selectedOptionalFolders)
         {
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (!folder.IsMandatory && !folder.IsOptional) continue;
                 if (folder.IsMandatory || (folder.IsOptional && selectedOptionalFolders.Contains(folder)))

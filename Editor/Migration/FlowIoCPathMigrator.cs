@@ -93,7 +93,7 @@ namespace FlowIoC.Editor.Migration
         /// </summary>
         private void RewriteDirectoryStructureConfigPaths(FlowIoCProjectPaths paths)
         {
-            var settings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(paths.CodeGeneratorSettings);
+            var settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(paths.CodeGeneratorSettings);
             if (settings == null || settings.DirectoryStructureConfigPaths == null) return;
 
             foreach (string configKey in new[] { "Main", "Screen", "Test" })

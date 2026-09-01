@@ -74,7 +74,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         {
             if (string.IsNullOrEmpty(modulePath) || config == null) return null;
 
-            string sharedFolderPath = config.FindFullFolderPathByID(FolderConfig.FolderType.Shared, modulePath);
+            string sharedFolderPath = config.FindFullFolderPathByID(FolderEVO.FolderType.Shared, modulePath);
 
             return string.IsNullOrEmpty(sharedFolderPath) || !Directory.Exists(sharedFolderPath) ? null : sharedFolderPath;
         }

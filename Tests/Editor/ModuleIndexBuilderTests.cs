@@ -13,20 +13,20 @@ namespace FlowIoC.Tests
             return new ScannedModule { Name = name, Kind = kind, AbsolutePath = path };
         }
 
-        private List<ModuleDescriptor> Build(
+        private List<ModuleDescriptorEVO> Build(
             IReadOnlyList<ScannedModule> scanned,
-            IReadOnlyList<ModuleDescriptor> previous = null)
+            IReadOnlyList<ModuleDescriptorEVO> previous = null)
         {
             return new ModuleIndexBuilder().Build(
                 scanned,
                 path => "guid-of:" + path,
-                previous ?? new List<ModuleDescriptor>());
+                previous ?? new List<ModuleDescriptorEVO>());
         }
 
         [Test]
         public void Every_scanned_module_becomes_a_descriptor()
         {
-            List<ModuleDescriptor> built = Build(new[]
+            List<ModuleDescriptorEVO> built = Build(new[]
             {
                 Scanned("CameraModule", ModuleKind.Main, "/p/CameraModule"),
                 Scanned("HudModule", ModuleKind.Screen, "/p/MainModule/zScreenModules/HudModule")
@@ -40,7 +40,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_folder_guid_comes_from_the_injected_lookup()
         {
-            ModuleDescriptor built = Build(new[] { Scanned("CameraModule", ModuleKind.Main, "/p/CameraModule") }).Single();
+            ModuleDescriptorEVO built = Build(new[] { Scanned("CameraModule", ModuleKind.Main, "/p/CameraModule") }).Single();
 
             Assert.AreEqual("guid-of:/p/CameraModule", built.FolderGuid);
         }
@@ -53,33 +53,33 @@ namespace FlowIoC.Tests
         [Test]
         public void Folder_guids_recorded_before_survive_a_rebuild()
         {
-            var previous = new ModuleDescriptor
+            var previous = new ModuleDescriptorEVO
             {
                 Name = "CameraModule",
                 Kind = ModuleKind.Main,
                 FolderGuid = "guid-of:/p/CameraModule"
             };
-            previous.RecordFolderGuid(FolderConfig.FolderType.Controllers, "ctrl-guid");
+            previous.RecordFolderGuid(FolderEVO.FolderType.Controllers, "ctrl-guid");
 
-            ModuleDescriptor built = Build(
+            ModuleDescriptorEVO built = Build(
                 new[] { Scanned("CameraModule", ModuleKind.Main, "/p/CameraModule") },
                 new[] { previous }).Single();
 
-            Assert.IsTrue(built.TryGetFolderGuid(FolderConfig.FolderType.Controllers, out string guid));
+            Assert.IsTrue(built.TryGetFolderGuid(FolderEVO.FolderType.Controllers, out string guid));
             Assert.AreEqual("ctrl-guid", guid);
         }
 
         [Test]
         public void A_module_that_is_gone_from_the_scan_is_gone_from_the_index()
         {
-            var previous = new ModuleDescriptor
+            var previous = new ModuleDescriptorEVO
             {
                 Name = "DeletedModule",
                 Kind = ModuleKind.Main,
                 FolderGuid = "guid-of:/p/DeletedModule"
             };
 
-            List<ModuleDescriptor> built = Build(
+            List<ModuleDescriptorEVO> built = Build(
                 new[] { Scanned("CameraModule", ModuleKind.Main, "/p/CameraModule") },
                 new[] { previous });
 
@@ -93,35 +93,35 @@ namespace FlowIoC.Tests
         [Test]
         public void A_renamed_module_keeps_its_folder_map_because_the_guid_did_not_change()
         {
-            var previous = new ModuleDescriptor
+            var previous = new ModuleDescriptorEVO
             {
                 Name = "CameraModule",
                 Kind = ModuleKind.Main,
                 FolderGuid = "guid-of:/p/CameraModule"
             };
-            previous.RecordFolderGuid(FolderConfig.FolderType.Models, "models-guid");
+            previous.RecordFolderGuid(FolderEVO.FolderType.Models, "models-guid");
 
-            ModuleDescriptor built = new ModuleIndexBuilder().Build(
+            ModuleDescriptorEVO built = new ModuleIndexBuilder().Build(
                 new[] { Scanned("CamModule", ModuleKind.Main, "/p/CamModule") },
                 _ => "guid-of:/p/CameraModule",
                 new[] { previous }).Single();
 
             Assert.AreEqual("CamModule", built.Name);
-            Assert.IsTrue(built.TryGetFolderGuid(FolderConfig.FolderType.Models, out string guid));
+            Assert.IsTrue(built.TryGetFolderGuid(FolderEVO.FolderType.Models, out string guid));
             Assert.AreEqual("models-guid", guid);
         }
 
         [Test]
         public void The_kind_is_taken_from_the_scan_not_from_the_previous_index()
         {
-            var previous = new ModuleDescriptor
+            var previous = new ModuleDescriptorEVO
             {
                 Name = "HudModule",
                 Kind = ModuleKind.Main,
                 FolderGuid = "guid-of:/p/HudModule"
             };
 
-            ModuleDescriptor built = Build(
+            ModuleDescriptorEVO built = Build(
                 new[] { Scanned("HudModule", ModuleKind.Screen, "/p/HudModule") },
                 new[] { previous }).Single();
 
@@ -131,10 +131,10 @@ namespace FlowIoC.Tests
         [Test]
         public void A_folder_with_no_guid_is_left_out_of_the_index()
         {
-            List<ModuleDescriptor> built = new ModuleIndexBuilder().Build(
+            List<ModuleDescriptorEVO> built = new ModuleIndexBuilder().Build(
                 new[] { Scanned("CameraModule", ModuleKind.Main, "/p/CameraModule") },
                 _ => string.Empty,
-                new List<ModuleDescriptor>());
+                new List<ModuleDescriptorEVO>());
 
             Assert.IsEmpty(built);
         }

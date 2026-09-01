@@ -10,10 +10,10 @@ using UnityEngine;
 namespace FlowIoC.Editor.Console
 {
 
-    [CustomEditor(typeof(FlowConsoleSettings))]
+    [CustomEditor(typeof(CD_FlowConsole))]
     public class FlowConsoleSettingsEditor : UnityEditor.Editor
     {
-        private FlowConsoleSettings _settings;
+        private CD_FlowConsole _settings;
         private Vector2 _customTypesScrollPosition;
         private Vector2 _profileScrollPosition;
 
@@ -30,7 +30,7 @@ namespace FlowIoC.Editor.Console
 
         private void OnEnable()
         {
-            _settings = (FlowConsoleSettings)target;
+            _settings = (CD_FlowConsole)target;
             _profileFoldouts.Clear();
         }
 
@@ -87,7 +87,7 @@ namespace FlowIoC.Editor.Console
             if (GUI.changed)
             {
                 EditorUtility.SetDirty(_settings);
-                FlowConsoleSettings.NotifySettingsChanged();
+                CD_FlowConsole.NotifySettingsChanged();
             }
         }
 

@@ -108,7 +108,7 @@ var win = UnityEngine.ScriptableObject.CreateInstance(menuType);   // OnEnable f
 var configMap   = menuType.GetField("_directoryConfigMap", flags).GetValue(win);
 var actionNames = menuType.GetField("_actionNames", flags).GetValue(win);
 var selected    = menuType.GetField("_selectedOptionalFolders", flags).GetValue(win);
-// add the FolderConfig entries you want out of configMap's RootFolders before calling
+// add the FolderEVO entries you want out of configMap's RootFolders before calling
 
 genType.GetMethod("CreateModuleStructure",
         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

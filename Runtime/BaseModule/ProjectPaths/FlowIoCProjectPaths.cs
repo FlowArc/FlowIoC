@@ -23,21 +23,21 @@ namespace FlowIoC.BaseModule.ProjectPaths
         public string GeneratedRoot => Root + "/Generated";
         public string ResourcesRoot => Root + "/Resources";
 
-        public string CodeGeneratorSettings => CodeGeneratorRoot + "/CodeGeneratorSettings.asset";
-        public string ModuleIndex => CodeGeneratorRoot + "/FlowIoCModuleIndex.asset";
-        public string FolderDrawerConfig => FolderDrawerRoot + "/FlowIoCFolderDrawerConfig.asset";
+        public string CodeGeneratorSettings => CodeGeneratorRoot + "/ED_CodeGenerator.asset";
+        public string ModuleIndex => CodeGeneratorRoot + "/ED_ModuleIndex.asset";
+        public string FolderDrawerConfig => FolderDrawerRoot + "/ED_FolderDrawer.asset";
         public string FlowLogType => GeneratedRoot + "/FlowLogType.cs";
         public string GeneratedAsmRef => GeneratedRoot + "/FlowIoC.Generated.asmref";
-        public string ConsoleSettings => ResourcesRoot + "/FlowConsoleSettings.asset";
+        public string ConsoleSettings => ResourcesRoot + "/CD_FlowConsole.asset";
 
         /// <summary>
         /// The per module-type directory structure config, keyed the way
-        /// <c>CodeGeneratorSettings.DirectoryStructureConfigPaths</c> keys them: "Main", "Screen",
+        /// <c>ED_CodeGenerator.DirectoryStructureConfigPaths</c> keys them: "Main", "Screen",
         /// "Test".
         /// </summary>
         public string DirectoryStructureConfig(string configKey)
         {
-            return CodeGeneratorRoot + "/" + configKey + "ModuleDirectoryStructureConfig.asset";
+            return CodeGeneratorRoot + "/ED_" + configKey + "ModuleDirectoryStructure.asset";
         }
     }
 }

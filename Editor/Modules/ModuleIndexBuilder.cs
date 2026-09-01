@@ -12,12 +12,12 @@ namespace FlowIoC.Editor.Modules
     /// </summary>
     internal class ModuleIndexBuilder
     {
-        public List<ModuleDescriptor> Build(
+        public List<ModuleDescriptorEVO> Build(
             IReadOnlyList<ScannedModule> scanned,
             Func<string, string> folderGuidOf,
-            IReadOnlyList<ModuleDescriptor> previous)
+            IReadOnlyList<ModuleDescriptorEVO> previous)
         {
-            var built = new List<ModuleDescriptor>();
+            var built = new List<ModuleDescriptorEVO>();
             if (scanned == null) return built;
 
             foreach (ScannedModule module in scanned)
@@ -28,10 +28,10 @@ namespace FlowIoC.Editor.Modules
                 // would put an entry in the index that resolves to nothing.
                 if (string.IsNullOrEmpty(folderGuid)) continue;
 
-                ModuleDescriptor carried = previous?
+                ModuleDescriptorEVO carried = previous?
                     .FirstOrDefault(p => string.Equals(p.FolderGuid, folderGuid, StringComparison.Ordinal));
 
-                var descriptor = new ModuleDescriptor
+                var descriptor = new ModuleDescriptorEVO
                 {
                     Name = module.Name,
                     Kind = module.Kind,

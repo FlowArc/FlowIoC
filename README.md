@@ -1140,7 +1140,7 @@ from the module config and can be renamed under
 them as the module needs them.
 
 Every module the generator creates is recorded in one project asset —
-`Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset` — keyed on the
+`Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_ModuleIndex.asset` — keyed on the
 module folder's Unity GUID rather than its name or path, so renaming or moving a
 module in the Project window does not desynchronise the tools from what is actually
 on disk. The index is a cache: name, kind and nesting are all read back off the
@@ -1158,11 +1158,11 @@ outside the `FLOWIOC:BEGIN`/`FLOWIOC:END` markers survives.
 > **A project that already committed the index.** `.gitignore` does not untrack what git
 > is already tracking. Untrack it once, keeping the file on disk:
 > ```
-> git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset*
+> git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_ModuleIndex.asset*
 > ```
 
 > **`Systems` in a project that predates it.** The folder list lives in
-> `Assets/Plugins/FlowIoC/Editor/CodeGenerator/MainModuleDirectoryStructureConfig.asset`, which
+> `Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_MainModuleDirectoryStructure.asset`, which
 > is written once, in your project. Upgrading FlowIoC does not rewrite it, so a project
 > created before `Systems` existed keeps its old list and the generator will not produce
 > the folder. Add it in that asset's inspector, or delete the asset and let FlowIoC

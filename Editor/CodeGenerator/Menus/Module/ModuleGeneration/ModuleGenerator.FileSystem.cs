@@ -91,10 +91,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             string currentPath = Path.Combine(Application.dataPath);
 
-            CodeGeneratorSettings codeGenSettings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
-                Debug.LogError($"CodeGeneratorSettings asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
 
@@ -108,9 +108,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 //     NamespaceUtility.SetNamespaceProvider(currentPath, false, dotSettingsFilePath);
                 // }
 
-                if (segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.SubModules]) ||
-                    segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.ScreenModules]) ||
-                    segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderConfig.FolderType.TestModules]))
+                if (segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules]) ||
+                    segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules]) ||
+                    segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules]))
                 {
                     NamespaceUtility.SetNamespaceProvider(currentPath, false, dotSettingsFilePath);
                 }
@@ -118,12 +118,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         }
 
         private static void TraverseFoldersForNamespaceExceptions(
-            List<FolderConfig> folders,
+            List<FolderEVO> folders,
             string basePath,
             string dotSettingsFilePath
         )
         {
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 string folderPath = Path.Combine(basePath, folder.FolderName);
 

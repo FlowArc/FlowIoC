@@ -15,8 +15,8 @@ namespace FlowIoC.ScreenModule.Model.Config
         [ShowInModelViewer] private readonly Dictionary<int, ScreenManagerVO> _screenManagers = new();
         [ShowInModelViewer] private readonly Dictionary<int, IContext> _screenManagerContextMap = new();
         
-        [ShowInModelViewer] private readonly Dictionary<ScreenConfig, IScreenBody> _configMap = new();
-        [ShowInModelViewer] private readonly Dictionary<ScreenTag, List<ScreenConfig>> _tagConfigs = new();
+        [ShowInModelViewer] private readonly Dictionary<CD_Screen, IScreenBody> _configMap = new();
+        [ShowInModelViewer] private readonly Dictionary<ScreenTag, List<CD_Screen>> _tagConfigs = new();
         
         public void RegisterScreenManager(ScreenManagerVO manager, IContext registeredContext)
         {
@@ -52,7 +52,7 @@ namespace FlowIoC.ScreenModule.Model.Config
 
         public IContext GetManagerRegisteredContext(int managerId) => _screenManagerContextMap[managerId];
 
-        public void RegisterScreenConfig(int managerId, Type type, ScreenConfig config)
+        public void RegisterScreenConfig(int managerId, Type type, CD_Screen config)
         {
             var manager = _screenManagers[managerId];
             if (manager == null)
@@ -61,7 +61,7 @@ namespace FlowIoC.ScreenModule.Model.Config
                 return;
             }
 
-            manager.ScreenConfigs ??= new Dictionary<Type, ScreenConfig>();
+            manager.ScreenConfigs ??= new Dictionary<Type, CD_Screen>();
 
             if (manager.ScreenConfigs.TryAdd(type, config))
             {
@@ -77,17 +77,17 @@ namespace FlowIoC.ScreenModule.Model.Config
             }
         }
 
-        private void AddScreenToAllConfigs(ScreenConfig config) => _configMap.TryAdd(config, null);
+        private void AddScreenToAllConfigs(CD_Screen config) => _configMap.TryAdd(config, null);
 
-        private void AddScreenToTagConfigs(ScreenTag screenTag, ScreenConfig config)
+        private void AddScreenToTagConfigs(ScreenTag screenTag, CD_Screen config)
         {
             if (!_tagConfigs.ContainsKey(screenTag))
-                _tagConfigs.Add(screenTag, new List<ScreenConfig>());
+                _tagConfigs.Add(screenTag, new List<CD_Screen>());
 
             _tagConfigs[screenTag].Add(config);
         }
 
-        public void UnRegisterScreenConfig(int managerId, Type type, ScreenConfig config)
+        public void UnRegisterScreenConfig(int managerId, Type type, CD_Screen config)
         {
             var manager = _screenManagers[managerId];
             if (manager == null)
@@ -116,20 +116,20 @@ namespace FlowIoC.ScreenModule.Model.Config
             return null;
         }
         
-        public List<ScreenConfig> GetAllRegisteredConfigs()
+        public List<CD_Screen> GetAllRegisteredConfigs()
         {
             return _configMap.Keys.ToList();
         }
 
-        public List<ScreenConfig> GetManagerConfigs(int managerId)
+        public List<CD_Screen> GetManagerConfigs(int managerId)
         {
             var manager = GetScreenManager(managerId);
-            var list = new List<ScreenConfig>(manager.ScreenConfigs.Values);
+            var list = new List<CD_Screen>(manager.ScreenConfigs.Values);
             return list;
         }
-        public List<ScreenConfig> GetTagConfigs(ScreenTag tag) => _tagConfigs[tag];
+        public List<CD_Screen> GetTagConfigs(ScreenTag tag) => _tagConfigs[tag];
 
-        public ScreenConfig GetScreenConfig(int managerId, Type screenType)
+        public CD_Screen GetScreenConfig(int managerId, Type screenType)
         {
             if (screenType == null)
             {
@@ -158,9 +158,9 @@ namespace FlowIoC.ScreenModule.Model.Config
             return null;
         }
 
-        public void ConfigToScreen(ScreenConfig config, IScreenBody screen) => _configMap[config] = screen;
+        public void ConfigToScreen(CD_Screen config, IScreenBody screen) => _configMap[config] = screen;
 
-        public bool IsScreenLoaded(ScreenConfig config, out IScreenBody screen)
+        public bool IsScreenLoaded(CD_Screen config, out IScreenBody screen)
         {
             screen = _configMap[config];
             return _configMap[config] != null;
@@ -196,7 +196,7 @@ namespace FlowIoC.ScreenModule.Model.Config
             CopyDataFromConfig(screenData, config);
         }
 
-        public void CopyDataFromConfig(ScreenVO screenData, ScreenConfig config)
+        public void CopyDataFromConfig(ScreenVO screenData, CD_Screen config)
         {
             if (config == null)
             {

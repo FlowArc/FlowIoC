@@ -13,9 +13,9 @@ namespace FlowIoC.Tests
         }
 
         [Test]
-        public void All_eight_project_local_assets_are_covered()
+        public void Every_project_local_asset_FlowIoC_ever_wrote_is_covered()
         {
-            Assert.AreEqual(8, CreateLegacyPaths().AssetMoves.Count);
+            Assert.AreEqual(15, CreateLegacyPaths().AssetMoves.Count);
         }
 
         [Test]

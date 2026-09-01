@@ -10,7 +10,7 @@ namespace FlowIoC.Tests
     {
         private string _root;
         private string _modulePath;
-        private MainModuleDirectoryStructureConfig _config;
+        private ED_MainModuleDirectoryStructure _config;
         private SharedAssemblyDefinition _sharedAssembly;
 
         [SetUp]
@@ -20,7 +20,7 @@ namespace FlowIoC.Tests
             _modulePath = Path.Combine(_root, "PlayerModule");
             Directory.CreateDirectory(_modulePath);
 
-            _config = ScriptableObject.CreateInstance<MainModuleDirectoryStructureConfig>();
+            _config = ScriptableObject.CreateInstance<ED_MainModuleDirectoryStructure>();
             _sharedAssembly = new SharedAssemblyDefinition();
         }
 

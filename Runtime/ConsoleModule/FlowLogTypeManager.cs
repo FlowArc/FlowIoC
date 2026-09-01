@@ -85,7 +85,7 @@ namespace FlowIoC.ConsoleModule
                 settings.SortProjectLogTypes();
                 EditorUtility.SetDirty(settings);
                 AssetDatabase.SaveAssets();
-                FlowConsoleSettings.NotifyProjectLogTypesChanged();
+                CD_FlowConsole.NotifyProjectLogTypesChanged();
                 Debug.Log($"<color=cyan>FlowConsole:</color> Updated {updatedCount} existing module log type(s).");
                 return;
             }
@@ -99,7 +99,7 @@ namespace FlowIoC.ConsoleModule
             settings.SortProjectLogTypes();
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
-            FlowConsoleSettings.NotifyProjectLogTypesChanged();
+            CD_FlowConsole.NotifyProjectLogTypesChanged();
 
             string names = string.Join(", ", resolved.Select(r => r.Name));
             Debug.Log($"<color=cyan>FlowConsole:</color> Auto-registered {resolved.Count} module log type(s): {names}");
@@ -139,7 +139,7 @@ namespace FlowIoC.ConsoleModule
             settings.SortProjectLogTypes();
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
-            FlowConsoleSettings.NotifyProjectLogTypesChanged();
+            CD_FlowConsole.NotifyProjectLogTypesChanged();
 
             string removedNames = string.Join(", ", removed);
             Debug.Log($"<color=cyan>FlowConsole:</color> Removed {removed.Count} module log type(s): {removedNames}");

@@ -28,7 +28,7 @@ namespace FlowIoC.ScreenModule.Extensions
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => _typeCache = new Dictionary<string, Type>();
 
-        public static void RegisterViewMediators(this IEnumerable<ScreenConfig> screenConfigs, IContext context)
+        public static void RegisterViewMediators(this IEnumerable<CD_Screen> screenConfigs, IContext context)
         {
             if (context == null || context.MediationBinder == null)
             {
@@ -83,7 +83,7 @@ namespace FlowIoC.ScreenModule.Extensions
             }
         }
 
-        public static void MapViewsAndMediators(this IEnumerable<ScreenConfig> screenConfigs)
+        public static void MapViewsAndMediators(this IEnumerable<CD_Screen> screenConfigs)
         {
             List<string> allTypeNames = screenConfigs
                 .SelectMany(config => new[] {config.ViewTypeName, config.MediatorTypeName})
@@ -102,12 +102,12 @@ namespace FlowIoC.ScreenModule.Extensions
             }
         }
         
-        public static Type ConvertStringToType(this ScreenConfig screenConfig)
+        public static Type ConvertStringToType(this CD_Screen screenConfig)
         {
             return _typeCache.GetValueOrDefault(screenConfig.ViewTypeName);
         }
 
-        public static void RegisterViewMediators(this ScreenConfig screenConfig, IContext context)
+        public static void RegisterViewMediators(this CD_Screen screenConfig, IContext context)
         {
             RegisterViewMediators(new[] {screenConfig}, context);
         }

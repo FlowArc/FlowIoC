@@ -34,9 +34,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             EditorGUILayout.EndScrollView();
         }
 
-        private void DrawFolderPreview(List<FolderConfig> folders, int indentLevel)
+        private void DrawFolderPreview(List<FolderEVO> folders, int indentLevel)
         {
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
                 if (!folder.IsMandatory && !folder.IsOptional)
                     continue;
@@ -50,7 +50,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             }
         }
 
-        private void DrawTreeLine(string text, int indentLevel, FolderConfig folder)
+        private void DrawTreeLine(string text, int indentLevel, FolderEVO folder)
         {
             EditorGUILayout.BeginHorizontal("box");
             GUILayout.Space(indentLevel * 20);
@@ -84,7 +84,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private void DrawScreenConfigPreview()
         {
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("ScreenConfig Preview", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("CD_Screen Preview", EditorStyles.boldLabel);
 
             if (_screenConfigEditor != null)
             {

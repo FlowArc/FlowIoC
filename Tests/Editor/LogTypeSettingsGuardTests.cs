@@ -11,7 +11,7 @@ namespace FlowIoC.Tests
         public void An_empty_list_is_not_trustworthy()
         {
             Assert.IsFalse(new LogTypeSettingsGuard()
-                .IsTrustworthy(new List<FlowConsoleSettings.FlowConsoleLogType>()));
+                .IsTrustworthy(new List<CD_FlowConsole.FlowConsoleLogTypeCVO>()));
         }
 
         [Test]
@@ -28,10 +28,10 @@ namespace FlowIoC.Tests
         [Test]
         public void A_list_without_any_mandatory_type_is_not_trustworthy()
         {
-            var types = new List<FlowConsoleSettings.FlowConsoleLogType>
+            var types = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>
             {
-                new FlowConsoleSettings.FlowConsoleLogType { Name = "Default", IsMandatory = false },
-                new FlowConsoleSettings.FlowConsoleLogType { Name = "PlayerModule", IsMandatory = false },
+                new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "Default", IsMandatory = false },
+                new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "PlayerModule", IsMandatory = false },
             };
 
             Assert.IsFalse(new LogTypeSettingsGuard().IsTrustworthy(types));
@@ -40,10 +40,10 @@ namespace FlowIoC.Tests
         [Test]
         public void A_list_carrying_a_mandatory_type_is_trustworthy()
         {
-            var types = new List<FlowConsoleSettings.FlowConsoleLogType>
+            var types = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>
             {
-                new FlowConsoleSettings.FlowConsoleLogType { Name = "All", IsMandatory = true },
-                new FlowConsoleSettings.FlowConsoleLogType { Name = "Default", IsMandatory = false },
+                new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "All", IsMandatory = true },
+                new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "Default", IsMandatory = false },
             };
 
             Assert.IsTrue(new LogTypeSettingsGuard().IsTrustworthy(types));

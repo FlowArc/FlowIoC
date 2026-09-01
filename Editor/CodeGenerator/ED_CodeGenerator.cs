@@ -13,22 +13,22 @@ using UnityEngine.Rendering;
 
 namespace FlowIoC.Editor.CodeGenerator
 {
-    [CreateAssetMenu(menuName = "FlowIoC/Editor/CodeGenerator/CodeGeneratorSettings", fileName = "CodeGeneratorSettings", order = 1)]
-    public class CodeGeneratorSettings : ScriptableObject
+    [CreateAssetMenu(menuName = "FlowIoC/Editor/CodeGenerator/ED_CodeGenerator", fileName = "ED_CodeGenerator", order = 1)]
+    public class ED_CodeGenerator : ScriptableObject
     {
         public List<AssemblyDefinitionAsset> AssemblyDefinitions;
 
-        [HideInInspector] [SerializeField] public SerializedDictionary<FolderConfig.FolderType, string> DirectoryStructureConfigMap =
+        [HideInInspector] [SerializeField] public SerializedDictionary<FolderEVO.FolderType, string> DirectoryStructureConfigMap =
             CreateDefaultDirectoryStructureConfigMap();
 
         [HideInInspector] [SerializeField] public SerializedDictionary<string, string> DirectoryStructureConfigPaths =
             CreateDefaultDirectoryStructureConfigPaths();
 
-        private static SerializedDictionary<FolderConfig.FolderType, string> CreateDefaultDirectoryStructureConfigMap()
+        private static SerializedDictionary<FolderEVO.FolderType, string> CreateDefaultDirectoryStructureConfigMap()
         {
-            var map = new SerializedDictionary<FolderConfig.FolderType, string>();
+            var map = new SerializedDictionary<FolderEVO.FolderType, string>();
 
-            foreach (KeyValuePair<FolderConfig.FolderType, string> entry in new CodeGeneratorDefaults().FolderNames)
+            foreach (KeyValuePair<FolderEVO.FolderType, string> entry in new CodeGeneratorDefaults().FolderNames)
                 map[entry.Key] = entry.Value;
 
             return map;
@@ -84,7 +84,7 @@ namespace FlowIoC.Editor.CodeGenerator
         /// copy. Indexing the dictionary directly throws there and takes module creation down
         /// with it, so every newly added type must be read through here.
         /// </summary>
-        public string FolderNameFor(FolderConfig.FolderType folderType, string fallback)
+        public string FolderNameFor(FolderEVO.FolderType folderType, string fallback)
         {
             return DirectoryStructureConfigMap.TryGetValue(folderType, out string folderName)
                    && !string.IsNullOrEmpty(folderName)
@@ -102,14 +102,14 @@ namespace FlowIoC.Editor.CodeGenerator
                 Directory.CreateDirectory(fullPath);
             }
 
-            CodeGeneratorSettings settings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(CodeGeneratorStrings.CONFIG_PATH);
+            ED_CodeGenerator settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (settings != null) return;
-            settings = CreateInstance<CodeGeneratorSettings>();
+            settings = CreateInstance<ED_CodeGenerator>();
             AssetDatabase.CreateAsset(settings, CodeGeneratorStrings.CONFIG_PATH);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log($"CodeGeneratorSettings asset created at: {CodeGeneratorStrings.CONFIG_PATH}");
+            Debug.Log($"ED_CodeGenerator asset created at: {CodeGeneratorStrings.CONFIG_PATH}");
         }
 
         public void ApplyConfiguredFolderNames()
@@ -117,7 +117,7 @@ namespace FlowIoC.Editor.CodeGenerator
             string modulesPath = Path.Combine(Application.dataPath, "Modules");
             if (!Directory.Exists(modulesPath)) return;
 
-            var folderOperations = new List<(string oldPath, string newPath, FolderConfig.FolderType type)>();
+            var folderOperations = new List<(string oldPath, string newPath, FolderEVO.FolderType type)>();
             CollectFolderOperations(folderOperations);
             AssetDatabase.Refresh();
 
@@ -167,9 +167,9 @@ namespace FlowIoC.Editor.CodeGenerator
         /// map for the next one - and records what it finds so the same module never needs the
         /// fallback again.
         /// </summary>
-        private void CollectFolderOperations(List<(string oldPath, string newPath, FolderConfig.FolderType type)> operations)
+        private void CollectFolderOperations(List<(string oldPath, string newPath, FolderEVO.FolderType type)> operations)
         {
-            FlowIoCModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
+            ED_ModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
             IAssetPaths assetPaths = new AssetDatabasePaths();
             ModuleRegistry registry = new ModuleRegistry(index, assetPaths);
             ModuleAssetPathResolver pathResolver = new ModuleAssetPathResolver();
@@ -179,7 +179,7 @@ namespace FlowIoC.Editor.CodeGenerator
             string dataPath = Application.dataPath.Replace('\\', '/');
             bool indexDirty = false;
 
-            foreach (ModuleDescriptor module in registry.Modules)
+            foreach (ModuleDescriptorEVO module in registry.Modules)
             {
                 string moduleAssetPath = registry.PathOf(module);
                 if (string.IsNullOrEmpty(moduleAssetPath)) continue;
@@ -189,9 +189,9 @@ namespace FlowIoC.Editor.CodeGenerator
 
                 DirectoryStructureConfig directoryConfig = configProvider.ConfigFor(module.Kind);
 
-                foreach (KeyValuePair<FolderConfig.FolderType, string> kvp in DirectoryStructureConfigMap)
+                foreach (KeyValuePair<FolderEVO.FolderType, string> kvp in DirectoryStructureConfigMap)
                 {
-                    FolderConfig.FolderType type = kvp.Key;
+                    FolderEVO.FolderType type = kvp.Key;
                     string configuredName = kvp.Value;
                     if (string.IsNullOrEmpty(configuredName)) continue;
 
@@ -282,7 +282,7 @@ namespace FlowIoC.Editor.CodeGenerator
         /// which is also why the caller keeps quiet about folder types marked optional, whose
         /// absence is ordinary rather than a gap.
         /// </summary>
-        private void LogFallbackMiss(ModuleDescriptor module, FolderConfig.FolderType type, string detail)
+        private void LogFallbackMiss(ModuleDescriptorEVO module, FolderEVO.FolderType type, string detail)
         {
             Debug.LogWarning($"<color=cyan>FlowIoC:</color> could not record a GUID for the '{type}' folder of " +
                              $"module '{module.Name}' - {detail}");

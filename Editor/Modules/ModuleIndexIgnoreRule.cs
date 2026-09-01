@@ -7,7 +7,7 @@ using UnityEngine;
 namespace FlowIoC.Editor.Modules
 {
     /// <summary>
-    /// Keeps a `.gitignore` beside `FlowIoCModuleIndex.asset` so the index stays out of the
+    /// Keeps a `.gitignore` beside `ED_ModuleIndex.asset` so the index stays out of the
     /// consuming project's history. Two people adding modules on separate branches would
     /// otherwise meet in the same serialized asset, and what they would be resolving by hand is
     /// a cache the next rebuild reproduces anyway.

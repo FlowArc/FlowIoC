@@ -24,7 +24,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_body_names_the_index_asset_and_its_meta()
         {
-            Assert.AreEqual("FlowIoCModuleIndex.asset\nFlowIoCModuleIndex.asset.meta", _rule.Body());
+            Assert.AreEqual("ED_ModuleIndex.asset\nED_ModuleIndex.asset.meta", _rule.Body());
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace FlowIoC.Tests
                 if (trimmed.Length == 0) continue;
 
                 bool isComment = trimmed.StartsWith("#");
-                bool isPattern = trimmed.StartsWith("FlowIoCModuleIndex.asset");
+                bool isPattern = trimmed.StartsWith("ED_ModuleIndex.asset");
 
                 Assert.IsTrue(isComment || isPattern, $"'{trimmed}' is neither a comment nor a pattern");
             }
@@ -65,7 +65,7 @@ namespace FlowIoC.Tests
             StringAssert.Contains("*.log", rewritten);
             StringAssert.Contains("Secrets/", rewritten);
             StringAssert.Contains("SomethingElse.asset", rewritten);
-            Assert.IsFalse(rewritten.Contains("FlowIoCModuleIndex.asset"), "the old block body was left behind");
+            Assert.IsFalse(rewritten.Contains("ED_ModuleIndex.asset"), "the old block body was left behind");
         }
 
         [Test]

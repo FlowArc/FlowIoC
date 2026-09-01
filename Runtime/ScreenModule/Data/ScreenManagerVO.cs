@@ -9,6 +9,6 @@ namespace FlowIoC.ScreenModule.Data
     {
         public int ManagerID;
         public List<ScreenLayer> ScreenLayerList = new ();
-        public Dictionary<Type, ScreenConfig> ScreenConfigs = new();
+        public Dictionary<Type, CD_Screen> ScreenConfigs = new();
     }
 }

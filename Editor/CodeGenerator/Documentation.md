@@ -146,7 +146,7 @@ after a move or a rename.
 | `Detect & Fix Module Index` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
 | `Update Namespace Settings` | Changes the namespace prefix the generators use for new code |
 
-Every module lives in one asset, `FlowIoCModuleIndex.asset`, beside the code
+Every module lives in one asset, `ED_ModuleIndex.asset`, beside the code
 generator settings. It is a cache, not something you hand-edit: name, kind and
 nesting are all read back off the folder tree on every rebuild, so a stale entry is
 fixed by running *Detect & Fix* — or just reopening the project, which rebuilds it
@@ -159,7 +159,7 @@ the asset and its `.meta`, so two branches adding modules never meet in the same
 serialized file. Your own lines in that file are left alone — only what sits between
 `FLOWIOC:BEGIN` and `FLOWIOC:END` is rewritten. A project that already committed the
 asset has to untrack it once with
-`git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset*`.
+`git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_ModuleIndex.asset*`.
 
 The symptom that you needed *Detect & Fix* is a generator writing into the wrong
 folder, or a Root whose sub-context list has gone empty after a move.

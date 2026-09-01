@@ -12,7 +12,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
     {
         [Inject] private IScreenConfigModel _configModel { get; set; }
 
-        public async Task<IScreenBody> LoadScreen(ScreenConfig config)
+        public async Task<IScreenBody> LoadScreen(CD_Screen config)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
             }
         }
 
-        public void UnloadScreen(ScreenConfig config, IScreenBody screenBody)
+        public void UnloadScreen(CD_Screen config, IScreenBody screenBody)
         {
             if (screenBody == null) return;
 

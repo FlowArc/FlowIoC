@@ -109,16 +109,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// </summary>
         private static bool IsModuleContainerFolder(string folderName)
         {
-            CodeGeneratorSettings settings = AssetDatabase.LoadAssetAtPath<CodeGeneratorSettings>(
+            ED_CodeGenerator settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(
                 new FlowIoCProjectPaths().CodeGeneratorSettings);
 
             string[] containerNames = settings == null
                 ? new[] {"zSubModules", "zTestModules", "zScreenModules"}
                 : new[]
                 {
-                    settings.FolderNameFor(FolderConfig.FolderType.SubModules, "zSubModules"),
-                    settings.FolderNameFor(FolderConfig.FolderType.TestModules, "zTestModules"),
-                    settings.FolderNameFor(FolderConfig.FolderType.ScreenModules, "zScreenModules")
+                    settings.FolderNameFor(FolderEVO.FolderType.SubModules, "zSubModules"),
+                    settings.FolderNameFor(FolderEVO.FolderType.TestModules, "zTestModules"),
+                    settings.FolderNameFor(FolderEVO.FolderType.ScreenModules, "zScreenModules")
                 };
 
             foreach (string containerName in containerNames)

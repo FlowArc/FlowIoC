@@ -37,16 +37,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         {
             return type switch
             {
-                ModuleType.Main => MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main"),
-                ModuleType.Screen => ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen"),
-                ModuleType.Test => TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test"),
+                ModuleType.Main => ED_MainModuleDirectoryStructure.GetOrCreateConfig("Main"),
+                ModuleType.Screen => ED_ScreenModuleDirectoryStructure.GetOrCreateConfig("Screen"),
+                ModuleType.Test => ED_TestModuleDirectoryStructure.GetOrCreateConfig("Test"),
                 _ => null
             };
         }
 
         /// <summary>
         /// The key the same three configs are recorded under in
-        /// CodeGeneratorSettings.DirectoryStructureConfigPaths.
+        /// ED_CodeGenerator.DirectoryStructureConfigPaths.
         /// </summary>
         public string ConfigKeyOf(ModuleKind kind)
         {

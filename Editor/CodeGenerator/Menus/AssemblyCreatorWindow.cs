@@ -187,16 +187,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void LoadModulesRecursive(
             ModuleRegistry registry,
             ModuleAssetPathResolver pathResolver,
-            ModuleDescriptor parentModule,
+            ModuleDescriptorEVO parentModule,
             ModuleNode parentNode)
         {
             ModuleKind[] nestedModuleKinds = {ModuleKind.Sub, ModuleKind.Test, ModuleKind.Screen};
 
-            IEnumerable<ModuleDescriptor> modules = parentModule == null
+            IEnumerable<ModuleDescriptorEVO> modules = parentModule == null
                 ? registry.Modules.Where(module => !registry.AncestorsOf(module).Any())
                 : nestedModuleKinds.SelectMany(kind => registry.ChildrenOf(parentModule, kind));
 
-            foreach (ModuleDescriptor module in modules)
+            foreach (ModuleDescriptorEVO module in modules)
             {
                 string fullPath = pathResolver.ToAbsolutePath(registry.PathOf(module));
                 if (string.IsNullOrEmpty(fullPath))
@@ -340,7 +340,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             }
         }
 
-        private void TraverseFoldersAndSetProviders(string basePath, List<FolderConfig> folders, string dotSettingsPath)
+        private void TraverseFoldersAndSetProviders(string basePath, List<FolderEVO> folders, string dotSettingsPath)
         {
             foreach (var folder in folders)
             {

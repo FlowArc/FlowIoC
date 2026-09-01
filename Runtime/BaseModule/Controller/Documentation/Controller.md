@@ -587,7 +587,7 @@ CommandBinder.Bind(_internal.Tick)
 Marking only the signal still leaves the per-command execute lines; marking only the
 commands still leaves the dispatch lines.
 
-To hide a whole project log channel instead, turn it off in `FlowConsoleSettings` —
+To hide a whole project log channel instead, turn it off in `CD_FlowConsole` —
 but that is a global switch, not a per-loop one.
 
 ---

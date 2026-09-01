@@ -5,22 +5,22 @@ using UnityEditor;
 
 namespace FlowIoC.Editor.Config.ModuleConfig.Editor
 {
-    [CustomEditor(typeof(ScreenModuleDirectoryStructureConfig))]
+    [CustomEditor(typeof(ED_ScreenModuleDirectoryStructure))]
     public class ScreenModuleDirectoryStructureConfigEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
 
-            ScreenModuleDirectoryStructureConfig config = target as ScreenModuleDirectoryStructureConfig;
+            ED_ScreenModuleDirectoryStructure config = target as ED_ScreenModuleDirectoryStructure;
             if (config == null)
                 return;
 
-            Dictionary<FolderConfig.FolderType, int> usageDict = new Dictionary<FolderConfig.FolderType, int>();
+            Dictionary<FolderEVO.FolderType, int> usageDict = new Dictionary<FolderEVO.FolderType, int>();
             GatherFolderTypes(config.RootFolders, usageDict);
 
-            List<FolderConfig.FolderType> duplicates = usageDict
-                .Where(kv => kv.Key != FolderConfig.FolderType.Folder && kv.Value > 1)
+            List<FolderEVO.FolderType> duplicates = usageDict
+                .Where(kv => kv.Key != FolderEVO.FolderType.Folder && kv.Value > 1)
                 .Select(kv => kv.Key)
                 .ToList();
 
@@ -35,14 +35,14 @@ namespace FlowIoC.Editor.Config.ModuleConfig.Editor
             }
         }
 
-        private void GatherFolderTypes(List<FolderConfig> folders, Dictionary<FolderConfig.FolderType, int> usageDict)
+        private void GatherFolderTypes(List<FolderEVO> folders, Dictionary<FolderEVO.FolderType, int> usageDict)
         {
             if (folders == null)
                 return;
 
-            foreach (FolderConfig folder in folders)
+            foreach (FolderEVO folder in folders)
             {
-                FolderConfig.FolderType type = folder.Type;
+                FolderEVO.FolderType type = folder.Type;
                 usageDict.TryAdd(type, 0);
                 usageDict[type]++;
 

@@ -30,9 +30,9 @@ namespace FlowIoC.Editor.Modules
 
         private readonly ModuleIndexIgnoreRule _ignoreRule = new ModuleIndexIgnoreRule();
 
-        public FlowIoCModuleIndex LoadOrCreate()
+        public ED_ModuleIndex LoadOrCreate()
         {
-            var index = AssetDatabase.LoadAssetAtPath<FlowIoCModuleIndex>(_paths.ModuleIndex);
+            var index = AssetDatabase.LoadAssetAtPath<ED_ModuleIndex>(_paths.ModuleIndex);
             if (index != null)
             {
                 // Also here, not only on the create path below, so a project that already had the
@@ -42,7 +42,7 @@ namespace FlowIoC.Editor.Modules
                 return index;
             }
 
-            // Recreating this asset costs a rescan and nothing else. Unlike FlowConsoleSettings
+            // Recreating this asset costs a rescan and nothing else. Unlike CD_FlowConsole
             // there is no user data in it to overwrite, which is why "could not load" and
             // "does not exist" may be treated the same here and nowhere else.
             EnsureDirectory();
@@ -50,7 +50,7 @@ namespace FlowIoC.Editor.Modules
             // Before the asset exists, so it is never stageable without the rule already in place.
             _ignoreRule.Ensure();
 
-            index = ScriptableObject.CreateInstance<FlowIoCModuleIndex>();
+            index = ScriptableObject.CreateInstance<ED_ModuleIndex>();
             AssetDatabase.CreateAsset(index, _paths.ModuleIndex);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

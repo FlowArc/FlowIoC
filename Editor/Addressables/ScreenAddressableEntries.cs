@@ -26,6 +26,10 @@ namespace FlowIoC.Editor.Addressables
     internal class ScreenAddressableEntries
     {
         internal const string ConfigGroup = "Local_Screen-Configs";
+
+        // A project-side Addressables label, not a type name: it is written into the consuming
+        // project's Addressables settings, so it stays what it has always been even though the
+        // asset it labels is now CD_Screen. Renaming it would orphan every entry already labelled.
         internal const string ConfigLabel = "ScreenConfig";
         internal const string PrefabLabel = "ScreenPrefab";
         private const string GroupPrefix = "Local_Screen-";
@@ -43,7 +47,7 @@ namespace FlowIoC.Editor.Addressables
                 },
                 new ScreenAddressableEntry
                 {
-                    Address = screenName + "Config",
+                    Address = "CD_" + screenName,
                     GroupName = ConfigGroup,
                     Label = ConfigLabel
                 }

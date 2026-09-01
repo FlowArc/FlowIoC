@@ -11,7 +11,7 @@ namespace FlowIoC.ScreenModule.Commands
     public sealed class UnRegisterScreenConfigCommand : Command
     {
         [SignalParam] private int _managerId { get; set; }
-        [SignalParam] private List<ScreenConfig> _configs { get; set; }
+        [SignalParam] private List<CD_Screen> _configs { get; set; }
         [Inject] private IScreenConfigModel _screenConfigModel { get; set; }
 
         public override void Execute()

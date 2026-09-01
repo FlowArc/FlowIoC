@@ -22,9 +22,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 Directory.CreateDirectory(relativePath);
             }
 
-            string assetPath = Path.Combine(relativePath, $"{moduleName}Config.asset").Replace("\\", "/");
-            ScreenConfig screenConfig = ScriptableObject.CreateInstance<ScreenConfig>();
-            screenConfig.name = $"{moduleName}Config";
+            string assetPath = Path.Combine(relativePath, $"CD_{moduleName}.asset").Replace("\\", "/");
+            CD_Screen screenConfig = ScriptableObject.CreateInstance<CD_Screen>();
+            screenConfig.name = $"CD_{moduleName}";
 
             if (screenConfigData != null)
             {

@@ -12,16 +12,16 @@ namespace FlowIoC.Editor.Modules
     /// its GUID and loses its name.
     /// </summary>
     [Serializable]
-    internal class ModuleDescriptor
+    internal class ModuleDescriptorEVO
     {
         public string Name;
         public ModuleKind Kind;
         public string FolderGuid;
 
-        public SerializedDictionary<FolderConfig.FolderType, string> FolderGuids =
-            new SerializedDictionary<FolderConfig.FolderType, string>();
+        public SerializedDictionary<FolderEVO.FolderType, string> FolderGuids =
+            new SerializedDictionary<FolderEVO.FolderType, string>();
 
-        public bool TryGetFolderGuid(FolderConfig.FolderType type, out string guid)
+        public bool TryGetFolderGuid(FolderEVO.FolderType type, out string guid)
         {
             guid = null;
             return FolderGuids != null
@@ -29,9 +29,9 @@ namespace FlowIoC.Editor.Modules
                    && !string.IsNullOrEmpty(guid);
         }
 
-        public void RecordFolderGuid(FolderConfig.FolderType type, string guid)
+        public void RecordFolderGuid(FolderEVO.FolderType type, string guid)
         {
-            FolderGuids ??= new SerializedDictionary<FolderConfig.FolderType, string>();
+            FolderGuids ??= new SerializedDictionary<FolderEVO.FolderType, string>();
             FolderGuids[type] = guid;
         }
     }

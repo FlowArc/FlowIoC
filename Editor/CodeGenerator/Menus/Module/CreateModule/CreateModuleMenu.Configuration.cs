@@ -10,12 +10,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
     {
         private void InitializeConfigMap()
         {
-            CodeGeneratorSettings.CreateConfig();
+            ED_CodeGenerator.CreateConfig();
             _directoryConfigMap = new Dictionary<ModuleType, DirectoryStructureConfig>
             {
-                {ModuleType.Main, MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main")},
-                {ModuleType.Screen, ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen")},
-                {ModuleType.Test, TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test")}
+                {ModuleType.Main, ED_MainModuleDirectoryStructure.GetOrCreateConfig("Main")},
+                {ModuleType.Screen, ED_ScreenModuleDirectoryStructure.GetOrCreateConfig("Screen")},
+                {ModuleType.Test, ED_TestModuleDirectoryStructure.GetOrCreateConfig("Test")}
             };
 
             if (_directoryConfigMap == null || _directoryConfigMap.Count == 0)
@@ -45,8 +45,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         {
             DestroyPreviewScreenConfig();
 
-            _screenConfigPreview = CreateInstance<ScreenConfig>();
-            _screenConfigPreview.name = "ScreenConfig Preview";
+            _screenConfigPreview = CreateInstance<CD_Screen>();
+            _screenConfigPreview.name = "CD_Screen Preview";
 
             _screenConfigEditor = UnityEditor.Editor.CreateEditor(_screenConfigPreview);
         }

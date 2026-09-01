@@ -7,15 +7,15 @@ namespace FlowIoC.Editor.FolderDrawer
     /// <summary>
     /// The only static surface of the folder drawer. Unity's load hook has to be static,
     /// so this type holds the single drawer instance the editor callbacks need and does
-    /// nothing else; the behaviour lives on <see cref="FlowIoCFolderDrawer"/>.
+    /// nothing else; the behaviour lives on <see cref="FolderDrawer"/>.
     /// </summary>
-    internal static class FlowIoCFolderDrawerBootstrap
+    internal static class FolderDrawerBootstrap
     {
         private const string CONFIG_CHECKED_KEY = "FlowIoCFolderDrawer_ConfigChecked";
 
-        private static FlowIoCFolderDrawer _drawer;
+        private static FolderDrawer _drawer;
 
-        public static FlowIoCFolderDrawer Drawer => _drawer ??= new FlowIoCFolderDrawer();
+        public static FolderDrawer Drawer => _drawer ??= new FolderDrawer();
 
         [InitializeOnLoadMethod]
         private static void OnProjectLoad()

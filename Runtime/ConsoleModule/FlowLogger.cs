@@ -20,7 +20,7 @@ namespace FlowIoC.ConsoleModule
         private const char ArrowDown = '\u21d3';
         private const char ArrowUp = '\u21d1';
 
-        private static FlowConsoleSettings _settings;
+        private static CD_FlowConsole _settings;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -32,17 +32,17 @@ namespace FlowIoC.ConsoleModule
             // subscription on every Play entry when domain reload is disabled.
         }
 
-        public static FlowConsoleSettings Settings
+        public static CD_FlowConsole Settings
         {
             get
             {
                 if (_settings == null)
                 {
-                    _settings = Resources.Load<FlowConsoleSettings>("FlowConsoleSettings");
+                    _settings = Resources.Load<CD_FlowConsole>("CD_FlowConsole");
 
                     if (_settings == null)
                     {
-                        _settings = ScriptableObject.CreateInstance<FlowConsoleSettings>();
+                        _settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
                         _settings.ResetToDefaults();
 
 #if UNITY_EDITOR
@@ -53,14 +53,14 @@ namespace FlowIoC.ConsoleModule
                             string fullPath = paths.ConsoleSettings;
 
                             bool fileExistsOnDisk = File.Exists(fullPath);
-                            var existing = UnityEditor.AssetDatabase.LoadAssetAtPath<FlowConsoleSettings>(fullPath);
+                            var existing = UnityEditor.AssetDatabase.LoadAssetAtPath<CD_FlowConsole>(fullPath);
 
                             if (!new FlowConsoleSettingsCreationPolicy().ShouldCreate(existing != null, fileExistsOnDisk))
                             {
                                 if (fileExistsOnDisk && existing == null)
                                 {
                                     Debug.LogWarning(
-                                        "<color=cyan>FlowConsole:</color> FlowConsoleSettings.asset is on disk but " +
+                                        "<color=cyan>FlowConsole:</color> CD_FlowConsole.asset is on disk but " +
                                         "could not be loaded, so it was left untouched rather than replaced. Scripts " +
                                         "are probably not compiling, or the package's asset paths changed. Fix the " +
                                         "compile errors - or close the Editor, delete Library/ and reopen - and the " +
@@ -76,7 +76,7 @@ namespace FlowIoC.ConsoleModule
                             UnityEditor.AssetDatabase.CreateAsset(_settings, fullPath);
                             UnityEditor.AssetDatabase.SaveAssets();
                             UnityEditor.AssetDatabase.Refresh();
-                            Debug.Log("<color=cyan>FlowConsoleLogger:</color> Created FlowConsoleSettings and verified FlowLogType.");
+                            Debug.Log("<color=cyan>FlowConsoleLogger:</color> Created CD_FlowConsole and verified FlowLogType.");
                         };
 #endif
                     }

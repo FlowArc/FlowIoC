@@ -5,14 +5,14 @@ using UnityEngine;
 
 namespace FlowIoC.Tests
 {
-    public class FlowIoCModuleIndexTests
+    public class ED_ModuleIndexTests
     {
-        private FlowIoCModuleIndex _index;
+        private ED_ModuleIndex _index;
 
         [SetUp]
         public void SetUp()
         {
-            _index = ScriptableObject.CreateInstance<FlowIoCModuleIndex>();
+            _index = ScriptableObject.CreateInstance<ED_ModuleIndex>();
         }
 
         [TearDown]
@@ -21,9 +21,9 @@ namespace FlowIoC.Tests
             Object.DestroyImmediate(_index);
         }
 
-        private ModuleDescriptor Descriptor(string name, ModuleKind kind, string guid)
+        private ModuleDescriptorEVO Descriptor(string name, ModuleKind kind, string guid)
         {
-            return new ModuleDescriptor { Name = name, Kind = kind, FolderGuid = guid };
+            return new ModuleDescriptorEVO { Name = name, Kind = kind, FolderGuid = guid };
         }
 
         [Test]
@@ -37,7 +37,7 @@ namespace FlowIoC.Tests
         {
             _index.Replace(new[] { Descriptor("CameraModule", ModuleKind.Main, "abc") });
 
-            Assert.IsTrue(_index.TryGetByFolderGuid("abc", out ModuleDescriptor module));
+            Assert.IsTrue(_index.TryGetByFolderGuid("abc", out ModuleDescriptorEVO module));
             Assert.AreEqual("CameraModule", module.Name);
             Assert.AreEqual(ModuleKind.Main, module.Kind);
         }
@@ -47,7 +47,7 @@ namespace FlowIoC.Tests
         {
             _index.Replace(new[] { Descriptor("CameraModule", ModuleKind.Main, "abc") });
 
-            Assert.IsTrue(_index.TryGetByName("cameramodule", out ModuleDescriptor module));
+            Assert.IsTrue(_index.TryGetByName("cameramodule", out ModuleDescriptorEVO module));
             Assert.AreEqual("abc", module.FolderGuid);
         }
 
@@ -79,11 +79,11 @@ namespace FlowIoC.Tests
         [Test]
         public void A_folder_guid_recorded_on_a_descriptor_is_read_back()
         {
-            ModuleDescriptor module = Descriptor("CameraModule", ModuleKind.Main, "abc");
+            ModuleDescriptorEVO module = Descriptor("CameraModule", ModuleKind.Main, "abc");
 
-            module.RecordFolderGuid(FolderConfig.FolderType.Controllers, "ctrl-guid");
+            module.RecordFolderGuid(FolderEVO.FolderType.Controllers, "ctrl-guid");
 
-            Assert.IsTrue(module.TryGetFolderGuid(FolderConfig.FolderType.Controllers, out string guid));
+            Assert.IsTrue(module.TryGetFolderGuid(FolderEVO.FolderType.Controllers, out string guid));
             Assert.AreEqual("ctrl-guid", guid);
         }
 
@@ -96,21 +96,21 @@ namespace FlowIoC.Tests
         [Test]
         public void An_unrecorded_folder_type_reports_itself_missing()
         {
-            ModuleDescriptor module = Descriptor("CameraModule", ModuleKind.Main, "abc");
+            ModuleDescriptorEVO module = Descriptor("CameraModule", ModuleKind.Main, "abc");
 
-            Assert.IsFalse(module.TryGetFolderGuid(FolderConfig.FolderType.Systems, out string guid));
+            Assert.IsFalse(module.TryGetFolderGuid(FolderEVO.FolderType.Systems, out string guid));
             Assert.IsNull(guid);
         }
 
         [Test]
         public void Recording_a_folder_type_twice_keeps_the_newer_guid()
         {
-            ModuleDescriptor module = Descriptor("CameraModule", ModuleKind.Main, "abc");
+            ModuleDescriptorEVO module = Descriptor("CameraModule", ModuleKind.Main, "abc");
 
-            module.RecordFolderGuid(FolderConfig.FolderType.Models, "old");
-            module.RecordFolderGuid(FolderConfig.FolderType.Models, "new");
+            module.RecordFolderGuid(FolderEVO.FolderType.Models, "old");
+            module.RecordFolderGuid(FolderEVO.FolderType.Models, "new");
 
-            module.TryGetFolderGuid(FolderConfig.FolderType.Models, out string guid);
+            module.TryGetFolderGuid(FolderEVO.FolderType.Models, out string guid);
             Assert.AreEqual("new", guid);
         }
     }

@@ -8,11 +8,11 @@ using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Editor
 {
-    [CustomEditor(typeof(CodeGeneratorSettings))]
+    [CustomEditor(typeof(ED_CodeGenerator))]
     public class CodeGeneratorSettingsEditor : UnityEditor.Editor
     {
-        private CodeGeneratorSettings _settings;
-        private FolderConfig.FolderType _selectedNewType = FolderConfig.FolderType.ViewsAndMediators;
+        private ED_CodeGenerator _settings;
+        private FolderEVO.FolderType _selectedNewType = FolderEVO.FolderType.ViewsAndMediators;
         private string _newTypeDefaultName = "NewFolderName";
 
         private string _newPathKey = "NewKey";
@@ -20,7 +20,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
 
         private void OnEnable()
         {
-            _settings = (CodeGeneratorSettings) target;
+            _settings = (ED_CodeGenerator) target;
 
             if (_settings.DirectoryStructureConfigMap == null)
             {
@@ -64,11 +64,11 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
 
         private void DrawExistingEntries()
         {
-            Dictionary<FolderConfig.FolderType, string> map = _settings.DirectoryStructureConfigMap;
+            Dictionary<FolderEVO.FolderType, string> map = _settings.DirectoryStructureConfigMap;
             if (map == null) return;
 
-            List<FolderConfig.FolderType> keys = new List<FolderConfig.FolderType>(map.Keys);
-            List<FolderConfig.FolderType> keysToRemove = new List<FolderConfig.FolderType>();
+            List<FolderEVO.FolderType> keys = new List<FolderEVO.FolderType>(map.Keys);
+            List<FolderEVO.FolderType> keysToRemove = new List<FolderEVO.FolderType>();
 
             EditorGUILayout.BeginVertical("box");
 
@@ -101,7 +101,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
 
             EditorGUILayout.Space(10);
 
-            foreach (FolderConfig.FolderType key in keys)
+            foreach (FolderEVO.FolderType key in keys)
             {
                 string oldValue = map[key];
 
@@ -131,7 +131,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
             if (keysToRemove.Count > 0)
             {
                 Undo.RecordObject(_settings, "Remove Dictionary Entries");
-                foreach (FolderConfig.FolderType key in keysToRemove)
+                foreach (FolderEVO.FolderType key in keysToRemove)
                 {
                     map.Remove(key);
                 }
@@ -145,13 +145,13 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
         {
             EditorGUILayout.LabelField("Add New Entry", EditorStyles.boldLabel);
 
-            Dictionary<FolderConfig.FolderType, string> map = _settings.DirectoryStructureConfigMap;
+            Dictionary<FolderEVO.FolderType, string> map = _settings.DirectoryStructureConfigMap;
             if (map == null) return;
 
-            List<FolderConfig.FolderType> unaddedTypes = System.Enum
-                .GetValues(typeof(FolderConfig.FolderType))
-                .Cast<FolderConfig.FolderType>()
-                .Where(t => t != FolderConfig.FolderType.Folder)
+            List<FolderEVO.FolderType> unaddedTypes = System.Enum
+                .GetValues(typeof(FolderEVO.FolderType))
+                .Cast<FolderEVO.FolderType>()
+                .Where(t => t != FolderEVO.FolderType.Folder)
                 .Where(t => !map.ContainsKey(t))
                 .ToList();
 
@@ -276,17 +276,17 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
                 switch (configKey)
                 {
                     case "Main":
-                        var mainConfig = MainModuleDirectoryStructureConfig.GetOrCreateConfig("Main");
+                        var mainConfig = ED_MainModuleDirectoryStructure.GetOrCreateConfig("Main");
                         UpdateFolderNames(mainConfig.RootFolders);
                         EditorUtility.SetDirty(mainConfig);
                         break;
                     case "Screen":
-                        var screenConfig = ScreenModuleDirectoryStructureConfig.GetOrCreateConfig("Screen");
+                        var screenConfig = ED_ScreenModuleDirectoryStructure.GetOrCreateConfig("Screen");
                         UpdateFolderNames(screenConfig.RootFolders);
                         EditorUtility.SetDirty(screenConfig);
                         break;
                     case "Test":
-                        var testConfig = TestModuleDirectoryStructureConfig.GetOrCreateConfig("Test");
+                        var testConfig = ED_TestModuleDirectoryStructure.GetOrCreateConfig("Test");
                         UpdateFolderNames(testConfig.RootFolders);
                         EditorUtility.SetDirty(testConfig);
                         break;
@@ -294,7 +294,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
             }
         }
 
-        private void UpdateFolderNames(List<FolderConfig> folders)
+        private void UpdateFolderNames(List<FolderEVO> folders)
         {
             if (folders == null) return;
 

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace FlowIoC.Editor.CustomEditorHeader
 {
-    public class HeaderConfig : ScriptableObject
+    public class ED_Header : ScriptableObject
     {
         public Color HeaderBackgroundColor = new Color(0.8f, 0.4f, 0.0f);
         public Color HeaderTextColor = Color.white;

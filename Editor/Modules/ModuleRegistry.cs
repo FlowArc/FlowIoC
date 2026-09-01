@@ -11,23 +11,23 @@ namespace FlowIoC.Editor.Modules
     /// </summary>
     internal class ModuleRegistry
     {
-        private readonly FlowIoCModuleIndex _index;
+        private readonly ED_ModuleIndex _index;
         private readonly IAssetPaths _assetPaths;
 
-        public ModuleRegistry(FlowIoCModuleIndex index, IAssetPaths assetPaths)
+        public ModuleRegistry(ED_ModuleIndex index, IAssetPaths assetPaths)
         {
             _index = index;
             _assetPaths = assetPaths;
         }
 
-        public IReadOnlyList<ModuleDescriptor> Modules => _index.Modules;
+        public IReadOnlyList<ModuleDescriptorEVO> Modules => _index.Modules;
 
         public bool IsModule(string assetPath)
         {
             return TryGetModule(assetPath, out _);
         }
 
-        public bool TryGetModule(string assetPath, out ModuleDescriptor module)
+        public bool TryGetModule(string assetPath, out ModuleDescriptorEVO module)
         {
             module = null;
             if (string.IsNullOrEmpty(assetPath)) return false;
@@ -36,7 +36,7 @@ namespace FlowIoC.Editor.Modules
             return !string.IsNullOrEmpty(guid) && _index.TryGetByFolderGuid(guid, out module);
         }
 
-        public bool TryGetNearestModule(string assetPath, out ModuleDescriptor module)
+        public bool TryGetNearestModule(string assetPath, out ModuleDescriptorEVO module)
         {
             module = null;
             string current = Normalize(assetPath);
@@ -54,15 +54,15 @@ namespace FlowIoC.Editor.Modules
             return false;
         }
 
-        public string PathOf(ModuleDescriptor module)
+        public string PathOf(ModuleDescriptorEVO module)
         {
             return module == null ? string.Empty : _assetPaths.PathOf(module.FolderGuid);
         }
 
-        public IEnumerable<ModuleDescriptor> ChildrenOf(ModuleDescriptor module, ModuleKind kind)
+        public IEnumerable<ModuleDescriptorEVO> ChildrenOf(ModuleDescriptorEVO module, ModuleKind kind)
         {
             string parentPath = PathOf(module);
-            if (string.IsNullOrEmpty(parentPath)) return Enumerable.Empty<ModuleDescriptor>();
+            if (string.IsNullOrEmpty(parentPath)) return Enumerable.Empty<ModuleDescriptorEVO>();
 
             string prefix = parentPath + "/";
 
@@ -73,7 +73,7 @@ namespace FlowIoC.Editor.Modules
                 .ToList();
         }
 
-        public IEnumerable<ModuleDescriptor> AncestorsOf(ModuleDescriptor module)
+        public IEnumerable<ModuleDescriptorEVO> AncestorsOf(ModuleDescriptorEVO module)
         {
             string path = PathOf(module);
             if (string.IsNullOrEmpty(path)) yield break;
@@ -83,7 +83,7 @@ namespace FlowIoC.Editor.Modules
 
             while (!string.IsNullOrEmpty(current))
             {
-                if (TryGetModule(current, out ModuleDescriptor ancestor))
+                if (TryGetModule(current, out ModuleDescriptorEVO ancestor))
                     yield return ancestor;
 
                 slash = current.LastIndexOf('/');
@@ -96,9 +96,9 @@ namespace FlowIoC.Editor.Modules
         /// <summary>
         /// A screen module nested two modules deep is a child of the inner one, not of both.
         /// </summary>
-        private bool IsNearestModuleUnder(ModuleDescriptor candidate, ModuleDescriptor parent)
+        private bool IsNearestModuleUnder(ModuleDescriptorEVO candidate, ModuleDescriptorEVO parent)
         {
-            ModuleDescriptor nearest = AncestorsOf(candidate).FirstOrDefault();
+            ModuleDescriptorEVO nearest = AncestorsOf(candidate).FirstOrDefault();
             return nearest != null
                    && string.Equals(nearest.FolderGuid, parent.FolderGuid, StringComparison.Ordinal);
         }

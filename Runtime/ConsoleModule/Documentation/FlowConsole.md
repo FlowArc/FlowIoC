@@ -122,7 +122,7 @@ log call, which matters exactly where logging matters least — inside a loop.
 
 ## Settings
 
-The `FlowConsoleSettings` asset controls the whole layer.
+The `CD_FlowConsole` asset controls the whole layer.
 
 | Setting | Effect |
 |---|---|

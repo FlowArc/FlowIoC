@@ -64,7 +64,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Rule("Screen - one UI screen or popup.");
             painter.Paragraph(
                 "Named <Name>ScreenModule and written into its parent's zScreenModules folder. It "
-                + "comes with a View, a Mediator and a ScreenConfig asset already registered with "
+                + "comes with a View, a Mediator and a CD_Screen asset already registered with "
                 + "the Screen module, and optionally its own scene. List the screen's actions in "
                 + "the panel and they are put on both the View and the Mediator, so the button you "
                 + "name here arrives already wired. A screen belongs to the module whose feature it "

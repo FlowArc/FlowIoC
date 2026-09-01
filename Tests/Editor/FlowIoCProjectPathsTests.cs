@@ -19,7 +19,7 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// CodeGeneratorSettings, the directory structure configs and the folder drawer config are
+        /// ED_CodeGenerator, the directory structure configs and the folder drawer config are
         /// ScriptableObjects whose scripts live in the editor-only FlowIoC.Editor assembly. Unity can
         /// only resolve the script behind such an asset while the asset sits inside a folder named
         /// Editor, so this is a layout constraint and not a preference.
@@ -44,7 +44,7 @@ namespace FlowIoC.Tests
             var paths = new FlowIoCProjectPaths();
 
             Assert.AreEqual(paths.Root + "/Resources", paths.ResourcesRoot);
-            Assert.AreEqual(paths.ResourcesRoot + "/FlowConsoleSettings.asset", paths.ConsoleSettings);
+            Assert.AreEqual(paths.ResourcesRoot + "/CD_FlowConsole.asset", paths.ConsoleSettings);
         }
 
         [Test]
@@ -62,10 +62,10 @@ namespace FlowIoC.Tests
             var paths = new FlowIoCProjectPaths();
 
             Assert.AreEqual(
-                paths.CodeGeneratorRoot + "/MainModuleDirectoryStructureConfig.asset",
+                paths.CodeGeneratorRoot + "/ED_MainModuleDirectoryStructure.asset",
                 paths.DirectoryStructureConfig("Main"));
             Assert.AreEqual(
-                paths.CodeGeneratorRoot + "/TestModuleDirectoryStructureConfig.asset",
+                paths.CodeGeneratorRoot + "/ED_TestModuleDirectoryStructure.asset",
                 paths.DirectoryStructureConfig("Test"));
         }
 
@@ -79,7 +79,7 @@ namespace FlowIoC.Tests
         public void The_module_index_sits_beside_the_code_generator_settings()
         {
             Assert.AreEqual(
-                "Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset",
+                "Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_ModuleIndex.asset",
                 new FlowIoCProjectPaths().ModuleIndex);
         }
     }

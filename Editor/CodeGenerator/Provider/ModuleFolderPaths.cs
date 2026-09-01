@@ -68,7 +68,7 @@ namespace FlowIoC.Editor.CodeGenerator.Provider
             var paths = new List<string>();
             var skipped = new List<SkippedModule>();
 
-            foreach (ModuleDescriptor module in registry.Modules)
+            foreach (ModuleDescriptorEVO module in registry.Modules)
             {
                 string absolutePath = _toAbsolutePath(registry.PathOf(module));
 

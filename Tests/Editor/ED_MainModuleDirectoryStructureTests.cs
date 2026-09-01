@@ -9,12 +9,12 @@ using UnityEngine;
 
 namespace FlowIoC.Tests
 {
-    public class MainModuleDirectoryStructureConfigTests
+    public class ED_MainModuleDirectoryStructureTests
     {
-        private MainModuleDirectoryStructureConfig _config;
+        private ED_MainModuleDirectoryStructure _config;
 
         [SetUp]
-        public void SetUp() => _config = ScriptableObject.CreateInstance<MainModuleDirectoryStructureConfig>();
+        public void SetUp() => _config = ScriptableObject.CreateInstance<ED_MainModuleDirectoryStructure>();
 
         [TearDown]
         public void TearDown() => Object.DestroyImmediate(_config);
@@ -72,7 +72,7 @@ namespace FlowIoC.Tests
         {
             InitializeDefaults();
 
-            FolderConfig scripts = Find(_config.RootFolders, "Scripts");
+            FolderEVO scripts = Find(_config.RootFolders, "Scripts");
             Assert.IsNotNull(scripts, "No Scripts folder in the default structure.");
 
             List<string> names = scripts.SubFolders.Select(f => f.FolderName).ToList();
@@ -83,7 +83,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_field_initializer_carries_a_Shared_folder_too()
         {
-            FolderConfig scripts = Find(_config.RootFolders, "Scripts");
+            FolderEVO scripts = Find(_config.RootFolders, "Scripts");
             Assert.IsNotNull(scripts, "No Scripts folder in the field initializer.");
 
             CollectionAssert.Contains(scripts.SubFolders.Select(f => f.FolderName).ToList(), "Shared");
@@ -99,12 +99,12 @@ namespace FlowIoC.Tests
         {
             InitializeDefaults();
 
-            FolderConfig shared = Find(_config.RootFolders, "Shared");
+            FolderEVO shared = Find(_config.RootFolders, "Shared");
             Assert.IsNotNull(shared);
             Assert.IsTrue(shared.IsOptional, "Shared should be offered as an optional folder.");
             Assert.IsFalse(shared.IsMandatory);
 
-            foreach (FolderConfig child in shared.SubFolders)
+            foreach (FolderEVO child in shared.SubFolders)
             {
                 Assert.IsTrue(child.IsMandatory, $"'{child.FolderName}' should come with Shared rather than need its own tick.");
             }
@@ -119,10 +119,10 @@ namespace FlowIoC.Tests
         {
             InitializeDefaults();
 
-            Assert.AreEqual(FolderConfig.FolderType.SharedUnityObjects, FolderTypeAt("Shared", "UnityObjects"));
-            Assert.AreEqual(FolderConfig.FolderType.SharedValueObjects, FolderTypeAt("Shared", "ValueObjects"));
-            Assert.AreEqual(FolderConfig.FolderType.SharedEnums, FolderTypeAt("Shared", "Enums"));
-            Assert.AreEqual(FolderConfig.FolderType.SharedConstants, FolderTypeAt("Shared", "Constants"));
+            Assert.AreEqual(FolderEVO.FolderType.SharedUnityObjects, FolderTypeAt("Shared", "UnityObjects"));
+            Assert.AreEqual(FolderEVO.FolderType.SharedValueObjects, FolderTypeAt("Shared", "ValueObjects"));
+            Assert.AreEqual(FolderEVO.FolderType.SharedEnums, FolderTypeAt("Shared", "Enums"));
+            Assert.AreEqual(FolderEVO.FolderType.SharedConstants, FolderTypeAt("Shared", "Constants"));
         }
 
         [Test]
@@ -130,7 +130,7 @@ namespace FlowIoC.Tests
         {
             InitializeDefaults();
 
-            string path = _config.FindFullFolderPathByID(FolderConfig.FolderType.SharedUnityObjects, "base");
+            string path = _config.FindFullFolderPathByID(FolderEVO.FolderType.SharedUnityObjects, "base");
 
             Assert.AreEqual(Path.Combine("base", "Scripts", "Shared", "Data", "UnityObjects"), path);
         }
@@ -145,7 +145,7 @@ namespace FlowIoC.Tests
         {
             InitializeDefaults();
 
-            _config.FindFullFolderPathByID(FolderConfig.FolderType.SharedUnityObjects, "base", out bool isOptional);
+            _config.FindFullFolderPathByID(FolderEVO.FolderType.SharedUnityObjects, "base", out bool isOptional);
 
             Assert.IsTrue(isOptional);
         }
@@ -155,7 +155,7 @@ namespace FlowIoC.Tests
         {
             InitializeDefaults();
 
-            _config.FindFullFolderPathByID(FolderConfig.FolderType.UnityObjects, "base", out bool isOptional);
+            _config.FindFullFolderPathByID(FolderEVO.FolderType.UnityObjects, "base", out bool isOptional);
 
             Assert.IsFalse(isOptional);
         }
@@ -171,14 +171,14 @@ namespace FlowIoC.Tests
             InitializeDefaults();
             RemoveSharedBranch();
 
-            var settings = ScriptableObject.CreateInstance<CodeGeneratorSettings>();
+            var settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
             try
             {
                 Assert.IsTrue(_config.EnsureSharedBranch(settings));
 
-                FolderConfig scripts = Find(_config.RootFolders, "Scripts");
+                FolderEVO scripts = Find(_config.RootFolders, "Scripts");
                 CollectionAssert.Contains(scripts.SubFolders.Select(f => f.FolderName).ToList(), "Shared");
-                Assert.AreEqual(FolderConfig.FolderType.SharedValueObjects, FolderTypeAt("Shared", "ValueObjects"));
+                Assert.AreEqual(FolderEVO.FolderType.SharedValueObjects, FolderTypeAt("Shared", "ValueObjects"));
             }
             finally
             {
@@ -197,22 +197,22 @@ namespace FlowIoC.Tests
             InitializeDefaults();
             RemoveSharedBranch();
 
-            var settings = ScriptableObject.CreateInstance<CodeGeneratorSettings>();
+            var settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
             try
             {
-                settings.DirectoryStructureConfigMap.Remove(FolderConfig.FolderType.Shared);
-                settings.DirectoryStructureConfigMap.Remove(FolderConfig.FolderType.SharedUnityObjects);
-                settings.DirectoryStructureConfigMap.Remove(FolderConfig.FolderType.SharedValueObjects);
-                settings.DirectoryStructureConfigMap.Remove(FolderConfig.FolderType.SharedEnums);
-                settings.DirectoryStructureConfigMap.Remove(FolderConfig.FolderType.SharedConstants);
+                settings.DirectoryStructureConfigMap.Remove(FolderEVO.FolderType.Shared);
+                settings.DirectoryStructureConfigMap.Remove(FolderEVO.FolderType.SharedUnityObjects);
+                settings.DirectoryStructureConfigMap.Remove(FolderEVO.FolderType.SharedValueObjects);
+                settings.DirectoryStructureConfigMap.Remove(FolderEVO.FolderType.SharedEnums);
+                settings.DirectoryStructureConfigMap.Remove(FolderEVO.FolderType.SharedConstants);
 
                 _config.EnsureSharedBranch(settings);
 
-                Assert.AreEqual("Shared", settings.DirectoryStructureConfigMap[FolderConfig.FolderType.Shared]);
-                Assert.AreEqual("UnityObjects", settings.DirectoryStructureConfigMap[FolderConfig.FolderType.SharedUnityObjects]);
-                Assert.AreEqual("ValueObjects", settings.DirectoryStructureConfigMap[FolderConfig.FolderType.SharedValueObjects]);
-                Assert.AreEqual("Enums", settings.DirectoryStructureConfigMap[FolderConfig.FolderType.SharedEnums]);
-                Assert.AreEqual("Constants", settings.DirectoryStructureConfigMap[FolderConfig.FolderType.SharedConstants]);
+                Assert.AreEqual("Shared", settings.DirectoryStructureConfigMap[FolderEVO.FolderType.Shared]);
+                Assert.AreEqual("UnityObjects", settings.DirectoryStructureConfigMap[FolderEVO.FolderType.SharedUnityObjects]);
+                Assert.AreEqual("ValueObjects", settings.DirectoryStructureConfigMap[FolderEVO.FolderType.SharedValueObjects]);
+                Assert.AreEqual("Enums", settings.DirectoryStructureConfigMap[FolderEVO.FolderType.SharedEnums]);
+                Assert.AreEqual("Constants", settings.DirectoryStructureConfigMap[FolderEVO.FolderType.SharedConstants]);
             }
             finally
             {
@@ -225,12 +225,12 @@ namespace FlowIoC.Tests
         {
             InitializeDefaults();
 
-            var settings = ScriptableObject.CreateInstance<CodeGeneratorSettings>();
+            var settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
             try
             {
                 Assert.IsFalse(_config.EnsureSharedBranch(settings));
 
-                FolderConfig scripts = Find(_config.RootFolders, "Scripts");
+                FolderEVO scripts = Find(_config.RootFolders, "Scripts");
                 Assert.AreEqual(1, scripts.SubFolders.Count(f => f.FolderName == "Shared"));
             }
             finally
@@ -241,16 +241,16 @@ namespace FlowIoC.Tests
 
         private void RemoveSharedBranch()
         {
-            FolderConfig scripts = Find(_config.RootFolders, "Scripts");
-            scripts.SubFolders.RemoveAll(f => f.Type == FolderConfig.FolderType.Shared);
+            FolderEVO scripts = Find(_config.RootFolders, "Scripts");
+            scripts.SubFolders.RemoveAll(f => f.Type == FolderEVO.FolderType.Shared);
         }
 
-        private FolderConfig.FolderType FolderTypeAt(string branchName, string folderName)
+        private FolderEVO.FolderType FolderTypeAt(string branchName, string folderName)
         {
-            FolderConfig branch = Find(_config.RootFolders, branchName);
+            FolderEVO branch = Find(_config.RootFolders, branchName);
             Assert.IsNotNull(branch, $"No '{branchName}' folder in the structure.");
 
-            FolderConfig folder = Find(branch.SubFolders, folderName);
+            FolderEVO folder = Find(branch.SubFolders, folderName);
             Assert.IsNotNull(folder, $"No '{folderName}' folder under '{branchName}'.");
 
             return folder.Type;
@@ -258,15 +258,15 @@ namespace FlowIoC.Tests
 
         private void InitializeDefaults()
         {
-            typeof(MainModuleDirectoryStructureConfig)
+            typeof(ED_MainModuleDirectoryStructure)
                 .GetMethod("InitializeDefaultFolderStructure", BindingFlags.NonPublic | BindingFlags.Instance)
                 .Invoke(_config, null);
         }
 
-        private static bool Contains(IEnumerable<FolderConfig> folders, string name) =>
+        private static bool Contains(IEnumerable<FolderEVO> folders, string name) =>
             Find(folders, name) != null;
 
-        private static FolderConfig Find(IEnumerable<FolderConfig> folders, string name)
+        private static FolderEVO Find(IEnumerable<FolderEVO> folders, string name)
         {
             if (folders == null)
                 return null;

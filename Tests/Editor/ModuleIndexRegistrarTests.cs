@@ -44,15 +44,15 @@ namespace FlowIoC.Tests
         private const string ControllersPath = "Assets/Modules/HeroModule/Scripts/Runtime/Controllers";
         private const string ModelsPath = "Assets/Modules/HeroModule/Scripts/Runtime/Models";
 
-        private FlowIoCModuleIndex _index;
+        private ED_ModuleIndex _index;
         private FakeAssetPaths _paths;
-        private ModuleDescriptor _hero;
+        private ModuleDescriptorEVO _hero;
 
         [SetUp]
         public void SetUp()
         {
-            _index = ScriptableObject.CreateInstance<FlowIoCModuleIndex>();
-            _hero = new ModuleDescriptor {Name = "HeroModule", Kind = ModuleKind.Main, FolderGuid = ModuleGuid};
+            _index = ScriptableObject.CreateInstance<ED_ModuleIndex>();
+            _hero = new ModuleDescriptorEVO {Name = "HeroModule", Kind = ModuleKind.Main, FolderGuid = ModuleGuid};
             _index.Replace(new[] {_hero});
 
             _paths = new FakeAssetPaths();
@@ -67,21 +67,21 @@ namespace FlowIoC.Tests
             Object.DestroyImmediate(_index);
         }
 
-        private static Dictionary<FolderConfig.FolderType, string> FolderPaths()
+        private static Dictionary<FolderEVO.FolderType, string> FolderPaths()
         {
-            return new Dictionary<FolderConfig.FolderType, string>
+            return new Dictionary<FolderEVO.FolderType, string>
             {
-                {FolderConfig.FolderType.Controllers, ControllersPath},
-                {FolderConfig.FolderType.Models, ModelsPath}
+                {FolderEVO.FolderType.Controllers, ControllersPath},
+                {FolderEVO.FolderType.Models, ModelsPath}
             };
         }
 
-        private bool Record(Dictionary<FolderConfig.FolderType, string> folderPaths, string moduleAssetPath = ModulePath)
+        private bool Record(Dictionary<FolderEVO.FolderType, string> folderPaths, string moduleAssetPath = ModulePath)
         {
             return new ModuleIndexRegistrar(_paths).RecordFolderGuids(
                 _index,
                 moduleAssetPath,
-                new List<FolderConfig.FolderType> {FolderConfig.FolderType.Controllers, FolderConfig.FolderType.Models},
+                new List<FolderEVO.FolderType> {FolderEVO.FolderType.Controllers, FolderEVO.FolderType.Models},
                 type => folderPaths.TryGetValue(type, out string path) ? path : string.Empty);
         }
 
@@ -90,23 +90,23 @@ namespace FlowIoC.Tests
         {
             Assert.IsTrue(Record(FolderPaths()));
 
-            Assert.IsTrue(_hero.TryGetFolderGuid(FolderConfig.FolderType.Controllers, out string controllers));
+            Assert.IsTrue(_hero.TryGetFolderGuid(FolderEVO.FolderType.Controllers, out string controllers));
             Assert.AreEqual("controllers-guid", controllers);
 
-            Assert.IsTrue(_hero.TryGetFolderGuid(FolderConfig.FolderType.Models, out string models));
+            Assert.IsTrue(_hero.TryGetFolderGuid(FolderEVO.FolderType.Models, out string models));
             Assert.AreEqual("models-guid", models);
         }
 
         [Test]
         public void A_folder_that_does_not_resolve_is_skipped_and_the_rest_still_record()
         {
-            Dictionary<FolderConfig.FolderType, string> folderPaths = FolderPaths();
-            folderPaths.Remove(FolderConfig.FolderType.Models);
+            Dictionary<FolderEVO.FolderType, string> folderPaths = FolderPaths();
+            folderPaths.Remove(FolderEVO.FolderType.Models);
 
             Assert.IsTrue(Record(folderPaths));
 
-            Assert.IsTrue(_hero.TryGetFolderGuid(FolderConfig.FolderType.Controllers, out _));
-            Assert.IsFalse(_hero.TryGetFolderGuid(FolderConfig.FolderType.Models, out _));
+            Assert.IsTrue(_hero.TryGetFolderGuid(FolderEVO.FolderType.Controllers, out _));
+            Assert.IsFalse(_hero.TryGetFolderGuid(FolderEVO.FolderType.Models, out _));
         }
 
         [Test]
@@ -114,19 +114,19 @@ namespace FlowIoC.Tests
         {
             Assert.IsFalse(Record(FolderPaths(), "Assets/Modules/GhostModule"));
 
-            Assert.IsFalse(_hero.TryGetFolderGuid(FolderConfig.FolderType.Controllers, out _));
-            Assert.IsFalse(_hero.TryGetFolderGuid(FolderConfig.FolderType.Models, out _));
+            Assert.IsFalse(_hero.TryGetFolderGuid(FolderEVO.FolderType.Controllers, out _));
+            Assert.IsFalse(_hero.TryGetFolderGuid(FolderEVO.FolderType.Models, out _));
         }
 
         [Test]
         public void A_folder_whose_path_has_no_GUID_yet_is_skipped()
         {
-            Dictionary<FolderConfig.FolderType, string> folderPaths = FolderPaths();
-            folderPaths[FolderConfig.FolderType.Models] = "Assets/Modules/HeroModule/Scripts/Runtime/NotImportedYet";
+            Dictionary<FolderEVO.FolderType, string> folderPaths = FolderPaths();
+            folderPaths[FolderEVO.FolderType.Models] = "Assets/Modules/HeroModule/Scripts/Runtime/NotImportedYet";
 
             Assert.IsTrue(Record(folderPaths));
 
-            Assert.IsFalse(_hero.TryGetFolderGuid(FolderConfig.FolderType.Models, out _));
+            Assert.IsFalse(_hero.TryGetFolderGuid(FolderEVO.FolderType.Models, out _));
         }
     }
 }

@@ -28,7 +28,18 @@ namespace FlowIoC.Editor.Migration
             new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Screen")),
             new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/TestModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Test")),
             new LegacyAssetMove("Assets/Editor/FlowIoC/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderDrawerConfig),
-            new LegacyAssetMove("Assets/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings)
+            new LegacyAssetMove("Assets/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings),
+
+            // The assets FlowIoC writes took the CD_/ED_ data-type prefixes the rest of the
+            // framework already used. A project installed before that keeps them under the current
+            // root but under the old file names, so the rename is a move like any other.
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/CodeGeneratorSettings.asset", _paths.CodeGeneratorSettings),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/FlowIoCModuleIndex.asset", _paths.ModuleIndex),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/MainModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Main")),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/ScreenModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Screen")),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/TestModuleDirectoryStructureConfig.asset", _paths.DirectoryStructureConfig("Test")),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderDrawerConfig),
+            new LegacyAssetMove("Assets/Plugins/FlowIoC/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings)
         };
 
         /// <summary>
