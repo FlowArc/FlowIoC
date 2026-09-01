@@ -1,0 +1,97 @@
+/* Screen Config Manager - layout only. Colours come from the editor theme
+   variables so the window reads in both the Light and the Dark skin. */
+
+.scm-root {
+    flex-grow: 1;
+}
+
+.scm-spacer {
+    flex-grow: 1;
+}
+
+/* ---------------------------------------------------------------- toolbar */
+
+.scm-toolbar {
+    flex-shrink: 0;
+}
+
+.scm-toolbar__search {
+    width: 200px;
+    margin-right: 4px;
+}
+
+.scm-toolbar__filters {
+    flex-direction: row;
+    align-items: center;
+}
+
+.scm-toolbar__filters .unity-base-field {
+    margin-right: 4px;
+    min-width: 0;
+}
+
+.scm-toolbar__filters .unity-base-field__label {
+    min-width: auto;
+    margin-right: 2px;
+    -unity-text-align: middle-left;
+}
+
+.scm-toolbar__filters .unity-base-field__input {
+    min-width: 78px;
+}
+
+.scm-toolbar__count {
+    -unity-text-align: middle-right;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+/* ------------------------------------------------------------------ table */
+
+.scm-table {
+    flex-grow: 1;
+    min-height: 60px;
+}
+
+/* Cells sit flush against the column edges, so give them their own padding
+   rather than letting each field type bring a different one. */
+.scm-table .unity-multi-column-view__cell {
+    justify-content: center;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.scm-table .unity-base-field {
+    margin: 0;
+}
+
+.scm-table .unity-base-field__input {
+    margin: 0;
+}
+
+/* Cells lay their content out in a column, so the cross axis is the horizontal
+   one - align-self is what puts a narrow toggle in the middle of its column. */
+.scm-cell--center {
+    align-self: center;
+}
+
+.scm-cell__label {
+    -unity-text-align: middle-left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------ empty state */
+
+.scm-empty {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.scm-empty__label {
+    opacity: 0.6;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    max-width: 380px;
+}

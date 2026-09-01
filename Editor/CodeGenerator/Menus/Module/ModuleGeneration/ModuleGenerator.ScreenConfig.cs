@@ -32,11 +32,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 var defaultLayerProp = so.FindProperty("_defaultLayer");
                 if (defaultLayerProp != null) defaultLayerProp.intValue = screenConfigData.DefaultLayer;
 
-                var hasOpenAnimationProp = so.FindProperty("_hasOpenAnimation");
-                if (hasOpenAnimationProp != null) hasOpenAnimationProp.boolValue = screenConfigData.HasOpenAnimation;
+                var hasShowAnimationProp = so.FindProperty("_hasShowAnimation");
+                if (hasShowAnimationProp != null) hasShowAnimationProp.boolValue = screenConfigData.HasOpenAnimation;
 
-                var hasCloseAnimationProp = so.FindProperty("_hasCloseAnimation");
-                if (hasCloseAnimationProp != null) hasCloseAnimationProp.boolValue = screenConfigData.HasCloseAnimation;
+                var hasHideAnimationProp = so.FindProperty("_hasHideAnimation");
+                if (hasHideAnimationProp != null) hasHideAnimationProp.boolValue = screenConfigData.HasCloseAnimation;
 
                 var loadTypeProp = so.FindProperty("_loadType");
                 if (loadTypeProp != null) loadTypeProp.enumValueIndex = (int) screenConfigData.LoadType;
