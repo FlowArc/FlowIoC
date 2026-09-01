@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a50a75e32add964aa138f2a6fba2a38, type: 3}
   m_Name: CD_GameplayScreen
   m_EditorClassIdentifier: FlowIoC::FlowIoC.ScreenModule.Data.CD_Screen
-  _defaultLayer: 0
+  _defaultLayer: 1
   _loadType: 0
   _directPrefab: {fileID: 0}
   _screenTag: 0
