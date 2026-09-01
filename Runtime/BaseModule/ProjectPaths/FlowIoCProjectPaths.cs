@@ -19,13 +19,13 @@ namespace FlowIoC.BaseModule.ProjectPaths
 
         public string EditorRoot => Root + "/Editor";
         public string CodeGeneratorRoot => EditorRoot + "/CodeGenerator";
-        public string FolderDrawerRoot => EditorRoot + "/FolderDrawer";
+        public string FolderPainterRoot => EditorRoot + "/FolderPainter";
         public string GeneratedRoot => Root + "/Generated";
         public string ResourcesRoot => Root + "/Resources";
 
         public string CodeGeneratorSettings => CodeGeneratorRoot + "/ED_CodeGenerator.asset";
         public string ModuleIndex => CodeGeneratorRoot + "/ED_ModuleIndex.asset";
-        public string FolderDrawerConfig => FolderDrawerRoot + "/ED_FolderDrawer.asset";
+        public string FolderPainterConfig => FolderPainterRoot + "/ED_FolderPainter.asset";
         public string FlowLogType => GeneratedRoot + "/FlowLogType.cs";
         public string GeneratedAsmRef => GeneratedRoot + "/FlowIoC.Generated.asmref";
         public string ConsoleSettings => ResourcesRoot + "/CD_FlowConsole.asset";

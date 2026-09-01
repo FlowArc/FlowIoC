@@ -3,18 +3,18 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.Editor.FolderDrawer
+namespace FlowIoC.Editor.FolderPainter
 {
     /// <summary>
-    /// Edits the project local folder drawer config. Every change is written straight to
+    /// Edits the project local folder painter config. Every change is written straight to
     /// the asset and repainted in the Project window, so the colors update as you type.
     /// </summary>
-    internal class FolderDrawerWindow : EditorWindow
+    internal class FolderPainterWindow : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/Folder Drawer", false, 150)]
+        [MenuItem("Tools/FlowIoC/Folder Painter", false, 150)]
         internal static void Open()
         {
-            FolderDrawerWindow window = GetWindow<FolderDrawerWindow>("Folder Drawer");
+            FolderPainterWindow window = GetWindow<FolderPainterWindow>("Folder Painter");
             window.minSize = new Vector2(380, 320);
             window.Show();
         }
@@ -27,7 +27,7 @@ namespace FlowIoC.Editor.FolderDrawer
             "Folder Rules",
             "Colors one specific folder asset. Takes priority over the path rules.");
 
-        private ED_FolderDrawer _config;
+        private ED_FolderPainter _config;
         private SerializedObject _serializedConfig;
         private Vector2 _scroll;
 
@@ -49,7 +49,7 @@ namespace FlowIoC.Editor.FolderDrawer
 
         private void BindConfig()
         {
-            _config = FolderDrawerBootstrap.Drawer.EnsureConfig();
+            _config = FolderPainterBootstrap.Painter.EnsureConfig();
             _serializedConfig = _config == null ? null : new SerializedObject(_config);
         }
 
@@ -100,7 +100,7 @@ namespace FlowIoC.Editor.FolderDrawer
         private void DrawMissingConfig()
         {
             EditorGUILayout.HelpBox(
-                $"No config found at {FolderDrawerBootstrap.Drawer.ConfigPath}.",
+                $"No config found at {FolderPainterBootstrap.Painter.ConfigPath}.",
                 MessageType.Warning);
 
             if (GUILayout.Button("Create Config")) BindConfig();
@@ -108,7 +108,7 @@ namespace FlowIoC.Editor.FolderDrawer
 
         private void RepaintFolders()
         {
-            FolderDrawerBootstrap.Drawer.Apply();
+            FolderPainterBootstrap.Painter.Apply();
             EditorApplication.RepaintProjectWindow();
         }
     }

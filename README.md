@@ -971,7 +971,7 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 | `Tools/FlowIoC/Delete Module` | Remove a module and its references |
 | `Tools/FlowIoC/Console/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
-| `Tools/FlowIoC/Folder Drawer` | Colour Project window folders by path or by folder |
+| `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
 | `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Rebuild the module index and its log types; update namespace settings and the solution code style |

@@ -11,7 +11,7 @@ namespace FlowIoC.Tests
             var paths = new FlowIoCProjectPaths();
 
             Assert.That(paths.CodeGeneratorSettings, Does.StartWith(paths.Root));
-            Assert.That(paths.FolderDrawerConfig, Does.StartWith(paths.Root));
+            Assert.That(paths.FolderPainterConfig, Does.StartWith(paths.Root));
             Assert.That(paths.FlowLogType, Does.StartWith(paths.Root));
             Assert.That(paths.GeneratedAsmRef, Does.StartWith(paths.Root));
             Assert.That(paths.ConsoleSettings, Does.StartWith(paths.Root));
@@ -19,7 +19,7 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// ED_CodeGenerator, the directory structure configs and the folder drawer config are
+        /// ED_CodeGenerator, the directory structure configs and the folder painter config are
         /// ScriptableObjects whose scripts live in the editor-only FlowIoC.Editor assembly. Unity can
         /// only resolve the script behind such an asset while the asset sits inside a folder named
         /// Editor, so this is a layout constraint and not a preference.
@@ -30,7 +30,7 @@ namespace FlowIoC.Tests
             var paths = new FlowIoCProjectPaths();
 
             Assert.That(paths.CodeGeneratorSettings, Does.Contain("/Editor/"));
-            Assert.That(paths.FolderDrawerConfig, Does.Contain("/Editor/"));
+            Assert.That(paths.FolderPainterConfig, Does.Contain("/Editor/"));
             Assert.That(paths.DirectoryStructureConfig("Screen"), Does.Contain("/Editor/"));
         }
 
