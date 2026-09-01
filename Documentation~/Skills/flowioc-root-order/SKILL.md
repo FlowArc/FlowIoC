@@ -21,8 +21,12 @@ Root belongs to.
 
 ## The bands
 
+The whole range is `-100` to `100`. Nothing needs to sit outside it: `-100` is as early as a Root
+can be and `100` is as late.
+
 | Order | Who sits there | Why |
 |---|---|---|
+| -100 | A module that must finish before anything reads its data | `PostConstruct` runs during the binding pass, not after `Setup`, and each Root finishes its own before the next begins - so being first is what puts data in place before anything reads it. Restoring saved data is the case this exists for. |
 | negative | Services | A Service depends on nothing else, so it can come up first and be ready for everyone. |
 | 0 - 97 | The game's own modules and systems | Gameplay, input, camera, the modules this game is made of. |
 | 98 | `ConnectorRoot` | After every module it wires, so the scene reads as modules first and wiring after them. A Connector binds no signal holder anyway - it gets the ones every other context bound. |

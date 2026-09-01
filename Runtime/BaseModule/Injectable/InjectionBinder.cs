@@ -57,8 +57,8 @@ namespace FlowIoC.BaseModule.Injectable
             where TConcrete : TAbstract, new()
             where TDummy : TAbstract, new()
         {
-            //FlowConsoleLogger.Log(ConsoleLogType.Injection, "Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
-
+            // The dummy is an Editor affordance only: a build always gets the real implementation,
+            // whatever a Root left ticked in a scene.
 #if UNITY_EDITOR
             if (_bindedContext.IsTest)
             {
@@ -67,11 +67,6 @@ namespace FlowIoC.BaseModule.Injectable
                     (name != "" ? (" Name: " + name) : "" + " To: " + typeof(TDummy).Name));
                 return GetOrCreateInstance<TAbstract, TDummy>(name);
             }
-
-            FlowLogger.LogWarning(SystemLogType.Injection, "TEST MODE WARNING!\n" +
-                                                           "► Using Production Implementation in Test Mode: " + typeof(TConcrete).Name + "\n" +
-                                                           "► Abstract Type: " + typeof(TAbstract).Name + "\n" +
-                                                           "► Dummy Type: " + typeof(TDummy).Name);
 #endif
             FlowLogger.Log(SystemLogType.Injection,
                 _bindedContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name +

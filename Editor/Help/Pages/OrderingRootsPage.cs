@@ -55,6 +55,9 @@ namespace FlowIoC.Editor.Help.Pages
                 + "new Root means picking the band it belongs to.");
 
             painter.SubHeading("The bands");
+            painter.Bullet("The whole range is -100 to 100. Nothing needs to sit outside it.");
+            painter.Bullet(
+                "-100 - a module that must finish before anything reads its data. Restoring saved data is the case this exists for.");
             painter.Bullet("Negative - Services. A Service depends on nothing else, so it comes up first and is ready for everyone.");
             painter.Bullet("0 to 97 - the game's own modules and Systems. Gameplay, input, camera, whatever this game is made of.");
             painter.Bullet("98 - ConnectorRoot. After every module it wires, so the scene reads as modules first and wiring after them.");

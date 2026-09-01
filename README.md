@@ -280,8 +280,12 @@ can be driven manually in a test scene.
 Initialize Order is not a free number. It falls into bands, and placing a Root means
 picking the band it belongs to:
 
+The whole range is `-100` to `100`. Nothing needs to sit outside it: `-100` is as early as a Root
+can be and `100` is as late.
+
 | Order | Who sits there | Why |
 |---|---|---|
+| -100 | A module that must finish before anything reads its data | `PostConstruct` runs during the binding pass, and each Root finishes its own before the next begins - so being first is what puts data in place before anything reads it. Restoring saved data is the case this exists for. |
 | negative | Services | A Service depends on nothing else, so it comes up first and is ready for everyone. |
 | 0 – 97 | The game's own modules and Systems | Gameplay, input, camera - whatever this game is made of. |
 | 98 | `ConnectorRoot` | After every module it wires, so the scene reads as modules first and wiring after them. |
