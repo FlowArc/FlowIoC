@@ -98,13 +98,20 @@ so follow the rules below deliberately.
 
   The `SetParent` is not decoration: Unity marks only root level objects as do not destroy,
   so a Root authored under something else has to detach itself before it can survive.
-- A Root's Initialize Order follows the bands the shipped scene uses: Services take negative
-  numbers because they depend on nothing (`-10000` asset, `-99` screen, `-2` pool), the game's
-  own modules and Systems take `0` to `97`, `ConnectorRoot` takes `98` so the wiring reads after
-  the modules it wires, `ScreenRoot` takes `99`, and `MainRoot` takes `100` because its `Launch`
-  is the entry point. Author the Hierarchy in the same order. The number decides binding order
-  and the order of the `Setup` and `Launch` passes; it is not what makes crossing modules safe.
-  `Setup` runs a frame after every Root has finished binding, and that barrier is.
+- **Initialize Order runs from `-100` to `100`, and nothing needs to sit outside that range.**
+  `-100` is the earliest a Root can be and `100` is the latest, so the two ends are taken by the
+  module that must finish before anything reads its data - local save - and by `MainRoot`, whose
+  `Launch` is the entry point. Services take the rest of the negative band because they depend on
+  nothing, the game's own modules and Systems take `0` to `97`, `ConnectorRoot` takes `98` so the
+  wiring reads after the modules it wires, and `ScreenRoot` takes `99`. Author the Hierarchy in the
+  same order. The number decides binding order and the order of the `Setup` and `Launch` passes; it
+  is not what makes crossing modules safe. `Setup` runs a frame after every Root has finished
+  binding, and that barrier is.
+- A module that has to put data in place before anything reads it takes `-100`. This works because
+  `PostConstruct` runs during the **binding** pass, not after `Setup`: `RootsManager` calls
+  `StartContext()` on every Root in Initialize Order, synchronously, and each one runs its own
+  `PostConstruct` before the next begins. `Setup` would already be a frame too late, and a Command
+  later still.
 
 ### Injection targets properties, never fields
 
