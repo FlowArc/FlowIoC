@@ -8,7 +8,7 @@ namespace FlowIoC.ScreenModule.Model.Runtime
     internal interface IScreenRuntimeModel
     {
         void AddToPassivePool(IScreenBody screenBody);
-        bool GetScreen<T>(out T screen) where T : IScreenBody;
+        bool GetScreen<T>(int managerId, out T screen) where T : IScreenBody;
         void AddToActivePools(IScreenBody screenBody);
         void RemoveFromActivePools(IScreenBody screenBody);
         void RemoveFromPassivePool(IScreenBody screenBody);

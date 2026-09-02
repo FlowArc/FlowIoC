@@ -77,7 +77,7 @@ namespace FlowIoC.Tests
             LogAssert.ignoreFailingMessages = true;
 
             Assert.IsNull(_registry.GetEntry(0, typeof(SettingsScreenView)));
-            Assert.IsNull(_registry.FindEntry(typeof(SettingsScreenView)));
+            Assert.IsFalse(_registry.TryGetEntry(0, typeof(SettingsScreenView), out ScreenEntry _));
             Assert.IsNull(_registry.GetScreenManager(3));
         }
 
@@ -89,7 +89,7 @@ namespace FlowIoC.Tests
             LogAssert.ignoreFailingMessages = true;
 
             Assert.IsFalse(_registry.RegisterScreen(entry));
-            Assert.IsNull(_registry.FindEntry(typeof(SettingsScreenView)));
+            Assert.IsFalse(_registry.TryGetEntry(0, typeof(SettingsScreenView), out ScreenEntry _));
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace FlowIoC.Tests
 
             _registry.RemoveEntry(entry);
 
-            Assert.IsNull(_registry.FindEntry(typeof(SettingsScreenView)));
+            Assert.IsFalse(_registry.TryGetEntry(0, typeof(SettingsScreenView), out ScreenEntry _));
             Assert.AreEqual(0, _registry.GetAllEntries().Count);
             Assert.AreEqual(0, _registry.GetManagerEntries(0).Count);
             Assert.AreEqual(0, _registry.GetTagEntries(ScreenTag.GroupA).Count);
@@ -182,6 +182,38 @@ namespace FlowIoC.Tests
             _registry.CopyDataFromConfig(data);
 
             Assert.AreEqual(0, data.LayerIndex);
+        }
+
+        [Test]
+        public void The_same_screen_can_be_registered_at_two_managers()
+        {
+            Assert.IsTrue(_registry.RegisterScreen(Entry<SettingsScreenView>(_owner, managerId: 0)));
+            Assert.IsTrue(_registry.RegisterScreen(Entry<SettingsScreenView>(_owner, managerId: 1)));
+
+            Assert.AreEqual(0, _registry.GetEntry(0, typeof(SettingsScreenView)).Screen.ManagerId);
+            Assert.AreEqual(1, _registry.GetEntry(1, typeof(SettingsScreenView)).Screen.ManagerId);
+        }
+
+        [Test]
+        public void Removing_one_registration_leaves_the_other_manager_alone()
+        {
+            ScreenEntry atZero = Entry<SettingsScreenView>(_owner, managerId: 0);
+            ScreenEntry atOne = Entry<SettingsScreenView>(_owner, managerId: 1);
+            _registry.RegisterScreen(atZero);
+            _registry.RegisterScreen(atOne);
+
+            _registry.RemoveEntry(atZero);
+
+            Assert.IsFalse(_registry.TryGetEntry(0, typeof(SettingsScreenView), out ScreenEntry _));
+            Assert.IsTrue(_registry.TryGetEntry(1, typeof(SettingsScreenView), out ScreenEntry remaining));
+            Assert.AreSame(atOne, remaining);
+        }
+
+        [Test]
+        public void A_lookup_for_a_screen_that_is_not_registered_is_silent()
+        {
+            Assert.IsFalse(_registry.TryGetEntry(0, typeof(ShopScreenView), out ScreenEntry entry));
+            Assert.IsNull(entry);
         }
     }
 }

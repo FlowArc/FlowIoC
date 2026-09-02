@@ -9,6 +9,6 @@ namespace FlowIoC.ScreenModule.Signals
     {
         public Signal<ScreenManagerVO> RegisterManager = new();
         public Signal<ScreenEntry> RegisterScreen = new();
-        public Signal<Type> UnRegisterScreen = new();
+        public Signal<int, Type> UnRegisterScreen = new();
     }
 }
