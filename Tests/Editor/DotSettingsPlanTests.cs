@@ -112,5 +112,31 @@ namespace FlowIoC.Tests
 
             CollectionAssert.AreEqual(new[] {MODULES_ROOT + "/GameplayModule/zScreenModules"}, skip);
         }
+
+        /// <summary>
+        /// The code generator asks the same question the settings file answers - which folder
+        /// names a namespace - but only about the folders inside the module, because the
+        /// containers above one never appear in a namespace it computes. Sharing the walk is
+        /// what stops the generator from writing a namespace the settings file contradicts.
+        /// </summary>
+        [Test]
+        public void The_folders_inside_a_module_can_be_planned_on_their_own()
+        {
+            List<string> skip = new DotSettingsPlan()
+                .SkipFoldersInside(
+                    MODULES_ROOT + "/GameplayModule/zScreenModules/HudScreenModule",
+                    Target(MODULES_ROOT + "/PlayerModule").Layout)
+                .Select(path => path.Replace('\\', '/'))
+                .ToList();
+
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    MODULES_ROOT + "/GameplayModule/zScreenModules/HudScreenModule/Scripts",
+                    MODULES_ROOT + "/GameplayModule/zScreenModules/HudScreenModule/Scripts/Runtime",
+                    MODULES_ROOT + "/GameplayModule/zScreenModules/HudScreenModule/Prefabs"
+                },
+                skip);
+        }
     }
 }

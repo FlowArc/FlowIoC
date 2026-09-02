@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A generated module's signal holders no longer keep `Scripts` in their namespace.** *Create
+  Module* wrote `Modules.PlayerModule.Scripts.Shared.Signals` while every module already on disk
+  said `Modules.PlayerModule.Shared.Signals`, so Rider reported the namespace as not matching the
+  file location and a namespace reorganise would have renamed a type nobody meant to touch. The
+  generator wrote its skip list into each assembly's `.csproj.DotSettings` and then read it back
+  from a project-wide `Project.DotSettings` that has never existed, so every folder counted as a
+  namespace provider. Both sides now answer from `DotSettingsPlan`, the one list the settings files
+  are written from, and the folder-to-segment decision moved into `FolderNamespaceSegments`, which
+  is covered by tests that need no project on disk.
+
 ### Changed
 
 - **`AssetServiceRoot` moved from `-10000` to `-1`**, the last seat in the Services band. It was
