@@ -60,6 +60,12 @@ namespace FlowIoC.BaseModule.Root
                 }
 
                 IContext context = (IContext) Activator.CreateInstance(contextType);
+
+                // Before any binding phase, so a context that reads its own configuration during
+                // one of them already has the Root's word for it.
+                if (context is ISubContextOverridable overridable)
+                    overridable.ApplyOverride(subContextData);
+
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.ContextName + " | Initialized");
                 context.Initialize(gameObject, initializeOrder, _rootsManager.InjectionBinderCrossContext, new List<IContext>(),
                     subContextData.IsTest);

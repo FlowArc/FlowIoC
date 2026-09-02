@@ -66,11 +66,18 @@ so follow the rules below deliberately.
 - A `ScreenView` wires its buttons in `OnEnable` and drops them in `OnDisable`, never in
   `Awake` or `Start`. A screen is pooled: hiding it deactivates the object and reopening it
   shows the same instance, so `Awake` runs once while the screen opens many times.
-- A screen module's context is the screen's whole declaration. It derives from
+- A screen module's context declares the screen. It derives from
   `ScreenSubContext<TView, TMediator>`, which binds the View to the Mediator, and it declares
-  where the prefab lives and how the screen behaves in a `ScreenCVO`:
+  where the prefab lives and how the screen behaves by default in a `ScreenCVO`:
   `Load = ScreenLoadCVO.Addressable("SettingsScreen")`, `Layer`, `Tag`, `ManagerId` and the two
   animation flags. There is no screen config asset.
+- The Root that lists a screen context may override that default. Ticking *Override Screen* on
+  the entry makes `ManagerId`, `Layer`, `Tag` and the two animation flags editable in the Root's
+  inspector, seeded from what the context declares; with the override off the same five are shown
+  read-only, so a Root always says how the screens it lists are configured. `Load` is never
+  overridable, because where a prefab lives is the module's business and not the scene's. Listing
+  the same screen context on two Roots with two `ManagerId`s registers it twice, and the two
+  registrations are opened, pooled and unregistered independently.
 - A screen context is a sub-context of the module the screen belongs to, listed in that
   module's Root with Auto Setup on - never in `ScreenRoot`. It registers the screen in `Setup`,
   so a screen whose module's Root is not in the scene is not registered, and `Open` reports
