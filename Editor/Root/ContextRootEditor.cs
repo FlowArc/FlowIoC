@@ -21,6 +21,7 @@ namespace FlowIoC.Editor.Root
         private ScreenOverrideSeed _seed;
         private ScreenOverrideSummary _summary;
         private SubContextFoldouts _foldouts;
+        private RootDirtyMarker _dirtyMarker;
 
         private void OnEnable()
         {
@@ -33,6 +34,8 @@ namespace FlowIoC.Editor.Root
 
             // The fold state itself lives in SessionState, so rebuilding this loses nothing.
             _foldouts = new SubContextFoldouts();
+
+            _dirtyMarker = new RootDirtyMarker();
         }
 
         public override void OnInspectorGUI()
@@ -599,20 +602,7 @@ namespace FlowIoC.Editor.Root
                 MarkDirty();
         }
 
-        private void MarkDirty()
-        {
-            var prefabScene = PrefabStageUtility.GetCurrentPrefabStage();
-            if (prefabScene != null)
-            {
-                EditorSceneManager.MarkSceneDirty(prefabScene.scene);
-            }
-            else if (PrefabUtility.IsOutermostPrefabInstanceRoot(_root.gameObject))
-            {
-                PrefabUtility.RecordPrefabInstancePropertyModifications(_root);
-            }
-            else
-                EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        }
+        private void MarkDirty() => _dirtyMarker.Mark(_root);
     }
 }
 #endif

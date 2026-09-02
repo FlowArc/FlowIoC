@@ -40,6 +40,7 @@ namespace FlowIoC.Editor.Help
                         new FlowConsolePage(),
                         new ModelViewerPage(),
                         new FolderPainterPage(),
+                        new ScreensPage(),
                         new AgentRulesPage(),
                         new AgentSkillsPage())),
                 new HelpSection("Modules", "Prefab Icon", ModuleSections())
