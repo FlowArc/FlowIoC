@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
+using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
@@ -326,19 +327,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
                 _generationState = GenerationState.InProgress;
 
-                ScreenConfigData screenConfigData = null;
-                if (_selectedModuleType == ModuleType.Screen && _screenConfigPreview != null)
+                ScreenModuleSettings screenSettings = null;
+                if (_selectedModuleType == ModuleType.Screen)
                 {
-                    screenConfigData = new ScreenConfigData
-                    {
-                        DefaultLayer = _screenConfigPreview.DefaultLayer,
-                        LoadType = _screenConfigPreview.LoadType,
-                        ResourcePath = _screenConfigPreview.ResourcePath,
-                        AddressableKey = _screenConfigPreview.AddressableKey,
-                        HasOpenAnimation = _screenConfigPreview.HasShowAnimation,
-                        HasCloseAnimation = _screenConfigPreview.HasHideAnimation,
-                        Tag = _screenConfigPreview.Tag
-                    };
+                    _screenSettings.AddressableKey = _moduleName + _moduleSuffix;
+                    screenSettings = _screenSettings;
                 }
 
                 ModuleGeneration.ModuleGenerator.CreateModuleStructure(
@@ -352,7 +345,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _createContext,
                     _createSignals,
                     _createScene,
-                    screenConfigData
+                    screenSettings
                 );
 
                 _generationState = GenerationState.Idle;

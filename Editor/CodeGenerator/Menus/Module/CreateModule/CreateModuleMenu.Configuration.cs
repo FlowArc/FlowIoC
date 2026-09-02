@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
-using FlowIoC.ScreenModule.Data;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
@@ -31,39 +31,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             SelectSignalsFolderByDefault();
             SelectSharedFolderByDefault();
 
-            if (_selectedModuleType == ModuleType.Screen)
-            {
-                CreatePreviewScreenConfig();
-            }
-            else
-            {
-                DestroyPreviewScreenConfig();
-            }
-        }
-
-        private void CreatePreviewScreenConfig()
-        {
-            DestroyPreviewScreenConfig();
-
-            _screenConfigPreview = CreateInstance<CD_Screen>();
-            _screenConfigPreview.name = "CD_Screen Preview";
-
-            _screenConfigEditor = UnityEditor.Editor.CreateEditor(_screenConfigPreview);
-        }
-
-        private void DestroyPreviewScreenConfig()
-        {
-            if (_screenConfigEditor != null)
-            {
-                DestroyImmediate(_screenConfigEditor);
-                _screenConfigEditor = null;
-            }
-
-            if (_screenConfigPreview != null)
-            {
-                DestroyImmediate(_screenConfigPreview);
-                _screenConfigPreview = null;
-            }
+            // A fresh screen starts from the defaults; the previous type's inputs do not carry over.
+            _screenSettings = new ScreenModuleSettings();
         }
     }
 }

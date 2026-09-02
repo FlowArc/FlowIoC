@@ -117,7 +117,7 @@ genType.GetMethod("CreateModuleStructure",
         System.IO.Path.Combine(UnityEngine.Application.dataPath, "Modules"),
         System.Enum.Parse(modType, "Main"),
         selected, configMap, actionNames,
-        true, true, true, false, null                      // root, context, signals, screen, screenConfig
+        true, true, true, false, null                      // root, context, signals, screen, screenSettings
     });
 ```
 

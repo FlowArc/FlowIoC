@@ -28,26 +28,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING: a screen declares itself in its context. The `CD_Screen` asset is gone.** A screen
+  module's context now derives from `ScreenSubContext<TView, TMediator>`, which binds the View to
+  the Mediator, and declares where the prefab lives and how the screen behaves in a `ScreenCVO` -
+  `Load = ScreenLoadCVO.Addressable("SettingsScreen")`, `Layer`, `Tag`, `ManagerId`, the two
+  animation flags. The context registers the screen with the service in `Setup`; when the screen is
+  instantiated the service tells the prefab's `ViewInjector` which context owns the view
+  (`ViewInjector.AssignContext`), so the mediator comes from the context that bound it instead of
+  being reflected into `ScreenRoot`'s context from strings in an asset.
+
+  Gone with the asset: the type-name strings and the AppDomain scan that resolved them, the
+  `ScreenConfigAdapter`, the `ScreenManager`'s config list, the `DirectPrefab` load type (a context
+  cannot hold a prefab reference; `Addressable` and `Resource` remain), and
+  `Tools/FlowIoC/Screen Config Manager` with its Help page. `Create Module` writes the context, adds
+  it to the parent module's Root prefab, and the screen's test Root lists that same context instead
+  of re-declaring the screen.
+
+  Upgrading: on the first Editor open, the package generates a context for every `CD_Screen` asset
+  whose screen has none, attaches it to the parent Root where it can find one, and asks before
+  deleting the assets. A screen that already has a hand-written context, or that used
+  `DirectPrefab`, is reported with the `Screen` block to paste, because that file is yours. The
+  legacy `CD_Screen` type is kept editor-only for this, and goes in the following release.
+
 - **BREAKING: every ScriptableObject the package ships now carries the data-type prefix its own
   rules ask for.** `CD_PoolGroup` already followed the table; the rest did not. The editor-only
   assets became `ED_CodeGenerator`, `ED_ModuleIndex`, `ED_FolderPainter`, `ED_Header` and
   `ED_MainModuleDirectoryStructure` / `ED_ScreenModuleDirectoryStructure` /
-  `ED_TestModuleDirectoryStructure`, and the two configs a game reads at runtime became
-  `CD_FlowConsole` and `CD_Screen`. The serializable classes they are built out of took the
+  `ED_TestModuleDirectoryStructure`, and the config a game reads at runtime became
+  `CD_FlowConsole`. The serializable classes they are built out of took the
   matching suffixes: `FolderEVO`, `ModuleDescriptorEVO`, the nine `FolderPainter*EVO` rule types,
   and `CD_FlowConsole.FlowConsoleLogTypeCVO`.
 
-  `ScreenConfig` and `FlowConsoleSettings` were public, so code that names either type has to be
-  updated to `CD_Screen` and `CD_FlowConsole`. Nothing else about them changed.
+  `FlowConsoleSettings` was public, so code that names it has to be updated to `CD_FlowConsole`.
+  Nothing else about it changed.
 
   The asset files were renamed with the types. The assets FlowIoC writes into a project are moved
   by the path migrator on the first editor tick after the upgrade, keeping their GUIDs and
   everything configured in them, so a project keeps its log types, folder colors and generator
-  settings. A game's own screen config assets keep working untouched - a `ScreenManager` holds
-  them by GUID - and `Create Module` names new ones `CD_<Screen>.asset` from here on. The
-  Addressables label on screen config entries is deliberately still `ScreenConfig`: it is a
-  project-side identifier rather than a type name, and renaming it would orphan every entry
-  already labelled.
+  settings.
 
 - **BREAKING: the Folder Drawer is now the Folder Painter.** The menu item is
   `Tools/FlowIoC/Folder Painter`, the types are `FolderPainter`, `FolderPainterWindow`,

@@ -93,7 +93,6 @@ namespace FlowIoC.Tests
                 "Flow Console",
                 "Model Viewer",
                 "Folder Painter",
-                "Screen Config Manager",
                 "Agent Rules",
                 "Agent Skills"
             }, ChildTitles("Editor Tools"));

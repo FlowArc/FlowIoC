@@ -17,6 +17,18 @@ namespace FlowIoC.BaseModule.Injectable.Components
 
         private RootsManager _rootsManager;
 
+        private IContext _assignedContext;
+
+        /// <summary>
+        /// Names the context this object's views belong to, for a view that is not authored under
+        /// its module's Root - a screen the screen service instantiates and parents under a layer,
+        /// for example. Set it before the object is activated; every view on the object then
+        /// registers against this context instead of the one found by bubbling up the hierarchy.
+        /// </summary>
+        public void AssignContext(IContext context) => _assignedContext = context;
+
+        internal IContext AssignedContext => _assignedContext;
+
         #region Unity Methods
 
         private void Start()
@@ -30,7 +42,9 @@ namespace FlowIoC.BaseModule.Injectable.Components
             {
                 ViewInjectorData viewInjectorData = viewDataList[i];
 
-                if (viewInjectorData.UseBubbleUp)
+                if (_assignedContext != null)
+                    context = _assignedContext;
+                else if (viewInjectorData.UseBubbleUp)
                     context = (transform.GetComponent<IView>()).FindViewContext();
                 else if (viewInjectorData.UseRootSelection)
                     context = viewInjectorData.SelectedRoot.GetContext();
@@ -70,8 +84,20 @@ namespace FlowIoC.BaseModule.Injectable.Components
                 view.UnRegister();
             }
         }
-        
-        public IContext GetContextOfView(IView view) => _viewRegistrationDataDict[view];
+
+        /// <summary>
+        /// The context a view was registered against. A screen registers before Unity's Start has
+        /// built the dictionary, so the assigned context is answered first.
+        /// </summary>
+        public IContext GetContextOfView(IView view)
+        {
+            if (_assignedContext != null)
+                return _assignedContext;
+
+            return _viewRegistrationDataDict != null && _viewRegistrationDataDict.TryGetValue(view, out IContext context)
+                ? context
+                : null;
+        }
 
         #endregion
 

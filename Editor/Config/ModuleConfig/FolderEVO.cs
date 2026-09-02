@@ -48,7 +48,11 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             Models,
             UnityObjects,
             ValueObjects,
+
+            // Retired: a screen declares itself in its context, so there is no config asset and no
+            // folder for one. The value stays for the same reason ScreenViews' does.
             ScreenConfigs,
+
             SubModules,
             TestModules,
             ScreenModules,

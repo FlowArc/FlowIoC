@@ -16,41 +16,26 @@ namespace FlowIoC.Editor.Addressables
     }
 
     /// <summary>
-    /// Which Addressables entries a screen wants, worked out from its name alone. This is the part
-    /// of registration that can be read and tested without an Editor; ScreenAddressables is the
-    /// thin piece that talks to Unity.
+    /// Which Addressables entry a screen's prefab wants, worked out from its name alone. This is the
+    /// part of registration that can be read and tested without an Editor; ScreenAddressables is
+    /// the thin piece that talks to Unity.
     ///
     /// AssetPath is left for the caller to fill, because the generator knows where it just wrote
-    /// the files and the installer has to go and find them.
+    /// the prefab and the installer has to go and find it.
     /// </summary>
     internal class ScreenAddressableEntries
     {
-        internal const string ConfigGroup = "Local_Screen-Configs";
-
-        // A project-side Addressables label, not a type name: it is written into the consuming
-        // project's Addressables settings, so it stays what it has always been even though the
-        // asset it labels is now CD_Screen. Renaming it would orphan every entry already labelled.
-        internal const string ConfigLabel = "ScreenConfig";
         internal const string PrefabLabel = "ScreenPrefab";
         private const string GroupPrefix = "Local_Screen-";
         private const string ScreenSuffix = "Screen";
 
-        internal ScreenAddressableEntry[] For(string screenName)
+        internal ScreenAddressableEntry For(string screenName)
         {
-            return new[]
+            return new ScreenAddressableEntry
             {
-                new ScreenAddressableEntry
-                {
-                    Address = screenName,
-                    GroupName = GroupPrefix + WithoutScreenSuffix(screenName),
-                    Label = PrefabLabel
-                },
-                new ScreenAddressableEntry
-                {
-                    Address = "CD_" + screenName,
-                    GroupName = ConfigGroup,
-                    Label = ConfigLabel
-                }
+                Address = screenName,
+                GroupName = GroupPrefix + WithoutScreenSuffix(screenName),
+                Label = PrefabLabel
             };
         }
 

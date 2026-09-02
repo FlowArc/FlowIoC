@@ -36,13 +36,6 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             {
                 FolderName = "Scriptables", Type = FolderEVO.FolderType.Folder, IsMandatory = false, IsOptional = true, IsNamespaceProvider = true,
                 SubFolders = new List<FolderEVO>()
-                {
-                    new FolderEVO()
-                    {
-                        FolderName = "ScreenConfigs", Type = FolderEVO.FolderType.ScreenConfigs, IsMandatory = false, IsOptional = true,
-                        IsNamespaceProvider = true
-                    }
-                }
             },
             new FolderEVO
             {
@@ -283,6 +276,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 
             bool healed = config.EnsureSharedBranch(settings);
             healed |= config.EnsureSharedSignalsFolder(settings);
+            healed |= config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
 
             if (healed)
             {
@@ -314,11 +308,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     false, true),
                 CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Scenes], FolderEVO.FolderType.Scenes, null, false,
                     true),
-                CreateFolder("Scriptables", FolderEVO.FolderType.Folder, new List<FolderEVO>
-                {
-                    CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenConfigs],
-                        FolderEVO.FolderType.ScreenConfigs, null, false, true)
-                }, false, true, true),
+                CreateFolder("Scriptables", FolderEVO.FolderType.Folder, new List<FolderEVO>(), false, true, true),
                 CreateFolder("Scripts", FolderEVO.FolderType.Folder, new List<FolderEVO>
                 {
                     CreateFolder("Runtime", FolderEVO.FolderType.Folder, new List<FolderEVO>

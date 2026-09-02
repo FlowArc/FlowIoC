@@ -1,10 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.Modules;
-using FlowIoC.ScreenModule.Data;
-using FlowIoC.ScreenModule.Enums;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -52,8 +51,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private List<string> _actionNames = new();
         private Vector2 _actionScrollPosition;
 
-        private CD_Screen _screenConfigPreview;
-        private UnityEditor.Editor _screenConfigEditor;
+        private ScreenModuleSettings _screenSettings = new ScreenModuleSettings();
 
         private void OnEnable()
         {
@@ -122,7 +120,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             EditorGUILayout.EndHorizontal();
 
             if (_selectedModuleType == ModuleType.Screen)
-                DrawScreenConfigPreview();
+                DrawScreenSettings();
 
             if (!string.IsNullOrEmpty(_moduleName))
                 DisplayFolderStructurePreview();
@@ -136,8 +134,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             GUILayout.FlexibleSpace();
             DisplayCreateModuleButton();
-
-            UpdateAddressableKeyManually();
 
             EditorGUILayout.EndVertical();
         }
@@ -158,17 +154,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 _generationState = GenerationState.Completed;
             }
         }
-    }
-
-    internal class ScreenConfigData
-    {
-        public int DefaultLayer;
-        public ScreenLoadType LoadType;
-        public string ResourcePath;
-        public string AddressableKey;
-        public bool HasOpenAnimation;
-        public bool HasCloseAnimation;
-        public ScreenTag Tag;
     }
 }
 #endif

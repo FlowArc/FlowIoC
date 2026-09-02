@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Data;
-using FlowIoC.ScreenModule.Model.Config;
+using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.Model.Runtime;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 
@@ -10,7 +10,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
 {
     public class ScreenBuilderSubService : IScreenBuilderSubService
     {
-        [Inject] private IScreenConfigModel _screenConfigModel { get; set; }
+        [Inject] private IScreenRegistryModel _registry { get; set; }
         [Inject] private IScreenRuntimeModel _screenRuntimeModel { get; set; }
         [Inject] private ShowSubService _show { get; set; }
         [Inject] private HideSubService _hide { get; set; }
@@ -26,20 +26,22 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
             {
                 _currentScreenBody = screen;
                 _currentScreenData = _currentScreenBody.Data;
-                _screenConfigModel.CopyDataFromConfig(_currentScreenData);
+                _registry.CopyDataFromConfig(_currentScreenData);
             }
             else
             {
                 _currentScreenData = new ScreenVO {ScreenType = typeof(T), ManagerId = managerId};
 
-                var config = _screenConfigModel.GetScreenConfig(managerId, typeof(T));
-                if (config == null)
+                ScreenEntry entry = _registry.GetEntry(managerId, typeof(T));
+                if (entry == null)
                 {
-                    FlowLogger.LogError(SystemLogType.Screen, $"[ScreenService.Open] {typeof(T).Name} aborted: screen config not found (manager: {managerId})");
+                    FlowLogger.LogError(SystemLogType.Screen,
+                        $"[ScreenService.Open] {typeof(T).Name} aborted: not registered at manager {managerId}. Is the Root of the module that owns it in the scene?");
                     _openAborted = true;
                     return this;
                 }
-                _screenConfigModel.CopyDataFromConfig(_currentScreenData, config);
+
+                _registry.CopyDataFromConfig(_currentScreenData, entry.Screen);
             }
 
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Open] {_currentScreenData.ScreenType.Name}");
@@ -120,6 +122,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
                 Reset();
                 return true;
             }
+
             if (CheckScreenDuplication()) return true;
             if (CheckIsLayerFull()) return true;
             return false;
@@ -127,8 +130,9 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
 
         private bool CheckScreenDuplication()
         {
-            if (!_screenRuntimeModel.IsScreenActive(_currentScreenData.ScreenType, _currentScreenData.ManagerId, out IScreenBody screenBody)) return false;
-            
+            if (!_screenRuntimeModel.IsScreenActive(_currentScreenData.ScreenType, _currentScreenData.ManagerId, out IScreenBody screenBody))
+                return false;
+
             if (!_currentScreenData.ForceOpenAtDuplication)
             {
                 FlowLogger.LogError(SystemLogType.Screen,
@@ -137,7 +141,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
                 Reset();
                 return true;
             }
-            
+
             FlowLogger.LogWarning(SystemLogType.Screen,
                 $"[ScreenService.Builder] Manager({_currentScreenData.ManagerId}) Screen {_currentScreenData.ScreenType.Name} is forced open!!!");
 
@@ -148,19 +152,19 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
         private bool CheckIsLayerFull()
         {
             if (!_screenRuntimeModel.IsLayerFull(_currentScreenData.LayerIndex, _currentScreenData.ManagerId, out _)) return false;
-            
+
             if (!_currentScreenData.ForceOpenAtFullLayer)
             {
                 FlowLogger.LogError(SystemLogType.Screen,
                     $"[ScreenService.Builder] Manager({_currentScreenData.ManagerId}) Layer {_currentScreenData.LayerIndex} is not empty");
-                
+
                 Reset();
                 return true;
             }
 
             FlowLogger.LogWarning(SystemLogType.Screen,
                 $"[ScreenService.Builder] Manager({_currentScreenData.ManagerId}) Layer {_currentScreenData.LayerIndex} is forced open!!!");
-            
+
             _hide.ScreenInLayer(_currentScreenData.LayerIndex, _currentScreenData.ManagerId, !_currentScreenData.ForceOpenAtFullLayerWithHideAnim);
             return false;
         }

@@ -1,8 +1,12 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using FlowIoC.BaseModule.Root;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule;
+using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Root;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,13 +20,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private static void HandleScreenModuleCreation(
             string moduleName,
             string modulePath,
+            string parentModulePath,
             string testModulesFolderName,
             List<FolderEVO> selectedOptionalFolders,
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
             ED_CodeGenerator codeGenSettings,
             List<string> actionNames,
             bool createScreen,
-            ScreenConfigData screenConfigData,
+            ScreenModuleSettings screenSettings,
             string parentSharedAssemblyName
         )
         {
@@ -62,14 +67,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             string viewsAndMediatorsPath = directoryConfigMap[ModuleType.Screen]
                 .FindFullFolderPathByID(FolderEVO.FolderType.ViewsAndMediators, modulePath);
-            string testViewsAndMediatorsPath = directoryConfigMap[ModuleType.Test]
-                .FindFullFolderPathByID(FolderEVO.FolderType.ViewsAndMediators, testModulePath);
             string scenePath = directoryConfigMap[ModuleType.Test]
                 .FindFullFolderPathByID(FolderEVO.FolderType.Scenes, testModulePath);
             string screenPrefabPath = directoryConfigMap[ModuleType.Screen]
                 .FindFullFolderPathByID(FolderEVO.FolderType.Prefabs, modulePath);
-            string screenConfigPath = directoryConfigMap[ModuleType.Screen]
-                .FindFullFolderPathByID(FolderEVO.FolderType.ScreenConfigs, modulePath);
             string rootsAndContextsPath = directoryConfigMap[ModuleType.Screen]
                 .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
             string testRootsAndContextsPath = directoryConfigMap[ModuleType.Test]
@@ -83,10 +84,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (!string.IsNullOrEmpty(sharedSignalsPath) && !Directory.Exists(sharedSignalsPath))
                 sharedSignalsPath = null;
 
-            // A screen's signals are not optional the way another module's are: the screen module
-            // generates no Context of its own, so the holder is the only surface anything outside
-            // the screen has to talk to it through. It goes in Shared, so a Connector can reach it
-            // without referencing the screen's own assembly.
+            // A screen's signals are not optional the way another module's are: a Connector reaches
+            // the screen through its holder, and the screen's own context binds it. It goes in
+            // Shared, so a Connector can reach it without referencing the screen's own assembly.
             string publicSignalsPath = string.IsNullOrEmpty(sharedSignalsPath) ? signalsPath : sharedSignalsPath;
 
             string signalsName = null;
@@ -112,24 +112,99 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames, false, signalsName, signalsNamespace);
 
+            string contextFullName = CreateScreenContext(rootsAndContextsPath, modulePath, moduleName,
+                screenSettings ?? new ScreenModuleSettings {AddressableKey = moduleName}, signalsName, signalsNamespace);
+
+            RegisterScreenContextOnParentRoot(parentModulePath, directoryConfigMap[ModuleType.Main],
+                contextFullName, moduleName + "Context");
+
+            EditorPrefs.SetString(KEY_SCREEN_CONTEXT_FULL_NAME, contextFullName);
+
             if (createScreen)
             {
                 CreateTestScene(scenePath, moduleName);
-                GameObject prefabAsset = CreateScreenPrefab(moduleName, screenPrefabPath);
-                CreateScreenConfig(screenConfigPath, moduleName, screenConfigData, prefabAsset);
+                CreateScreenPrefab(moduleName, screenPrefabPath);
                 EditorPrefs.SetBool(BOOL_CREATE_SCREEN, true);
             }
 
             CreateScreenRootAndContext(testRootsAndContextsPath, testModulePath, moduleName, true);
-            BindScreenMediationInTestContext(testRootsAndContextsPath, modulePath, moduleName);
+            ShowScreenInLaunch(testRootsAndContextsPath, moduleName + "TestContext", moduleName, modulePath);
+        }
 
-            if (!string.IsNullOrEmpty(signalsName))
+        /// <summary>
+        /// The screen's one declaration: its context, deriving from ScreenSubContext with the view
+        /// and mediator as type arguments and the Screen block filled from the window. Returns the
+        /// context's full name, which is what a Root's SubContextTypes entry stores.
+        /// </summary>
+        private static string CreateScreenContext(
+            string rootsAndContextsPath,
+            string modulePath,
+            string moduleName,
+            ScreenModuleSettings screenSettings,
+            string signalsName,
+            string signalsNamespace)
+        {
+            if (string.IsNullOrEmpty(rootsAndContextsPath))
             {
-                CodeGeneratorUtils.BindSignalsInContext(
-                    testRootsAndContextsPath + "/" + moduleName + "TestContext.cs", signalsName, signalsNamespace);
+                Debug.LogWarning(ROOTS_CONTEXTS_WARNING);
+                return null;
             }
 
-            ShowScreenInLaunch(testRootsAndContextsPath, moduleName + "TestContext", moduleName, "Runtime");
+            string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
+            string contextNamespace = $"{moduleNamespace}.RootsContexts";
+            string viewNamespace = $"{moduleNamespace}.ViewsMediators";
+            string contextName = moduleName + "Context";
+
+            string content = new ScreenContextTemplate().Render(
+                contextNamespace, contextName, moduleName + "View", moduleName + "Mediator", viewNamespace, screenSettings);
+
+            if (!Directory.Exists(rootsAndContextsPath))
+                Directory.CreateDirectory(rootsAndContextsPath);
+
+            string contextPath = rootsAndContextsPath + "/" + contextName + ".cs";
+            File.WriteAllText(contextPath, content);
+            AssetDatabase.Refresh();
+
+            if (!string.IsNullOrEmpty(signalsName))
+                CodeGeneratorUtils.BindSignalsInContext(contextPath, signalsName, signalsNamespace);
+
+            return $"{contextNamespace}.{contextName}";
+        }
+
+        /// <summary>
+        /// A screen context is a sub-context of the module it lives in, so the parent's Root prefab
+        /// gets the entry. The prefab is whichever one under the parent's Prefabs folder carries a
+        /// RootBase. When there is none - a parent created without a Root, or one kept in a scene -
+        /// the step is left to the inspector's Add Sub Context, and says so.
+        /// </summary>
+        private static void RegisterScreenContextOnParentRoot(
+            string parentModulePath,
+            DirectoryStructureConfig parentConfig,
+            string contextFullName,
+            string contextName)
+        {
+            if (string.IsNullOrEmpty(contextFullName))
+                return;
+
+            string prefabsPath = parentConfig.FindFullFolderPathByID(FolderEVO.FolderType.Prefabs, parentModulePath);
+
+            string prefabAssetPath = string.IsNullOrEmpty(prefabsPath) || !Directory.Exists(prefabsPath)
+                ? null
+                : Directory.GetFiles(prefabsPath, "*.prefab")
+                    .Select(NamespaceUtility.GetUnityAssetPath)
+                    .FirstOrDefault(path => AssetDatabase.LoadAssetAtPath<GameObject>(path)?.GetComponent<RootBase>() != null);
+
+            if (prefabAssetPath == null)
+            {
+                Debug.LogWarning(
+                    $"<color=cyan>[FlowIoC]</color> No Root prefab was found under '{prefabsPath}', so {contextName} is not attached to a Root yet. "
+                    + "Select the parent module's Root, press Add Sub Context in its inspector, pick "
+                    + $"{contextName} and leave Auto Setup ticked - the screen registers itself in Setup.");
+                return;
+            }
+
+            new RootPrefabSubContexts().Add(prefabAssetPath, contextFullName, contextName);
+            Debug.Log($"<color=cyan>[FlowIoC]</color> {contextName} added to the sub-contexts of '{prefabAssetPath}'.");
         }
 
         private static void CreateScreenViewAndMediator(
@@ -159,6 +234,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 actionNames,
                 isTest
             );
+
             CodeGeneratorUtils.CreateMediator(
                 mediatorName,
                 viewName,
@@ -213,43 +289,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             EditorPrefs.SetString(KEY_CONTEXT_NAMESPACE, rootsAndContextsNamespace);
         }
 
-        private static void BindScreenMediationInContext(string contextPath, string modulePath, string moduleName)
-        {
-            string viewName = moduleName + "View";
-            string mediatorName = moduleName + "Mediator";
-            string contextName = moduleName + "Context";
-
-            string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
-            string viewNamespace = $"{moduleNamespace}.ViewsMediators";
-
-            CodeGeneratorUtils.BindMediationInContext(
-                contextPath + "/" + contextName + ".cs",
-                viewName,
-                mediatorName,
-                viewNamespace
-            );
-        }
-
-        private static void BindScreenMediationInTestContext(string contextPath, string modulePath, string moduleName)
-        {
-            string contextName = moduleName + "TestContext";
-
-            string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
-            string viewNamespace = $"{moduleNamespace}.ViewsMediators";
-
-            CodeGeneratorUtils.BindMediationInScreenContext(
-                contextPath + "/" + contextName + ".cs",
-                viewNamespace
-            );
-        }
-
-        private static void ShowScreenInLaunch(string contextPath, string contextName, string screenName, string parentFolderPath)
+        private static void ShowScreenInLaunch(string contextPath, string contextName, string screenName, string modulePath)
         {
             CodeGeneratorUtils.ShowScreenInLaunch(
                 contextPath + "/" + contextName + ".cs",
                 screenName + "View",
-                screenName,
-                parentFolderPath
+                $"{NamespaceUtility.GetModuleNamespace(modulePath)}.ViewsMediators"
             );
         }
 
@@ -280,7 +325,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             scene.name = sceneName;
         }
 
-        private static GameObject CreateScreenPrefab(string moduleName, string screenPrefabPath)
+        private static void CreateScreenPrefab(string moduleName, string screenPrefabPath)
         {
             EditorPrefs.SetString(SCREEN_PREFAB_PATH, screenPrefabPath);
 
@@ -291,11 +336,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             string finalPrefabPath = Path.Combine(screenPrefabPath, $"{moduleName}.prefab").Replace("\\", "/");
             GameObject screenObj = new GameObject($"{moduleName}ScreenView", typeof(RectTransform));
-            GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(screenObj, finalPrefabPath);
+            PrefabUtility.SaveAsPrefabAsset(screenObj, finalPrefabPath);
             Object.DestroyImmediate(screenObj);
-            EditorPrefs.SetString(PREF_KEY_SCREEN_PREFAB_PATH, finalPrefabPath);
-
-            return prefabAsset;
         }
     }
 }

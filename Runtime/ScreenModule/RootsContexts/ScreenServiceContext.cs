@@ -1,6 +1,6 @@
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.ScreenModule.Commands;
-using FlowIoC.ScreenModule.Model.Config;
+using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.Model.Runtime;
 using FlowIoC.ScreenModule.Service;
 using FlowIoC.ScreenModule.Service.Sub;
@@ -20,16 +20,13 @@ namespace FlowIoC.ScreenModule.RootsContexts
 
             _screenServiceInternalSignals = InjectionBinderCrossContext.Bind<ScreenServiceInternalSignals>();
             InjectionBinderCrossContext.Bind<IScreenService, ScreenService>();
-            InjectionBinder.Bind<IScreenConfigModel, ScreenConfigModel>();
+            InjectionBinder.Bind<IScreenRegistryModel, ScreenRegistryModel>();
             InjectionBinder.Bind<IScreenRuntimeModel, ScreenRuntimeModel>();
 
-            // LoadByTag SubServices
             InjectionBinder.Bind<AddressableLoadSubService>();
             InjectionBinder.Bind<ResourceLoadSubService>();
-            InjectionBinder.Bind<DirectPrefabLoadSubService>();
             InjectionBinder.Bind<DisposeSubService>();
-            
-            // New SubServices
+
             InjectionBinder.Bind<ScreenBuilderSubService>();
             InjectionBinder.Bind<ShowSubService>();
             InjectionBinder.Bind<SetupSubService>();
@@ -38,10 +35,10 @@ namespace FlowIoC.ScreenModule.RootsContexts
             InjectionBinder.Bind<TryGetSubService>();
             InjectionBinder.Bind<HideSubService>();
             InjectionBinder.Bind<UnloadSubService>();
-            
+
             CommandBinder.Bind(_screenServiceInternalSignals.RegisterManager).ToSequence<RegisterScreenManagerCommand>();
-            CommandBinder.Bind(_screenServiceInternalSignals.RegisterConfigs).ToSequence<RegisterScreenConfigCommand>();
-            CommandBinder.Bind(_screenServiceInternalSignals.UnRegisterConfigs).ToSequence<UnRegisterScreenConfigCommand>();
+            CommandBinder.Bind(_screenServiceInternalSignals.RegisterScreen).ToSequence<RegisterScreenCommand>();
+            CommandBinder.Bind(_screenServiceInternalSignals.UnRegisterScreen).ToSequence<UnRegisterScreenCommand>();
         }
     }
 }

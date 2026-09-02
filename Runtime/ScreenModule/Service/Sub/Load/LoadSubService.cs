@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
-using FlowIoC.ScreenModule.Model.Config;
+using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.Model.Runtime;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 
@@ -13,82 +14,104 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
 {
     public class LoadSubService
     {
-        [Inject] private IScreenConfigModel _configModel { get; set; }
+        [Inject] private IScreenRegistryModel _registry { get; set; }
         [Inject] private IScreenRuntimeModel _runtimeModel { get; set; }
-        [Inject] private DirectPrefabLoadSubService _directPrefabLoadSubService{ get; set; }
-        [Inject] private AddressableLoadSubService _addressableLoadService{ get; set; }
-        [Inject] private ResourceLoadSubService _resourceLoadSubService{ get; set; }
+        [Inject] private AddressableLoadSubService _addressableLoadService { get; set; }
+        [Inject] private ResourceLoadSubService _resourceLoadSubService { get; set; }
 
-        public async void All(bool isTest = false, Action completeCallback = null, Action<int,int> loadingProgressCallback = null)
+        public async void All(bool isTest = false, Action completeCallback = null, Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.All]");
-            List<CD_Screen> allConfigs = _configModel.GetAllRegisteredConfigs();
-            await LoadByConfigList(allConfigs, isTest, completeCallback, loadingProgressCallback);
+            await LoadEntries(_registry.GetAllEntries(), completeCallback, loadingProgressCallback);
         }
-        public async void ScreensAtManager(int managerId = 0, bool isTest = false, Action completeCallback = null, Action<int,int> loadingProgressCallback = null)
+
+        public async void ScreensAtManager(int managerId = 0, bool isTest = false, Action completeCallback = null,
+            Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.ScreensAtManager]");
-            List<CD_Screen> allConfigs = _configModel.GetManagerConfigs(managerId);
-            await LoadByConfigList(allConfigs, isTest, completeCallback, loadingProgressCallback);
+            await LoadEntries(_registry.GetManagerEntries(managerId), completeCallback, loadingProgressCallback);
         }
-        public async void ByTag(ScreenTag tag, bool isTest = false, Action completeCallback = null, Action<int,int> loadingProgressCallback = null)
+
+        public async void ByTag(ScreenTag tag, bool isTest = false, Action completeCallback = null,
+            Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.ByTag] {tag}");
-            var tagConfigs = _configModel.GetTagConfigs(tag);
-            await LoadByConfigList(tagConfigs, isTest, completeCallback, loadingProgressCallback);
+            await LoadEntries(_registry.GetTagEntries(tag), completeCallback, loadingProgressCallback);
         }
-        private async Task LoadByConfigList(List<CD_Screen> configs, bool isTest, 
-            Action completeCallback, Action<int,int> loadingProgressCallback)
+
+        private async Task LoadEntries(List<ScreenEntry> entries, Action completeCallback, Action<int, int> loadingProgressCallback)
         {
-            for (var index = 0; index < configs.Count; index++)
+            for (int index = 0; index < entries.Count; index++)
             {
-                var config = configs[index];
-                if (_configModel.IsScreenLoaded(config, out _))
+                ScreenEntry entry = entries[index];
+
+                if (entry.Loaded != null)
                 {
-                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load][LoadByConfigList] Screen is already loaded: {config.AddressableKey}");
-                    loadingProgressCallback?.Invoke(index,configs.Count);
+                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load] Screen is already loaded: {entry.ViewType.Name}");
+                    loadingProgressCallback?.Invoke(index, entries.Count);
                     continue;
                 }
-                var screen = await LoadScreenByConfig(config);
+
+                IScreenBody screen = await LoadScreen(entry);
                 if (screen == null) continue;
+
                 screen.Data.ScreenType = screen.GetType();
-                _configModel.CopyDataFromConfig(screen.Data, config);
+                screen.Data.ManagerId = entry.Screen.ManagerId;
+                _registry.CopyDataFromConfig(screen.Data, entry.Screen);
                 _runtimeModel.AddToPassivePool(screen);
-                loadingProgressCallback?.Invoke(index,configs.Count);
+                loadingProgressCallback?.Invoke(index, entries.Count);
             }
 
             completeCallback?.Invoke();
         }
-        
+
         internal async Task<IScreenBody> Screen(ScreenVO screenData)
         {
-            var config = _configModel.GetScreenConfig(screenData.ManagerId, screenData.ScreenType);
-            return await LoadScreenByType(config);
+            ScreenEntry entry = _registry.GetEntry(screenData.ManagerId, screenData.ScreenType);
+            return entry == null ? null : await LoadScreen(entry);
         }
-        private async Task<IScreenBody> LoadScreenByConfig(CD_Screen config)
+
+        /// <summary>
+        /// Loads by whichever kind the declaration names, then tells the instance's ViewInjector
+        /// which context owns it. The instance is parented under a ScreenRoot layer later, and
+        /// bubbling up from there would find ScreenRoot's context, which knows nothing about this
+        /// view; the owner is the context that bound its mediator.
+        /// </summary>
+        private async Task<IScreenBody> LoadScreen(ScreenEntry entry)
         {
-            return await LoadScreenByType(config);
-        }
-        private async Task<IScreenBody> LoadScreenByType(CD_Screen config)
-        {
-            switch (config.LoadType)
+            IScreenBody screen;
+
+            switch (entry.Screen.Load.Kind)
             {
                 case ScreenLoadType.Addressable:
-                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load] Attempting Addressable load for {config.AddressableKey}");
-                    return await _addressableLoadService.LoadScreen(config);
+                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load] Addressable load for {entry.Screen.Load.Key}");
+                    screen = await _addressableLoadService.LoadScreen(entry);
+                    break;
 
                 case ScreenLoadType.Resource:
-                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load] Attempting Resource load for {config.AddressableKey}");
-                    return await _resourceLoadSubService.LoadScreen(config);
-
-                case ScreenLoadType.DirectPrefab:
-                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load] Attempting DirectPrefab load for {config.AddressableKey}");
-                    return await _directPrefabLoadSubService.LoadScreen(config);
+                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load] Resource load for {entry.Screen.Load.Key}");
+                    screen = await _resourceLoadSubService.LoadScreen(entry);
+                    break;
 
                 default:
-                    FlowLogger.LogError(SystemLogType.Screen, $"[ScreenService.Load][LoadScreenByType] Unknown load type {config.LoadType} for screen {config.AddressableKey}");
-                    return default;
+                    FlowLogger.LogError(SystemLogType.Screen,
+                        $"[ScreenService.Load] Unknown load kind {entry.Screen.Load.Kind} for screen {entry.ViewType.Name}");
+                    return null;
             }
+
+            if (screen == null)
+                return null;
+
+            ViewInjector injector = screen.transform.GetComponent<ViewInjector>();
+            if (injector == null)
+            {
+                FlowLogger.LogError(SystemLogType.Screen,
+                    $"[ScreenService.Load] {entry.ViewType.Name}'s prefab has no ViewInjector, so its mediator cannot be registered.");
+                return screen;
+            }
+
+            injector.AssignContext(entry.Owner);
+            return screen;
         }
     }
 }

@@ -64,8 +64,9 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Rule("Screen - one UI screen or popup.");
             painter.Paragraph(
                 "Named <Name>ScreenModule and written into its parent's zScreenModules folder. It "
-                + "comes with a View, a Mediator and a CD_Screen asset already registered with "
-                + "the Screen module, and optionally its own scene. List the screen's actions in "
+                + "comes with a View, a Mediator, its signal holder, and a context deriving from "
+                + "ScreenSubContext that declares where the prefab lives - added to the parent "
+                + "module's Root for you - and optionally its own scene. List the screen's actions in "
                 + "the panel and they are put on both the View and the Mediator, so the button you "
                 + "name here arrives already wired. A screen belongs to the module whose feature it "
                 + "shows, which is the direction the nesting rule enforces.");

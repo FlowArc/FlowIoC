@@ -51,8 +51,6 @@ namespace FlowIoC.Editor.CodeGenerator
         internal static readonly string TempScreenViewPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenView.cs";
         internal static readonly string TempScreenMediatorPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenMediator.cs";
 
-        internal static readonly string TempScreenContextPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenContext.cs";
-        internal static readonly string TempScreenRootPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenRoot.cs";
 
         internal static readonly string TempScreenTestContextPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestContext.cs";
         internal static readonly string TempScreenTestRootPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestRoot.cs";

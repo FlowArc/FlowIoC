@@ -23,7 +23,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
             painter.SubHeading("Create Module");
             painter.Paragraph("Tools > FlowIoC > Create Module. The one you reach for first.");
             painter.Bullet("Main - a normal feature module under Assets/Modules/<Name>Module/.");
-            painter.Bullet("Screen - a screen module: view, mediator, screen config and an optional scene.");
+            painter.Bullet("Screen - a screen module: view, mediator, signals, a context that declares the screen, and an optional scene.");
             painter.Bullet("Test - an isolated test module, wrapped in editor-only directives.");
             painter.Paragraph(
                 "It writes the folder tree, Modules.<Name>.asmdef, and - unless you clear the "
