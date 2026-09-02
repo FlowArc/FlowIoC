@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.BaseModule.Contexts;
+using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using UnityEditor;
 using UnityEngine;
 
@@ -117,32 +118,16 @@ namespace FlowIoC.Editor.CodeGenerator
             return result;
         }
 
-        private static string ParseAssemblyName(string rawName)
-        {
-            if (string.IsNullOrEmpty(rawName))
-                return string.Empty;
-
-
-            if (rawName.EndsWith("Screen", StringComparison.OrdinalIgnoreCase))
-            {
-                var core = rawName.Substring(0, rawName.Length - "Screen".Length);
-                return "Modules." + core + ".Screen";
-            }
-
-            else if (rawName.EndsWith("Test", StringComparison.OrdinalIgnoreCase))
-            {
-                var core = rawName.Substring(0, rawName.Length - "Test".Length);
-                return "Modules." + core + ".Test";
-            }
-
-            else if (rawName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
-            {
-                var core = rawName.Substring(0, rawName.Length - "Module".Length);
-                return "Modules." + core;
-            }
-
-            return "Modules." + rawName;
-        }
+        /// <summary>
+        /// The assembly a module name stands for, answered by the one class that knows the rules.
+        /// This used to be a fifth hand-rolled copy of them, and it read one suffix off the end
+        /// without asking what the rest was: "AaaScreenTest" lost its "Test" and became
+        /// "Modules.AaaScreen.Test", while the asmdef the generator had just written next to it
+        /// said "Modules.Aaa.Screen.Test". The lookup then found no assembly, and the screen's
+        /// test Root was never placed in its scene.
+        /// </summary>
+        private static string ParseAssemblyName(string rawName) =>
+            new ModuleAssemblyName().FromModuleName(rawName);
     }
 }
 #endif

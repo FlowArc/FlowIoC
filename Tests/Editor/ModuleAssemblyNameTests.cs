@@ -112,5 +112,38 @@ namespace FlowIoC.Tests
             Assert.AreEqual(string.Empty, new ModuleAssemblyName().From(null));
             Assert.AreEqual(string.Empty, new ModuleAssemblyName().From("   "));
         }
+
+        /// <summary>
+        /// After a reload the generator knows a module by the name the window was given, without
+        /// the "Module" suffix the folder carries. Reading the role suffixes off that shorter form
+        /// is what sent the assembly lookup after "Modules.AaaScreen.Test" while the asmdef beside
+        /// it said "Modules.Aaa.Screen.Test", so the screen's test Root was never placed.
+        /// </summary>
+        [Test]
+        public void A_module_name_without_the_Module_suffix_names_the_same_assembly()
+        {
+            ModuleAssemblyName names = new ModuleAssemblyName();
+
+            Assert.AreEqual("Modules.Aaa.Screen", names.FromModuleName("AaaScreen"));
+            Assert.AreEqual("Modules.Aaa.Screen.Test", names.FromModuleName("AaaScreenTest"));
+            Assert.AreEqual("Modules.Player", names.FromModuleName("Player"));
+            Assert.AreEqual("Modules.Player.Test", names.FromModuleName("PlayerTest"));
+        }
+
+        [Test]
+        public void A_module_name_that_already_carries_Module_is_read_as_the_folder_it_is()
+        {
+            ModuleAssemblyName names = new ModuleAssemblyName();
+
+            Assert.AreEqual("Modules.Aaa.Screen.Test", names.FromModuleName("AaaScreenTestModule"));
+            Assert.AreEqual("Modules.Screen", names.FromModuleName("ScreenModule"));
+        }
+
+        [Test]
+        public void A_module_name_of_nothing_yields_nothing()
+        {
+            Assert.AreEqual(string.Empty, new ModuleAssemblyName().FromModuleName(null));
+            Assert.AreEqual(string.Empty, new ModuleAssemblyName().FromModuleName("   "));
+        }
     }
 }
