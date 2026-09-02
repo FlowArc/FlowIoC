@@ -133,23 +133,20 @@ genuinely read, and every one of those is a coupling you will have to maintain.
 ## Namespaces and the Module Index
 
 Namespaces are derived from the module's path, so moving a folder in the Project
-window desynchronises the code from its location. Two tools fix it:
+window desynchronises the code from its location.
 
-**`Assets ▸ FlowIoC ▸ Update Module's Namespaces`** — select the module folder and
-every namespace inside is rewritten to match where it now lives. Run it immediately
-after a move or a rename.
+**`Tools ▸ FlowIoC ▸ Module Scan`** reads every module and reports what has fallen out
+of step — a stale module index, a missing assembly definition, a `.csproj.DotSettings`
+that no longer describes the module's folders — and repairs from one button everything
+that can be repaired without renaming an assembly.
 
-**`Tools ▸ FlowIoC ▸ Module Configuration`**
-
-| Item | Does |
-|---|---|
-| `Detect & Fix Module Index` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
-| `Update Namespace Settings` | Changes the namespace prefix the generators use for new code |
+Rider's own *Adjust Namespaces* is what rewrites the `namespace` line inside a `.cs`
+file once the settings are right. Module Scan's job is to make sure they are.
 
 Every module lives in one asset, `ED_ModuleIndex.asset`, beside the code
 generator settings. It is a cache, not something you hand-edit: name, kind and
 nesting are all read back off the folder tree on every rebuild, so a stale entry is
-fixed by running *Detect & Fix* — or just reopening the project, which rebuilds it
+fixed by running *Module Scan* — or just reopening the project, which rebuilds it
 the same way on its own. Each module's folder-type GUID map is durable state
 instead — carried forward rather than read back off the tree, and healed only
 lazily, not on every rebuild.
@@ -161,7 +158,7 @@ serialized file. Your own lines in that file are left alone — only what sits b
 asset has to untrack it once with
 `git rm --cached Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_ModuleIndex.asset*`.
 
-The symptom that you needed *Detect & Fix* is a generator writing into the wrong
+The symptom that you needed *Module Scan* is a generator writing into the wrong
 folder, or a Root whose sub-context list has gone empty after a move.
 
 ---
@@ -201,7 +198,7 @@ when the project compiles.
 ### Fix namespaces at the moment you move something
 
 ```
-✅ Move the folder, then run Update Module's Namespaces, then compile.
+✅ Move the folder, then run Module Scan and Fix All, then compile.
 ```
 
 ```
@@ -240,8 +237,8 @@ public class OnPurchaseSignalCommand : Command { }
 
 ### The generator writes into the wrong module
 
-The module index is stale — usually after a folder move. Run *Module Configuration ▸
-Detect & Fix Module Index* to rebuild it.
+The module index is stale — usually after a folder move. Run *Tools ▸ FlowIoC ▸
+Module Scan* and Fix All to rebuild it.
 
 ### A new module does not appear in the sub-context picker
 

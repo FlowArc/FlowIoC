@@ -59,9 +59,36 @@ namespace FlowIoC.Editor.CodeStyle
         /// </summary>
         internal bool TryWrite(out string path, out string error, out bool changed)
         {
+            if (!TryCompose(out path, out string content, out changed, out error))
+                return false;
+
+            if (!changed) return true;
+
+            try
+            {
+                File.WriteAllText(path, content);
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = $"FlowIoC could not write '{path}': {exception.Message}";
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The merge of the shipped template over whatever the project already has, without
+        /// writing it. <paramref name="changed"/> says whether the file on disk differs from that
+        /// merge, so a caller that only wants to know - Module Scan's report, which must not
+        /// change anything while it scans - can ask without touching the file.
+        /// </summary>
+        internal bool TryCompose(out string path, out string content, out bool changed, out string error)
+        {
             path = null;
-            error = null;
+            content = null;
             changed = false;
+            error = null;
 
             if (!File.Exists(_templatePath))
             {
@@ -82,19 +109,16 @@ namespace FlowIoC.Editor.CodeStyle
                     entries[shipped.Key] = shipped.Value;
                 }
 
-                string content = Compose(entries);
+                content = Compose(entries);
 
                 changed = !File.Exists(path)
                           || !string.Equals(File.ReadAllText(path), content, StringComparison.Ordinal);
-
-                if (changed)
-                    File.WriteAllText(path, content);
 
                 return true;
             }
             catch (Exception exception)
             {
-                error = $"FlowIoC could not write '{path}': {exception.Message}";
+                error = $"FlowIoC could not read '{path}': {exception.Message}";
                 return false;
             }
         }
@@ -107,9 +131,26 @@ namespace FlowIoC.Editor.CodeStyle
         {
             var removed = new List<string>();
 
+            foreach (string file in Orphaned())
+            {
+                File.Delete(file);
+                removed.Add(file);
+            }
+
+            return removed.ToArray();
+        }
+
+        /// <summary>
+        /// The same files CleanupOrphaned would remove, without removing them, so a report can
+        /// name them before anyone decides to sweep.
+        /// </summary>
+        internal string[] Orphaned()
+        {
+            var orphaned = new List<string>();
+
             string[] solutions = FindSolutions();
             if (solutions.Length == 0)
-                return removed.ToArray();
+                return orphaned.ToArray();
 
             var solutionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string solution in solutions)
@@ -128,11 +169,10 @@ namespace FlowIoC.Editor.CodeStyle
                 if (solutionNames.Contains(name))
                     continue;
 
-                File.Delete(file);
-                removed.Add(file);
+                orphaned.Add(file);
             }
 
-            return removed.ToArray();
+            return orphaned.ToArray();
         }
 
         private string ResolveSolutionName()

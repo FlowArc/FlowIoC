@@ -15,10 +15,7 @@ The tools keep those conventions correct so you do not have to.
 | `Tools/FlowIoC/Console/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
-| `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
-| `Tools/FlowIoC/Module Configuration/…` | Repair module metadata and namespace settings |
-| `Assets/FlowIoC/Create Assembly` | Assembly definition for the selected folder |
-| `Assets/FlowIoC/Update Module's Namespaces` | Rewrite namespaces after a move or rename |
+| `Tools/FlowIoC/Module Scan` | Report every module's folders, assemblies and namespace settings, and repair what is safe to repair |
 
 ---
 
@@ -53,35 +50,36 @@ class belongs to, then writes it into the right folder with the right namespace.
 View generator also creates the prefab and adds the `ViewInjector` component, which
 is easy to forget by hand and produces a view that silently never registers.
 
-### Assembly Creator / Create Assembly
-
-`Assets ▸ FlowIoC ▸ Create Assembly` adds an assembly definition for the folder you
-have selected, named to match the module convention. The Assembly Creator Window does
-the same for several modules at once.
-
-Assembly definitions are what make a module's boundary real: without one, "this
-module does not reference that module" is a rule nobody enforces.
-
 ---
 
 ## Keeping Things Correct
 
-### Module Configuration
+### Module Scan
 
-| Item | Does |
+`Tools ▸ FlowIoC ▸ Module Scan` reads every module in the project and reports what each
+one is missing:
+
+| Checks | Looks for |
 |---|---|
-| `Detect & Fix Module Index` | Rescans the folder tree and rebuilds the project's module index, so every module's name, kind and nesting match what is actually on disk |
-| `Update Namespace Settings` | Changes the namespace prefix the generators use |
+| Mandatory folders | The folders this module type's layout says must exist |
+| Shared assembly | A module with a `Scripts/Shared` folder must have the assembly that folder is for |
+| Assembly definition | One asmdef at the module root, named to the module convention |
+| References | Its own Shared assembly, its parent's Shared assembly, and for a test module its parent's own assembly |
+| Namespace settings | The root `.csproj.DotSettings` that tells Rider which folders produce a namespace |
+| The project | The module index against the folder tree, orphaned settings files, the Flow log types, the solution code style |
 
-Run *Detect & Fix* after moving folders around in the Project window. The symptom
-that you needed it is a generator writing into the wrong place, or a Root whose
-sub-context list has gone empty.
+`Fix All` repairs everything that can be repaired without guessing. It will not rename
+an assembly or remove a reference — renaming one moves every asmdef that names it and
+the settings file named after it, so those rows stay red and say what to do.
 
-### Update Module's Namespaces
+Assembly definitions are what make a module's boundary real: without one, "this
+module does not reference that module" is a rule nobody enforces. A module with no
+assembly is also invisible to the namespace settings, which skip it silently — Module
+Scan is where that gap becomes visible.
 
-Select a module folder, run it, and every namespace inside is rewritten to match the
-module's current location. This is the counterpart to renaming a module: Unity moves
-the files, this fixes the code.
+Run it after moving folders around in the Project window. The symptom that you needed
+it is a generator writing into the wrong place, or a Root whose sub-context list has
+gone empty. If anything is wrong, the console says so once on editor load.
 
 ### Delete Module
 

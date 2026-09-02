@@ -1,9 +1,6 @@
 ﻿#if UNITY_EDITOR
-using FlowIoC.Editor.CodeGenerator.Detector;
 using FlowIoC.Editor.CodeGenerator.Menus;
-using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule;
-using FlowIoC.Editor.CodeGenerator.Provider;
 using UnityEditor;
 using UnityEngine;
 using CreateModuleMenu = FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule.CreateModuleMenu;
@@ -42,18 +39,6 @@ namespace FlowIoC.Editor.CodeGenerator
         private static void CreateCommandV2()
         {
             EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
-        }
-
-        [MenuItem("Tools/FlowIoC/Module Configuration/Detect & Fix Module Index", false, -1249)]
-        private static void FixModuleIndex()
-        {
-            ModuleAutoDetector.DetectAndRegisterModulesOnStartup();
-        }
-
-        [MenuItem("Tools/FlowIoC/Module Configuration/Update Namespace Settings", false, -1247)]
-        private static void UpdateNamespaceSettingsMenu()
-        {
-            NamespaceProvider.UpdateNamespaceSettings();
         }
     }
 }

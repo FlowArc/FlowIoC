@@ -3,7 +3,7 @@
 using System;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Detector;
-using FlowIoC.Editor.CodeGenerator.Provider;
+using FlowIoC.Editor.ModuleScan;
 using FlowIoC.Editor.Console;
 using UnityEditor;
 using UnityEngine;
@@ -212,7 +212,7 @@ namespace FlowIoC.Editor.ModuleInstall
             FlowLogTypeGenerator.Generate();
 
             // <Assembly>.csproj.DotSettings at the project root, for this module and every other.
-            NamespaceProvider.UpdateNamespaceSettings();
+            new ModuleRepair().FixAll();
 
             Debug.Log($"<color=cyan>[FlowIoC]</color> Module installed: {TargetFolder}/{moduleFolderName}");
         }

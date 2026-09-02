@@ -25,8 +25,8 @@ namespace FlowIoC.Editor.CodeStyle
     ///
     /// The rules that decide what a `CD_` asset or a `PVO` value object may be called live in the
     /// solution level settings file, and Rider only reads it under the solution's own name. Until
-    /// this ran, that file was written by `Tools/FlowIoC/Module Configuration/Update Namespace
-    /// Settings` and nothing else, so a project that installed the package and generated a module
+    /// this ran, that file was written by a menu item the reader had to know about and nothing
+    /// else - it is `Tools/FlowIoC/Module Scan` now - so a project that installed the package and generated a module
     /// had every convention documented and none of them enforced. The rules ship with the package;
     /// they should arrive with it, the way the agent rules and the skills already do.
     ///
