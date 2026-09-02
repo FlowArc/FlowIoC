@@ -1,4 +1,3 @@
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.ViewsMediators.View;
 using FlowIoC.ScreenModule.Data;
@@ -12,7 +11,6 @@ namespace FlowIoC.ScreenModule.ViewsMediators.Manager
     /// context registers itself with the service.
     /// </summary>
     [RequireComponent(typeof(ViewInjector))]
-    [CustomClassHeader("SCREEN MANAGER", 1.0f, 0.5f, 0.0f, 0.8f, 0.3f, 0.0f, 14, "⚡ ")]
     internal class ScreenManager : MonoBehaviour, IView
     {
         public bool IsRegistered { get; set; }

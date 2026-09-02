@@ -24,10 +24,19 @@ namespace FlowIoC.BaseModule.Root
         /// </summary>
         public bool OverrideScreen;
 
+        /// <summary>Which screen manager this registration belongs to.</summary>
         public int ScreenManagerId;
+
+        /// <summary>How far up the stack the screen is drawn. A higher layer covers a lower one.</summary>
         public int ScreenLayer;
+
+        /// <summary>What kind of surface this is - a screen in its own right, or a popup over one.</summary>
         public ScreenTag ScreenTag;
+
+        /// <summary>Whether the screen plays its own animation when it opens, instead of appearing.</summary>
         public bool ScreenHasShowAnimation;
+
+        /// <summary>Whether the screen plays its own animation when it closes.</summary>
         public bool ScreenHasHideAnimation;
     }
 }

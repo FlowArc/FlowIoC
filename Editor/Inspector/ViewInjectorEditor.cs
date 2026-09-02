@@ -4,6 +4,7 @@ using System.Linq;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.BaseModule.ViewsMediators.Utils;
+using FlowIoC.BaseModule.ViewsMediators.View;
 using FlowIoC.BaseModule.ViewsMediators.View.Data;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -11,7 +12,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
-namespace FlowIoC.BaseModule.ViewsMediators.View.Editor
+namespace FlowIoC.Editor.Inspector
 {
     [CustomEditor(typeof(ViewInjector))]
     [CanEditMultipleObjects]
@@ -21,9 +22,11 @@ namespace FlowIoC.BaseModule.ViewsMediators.View.Editor
 
         private List<IView> _viewList;
         private ViewInjector _target;
+        private FlowComponentBar _bar;
 
         private void OnEnable()
         {
+            _bar = new FlowComponentBar();
             _target = target as ViewInjector;
             if (_target.viewDataList == null)
                 _target.viewDataList = new List<ViewInjectorData>();
@@ -31,6 +34,8 @@ namespace FlowIoC.BaseModule.ViewsMediators.View.Editor
 
         public override void OnInspectorGUI()
         {
+            _bar.Draw(target != null ? target.GetType() : null);
+
             FindViews();
             CreateOrDeleteViewInjectorData();
             DrawViewInjectorDataList();

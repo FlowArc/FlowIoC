@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.BaseModule.ViewsMediators.Utils;
@@ -9,6 +10,11 @@ using UnityEngine;
 
 namespace FlowIoC.BaseModule.Injectable.Components
 {
+    /// <summary>
+    /// Wears the Mediator colour. A Mediator is not a component, so that colour would otherwise
+    /// never appear in an inspector - and this is the piece that hands a View to one.
+    /// </summary>
+    [FlowHeader(FlowRole.Mediator, label: "View Injector")]
     public class ViewInjector : MonoBehaviour
     {
         public List<ViewInjectorData> viewDataList;
@@ -51,7 +57,7 @@ namespace FlowIoC.BaseModule.Injectable.Components
                 else
                     context = _rootsManager.GetRootByName(viewInjectorData.RootName).GetContext();
 
-                _viewRegistrationDataDict.Add((IView)viewInjectorData.View, context);
+                _viewRegistrationDataDict.Add((IView) viewInjectorData.View, context);
 
                 //if (_rootsManager.IsContextReady(context))
                 if (context.IsStarted)
@@ -80,7 +86,7 @@ namespace FlowIoC.BaseModule.Injectable.Components
                 ViewInjectorData viewInjectorData = viewDataList[i];
                 if (!viewInjectorData.IsRegistered)
                     continue;
-                IView view = (IView)viewInjectorData.View;
+                IView view = (IView) viewInjectorData.View;
                 view.UnRegister();
             }
         }
@@ -108,7 +114,7 @@ namespace FlowIoC.BaseModule.Injectable.Components
             bool foundAny = false;
             for (int i = 0; i < viewDataList.Count; i++)
             {
-                if (!_viewRegistrationDataDict.TryGetValue((IView)viewDataList[i].View, out var registeredContext)
+                if (!_viewRegistrationDataDict.TryGetValue((IView) viewDataList[i].View, out var registeredContext)
                     || registeredContext != context) continue;
                 RegisterView(viewDataList[i]);
                 foundAny = true;
@@ -119,12 +125,12 @@ namespace FlowIoC.BaseModule.Injectable.Components
                 _rootsManager.OnContextReady -= OnContextsReadyListener;
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RegisterView(ViewInjectorData viewInjectorData)
         {
             if (viewInjectorData.AutoRegister)
-                TryToInject((IView)viewInjectorData.View);
+                TryToInject((IView) viewInjectorData.View);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,7 +150,7 @@ namespace FlowIoC.BaseModule.Injectable.Components
         {
             for (int i = 0; i < viewDataList.Count; i++)
             {
-                if (viewDataList[i].View == (Object)view)
+                if (viewDataList[i].View == (Object) view)
                     return viewDataList[i];
             }
 
@@ -174,7 +180,7 @@ namespace FlowIoC.BaseModule.Injectable.Components
             {
                 ViewInjectorData viewInjectorData = new ViewInjectorData
                 {
-                    View = (Object)viewComponentList[i],
+                    View = (Object) viewComponentList[i],
                     AutoRegister = true,
                     IsRegistered = false
                 };

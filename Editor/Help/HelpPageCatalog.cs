@@ -164,6 +164,22 @@ namespace FlowIoC.Editor.Help
 
             return Pages[0];
         }
+
+        /// <summary>
+        /// The page with this exact title, or null when the catalogue has none. A caller that
+        /// links to a page - the inspector's header bar does - needs to know when the page it
+        /// wants was never written, so it can leave the link out rather than open the wrong one.
+        /// </summary>
+        public IHelpPage FindPage(string title)
+        {
+            foreach (IHelpPage page in Pages)
+            {
+                if (page.Title == title)
+                    return page;
+            }
+
+            return null;
+        }
     }
 }
 
