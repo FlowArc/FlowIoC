@@ -21,12 +21,24 @@ namespace FlowIoC.Editor.ModuleScan
     {
         internal IReadOnlyList<string> SkipFoldersFor(ModuleTargetEVO module, string modulesRoot)
         {
-            var skip = new List<string>();
-
-            if (module?.Layout?.RootFolders != null && !string.IsNullOrEmpty(module.AbsolutePath))
-                Walk(module.AbsolutePath, module.Layout.RootFolders, skip);
+            var skip = new List<string>(SkipFoldersInside(module?.AbsolutePath, module?.Layout));
 
             AddContainersAbove(module?.AbsolutePath, modulesRoot, skip);
+
+            return skip;
+        }
+
+        /// <summary>
+        /// Only the folders inside the module. The code generator asks for these when it names
+        /// the namespace of a file it is about to write, and the containers a module hangs under
+        /// never appear in such a namespace.
+        /// </summary>
+        internal IReadOnlyList<string> SkipFoldersInside(string modulePath, DirectoryStructureConfig layout)
+        {
+            var skip = new List<string>();
+
+            if (layout?.RootFolders != null && !string.IsNullOrEmpty(modulePath))
+                Walk(modulePath, layout.RootFolders, skip);
 
             return skip;
         }

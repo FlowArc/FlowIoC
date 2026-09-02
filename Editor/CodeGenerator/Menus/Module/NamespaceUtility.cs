@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using FlowIoC.Editor.ModuleScan;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
@@ -21,42 +22,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         private const string LEGACY_CODE_GENERATED_SECTION = "CodeGeneratedEntries";
         private static readonly CultureInfo TurkishCulture = new CultureInfo("tr-TR");
         internal static readonly string[] SkipFolderNames = {"zScreenModules", "zSubModules", "zTestModules"};
-
-        public static bool IsFolderNamespaceProvider(string folderPath)
-        {
-            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-
-            string fileName = "Project.DotSettings";
-            string finalDotSettingsPath = Path.Combine(projectRoot, fileName);
-
-            if (!File.Exists(finalDotSettingsPath))
-                return true;
-
-            var doc = new XmlDocument();
-            doc.Load(finalDotSettingsPath);
-
-            var nsManager = new XmlNamespaceManager(doc.NameTable);
-            nsManager.AddNamespace("x", XAML_NAMESPACE);
-            nsManager.AddNamespace("s", XAML_ASSEMBLY);
-
-            string relativePath = NormalizePath(folderPath)
-                .Replace(NormalizePath(Application.dataPath), "Assets")
-                .Replace("/", "_005C");
-
-            if (string.IsNullOrEmpty(relativePath))
-                return true;
-
-            string key = $"/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/={relativePath}/@EntryIndexedValue";
-
-            XmlNode skipNode = doc.SelectSingleNode($"//s:Boolean[@x:Key='{key}']", nsManager);
-            if (skipNode != null &&
-                skipNode.InnerText.Equals("True", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            return true;
-        }
 
         public static void SetNamespaceProvider(
             string assetFolderPath,
@@ -376,7 +341,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
             ModuleRegistry registry = new ModuleRegistryFactory().FromProject();
 
-            string moduleFolder = FindNearestModuleFolder(registry, fileDirectory);
+            string moduleFolder = FindNearestModuleFolder(registry, fileDirectory, out ModuleDescriptorEVO module);
             if (string.IsNullOrEmpty(moduleFolder))
             {
                 return "Modules";
@@ -384,56 +349,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
             string baseNamespace = GetModuleNamespace(registry, moduleFolder);
 
-            string relativeSubPath = "";
-            try
-            {
-                relativeSubPath = Path.GetRelativePath(moduleFolder, fileDirectory);
-            }
-            catch
-            {
-                if (fileDirectory.StartsWith(moduleFolder))
-                {
-                    relativeSubPath = fileDirectory.Substring(moduleFolder.Length);
-                }
-            }
+            // The folders that name nothing come from the same plan that writes the module's
+            // .csproj.DotSettings, so the namespace written into a file and the one Rider reads
+            // off its location are answered by one list rather than two.
+            IReadOnlyList<string> skipFolders = new DotSettingsPlan().SkipFoldersInside(
+                moduleFolder,
+                new DirectoryStructureConfigProvider().ConfigFor(module.Kind));
 
-            if (string.IsNullOrWhiteSpace(relativeSubPath))
-            {
-                return baseNamespace;
-            }
+            IReadOnlyList<string> segments = new FolderNamespaceSegments()
+                .Between(moduleFolder, fileDirectory, skipFolders);
 
-            char[] trimChars = {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar};
-            relativeSubPath = relativeSubPath.Trim(trimChars);
-
-            string[] subFolders = relativeSubPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-            List<string> includedFolders = new List<string>();
-
-            string currentPath = moduleFolder;
-            foreach (string sf in subFolders)
-            {
-                if (string.IsNullOrEmpty(sf))
-                    continue;
-
-                currentPath = Path.Combine(currentPath, sf);
-
-                if (IsFolderNamespaceProvider(currentPath))
-                {
-                    includedFolders.Add(sf);
-                }
-            }
-
-            if (includedFolders.Count > 0)
-            {
-                return baseNamespace + "." + string.Join(".", includedFolders);
-            }
-
-            return baseNamespace;
+            return segments.Count > 0
+                ? baseNamespace + "." + string.Join(".", segments)
+                : baseNamespace;
         }
 
-        private static string FindNearestModuleFolder(ModuleRegistry registry, string startDirectory)
+        private static string FindNearestModuleFolder(
+            ModuleRegistry registry,
+            string startDirectory,
+            out ModuleDescriptorEVO module)
         {
-            if (!registry.TryGetNearestModule(GetUnityAssetPath(startDirectory), out ModuleDescriptorEVO module))
+            if (!registry.TryGetNearestModule(GetUnityAssetPath(startDirectory), out module))
                 return string.Empty;
 
             return new ModuleAssetPathResolver().ToAbsolutePath(registry.PathOf(module));
