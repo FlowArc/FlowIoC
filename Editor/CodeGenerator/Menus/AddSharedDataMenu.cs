@@ -38,7 +38,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private Vector2 _scrollPosition;
         private string _lastResult;
 
-        [MenuItem("Tools/FlowIoC/Add Shared Data", false, 5)]
+        [MenuItem("Tools/FlowIoC/Add Shared Data", false, -1295)]
         private static void ShowWindow()
         {
             GetWindow<AddSharedDataMenu>(WINDOW_TITLE);

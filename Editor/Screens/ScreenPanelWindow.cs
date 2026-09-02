@@ -24,7 +24,7 @@ namespace FlowIoC.Editor.Screens
     /// </summary>
     internal class ScreenPanelWindow : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/Screens", false, 152)]
+        [MenuItem("Tools/FlowIoC/Screens", false, -1148)]
         internal static void Open()
         {
             ScreenPanelWindow window = GetWindow<ScreenPanelWindow>("Screens");

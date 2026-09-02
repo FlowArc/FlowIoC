@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.FolderPainter
     /// </summary>
     internal class FolderPainterWindow : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/Folder Painter", false, 150)]
+        [MenuItem("Tools/FlowIoC/Folder Painter", false, -1150)]
         internal static void Open()
         {
             FolderPainterWindow window = GetWindow<FolderPainterWindow>("Folder Painter");
