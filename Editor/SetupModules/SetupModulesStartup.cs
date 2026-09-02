@@ -6,7 +6,7 @@ using FlowIoC.Editor.Addressables;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.CodeGenerator.Detector;
-using FlowIoC.Editor.CodeGenerator.Provider;
+using FlowIoC.Editor.ModuleScan;
 using FlowIoC.Editor.Console;
 using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
@@ -115,7 +115,7 @@ namespace FlowIoC.Editor.SetupModules
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
             ModuleAutoDetector.RescanModules();
             FlowLogTypeGenerator.Generate();
-            NamespaceProvider.UpdateNamespaceSettings();
+            new ModuleRepair().FixAll();
         }
 
         /// <summary>

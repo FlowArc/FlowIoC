@@ -89,7 +89,7 @@ namespace FlowIoC.Tests
             CollectionAssert.AreEqual(new[]
             {
                 "Code Generators",
-                "Module Configuration",
+                "Module Scan",
                 "Flow Console",
                 "Model Viewer",
                 "Folder Painter",

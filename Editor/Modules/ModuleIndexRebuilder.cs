@@ -6,6 +6,7 @@ using System.Linq;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.ModuleScan;
 using UnityEditor;
 using UnityEngine;
 
@@ -76,8 +77,7 @@ namespace FlowIoC.Editor.Modules
             var scanner = new ModuleTreeScanner(resolver);
             var scanned = new List<ScannedModule>();
 
-            scanned.AddRange(scanner.Scan(Path.Combine(Application.dataPath, "Modules")));
-            foreach (string modulesRoot in EmbeddedPackageModuleRoots())
+            foreach (string modulesRoot in new ModuleScanRoots().All(Path.GetDirectoryName(Application.dataPath)))
                 scanned.AddRange(scanner.Scan(modulesRoot));
 
             ED_ModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
@@ -88,16 +88,6 @@ namespace FlowIoC.Editor.Modules
             AssetDatabase.SaveAssets();
 
             return index;
-        }
-
-        private IEnumerable<string> EmbeddedPackageModuleRoots()
-        {
-            string packagesPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Packages"));
-            if (!Directory.Exists(packagesPath)) yield break;
-
-            foreach (string packageDir in Directory.GetDirectories(packagesPath))
-            foreach (string modulesDir in Directory.GetDirectories(packageDir, "Modules", SearchOption.AllDirectories))
-                yield return modulesDir;
         }
 
         private string GuidOfAbsolutePath(string absolutePath)

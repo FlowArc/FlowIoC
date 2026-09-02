@@ -28,6 +28,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **One *Module Scan* panel replaces the three tools that used to repair a module.** *Assembly
+  Creator Window*, *Module Configuration ▸ Detect & Fix Module Index* and *Module Configuration ▸
+  Update Namespace Settings* are gone. Between them they had a dependency order nothing stated -
+  the namespace settings silently skip a module whose index entry is stale or whose assembly is
+  missing - and none of them could say what was actually wrong. Assembly Creator could not fire at
+  all: its checkbox was disabled whenever a module already had an asmdef, and *Create Module*
+  always writes one.
+
+  The panel reads every module from the folder tree rather than from the index, so its rows are
+  right even when the index is not, and reports nine things: mandatory folders, the Shared
+  assembly, the assembly definition, its references, the root `.csproj.DotSettings`, and for the
+  project itself the module index, orphaned settings files, the Flow log types and the solution
+  code style. `Fix All` repairs everything that does not require renaming an assembly or removing
+  a reference someone added by hand; those rows stay red and say what to do. If anything is wrong,
+  the console carries one line about it on editor load.
+
 - **BREAKING: a screen declares itself in its context. The `CD_Screen` asset is gone.** A screen
   module's context now derives from `ScreenSubContext<TView, TMediator>`, which binds the View to
   the Mediator, and declares where the prefab lives and how the screen behaves in a `ScreenCVO` -
@@ -87,6 +103,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ConnectorRoot` moved from `101` to `98`.** The frame barrier already guarantees that every
   signal holder is bound before any `Setup` runs, so the Connector never needed to be last; `98`
   places it after the modules it wires and before the screen host and the entry point.
+
+### Removed
+
+- **The `Assets ▸ FlowIoC ▸ Create Assembly` and `Assets ▸ FlowIoC ▸ Update Module's Namespaces`
+  context menus.** Both wrote `.csproj.DotSettings` inside the module folder, where Rider never
+  reads it - the file has to sit beside the `.csproj`, which is at the project root - so neither
+  had any effect. Rewriting the `namespace` line inside `.cs` files goes with them: once the
+  settings file at the root is right, Rider's own *Adjust Namespaces* does that better, moving
+  files and fixing `using` directives as it goes.
 
 ## [1.3.1] - 2026-08-31
 

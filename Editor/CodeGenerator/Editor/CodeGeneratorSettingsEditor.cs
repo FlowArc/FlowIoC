@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
-using FlowIoC.Editor.CodeGenerator.Provider;
+using FlowIoC.Editor.ModuleScan;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
 using UnityEngine;
@@ -93,7 +93,7 @@ namespace FlowIoC.Editor.CodeGenerator.Editor
                     _settings.ApplyConfiguredFolderNames();
                     UpdateDirectoryStructureConfigs();
                     AssetDatabase.SaveAssets();
-                    NamespaceProvider.UpdateNamespaceSettings();
+                    new ModuleRepair().FixAll();
                     AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
                 }
