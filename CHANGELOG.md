@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A What's New tab on the Help window's Welcome page, and the window opens itself there once
+  after an update.** The window has always opened on the introduction, which is right the first
+  time somebody meets FlowIoC and wrong every time after a new version lands. The tab is read out
+  of the `CHANGELOG.md` the package ships, reduced to one line per entry: every entry's first
+  sentence, grouped under the version and section it was written in, newest first. Nothing is
+  written twice, so a release still means one file to update. The version a reader has seen is
+  remembered per person rather than per project, because a marker committed with the project
+  would be ticked by whoever updated the package and nobody who pulled afterwards would ever be
+  shown the notes.
+
 ### Fixed
 
 - **A generated module's signal holders no longer keep `Scripts` in their namespace.** *Create

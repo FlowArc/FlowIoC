@@ -2,11 +2,20 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Help.WhatsNew;
 
 namespace FlowIoC.Editor.Help.Pages
 {
     internal class WelcomePage : HelpPage
     {
+        /// <summary>
+        /// The reading the window lands on after the package has been updated, named here so
+        /// that the startup notice can ask for it rather than for a tab number.
+        /// </summary>
+        internal const string WHATS_NEW_TAB = "What's New";
+
+        private IReadOnlyList<WhatsNewVersionEVO> _releases;
+
         public WelcomePage() : base(Build())
         {
         }
@@ -18,6 +27,48 @@ namespace FlowIoC.Editor.Help.Pages
         public override string Icon => "console.infoicon";
 
         public override bool Featured => true;
+
+        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab(WHATS_NEW_TAB, DrawWhatsNew)
+        };
+
+        /// <summary>
+        /// What changed, newest first, read out of the changelog the package ships. Every entry
+        /// is one line: the detail is in CHANGELOG.md for whoever wants it, and a reader who has
+        /// just updated wants the headlines.
+        /// </summary>
+        private void DrawWhatsNew(HelpPainter painter)
+        {
+            _releases ??= new WhatsNewSource().Releases();
+
+            if (_releases.Count == 0)
+            {
+                painter.Note(
+                    "The changelog that ships with the package could not be read, so there is "
+                    + "nothing to show here.");
+
+                return;
+            }
+
+            painter.Rule("What changed, newest first. The full entries are in the package's CHANGELOG.md.");
+
+            foreach (WhatsNewVersionEVO release in _releases)
+            {
+                painter.Space();
+                painter.SubHeading(release.Date.Length > 0
+                    ? $"{release.Version}  -  {release.Date}"
+                    : release.Version);
+
+                foreach (WhatsNewGroupEVO group in release.Groups)
+                {
+                    painter.Rule(group.Title);
+
+                    foreach (string line in group.Lines)
+                        painter.Bullet(line);
+                }
+            }
+        }
 
         protected override void DrawBody(HelpPainter painter)
         {

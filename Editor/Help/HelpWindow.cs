@@ -82,16 +82,23 @@ namespace FlowIoC.Editor.Help
         /// reader lands on the page for what they were looking at rather than on the section it
         /// happens to sit in.
         /// </summary>
-        internal static void OpenPage(string pageTitle)
+        internal static void OpenPage(string pageTitle) => OpenPage(pageTitle, null);
+
+        /// <summary>
+        /// Opens the window on one topic and one of its readings. The startup notice asks for
+        /// Welcome's What's New this way, so that landing on a tab needs no knowledge of which
+        /// number that tab happens to be.
+        /// </summary>
+        internal static void OpenPage(string pageTitle, string tabTitle)
         {
             HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
             window.minSize = new Vector2(1120f, 600f);
             window.Show();
 
-            window.GoToPage(pageTitle);
+            window.GoToPage(pageTitle, tabTitle);
         }
 
-        private void GoToPage(string pageTitle)
+        private void GoToPage(string pageTitle, string tabTitle)
         {
             IHelpPage page = _catalog.FindPage(pageTitle);
 
@@ -99,8 +106,29 @@ namespace FlowIoC.Editor.Help
                 return;
 
             Select(page);
+            SelectTab(page, tabTitle);
             OpenCategoriesTo(page);
             Repaint();
+        }
+
+        /// <summary>
+        /// A page keeps the reading it was left on, so a tab that was asked for is set and a
+        /// caller that named none leaves the page as the reader had it. A title the page does
+        /// not offer changes nothing.
+        /// </summary>
+        private void SelectTab(IHelpPage page, string tabTitle)
+        {
+            if (string.IsNullOrEmpty(tabTitle))
+                return;
+
+            for (var i = 0; i < page.Tabs.Count; i++)
+            {
+                if (page.Tabs[i].Title != tabTitle) continue;
+
+                page.SelectedTab = i;
+
+                return;
+            }
         }
 
         /// <summary>
