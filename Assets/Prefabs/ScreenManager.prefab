@@ -477,7 +477,6 @@ MonoBehaviour:
     - {fileID: 6542845026532694594}
     - {fileID: 7430222619431687758}
     - {fileID: 5002259277600403754}
-  _screenConfigs: []
 --- !u!1 &7794377508841312619
 GameObject:
   m_ObjectHideFlags: 0

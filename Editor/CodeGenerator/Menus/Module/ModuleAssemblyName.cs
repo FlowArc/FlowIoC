@@ -58,6 +58,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         }
 
         /// <summary>
+        /// The same answer for a module named without its "Module" suffix - "MatchBoardScreen" or
+        /// "MatchBoardScreenTest", which is the shape the generator carries in EditorPrefs and
+        /// hands to the assembly lookup after a reload. The folder such a name stands for is that
+        /// name plus "Module", so that is what the rules above are asked about: reading the
+        /// suffixes off the shorter form instead is what produced "Modules.MatchBoardScreen.Test"
+        /// for a module whose assembly is "Modules.MatchBoard.Screen.Test".
+        /// </summary>
+        public string FromModuleName(string moduleName)
+        {
+            string name = moduleName?.Trim();
+
+            if (string.IsNullOrEmpty(name))
+                return string.Empty;
+
+            return From(name.EndsWith("Module", StringComparison.OrdinalIgnoreCase) ? name : name + "Module");
+        }
+
+        /// <summary>
         /// What stands in front of <paramref name="suffix"/>, or nothing when the name does not
         /// carry that suffix or is made of nothing else.
         /// </summary>
