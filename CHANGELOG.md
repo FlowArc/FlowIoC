@@ -5,7 +5,7 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2026-09-02
 
 ### Added
 
@@ -25,6 +25,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page.
 - **A `flowioc-connectors` skill**, covering the shape of a Connector sub-context, the `Connect`
   overloads, connection groups, and what to check when a signal is dispatched but never arrives.
+- **One visual language across every inspector.** A FlowIoC component now wears a bar that says
+  what it is and which module it comes from, coloured by its role: Root purple, Service blue,
+  System teal, View orange, Mediator its darker shade, Screen amber, Connector green, Adapter and
+  Test grey. Each colour is two values - a deep one the bar is filled with, dark enough that the
+  white title clears 4.5:1, and a vivid one for the stripe down its left edge and the help accents -
+  and the palette is covered by a test, so a colour that fails contrast or disappears against a
+  skin cannot be committed.
+
+  A Root takes the colour of whatever it roots, which is why `ScreenServiceRoot` reads as a Service
+  and `ConnectorRoot` as a Connector while a game module's Root stays a Root. A Service, a System
+  and a Connector sub-context are not components, so without that rule three of the colours would
+  never have been seen at all; the sub-context list badges connector and screen entries for the
+  same reason.
+- **A help button on every documented field, reading the code's own `///` summary.** Nothing is
+  written twice: the parser takes the summary above a field, follows the type's base chain, and a
+  field with no comment simply has no button. The Root's fields are documented for it, so the
+  lifecycle table explains itself. Where Odin is installed the button joins Odin's own drawer
+  chain, so `[Button]`, `[ShowIf]` and the rest keep drawing exactly as before.
+- **`[FlowHeader]`**, for a type whose role the package cannot read from the type itself. It also
+  takes an optional label, so a type can wear a role's colour without claiming to be one -
+  `ViewInjector` wears the Mediator colour and says `VIEW INJECTOR`.
+- **`Tools/FlowIoC/Inspector Bar`**, which turns all of this off for a project that wants its
+  inspectors untouched.
 
 ### Changed
 
@@ -68,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING: every ScriptableObject the package ships now carries the data-type prefix its own
   rules ask for.** `CD_PoolGroup` already followed the table; the rest did not. The editor-only
-  assets became `ED_CodeGenerator`, `ED_ModuleIndex`, `ED_FolderPainter`, `ED_Header` and
+  assets became `ED_CodeGenerator`, `ED_ModuleIndex`, `ED_FolderPainter` and
   `ED_MainModuleDirectoryStructure` / `ED_ScreenModuleDirectoryStructure` /
   `ED_TestModuleDirectoryStructure`, and the config a game reads at runtime became
   `CD_FlowConsole`. The serializable classes they are built out of took the
@@ -103,6 +126,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`ConnectorRoot` moved from `101` to `98`.** The frame barrier already guarantees that every
   signal holder is bound before any `Setup` runs, so the Connector never needed to be last; `98`
   places it after the modules it wires and before the screen host and the entry point.
+- **A Root's inspector is one lifecycle table.** Six option boxes and a status box that repeated
+  what they said became a single card: a row per phase, with the toggle that says whether it
+  happens on its own and - while the game runs - a badge for what has happened and a button to make
+  it happen now. Two bugs went with them: the *Bind Mediations* toggle wrote to
+  `AutoBindInjections` and so never saved, and a derived Root drew its own fields twice. Removing
+  an entry from the sub-context list now records an Undo, which it did not before.
+- **The shipped Roots are named after what they root**, so their colours follow from their names:
+  `CameraRoot` is `CameraSystemRoot`, `GameplayRoot` is `GameplaySystemRoot`, and the pool prefab
+  drops its `Variant` suffix.
+- **The help window's banner comes from the inspector palette.** It also gets darker: white on the
+  purple it used to be measured 3.7:1.
 
 ### Removed
 
@@ -112,6 +146,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   had any effect. Rewriting the `namespace` line inside `.cs` files goes with them: once the
   settings file at the root is right, Rider's own *Adjust Namespaces* does that better, moving
   files and fixing `using` directives as it goes.
+- **BREAKING: `CustomClassHeaderAttribute` is gone, and with it the header drawer nothing called.**
+  The attribute described a gradient bar in colours each type chose for itself, which is the
+  opposite of a shared language; a role decides the colour now, and `[FlowHeader]` is there for the
+  types whose role cannot be read from the type. `CustomHeaderDrawer`, `CustomHeaderEditor`,
+  `GenericCustomHeaderEditor` and the `ED_Header` asset they used were never called from anywhere
+  and go with it.
+
+  Upgrading: delete the attribute from your own types. Most need nothing in its place - a Root, a
+  View and a screen are recognised on their own.
 
 ## [1.3.1] - 2026-08-31
 
