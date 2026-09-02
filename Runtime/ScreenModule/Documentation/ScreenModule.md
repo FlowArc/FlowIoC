@@ -108,7 +108,7 @@ public class SettingsScreenMediator : IMediator
 
 ### 4. The screen context
 
-A screen module's context is its whole declaration. It derives from
+A screen module's context declares the screen. It derives from
 `ScreenSubContext<TView, TMediator>`, which binds the view to the mediator for you, and
 it says where the prefab lives and how the screen behaves in a `ScreenCVO`:
 
@@ -141,7 +141,7 @@ public class SettingsScreenContext : ScreenSubContext<SettingsScreenView, Settin
 
 | `ScreenCVO` field | Meaning |
 |---|---|
-| `Load` | `ScreenLoadCVO.Addressable(address)` or `ScreenLoadCVO.Resource(path)`. Required — a screen without it is refused at registration |
+| `Load` | `ScreenLoadCVO.Addressable(address)` or `ScreenLoadCVO.Resource(path)`. Required — a screen without it is refused at registration, and it is the one field a Root cannot override |
 | `Layer` | The layer this screen opens in unless `OpenInLayer` overrides it |
 | `ManagerId` | The `ScreenManager` it opens in. `0` unless you have more than one |
 | `Tag` | `Default` or `GroupA`…`GroupH` — used for bulk load, hide and unload |
@@ -154,6 +154,32 @@ screen with the service. When the screen is later instantiated, the service regi
 the view against this context, so the mediator is the one bound here even though the
 instance sits under `ScreenRoot`'s layers. A screen whose module's Root is not in the
 scene is not registered, and `Open` says so.
+
+#### Overriding the declaration from a Root
+
+What the context declares is the default. The Root that lists the context may override it: tick
+*Override Screen* on the sub-context entry in the Root's inspector and `ManagerId`, `Layer`,
+`Tag` and the two animation flags become editable, seeded from what the context declares so the
+edit starts from the real values. With the override off the same five are shown read-only, so the
+Root always says how the screen is configured without anyone opening the context class.
+
+`Load` is not in that list and never becomes editable. Where a prefab lives is the module's
+business, and a scene that could repoint it could send a screen at an address the module does not
+ship.
+
+This is what lets one screen live in two places. List the same screen context on two Roots — the
+*Add Sub Context* window refuses a duplicate within one Root, not across two — and give the second
+one a different `ManagerId`:
+
+| Root | Override | `ManagerId` | `Layer` |
+|---|---|---|---|
+| `MainRoot` | off | `0` (declared) | `3` (declared) |
+| `GameplayRoot` | on | `1` | `1` |
+
+Both register. `Open<SettingsScreenView>()` opens the one at manager 0 and
+`Open<SettingsScreenView>(1)` the one at manager 1, each with its own pooled instance, and one
+Root going away unregisters only its own. The two pooled instances are the cost: a screen used at
+two managers is held twice, because the two live under different managers' layers.
 
 `BaseScreenContext` stays the base for the context that owns a `ScreenManager` —
 `ScreenRoot`'s. A screen never derives from it.

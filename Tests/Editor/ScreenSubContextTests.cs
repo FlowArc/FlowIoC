@@ -8,6 +8,7 @@ using FlowIoC.BaseModule.Provider.Update;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ScreenModule.Data;
+using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.RootsContexts;
 using FlowIoC.ScreenModule.Service;
@@ -22,8 +23,10 @@ using UnityEngine;
 namespace FlowIoC.Tests
 {
     /// <summary>
-    /// A screen context is the screen's whole declaration: it binds the mediation itself and hands
-    /// the service its ScreenCVO in Setup, then takes it back when the context is destroyed.
+    /// A screen context declares the screen: it binds the mediation itself and hands the service
+    /// its ScreenCVO in Setup, then takes it back when the context is destroyed. What it hands
+    /// over is the declaration unless the Root listing it overrode the five values a scene may
+    /// decide - Load never being one of them.
     /// </summary>
     public class ScreenSubContextTests
     {
@@ -145,6 +148,82 @@ namespace FlowIoC.Tests
 
             Assert.AreEqual(0, managerId);
             Assert.AreEqual(typeof(ProbeScreenView), unregistered);
+        }
+
+        [Test]
+        public void The_resolved_declaration_is_read_once_and_kept()
+        {
+            ScreenCVO first = _context.Resolved;
+            ScreenCVO second = _context.Resolved;
+
+            Assert.AreSame(first, second);
+            Assert.AreNotSame(first, _context.Declaration);
+            Assert.AreEqual(3, first.Layer);
+        }
+
+        [Test]
+        public void An_override_replaces_the_declaration_but_never_its_load()
+        {
+            ((ISubContextOverridable) _context).ApplyOverride(new SubContextData
+            {
+                OverrideScreen = true,
+                ScreenManagerId = 1,
+                ScreenLayer = 7,
+                ScreenTag = ScreenTag.GroupB,
+                ScreenHasShowAnimation = true,
+                ScreenHasHideAnimation = true
+            });
+
+            ScreenCVO resolved = _context.Resolved;
+
+            Assert.AreEqual(1, resolved.ManagerId);
+            Assert.AreEqual(7, resolved.Layer);
+            Assert.AreEqual(ScreenTag.GroupB, resolved.Tag);
+            Assert.IsTrue(resolved.HasShowAnimation);
+            Assert.IsTrue(resolved.HasHideAnimation);
+            Assert.AreEqual("Probe", resolved.Load.Key);
+        }
+
+        [Test]
+        public void An_entry_that_does_not_override_leaves_the_declaration_alone()
+        {
+            ((ISubContextOverridable) _context).ApplyOverride(new SubContextData
+            {
+                OverrideScreen = false,
+                ScreenLayer = 7
+            });
+
+            Assert.AreEqual(3, _context.Resolved.Layer);
+        }
+
+        [Test]
+        public void Setup_registers_the_overridden_declaration()
+        {
+            ScreenEntry received = null;
+            _signals.RegisterScreen.AddListener(entry => received = entry);
+            ((ISubContextOverridable) _context).ApplyOverride(new SubContextData
+            {
+                OverrideScreen = true,
+                ScreenManagerId = 1,
+                ScreenLayer = 7
+            });
+
+            _context.Setup();
+
+            Assert.AreEqual(1, received.Screen.ManagerId);
+            Assert.AreEqual(7, received.Screen.Layer);
+            Assert.AreEqual("Probe", received.Screen.Load.Key);
+        }
+
+        [Test]
+        public void A_second_override_does_not_compound_onto_the_first()
+        {
+            ISubContextOverridable overridable = _context;
+            overridable.ApplyOverride(new SubContextData {OverrideScreen = true, ScreenLayer = 7});
+            overridable.ApplyOverride(new SubContextData {OverrideScreen = true, ScreenLayer = 2});
+
+            Assert.AreEqual(2, _context.Resolved.Layer);
+            Assert.AreEqual("Probe", _context.Resolved.Load.Key);
         }
     }
 }
