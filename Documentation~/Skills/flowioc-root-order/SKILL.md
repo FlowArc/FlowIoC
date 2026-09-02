@@ -33,9 +33,9 @@ can be and `100` is as late.
 | 99 | `ScreenRoot` | The screen manager owns the screen prefabs, so it is up before the flow that opens the first screen. |
 | 100 | `MainRoot` | The application's entry point. Its `Launch()` dispatches the first signal, last of all. |
 
-What the shipped Roots actually use: asset service `-10000`, screen service `-99`, pool service
-`-2`, gameplay `0`, input `0`, camera system `1`, `ScreenRoot` `99`, `MainRoot` `100`,
-`ConnectorRoot` `98`.
+What the shipped Roots actually use: screen service `-99`, pool service `-2`, asset service
+`-1`, gameplay `0`, input `0`, camera system `1`, `ConnectorRoot` `98`, `ScreenRoot` `99`,
+`MainRoot` `100`.
 
 Inside a band the exact number rarely matters. Two modules that never touch each other can both
 sit at `0`; a System that another Root wants bound before it goes a step lower.

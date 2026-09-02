@@ -32,6 +32,7 @@ namespace FlowIoC.Editor.Help.Pages
         {
             {"ScreenServiceRoot", -99},
             {"PoolServiceRoot", -2},
+            {"AssetServiceRoot", -1},
             {"GameplayRoot", 0},
             {"ScreenRoot", 99},
             {"MainRoot", 100},
@@ -67,8 +68,8 @@ namespace FlowIoC.Editor.Help.Pages
 
             painter.Space();
             painter.Note(
-                "The shipped Roots use -10000 for the asset service, -99 for the screen service, -2 "
-                + "for the pool service, 0 for gameplay and input, 1 for the camera system. Inside a "
+                "The shipped Roots use -99 for the screen service, -2 for the pool service, -1 for "
+                + "the asset service, 0 for gameplay and input, 1 for the camera system. Inside a "
                 + "band the exact number rarely matters - two modules that never touch can both sit at 0.");
 
             painter.SubHeading("The scene reads top to bottom");

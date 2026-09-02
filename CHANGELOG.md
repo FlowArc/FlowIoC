@@ -5,6 +5,18 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **`AssetServiceRoot` moved from `-10000` to `-1`**, the last seat in the Services band. It was
+  the one shipped Root still carrying a number from the old open-ended scheme, so Initialize Order
+  now runs from `-100` to `100` with nothing outside it, exactly as the agent rules, the README,
+  the `flowioc-root-order` skill and the Help window's Ordering Roots page all say. Nothing binds
+  differently: the asset service still comes up ahead of every module that injects it, and no
+  shipped scene overrides the value. A project that placed a Root below `-1` on purpose, to bind
+  before the asset service, should check that it still does.
+
 ## [1.4.0] - 2026-09-02
 
 ### Added
