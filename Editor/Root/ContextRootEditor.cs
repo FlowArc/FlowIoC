@@ -3,12 +3,11 @@ using System;
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Root;
+using FlowIoC.Editor.Inspector;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace FlowIoC.Editor.Root
 {
@@ -23,6 +22,29 @@ namespace FlowIoC.Editor.Root
         private SubContextFoldouts _foldouts;
         private RootDirtyMarker _dirtyMarker;
 
+        private FlowPalette _palette;
+        private FlowRoleResolver _roles;
+        private FlowHelpSource _help;
+        private FlowHelpState _helpState;
+        private FlowHeaderBar _bar;
+        private FlowInspectorGUI _gui;
+        private FlowInspectorSettings _settings;
+
+        /// <summary>
+        /// The rows the bar's help button opens and closes together. They are the fields of
+        /// RootBase, which is where the lifecycle lives whatever the Root is called.
+        /// </summary>
+        private static readonly string[] LifecycleMembers =
+        {
+            nameof(RootBase.initializeOrder),
+            nameof(RootBase.AutoBindInjections),
+            nameof(RootBase.AutoBindMediations),
+            nameof(RootBase.AutoInitialize),
+            nameof(RootBase.AutoSetup),
+            nameof(RootBase.AutoLaunch),
+            nameof(RootBase.IsTest)
+        };
+
         private void OnEnable()
         {
             _root = target as RootBase;
@@ -36,111 +58,54 @@ namespace FlowIoC.Editor.Root
             _foldouts = new SubContextFoldouts();
 
             _dirtyMarker = new RootDirtyMarker();
+
+            _palette = new FlowPalette();
+            _roles = new FlowRoleResolver();
+            _help = new FlowHelpSource(new MonoScriptText());
+            _helpState = new FlowHelpState();
+            _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
+            _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
+            _settings = new FlowInspectorSettings();
         }
+
+        /// <summary>
+        /// Only while the game runs: the lifecycle badges read fields that change without the
+        /// inspector being touched, and a repaint is the only way they can say so.
+        /// </summary>
+        public override bool RequiresConstantRepaint() => Application.isPlaying;
 
         public override void OnInspectorGUI()
         {
-            DrawCustomHeader();
+            if (_settings.Enabled)
+                DrawFlowHeader();
 
-            base.OnInspectorGUI();
+            GUIDisableScript();
 
-            GUILayout.Space(10);
-
-            GUIDisableScript(); //TODO
-            GUI_InitializeOrder();
-            GUI_BindingOptions();
-            GUI_InitializeOptions();
-            GUI_SetupOptions();
-            GUI_LaunchOptions();
-            GUI_TestBindingOptions();
-
-            GUI_RootStatus();
-
+            GUI_Lifecycle();
             GUI_SubContexts();
         }
 
-        private void DrawCustomHeader()
+        /// <summary>The role the bar and the card action wear. A Root that resolves to nothing is still a Root.</summary>
+        private FlowRole RoleOf()
         {
-            if (target == null) return;
-
-            var targetType = target.GetType();
-            var titleAttributes = targetType.GetCustomAttributes(typeof(CustomClassHeaderAttribute), true);
-
-            if (titleAttributes.Length > 0)
-            {
-                var attribute = titleAttributes[0] as CustomClassHeaderAttribute;
-                if (attribute != null)
-                {
-                    GUILayout.Space(10);
-
-                    Rect rect = GUILayoutUtility.GetRect(Screen.width, attribute.Height, GUILayout.ExpandWidth(true));
-
-                    if (Event.current.type == EventType.Repaint)
-                    {
-                        var gradientRect = new Rect(rect.x, rect.y, rect.width, rect.height);
-
-                        var backgroundColor = GUI.backgroundColor;
-
-                        Texture2D gradientTexture = new Texture2D(1, 1);
-                        Color startColor = attribute.StartColor;
-                        Color endColor = attribute.EndColor;
-
-                        var gradientStyle = new GUIStyle();
-                        gradientStyle.normal.background = DrawGradient((int) rect.width, (int) rect.height, startColor, endColor);
-                        GUI.Label(gradientRect, "", gradientStyle);
-
-                        var headerStyle = new GUIStyle(EditorStyles.boldLabel);
-                        headerStyle.fontSize = attribute.FontSize;
-                        headerStyle.alignment = TextAnchor.MiddleLeft;
-                        headerStyle.normal.textColor = Color.white;
-                        headerStyle.padding.left = 10;
-
-                        string titleText = attribute.Title.ToUpper();
-                        GUI.Label(gradientRect, titleText, headerStyle);
-
-                        GUI.backgroundColor = backgroundColor;
-                    }
-
-                    GUILayout.Space(5);
-
-                    if (!string.IsNullOrEmpty(attribute.Description))
-                    {
-                        var descriptionStyle = new GUIStyle(EditorStyles.label);
-                        descriptionStyle.wordWrap = true;
-                        descriptionStyle.padding.left = 10;
-                        descriptionStyle.padding.right = 10;
-
-                        EditorGUILayout.LabelField(attribute.Description, descriptionStyle);
-
-                        GUILayout.Space(5);
-                        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-                    }
-
-                    GUILayout.Space(5);
-                }
-            }
+            return _roles.TryResolve(_root.GetType(), out FlowRole role) ? role : FlowRole.Root;
         }
 
-        private Texture2D DrawGradient(int width, int height, Color startColor, Color endColor)
+        private void DrawFlowHeader()
         {
-            Texture2D texture = new Texture2D(width, height);
-            Color[] pixels = new Color[width * height];
+            Type type = _root.GetType();
+            FlowRole role = RoleOf();
 
-            for (int x = 0; x < width; x++)
-            {
-                float gradientPos = (float) x / width;
-                Color gradientColor = Color.Lerp(startColor, endColor, gradientPos);
+            bool open = _helpState.IsOpen(type, FlowHelpParser.TypeKey);
 
-                for (int y = 0; y < height; y++)
+            _bar.Draw(role, _roles.TitleFor(type), type.Assembly.GetName().Name, _roles.LabelFor(type, role),
+                _help.Summary(type), open,
+                () =>
                 {
-                    pixels[y * width + x] = gradientColor;
-                }
-            }
-
-            texture.SetPixels(pixels);
-            texture.Apply();
-
-            return texture;
+                    bool next = !open;
+                    _helpState.SetOpen(type, FlowHelpParser.TypeKey, next);
+                    _helpState.SetAll(type, LifecycleMembers, next);
+                });
         }
 
         private void GUIDisableScript()
@@ -152,257 +117,75 @@ namespace FlowIoC.Editor.Root
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void GUI_InitializeOrder()
+        /// <summary>
+        /// Every phase of the Root's life in one table: whether it happens on its own, whether it
+        /// has happened, and - while the game runs - a way to make it happen now. The separate
+        /// status box this replaces said the same things a second time.
+        /// </summary>
+        private void GUI_Lifecycle()
         {
+            Type type = _root.GetType();
+
+            _gui.BeginCard("LIFECYCLE");
+
             EditorGUI.BeginChangeCheck();
 
-            EditorGUILayout.BeginVertical("box");
+            int order = _gui.IntField(type, nameof(RootBase.initializeOrder), "Initialize Order", _root.initializeOrder);
 
-            var initializeOrder = EditorGUILayout.IntField("Initialize Order: ", _root.initializeOrder);
+            bool injections = _gui.Phase(type, nameof(RootBase.AutoBindInjections), "Bind Injections",
+                _root.AutoBindInjections, _root.injectionsBound,
+                Application.isPlaying && !_root.injectionsBound, out bool runInjections);
+
+            bool mediations = _gui.Phase(type, nameof(RootBase.AutoBindMediations), "Bind Mediations",
+                _root.AutoBindMediations, _root.mediationsBound,
+                Application.isPlaying && !_root.mediationsBound, out bool runMediations);
+
+            bool initialize = _gui.Phase(type, nameof(RootBase.AutoInitialize), "Initialize",
+                _root.AutoInitialize, _root.hasInitialized,
+                Application.isPlaying && !_root.hasInitialized, out bool runInitialize);
+
+            bool setup = _gui.Phase(type, nameof(RootBase.AutoSetup), "Setup",
+                _root.AutoSetup, _root.hasSetuped,
+                Application.isPlaying && _root.hasInitialized && !_root.hasSetuped, out bool runSetup);
+
+            bool launch = _gui.Phase(type, nameof(RootBase.AutoLaunch), "Launch",
+                _root.AutoLaunch, _root.hasLaunched,
+                Application.isPlaying && _root.hasInitialized && !_root.hasLaunched, out bool runLaunch);
+
+            bool isTest = _gui.Toggle(type, nameof(RootBase.IsTest), "Is Test", _root.IsTest);
 
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(_root, "initialize-order");
-                _root.initializeOrder = initializeOrder;
+                Undo.RecordObject(_root, "root-lifecycle");
+
+                _root.initializeOrder = order;
+                _root.AutoBindInjections = injections;
+                _root.AutoBindMediations = mediations;
+                _root.AutoInitialize = initialize;
+                _root.AutoSetup = setup;
+                _root.AutoLaunch = launch;
+                _root.IsTest = isTest;
+
                 if (!Application.isPlaying)
                     MarkDirty();
             }
 
-            EditorGUILayout.EndVertical();
-        }
-
-        private void GUI_BindingOptions()
-        {
-            EditorGUILayout.BeginVertical("box");
-
-            EditorGUI.BeginChangeCheck();
-
-            #region Injection
-
-            EditorGUILayout.BeginHorizontal();
-
-            var injectionBinding = EditorGUILayout.ToggleLeft("Bind Injections", _root.AutoBindInjections, GUILayout.Width(125));
-            GUI.enabled = (Application.isPlaying && !_root.injectionsBound);
-
-            if (GUI.enabled && !_root.injectionsBound)
-                GUI.backgroundColor = Color.green;
-            else
-                GUI.backgroundColor = new Color(1, .3f, .4f);
-
-            var injectionButton = GUILayout.Button("Bind Injections");
-            if (injectionButton)
+            if (runInjections)
                 _root.BindInjections(true);
 
-            GUI.backgroundColor = Color.white;
-
-            GUI.enabled = true;
-            EditorGUILayout.EndHorizontal();
-
-            #endregion
-
-            #region Mediation
-
-            EditorGUILayout.BeginHorizontal();
-
-            var mediationBinding = EditorGUILayout.ToggleLeft("Bind Mediations", _root.AutoBindMediations, GUILayout.Width(125));
-            GUI.enabled = (Application.isPlaying && !_root.mediationsBound);
-
-            if (GUI.enabled && !_root.mediationsBound)
-                GUI.backgroundColor = Color.green;
-            else
-                GUI.backgroundColor = new Color(1, .3f, .4f);
-
-            var mediationButton = GUILayout.Button("Bind Mediations");
-            if (mediationButton)
+            if (runMediations)
                 _root.BindMediations(true);
 
-            GUI.backgroundColor = Color.white;
-
-            GUI.enabled = true;
-            EditorGUILayout.EndHorizontal();
-
-            #endregion
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(_root, "binding-flags");
-                _root.AutoBindInjections = injectionBinding;
-                _root.AutoBindInjections = mediationBinding;
-
-                if (!Application.isPlaying)
-                    EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            }
-
-            EditorGUILayout.EndVertical();
-        }
-
-        private void GUI_InitializeOptions()
-        {
-            EditorGUILayout.BeginVertical("box");
-
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUI.BeginChangeCheck();
-
-            var autoInitialize = EditorGUILayout.ToggleLeft("Auto Initialize", _root.AutoInitialize, GUILayout.Width(125));
-            GUI.enabled = (Application.isPlaying && !_root.hasInitialized);
-
-            if (GUI.enabled && !_root.hasInitialized)
-                GUI.backgroundColor = Color.green;
-            else
-                GUI.backgroundColor = new Color(1, .3f, .4f);
-
-            var launchButton = GUILayout.Button("Initialize");
-            if (launchButton)
+            if (runInitialize)
                 _root.StartContext(true);
 
-            GUI.backgroundColor = Color.white;
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(_root, "auto-initialize");
-                _root.AutoInitialize = autoInitialize;
-
-                if (!Application.isPlaying)
-                    EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            }
-
-            GUI.enabled = true;
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndVertical();
-        }
-
-        private void GUI_SetupOptions()
-        {
-            EditorGUILayout.BeginVertical("box");
-
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUI.BeginChangeCheck();
-
-            var autoSetup = EditorGUILayout.ToggleLeft("Auto Setup", _root.AutoSetup, GUILayout.Width(125));
-            GUI.enabled = (Application.isPlaying && !_root.hasSetuped && _root.hasInitialized);
-
-            if (GUI.enabled && !_root.hasSetuped)
-                GUI.backgroundColor = Color.green;
-            else
-                GUI.backgroundColor = new Color(1, .3f, .4f);
-
-            var setupButton = GUILayout.Button("Setup");
-            if (setupButton)
+            if (runSetup)
                 _root.Setup(true);
 
-            GUI.backgroundColor = Color.white;
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(_root, "auto-setup");
-                _root.AutoSetup = autoSetup;
-
-                if (!Application.isPlaying)
-                    EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            }
-
-            GUI.enabled = true;
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndVertical();
-        }
-
-        private void GUI_LaunchOptions()
-        {
-            EditorGUILayout.BeginVertical("box");
-
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUI.BeginChangeCheck();
-
-            var autoLaunch = EditorGUILayout.ToggleLeft("Auto Launch", _root.AutoLaunch, GUILayout.Width(125));
-            GUI.enabled = (Application.isPlaying && !_root.hasLaunched && _root.hasInitialized);
-
-            if (GUI.enabled && !_root.hasLaunched)
-                GUI.backgroundColor = Color.green;
-            else
-                GUI.backgroundColor = new Color(1, .3f, .4f);
-
-            var launchButton = GUILayout.Button("Launch");
-            if (launchButton)
+            if (runLaunch)
                 _root.Launch(true);
 
-            GUI.backgroundColor = Color.white;
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(_root, "auto-launch");
-                _root.AutoLaunch = autoLaunch;
-
-                if (!Application.isPlaying)
-                    EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            }
-
-            GUI.enabled = true;
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndVertical();
-        }
-
-        private void GUI_TestBindingOptions()
-        {
-            EditorGUILayout.BeginVertical("box");
-
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUI.BeginChangeCheck();
-
-            var isTest = EditorGUILayout.ToggleLeft("IsTest", _root.IsTest, GUILayout.Width(125));
-            GUI.enabled = (Application.isPlaying && !_root.IsTest);
-
-            if (GUI.enabled && !_root.hasLaunched)
-                GUI.backgroundColor = Color.green;
-            else
-                GUI.backgroundColor = new Color(1, .3f, .4f);
-
-            GUI.backgroundColor = Color.white;
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(_root, "isTest");
-                _root.IsTest = isTest;
-
-                if (!Application.isPlaying)
-                    EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            }
-
-            GUI.enabled = true;
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndVertical();
-        }
-
-        private void GUI_RootStatus()
-        {
-            var guiStyle = new GUIStyle(EditorStyles.textField);
-
-            EditorGUILayout.BeginVertical("box");
-
-            EditorGUILayout.LabelField("Context Status:");
-
-            guiStyle.normal.textColor = _root.injectionsBound ? Color.green : new Color(1, .3f, .4f);
-            EditorGUILayout.LabelField("Injections Bound: " + _root.injectionsBound, guiStyle);
-
-            guiStyle.normal.textColor = _root.mediationsBound ? Color.green : new Color(1, .3f, .4f);
-            EditorGUILayout.LabelField("Mediations Bound: " + _root.mediationsBound, guiStyle);
-
-            EditorGUILayout.Separator();
-
-            guiStyle.normal.textColor = _root.hasInitialized ? Color.green : new Color(1, .3f, .4f);
-            EditorGUILayout.LabelField("Has Initialized: " + _root.hasInitialized, guiStyle);
-
-            guiStyle.normal.textColor = _root.hasLaunched ? Color.green : new Color(1, .3f, .4f);
-            EditorGUILayout.LabelField("Has Launched: " + _root.hasLaunched, guiStyle);
-
-            EditorGUILayout.EndVertical();
+            _gui.EndCard();
         }
 
         private void GUI_SubContexts()
@@ -412,11 +195,11 @@ namespace FlowIoC.Editor.Root
 
             if (_root.SubContextTypes.Count != 0)
             {
-                EditorGUILayout.BeginVertical("box");
+                _gui.BeginCard("SUB CONTEXTS", true);
 
                 for (var ii = 0; ii < _root.SubContextTypes.Count; ii++)
                 {
-                    EditorGUILayout.BeginVertical("box");
+                    EditorGUILayout.BeginVertical(_gui.CardEntry);
 
                     SubContextData contextData = _root.SubContextTypes[ii];
                     int rootId = _root.GetInstanceID();
@@ -431,8 +214,10 @@ namespace FlowIoC.Editor.Root
 
                     GUI_SubContextKind(contextData);
 
-                    if (GUILayout.Button("-", GUILayout.Width(24)))
+                    if (GUILayout.Button("-", _gui.EntryAction, GUILayout.Width(24)))
                     {
+                        // Recorded, because a mis-click here used to destroy an entry with no way back.
+                        Undo.RecordObject(_root, "remove-sub-context");
                         _root.SubContextTypes.RemoveAt(ii);
                         MarkDirty();
 
@@ -440,7 +225,7 @@ namespace FlowIoC.Editor.Root
                         // the rest of the inspector draws inside them.
                         EditorGUILayout.EndHorizontal();
                         EditorGUILayout.EndVertical();
-                        EditorGUILayout.EndVertical();
+                        _gui.EndCard();
                         return;
                     }
 
@@ -467,31 +252,44 @@ namespace FlowIoC.Editor.Root
                     }
 
                     EditorGUILayout.EndVertical();
-                    EditorGUILayout.Space(5);
                 }
 
-                EditorGUILayout.EndVertical();
+                _gui.EndCard();
             }
 
-            if (GUILayout.Button("Add Sub Context"))
-            {
+            if (_gui.AccentButton(RoleOf(), "Add Sub Context"))
                 AddSubContextWindow.ShowWindow(_root);
-            }
         }
 
         /// <summary>
-        /// The badge that separates a screen context from every other kind of sub-context in a
-        /// folded list, drawn the way the Publish window marks a private module. The label is
-        /// always laid out, tinted clear when it does not apply, so the remove button beside it
-        /// keeps the same place on every row.
+        /// The badge that says what kind of sub-context a folded entry is: a screen in the screen
+        /// colour, a connector in the connector's. A sub-context is not a component, so this list
+        /// is the only place those two colours are ever seen. The badge is always laid out, blank
+        /// when it says nothing, so the remove button beside it keeps the same place on every row.
         /// </summary>
         private void GUI_SubContextKind(SubContextData contextData)
         {
             Type contextType = _declarations.ResolveType(contextData.ContextFullName);
 
+            string badge = string.Empty;
+            Color color = Color.clear;
+
+            if (_declarations.IsScreenContext(contextType))
+            {
+                badge = "SCREEN";
+                color = _palette.Accent(FlowRole.Screen, EditorGUIUtility.isProSkin);
+            }
+            else if (contextData.ContextName != null && contextData.ContextName.Contains("Connector"))
+            {
+                badge = "CONNECTOR";
+                color = _palette.Accent(FlowRole.Connector, EditorGUIUtility.isProSkin);
+            }
+
             Color previous = GUI.color;
-            GUI.color = _declarations.IsScreenContext(contextType) ? new Color(1f, 0.8f, 0.3f) : Color.clear;
-            EditorGUILayout.LabelField("SCREEN", EditorStyles.miniBoldLabel, GUILayout.Width(50));
+            GUI.color = color;
+
+            EditorGUILayout.LabelField(badge, EditorStyles.miniBoldLabel, GUILayout.Width(68));
+
             GUI.color = previous;
         }
 

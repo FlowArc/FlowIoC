@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.Editor.Inspector;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,6 +15,7 @@ namespace FlowIoC.Editor.Help
     internal class HelpTheme
     {
         private readonly bool _pro = EditorGUIUtility.isProSkin;
+        private readonly FlowPalette _palette = new FlowPalette();
 
         private GUIStyle _heading;
         private GUIStyle _subHeading;
@@ -41,10 +44,11 @@ namespace FlowIoC.Editor.Help
         public Color MutedText => _pro ? new Color(0.66f, 0.66f, 0.69f) : new Color(0.40f, 0.40f, 0.44f);
 
         /// <summary>
-        /// The banner behind a page title. The same purple Create Module tints its Folder
-        /// Structure Preview header with, so the two windows read as one tool.
+        /// The banner behind a page title. Root's colour from the inspector palette, so the help
+        /// window and the bar on top of a Root read as one tool - and dark enough that the white
+        /// title on it clears 4.5:1, which the lighter purple it used to be did not.
         /// </summary>
-        public Color Banner => new Color(.6f, .4f, 1f);
+        public Color Banner => _palette.Deep(FlowRole.Root);
 
         public float BannerHeight => 38f;
 

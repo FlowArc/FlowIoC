@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FlowIoC.AssetModule.Service.Sub;
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Injectable.Attributes;
 
 namespace FlowIoC.AssetModule.Service
 {
-    [CustomClassHeader("ASSETSERVICE", 0.2f, 0.6f, 0.9f, 0.1f, 0.3f, 0.5f, 16)]
     internal sealed class AssetService : IAssetService
     {
         [Inject] private AssetLoadSubService _load { get; set; }

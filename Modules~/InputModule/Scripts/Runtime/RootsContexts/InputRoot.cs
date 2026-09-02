@@ -1,4 +1,3 @@
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Root;
 
 namespace Modules.InputModule.RootsContexts
@@ -11,7 +10,6 @@ namespace Modules.InputModule.RootsContexts
     /// do not destroy, which is why the SetParent comes first, and BeforeCreateContext is where
     /// it happens because the context is built right after it.
     /// </summary>
-     [CustomClassHeader("ROOTs", 0.8f, 0.2f, 0.2f, 0.2f, 0.2f, 0.8f, 14)]
     public class InputRoot : Root<InputContext>
     {
         protected override void BeforeCreateContext()

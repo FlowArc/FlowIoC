@@ -78,6 +78,32 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
+        /// Opens the window on one exact topic. The header bar of an inspector links here, so the
+        /// reader lands on the page for what they were looking at rather than on the section it
+        /// happens to sit in.
+        /// </summary>
+        internal static void OpenPage(string pageTitle)
+        {
+            HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
+            window.minSize = new Vector2(1120f, 600f);
+            window.Show();
+
+            window.GoToPage(pageTitle);
+        }
+
+        private void GoToPage(string pageTitle)
+        {
+            IHelpPage page = _catalog.FindPage(pageTitle);
+
+            if (page == null)
+                return;
+
+            Select(page);
+            OpenCategoriesTo(page);
+            Repaint();
+        }
+
+        /// <summary>
         /// Selects the section's first topic and folds open every category above it, so the
         /// sidebar shows where the reader has landed rather than a closed tree.
         /// </summary>

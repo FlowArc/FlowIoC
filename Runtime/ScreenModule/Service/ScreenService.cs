@@ -1,4 +1,3 @@
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ScreenModule.Service.Sub;
 using FlowIoC.ScreenModule.Service.Sub.Builder;
@@ -7,7 +6,6 @@ using FlowIoC.ScreenModule.ViewsMediators.Screen;
 
 namespace FlowIoC.ScreenModule.Service
 {
-    [CustomClassHeader("SCREENSERVICE", 0.8f, 0.2f, 0.2f, 0.5f, 0.1f, 0.1f, 16)]
 
     internal class ScreenService : IScreenService
     {

@@ -5,14 +5,28 @@ using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
 using UnityEngine;
 
-namespace FlowIoC.ScreenModule.Editor
+namespace FlowIoC.Editor.Inspector
 {
+    /// <summary>
+    /// The screen manager's own inspector. It lives in the Editor assembly rather than beside the
+    /// manager, because a dedicated editor is the only place a component with one can get the
+    /// FlowIoC bar.
+    /// </summary>
     [CustomEditor(typeof(ScreenManager), true)]
     [CanEditMultipleObjects]
     public class ScreenManagerEditor : UnityEditor.Editor
     {
+        private FlowComponentBar _bar;
+
+        private void OnEnable()
+        {
+            _bar = new FlowComponentBar();
+        }
+
         public override void OnInspectorGUI()
         {
+            _bar.Draw(target != null ? target.GetType() : null);
+
             if (!Application.isPlaying)
             {
                 List<ScreenManager> allScreenManagers = FindObjectsByType<ScreenManager>(FindObjectsSortMode.None).ToList();
@@ -30,7 +44,9 @@ namespace FlowIoC.ScreenModule.Editor
                 }
             }
 
-            base.OnInspectorGUI();
+            serializedObject.Update();
+            DrawPropertiesExcluding(serializedObject, "m_Script");
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }

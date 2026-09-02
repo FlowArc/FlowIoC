@@ -14,6 +14,12 @@ namespace FlowIoC.BaseModule.Root
 
         [HideInInspector] protected Dictionary<IContext, SubContextData> _subContexts = new();
 
+        /// <summary>
+        /// Where this Root sits in the binding order, from -100 to 100. -100 is the earliest a
+        /// Root can be and belongs to whatever must put data in place before anything reads it;
+        /// 100 is the latest and belongs to the Root whose Launch starts the game. Services take
+        /// the negative band, the game's own modules 0 to 97, the Connector 98, screens 99.
+        /// </summary>
         [HideInInspector] public int initializeOrder;
 
         [HideInInspector] internal bool signalsBound;
@@ -24,11 +30,43 @@ namespace FlowIoC.BaseModule.Root
         [HideInInspector] internal bool hasSetuped;
         [HideInInspector] internal bool hasLaunched;
 
+        /// <summary>
+        /// Whether this Root binds its injections when the scene starts. With it off nothing is
+        /// injected until something binds them by hand, which is a thing a test does and a
+        /// running game does not.
+        /// </summary>
         [HideInInspector] public bool AutoBindInjections = true;
+
+        /// <summary>
+        /// Whether this Root binds its mediations when the scene starts. With it off, a View in
+        /// the scene never gets its Mediator.
+        /// </summary>
         [HideInInspector] public bool AutoBindMediations = true;
+
+        /// <summary>
+        /// Whether the context is built and its bindings declared without being asked. This is
+        /// the phase that runs the module's own PostConstruct, so a module that has to put data
+        /// in place before anything reads it does that work here.
+        /// </summary>
         [HideInInspector] public bool AutoInitialize = true;
+
+        /// <summary>
+        /// Whether Setup runs on its own. Setup runs a frame after every Root in the scene has
+        /// finished binding, which is what makes it the only phase allowed to reach across
+        /// modules - a Connector does its wiring here.
+        /// </summary>
         [HideInInspector] public bool AutoSetup = true;
+
+        /// <summary>
+        /// Whether Launch runs on its own. Launch happens after every Setup, and is where a
+        /// module dispatches its first signal.
+        /// </summary>
         [HideInInspector] public bool AutoLaunch = true;
+
+        /// <summary>
+        /// Marks this Root as test scaffolding. A test context may reference any module in the
+        /// project, and everything it brings is expected to stay out of a built game.
+        /// </summary>
         [HideInInspector] public bool IsTest = false;
 
         public IContext Context { get; set; }
