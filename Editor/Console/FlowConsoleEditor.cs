@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.Console
 {
     internal class FlowConsoleEditor : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/Console/Flow Console", false, 151)]
+        [MenuItem("Tools/FlowIoC/Console/Flow Console", false, -1149)]
         private static void OpenConsole()
         {
             var window = GetWindow<FlowConsoleEditor>("Flow Console");

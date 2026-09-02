@@ -9,7 +9,7 @@ namespace FlowIoC.Editor.ModelViewer
 {
     internal class ModelViewerEditorWindow : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/Model Viewer", false, 151)]
+        [MenuItem("Tools/FlowIoC/Model Viewer", false, -1149)]
         private static void OpenModelViewer()
         {
             GetWindow<ModelViewerEditorWindow>("Model Viewer");

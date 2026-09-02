@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.AgentSkills
     /// </summary>
     internal class AgentSkillsWindow : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/AI/Agent Skills", false, 161)]
+        [MenuItem("Tools/FlowIoC/AI/Agent Skills", false, -1139)]
         internal static void Open()
         {
             AgentSkillsWindow window = GetWindow<AgentSkillsWindow>("Agent Skills");

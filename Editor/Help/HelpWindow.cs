@@ -51,13 +51,13 @@ namespace FlowIoC.Editor.Help
         /// submenu or an item at a path, never both, and three named ways in beat one that always
         /// lands on the introduction.
         /// </summary>
-        [MenuItem("Tools/FlowIoC/Help/Welcome", false, 200)]
+        [MenuItem("Tools/FlowIoC/Help/Welcome", false, -1100)]
         private static void OpenWelcome() => Open("Welcome");
 
-        [MenuItem("Tools/FlowIoC/Help/Wiki", false, 201)]
+        [MenuItem("Tools/FlowIoC/Help/Wiki", false, -1099)]
         private static void OpenWiki() => Open("Wiki");
 
-        [MenuItem("Tools/FlowIoC/Help/Modules", false, 202)]
+        [MenuItem("Tools/FlowIoC/Help/Modules", false, -1098)]
         private static void OpenModules() => Open("Modules");
 
         internal static void Open() => Open(null);

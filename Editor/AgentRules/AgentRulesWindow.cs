@@ -12,7 +12,7 @@ namespace FlowIoC.Editor.AgentRules
     /// </summary>
     internal class AgentRulesWindow : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/AI/Agent Rules", false, 160)]
+        [MenuItem("Tools/FlowIoC/AI/Agent Rules", false, -1140)]
         internal static void Open()
         {
             AgentRulesWindow window = GetWindow<AgentRulesWindow>("Agent Rules");
