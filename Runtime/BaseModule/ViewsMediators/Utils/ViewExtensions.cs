@@ -28,7 +28,7 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
                 return false;
             }
 
-            IContext context = view.FindViewContext();
+            IContext context = view.AssignedContext() ?? view.FindViewContext();
             if (context == null)
             {
                 Debug.LogError("There is no Context \nviewType: " + view.GetType().Name);
@@ -47,6 +47,10 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
                 FlowLogger.LogWarning(SystemLogType.Injection, "View is already registered. \nviewType: " + view.GetType().Name);
                 return false;
             }
+
+            IContext assigned = view.AssignedContext();
+            if (assigned != null)
+                return view.Register(assigned);
 
             if (injectorData.SelectedRoot == null)
             {
@@ -120,7 +124,7 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
 
         private static bool FindMediationBinder(this IView view, out MediationBinder mediationBinder)
         {
-            IContext viewContext = view.FindViewContext();
+            IContext viewContext = view.AssignedContext() ?? view.FindViewContext();
             mediationBinder = null;
 
             if (viewContext == null)
@@ -134,7 +138,7 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
             if (injectedMediatorData?.mediator != null)
                 return true;
 
-            List<IContext> viewSubContexts = view.FindViewContext().SubContexts;
+            List<IContext> viewSubContexts = viewContext.SubContexts;
             foreach (IContext viewSubContext in viewSubContexts)
             {
                 mediationBinder = viewSubContext.MediationBinder;
@@ -180,6 +184,16 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
         {
             IRoot contextRoot = view.FindRoot();
             return contextRoot == null ? null : contextRoot.GetContext();
+        }
+
+        /// <summary>
+        /// The context the loader named on the injector, or null when the view is an ordinary one
+        /// that finds its context by bubbling up.
+        /// </summary>
+        private static IContext AssignedContext(this IView view)
+        {
+            ViewInjector injector = view.transform.GetComponent<ViewInjector>();
+            return injector == null ? null : injector.AssignedContext;
         }
 
         private static IRoot FindRoot(this IView view)

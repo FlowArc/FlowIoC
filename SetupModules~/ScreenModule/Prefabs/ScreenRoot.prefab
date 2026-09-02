@@ -145,18 +145,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: ScreenManager
       objectReference: {fileID: 0}
-    - target: {fileID: 8432870853247024655, guid: 14e56ec2c22153c4eb1af8217ea194a4, type: 3}
-      propertyPath: _screenConfigs.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 8432870853247024655, guid: 14e56ec2c22153c4eb1af8217ea194a4, type: 3}
-      propertyPath: '_screenConfigs.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: d882b4f45b9e021449c14f6e8c4eea2d, type: 2}
-    - target: {fileID: 8432870853247024655, guid: 14e56ec2c22153c4eb1af8217ea194a4, type: 3}
-      propertyPath: '_screenConfigs.Array.data[1]'
-      value: 
-      objectReference: {fileID: 11400000, guid: eb256c90b1631dc48a875e5db24b3531, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

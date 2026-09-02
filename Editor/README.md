@@ -15,7 +15,6 @@ The tools keep those conventions correct so you do not have to.
 | `Tools/FlowIoC/Console/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
-| `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Repair module metadata and namespace settings |
 | `Assets/FlowIoC/Create Assembly` | Assembly definition for the selected folder |
@@ -32,7 +31,7 @@ The one you use first. Pick a name and a module type:
 | Type | Produces |
 |---|---|
 | `Main` | A normal feature module under `Assets/Modules/<Name>Module/` |
-| `Screen` | A screen module: view, mediator, screen config and optional scene |
+| `Screen` | A screen module: view, mediator, its context, and optional scene |
 | `Test` | An isolated test module, wrapped in editor-only preprocessor directives |
 
 It writes the folder tree, `Modules.<Name>.asmdef`, and — if you leave the toggles

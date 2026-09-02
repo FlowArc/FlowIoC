@@ -976,7 +976,6 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 | `Tools/FlowIoC/Console/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
-| `Tools/FlowIoC/Screen Config Manager` | Edit the screen catalogue |
 | `Tools/FlowIoC/Assembly Creator Window` | Create assembly definitions |
 | `Tools/FlowIoC/Module Configuration/…` | Rebuild the module index and its log types; update namespace settings and the solution code style |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
@@ -1135,7 +1134,7 @@ a Service more than one module needs.
 
 The generator creates the module folder, the assembly definition, the managed
 folders (`Controllers`, `Models`, `RootsContexts`, `Services`, `Systems`,
-`ViewsMediators`, `UnityObjects`, `ValueObjects`, `ScreenConfigs`,
+`ViewsMediators`, `UnityObjects`, `ValueObjects`,
 `Editor`, `Resources`, `Prefabs`, `Scenes`, and the three `z` folders) and —
 optionally — the `Root` / `Context` pair. Their names are not hard-coded; they come
 from the module config and can be renamed under

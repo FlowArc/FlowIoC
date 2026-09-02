@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.ScreenModule.Data;
+using FlowIoC.ScreenModule.Enums;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,7 +14,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         {
             EditorGUILayout.Space(10);
 
-            GUI.backgroundColor = new Color(.6f,.4f,1f);
+            GUI.backgroundColor = new Color(.6f, .4f, 1f);
             var style = new GUIStyle(EditorStyles.whiteLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
@@ -20,12 +22,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 richText = true
             };
 
-            EditorGUILayout.BeginHorizontal( new GUIStyle(EditorStyles.helpBox), GUILayout.Height(33));
-            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"), GUILayout.Width(35), GUILayout.Height(33)); 
-            EditorGUILayout.LabelField(FOLDER_STRUCTURE_PREVIEW, style, GUILayout.Height(33)); 
+            EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(33));
+            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"), GUILayout.Width(35), GUILayout.Height(33));
+            EditorGUILayout.LabelField(FOLDER_STRUCTURE_PREVIEW, style, GUILayout.Height(33));
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
-            
+
             _folderPreviewScrollPosition = EditorGUILayout.BeginScrollView(_folderPreviewScrollPosition,
                 GUILayout.MaxHeight(_selectedModuleType == ModuleType.Screen ? 190 : 200));
             EditorGUILayout.BeginVertical();
@@ -54,7 +56,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         {
             EditorGUILayout.BeginHorizontal("box");
             GUILayout.Space(indentLevel * 20);
-            
+
             if (folder.IsMandatory)
             {
                 GUILayout.Space(20);
@@ -73,35 +75,39 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _selectedOptionalFolders.Remove(folder);
                 }
             }
-            if (indentLevel>0)
+
+            if (indentLevel > 0)
                 GUILayout.Space(-15);
-            
+
             EditorGUILayout.LabelField(text, GUILayout.Width(200));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
         }
 
-        private void DrawScreenConfigPreview()
+        private void DrawScreenSettings()
         {
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("CD_Screen Preview", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Screen", EditorStyles.boldLabel);
 
-            if (_screenConfigEditor != null)
-            {
-                _screenConfigEditor.OnInspectorGUI();
-            }
-            else
-            {
-                EditorGUILayout.HelpBox("No ScreenConfigEditor found.", MessageType.Warning);
-            }
-        }
+            _screenSettings.ManagerId = EditorGUILayout.IntField("Manager Id", _screenSettings.ManagerId);
+            _screenSettings.Layer = EditorGUILayout.IntField("Layer", _screenSettings.Layer);
+            _screenSettings.Tag = (ScreenTag) EditorGUILayout.EnumPopup("Tag", _screenSettings.Tag);
+            _screenSettings.LoadType = (ScreenLoadType) EditorGUILayout.EnumPopup("Load", _screenSettings.LoadType);
 
-        private void UpdateAddressableKeyManually()
-        {
-            if (_screenConfigPreview != null)
+            switch (_screenSettings.LoadType)
             {
-                _screenConfigPreview.AddressableKey = _moduleName + _moduleSuffix;
+                case ScreenLoadType.Resource:
+                    _screenSettings.ResourcePath = EditorGUILayout.TextField("Resources Path", _screenSettings.ResourcePath);
+                    break;
+                default:
+                    // The address is the module name, and the generator gives the prefab that same
+                    // address, so it is shown rather than asked for.
+                    EditorGUILayout.LabelField("Address", _moduleName + _moduleSuffix);
+                    break;
             }
+
+            _screenSettings.HasShowAnimation = EditorGUILayout.ToggleLeft("Has Show Animation", _screenSettings.HasShowAnimation);
+            _screenSettings.HasHideAnimation = EditorGUILayout.ToggleLeft("Has Hide Animation", _screenSettings.HasHideAnimation);
         }
     }
 }

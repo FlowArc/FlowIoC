@@ -12,6 +12,8 @@ namespace FlowIoC.Editor.Migration
     /// EditorApplication.update is used rather than delayCall for the same reason
     /// FolderPainterBootstrap uses it: delayCall is only pumped by the editor GUI loop and
     /// never fires while the Editor sits unfocused or minimized.
+    ///
+    /// It also runs the screen config migrator, which needs the same footing.
     /// </summary>
     internal static class FlowIoCPathMigrationBootstrap
     {
@@ -29,6 +31,7 @@ namespace FlowIoC.Editor.Migration
             EditorApplication.update -= Run;
 
             new FlowIoCPathMigrator().MigrateIfNeeded();
+            new ScreenConfigMigrator().MigrateIfNeeded();
         }
     }
 }

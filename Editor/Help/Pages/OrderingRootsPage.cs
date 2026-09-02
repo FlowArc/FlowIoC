@@ -61,7 +61,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("Negative - Services. A Service depends on nothing else, so it comes up first and is ready for everyone.");
             painter.Bullet("0 to 97 - the game's own modules and Systems. Gameplay, input, camera, whatever this game is made of.");
             painter.Bullet("98 - ConnectorRoot. After every module it wires, so the scene reads as modules first and wiring after them.");
-            painter.Bullet("99 - ScreenRoot. The screen manager owns the screen prefabs, so it is up before the flow that opens the first screen.");
+            painter.Bullet(
+                "99 - ScreenRoot. The screen manager owns the layers the screens open in, so it is up before the flow that opens the first screen.");
             painter.Bullet("100 - MainRoot. The entry point. Its Launch dispatches the first signal, last of all.");
 
             painter.Space();

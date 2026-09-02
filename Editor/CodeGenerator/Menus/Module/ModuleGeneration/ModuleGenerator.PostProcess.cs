@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FlowIoC.BaseModule.Injectable.Components;
-using FlowIoC.ScreenModule.Data;
+using FlowIoC.BaseModule.Root;
 using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -91,9 +91,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             ClearPrefs();
             AssetDatabase.Refresh();
-
-            EditorPrefs.DeleteKey(PREF_KEY_SCREEN_PREFAB_PATH);
-            EditorPrefs.DeleteKey(PREF_KEY_SCREEN_CONFIG_PATH);
         }
 
         private static void ModuleTypeMainGenerationComplete()
@@ -129,9 +126,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             ClearPrefs();
             AssetDatabase.Refresh();
-
-            EditorPrefs.DeleteKey(PREF_KEY_SCREEN_PREFAB_PATH);
-            EditorPrefs.DeleteKey(PREF_KEY_SCREEN_CONFIG_PATH);
         }
 
         private static void ModuleTypeScreenGenerationComplete()
@@ -149,9 +143,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string scenePath = EditorPrefs.GetString(KEY_SCENE_PATH);
             string parentFolderName = EditorPrefs.GetString(KEY_PARENT_FOLDER_PATH);
             string screenPrefabPath = EditorPrefs.GetString(SCREEN_PREFAB_PATH);
-
-            string createdPrefabPath = EditorPrefs.GetString(PREF_KEY_SCREEN_PREFAB_PATH, "");
-            string createdConfigPath = EditorPrefs.GetString(PREF_KEY_SCREEN_CONFIG_PATH, "");
+            string screenContextFullName = EditorPrefs.GetString(KEY_SCREEN_CONTEXT_FULL_NAME);
 
             ClearPrefs();
 
@@ -174,7 +166,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             GameObject rootGameObject = new GameObject(rootPrefixName + "TestRoot");
             if (rootType != null)
             {
-                rootGameObject.AddComponent(rootType);
+                RootBase testRoot = (RootBase) rootGameObject.AddComponent(rootType);
+
+                // The test Root hosts the screen's real context rather than a copy of its bindings,
+                // so the screen is declared once and the test scene exercises that declaration.
+                if (!string.IsNullOrEmpty(screenContextFullName))
+                {
+                    testRoot.SubContextTypes = new List<SubContextData>
+                    {
+                        new SubContextData
+                        {
+                            ContextFullName = screenContextFullName,
+                            ContextName = screenContextFullName.Substring(screenContextFullName.LastIndexOf('.') + 1),
+                            AutoSetup = true,
+                            IsTest = false
+                        }
+                    };
+                }
             }
             else
             {
@@ -213,7 +221,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             PrefabUtility.SaveAsPrefabAssetAndConnect(screenGameObject, finalPrefabPath, InteractionMode.UserAction);
 
             MakePrefabAddressable(finalPrefabPath, prefabName);
-            MakeScreenConfigAddressable(createdConfigPath, prefabName);
 
             string relativeScenePath = scenePath.Replace(Application.dataPath, "Assets") + "/" + sceneName + ".unity";
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), relativeScenePath);
@@ -222,47 +229,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             Selection.activeGameObject = screenGameObject;
 
             Debug.Log($"Screen prefab '{prefabName}' has been created and marked as Addressable. Scene saved at: {relativeScenePath}");
-
-            ConfigureScreenManager(screenManager, relativeScenePath, createdPrefabPath, createdConfigPath);
-
-            EditorPrefs.DeleteKey(PREF_KEY_SCREEN_PREFAB_PATH);
-            EditorPrefs.DeleteKey(PREF_KEY_SCREEN_CONFIG_PATH);
-        }
-
-        private static void ConfigureScreenManager(
-            ScreenManager screenManager, 
-            string relativeScenePath,
-            string createdPrefabPath, 
-            string createdConfigPath)
-        {
-            if (!string.IsNullOrEmpty(createdPrefabPath) && !string.IsNullOrEmpty(createdConfigPath))
-            {
-                string relativePrefabPath = createdPrefabPath.Substring(createdPrefabPath.IndexOf("Assets"));
-                GameObject createdPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(relativePrefabPath);
-
-                string relativeConfigPath = createdConfigPath.Substring(createdConfigPath.IndexOf("Assets"));
-                CD_Screen screenConfig = AssetDatabase.LoadAssetAtPath<CD_Screen>(relativeConfigPath);
-
-                screenManager.AddScreenToConfig(screenConfig);
-                EditorUtility.SetDirty(screenManager);
-                EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-                EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), relativeScenePath);
-
-                AssetDatabase.Refresh();
-                AssetDatabase.SaveAssets();
-
-                if (screenConfig != null && createdPrefab != null)
-                {
-                    if (screenConfig.LoadType == ScreenLoadType.DirectPrefab)
-                    {
-                        screenConfig.DirectPrefab = createdPrefab;
-                    }
-
-                    EditorUtility.SetDirty(screenConfig);
-                    AssetDatabase.SaveAssets();
-                    Debug.Log($"DirectPrefab '{createdPrefabPath}' assigned to CD_Screen '{createdConfigPath}'.");
-                }
-            }
         }
     }
 }

@@ -114,6 +114,25 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         }
 
         /// <summary>
+        /// Takes a folder type out of the tree wherever it sits. A folder retires in code, but a
+        /// project's config asset is serialized and keeps offering it; GetOrCreateConfig calls this
+        /// so the asset catches up the next time the Editor opens.
+        /// </summary>
+        internal bool RemoveFolderType(FolderEVO.FolderType folderType) => RemoveFolderType(RootFolders, folderType);
+
+        private static bool RemoveFolderType(List<FolderEVO> folders, FolderEVO.FolderType folderType)
+        {
+            if (folders == null) return false;
+
+            bool removed = folders.RemoveAll(folder => folder.Type == folderType) > 0;
+
+            foreach (FolderEVO folder in folders)
+                removed |= RemoveFolderType(folder.SubFolders, folderType);
+
+            return removed;
+        }
+
+        /// <summary>
         /// The Shared folder as every layout that has one lays it out: the data a module publishes,
         /// the enums and constants that data needs, and the module's public signal holder.
         /// </summary>

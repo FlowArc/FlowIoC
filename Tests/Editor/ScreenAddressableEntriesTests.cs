@@ -1,4 +1,3 @@
-using System.Linq;
 using FlowIoC.Editor.Addressables;
 using NUnit.Framework;
 
@@ -15,35 +14,19 @@ namespace FlowIoC.Tests
         }
 
         [Test]
-        public void A_screen_yields_an_entry_for_its_prefab_and_one_for_its_config()
-        {
-            Assert.AreEqual(2, _entries.For("MainScreen").Length);
-        }
-
-        [Test]
         public void The_prefab_goes_to_a_group_of_its_own_under_its_bare_name()
         {
-            ScreenAddressableEntry prefab = _entries.For("MainScreen").First(e => e.Address == "MainScreen");
+            ScreenAddressableEntry prefab = _entries.For("MainScreen");
 
+            Assert.AreEqual("MainScreen", prefab.Address);
             Assert.AreEqual("Local_Screen-Main", prefab.GroupName);
             Assert.AreEqual(ScreenAddressableEntries.PrefabLabel, prefab.Label);
         }
 
         [Test]
-        public void The_config_joins_the_shared_config_group_and_carries_the_label()
-        {
-            ScreenAddressableEntry config = _entries.For("MainScreen").First(e => e.Address == "CD_MainScreen");
-
-            Assert.AreEqual("Local_Screen-Configs", config.GroupName);
-            Assert.AreEqual("ScreenConfig", config.Label);
-        }
-
-        [Test]
         public void A_screen_whose_name_does_not_end_in_Screen_keeps_its_whole_name_in_the_group()
         {
-            ScreenAddressableEntry prefab = _entries.For("Hud").First(e => e.Address == "Hud");
-
-            Assert.AreEqual("Local_Screen-Hud", prefab.GroupName);
+            Assert.AreEqual("Local_Screen-Hud", _entries.For("Hud").GroupName);
         }
     }
 }

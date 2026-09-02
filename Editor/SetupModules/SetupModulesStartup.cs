@@ -119,8 +119,8 @@ namespace FlowIoC.Editor.SetupModules
         }
 
         /// <summary>
-        /// Every screen the set brought, registered the way Create Module registers one it wrote.
-        /// The pairs are found by convention rather than from a list in the payload: a list would
+        /// Every screen the set brought, made addressable the way Create Module makes one it wrote.
+        /// The prefabs are found by convention rather than from a list in the payload: a list would
         /// be one more file to keep in step with the modules beside it.
         ///
         /// Only the folders this run wrote are walked. The automatic install happens in a project
@@ -142,25 +142,11 @@ namespace FlowIoC.Editor.SetupModules
 
                 foreach (string prefab in Directory.GetFiles(module, "*Screen.prefab", SearchOption.AllDirectories))
                 {
-                    string screenName = Path.GetFileNameWithoutExtension(prefab);
-                    string configPath = ConfigFor(module, screenName);
+                    ScreenAddressableEntry entry = entries.For(Path.GetFileNameWithoutExtension(prefab));
+                    entry.AssetPath = AssetPath(prefab);
 
-                    if (configPath == null)
-                    {
-                        Debug.LogWarning($"<color=cyan>[FlowIoC]</color> No {screenName}Config found beside "
-                                         + $"'{AssetPath(prefab)}', so the screen was not made addressable.");
-                        continue;
-                    }
-
-                    foreach (ScreenAddressableEntry entry in entries.For(screenName))
-                    {
-                        entry.AssetPath = entry.GroupName == ScreenAddressableEntries.ConfigGroup
-                            ? AssetPath(configPath)
-                            : AssetPath(prefab);
-
-                        addressables.Register(entry);
-                        registered = true;
-                    }
+                    addressables.Register(entry);
+                    registered = true;
                 }
             }
 
@@ -168,13 +154,6 @@ namespace FlowIoC.Editor.SetupModules
             // once rather than after each of the entries above.
             if (registered)
                 AssetDatabase.SaveAssets();
-        }
-
-        private static string ConfigFor(string module, string screenName)
-        {
-            return Directory
-                .GetFiles(module, screenName + "Config.asset", SearchOption.AllDirectories)
-                .FirstOrDefault();
         }
 
         private string AssetPath(string fullPath)

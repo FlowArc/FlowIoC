@@ -1,10 +1,8 @@
-using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
-using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.Extensions;
-using FlowIoC.ScreenModule.Model.Config;
+using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.Model.Runtime;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 
@@ -12,7 +10,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 {
     public class UnloadSubService
     {
-        [Inject] private IScreenConfigModel _configModel { get; set; }
+        [Inject] private IScreenRegistryModel _registry { get; set; }
         [Inject] private IScreenRuntimeModel _runtimeModel { get; set; }
         [Inject] private DisposeSubService _dispose { get; set; }
         [Inject] private HideSubService _hide { get; set; }
@@ -21,7 +19,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Close.AllScreens][isForce({isForce})]");
 
-            foreach (var screenBody in _configModel.GetAllLoadedScreens())
+            foreach (var screenBody in _registry.GetAllLoadedScreens())
             {
                 Screen(screenBody, isForce);
             }
@@ -31,7 +29,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Close.AllScreensAtManager][isForce({isForce}) manager({managerId})]");
 
-            foreach (var screenBody in _configModel.GetAllScreensAtManager(managerId))
+            foreach (var screenBody in _registry.GetAllScreensAtManager(managerId))
             {
                 Screen(screenBody, isForce);
             }
@@ -39,36 +37,46 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void ScreensByTag(ScreenTag tag, bool isForce = false)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Close.AllScreensAtManager][isForce({isForce}) tag:({tag.ToString()})]");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Unload.ScreensByTag][isForce({isForce}) tag:({tag})]");
 
-            List<CD_Screen> tagConfigs = _configModel.GetTagConfigs(tag);
-
-            foreach (CD_Screen config in tagConfigs)
+            foreach (ScreenEntry entry in _registry.GetTagEntries(tag))
             {
-                if (_configModel.IsScreenLoaded(config, out var screenBody))
-                {
-                    Screen(screenBody, isForce);
-                }
+                if (entry.Loaded != null)
+                    Screen(entry.Loaded, isForce);
             }
         }
 
         public void Screen<T>(int managerId = 0, bool isForce = false) where T : IScreenBody
         {
-            var config = _configModel.GetScreenConfig(managerId, typeof(T));
+            ScreenEntry entry = _registry.GetEntry(managerId, typeof(T));
 
-            if (_configModel.IsScreenLoaded(config, out var screenBody))
-            {
-                Screen(screenBody, isForce);
-            }
+            if (entry?.Loaded != null)
+                Screen(entry.Loaded, isForce);
             else
-                FlowLogger.LogWarning(SystemLogType.Screen,
-                    $"[ScreenService.Hide] Layer({screenBody.Data.LayerIndex}) is empty at manager({managerId})!");
+                FlowLogger.LogWarning(SystemLogType.Screen, $"[ScreenService.Unload] {typeof(T).Name} is not loaded at manager({managerId})!");
         }
 
         public void Screen(IScreenBody screenBody, bool isForce = false)
         {
             screenBody.Data.AddState(ScreenState.Unloading);
             _hide.Screen(screenBody, isForce);
+        }
+
+        /// <summary>
+        /// The screen's context is going away. An active screen goes through the hide path with
+        /// the animation skipped; a pooled one is disposed directly, because Hide refuses a screen
+        /// that is not in use. Both end in the loader releasing the instance.
+        /// </summary>
+        internal void Unregistered(IScreenBody screenBody)
+        {
+            if (screenBody.Data.HasState(ScreenState.InUse))
+            {
+                Screen(screenBody, isForce: true);
+                return;
+            }
+
+            RemoveFromPools(screenBody);
+            _dispose.Screen(screenBody);
         }
 
         internal void AfterHide(IScreenBody screenBody)

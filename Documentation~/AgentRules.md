@@ -66,6 +66,17 @@ so follow the rules below deliberately.
 - A `ScreenView` wires its buttons in `OnEnable` and drops them in `OnDisable`, never in
   `Awake` or `Start`. A screen is pooled: hiding it deactivates the object and reopening it
   shows the same instance, so `Awake` runs once while the screen opens many times.
+- A screen module's context is the screen's whole declaration. It derives from
+  `ScreenSubContext<TView, TMediator>`, which binds the View to the Mediator, and it declares
+  where the prefab lives and how the screen behaves in a `ScreenCVO`:
+  `Load = ScreenLoadCVO.Addressable("SettingsScreen")`, `Layer`, `Tag`, `ManagerId` and the two
+  animation flags. There is no screen config asset.
+- A screen context is a sub-context of the module the screen belongs to, listed in that
+  module's Root with Auto Setup on - never in `ScreenRoot`. It registers the screen in `Setup`,
+  so a screen whose module's Root is not in the scene is not registered, and `Open` reports
+  that instead of opening it.
+- A screen's test Root lists the production screen context as a sub-context rather than
+  re-declaring the screen; the test context only opens the screen in `Launch`.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
   what it announces. A module's signals are its public surface - together with the
   interface of a Service, which is the one thing another module may reference directly.
@@ -242,6 +253,7 @@ means is the table above.
 | View and Mediator | `HudView` and `HudMediator` |
 | Function | `CalculateDamageFunction` |
 | Connector sub-context | `HeroConnectorSubContext` |
+| Screen context | `SettingsScreenContext`, deriving from `ScreenSubContext<SettingsScreenView, SettingsScreenMediator>` |
 | Assembly definition | `Modules.Player.asmdef` |
 
 ### The smallest complete flow

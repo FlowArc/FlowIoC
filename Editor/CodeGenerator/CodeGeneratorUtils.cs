@@ -533,40 +533,6 @@ namespace FlowIoC.Editor.CodeGenerator
             AssetDatabase.Refresh();
         }
 
-        public static void BindMediationInScreenContext(string contextPath, string viewNamespace)
-        {
-            var contextLines = File.ReadAllLines(contextPath);
-            var newRootContent = new List<string>();
-
-            if (newRootContent.Contains("#if UNITY_EDITOR"))
-            {
-                newRootContent.Add("#if UNITY_EDITOR");
-                newRootContent.Add("using " + viewNamespace + ";");
-            }
-            else
-            {
-                newRootContent.Add("using " + viewNamespace + ";");
-            }
-
-            for (var ii = 0; ii < contextLines.Length; ii++)
-            {
-                var content = contextLines[ii];
-
-                if (content.Contains("base.MediationBindings();"))
-                {
-                    newRootContent.Add(content);
-
-                    //newRootContent.Add("\t\t\t" + $"MediationBinder.Bind<{viewName}>().To<{mediationName}>();");
-                    continue;
-                }
-
-                newRootContent.Add(content);
-            }
-
-            File.WriteAllLines(contextPath, newRootContent.ToArray());
-            AssetDatabase.Refresh();
-        }
-
         public static void BindModelInContext(string contextPath, string modelName, string iModelName, string dummyModelName, string modelNamespace,
             bool useDummyBinding = false)
         {
@@ -843,12 +809,17 @@ namespace FlowIoC.Editor.CodeGenerator
             return string.Join("\r\n", lines);
         }
 
-        public static void ShowScreenInLaunch(string contextPath, string screenName, string screenType, string parentFolderName)
+        /// <summary>
+        /// Writes the screen's first Open into a test context's Launch, and the using the screen
+        /// view needs. The using is this method's business because nothing else in the test
+        /// context names a type from the screen module.
+        /// </summary>
+        public static void ShowScreenInLaunch(string contextPath, string screenName, string viewNamespace)
         {
+            if (!File.Exists(contextPath)) return;
+
             var contextLines = File.ReadAllLines(contextPath);
             var newRootContent = new List<string>();
-
-            //newRootContent.Add($"using {parentFolderName}.Contexts.Screen.Enums;");
 
             for (var ii = 0; ii < contextLines.Length; ii++)
             {
@@ -862,6 +833,8 @@ namespace FlowIoC.Editor.CodeGenerator
 
                 newRootContent.Add(content);
             }
+
+            InsertUsing(newRootContent, viewNamespace);
 
             File.WriteAllLines(contextPath, newRootContent.ToArray());
             AssetDatabase.Refresh();

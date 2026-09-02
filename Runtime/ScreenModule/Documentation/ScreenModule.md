@@ -1,7 +1,7 @@
 # Screens
 
-The Screen Module opens, stacks, pools and unloads UI. You describe each screen once
-in a `CD_Screen` asset, then ask for it by type:
+The Screen Module opens, stacks, pools and unloads UI. You describe each screen once,
+in its context, then ask for it by type:
 
 ```csharp
 await _screenService.Open<SettingsScreenView>().Show();
@@ -38,9 +38,10 @@ scene once. Every module then injects the service:
 
 ### 2. A `ScreenManager` in the scene
 
-`ScreenManager` is the MonoBehaviour that owns a canvas, a set of layers, and the list
-of `CD_Screen` assets it is allowed to open. Its `ManagerID` is what the
-`managerId` parameter on every service call refers to — `0` is the default.
+`ScreenManager` is the MonoBehaviour that owns a canvas and a set of layers. Its
+`ManagerID` is what the `managerId` parameter on every service call refers to — `0` is
+the default. It holds no list of screens: every screen registers itself, through its
+context.
 
 Use more than one manager when you have genuinely separate UI surfaces: a world-space
 diegetic canvas and a screen-space HUD, for example. Otherwise one is enough.
@@ -105,44 +106,28 @@ public class SettingsScreenMediator : IMediator
 }
 ```
 
-### 4. A `CD_Screen` asset
+### 4. The screen context
 
-One `CD_Screen` per screen tells the module where the prefab lives and how it
-behaves by default. Edit them through *Tools ▸ FlowIoC ▸ Screen Config Manager*.
-
-| Field | Meaning |
-|---|---|
-| `LoadType` | `Addressable`, `Resource` or `DirectPrefab` |
-| `AddressableKey` / `ResourcePath` / `DirectPrefab` | Where the prefab comes from, per load type |
-| `DefaultLayer` | The layer this screen opens in unless `OpenInLayer` overrides it |
-| `Tag` | `Default` or `GroupA`…`GroupH` — used for bulk load, hide and unload |
-| `HasShowAnimation` / `HasHideAnimation` | Whether the module waits for your animation hooks |
-| `ViewType` / `MediatorType` | The pair to instantiate and register |
-
-Register the config with the manager that is allowed to open it. A screen the manager
-does not know about cannot be opened from that manager.
-
-### The module context
-
-A module that owns screens derives its context from `BaseScreenContext`, which
-resolves `IScreenService` into the protected `_screenService` field and binds the
-`ScreenManager` mediation for you:
+A screen module's context is its whole declaration. It derives from
+`ScreenSubContext<TView, TMediator>`, which binds the view to the mediator for you, and
+it says where the prefab lives and how the screen behaves in a `ScreenCVO`:
 
 ```csharp
-public class SettingsScreenSubContext : BaseScreenContext
+public class SettingsScreenContext : ScreenSubContext<SettingsScreenView, SettingsScreenMediator>
 {
-    private SettingsSignals _signals;
+    private SettingsScreenSignals _signals;
+
+    protected override ScreenCVO Screen => new()
+    {
+        Layer = 1,
+        Tag   = ScreenTag.GroupA,
+        Load  = ScreenLoadCVO.Addressable("SettingsScreen"),
+    };
 
     public override void SignalBindings()
     {
         base.SignalBindings();
-        _signals = InjectionBinderCrossContext.Bind<SettingsSignals>();
-    }
-
-    public override void MediationBindings()
-    {
-        base.MediationBindings();
-        MediationBinder.Bind<SettingsScreenView>().To<SettingsScreenMediator>();
+        _signals = InjectionBinderCrossContext.Bind<SettingsScreenSignals>();
     }
 
     public override void CommandBindings()
@@ -154,8 +139,24 @@ public class SettingsScreenSubContext : BaseScreenContext
 }
 ```
 
-`BaseScreenRoot<TContext>` is the matching Root when the screen module needs its own
-GameObject rather than being a sub-context.
+| `ScreenCVO` field | Meaning |
+|---|---|
+| `Load` | `ScreenLoadCVO.Addressable(address)` or `ScreenLoadCVO.Resource(path)`. Required — a screen without it is refused at registration |
+| `Layer` | The layer this screen opens in unless `OpenInLayer` overrides it |
+| `ManagerId` | The `ScreenManager` it opens in. `0` unless you have more than one |
+| `Tag` | `Default` or `GroupA`…`GroupH` — used for bulk load, hide and unload |
+| `HasShowAnimation` / `HasHideAnimation` | Whether the module waits for your animation hooks |
+
+The context is a sub-context of the module the screen belongs to. `Create Module` adds
+it to that module's Root prefab; a hand-written one is added with *Add Sub Context* in
+the Root's inspector, with *Auto Setup* ticked. In `Setup` the context registers the
+screen with the service. When the screen is later instantiated, the service registers
+the view against this context, so the mediator is the one bound here even though the
+instance sits under `ScreenRoot`'s layers. A screen whose module's Root is not in the
+scene is not registered, and `Open` says so.
+
+`BaseScreenContext` stays the base for the context that owns a `ScreenManager` —
+`ScreenRoot`'s. A screen never derives from it.
 
 ---
 
@@ -314,14 +315,14 @@ _screenService.Load.All(completeCallback: OnEverythingReady);
 ```
 
 Tag the screens a given phase needs, and preload the tag rather than naming each
-screen — the list then lives in the config assets, not in code.
+screen — the tag is declared once, in each screen's `ScreenCVO`.
 
 ---
 
 ## Managers, Layers and Tags
 
 **Managers** separate UI surfaces that never interact. Each `ScreenManager` has its
-own layers and its own config list; `managerId` selects one.
+own layers, and every screen names its manager in its `ScreenCVO`; `managerId` selects one.
 
 **Layers** are slots inside a manager. One screen occupies one layer at a time.
 Opening into an occupied layer fails unless you pass `ForceOpenAtFullLayer()`, which
@@ -528,17 +529,17 @@ In order of likelihood:
 
 1. The target layer is occupied and you did not pass `ForceOpenAtFullLayer()`.
 2. The screen is already open and you did not pass `ForceOpenAtDuplication()`.
-3. The `CD_Screen` is not registered with the manager you are opening from.
-4. The load failed — wrong `AddressableKey`, wrong `ResourcePath`, or a missing
-   `DirectPrefab` reference.
+3. The screen is not registered: its module's Root is not in the scene, or its context is
+   not listed in that Root's sub-contexts (or is listed with *Auto Setup* off).
+4. The load failed — wrong Addressables address or Resources path.
 
 The Flow Console's `Screen` channel names which of these happened.
 
 ### The screen opens but the mediator never runs
 
-The view is missing its `ViewInjector` component, or the `MediationBinder.Bind<View>().To<Mediator>()`
-line is in a context that never started. A screen view is still an ordinary FlowIoC
-view — inheriting `ScreenView` does not register it.
+The view is missing its `ViewInjector` component, or the screen's context does not derive
+from `ScreenSubContext<View, Mediator>` — that base is what binds the pair. A screen view
+is still an ordinary FlowIoC view — inheriting `ScreenView` does not register it.
 
 ### Second open looks wrong
 
@@ -555,9 +556,9 @@ directly.
 
 ### A preload never completes
 
-`Load.ByTag` only loads screens whose configs carry that tag *and* are registered with
-a manager. A config created but never added to a `ScreenManager` is invisible to the
-loader — and to `Open`.
+`Load.ByTag` only loads screens whose contexts carry that tag *and* have run their
+`Setup`. A context that is not listed in a Root's sub-contexts, or is listed with *Auto
+Setup* off, is invisible to the loader — and to `Open`.
 
 ---
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule;
+using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
 using UnityEngine;
@@ -29,9 +30,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private const string KEY_SCREEN_NAME = "screen-scene-name";
         private const string KEY_SCENE_PATH = "scene-path";
         private const string BOOL_CREATE_SCREEN = "create-screen";
-
-        private const string PREF_KEY_SCREEN_PREFAB_PATH = "MY_SCREEN_PREFAB_PATH";
-        private const string PREF_KEY_SCREEN_CONFIG_PATH = "MY_SCREEN_CONFIG_PATH";
+        private const string KEY_SCREEN_CONTEXT_FULL_NAME = "screen-context-full-name";
 
         private static ModuleType _selectedModuleType;
 
@@ -46,7 +45,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createContext,
             bool createSignals,
             bool createScreen,
-            ScreenConfigData screenConfigData = null
+            ScreenModuleSettings screenSettings = null
         )
         {
             EditorPrefs.SetBool(MODULE_GENERATION_WORKING, true);
@@ -103,7 +102,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 createContext,
                 createSignals,
                 createScreen,
-                screenConfigData,
+                screenSettings,
                 testModulesFolderName
             );
         }
@@ -121,7 +120,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createContext,
             bool createSignals,
             bool createScreen,
-            ScreenConfigData screenConfigData,
+            ScreenModuleSettings screenSettings,
             string testModulesFolderName
         )
         {
@@ -173,13 +172,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 HandleScreenModuleCreation(
                     moduleName,
                     modulePath,
+                    parentModulePath,
                     testModulesFolderName,
                     selectedOptionalFolders,
                     directoryConfigMap,
                     codeGenSettings,
                     actionNames,
                     createScreen,
-                    screenConfigData,
+                    screenSettings,
                     parentSharedAssemblyName
                 );
             }
@@ -224,6 +224,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             EditorPrefs.DeleteKey(SCREEN_PREFAB_PATH);
             EditorPrefs.DeleteKey(BOOL_CREATE_SCREEN);
             EditorPrefs.DeleteKey(KEY_MODULE_NAME);
+            EditorPrefs.DeleteKey(KEY_SCREEN_CONTEXT_FULL_NAME);
             EditorPrefs.DeleteKey(MODULE_GENERATION_WORKING);
         }
     }

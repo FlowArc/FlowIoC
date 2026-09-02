@@ -211,14 +211,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: ScreenManager
       objectReference: {fileID: 0}
-    - target: {fileID: 8432870853247024655, guid: 14e56ec2c22153c4eb1af8217ea194a4, type: 3}
-      propertyPath: _screenConfigs.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8432870853247024655, guid: 14e56ec2c22153c4eb1af8217ea194a4, type: 3}
-      propertyPath: '_screenConfigs.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: eb256c90b1631dc48a875e5db24b3531, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -601,6 +593,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1286372583}
+  - component: {fileID: 1286372584}
   m_Layer: 0
   m_Name: GameplayTestRoot
   m_TagString: Untagged
@@ -624,6 +617,30 @@ Transform:
   - {fileID: 16527120}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1286372584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1286372582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbc75bb25e2aaad488a041e0e60dc144, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Gameplay.Screen.Test::Modules.GameplayModule.GameplayScreenModule.GameplayScreenTestModule.RootsContexts.GameplayScreenTestRoot
+  SubContextTypes:
+  - ContextFullName: Modules.GameplayModule.GameplayScreenModule.RootsContexts.GameplayScreenContext
+    ContextName: GameplayScreenContext
+    AutoSetup: 1
+    IsTest: 0
+  initializeOrder: 0
+  AutoBindInjections: 1
+  AutoBindMediations: 1
+  AutoInitialize: 1
+  AutoSetup: 1
+  AutoLaunch: 1
+  IsTest: 0
 --- !u!1001 &2331948785492696468
 PrefabInstance:
   m_ObjectHideFlags: 0
