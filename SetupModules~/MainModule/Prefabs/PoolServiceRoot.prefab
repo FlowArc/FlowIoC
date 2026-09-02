@@ -50,7 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4143549671386703464, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
       propertyPath: m_Name
-      value: PoolServiceRoot Variant
+      value: PoolServiceRoot
+      objectReference: {fileID: 0}
+    - target: {fileID: 7023137603586019295, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
+      propertyPath: initializeOrder
+      value: -98
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
