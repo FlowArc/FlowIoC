@@ -131,13 +131,19 @@ namespace FlowIoC.Tests
         }
 
         [Test]
-        public void Destroying_the_context_unregisters_the_screen()
+        public void Destroying_the_context_unregisters_the_screen_at_its_own_manager()
         {
+            int managerId = -1;
             Type unregistered = null;
-            _signals.UnRegisterScreen.AddListener(viewType => unregistered = viewType);
+            _signals.UnRegisterScreen.AddListener((id, viewType) =>
+            {
+                managerId = id;
+                unregistered = viewType;
+            });
 
             _context.DestroyContext();
 
+            Assert.AreEqual(0, managerId);
             Assert.AreEqual(typeof(ProbeScreenView), unregistered);
         }
     }

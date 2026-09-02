@@ -13,15 +13,16 @@ namespace FlowIoC.ScreenModule.Model.Runtime
 {
     internal class ScreenRuntimeModel : IScreenRuntimeModel, IConstructable
     {
-        [ShowInModelViewer] private readonly Dictionary<Type, List<IScreenBody>> _passiveScreens = new();
+        [ShowInModelViewer] private readonly Dictionary<(int managerId, Type viewType), List<IScreenBody>> _passiveScreens = new();
         [ShowInModelViewer] private readonly Dictionary<int, Dictionary<Type, IScreenBody>> _activeScreens = new();
         [ShowInModelViewer] private readonly Dictionary<int, Dictionary<int, IScreenBody>> _activeLayerScreens = new();
         [ShowInModelViewer] private readonly Dictionary<int, Dictionary<ScreenTag, List<IScreenBody>>> _activeTagScreens = new();
 
         private Transform _poolParent;
-        
+
         public bool IsPostConstructed { get; set; }
         public bool IsDeConstructed { get; set; }
+
         public void PostConstruct()
         {
             CreatePoolParent();
@@ -59,7 +60,7 @@ namespace FlowIoC.ScreenModule.Model.Runtime
         private void CreatePoolParent()
         {
             _poolParent = new GameObject("[Screen_Pool]").transform;
-            
+
             Object.DontDestroyOnLoad(_poolParent.gameObject);
         }
 
@@ -69,28 +70,28 @@ namespace FlowIoC.ScreenModule.Model.Runtime
 
             screenBody.Data.AddState(ScreenState.InPool);
 
-            var screenType = screenBody.Data.ScreenType;
+            (int, Type) key = (screenBody.Data.ManagerId, screenBody.Data.ScreenType);
 
-            if (!_passiveScreens.ContainsKey(screenType))
-                _passiveScreens[screenType] = new List<IScreenBody>();
+            if (!_passiveScreens.ContainsKey(key))
+                _passiveScreens[key] = new List<IScreenBody>();
 
-            _passiveScreens[screenType].Add(screenBody);
+            _passiveScreens[key].Add(screenBody);
             screenBody.transform.SetParent(_poolParent);
             //screenBody.gameObject.SetActive(false);
         }
 
-        public bool GetScreen<T>(out T screen) where T : IScreenBody
+        public bool GetScreen<T>(int managerId, out T screen) where T : IScreenBody
         {
-            Type screenType = typeof(T);
+            (int, Type) key = (managerId, typeof(T));
 
-            if (!_passiveScreens.ContainsKey(screenType) || _passiveScreens[screenType].Count == 0)
+            if (!_passiveScreens.TryGetValue(key, out List<IScreenBody> pooled) || pooled.Count == 0)
             {
                 screen = default;
                 return false;
             }
 
-            var pooledScreen = _passiveScreens[screenType][0];
-            _passiveScreens[screenType].RemoveAt(0);
+            IScreenBody pooledScreen = pooled[0];
+            pooled.RemoveAt(0);
 
             screen = (T) pooledScreen;
             return true;
@@ -103,9 +104,10 @@ namespace FlowIoC.ScreenModule.Model.Runtime
             screenBody.Data.RemoveState(ScreenState.InUse);
             screenBody.Data.RemoveState(ScreenState.InPool);
 
-            Type screenType = screenBody.Data.ScreenType;
-            if (!_passiveScreens.TryGetValue(screenType, out List<IScreenBody> passiveScreen)) return;
-            passiveScreen.Remove(screenBody);
+            (int, Type) key = (screenBody.Data.ManagerId, screenBody.Data.ScreenType);
+            if (!_passiveScreens.TryGetValue(key, out List<IScreenBody> passiveScreens)) return;
+
+            passiveScreens.Remove(screenBody);
         }
 
         public void AddToActivePools(IScreenBody screenBody)
@@ -163,7 +165,7 @@ namespace FlowIoC.ScreenModule.Model.Runtime
             screenBody = _activeScreens[managerId][screenType];
             return screenBody != null;
         }
-        
+
         public List<IScreenBody> GetAllActiveScreens()
         {
             List<IScreenBody> list = new List<IScreenBody>();

@@ -73,13 +73,24 @@ namespace FlowIoC.ScreenModule.Model.Registry
                     $"[ScreenRegistryModel] {entry.ViewType.Name} is already registered at manager {entry.Screen.ManagerId}! Updating...");
 
             _screens[key] = entry;
-            FlowLogger.Log(SystemLogType.Screen, $"[ScreenRegistryModel] Registered screen {entry.ViewType.Name} at manager {entry.Screen.ManagerId}");
+            FlowLogger.Log(SystemLogType.Screen,
+                $"[ScreenRegistryModel] Registered screen {entry.ViewType.Name} at manager {entry.Screen.ManagerId}");
             return true;
         }
 
-        public ScreenEntry FindEntry(Type viewType)
+        /// <summary>
+        /// The quiet lookup. A screen context going away asks with this: the same view type may
+        /// be registered at another manager by another Root, and not finding one here is an
+        /// answer rather than a fault.
+        /// </summary>
+        public bool TryGetEntry(int managerId, Type viewType, out ScreenEntry entry)
         {
-            return _screens.Values.FirstOrDefault(entry => entry.ViewType == viewType);
+            entry = null;
+
+            if (viewType == null)
+                return false;
+
+            return _screens.TryGetValue((managerId, viewType), out entry);
         }
 
         public ScreenEntry GetEntry(int managerId, Type viewType)
@@ -90,7 +101,7 @@ namespace FlowIoC.ScreenModule.Model.Registry
                 return null;
             }
 
-            if (_screens.TryGetValue((managerId, viewType), out ScreenEntry entry))
+            if (TryGetEntry(managerId, viewType, out ScreenEntry entry))
                 return entry;
 
             FlowLogger.LogError(SystemLogType.Screen,
@@ -103,7 +114,8 @@ namespace FlowIoC.ScreenModule.Model.Registry
             if (entry == null) return;
 
             if (_screens.Remove((entry.Screen.ManagerId, entry.ViewType)))
-                FlowLogger.Log(SystemLogType.Screen, $"[ScreenRegistryModel] Removed screen {entry.ViewType.Name} at manager {entry.Screen.ManagerId}");
+                FlowLogger.Log(SystemLogType.Screen,
+                    $"[ScreenRegistryModel] Removed screen {entry.ViewType.Name} at manager {entry.Screen.ManagerId}");
         }
 
         public List<ScreenEntry> GetAllEntries() => _screens.Values.ToList();
@@ -140,7 +152,8 @@ namespace FlowIoC.ScreenModule.Model.Registry
         {
             if (screen == null)
             {
-                FlowLogger.LogError(SystemLogType.Screen, $"[ScreenRegistryModel] Cannot copy data: no declaration for {screenData?.ScreenType?.Name}");
+                FlowLogger.LogError(SystemLogType.Screen,
+                    $"[ScreenRegistryModel] Cannot copy data: no declaration for {screenData?.ScreenType?.Name}");
                 return;
             }
 

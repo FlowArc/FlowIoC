@@ -73,7 +73,7 @@ namespace FlowIoC.ScreenModule.RootsContexts
 
         public override void DestroyContext()
         {
-            _internalSignals?.UnRegisterScreen.Dispatch(typeof(TView));
+            _internalSignals?.UnRegisterScreen.Dispatch(Screen.ManagerId, typeof(TView));
 
             base.DestroyContext();
         }

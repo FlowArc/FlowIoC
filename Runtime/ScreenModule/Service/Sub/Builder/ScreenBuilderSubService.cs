@@ -22,10 +22,11 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
         IScreenBuilderSubService IScreenBuilderSubService.Open<T>(int managerId)
         {
             _openAborted = false;
-            if (_screenRuntimeModel.GetScreen<T>(out var screen))
+            if (_screenRuntimeModel.GetScreen<T>(managerId, out var screen))
             {
                 _currentScreenBody = screen;
                 _currentScreenData = _currentScreenBody.Data;
+                _currentScreenData.ManagerId = managerId;
                 _registry.CopyDataFromConfig(_currentScreenData);
             }
             else

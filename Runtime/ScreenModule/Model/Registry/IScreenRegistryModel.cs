@@ -12,7 +12,7 @@ namespace FlowIoC.ScreenModule.Model.Registry
         ScreenManagerVO GetScreenManager(int managerId);
 
         bool RegisterScreen(ScreenEntry entry);
-        ScreenEntry FindEntry(Type viewType);
+        bool TryGetEntry(int managerId, Type viewType, out ScreenEntry entry);
         ScreenEntry GetEntry(int managerId, Type viewType);
         void RemoveEntry(ScreenEntry entry);
 
