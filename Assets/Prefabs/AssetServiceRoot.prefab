@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: FlowIoC::FlowIoC.AssetModule.RootsContexts.AssetServiceRoot
   SubContextTypes: []
-  initializeOrder: -10000
+  initializeOrder: -1
   AutoBindInjections: 1
   AutoBindMediations: 1
   AutoInitialize: 1

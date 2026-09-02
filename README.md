@@ -292,8 +292,8 @@ can be and `100` is as late.
 | 99 | `ScreenRoot` | The screen manager owns the screen prefabs, so it is up before the flow that opens the first screen. |
 | 100 | `MainRoot` | The entry point. Its `Launch()` dispatches the first signal, last of all. |
 
-The shipped Roots use `-10000` for the asset service, `-99` for the screen service, `-2`
-for the pool service, `0` for gameplay and input, `1` for the camera system. Inside a band
+The shipped Roots use `-99` for the screen service, `-2` for the pool service, `-1` for
+the asset service, `0` for gameplay and input, `1` for the camera system. Inside a band
 the exact number rarely matters - two modules that never touch can both sit at `0`.
 
 `MainScene` is authored in the same order, with separators between the bands, so the

@@ -22,6 +22,7 @@ namespace FlowIoC.Tests
         {
             {"ScreenServiceRoot", "Assets/Prefabs/ScreenServiceRoot.prefab"},
             {"PoolServiceRoot", "Assets/Prefabs/PoolServiceRoot.prefab"},
+            {"AssetServiceRoot", "Assets/Prefabs/AssetServiceRoot.prefab"},
             {"GameplayRoot", "SetupModules~/GameplayModule/Prefabs/GameplayRoot.prefab"},
             {"ScreenRoot", "SetupModules~/ScreenModule/Prefabs/ScreenRoot.prefab"},
             {"MainRoot", "SetupModules~/MainModule/Prefabs/MainRoot.prefab"},
@@ -64,7 +65,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_services_come_up_before_the_game_s_own_modules()
         {
-            var services = new[] {"ScreenServiceRoot", "PoolServiceRoot"};
+            var services = new[] {"ScreenServiceRoot", "PoolServiceRoot", "AssetServiceRoot"};
 
             int firstModule = _page.Seats
                 .Where(seat => !services.Contains(seat.Key))
