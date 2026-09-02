@@ -271,6 +271,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             bool healed = config.EnsureSharedBranch(settings);
             healed |= config.EnsureSharedSignalsFolder(settings);
             healed |= config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
+            healed |= config.MakeFolderOptional("Scriptables");
 
             if (healed)
             {
@@ -302,7 +303,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     false, true),
                 CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Scenes], FolderEVO.FolderType.Scenes, null, false,
                     true),
-                CreateFolder("Scriptables", FolderEVO.FolderType.Folder, new List<FolderEVO>(), true, false, true),
+                CreateFolder("Scriptables", FolderEVO.FolderType.Folder, new List<FolderEVO>(), false, true, true),
                 CreateFolder("Scripts", FolderEVO.FolderType.Folder, new List<FolderEVO>
                 {
                     CreateFolder("Runtime", FolderEVO.FolderType.Folder, new List<FolderEVO>

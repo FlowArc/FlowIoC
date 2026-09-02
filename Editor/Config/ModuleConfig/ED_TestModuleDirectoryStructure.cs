@@ -211,7 +211,10 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 Debug.Log($"DirectoryStructureConfig created at: {configPath}");
             }
 
-            if (config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs))
+            bool healed = config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
+            healed |= config.MakeFolderOptional("Scriptables");
+
+            if (healed)
             {
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();

@@ -120,6 +120,40 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// </summary>
         internal bool RemoveFolderType(FolderEVO.FolderType folderType) => RemoveFolderType(RootFolders, folderType);
 
+        /// <summary>
+        /// Marks a folder optional in a config asset that has it as mandatory. The screen layout
+        /// shipped with `Scriptables` mandatory in the half of its declaration that gets
+        /// serialized and optional in the half that does not, and correcting the code cannot reach
+        /// an asset already written into a project.
+        ///
+        /// It went unnoticed for as long as nothing acted on the flag - Create Module only reads
+        /// the optional ones, to decide which checkboxes to offer. Module Scan creates whatever is
+        /// mandatory and missing, so it created a `Scriptables` folder in every screen module that
+        /// did not have one.
+        /// </summary>
+        internal bool MakeFolderOptional(string folderName) => MakeFolderOptional(RootFolders, folderName);
+
+        private static bool MakeFolderOptional(List<FolderEVO> folders, string folderName)
+        {
+            if (folders == null) return false;
+
+            bool changed = false;
+
+            foreach (FolderEVO folder in folders)
+            {
+                if (folder.FolderName == folderName && folder.IsMandatory)
+                {
+                    folder.IsMandatory = false;
+                    folder.IsOptional = true;
+                    changed = true;
+                }
+
+                changed |= MakeFolderOptional(folder.SubFolders, folderName);
+            }
+
+            return changed;
+        }
+
         private static bool RemoveFolderType(List<FolderEVO> folders, FolderEVO.FolderType folderType)
         {
             if (folders == null) return false;
