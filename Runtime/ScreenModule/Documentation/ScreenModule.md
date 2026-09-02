@@ -181,6 +181,11 @@ Both register. `Open<SettingsScreenView>()` opens the one at manager 0 and
 Root going away unregisters only its own. The two pooled instances are the cost: a screen used at
 two managers is held twice, because the two live under different managers' layers.
 
+*Tools > FlowIoC > Screens* lists every screen context on a Root in the open scenes, grouped by
+manager and sorted by layer, and marks two screens that want the same layer of the same manager.
+The same five values are editable there, writing the same Root override, which is the faster way to
+compare a scene's screens than opening one Root at a time.
+
 `BaseScreenContext` stays the base for the context that owns a `ScreenManager` —
 `ScreenRoot`'s. A screen never derives from it.
 
