@@ -979,7 +979,7 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 | `Tools/FlowIoC/Module Scan` | Report every module's folders, assemblies, references and namespace settings, and repair what is safe to repair |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
 | `Tools/FlowIoC/AI/Agent Skills` | Install the skills FlowIoC ships into the project's `.claude/skills` |
-| `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor |
+| `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor. Its Welcome page has a **What's New** tab, read out of the package's `CHANGELOG.md`, and the window opens itself there once after FlowIoC has been updated |
 
 `Module Scan` also writes `<Solution>.sln.DotSettings`, the ReSharper and Rider
 code style FlowIoC ships: naming rules, the `_` prefix on private members, the `VO` suffix
