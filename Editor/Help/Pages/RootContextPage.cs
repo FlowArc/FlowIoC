@@ -53,6 +53,25 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    DontDestroyOnLoad(gameObject);\n"
                 + "}");
 
+            painter.SubHeading("What Add Sub Context offers");
+            painter.Paragraph(
+                "A Root can host contexts other than its own, and the button under the list offers the "
+                + "ones that may honestly go there. A context that some Root declares as its Root<T> is "
+                + "built by that Root already, so it is not offered: adding it to a second Root would "
+                + "build a second instance of it and run the same bindings twice.");
+            painter.Paragraph(
+                "A module meant to be hosted on another module's Root says so on its context, and is "
+                + "offered again. ExcludeFromContextWindow says the opposite, and wins over it.");
+            painter.Code("[AllowAsSubContext]\npublic class CameraContext : Context { }");
+            painter.Paragraph(
+                "Create Module offers the same attribute as a toggle on a main module that gets a Root. "
+                + "It starts unticked, because a module with a Root of its own is the ordinary case.");
+            painter.Paragraph(
+                "Connector sub-contexts are the other half of the rule: they are offered on the "
+                + "Connector Root and nowhere else, and every other Root is offered everything but "
+                + "those. A context counts as a Connector's when its name says so - "
+                + "HeroConnectorSubContext - or when it carries FlowHeader(FlowRole.Connector).");
+
             painter.Space();
             painter.Graph(Graph, Stepper);
         }

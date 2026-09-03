@@ -17,7 +17,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createRoot,
             bool createContext,
             bool createSignals,
-            bool createScreen
+            bool createScreen,
+            bool allowAsSubContext
         )
         {
             string rootsAndContextsPath = directoryConfigMap[selectedModuleType]
@@ -32,7 +33,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
                 if (createContext)
                 {
-                    CreateContext(rootsAndContextsPath, modulePath, moduleName, selectedModuleType == ModuleType.Test);
+                    // Only a module that gets a Root of its own is ever kept out of Add Sub
+                    // Context, so only that module is written with the attribute that puts it
+                    // back. A screen module's context never reaches here, and a test module's is
+                    // not offered either way.
+                    CreateContext(rootsAndContextsPath, modulePath, moduleName,
+                        selectedModuleType == ModuleType.Test,
+                        allowAsSubContext && createRoot && selectedModuleType == ModuleType.Main);
                 }
             }
             else
@@ -76,7 +83,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             );
         }
 
-        private static void CreateContext(string path, string modulePath, string moduleName, bool isTest)
+        private static void CreateContext(string path, string modulePath, string moduleName, bool isTest,
+            bool allowAsSubContext)
         {
             string suffix = isTest ? "" : "";
             string rootName = moduleName + suffix + "Root";
@@ -92,7 +100,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 CodeGeneratorStrings.TempContextPath,
                 rootsAndContextsNamespace,
                 false,
-                isTest
+                isTest,
+                allowAsSubContext
             );
             EditorPrefs.SetString(KEY_CONTEXT_NAMESPACE, rootsAndContextsNamespace);
         }

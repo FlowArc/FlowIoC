@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using UnityEditor;
@@ -11,24 +12,25 @@ namespace FlowIoC.Editor.CodeGenerator
 {
     public static class AssemblyHelper
     {
+        /// <summary>
+        /// The assemblies worth reading: everything the project and its packages compiled, and
+        /// none of the engine and framework ones a FlowIoC type could never live in.
+        /// </summary>
+        public static IEnumerable<Assembly> GetProjectAssemblies() =>
+            AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => !assembly.FullName.StartsWith("Unity.") &&
+                                   !assembly.FullName.StartsWith("UnityEngine.") &&
+                                   !assembly.FullName.StartsWith("UnityEditor.") &&
+                                   !assembly.FullName.StartsWith("System.") &&
+                                   !assembly.FullName.StartsWith("mscorlib") &&
+                                   !assembly.FullName.StartsWith("netstandard"));
+
         public static List<Type> GetAllTypesFromAssemblies()
         {
-            var assemblyList = AppDomain.CurrentDomain.GetAssemblies();
-
             var result = new List<Type>();
 
-            foreach (var assembly in assemblyList)
+            foreach (var assembly in GetProjectAssemblies())
             {
-                if (assembly.FullName.StartsWith("Unity.") ||
-                    assembly.FullName.StartsWith("UnityEngine.") ||
-                    assembly.FullName.StartsWith("UnityEditor.") ||
-                    assembly.FullName.StartsWith("System.") ||
-                    assembly.FullName.StartsWith("mscorlib") ||
-                    assembly.FullName.StartsWith("netstandard"))
-                {
-                    continue;
-                }
-
                 try
                 {
                     var assemblyTypes = assembly.GetTypes();

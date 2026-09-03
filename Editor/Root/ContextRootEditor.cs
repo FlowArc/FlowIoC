@@ -258,7 +258,7 @@ namespace FlowIoC.Editor.Root
             }
 
             if (_gui.AccentButton(RoleOf(), "Add Sub Context"))
-                AddSubContextWindow.ShowWindow(_root);
+                AddSubContextWindow.ShowWindow(_root, RoleOf());
         }
 
         /// <summary>

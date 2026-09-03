@@ -47,6 +47,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private bool _createContext;
         private bool _createSignals;
         private bool _createScene;
+
+        /// <summary>
+        /// Whether the module's context is written with [AllowAsSubContext]. A context that has a
+        /// Root is left out of Add Sub Context, because adding it to a second Root would build it
+        /// twice; a module meant to be hosted on another module's Root says otherwise here. Off by
+        /// default, since a module with a Root of its own is the ordinary case.
+        /// </summary>
+        private bool _allowAsSubContext;
+
         private string _selectedModuleName = string.Empty;
         private List<string> _actionNames = new();
         private Vector2 _actionScrollPosition;
@@ -64,6 +73,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _createRoot = true;
             _createContext = true;
             _createSignals = true;
+            _allowAsSubContext = false;
             _actionNames = new List<string>();
             _registry = new ModuleRegistryFactory().FromProject();
             _selectionRules = new ModuleSelectionRules();
