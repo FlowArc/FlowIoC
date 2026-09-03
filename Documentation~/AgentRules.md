@@ -31,6 +31,18 @@ so follow the rules below deliberately.
   quietly creates a second holder nobody dispatches when the owning module is absent.
   Failing to get one is the report that the module's Root is not in the scene - put the Root
   back rather than binding around it.
+- The Root inspector's *Add Sub Context* offers what may honestly be added there, and three rules
+  decide it. A context that some Root declares as its `Root<T>` is built by that Root already, so
+  it is not offered - adding it to a second Root would build a second instance and run the same
+  bindings twice. A module meant to be hosted on another module's Root says so with
+  `[AllowAsSubContext]` on its context and is offered again, and `[ExcludeFromContextWindow]` says
+  the opposite and wins over it. A Connector sub-context is offered on the Connector Root and
+  nowhere else, and every other Root is offered everything but those, so the wiring between two
+  modules stays in the one place it belongs; a context counts as a Connector's when its name says
+  so, the way `HeroConnectorSubContext` does, or when it carries
+  `[FlowHeader(FlowRole.Connector)]`. `Create Module` offers `[AllowAsSubContext]` as a toggle on a
+  main module that gets a Root, unticked, because a module with a Root of its own is the ordinary
+  case.
 - A Context declares bindings and nothing else. If a Context needs an `if`, that decision
   belongs in a Command.
 - The binding phases declare, `Setup` initialises, `Launch` starts. `SignalBindings`,

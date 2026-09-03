@@ -88,6 +88,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 }
             }
 
+            AllowAsSubContextToggle();
+
             if (_createRoot)
             {
                 _createScene = _selectedModuleType switch
@@ -99,6 +101,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             }
 
             GUI.backgroundColor = Color.white;
+        }
+
+        /// <summary>
+        /// Whether the context is written with [AllowAsSubContext]. It is only asked of a module
+        /// that gets a Root of its own, because a context without one is listed in Add Sub Context
+        /// anyway. A screen module's context is a sub-context already and a test module's is never
+        /// offered, so neither is asked.
+        /// </summary>
+        private void AllowAsSubContextToggle()
+        {
+            if (_selectedModuleType != ModuleType.Main || !_createRoot)
+            {
+                _allowAsSubContext = false;
+                return;
+            }
+
+            _allowAsSubContext = EditorGUILayout.ToggleLeft(
+                "Allow As Sub Context", _allowAsSubContext, GUILayout.Width(160));
         }
 
         /// <summary>
@@ -345,6 +365,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _createContext,
                     _createSignals,
                     _createScene,
+                    _allowAsSubContext,
                     screenSettings
                 );
 

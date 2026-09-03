@@ -85,6 +85,12 @@ namespace FlowIoC.Editor.Help.Pages
                 + "in the scene and its bindings. Leave both on unless you are adding a module that "
                 + "another one launches.");
             painter.Bullet(
+                "Allow As Sub Context writes AllowAsSubContext on the context. A context that has a "
+                + "Root of its own is kept out of a Root's Add Sub Context list, because adding it "
+                + "elsewhere would build it a second time; this puts it back, for a module meant to be "
+                + "hosted on another module's Root. Offered on a main module that gets a Root, and off "
+                + "by default.");
+            painter.Bullet(
                 "Create Signals writes the signal holder - the module's public surface. A module "
                 + "with no signals can only be reached by referencing it directly, which is the "
                 + "thing the architecture is there to prevent.");

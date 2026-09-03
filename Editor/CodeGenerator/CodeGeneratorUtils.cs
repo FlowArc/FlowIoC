@@ -149,8 +149,15 @@ namespace FlowIoC.Editor.CodeGenerator
             AssetDatabase.Refresh();
         }
 
+        /// <summary>
+        /// Writes a module's context from one of the templates. A context that will have a Root of
+        /// its own is kept out of the Root inspector's Add Sub Context list, so a module meant to
+        /// be hosted on another module's Root asks for <c>allowAsSubContext</c> and gets the
+        /// attribute that puts it back.
+        /// </summary>
         public static void CreateContext(string contextName, string tempClassName, string contextPath,
-            string tempClassPath, string namespaceName, bool isScreen, bool isTest)
+            string tempClassPath, string namespaceName, bool isScreen, bool isTest,
+            bool allowAsSubContext = false)
         {
             var directoryPath = contextPath;
             var path = directoryPath + "/" + contextName + ".cs";
@@ -170,6 +177,9 @@ namespace FlowIoC.Editor.CodeGenerator
                 }
                 else if (content.Contains("internal class "))
                 {
+                    if (allowAsSubContext)
+                        newContextContent.Add(IndentationOf(content) + "[AllowAsSubContext]");
+
                     content = content.Replace("internal class", "public class");
                 }
 
@@ -179,6 +189,9 @@ namespace FlowIoC.Editor.CodeGenerator
 
             if (isTest)
                 newContextContent.Add("#endif");
+
+            if (allowAsSubContext)
+                InsertUsing(newContextContent, "FlowIoC.BaseModule.Attributes");
 
             if (!Directory.Exists(directoryPath))
                 Directory.CreateDirectory(directoryPath);
@@ -488,6 +501,10 @@ namespace FlowIoC.Editor.CodeGenerator
         /// Adds a using to generated content, after the leading <c>#if UNITY_EDITOR</c> when the
         /// file has one - a test-only using written above the guard would break player builds.
         /// </summary>
+        /// <summary>The whitespace a line starts with, so a line written above it lines up.</summary>
+        private static string IndentationOf(string line) =>
+            line.Substring(0, line.Length - line.TrimStart().Length);
+
         private static void InsertUsing(List<string> content, string namespaceName)
         {
             if (string.IsNullOrEmpty(namespaceName)) return;

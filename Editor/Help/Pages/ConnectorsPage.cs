@@ -29,6 +29,12 @@ namespace FlowIoC.Editor.Help.Pages
                 + "asks for what is there with GetInstance. Bind would hand it a holder of its own the "
                 + "moment the owning module is missing from the scene: nothing would fail, and nothing "
                 + "would ever arrive either.");
+            painter.Paragraph(
+                "It is listed on the Connector Root and nowhere else. Add Sub Context offers connector "
+                + "sub-contexts on that Root alone, and offers every other Root everything but those, so "
+                + "the wiring between two modules cannot be scattered across the scene by accident. A "
+                + "context counts as a Connector's when its name says so - HeroConnectorSubContext - or "
+                + "when it carries FlowHeader(FlowRole.Connector).");
 
             painter.Space();
             painter.Graph(Graph, Stepper);
