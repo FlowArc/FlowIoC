@@ -758,9 +758,16 @@ wire its buttons in `OnEnable` and drop them in `OnDisable` instead. See
 [Screens](Runtime/ScreenModule/Documentation/ScreenModule.md).
 
 The `ViewInjector` component lists every `IView` on the GameObject and resolves
-which Context each one belongs to — by bubbling up the hierarchy, by an explicit
-Root selection, or by Root name. Registration happens as soon as that Context is
-started, and `OnRemove` runs when the object is destroyed.
+which Context each one belongs to. Each entry says so with **Context Source** —
+`Bubble Up` walks the hierarchy to the first Root above the View and is the
+default, `Selected Root` names a Root in the scene, and `Root Name` names one by
+its GameObject name and looks it up at startup. Registration happens as soon as
+that Context is started, and `OnRemove` runs when the object is destroyed.
+
+A prefab cannot hold a reference to a Root in the scene, so a prefab that has to
+reach a Root outside its own hierarchy uses `Root Name`. A screen answers none of
+the three: the screen service names the owning Context on the injector itself,
+which outranks whatever the entry says.
 
 Clear **Auto Register** for a view in the ViewInjector list to take over yourself:
 

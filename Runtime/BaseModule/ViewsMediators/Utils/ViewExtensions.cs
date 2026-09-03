@@ -21,26 +21,26 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
     {
         public static bool Register(this IView view)
         {
-            if (view.IsRegistered)
-            {
-                Debug.LogWarning("View is already registered. \nviewType: " + view.GetType().Name);
-                FlowLogger.LogWarning(SystemLogType.Injection, "View is already registered. \nviewType: " + view.GetType().Name);
-                return false;
-            }
+            ViewInjector injector = view.transform.GetComponent<ViewInjector>();
+            ViewInjectorData injectorData = injector == null ? null : injector.GetViewInjectorData(view);
 
-            IContext context = view.AssignedContext() ?? view.FindViewContext();
-            if (context == null)
-            {
-                Debug.LogError("There is no Context \nviewType: " + view.GetType().Name);
-                FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name);
-                return false;
-            }
-
-            return view.Register(context);
+            return injectorData == null
+                ? view.Register(view.AssignedContext() ?? view.FindViewContext())
+                : view.Register(injectorData);
         }
 
         internal static bool Register(this IView view, ViewInjectorData injectorData)
         {
+            ViewInjector injector = view.transform.GetComponent<ViewInjector>();
+
+            // The injector decides where a view belongs. This used to look at the selected Root
+            // alone, so the two other ways of naming a context were resolved when the object
+            // started and then thrown away here.
+            return view.Register(injector == null ? null : injector.ResolveContext(injectorData));
+        }
+
+        private static bool Register(this IView view, IContext context)
+        {
             if (view.IsRegistered)
             {
                 Debug.LogWarning("View is already registered. \nviewType: " + view.GetType().Name);
@@ -48,47 +48,36 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
                 return false;
             }
 
-            IContext assigned = view.AssignedContext();
-            if (assigned != null)
-                return view.Register(assigned);
+            if (context != null)
+                return view.RegisterIn(context);
 
-            if (injectorData.SelectedRoot == null)
-            {
-                return view.Register();
-            }
+            FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name);
 
-            IContext context = injectorData.SelectedRoot.GetContext();
-            if (context == null)
-            {
-                Debug.LogError("There is no Context \nviewType: " + view.GetType().Name);
-                FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name);
-                return false;
-            }
-
-            return view.Register(context);
+            return false;
         }
 
-        private static bool Register(this IView view, IContext context)
+        /// <summary>
+        /// The registration itself, once the context is known. Auto Register is not consulted
+        /// here: it says whether the injector registers the view on its own, and the inspector's
+        /// own Register button is by definition not on its own.
+        /// </summary>
+        private static bool RegisterIn(this IView view, IContext context)
         {
             ViewBindingData viewBindingData = context.GetBindingData(view);
             if (viewBindingData.Equals(default))
             {
-                Debug.LogError("There is no view binding! " + view.GetType());
                 FlowLogger.LogError(SystemLogType.Injection, "There is no view binding! " + view.GetType());
                 return false;
             }
-            else if (viewBindingData.Context == null)
+
+            if (viewBindingData.Context == null)
             {
-                Debug.LogError("There is no Context \nviewType: " + view.GetType().Name);
                 FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name);
                 return false;
             }
 
             ViewInjector viewInjector = view.transform.GetComponent<ViewInjector>();
             ViewInjectorData viewInjectionData = viewInjector.GetViewInjectorData(view);
-
-            if (!viewInjectionData.AutoRegister)
-                return false;
 
             if (viewInjectionData.InjectableView)
                 context.TryToInjectObject(view);

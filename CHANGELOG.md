@@ -21,6 +21,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A View that names its Root now actually registers against it.** The injector resolved a
+  view's context from its entry when the object started, and registration then threw that answer
+  away and looked at the selected Root alone. A view with *Use Bubble-up* off and a Root Name
+  typed therefore waited for the named context and registered against whatever Root happened to
+  sit above it in the hierarchy - or reported that there was none. `ViewInjector.ResolveContext`
+  is now the one place that answers the question, and `ViewExtensions.Register` asks it. A Root
+  name that no Root answers to is reported and the object carries on, where
+  `RootsManager.GetRootByName` used to throw a `KeyNotFoundException` on a typo.
+- **Two views on one object waiting for different Roots no longer strand one of them.** The
+  injector subscribed to `OnContextReady` once per view and unsubscribed once per handler run, so
+  the first Root to become ready took away the subscription the other view was still waiting on.
+  It now subscribes once and lets go only when every view on the object has its context.
+- **The inspector's Register button works on a view that does not register itself.** *Auto
+  Register* says whether the injector registers the view on its own; it was also consulted by the
+  registration itself, so pressing the button by hand did nothing and said nothing.
+
 - **A generated module's signal holders no longer keep `Scripts` in their namespace.** *Create
   Module* wrote `Modules.PlayerModule.Scripts.Shared.Signals` while every module already on disk
   said `Modules.PlayerModule.Shared.Signals`, so Rider reported the namespace as not matching the
@@ -33,6 +49,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A view says where its context comes from with one value instead of two toggles.** *Use
+  Bubble-up* and *Use Root Selection* are replaced by `ContextSource`, which is `BubbleUp`,
+  `SelectedRoot` or `RootName`. The two booleans could say both things at once and the inspector
+  had to hide one of them to keep the answer single. **This is a breaking change**: an entry that
+  selected a Root is read back as bubbling up, because the old toggles are gone from the
+  serialised data. Every entry FlowIoC ships was bubbling up, and the other two ways never worked
+  end to end, so nothing in the package or its modules changes behaviour.
+- **The View Injector's inspector was rewritten in the same visual language as the rest.** One
+  card, one folding entry per view wearing a badge that says where its context comes from, and a
+  `?` beside every field that opens what that field does - read from the documentation
+  `ViewInjectorData` now carries, so nothing is written twice. Selecting a Root inside a prefab
+  warns that a prefab cannot hold a scene reference, which used to fail silently when the asset
+  was saved. While the game runs each entry reports the Context it reached and whether it
+  registered, with the badge and the single action the Root's own lifecycle table uses; the red
+  and green buttons are gone. Edits go through the serialized object, so they are undoable and
+  land on the prefab or scene that holds the object.
 - **`AssetServiceRoot` moved from `-10000` to `-1`**, the last seat in the Services band. It was
   the one shipped Root still carrying a number from the old open-ended scheme, so Initialize Order
   now runs from `-100` to `100` with nothing outside it, exactly as the agent rules, the README,

@@ -172,6 +172,85 @@ namespace FlowIoC.Editor.Inspector
             return result;
         }
 
+        public string TextField(Type owner, string member, string label, string value)
+        {
+            Rect content = Row(owner, member);
+            string result = EditorGUI.TextField(content, label, value);
+
+            HelpBox(owner, member);
+
+            return result;
+        }
+
+        public TEnum EnumPopup<TEnum>(Type owner, string member, string label, TEnum value) where TEnum : Enum
+        {
+            Rect content = Row(owner, member);
+            var result = (TEnum) EditorGUI.EnumPopup(content, label, value);
+
+            HelpBox(owner, member);
+
+            return result;
+        }
+
+        public UnityEngine.Object ObjectField(Type owner, string member, string label, UnityEngine.Object value,
+            Type objectType, bool allowSceneObjects)
+        {
+            Rect content = Row(owner, member);
+            UnityEngine.Object result = EditorGUI.ObjectField(content, label, value, objectType, allowSceneObjects);
+
+            HelpBox(owner, member);
+
+            return result;
+        }
+
+        /// <summary>A row that only reports: what the game decided, in the place a field would be.</summary>
+        public void ReadOnlyField(Type owner, string member, string label, string value)
+        {
+            Rect content = Row(owner, member);
+
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUI.LabelField(content, label, value);
+
+            HelpBox(owner, member);
+        }
+
+        /// <summary>
+        /// What the game has decided about a row, and the one action that changes it. Play mode
+        /// only, for the same reason Phase hides its badge out of play mode: nothing has happened
+        /// yet and the button could never be pressed.
+        /// </summary>
+        public bool Status(Type owner, string member, string label, bool done, string doneText, string waitingText,
+            string action, bool actionEnabled)
+        {
+            const float badgeWidth = 80f;
+            const float actionWidth = 24f;
+
+            Rect content = Row(owner, member);
+            var labelPart = new Rect(content.x, content.y, content.width - badgeWidth - actionWidth - 8f,
+                content.height);
+
+            GUI.Label(labelPart, label);
+
+            var badge = new Rect(content.xMax - badgeWidth - actionWidth - 4f, content.y, badgeWidth, content.height);
+
+            Color previous = GUI.color;
+            GUI.color = done ? new Color(0.44f, 0.82f, 0.50f) : new Color(0.62f, 0.62f, 0.62f);
+            GUI.Label(badge, done ? doneText : waitingText, EditorStyles.miniLabel);
+            GUI.color = previous;
+
+            bool pressed;
+
+            using (new EditorGUI.DisabledScope(!actionEnabled))
+            {
+                var button = new Rect(content.xMax - actionWidth, content.y, actionWidth, content.height);
+                pressed = GUI.Button(button, action, EditorStyles.miniButton);
+            }
+
+            HelpBox(owner, member);
+
+            return pressed;
+        }
+
         /// <summary>
         /// One phase of a Root's life: the toggle that says whether it happens by itself, and - in
         /// play mode only - what has happened and a way to make it happen now. Out of play mode a

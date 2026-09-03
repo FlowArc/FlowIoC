@@ -20,7 +20,13 @@ namespace FlowIoC.BaseModule.Root
         private readonly List<IRoot> _contextRootList = new List<IRoot>();
         private readonly Dictionary<string, IRoot> _contextRootMap = new();
 
-        public IRoot GetRootByName(string name) => _contextRootMap[name];
+        /// <summary>
+        /// The Root a name belongs to, or null when the scene holds no such Root. Null rather
+        /// than a thrown key, because the name is authored in an inspector: a typo is a thing to
+        /// report and carry on from, not a thing to stop the object over.
+        /// </summary>
+        public IRoot GetRootByName(string name) =>
+            _contextRootMap.TryGetValue(name, out IRoot root) ? root : null;
 
         public void Initialize()
         {
