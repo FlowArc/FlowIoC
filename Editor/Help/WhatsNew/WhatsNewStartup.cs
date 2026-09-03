@@ -30,7 +30,7 @@ namespace FlowIoC.Editor.Help.WhatsNew
     /// </summary>
     internal class WhatsNewStartup
     {
-        private const string SESSION_KEY = "FlowIoC.WhatsNew.Checked";
+        private const string SESSION_KEY = "FlowIoC.WhatsNew.CheckedVersion";
 
         private readonly WhatsNewSource _source;
         private readonly LastSeenVersion _lastSeen;
@@ -56,14 +56,19 @@ namespace FlowIoC.Editor.Help.WhatsNew
             if (Application.isBatchMode)
                 return;
 
-            // A domain reload is not an update. Without this the window would come back every
-            // time a script compiles, until the version is recorded.
-            if (SessionState.GetBool(SESSION_KEY, false))
+            string installed = _source.Version;
+
+            // A domain reload is not an update, and without a guard the window would come back
+            // every time a script compiles. What the session has to remember is which version it
+            // answered for, not that it answered: SessionState survives a domain reload and is
+            // cleared only when the Editor restarts, and updating the package is a domain reload
+            // inside the same session - so a bare flag would swallow the one event this exists for
+            // and leave the notes until the reader next opened the Editor.
+            if (SessionState.GetString(SESSION_KEY, string.Empty) == installed)
                 return;
 
-            SessionState.SetBool(SESSION_KEY, true);
+            SessionState.SetString(SESSION_KEY, installed);
 
-            string installed = _source.Version;
             WhatsNewDecision decision = new WhatsNewNoticeRule()
                 .For(installed, _lastSeen.Read(), _setup.InstalledVersion());
 

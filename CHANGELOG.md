@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Updating the package shows What's New straight away, rather than on the next Editor launch.**
+  The notice guarded itself with a session flag so that a domain reload - which happens every time
+  a script compiles - would not be mistaken for an update and bring the window back over and over.
+  But `SessionState` survives a domain reload and is cleared only when the Editor restarts, and
+  updating a package *is* a domain reload inside the same session, so the flag swallowed the one
+  event the feature exists for: the reader pressed Update, the new version resolved, and nothing
+  was shown until they next opened the Editor. The session now remembers which version it answered
+  for instead of that it answered, which still elides a recompile on the same version and no longer
+  elides an update to a new one.
+
 - **A project's first open no longer deletes the `FlowLogType.cs` it just generated.** When
   `CD_FlowConsole.asset` cannot be loaded - which happens during the import storm of a first open -
   `FlowLogger` hands back an in-memory stand-in built by `ResetToDefaults`, and that stand-in
