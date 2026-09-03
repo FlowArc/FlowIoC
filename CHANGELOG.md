@@ -7,7 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The Screens panel wears the header bar every FlowIoC component wears.** It says what the window
+  is and which module it belongs to, and carries the window's two ways out on its right: the link
+  to the Screens help page, and Refresh. The strip that used to sit under it is gone with them -
+  the screen count and the collision count were saying what the rows already say. `FlowHeaderBar`
+  grew a `DrawWindow` for this: a window has no fields to explain, so it wears the window's own
+  action where a component wears the help toggle.
+
+- **Two screens on one layer are amber rather than red.** The runtime allows it and a game
+  sometimes wants it - opening one closes the other - so it is a warning and never a refusal. A
+  layer no other screen of that manager opens on is green, which is the settled case rather than a
+  checked one.
+
+- **The columns say what they mean.** `Mgr` is `Manager`, and `Show` and `Hide` are `Show Anim` and
+  `Hide Anim` with their checkboxes carried to the middle of the column instead of hugging its left
+  edge. The headings sit level in their strip too: `miniBoldLabel` is authored for a body of text -
+  a 6 pixel top margin over a 3 pixel top padding, aligned upper left - which in a 21 pixel toolbar
+  left every word near the bottom of its cell.
+
 ### Fixed
+
+- **The Screens panel's Mgr and Layer cells apply when you leave them, not as you type.** Both
+  decide where a row sits - the manager picks its box and the layer sorts it inside one - and both
+  wrote back on every keystroke, so typing `12` committed `1` after the first digit, moved the row
+  into a `Manager 1` box that had not existed a moment earlier, and left the caret pointing at
+  whatever row slid into that place. The second digit then landed on the wrong row. They are
+  delayed fields now: the value applies on Enter or when the field loses focus. The Tag popup and
+  the two animation toggles still apply at once, because a click on either is a finished edit and
+  neither moves the row.
 
 - **A `ViewInjector` whose list was never filled says so instead of registering nothing.** The list
   is written by the injector's own inspector, so an object assembled from code reaches `Start` with

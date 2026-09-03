@@ -21,6 +21,8 @@ namespace FlowIoC.Editor.Inspector
         private const float StripHeight = 16f;
         private const float StripeWidth = 3f;
         private const float IconSize = 20f;
+        private const float ActionWidth = 70f;
+        private const float ActionHeight = 18f;
 
         private readonly FlowPalette _palette;
         private readonly FlowHelpPageMap _pages;
@@ -37,8 +39,43 @@ namespace FlowIoC.Editor.Inspector
         public void Draw(FlowRole role, string title, string module, string label, string summary, bool helpOpen,
             Action onToggleHelp)
         {
+            Rect bar = DrawFrame(role, title, module, label, out Color accent);
+
+            DrawIcons(bar, role, helpOpen, onToggleHelp);
+
+            if (helpOpen && !string.IsNullOrEmpty(summary))
+                DrawSummary(summary, accent);
+
+            GUILayout.Space(2f);
+        }
+
+        /// <summary>
+        /// The same bar for a window. A window has no fields to explain, so it wears no help toggle;
+        /// what sits on the right instead is the window's own action - a Refresh, say - beside the
+        /// link to the role's help page.
+        /// </summary>
+        public void DrawWindow(FlowRole role, string title, string module, string label, string actionLabel,
+            Action onAction)
+        {
+            Rect bar = DrawFrame(role, title, module, label, out Color _);
+
+            float right = DrawHelpPageIcon(bar, role);
+
+            if (!string.IsNullOrEmpty(actionLabel) && onAction != null)
+            {
+                var actionRect = new Rect(right - ActionWidth, bar.y + 6f, ActionWidth, ActionHeight);
+
+                if (GUI.Button(actionRect, actionLabel, EditorStyles.miniButton))
+                    onAction();
+            }
+
+            GUILayout.Space(2f);
+        }
+
+        private Rect DrawFrame(FlowRole role, string title, string module, string label, out Color accent)
+        {
             bool pro = EditorGUIUtility.isProSkin;
-            Color accent = _palette.Accent(role, pro);
+            accent = _palette.Accent(role, pro);
 
             Rect bar = Bleed(EditorGUILayout.GetControlRect(false, BarHeight));
             Rect strip = Bleed(EditorGUILayout.GetControlRect(false, StripHeight));
@@ -50,15 +87,10 @@ namespace FlowIoC.Editor.Inspector
             var titleRect = new Rect(bar.x + StripeWidth + 8f, bar.y, bar.width - 60f, bar.height);
             GUI.Label(titleRect, title, TitleStyle());
 
-            DrawIcons(bar, role, helpOpen, onToggleHelp);
-
             var moduleRect = new Rect(strip.x + StripeWidth + 8f, strip.y, strip.width - 16f, strip.height);
             GUI.Label(moduleRect, $"{module} · {label}", ModuleStyle(accent));
 
-            if (helpOpen && !string.IsNullOrEmpty(summary))
-                DrawSummary(summary, accent);
-
-            GUILayout.Space(2f);
+            return bar;
         }
 
         /// <summary>
@@ -72,24 +104,34 @@ namespace FlowIoC.Editor.Inspector
 
         private void DrawIcons(Rect bar, FlowRole role, bool helpOpen, Action onToggleHelp)
         {
-            string page = _pages.PageFor(role);
-            float right = bar.xMax - 6f;
-
-            if (page != null)
-            {
-                var pageRect = new Rect(right - IconSize, bar.y + 5f, IconSize, IconSize);
-
-                if (GUI.Button(pageRect, new GUIContent(EditorGUIUtility.IconContent("_Help").image, $"Open help: {page}"), EditorStyles.label))
-                    HelpWindow.OpenPage(page);
-
-                right -= IconSize + 4f;
-            }
+            float right = DrawHelpPageIcon(bar, role);
 
             var toggleRect = new Rect(right - IconSize, bar.y + 5f, IconSize, IconSize);
             var content = new GUIContent(helpOpen ? "▾" : "?", "Show what every field here does");
 
             if (GUI.Button(toggleRect, content, TitleStyle()))
                 onToggleHelp();
+        }
+
+        /// <summary>
+        /// The link to the role's help page, and the x the next thing on the right may end at. A
+        /// role with no page draws nothing, because an icon opening the wrong page is worse.
+        /// </summary>
+        private float DrawHelpPageIcon(Rect bar, FlowRole role)
+        {
+            string page = _pages.PageFor(role);
+            float right = bar.xMax - 6f;
+
+            if (page == null)
+                return right;
+
+            var pageRect = new Rect(right - IconSize, bar.y + 5f, IconSize, IconSize);
+            var content = new GUIContent(EditorGUIUtility.IconContent("_Help").image, $"Open help: {page}");
+
+            if (GUI.Button(pageRect, content, EditorStyles.label))
+                HelpWindow.OpenPage(page);
+
+            return right - IconSize - 4f;
         }
 
         private void DrawSummary(string summary, Color accent)
