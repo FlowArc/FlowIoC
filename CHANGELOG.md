@@ -5,6 +5,19 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **A project's first open no longer opens on a warning about eight issues the install was about
+  to fix.** The Module Scan startup report was made from inside `ModuleAutoDetector`, which the
+  setup install calls one line before `ModuleRepair.FixAll` - so the scan counted the
+  `.csproj.DotSettings` files that had not been written yet and told a brand new reader their eight
+  modules had eight issues, on a set FlowIoC had installed itself a moment earlier. The report is
+  now the caller's to make: the startup pass reports, and an install reports once its own repair
+  has run. `RescanModules` detects and says nothing, which is what a caller in the middle of
+  changing the project needs.
+
 ## [1.4.4] - 2026-09-03
 
 ### Added
