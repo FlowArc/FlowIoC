@@ -46,7 +46,7 @@ namespace FlowIoC.Editor.Modules
     /// <summary>
     /// Remembers that the marker migration already ran for a project. EditorPrefs is shared by
     /// every project a user opens with the same Editor, so the key carries the project root the
-    /// same way <see cref="AgentRulesDismissal"/> does - completing the migration in one project
+    /// same way <see cref="AgentRulesAutoSync"/> does - completing the migration in one project
     /// must not silently skip it in another.
     /// </summary>
     internal class MarkerFileMigrationGuard

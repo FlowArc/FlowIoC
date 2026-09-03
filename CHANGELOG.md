@@ -5,6 +5,30 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The agent rules are kept up to date without asking.** FlowIoC used to open a modal dialog on
+  startup offering to write or refresh the rule block, which was wrong twice over: a modal during a
+  load callback blocks every other one behind it - the setup modules install from one, and on a
+  first open they waited for the dialog to be answered - and the question had one sensible answer,
+  because a stale block describes a version of FlowIoC the project is no longer on. The block is
+  generated text between two markers, so nothing a reader wrote is ever touched, which is what
+  makes writing it without asking honest. It is now written whenever it is absent or stale, with a
+  line in the console saying which file was taken, the same way the agent skills report themselves.
+  A project that would rather decide for itself turns it off with a toggle in the Agent Rules
+  window, and then nothing is written until Sync is pressed. `Do not ask again`, which lapsed the
+  next time the rules changed, is gone - the toggle stays off until it is turned back on.
+
+### Fixed
+
+- **The agent rules notice stopped noticing after the first check of a session.** It guarded itself
+  with a session flag, and `SessionState` survives a domain reload, so a package update - which is
+  a domain reload inside the same session - never re-ran the check: a project that updated twice in
+  one sitting kept a rule block describing the version it started on. The check now answers from
+  the files themselves, which is the only thing that can be stale, and needs no flag at all.
+
 ## [1.4.3] - 2026-09-03
 
 ### Fixed
