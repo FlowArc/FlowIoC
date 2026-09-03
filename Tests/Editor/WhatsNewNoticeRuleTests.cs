@@ -28,13 +28,13 @@ namespace FlowIoC.Tests
         /// <summary>
         /// Nothing recorded and no marker means this reader has never opened this project with
         /// FlowIoC in it. What they want then is the introduction, not a list of what changed in a
-        /// package they have not used yet - so the version is recorded quietly and the next update
-        /// is the first one they are shown.
+        /// package they have not used yet - and the introduction is what they get, because nothing
+        /// else in the Editor tells a new project where to start.
         /// </summary>
         [Test]
-        public void A_reader_who_has_seen_nothing_in_a_project_with_no_marker_is_recorded_rather_than_shown()
+        public void A_reader_who_has_seen_nothing_in_a_project_with_no_marker_is_introduced()
         {
-            Assert.AreEqual(WhatsNewDecision.RecordOnly, For("1.5.0", string.Empty));
+            Assert.AreEqual(WhatsNewDecision.Introduce, For("1.5.0", string.Empty));
         }
 
         /// <summary>
@@ -42,9 +42,9 @@ namespace FlowIoC.Tests
         /// so the reader is still meeting it and still wants the introduction.
         /// </summary>
         [Test]
-        public void A_project_that_met_FlowIoC_at_the_installed_version_is_recorded_rather_than_shown()
+        public void A_project_that_met_FlowIoC_at_the_installed_version_is_introduced()
         {
-            Assert.AreEqual(WhatsNewDecision.RecordOnly, For("1.5.0", string.Empty, "1.5.0"));
+            Assert.AreEqual(WhatsNewDecision.Introduce, For("1.5.0", string.Empty, "1.5.0"));
         }
 
         /// <summary>

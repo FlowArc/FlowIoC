@@ -21,12 +21,14 @@ namespace FlowIoC.Editor.Help.WhatsNew
     }
 
     /// <summary>
-    /// Shows what changed, once, after the package has been updated.
+    /// Opens the Help window once, on the reading the moment calls for, and remembers the version
+    /// so that the next Editor launch is quiet again.
     ///
-    /// The Help window opens on the introduction, which is what somebody meeting FlowIoC wants
-    /// and what nobody wants on the session after an update. So a reader who is on a version they
-    /// have not seen the notes for is opened on Welcome's What's New instead, and the version is
-    /// remembered so that the next Editor launch is quiet again.
+    /// A project meeting FlowIoC lands on Welcome's introduction: it has just been given four
+    /// modules, an AGENTS.md and a set of skills, and nothing else in the Editor says where to
+    /// start. A project that has had FlowIoC for a while and has just updated lands on What's New
+    /// instead, because what it wants is the difference rather than the introduction it has
+    /// already read.
     /// </summary>
     internal class WhatsNewStartup
     {
@@ -75,10 +77,16 @@ namespace FlowIoC.Editor.Help.WhatsNew
             if (decision == WhatsNewDecision.Stop)
                 return;
 
-            if (decision == WhatsNewDecision.Show)
-                HelpWindow.OpenPage("Welcome", WelcomePage.WHATS_NEW_TAB);
+            HelpWindow.OpenPage(WelcomePage.PAGE_TITLE, TabFor(decision));
 
             _lastSeen.Write(installed);
+        }
+
+        private string TabFor(WhatsNewDecision decision)
+        {
+            return decision == WhatsNewDecision.Show
+                ? WelcomePage.WHATS_NEW_TAB
+                : WelcomePage.INTRODUCTION_TAB;
         }
     }
 }
