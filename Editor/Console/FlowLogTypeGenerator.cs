@@ -252,6 +252,11 @@ namespace FlowIoC.Editor.Console
             {
                 AssetDatabase.DeleteAsset(GeneratedFolder);
             }
+
+            Debug.Log(
+                $"<color=cyan>FlowConsole:</color> {GeneratedFilePath} was removed, because the settings " +
+                "carry no log types beyond the mandatory channels and there is nothing left to generate. " +
+                "It is written again the moment a module or a custom channel is registered.");
         }
 
         private static string GetFullPath(string assetPath)
