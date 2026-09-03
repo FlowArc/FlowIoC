@@ -66,6 +66,28 @@ namespace FlowIoC.Tests
         }
 
         [Test]
+        public void A_project_with_no_marker_names_no_installed_version()
+        {
+            Assert.AreEqual(string.Empty, _state.InstalledVersion());
+        }
+
+        [Test]
+        public void InstalledVersion_reads_back_the_version_the_marker_was_written_at()
+        {
+            _state.MarkInstalled("1.3.0");
+
+            Assert.AreEqual("1.3.0", new SetupState(_root).InstalledVersion());
+        }
+
+        [Test]
+        public void A_marker_that_cannot_be_parsed_names_no_installed_version()
+        {
+            File.WriteAllText(MarkerPath, "this is not json");
+
+            Assert.AreEqual(string.Empty, _state.InstalledVersion());
+        }
+
+        [Test]
         public void MarkInstalled_creates_the_ProjectSettings_folder_when_it_is_missing()
         {
             Directory.Delete(Path.Combine(_root, "ProjectSettings"), true);

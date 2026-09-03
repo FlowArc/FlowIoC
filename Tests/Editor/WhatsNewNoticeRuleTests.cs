@@ -10,8 +10,8 @@ namespace FlowIoC.Tests
     /// </summary>
     public class WhatsNewNoticeRuleTests
     {
-        private static WhatsNewDecision For(string installed, string seen) =>
-            new WhatsNewNoticeRule().For(installed, seen);
+        private static WhatsNewDecision For(string installed, string seen, string setup = "") =>
+            new WhatsNewNoticeRule().For(installed, seen, setup);
 
         [Test]
         public void A_version_the_reader_has_already_seen_is_not_shown_again()
@@ -26,15 +26,37 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// Nothing recorded means this reader has never opened this project with FlowIoC in it.
-        /// What they want then is the introduction, not a list of what changed in a package they
-        /// have not used yet - so the version is recorded quietly and the next update is the first
-        /// one they are shown.
+        /// Nothing recorded and no marker means this reader has never opened this project with
+        /// FlowIoC in it. What they want then is the introduction, not a list of what changed in a
+        /// package they have not used yet - so the version is recorded quietly and the next update
+        /// is the first one they are shown.
         /// </summary>
         [Test]
-        public void A_reader_who_has_seen_nothing_is_recorded_rather_than_shown()
+        public void A_reader_who_has_seen_nothing_in_a_project_with_no_marker_is_recorded_rather_than_shown()
         {
             Assert.AreEqual(WhatsNewDecision.RecordOnly, For("1.5.0", string.Empty));
+        }
+
+        /// <summary>
+        /// A marker naming the version now installed is a project that met FlowIoC at this version,
+        /// so the reader is still meeting it and still wants the introduction.
+        /// </summary>
+        [Test]
+        public void A_project_that_met_FlowIoC_at_the_installed_version_is_recorded_rather_than_shown()
+        {
+            Assert.AreEqual(WhatsNewDecision.RecordOnly, For("1.5.0", string.Empty, "1.5.0"));
+        }
+
+        /// <summary>
+        /// The case the feature could not otherwise serve: the release that introduces What's New
+        /// lands in a project that has been on FlowIoC for a while, so every reader has nothing
+        /// recorded on that day. The marker names the older version the setup modules were
+        /// installed at, which is the project saying it has been here before.
+        /// </summary>
+        [Test]
+        public void A_project_that_has_been_here_before_is_shown_even_with_nothing_recorded()
+        {
+            Assert.AreEqual(WhatsNewDecision.Show, For("1.5.0", string.Empty, "1.4.0"));
         }
 
         /// <summary>
