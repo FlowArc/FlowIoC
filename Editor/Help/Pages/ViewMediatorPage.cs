@@ -43,6 +43,24 @@ namespace FlowIoC.Editor.Help.Pages
                 + "when the object is destroyed.");
 
             painter.Space();
+            painter.SubHeading("Which Context a View belongs to");
+            painter.Paragraph(
+                "The injector lists one entry per IView on the object, and each entry says where its "
+                + "Context comes from. A View authored under its module's Root wants Bubble Up, which "
+                + "is the default and walks the hierarchy until it finds a Root.");
+            painter.Bullet("Bubble Up - the first Root above the View in the hierarchy.");
+            painter.Bullet("Selected Root - the Root named on the entry, wherever it sits in the scene.");
+            painter.Bullet("Root Name - the Root whose GameObject carries that name, resolved at startup.");
+            painter.Paragraph(
+                "A screen is the one case that answers none of the three: the screen service "
+                + "instantiates it and parents it under a layer, so it names the owning Context on the "
+                + "injector itself. That assignment outranks whatever the entry says.");
+            painter.Note(
+                "Important: a prefab cannot hold a reference to a Root in the scene. Selecting one "
+                + "inside a prefab looks like it worked and is empty again when the asset is saved, so "
+                + "a prefab that has to reach a Root outside its own hierarchy names it with Root Name.");
+
+            painter.Space();
             painter.SubHeading("Screen views are pooled");
             painter.Paragraph(
                 "Start is fine for a View that lives and dies with its GameObject. A ScreenView does "

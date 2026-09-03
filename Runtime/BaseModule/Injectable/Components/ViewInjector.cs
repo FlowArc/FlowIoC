@@ -6,6 +6,8 @@ using FlowIoC.BaseModule.Root;
 using FlowIoC.BaseModule.ViewsMediators.Utils;
 using FlowIoC.BaseModule.ViewsMediators.View;
 using FlowIoC.BaseModule.ViewsMediators.View.Data;
+using FlowIoC.BaseModule.ViewsMediators.View.Enums;
+using FlowIoC.ConsoleModule;
 using UnityEngine;
 
 namespace FlowIoC.BaseModule.Injectable.Components
@@ -25,6 +27,8 @@ namespace FlowIoC.BaseModule.Injectable.Components
 
         private IContext _assignedContext;
 
+        private bool _waitingForContexts;
+
         /// <summary>
         /// Names the context this object's views belong to, for a view that is not authored under
         /// its module's Root - a screen the screen service instantiates and parents under a layer,
@@ -35,49 +39,53 @@ namespace FlowIoC.BaseModule.Injectable.Components
 
         internal IContext AssignedContext => _assignedContext;
 
+        private RootsManager _rootsManagerInstance =>
+            _rootsManager ??= RootsManagerFactory.GetRootsManager() as RootsManager;
+
         #region Unity Methods
 
         private void Start()
         {
             _viewRegistrationDataDict = new Dictionary<IView, IContext>(viewDataList.Count);
 
-            IContext context = null;
-            _rootsManager = RootsManagerFactory.GetRootsManager() as RootsManager;
+            bool waiting = false;
 
             for (int i = 0; i < viewDataList.Count; i++)
             {
                 ViewInjectorData viewInjectorData = viewDataList[i];
+                IContext context = ResolveContext(viewInjectorData);
 
-                if (_assignedContext != null)
-                    context = _assignedContext;
-                else if (viewInjectorData.UseBubbleUp)
-                    context = (transform.GetComponent<IView>()).FindViewContext();
-                else if (viewInjectorData.UseRootSelection)
-                    context = viewInjectorData.SelectedRoot.GetContext();
-                else
-                    context = _rootsManager.GetRootByName(viewInjectorData.RootName).GetContext();
+                // ResolveContext has already said what was missing. Carrying on leaves the other
+                // views on this object working, which is what a reader trying to fix one wants.
+                if (context == null)
+                    continue;
 
-                _viewRegistrationDataDict.Add((IView) viewInjectorData.View, context);
+                _viewRegistrationDataDict[(IView) viewInjectorData.View] = context;
 
-                //if (_rootsManager.IsContextReady(context))
                 if (context.IsStarted)
-                {
                     RegisterView(viewInjectorData);
-                }
                 else
-                {
-                    _rootsManager.OnContextReady += OnContextsReadyListener;
-                }
+                    waiting = true;
             }
+
+            // One subscription for the whole object. Subscribing once per view meant the handler
+            // ran once per view and unsubscribed once per run, so the first context to become
+            // ready could take away the subscription every other view was still waiting on.
+            if (!waiting)
+                return;
+
+            _rootsManagerInstance.OnContextReady += OnContextsReadyListener;
+            _waitingForContexts = true;
         }
 
         public virtual void OnDestroy()
         {
             RootsManagerFactory.ExecuteSafelyOnRootsManager(rootsManager =>
             {
-                if (_rootsManager?.OnContextReady != null)
+                if (_waitingForContexts && _rootsManager?.OnContextReady != null)
                 {
                     _rootsManager.OnContextReady -= OnContextsReadyListener;
+                    _waitingForContexts = false;
                 }
             });
 
@@ -107,23 +115,101 @@ namespace FlowIoC.BaseModule.Injectable.Components
 
         #endregion
 
+        #region Context
+
+        /// <summary>
+        /// Which context a view belongs to, and the one place that answers it. Registration used
+        /// to decide for itself and only ever looked at the selected Root, so a view that named
+        /// its Root waited for the named context and then registered against whatever Root
+        /// happened to sit above it in the hierarchy.
+        ///
+        /// A context assigned by a loader outranks everything the entry says, because the object
+        /// cannot know in the editor where it will be parented.
+        /// </summary>
+        internal IContext ResolveContext(ViewInjectorData viewInjectorData)
+        {
+            if (_assignedContext != null)
+                return _assignedContext;
+
+            switch (viewInjectorData.ContextSource)
+            {
+                case ViewContextSource.SelectedRoot:
+                    return ContextOfSelectedRoot(viewInjectorData);
+
+                case ViewContextSource.RootName:
+                    return ContextOfNamedRoot(viewInjectorData);
+
+                default:
+                    return ((IView) viewInjectorData.View).FindViewContext();
+            }
+        }
+
+        private IContext ContextOfSelectedRoot(ViewInjectorData viewInjectorData)
+        {
+            if (viewInjectorData.SelectedRoot != null)
+                return viewInjectorData.SelectedRoot.GetContext();
+
+            Report(viewInjectorData, "is set to Selected Root and none is selected. A prefab cannot hold "
+                                     + "a reference to a Root in the scene - name the Root instead.");
+
+            return null;
+        }
+
+        private IContext ContextOfNamedRoot(ViewInjectorData viewInjectorData)
+        {
+            IRoot root = string.IsNullOrEmpty(viewInjectorData.RootName)
+                ? null
+                : _rootsManagerInstance.GetRootByName(viewInjectorData.RootName);
+
+            if (root != null)
+                return root.GetContext();
+
+            Report(viewInjectorData, $"asks for the Root named \"{viewInjectorData.RootName}\", which is "
+                                     + "not in the scene.");
+
+            return null;
+        }
+
+        /// <summary>
+        /// Says which view on which object could not find a context. Both halves matter: an
+        /// object carries several views, and a scene carries several of the object.
+        /// </summary>
+        private void Report(ViewInjectorData viewInjectorData, string problem)
+        {
+            string viewName = viewInjectorData.View == null ? "a missing view" : viewInjectorData.View.GetType().Name;
+            string message = $"ViewInjector on \"{name}\": {viewName} {problem}";
+
+            FlowLogger.LogError(SystemLogType.Injection, message);
+        }
+
+        #endregion
+
         #region Injection
 
         private void OnContextsReadyListener(IContext context)
         {
-            bool foundAny = false;
+            bool pending = false;
+
             for (int i = 0; i < viewDataList.Count; i++)
             {
-                if (!_viewRegistrationDataDict.TryGetValue((IView) viewDataList[i].View, out var registeredContext)
-                    || registeredContext != context) continue;
-                RegisterView(viewDataList[i]);
-                foundAny = true;
+                ViewInjectorData viewInjectorData = viewDataList[i];
+
+                if (!_viewRegistrationDataDict.TryGetValue((IView) viewInjectorData.View, out IContext registeredContext))
+                    continue;
+
+                if (registeredContext == context)
+                    RegisterView(viewInjectorData);
+                else if (!registeredContext.IsStarted)
+                    pending = true;
             }
 
-            if (foundAny)
-            {
-                _rootsManager.OnContextReady -= OnContextsReadyListener;
-            }
+            // Held until every view on this object has its context. One Root becoming ready says
+            // nothing about the Root another view on the same object is waiting for.
+            if (pending)
+                return;
+
+            _rootsManagerInstance.OnContextReady -= OnContextsReadyListener;
+            _waitingForContexts = false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
