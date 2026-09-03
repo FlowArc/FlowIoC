@@ -131,6 +131,8 @@ GameObject:
   - component: {fileID: 155719426}
   - component: {fileID: 155719425}
   - component: {fileID: 155719424}
+  - component: {fileID: 155719428}
+  - component: {fileID: 155719427}
   m_Layer: 0
   m_Name: Canvas
   m_TagString: Untagged
@@ -155,7 +157,7 @@ RectTransform:
   - {fileID: 1567295717}
   - {fileID: 1904207176}
   - {fileID: 1793132608}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 750901731}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -225,6 +227,43 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &155719427
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 155719422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03cab3481c6e0644b9556052741d16c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FlowIoC::FlowIoC.BaseModule.Injectable.Components.ViewInjector
+  viewDataList:
+  - View: {fileID: 155719428}
+    AutoRegister: 1
+    InjectableView: 0
+    ContextSource: 0
+    SelectedRoot: {fileID: 0}
+    RootName: 
+    IsRegistered: 0
+--- !u!114 &155719428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 155719422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90831ae745d272f47b43e4463fd6eb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.Counter.Test::Modules.CounterModule.CounterTestModule.ViewsMediators.CounterTestView
+  _remainingLabel: {fileID: 2000306903}
+  _elapsedLabel: {fileID: 1068063648}
+  _statusLabel: {fileID: 1567295719}
+  _startButton: {fileID: 1904207179}
+  _stopButton: {fileID: 1793132605}
 --- !u!1 &676085707
 GameObject:
   m_ObjectHideFlags: 0
@@ -366,77 +405,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1000534855
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1000534858}
-  - component: {fileID: 1000534857}
-  - component: {fileID: 1000534856}
-  m_Layer: 0
-  m_Name: CounterTestView
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1000534856
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000534855}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90831ae745d272f47b43e4463fd6eb30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Modules.Counter.Test::Modules.CounterModule.CounterTestModule.ViewsMediators.CounterTestView
-  _remainingLabel: {fileID: 2000306903}
-  _elapsedLabel: {fileID: 1068063648}
-  _statusLabel: {fileID: 1567295719}
-  _startButton: {fileID: 1904207179}
-  _stopButton: {fileID: 1793132605}
---- !u!114 &1000534857
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000534855}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03cab3481c6e0644b9556052741d16c8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FlowIoC::FlowIoC.BaseModule.Injectable.Components.ViewInjector
-  viewDataList:
-  - View: {fileID: 1000534856}
-    AutoRegister: 1
-    InjectableView: 1
-    ContextSource: 1
-    SelectedRoot: {fileID: 750901730}
-    RootName: 
-    IsRegistered: 0
---- !u!4 &1000534858
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000534855}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 155719423}
+  - {fileID: 2093535052}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1068063645
@@ -1296,12 +1267,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2093535049}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 750901731}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2093535053
 MonoBehaviour:
@@ -1342,6 +1313,3 @@ SceneRoots:
   - {fileID: 1643784943}
   - {fileID: 1542587486}
   - {fileID: 750901731}
-  - {fileID: 155719423}
-  - {fileID: 2093535052}
-  - {fileID: 1000534858}
