@@ -12,7 +12,16 @@ namespace FlowIoC.Editor.Help.Pages
         /// The reading the window lands on after the package has been updated, named here so
         /// that the startup notice can ask for it rather than for a tab number.
         /// </summary>
+        /// <summary>The page's own name, so a caller asking for it does not spell it again.</summary>
+        internal const string PAGE_TITLE = "Welcome";
+
         internal const string WHATS_NEW_TAB = "What's New";
+
+        /// <summary>
+        /// The reading a project lands on the first time it opens with FlowIoC installed, named
+        /// here for the same reason.
+        /// </summary>
+        internal const string INTRODUCTION_TAB = "Introduction";
 
         private IReadOnlyList<WhatsNewVersionEVO> _releases;
 
@@ -20,13 +29,15 @@ namespace FlowIoC.Editor.Help.Pages
         {
         }
 
-        public override string Title => "Welcome";
+        public override string Title => PAGE_TITLE;
 
         public override string Subtitle => "What is FlowIoC";
 
         public override string Icon => "console.infoicon";
 
         public override bool Featured => true;
+
+        protected override string BodyTabTitle => INTRODUCTION_TAB;
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {

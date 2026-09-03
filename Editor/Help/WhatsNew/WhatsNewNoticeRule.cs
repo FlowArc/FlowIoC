@@ -8,8 +8,12 @@ namespace FlowIoC.Editor.Help.WhatsNew
         /// <summary>Nothing to do: the reader is on the version they were on.</summary>
         Stop,
 
-        /// <summary>Show nothing, but remember the version this reader is now on.</summary>
-        RecordOnly,
+        /// <summary>
+        /// Open the window on Welcome's introduction, then remember the version. This reader is
+        /// meeting FlowIoC, and what changed in a package they have not used yet means nothing to
+        /// them.
+        /// </summary>
+        Introduce,
 
         /// <summary>Open the window on What's New, then remember the version.</summary>
         Show
@@ -57,7 +61,7 @@ namespace FlowIoC.Editor.Help.WhatsNew
         {
             return !string.IsNullOrEmpty(setupVersion) && setupVersion != installedVersion
                 ? WhatsNewDecision.Show
-                : WhatsNewDecision.RecordOnly;
+                : WhatsNewDecision.Introduce;
         }
     }
 }

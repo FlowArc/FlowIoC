@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A project meeting FlowIoC is shown the Welcome page.** The window opened itself on What's New
+  after an update and on nothing at all the first time, which left the one reader who most needed
+  a starting point without one: a new project is handed four modules, an `AGENTS.md`, a set of
+  agent skills and a Flow Console, and nothing in the Editor says where to begin. The startup now
+  opens Welcome on its introduction instead of recording the version in silence, and a project that
+  has had FlowIoC for a while still lands on What's New. `WhatsNewDecision.RecordOnly` is
+  `Introduce`, because there is no longer a case that records and shows nothing.
+
 ### Changed
 
 - **The agent rules are kept up to date without asking.** FlowIoC used to open a modal dialog on
