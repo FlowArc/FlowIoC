@@ -75,13 +75,14 @@ namespace FlowIoC.Editor.Console
             if (defaultType == null && moduleTypes.Count == 0 && customTypes.Count == 0)
             {
                 // Nothing to generate is a legitimate state, but so is "the settings asset did not
-                // load and this object is an empty stand-in". Only the first one may delete source.
-                if (!new LogTypeSettingsGuard().IsTrustworthy(settings.LogTypes))
+                // load and this object is a stand-in". Only the first one may delete source.
+                if (!new LogTypeSettingsGuard().IsTrustworthy(settings.IsStandIn, settings.LogTypes))
                 {
                     Debug.LogWarning(
-                        "<color=cyan>FlowConsole:</color> the log type settings came back empty, which means the " +
-                        "settings asset could not be loaded rather than that the project has no log types. " +
-                        $"{GeneratedFolder} was left in place.");
+                        "<color=cyan>FlowConsole:</color> the log types came back empty on a settings object that " +
+                        "did not come from disk, which means CD_FlowConsole.asset could not be loaded rather than " +
+                        $"that the project has no log types. {GeneratedFolder} was left in place, and the file is " +
+                        "regenerated as soon as the settings load.");
                     return;
                 }
 

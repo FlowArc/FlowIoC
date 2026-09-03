@@ -44,6 +44,7 @@ namespace FlowIoC.ConsoleModule
                     {
                         _settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
                         _settings.ResetToDefaults();
+                        _settings.IsStandIn = true;
 
 #if UNITY_EDITOR
                         UnityEditor.EditorApplication.delayCall += () =>
@@ -74,6 +75,7 @@ namespace FlowIoC.ConsoleModule
                                 Directory.CreateDirectory(resourcesPath);
 
                             UnityEditor.AssetDatabase.CreateAsset(_settings, fullPath);
+                            _settings.IsStandIn = false;
                             UnityEditor.AssetDatabase.SaveAssets();
                             UnityEditor.AssetDatabase.Refresh();
                             Debug.Log("<color=cyan>FlowConsoleLogger:</color> Created CD_FlowConsole and verified FlowLogType.");

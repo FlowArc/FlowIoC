@@ -55,6 +55,19 @@ namespace FlowIoC.ConsoleModule
             private set => _logTypes = value;
         }
 
+        /// <summary>
+        /// True while this object is the in-memory stand-in <see cref="FlowLogger"/> builds when
+        /// CD_FlowConsole.asset will not load, and false once it has been written to disk or read
+        /// from it. Unity does not serialise an internal field, so an object that came from an
+        /// asset always answers false.
+        ///
+        /// It exists because ResetToDefaults fills a stand-in with exactly the mandatory channels,
+        /// which makes it indistinguishable from a freshly authored asset by its contents alone.
+        /// Editor tooling that deletes generated source on the settings' word has to be able to
+        /// tell the two apart.
+        /// </summary>
+        [NonSerialized] internal bool IsStandIn;
+
         [Serializable]
         public class FlowConsoleLogTypeCVO
         {
