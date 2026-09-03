@@ -19,8 +19,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   would be ticked by whoever updated the package and nobody who pulled afterwards would ever be
   shown the notes.
 
+- **Add Sub Context says what kind each listed context is, and where it is already used.** The
+  window now wears the same `SCREEN` and `CONNECTOR` badges the Root's own list does, so a context
+  is recognisable before it is added rather than after. A context that a Root in one of the open
+  scenes already lists says which Root has it, and sorts to the bottom of the list instead of
+  disappearing from it - adding the same screen context to a second Root with a second `ManagerId`
+  is a real thing to want, and hiding the row would have made it look impossible.
+
 ### Fixed
 
+- **An error reaches the console whether or not `ENABLE_LOG` is defined, and exactly once.** Every
+  `FlowLogger.LogError` overload now routes through one `WriteError` that carries no
+  `[Conditional]` and consults no setting, so an error survives both a missing `ENABLE_LOG` define
+  and `IsLoggingEnabled` being off - a build that had turned logging off was throwing its
+  diagnostics away with it. Errors also take an optional context object, so clicking one in the
+  console selects the object it is about, and the three runtime `Debug.LogError` call sites moved
+  onto the matching channels; the last `Debug`/`FlowLogger` pair among them had been printing the
+  same error twice.
 - **A View that names its Root now actually registers against it.** The injector resolved a
   view's context from its entry when the object started, and registration then threw that answer
   away and looked at the selected Root alone. A view with *Use Bubble-up* off and a Root Name
@@ -61,6 +76,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   keep the suffix - `CounterServiceRoot` and `CounterServiceContext` - because a Root takes the
   colour of whatever it roots and reads that from its own name, which is now written down as a
   rule in the agent rules, the README and the Help window.
+- **Add Sub Context offers only the contexts that may honestly go on a Root.** A context that some
+  Root declares as its `Root<T>` is built by that Root already, so adding it to a second Root would
+  build a second instance and run the same bindings twice - those are now hidden. A module meant to
+  be hosted on another module's Root says so with the new `[AllowAsSubContext]` on its context and
+  is offered again, and `[ExcludeFromContextWindow]` says the opposite and wins over it. A
+  Connector sub-context is offered on the Connector Root and nowhere else, so the wiring between
+  two modules stays in the one place it belongs; a context counts as a Connector's when its name
+  says so or when it carries `[FlowHeader(FlowRole.Connector)]`. *Create Module* offers
+  `[AllowAsSubContext]` as a toggle on a main module that gets a Root, unticked, because a module
+  with a Root of its own is the ordinary case.
 - **A view says where its context comes from with one value instead of two toggles.** *Use
   Bubble-up* and *Use Root Selection* are replaced by `ContextSource`, which is `BubbleUp`,
   `SelectedRoot` or `RootName`. The two booleans could say both things at once and the inspector
