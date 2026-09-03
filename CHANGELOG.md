@@ -36,6 +36,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   console selects the object it is about, and the three runtime `Debug.LogError` call sites moved
   onto the matching channels; the last `Debug`/`FlowLogger` pair among them had been printing the
   same error twice.
+- **`InputRoot.prefab`'s view registers again, and both shipped scenes hang their views off a
+  Root.** `InputView` sat on the Root's own GameObject, and bubbling up starts at the view's parent
+  rather than at the view itself, so the only way it ever worked was the *Use Root Selection*
+  toggle the `ContextSource` rework retired. The view moved to an `InputView` child under
+  `InputRoot`, where bubbling up finds the Root with nothing configured. The counter module's test
+  scene was re-authored the same way, after `LocalSaveTestScene`: the `Canvas` carries the
+  `ViewInjector` and the View itself, and it and the `EventSystem` sit under the test Root, which
+  is what the rule about a module's GameObjects living under its Root asked for all along. Every
+  other shipped scene and prefab was reserialized onto `ContextSource` in the same pass, so no
+  asset FlowIoC ships still carries the retired `UseBubbleUp` and `UseRootSelection` keys.
 - **A View that names its Root now actually registers against it.** The injector resolved a
   view's context from its entry when the object started, and registration then threw that answer
   away and looked at the selected Root alone. A view with *Use Bubble-up* off and a Root Name
@@ -91,8 +101,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SelectedRoot` or `RootName`. The two booleans could say both things at once and the inspector
   had to hide one of them to keep the answer single. **This is a breaking change**: an entry that
   selected a Root is read back as bubbling up, because the old toggles are gone from the
-  serialised data. The one shipped entry that selected a Root - the counter module's test scene -
-  has been migrated by hand; every other entry FlowIoC ships was already bubbling up. A project
+  serialised data. The two shipped entries that selected a Root have been re-authored to bubble up
+  instead of migrated, because a view that cannot find its Root by bubbling up is a hierarchy
+  problem rather than a setting; every other entry FlowIoC ships was already bubbling up. A project
   that had a view selecting a Root has to pick it again.
 - **The View Injector's inspector was rewritten in the same visual language as the rest.** One
   card, one folding entry per view wearing a badge that says where its context comes from, and a

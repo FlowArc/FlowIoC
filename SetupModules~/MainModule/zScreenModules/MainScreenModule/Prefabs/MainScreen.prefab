@@ -532,9 +532,8 @@ MonoBehaviour:
   viewDataList:
   - View: {fileID: 7744299066773064961}
     AutoRegister: 1
-    UseBubbleUp: 1
     InjectableView: 0
-    UseRootSelection: 1
+    ContextSource: 0
     SelectedRoot: {fileID: 0}
     RootName: 
     IsRegistered: 0

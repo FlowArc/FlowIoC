@@ -101,9 +101,8 @@ MonoBehaviour:
   viewDataList:
   - View: {fileID: 7426752600732395206}
     AutoRegister: 1
-    UseBubbleUp: 1
     InjectableView: 0
-    UseRootSelection: 1
+    ContextSource: 0
     SelectedRoot: {fileID: 0}
     RootName: 
     IsRegistered: 0
@@ -119,6 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 264e316acffe4b92bee6b4de322cd273, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UnregisterWhenViewDestroyed: 0
   _poolConfigs:
     m_Keys: []
     m_Values: []
