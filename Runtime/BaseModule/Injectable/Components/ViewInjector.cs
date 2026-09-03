@@ -46,6 +46,17 @@ namespace FlowIoC.BaseModule.Injectable.Components
 
         private void Start()
         {
+            // An object built from code has never had this list written, and Unity hands a
+            // component added at runtime a null one rather than an empty one.
+            viewDataList ??= new List<ViewInjectorData>();
+
+            if (viewDataList.Count == 0)
+            {
+                ReportUnfilled();
+
+                return;
+            }
+
             _viewRegistrationDataDict = new Dictionary<IView, IContext>(viewDataList.Count);
 
             bool waiting = false;
@@ -178,6 +189,31 @@ namespace FlowIoC.BaseModule.Injectable.Components
         {
             string viewName = viewInjectorData.View == null ? "a missing view" : viewInjectorData.View.GetType().Name;
             string message = $"ViewInjector on \"{name}\": {viewName} {problem}";
+
+            FlowLogger.LogError(SystemLogType.Injection, message);
+        }
+
+        /// <summary>
+        /// The list is filled by the injector's own inspector, so an object assembled from code
+        /// reaches Start with nothing in it and every view on the object stays unregistered without
+        /// a word. An injector on an object that carries no view is idle rather than broken, so
+        /// that one says nothing.
+        /// </summary>
+        private void ReportUnfilled()
+        {
+            List<IView> views = new List<IView>();
+            GetComponents(views);
+
+            if (views.Count == 0)
+                return;
+
+            string[] viewNames = new string[views.Count];
+            for (int i = 0; i < views.Count; i++)
+                viewNames[i] = views[i].GetType().Name;
+
+            string message = $"ViewInjector on \"{name}\": the view list is empty, so no view on this object "
+                             + $"registers: {string.Join(", ", viewNames)}. The list is filled by the injector's "
+                             + "own inspector - select the object once and save the scene.";
 
             FlowLogger.LogError(SystemLogType.Injection, message);
         }

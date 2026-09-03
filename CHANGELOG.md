@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `ViewInjector` whose list was never filled says so instead of registering nothing.** The list
+  is written by the injector's own inspector, so an object assembled from code reaches `Start` with
+  an empty one - or, for a component added at runtime, a null one - and every view on that object
+  stays unregistered without a word, with `IsRegistered` quietly false. `Start` now reports which
+  views on which object are affected and how to fill the list, and an injector on an object that
+  carries no view stays silent, because that one is idle rather than broken.
+
 - **A project's first open no longer opens on a warning about eight issues the install was about
   to fix.** The Module Scan startup report was made from inside `ModuleAutoDetector`, which the
   setup install calls one line before `ModuleRepair.FixAll` - so the scan counted the
