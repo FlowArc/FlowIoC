@@ -65,7 +65,7 @@ namespace FlowIoC.Editor.Help
             var sections = new List<HelpSection>
             {
                 new HelpSection(new SetupModulesPage()),
-                new HelpSection(new CountdownServiceModulePage()),
+                new HelpSection(new CounterModulePage()),
                 new HelpSection(new CameraSystemModulePage()),
                 new HelpSection(new InputModulePage())
             };

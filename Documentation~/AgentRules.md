@@ -15,7 +15,7 @@ so follow the rules below deliberately.
   `Modules.B`, and the only crossing point is a Connector. The three exceptions that
   follow are the whole list.
 - **A Service crosses directly.** Reference the Service module's assembly and inject its
-  interface, the way `OpenMatchBoardScreenCommand` injects `ICountdownService`. Being
+  interface, the way `OpenMatchBoardScreenCommand` injects `ICounterService`. Being
   usable this way is the point of a Service.
 - **A sub-module reaches the module it lives in.** A screen or sub module may use its
   parent's types. The direction is one way: a module never knows what sits in its own
@@ -23,6 +23,10 @@ so follow the rules below deliberately.
 - **A test module reaches anything.** Everything under `zTestModules` is test code, so it
   may reference any module in the project. In exchange, every script in it is wrapped in
   `#if UNITY_EDITOR`.
+- A module's tests are that test module, and nothing else. There is no assembly of unit tests
+  under `Scripts/`: the shape `Create Module` writes has no `Tests` folder, and adding one gives
+  the module a second assembly nothing else in the project has. What a module hands the reader
+  is the scene its test module runs, the same way it ships everything else it offers.
 - Systems are never added to one another's assemblies. Two Systems in separate modules
   talk through signals wired in a Connector, like any other cross-module traffic.
 - A Connector gets signal holders, it never binds them:
@@ -70,7 +74,14 @@ so follow the rules below deliberately.
 - Systems and Services both dispatch outgoing signals when they have something to announce,
   and a Command drives their work the same way it drives a Model's.
 - A Service lives in `Services/`, a System in `Systems/`. Both are an interface and an
-  implementation, the way a Model is: `ICountdownService` and `CountdownService`.
+  implementation, the way a Model is: `ICounterService` and `CounterService`.
+- A module that exists to provide a Service is named for what it does, and its Root and Context
+  keep the `Service` suffix: `CounterModule` holds `Modules.Counter`, and inside it sit
+  `CounterServiceRoot` and `CounterServiceContext`. The suffix is what the inspector reads - a
+  Root takes the colour of whatever it roots, and it decides that from its own name - so
+  `CounterRoot` would be drawn as a plain Root while `CounterServiceRoot` is drawn as a Service.
+  The module name has no such job, so it says what the module counts, parses or stores rather
+  than repeating the word.
 - A View holds scene references and raw input. A View with an `if` about game rules is
   doing the Mediator's job.
 - A Mediator drives exactly one View. It listens to signals and dispatches them, and holds
@@ -265,7 +276,7 @@ means is the table above.
 | Signal container | `PlayerSignals`, with nested `PlayerSignalsIncoming` and `PlayerSignalsOutgoing` |
 | Command | `AddCurrencyCommand` |
 | Model | `IPlayerModel` and `PlayerModel` |
-| Service | `ICountdownService` and `CountdownService` |
+| Service | `ICounterService` and `CounterService` |
 | System | `IMapSystem` and `MapSystem` |
 | Data asset | `CD_Maps`, `RD_Maps`, `PD_Maps` |
 | Value object | `PlayerStateVO`, `MapCVO`, `MapRVO` |

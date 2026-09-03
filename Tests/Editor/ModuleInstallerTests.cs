@@ -7,8 +7,8 @@ namespace FlowIoC.Tests
 {
     public class ModuleInstallerTests
     {
-        private const string ModuleName = "CountdownServiceModule";
-        private const string AssemblyName = "Modules.CountdownService";
+        private const string ModuleName = "CounterModule";
+        private const string AssemblyName = "Modules.Counter";
 
         private string _package;
         private string _project;
@@ -65,9 +65,9 @@ namespace FlowIoC.Tests
         {
             Assert.IsTrue(NewInstaller().TryInstall(ModuleName, out string error), error);
 
-            Assert.IsTrue(File.Exists(Installed("Modules.CountdownService.asmdef")));
-            Assert.IsTrue(File.Exists(Installed("Modules.CountdownService.asmdef.meta")));
-            Assert.IsTrue(File.Exists(Installed("Scripts/Runtime/Services/CountdownService.cs")));
+            Assert.IsTrue(File.Exists(Installed("Modules.Counter.asmdef")));
+            Assert.IsTrue(File.Exists(Installed("Modules.Counter.asmdef.meta")));
+            Assert.IsTrue(File.Exists(Installed("Scripts/Runtime/Services/CounterService.cs")));
         }
 
         /// <summary>
@@ -81,8 +81,8 @@ namespace FlowIoC.Tests
             NewInstaller().TryInstall(ModuleName, out _);
 
             Assert.AreEqual(
-                File.ReadAllText(Shipped("Modules.CountdownService.asmdef.meta")),
-                File.ReadAllText(Installed("Modules.CountdownService.asmdef.meta")));
+                File.ReadAllText(Shipped("Modules.Counter.asmdef.meta")),
+                File.ReadAllText(Installed("Modules.Counter.asmdef.meta")));
         }
 
         [Test]
@@ -104,12 +104,12 @@ namespace FlowIoC.Tests
             ModuleInstaller installer = NewInstaller();
             installer.TryInstall(ModuleName, out _);
 
-            File.WriteAllText(Installed("Scripts/Runtime/Services/CountdownService.cs"), "edited by the game");
+            File.WriteAllText(Installed("Scripts/Runtime/Services/CounterService.cs"), "edited by the game");
 
             Assert.IsFalse(installer.TryInstall(ModuleName, out string error));
             Assert.IsNotEmpty(error);
             Assert.AreEqual("edited by the game",
-                File.ReadAllText(Installed("Scripts/Runtime/Services/CountdownService.cs")));
+                File.ReadAllText(Installed("Scripts/Runtime/Services/CounterService.cs")));
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace FlowIoC.Tests
             Assert.IsFalse(installer.IsInstalled(ModuleName));
             Assert.IsFalse(installer.TryInstall(ModuleName, out string error));
             StringAssert.Contains(AssemblyName, error);
-            Assert.IsFalse(File.Exists(Path.Combine(target, "Modules.CountdownService.asmdef")));
+            Assert.IsFalse(File.Exists(Path.Combine(target, "Modules.Counter.asmdef")));
         }
 
         [Test]
@@ -188,11 +188,11 @@ namespace FlowIoC.Tests
 
             Directory.CreateDirectory(services);
 
-            File.WriteAllText(Path.Combine(root, "Modules.CountdownService.asmdef"),
+            File.WriteAllText(Path.Combine(root, "Modules.Counter.asmdef"),
                 "{\n  \"name\": \"" + AssemblyName + "\",\n  \"references\": [\"FlowIoC\"]\n}");
-            File.WriteAllText(Path.Combine(root, "Modules.CountdownService.asmdef.meta"),
+            File.WriteAllText(Path.Combine(root, "Modules.Counter.asmdef.meta"),
                 "fileFormatVersion: 2\nguid: 0123456789abcdef0123456789abcdef");
-            File.WriteAllText(Path.Combine(services, "CountdownService.cs"), "// shipped");
+            File.WriteAllText(Path.Combine(services, "CounterService.cs"), "// shipped");
         }
 
         private string Shipped(string relativePath) =>

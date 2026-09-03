@@ -1,0 +1,16 @@
+{
+  "name": "Modules.Counter",
+  "references": [
+    "FlowIoC",
+    "Modules.Counter.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

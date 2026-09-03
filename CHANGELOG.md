@@ -49,13 +49,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`CountdownServiceModule` is now `CounterModule`, and its service counts in both directions
+  under names that say so.** The module always measured elapsed time as well as counting down, so
+  a name that described only half of it was the wrong name. **This is a breaking change**: the
+  folder is `CounterModule`, the assemblies are `Modules.Counter`, `Modules.Counter.Shared` and
+  `Modules.Counter.Test`, the namespaces are `Modules.CounterModule.*`, and the types are
+  `ICounterService`, `CounterService`, `ICounterModel`, `CounterModel`, `CounterVO`,
+  `CounterRequestVO` and `CounterServiceSignals`. `EvaluateElapsedTime` is now `CountUpFrom`, to
+  read beside `CountDownFrom`, and the request's `CountdownTick`, `CountdownComplete` and
+  `CountdownStop` are `CounterTick`, `CounterComplete` and `CounterStop`. The Root and Context
+  keep the suffix - `CounterServiceRoot` and `CounterServiceContext` - because a Root takes the
+  colour of whatever it roots and reads that from its own name, which is now written down as a
+  rule in the agent rules, the README and the Help window.
 - **A view says where its context comes from with one value instead of two toggles.** *Use
   Bubble-up* and *Use Root Selection* are replaced by `ContextSource`, which is `BubbleUp`,
   `SelectedRoot` or `RootName`. The two booleans could say both things at once and the inspector
   had to hide one of them to keep the answer single. **This is a breaking change**: an entry that
   selected a Root is read back as bubbling up, because the old toggles are gone from the
-  serialised data. Every entry FlowIoC ships was bubbling up, and the other two ways never worked
-  end to end, so nothing in the package or its modules changes behaviour.
+  serialised data. The one shipped entry that selected a Root - the counter module's test scene -
+  has been migrated by hand; every other entry FlowIoC ships was already bubbling up. A project
+  that had a view selecting a Root has to pick it again.
 - **The View Injector's inspector was rewritten in the same visual language as the rest.** One
   card, one folding entry per view wearing a badge that says where its context comes from, and a
   `?` beside every field that opens what that field does - read from the documentation

@@ -32,19 +32,19 @@ namespace FlowIoC.Tests
         [Test]
         public void A_source_defaults_to_the_button_installed_modules()
         {
-            WriteModule(ModulesSource.ModulesFolder, "CountdownServiceModule");
+            WriteModule(ModulesSource.ModulesFolder, "CounterModule");
             WriteModule(ModulesSource.SetupModulesFolder, "MainModule");
 
             Assert.IsTrue(new ModulesSource(_packageRoot).TryList(out string[] found, out _));
 
             Assert.AreEqual(1, found.Length);
-            StringAssert.EndsWith("CountdownServiceModule", found[0]);
+            StringAssert.EndsWith("CounterModule", found[0]);
         }
 
         [Test]
         public void A_source_told_to_read_the_setup_folder_lists_only_the_set()
         {
-            WriteModule(ModulesSource.ModulesFolder, "CountdownServiceModule");
+            WriteModule(ModulesSource.ModulesFolder, "CounterModule");
             WriteModule(ModulesSource.SetupModulesFolder, "MainModule");
 
             var source = new ModulesSource(_packageRoot, ModulesSource.SetupModulesFolder);

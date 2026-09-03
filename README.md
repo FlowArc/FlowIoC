@@ -209,6 +209,13 @@ flowchart LR
 | **Mediator** | Driving one View: subscribes to signals in `OnRegister`, unsubscribes in `OnRemove`, and turns view callbacks into outgoing signals. | Do the work itself. A Mediator dispatches; a Command decides. |
 | **Connector** | Wiring one module's `Outgoing` signals to another's `Incoming` signals, in one readable place. | Transform game state. A converter that reshapes a payload is fine; a rule is not. |
 
+A module that exists to provide a Service is named for what it does, while its Root and Context
+keep the `Service` suffix — `CounterModule` holds `Modules.Counter`, and inside it sit
+`CounterServiceRoot` and `CounterServiceContext` beside `ICounterService`. The suffix is what the
+inspector reads: a Root takes the colour of whatever it roots and decides that from its own name,
+so `CounterRoot` would be drawn as a plain Root while `CounterServiceRoot` is drawn as a Service.
+The module name has no such job, so it says what the module counts, parses or stores.
+
 ---
 
 ## Core Concepts
@@ -949,7 +956,7 @@ you do not want.
 
 | Module | Injected as | What it does |
 |---|---|---|
-| **CountdownServiceModule** | `ICountdownService` | Named countdowns with once-a-second callbacks: seconds left or 0..1, several listeners per id, counting up as well as down, and a pluggable time source so a server clock can replace the device one. |
+| **CounterModule** | `ICounterService` | Named counters with once-a-second callbacks: `CountDownFrom` towards zero or `CountUpFrom` measuring elapsed time, seconds left or 0..1, several listeners per id, and a pluggable time source so a server clock can replace the device one. |
 
 Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its
 page. Copying the files is only part of it — the installer also registers the module in the module
