@@ -21,22 +21,43 @@ namespace FlowIoC.Editor.Help.WhatsNew
     /// </summary>
     internal class WhatsNewNoticeRule
     {
-        internal WhatsNewDecision For(string installedVersion, string lastSeenVersion)
+        /// <summary>
+        /// <paramref name="setupVersion"/> is the version recorded in the project's setup marker,
+        /// which only matters when the reader has seen nothing. It is what tells a project that has
+        /// had FlowIoC in it for a while from one that has just met it.
+        /// </summary>
+        internal WhatsNewDecision For(string installedVersion, string lastSeenVersion, string setupVersion)
         {
             // An unresolved package has no version to compare or to record, which is what an
             // embedded copy outside the Package Manager looks like.
             if (string.IsNullOrEmpty(installedVersion))
                 return WhatsNewDecision.Stop;
 
-            // Nothing recorded means this reader has never opened this project with FlowIoC in
-            // it. What they want then is the introduction, so the version is recorded quietly
-            // and the next update is the first one they are shown.
             if (string.IsNullOrEmpty(lastSeenVersion))
-                return WhatsNewDecision.RecordOnly;
+                return FirstTimeSeen(installedVersion, setupVersion);
 
             return installedVersion == lastSeenVersion
                 ? WhatsNewDecision.Stop
                 : WhatsNewDecision.Show;
+        }
+
+        /// <summary>
+        /// Nothing recorded means one of two things, and the reader wants opposite answers to them.
+        /// Somebody meeting FlowIoC wants the introduction, not a list of what changed in a package
+        /// they have not used yet. Somebody whose project has been on FlowIoC for a while and has
+        /// only now updated to a version that keeps this record wants exactly those notes - and
+        /// without this, the release that introduces What's New could never announce itself to
+        /// anyone, because every existing reader has nothing recorded on the day it lands.
+        ///
+        /// The project's setup marker separates them: it carries the version the setup modules were
+        /// installed at, so a marker naming an older version is the project saying it has been here
+        /// before. No marker, or one naming the version now installed, is a first meeting.
+        /// </summary>
+        private WhatsNewDecision FirstTimeSeen(string installedVersion, string setupVersion)
+        {
+            return !string.IsNullOrEmpty(setupVersion) && setupVersion != installedVersion
+                ? WhatsNewDecision.Show
+                : WhatsNewDecision.RecordOnly;
         }
     }
 }

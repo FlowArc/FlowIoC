@@ -49,6 +49,29 @@ namespace FlowIoC.Editor.SetupModules
             }
         }
 
+        /// <summary>
+        /// The FlowIoC version the marker was written at, or empty when this project has none. It
+        /// is the one record that says a project has had FlowIoC in it before, which is what lets
+        /// What's New tell a reader meeting the package from one who has simply never been shown
+        /// the notes.
+        /// </summary>
+        internal string InstalledVersion()
+        {
+            try
+            {
+                if (!File.Exists(MarkerPath))
+                    return string.Empty;
+
+                var record = JsonUtility.FromJson<SetupRecord>(File.ReadAllText(MarkerPath));
+
+                return record == null ? string.Empty : record.installedVersion ?? string.Empty;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
         internal void MarkInstalled(string version)
         {
             var record = new SetupRecord

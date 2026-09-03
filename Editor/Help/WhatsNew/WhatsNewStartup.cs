@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
+using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Help.Pages;
+using FlowIoC.Editor.SetupModules;
 using UnityEditor;
 using UnityEngine;
 
@@ -32,15 +34,20 @@ namespace FlowIoC.Editor.Help.WhatsNew
 
         private readonly WhatsNewSource _source;
         private readonly LastSeenVersion _lastSeen;
+        private readonly SetupState _setup;
 
-        internal WhatsNewStartup() : this(new WhatsNewSource(), new LastSeenVersion())
+        internal WhatsNewStartup() : this(
+            new WhatsNewSource(),
+            new LastSeenVersion(),
+            new SetupState(new ProjectRoot().Resolve()))
         {
         }
 
-        internal WhatsNewStartup(WhatsNewSource source, LastSeenVersion lastSeen)
+        internal WhatsNewStartup(WhatsNewSource source, LastSeenVersion lastSeen, SetupState setup)
         {
             _source = source;
             _lastSeen = lastSeen;
+            _setup = setup;
         }
 
         internal void Run()
@@ -57,7 +64,8 @@ namespace FlowIoC.Editor.Help.WhatsNew
             SessionState.SetBool(SESSION_KEY, true);
 
             string installed = _source.Version;
-            WhatsNewDecision decision = new WhatsNewNoticeRule().For(installed, _lastSeen.Read());
+            WhatsNewDecision decision = new WhatsNewNoticeRule()
+                .For(installed, _lastSeen.Read(), _setup.InstalledVersion());
 
             if (decision == WhatsNewDecision.Stop)
                 return;

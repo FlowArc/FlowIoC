@@ -5,6 +5,21 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **What's New is shown to a project that has been on FlowIoC for a while, not only from the
+  second update onwards.** The notice remembers the version a reader has seen in `EditorPrefs`,
+  and reads nothing recorded as somebody meeting FlowIoC for the first time - who wants the
+  introduction rather than a list of changes to a package they have not used. That is right for a
+  new project and wrong for every existing one on the day the feature lands, which is how `1.4.1`
+  shipped What's New and then could not announce itself to a single reader. The rule now asks the
+  project as well as the reader: `ProjectSettings/FlowIoCSetup.json` carries the version the setup
+  modules were installed at, so a marker naming an older version is the project saying it has been
+  here before, and the notes are shown. No marker, or one naming the version now installed, still
+  means a first meeting.
+
 ## [1.4.1] - 2026-09-03
 
 ### Added
