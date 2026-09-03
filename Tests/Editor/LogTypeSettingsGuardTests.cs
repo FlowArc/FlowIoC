@@ -11,13 +11,13 @@ namespace FlowIoC.Tests
         public void An_empty_list_is_not_trustworthy()
         {
             Assert.IsFalse(new LogTypeSettingsGuard()
-                .IsTrustworthy(new List<CD_FlowConsole.FlowConsoleLogTypeCVO>()));
+                .IsTrustworthy(false, new List<CD_FlowConsole.FlowConsoleLogTypeCVO>()));
         }
 
         [Test]
         public void A_null_list_is_not_trustworthy()
         {
-            Assert.IsFalse(new LogTypeSettingsGuard().IsTrustworthy(null));
+            Assert.IsFalse(new LogTypeSettingsGuard().IsTrustworthy(false, null));
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace FlowIoC.Tests
                 new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "PlayerModule", IsMandatory = false },
             };
 
-            Assert.IsFalse(new LogTypeSettingsGuard().IsTrustworthy(types));
+            Assert.IsFalse(new LogTypeSettingsGuard().IsTrustworthy(false, types));
         }
 
         [Test]
@@ -46,7 +46,25 @@ namespace FlowIoC.Tests
                 new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "Default", IsMandatory = false },
             };
 
-            Assert.IsTrue(new LogTypeSettingsGuard().IsTrustworthy(types));
+            Assert.IsTrue(new LogTypeSettingsGuard().IsTrustworthy(false, types));
+        }
+
+        /// <summary>
+        /// The stand-in FlowLogger builds when the asset cannot be loaded is filled by
+        /// ResetToDefaults, which adds exactly the mandatory channels - so counting them cannot
+        /// tell a stand-in from an asset, and the object has to say which it is. Trusting a
+        /// stand-in is what deleted FlowLogType.cs on a consumer's first open.
+        /// </summary>
+        [Test]
+        public void A_stand_in_is_not_trustworthy_even_carrying_its_mandatory_types()
+        {
+            var types = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>
+            {
+                new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "All", IsMandatory = true },
+                new CD_FlowConsole.FlowConsoleLogTypeCVO { Name = "Default", IsMandatory = true },
+            };
+
+            Assert.IsFalse(new LogTypeSettingsGuard().IsTrustworthy(true, types));
         }
     }
 }

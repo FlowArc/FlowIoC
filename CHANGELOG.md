@@ -5,6 +5,22 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **A project's first open no longer deletes the `FlowLogType.cs` it just generated.** When
+  `CD_FlowConsole.asset` cannot be loaded - which happens during the import storm of a first open -
+  `FlowLogger` hands back an in-memory stand-in built by `ResetToDefaults`, and that stand-in
+  carries the mandatory system channels and no module channels. `FlowLogTypeGenerator` read three
+  empty type lists from it and asked `LogTypeSettingsGuard` whether the settings could be trusted;
+  the guard answered by counting mandatory channels, which the stand-in has, so the generated file
+  was deleted without a word. The next compile then failed with `The name 'FlowLogType' does not
+  exist in the current context` in every command that logs, and only focusing the Editor once put
+  it right. The settings object now says whether it came from disk, and the guard asks that first,
+  so a stand-in is never trusted with a deletion. When it is refused, the console says so rather
+  than staying silent.
+
 ## [1.4.2] - 2026-09-03
 
 ### Fixed
