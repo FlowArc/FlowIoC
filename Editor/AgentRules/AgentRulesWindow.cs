@@ -8,7 +8,8 @@ namespace FlowIoC.Editor.AgentRules
 {
     /// <summary>
     /// Shows what the FlowIoC rule block looks like in this project's AGENTS.md and CLAUDE.md,
-    /// and writes it on request. Nothing is written without the button being pressed.
+    /// writes it on request, and carries the switch that decides whether FlowIoC keeps it current
+    /// on its own.
     /// </summary>
     internal class AgentRulesWindow : EditorWindow
     {
@@ -20,7 +21,7 @@ namespace FlowIoC.Editor.AgentRules
             window.Show();
         }
 
-        private readonly AgentRulesDismissal _dismissal = new AgentRulesDismissal();
+        private readonly AgentRulesAutoSync _autoSync = new AgentRulesAutoSync();
 
         private SyncFileState[] _states;
         private string _projectRoot;
@@ -73,16 +74,28 @@ namespace FlowIoC.Editor.AgentRules
                     Refresh();
             }
 
-            if (!_dismissal.HasDismissal(_projectRoot))
+            EditorGUILayout.Space();
+            DrawAutoSyncToggle();
+        }
+
+        /// <summary>
+        /// FlowIoC writes the block whenever it is absent or stale, without asking. A project that
+        /// would rather decide for itself turns that off here, and then nothing is written until
+        /// Sync is pressed.
+        /// </summary>
+        private void DrawAutoSyncToggle()
+        {
+            bool on = !_autoSync.IsOff(_projectRoot);
+            bool wanted = EditorGUILayout.ToggleLeft(
+                "Keep AGENTS.md and CLAUDE.md up to date automatically", on);
+
+            if (wanted == on)
                 return;
 
-            EditorGUILayout.Space();
-            EditorGUILayout.HelpBox(
-                "The startup notice is switched off for this project. It stays off until the rules change.",
-                MessageType.None);
-
-            if (GUILayout.Button("Re-enable the startup notice", GUILayout.Height(22)))
-                _dismissal.Clear(_projectRoot);
+            if (wanted)
+                _autoSync.TurnOn(_projectRoot);
+            else
+                _autoSync.TurnOff(_projectRoot);
         }
 
         private void Refresh() => _states = NewSynchronizer().Inspect();
