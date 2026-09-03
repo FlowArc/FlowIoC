@@ -67,6 +67,12 @@ namespace FlowIoC.Editor.Help.Pages
                 "Create Module offers the same attribute as a toggle on a main module that gets a Root. "
                 + "It starts unticked, because a module with a Root of its own is the ordinary case.");
             painter.Paragraph(
+                "What is left is offered with the kind it is - SCREEN, CONNECTOR - and with the Roots "
+                + "that already list it, read from the open scenes. Those are sorted to the bottom "
+                + "under a heading of their own, and stay clickable: the same screen on two Roots with "
+                + "two ManagerIds is a deliberate thing, and the window says so rather than deciding "
+                + "for you.");
+            painter.Paragraph(
                 "Connector sub-contexts are the other half of the rule: they are offered on the "
                 + "Connector Root and nowhere else, and every other Root is offered everything but "
                 + "those. A context counts as a Connector's when its name says so - "
