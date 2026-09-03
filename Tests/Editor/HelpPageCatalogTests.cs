@@ -110,7 +110,7 @@ namespace FlowIoC.Tests
             List<string> titles = ChildTitles("Modules");
 
             CollectionAssert.AreEqual(
-                new[] {"Setup Modules", "Countdown Service", "Camera System", "Input"},
+                new[] {"Setup Modules", "Counter", "Camera System", "Input"},
                 titles.Take(4).ToList());
 
             CollectionAssert.IsSubsetOf(titles.Skip(4).ToList(), new[] {"Private Modules"});

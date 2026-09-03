@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// The camera system module: the cameras it names, how a game hands its own Cinemachine
     /// cameras over, what it does not wire up for you, and the button that puts it in the project.
     ///
-    /// Unlike the countdown service this module has packages behind it, so installing it may have
+    /// Unlike the counter module this module has packages behind it, so installing it may have
     /// to add them first. PendingModuleInstall carries the install across that.
     /// </summary>
     internal class CameraSystemModulePage : HelpPage

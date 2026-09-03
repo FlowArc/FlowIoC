@@ -67,7 +67,7 @@ namespace FlowIoC.Tests
         /// <summary>
         /// "ScreenTestModule" has an empty parent under the screen-test rule, but it is not
         /// meaningless: it is what Create Module names the test module of a module called
-        /// "ScreenModule", the same way CountdownServiceModule's is CountdownServiceTestModule.
+        /// "ScreenModule", the same way CounterModule's is CounterTestModule.
         /// So the rule that no longer applies gives way to the one that does.
         /// </summary>
         [Test]

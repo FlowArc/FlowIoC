@@ -23,7 +23,7 @@ namespace FlowIoC.Tests
             public GameObject gameObject => null;
         }
 
-        private class CountdownService { }
+        private class CounterService { }
 
         private class MapSystem { }
 
@@ -55,7 +55,7 @@ namespace FlowIoC.Tests
         [Test]
         public void TryResolve_reads_a_service_from_its_name()
         {
-            new FlowRoleResolver().TryResolve(typeof(CountdownService), out FlowRole role);
+            new FlowRoleResolver().TryResolve(typeof(CounterService), out FlowRole role);
 
             Assert.AreEqual(FlowRole.Service, role);
         }

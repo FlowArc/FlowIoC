@@ -24,6 +24,15 @@ namespace FlowIoC.Editor.Help.Pages
                 "The Context is where the module declares what it is made of - and nothing else. A "
                 + "Context that needs an if is making a decision, and a decision belongs in a Command.");
 
+            painter.SubHeading("What a Root is called");
+            painter.Paragraph(
+                "A Root takes the colour of whatever it roots, and it decides that from its own name. "
+                + "So a module that exists to provide a Service keeps the Service suffix on its Root "
+                + "and Context even when the module itself does not: CounterModule holds "
+                + "Modules.Counter, and inside it sit CounterServiceRoot and CounterServiceContext "
+                + "beside ICounterService. CounterRoot would be drawn as a plain Root instead, and the "
+                + "scene would stop saying at a glance what kind of module that is.");
+
             painter.SubHeading("What each phase is for");
             painter.Paragraph(
                 "The binding phases declare. SignalBindings, InjectionBindings, MediationBindings and "

@@ -28,12 +28,12 @@ namespace FlowIoC.Tests
         [Test]
         public void Everything_else_in_the_file_survives()
         {
-            string asmdef = "{\n  \"name\": \"Modules.Player\",\n  \"references\": [\n    \"FlowIoC\",\n    \"Modules.Countdown\"\n  ],\n"
+            string asmdef = "{\n  \"name\": \"Modules.Player\",\n  \"references\": [\n    \"FlowIoC\",\n    \"Modules.Counter\"\n  ],\n"
                             + "  \"allowUnsafeCode\": true,\n  \"defineConstraints\": [\n    \"UNITY_EDITOR\"\n  ]\n}";
 
             string result = _references.Add(asmdef, "Modules.Player.Shared", out _);
 
-            StringAssert.Contains("\"Modules.Countdown\"", result);
+            StringAssert.Contains("\"Modules.Counter\"", result);
             StringAssert.Contains("\"allowUnsafeCode\": true", result);
             StringAssert.Contains("\"UNITY_EDITOR\"", result);
             StringAssert.Contains("\"name\": \"Modules.Player\"", result);

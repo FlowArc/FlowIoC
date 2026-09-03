@@ -562,10 +562,10 @@ affected.
 They are complementary — a self-retriggering loop needs both to go fully quiet:
 
 ```csharp
-internal class CountdownSignalsInternal : ISignalHolder
+internal class CounterInternalSignals : ISignalHolder
 {
     public Signal Tick = new(hideCommandLog: true);
-    public Signal<CountdownRequestVO> AddCountdown = new();   // still logged
+    public Signal<CounterRequestVO> AddCounter = new();   // still logged
 }
 ```
 
