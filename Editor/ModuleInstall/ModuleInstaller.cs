@@ -215,6 +215,10 @@ namespace FlowIoC.Editor.ModuleInstall
             new ModuleRepair().FixAll();
 
             Debug.Log($"<color=cyan>[FlowIoC]</color> Module installed: {TargetFolder}/{moduleFolderName}");
+
+            // After the repair above, for the reason the startup pass has: a scan taken before it
+            // reports the settings files that FixAll has just written.
+            new ModuleScanStartupReport().Report();
         }
 
         private static void CopyTree(string source, string target)

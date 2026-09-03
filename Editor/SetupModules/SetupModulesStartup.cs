@@ -116,6 +116,10 @@ namespace FlowIoC.Editor.SetupModules
             ModuleAutoDetector.RescanModules();
             FlowLogTypeGenerator.Generate();
             new ModuleRepair().FixAll();
+
+            // Here, and not from inside RescanModules: the repair above writes the settings files
+            // that a scan taken a line earlier would have reported as missing.
+            new ModuleScanStartupReport().Report();
         }
 
         /// <summary>

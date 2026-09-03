@@ -30,11 +30,27 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
             }
         }
 
+        /// <summary>
+        /// The startup pass, and the one place the scan report belongs: nothing else is running,
+        /// so what the scan sees is the project as it stands.
+        /// </summary>
         public static void DetectAndRegisterModulesOnStartup()
         {
             new ModuleAutoDetector().DetectAndRegisterModules();
+
+            // Everything the detector touches repairs itself silently. Everything else a module can
+            // be missing - an assembly, a mandatory folder, a stale namespace settings file - is
+            // only visible in Module Scan, and a panel nobody remembers to open is a panel that
+            // never helps.
+            new ModuleScanStartupReport().Report();
         }
 
+        /// <summary>
+        /// Detection on its own, for a caller that is in the middle of changing the project. It
+        /// deliberately does not report: an install has folders copied and settings files not yet
+        /// written when it calls this, so a scan taken here reports the very issues the caller
+        /// repairs on its next line. Whoever calls this reports when its own work is done.
+        /// </summary>
         public static void RescanModules()
         {
             new ModuleAutoDetector().DetectAndRegisterModules();
@@ -69,11 +85,6 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
 
             if (changes.ToRemove.Count > 0)
                 FlowLogTypeManager.RemoveFlowLogTypesBatch(changes.ToRemove);
-
-            // Everything above repairs itself silently. Everything else a module can be missing -
-            // an assembly, a mandatory folder, a stale namespace settings file - is only visible
-            // in Module Scan, and a panel nobody remembers to open is a panel that never helps.
-            new ModuleScanStartupReport().Report();
         }
     }
 }
