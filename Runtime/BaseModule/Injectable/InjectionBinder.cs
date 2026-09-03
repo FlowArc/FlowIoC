@@ -217,8 +217,9 @@ namespace FlowIoC.BaseModule.Injectable
 
             if (!_container.TryGetValue(bindingType, out List<InjectionBinding> bindings))
             {
-                Debug.LogError("Nothing is bound to " + bindingType.Name + NameSuffix(name)
-                               + ". Whoever owns it either never bound it or is not in the scene.");
+                FlowLogger.LogError(SystemLogType.Injection, "Nothing is bound to " + bindingType.Name
+                                                            + NameSuffix(name) + ". Whoever owns it either never "
+                                                            + "bound it or is not in the scene.");
                 return default;
             }
 
@@ -226,7 +227,8 @@ namespace FlowIoC.BaseModule.Injectable
 
             if (injectionData == null)
             {
-                Debug.LogError(bindingType.Name + " is bound, but not" + NameSuffix(name) + ".");
+                FlowLogger.LogError(SystemLogType.Injection,
+                    bindingType.Name + " is bound, but not" + NameSuffix(name) + ".");
                 return default;
             }
 

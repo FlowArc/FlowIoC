@@ -166,32 +166,50 @@ namespace FlowIoC.ConsoleModule
         // ======================== LogError ========================
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
-        internal static void LogError(SystemLogType systemLogType, string message, string unityMessage = "")
+        internal static void LogError(SystemLogType systemLogType, string message, string unityMessage = "",
+            UnityEngine.Object context = null)
         {
-            if (!string.IsNullOrEmpty(unityMessage))
-                Debug.LogError(unityMessage);
-            else
-                Debug.LogError(message);
-
-            if (!Settings.IsLoggingEnabled) return;
-
-            AddLog(systemLogType, message, LogType.Error);
+            WriteError((int) systemLogType, systemLogType, message, unityMessage, context);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
-        public static void LogError(int logTypeValue, string message)
+        public static void LogError(int logTypeValue, string message, UnityEngine.Object context = null)
         {
-            AddCustomLog(logTypeValue, ResolveMessage(logTypeValue, message), LogType.Error);
+            WriteError(logTypeValue, null, ResolveMessage(logTypeValue, message), null, context);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
-        public static void LogError(int logTypeValue, string message, FlowLogProfile profile)
+        public static void LogError(int logTypeValue, string message, FlowLogProfile profile,
+            UnityEngine.Object context = null)
         {
             string formatted = profile != null ? FormatWithProfile(message, profile) : message;
-            AddCustomLog(logTypeValue, formatted, LogType.Error);
+            WriteError(logTypeValue, null, formatted, null, context);
+        }
+
+        /// <summary>
+        /// The one path an error takes. It carries no [Conditional] attribute and consults no setting,
+        /// because a project that never defined ENABLE_LOG - or turned logging off - is exactly the one
+        /// that has to be told something is broken. Every error is written here, and written once.
+        /// </summary>
+        [HideInCallstack]
+        private static void WriteError(int logTypeValue, SystemLogType? systemLogType, string message,
+            string unityMessage, UnityEngine.Object context)
+        {
+#if UNITY_EDITOR
+            var log = CreateLogEntry(message, LogType.Error);
+            log.LogTypeValue = logTypeValue;
+
+            if (systemLogType.HasValue)
+                log.SystemLogType = systemLogType.Value;
+
+            if (Settings.TryGetLogType(logTypeValue, out var typeInfo))
+                log.LogColor = typeInfo.LogColor;
+
+            Logs.Add(log);
+            OnLogAdded?.Invoke(log);
+#endif
+
+            Debug.LogError(string.IsNullOrEmpty(unityMessage) ? message : unityMessage, context);
         }
 
         // ======================== LogLong ========================
@@ -295,14 +313,7 @@ namespace FlowIoC.ConsoleModule
             OnLogAdded?.Invoke(log);
 #endif
 
-            if (logType == LogType.Error)
-            {
-                Debug.LogError(message);
-            }
-            else
-            {
-                ForwardToUnityConsole(logTypeValue, message, logType);
-            }
+            ForwardToUnityConsole(logTypeValue, message, logType);
         }
 
 #if UNITY_EDITOR

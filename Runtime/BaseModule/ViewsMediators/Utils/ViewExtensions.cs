@@ -99,8 +99,7 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
                 InjectedMediatorData injectedMediatorData = mediationBinder.GetOrCreateInjectedMediatorData(view);
                 if (injectedMediatorData == null)
                 {
-                    Debug.LogError("Injection Data not found! ", view.gameObject);
-                    FlowLogger.LogError(SystemLogType.Injection, "Injection Data not found! ");
+                    FlowLogger.LogError(SystemLogType.Injection, "Injection Data not found!", context: view.gameObject);
                     return false;
                 }
 
