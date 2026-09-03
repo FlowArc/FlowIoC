@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   window, and then nothing is written until Sync is pressed. `Do not ask again`, which lapsed the
   next time the rules changed, is gone - the toggle stays off until it is turned back on.
 
+- **Removing the generated `FlowLogType.cs` is announced rather than done in silence.** Deleting it
+  is correct when the settings carry no log types beyond the mandatory channels, because there is
+  then nothing to generate - but a deletion that says nothing is indistinguishable from the bug
+  fixed in `1.4.3`, where the same call ran on a settings stand-in and took the file with it. The
+  cleanup now logs which file it removed and why, and that it comes back as soon as a module or a
+  custom channel is registered.
+
 ### Fixed
 
 - **The agent rules notice stopped noticing after the first check of a session.** It guarded itself
