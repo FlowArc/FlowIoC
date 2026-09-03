@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.BaseModule.Root;
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.Editor.Inspector;
 using FlowIoC.Editor.Root;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
@@ -32,18 +34,37 @@ namespace FlowIoC.Editor.Screens
             window.Show();
         }
 
-        private readonly Color _collisionColor = new Color(1f, 0.45f, 0.45f);
+        /// <summary>
+        /// A layer no other screen of this manager opens on. Green because it is the settled case,
+        /// not because anything was checked for the reader.
+        /// </summary>
+        private readonly Color _uniqueLayerColor = new Color(0.55f, 0.85f, 0.55f);
+
+        /// <summary>
+        /// A layer another screen of this manager also opens on. Amber rather than red: the runtime
+        /// allows it and a game sometimes wants it, so this is a warning and never a refusal.
+        /// </summary>
+        private readonly Color _sharedLayerColor = new Color(1f, 0.8f, 0.35f);
 
         private ScreenSubContextDeclarations _declarations;
         private ScreenPanelScan _scan;
         private ScreenLayerCollisions _collisions;
         private ScreenOverrideSeed _seed;
         private RootDirtyMarker _dirtyMarker;
+        private FlowHeaderBar _bar;
 
         private List<ScreenRowEVO> _rows = new List<ScreenRowEVO>();
         private HashSet<ScreenRowEVO> _collided = new HashSet<ScreenRowEVO>();
         private bool _manyScenes;
         private Vector2 _scroll;
+
+        /// <summary>
+        /// The column headings. miniBoldLabel is authored for a body of text rather than a toolbar
+        /// strip - a 6 pixel top margin over a 3 pixel top padding, aligned upper left - which in a
+        /// 21 pixel toolbar leaves the word sitting near the bottom of its cell. This is that style
+        /// with miniLabel's vertical metrics, which is what the toolbar's own labels already use.
+        /// </summary>
+        private GUIStyle _headerStyle;
 
         private void OnEnable()
         {
@@ -52,6 +73,7 @@ namespace FlowIoC.Editor.Screens
             _collisions = new ScreenLayerCollisions();
             _seed = new ScreenOverrideSeed();
             _dirtyMarker = new RootDirtyMarker();
+            _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
             EditorApplication.hierarchyChanged += Rescan;
             EditorSceneManager.sceneOpened += OnSceneOpened;
@@ -88,7 +110,7 @@ namespace FlowIoC.Editor.Screens
 
         private void OnGUI()
         {
-            DrawToolbar();
+            _bar.DrawWindow(FlowRole.Screen, "Screens", "FlowIoC", "Screens in the open scenes", "Refresh", Refresh);
 
             if (_rows.Count == 0)
             {
@@ -107,30 +129,16 @@ namespace FlowIoC.Editor.Screens
             EditorGUILayout.EndScrollView();
         }
 
-        private void DrawToolbar()
+        /// <summary>
+        /// A rescan reads the declarations the context types already loaded hold. Refresh throws
+        /// those away first, so a declaration edited in code since the window opened is read again.
+        /// </summary>
+        private void Refresh()
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            _declarations = new ScreenSubContextDeclarations();
+            _scan = new ScreenPanelScan(_declarations);
 
-            GUILayout.Label($"{_rows.Count} screen(s)", EditorStyles.miniLabel);
-
-            if (_collided.Count > 0)
-            {
-                Color previous = GUI.color;
-                GUI.color = _collisionColor;
-                GUILayout.Label($"{_collided.Count} sharing a layer", EditorStyles.miniBoldLabel);
-                GUI.color = previous;
-            }
-
-            GUILayout.FlexibleSpace();
-
-            if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(70)))
-            {
-                _declarations = new ScreenSubContextDeclarations();
-                _scan = new ScreenPanelScan(_declarations);
-                Rescan();
-            }
-
-            EditorGUILayout.EndHorizontal();
+            Rescan();
         }
 
         private int ManagerOf(ScreenRowEVO row) => row.Effective?.ManagerId ?? 0;
@@ -157,17 +165,27 @@ namespace FlowIoC.Editor.Screens
 
         private void DrawHeaderRow()
         {
+            // EditorStyles is not loaded when the window's fields are, so the style is built here.
+            _headerStyle ??= new GUIStyle(EditorStyles.miniBoldLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                margin = new RectOffset(4, 4, 2, 2),
+                padding = new RectOffset(2, 2, 0, 0)
+            };
+
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label("Screen", EditorStyles.miniBoldLabel, GUILayout.Width(180));
-            GUILayout.Label("Root", EditorStyles.miniBoldLabel, GUILayout.Width(160));
-            GUILayout.Label("Mgr", EditorStyles.miniBoldLabel, GUILayout.Width(40));
-            GUILayout.Label("Layer", EditorStyles.miniBoldLabel, GUILayout.Width(50));
-            GUILayout.Label("Tag", EditorStyles.miniBoldLabel, GUILayout.Width(80));
-            GUILayout.Label("Show", EditorStyles.miniBoldLabel, GUILayout.Width(40));
-            GUILayout.Label("Hide", EditorStyles.miniBoldLabel, GUILayout.Width(40));
-            GUILayout.Label("Load", EditorStyles.miniBoldLabel);
+            GUILayout.Label("Screen", _headerStyle, GUILayout.Width(180));
+            GUILayout.Label("Root", _headerStyle, GUILayout.Width(160));
+            GUILayout.Label("Manager", _headerStyle, GUILayout.Width(60));
+            GUILayout.Label("Layer", _headerStyle, GUILayout.Width(50));
+            GUILayout.Label("Tag", _headerStyle, GUILayout.Width(80));
+            GUILayout.Label("Show Anim", _headerStyle, GUILayout.Width(70));
+            GUILayout.Label("Hide Anim", _headerStyle, GUILayout.Width(70));
+            GUILayout.Label("Load", _headerStyle);
             EditorGUILayout.EndHorizontal();
         }
+
+        private Color LayerColor(bool collided) => collided ? _sharedLayerColor : _uniqueLayerColor;
 
         private void DrawRow(ScreenRowEVO row)
         {
@@ -175,8 +193,7 @@ namespace FlowIoC.Editor.Screens
 
             bool collided = _collided.Contains(row);
             Color previous = GUI.color;
-            if (collided)
-                GUI.color = _collisionColor;
+            GUI.color = LayerColor(collided);
 
             string name = row.IsOverridden ? row.ContextName + " *" : row.ContextName;
             GUIContent nameContent = new GUIContent(
@@ -207,19 +224,22 @@ namespace FlowIoC.Editor.Screens
         {
             EditorGUI.BeginChangeCheck();
 
-            int managerId = EditorGUILayout.IntField(row.Effective.ManagerId, GUILayout.Width(40));
+            // Delayed, because these two decide where the row sits: the manager picks its box and
+            // the layer sorts it inside one. A plain IntField writes on every keystroke, so typing
+            // 12 committed 1 first, moved the row into a box that did not exist a moment before,
+            // and left the caret on whatever row had slid into that place.
+            int managerId = EditorGUILayout.DelayedIntField(row.Effective.ManagerId, GUILayout.Width(60));
 
             Color previous = GUI.color;
-            if (collided)
-                GUI.color = _collisionColor;
+            GUI.color = LayerColor(collided);
 
-            int layer = EditorGUILayout.IntField(row.Effective.Layer, GUILayout.Width(50));
+            int layer = EditorGUILayout.DelayedIntField(row.Effective.Layer, GUILayout.Width(50));
 
             GUI.color = previous;
 
             ScreenTag tag = (ScreenTag) EditorGUILayout.EnumPopup(row.Effective.Tag, GUILayout.Width(80));
-            bool show = EditorGUILayout.Toggle(row.Effective.HasShowAnimation, GUILayout.Width(40));
-            bool hide = EditorGUILayout.Toggle(row.Effective.HasHideAnimation, GUILayout.Width(40));
+            bool show = AnimationToggle(row.Effective.HasShowAnimation);
+            bool hide = AnimationToggle(row.Effective.HasHideAnimation);
 
             if (EditorGUI.EndChangeCheck())
                 Write(row, managerId, layer, tag, show, hide);
@@ -238,6 +258,17 @@ namespace FlowIoC.Editor.Screens
                         GUILayout.Width(52)))
                     ResetToCode(row);
             }
+        }
+
+        /// <summary>
+        /// A checkbox draws at the left edge of whatever width it is given, which left it under the
+        /// first letter of a two word header. The space carries it to the middle of its column.
+        /// </summary>
+        private bool AnimationToggle(bool value)
+        {
+            GUILayout.Space(26);
+
+            return EditorGUILayout.Toggle(value, GUILayout.Width(44));
         }
 
         private void Write(ScreenRowEVO row, int managerId, int layer, ScreenTag tag, bool show, bool hide)
