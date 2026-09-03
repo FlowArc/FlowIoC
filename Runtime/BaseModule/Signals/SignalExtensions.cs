@@ -1,4 +1,5 @@
 using System;
+using FlowIoC.ConsoleModule;
 
 namespace FlowIoC.BaseModule.Signals
 {
@@ -55,7 +56,8 @@ namespace FlowIoC.BaseModule.Signals
                 }
                 catch (Exception e)
                 {
-                    UnityEngine.Debug.LogError($"Cannot convert {typeof(TSource).Name} to {typeof(TTarget).Name}: {e.Message}");
+                    FlowLogger.LogError(SystemLogType.Signal,
+                        $"Cannot convert {typeof(TSource).Name} to {typeof(TTarget).Name}: {e.Message}");
                 }
             });
         }
