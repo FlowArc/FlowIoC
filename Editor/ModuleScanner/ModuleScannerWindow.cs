@@ -33,7 +33,7 @@ namespace FlowIoC.Editor.ModuleScanner
         private const float BADGE_WIDTH = 78f;
         private const float FINDING_INDENT = 26f;
 
-        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1249)]
+        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1250)]
         internal static void Open()
         {
             ModuleScannerWindow window = GetWindow<ModuleScannerWindow>(TITLE);
