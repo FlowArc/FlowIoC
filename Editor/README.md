@@ -15,7 +15,7 @@ The tools keep those conventions correct so you do not have to.
 | `Tools/FlowIoC/Console/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
-| `Tools/FlowIoC/Module Scan` | Report every module's folders, assemblies and namespace settings, and repair what is safe to repair |
+| `Tools/FlowIoC/Module Scanner` | Report every module's folders, assemblies and namespace settings, and repair what is safe to repair |
 
 ---
 
@@ -54,9 +54,9 @@ is easy to forget by hand and produces a view that silently never registers.
 
 ## Keeping Things Correct
 
-### Module Scan
+### Module Scanner
 
-`Tools ▸ FlowIoC ▸ Module Scan` reads every module in the project and reports what each
+`Tools ▸ FlowIoC ▸ Module Scanner` reads every module in the project and reports what each
 one is missing:
 
 | Checks | Looks for |

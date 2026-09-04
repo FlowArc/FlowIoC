@@ -990,12 +990,12 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 | `Tools/FlowIoC/Console/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
-| `Tools/FlowIoC/Module Scan` | Report every module's folders, assemblies, references and namespace settings, and repair what is safe to repair |
+| `Tools/FlowIoC/Module Scanner` | Report every module's folders, assemblies, references and namespace settings, and repair what is safe to repair |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
 | `Tools/FlowIoC/AI/Agent Skills` | Install the skills FlowIoC ships into the project's `.claude/skills` |
 | `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor. Its Welcome page has a **What's New** tab, read out of the package's `CHANGELOG.md`, and the window opens itself there once after FlowIoC has been updated |
 
-`Module Scan` also writes `<Solution>.sln.DotSettings`, the ReSharper and Rider
+`Module Scanner` also writes `<Solution>.sln.DotSettings`, the ReSharper and Rider
 code style FlowIoC ships: naming rules, the `_` prefix on private members, the `VO` suffix
 family, spacing. Rider only reads a settings file named after the solution, which differs per
 project, so the file is generated rather than shipped. Only the keys FlowIoC owns are written -
@@ -1137,7 +1137,7 @@ Runtime type of the same name in `Modules.PlayerModule.Data.ValueObjects`. The
 generator writes `Modules.Player.Shared.csproj.DotSettings` alongside the module's
 own — a `.csproj.DotSettings` applies only to the project it is named after, so the
 module's file cannot skip the `Scripts` folder on the Shared assembly's behalf.
-*Tools ▸ FlowIoC ▸ Module Scan* rewrites both.
+*Tools ▸ FlowIoC ▸ Module Scanner* rewrites both.
 
 Shared is offered on main modules only. If two modules need the same data and
 neither owns it, that data belongs in a module of its own — the same answer as for
@@ -1159,7 +1159,7 @@ module folder's Unity GUID rather than its name or path, so renaming or moving a
 module in the Project window does not desynchronise the tools from what is actually
 on disk. The index is a cache: name, kind and nesting are all read back off the
 folder tree, so a stale or missing entry is fixed by rebuilding it — *Tools ▸ FlowIoC ▸
-Module Scan*, or just reopening the project — rather
+Module Scanner*, or just reopening the project — rather
 than by editing the asset.
 
 Because it is a cache, FlowIoC keeps it out of version control: a `.gitignore` next to
@@ -1260,7 +1260,7 @@ project that needs a family of its own adds one the same way: a new prefix, a ma
 both declared in the code style.
 
 Which prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`, written by
-*Tools ▸ FlowIoC ▸ Module Scan*. What each one means is the
+*Tools ▸ FlowIoC ▸ Module Scanner*. What each one means is the
 table above, and the agent rules carry a short version of it so an AI assistant names data the
 same way.
 

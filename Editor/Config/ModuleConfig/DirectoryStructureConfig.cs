@@ -127,7 +127,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// an asset already written into a project.
         ///
         /// It went unnoticed for as long as nothing acted on the flag - Create Module only reads
-        /// the optional ones, to decide which checkboxes to offer. Module Scan creates whatever is
+        /// the optional ones, to decide which checkboxes to offer. Module Scanner creates whatever is
         /// mandatory and missing, so it created a `Scriptables` folder in every screen module that
         /// did not have one.
         /// </summary>

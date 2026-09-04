@@ -140,7 +140,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             if (!_registry.TryGetModule(moduleAssetPath, out ModuleDescriptorEVO module))
             {
-                _lastResult = $"'{moduleAssetPath}' is not in the module index. Run Tools > FlowIoC > Module Scan first.";
+                _lastResult = $"'{moduleAssetPath}' is not in the module index. Run Tools > FlowIoC > Module Scanner first.";
                 Debug.LogError($"<color=cyan>FlowIoC:</color> Add Shared Data - {_lastResult}");
                 return;
             }

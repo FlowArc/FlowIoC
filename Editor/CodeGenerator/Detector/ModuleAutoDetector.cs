@@ -40,7 +40,7 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
 
             // Everything the detector touches repairs itself silently. Everything else a module can
             // be missing - an assembly, a mandatory folder, a stale namespace settings file - is
-            // only visible in Module Scan, and a panel nobody remembers to open is a panel that
+            // only visible in Module Scanner, and a panel nobody remembers to open is a panel that
             // never helps.
             new ModuleScanStartupReport().Report();
         }

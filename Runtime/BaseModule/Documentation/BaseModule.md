@@ -691,7 +691,7 @@ that uses that mediator type.
 Sub-contexts are attached in the Root's inspector, not in code. If you renamed or
 moved the Context class, the stored `ContextFullName` no longer resolves and the
 console logs `Context Type couldn't find!`. Re-add it from the inspector, or run
-*Tools ▸ FlowIoC ▸ Module Scan*.
+*Tools ▸ FlowIoC ▸ Module Scanner*.
 
 ### A second copy of an app-wide module appears
 

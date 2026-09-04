@@ -434,7 +434,7 @@ prefixes and suffixes, spacing. Read it before writing C# and follow what it say
 project. Change the modules, not the file.
 
 `<Solution>.sln.DotSettings` and the `*.csproj.DotSettings` files beside it are written by
-`Tools/FlowIoC/Module Scan`. Run the menu item rather than editing them.
+`Tools/FlowIoC/Module Scanner`. Run the menu item rather than editing them.
 
 ### Logging
 

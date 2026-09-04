@@ -103,4 +103,4 @@ declaring both in `<Solution>.sln.DotSettings`.
 FlowIoC's full architecture rules live in the project's `AGENTS.md`, written by
 *Tools ▸ FlowIoC ▸ AI ▸ Agent Rules*. The legal prefixes and suffixes are declared in
 `<Solution>.sln.DotSettings`, written by
-*Tools ▸ FlowIoC ▸ Module Scan*.
+*Tools ▸ FlowIoC ▸ Module Scanner*.

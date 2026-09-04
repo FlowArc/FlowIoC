@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.CodeStyle
         /// <summary>
         /// The merge of the shipped template over whatever the project already has, without
         /// writing it. <paramref name="changed"/> says whether the file on disk differs from that
-        /// merge, so a caller that only wants to know - Module Scan's report, which must not
+        /// merge, so a caller that only wants to know - Module Scanner's report, which must not
         /// change anything while it scans - can ask without touching the file.
         /// </summary>
         internal bool TryCompose(out string path, out string content, out bool changed, out string error)
