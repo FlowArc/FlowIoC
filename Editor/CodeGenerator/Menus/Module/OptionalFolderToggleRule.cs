@@ -17,13 +17,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         /// <summary>
         /// <paramref name="folder"/> is the layout's entry for the folder, or null when the layout
         /// has none. <paramref name="withheldFrom"/> names the module types that are not offered
-        /// this folder whatever the layout says - a test module wires other modules' signals
-        /// rather than owning a public surface of its own, so it is withheld the Signals holder.
+        /// this folder whatever the layout says - a test module holds nothing another module reads,
+        /// so it is withheld the Shared assembly. <paramref name="requiredFor"/> names the ones
+        /// that get it whether they want it or not: a screen module's signals are its only way in
+        /// and they live in Shared, so a screen module without one has no public surface at all.
         /// </summary>
         public OptionalFolderToggleState For(
             FolderEVO folder,
             ModuleType moduleType,
-            IReadOnlyCollection<ModuleType> withheldFrom)
+            IReadOnlyCollection<ModuleType> withheldFrom,
+            IReadOnlyCollection<ModuleType> requiredFor = null)
         {
             if (folder == null)
                 return OptionalFolderToggleState.Hidden;
@@ -32,6 +35,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             // describing the folder, not deciding which module types are offered a toggle for it.
             if (withheldFrom != null && withheldFrom.Contains(moduleType))
                 return OptionalFolderToggleState.Hidden;
+
+            if (requiredFor != null && requiredFor.Contains(moduleType))
+                return OptionalFolderToggleState.ForcedOn;
 
             return folder.IsOptional
                 ? OptionalFolderToggleState.Selectable

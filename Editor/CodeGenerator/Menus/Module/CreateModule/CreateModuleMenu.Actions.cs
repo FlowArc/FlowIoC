@@ -13,21 +13,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             {
                 _actionNames.Add(NEW_ACTION);
             }
+
             GUI.backgroundColor = Color.white;
 
             _actionScrollPosition = EditorGUILayout.BeginScrollView(_actionScrollPosition, GUILayout.MaxHeight(60));
-            for (int i = 0; i < _actionNames.Count; i++)
+
+            // The row that is pressed is noted and dropped once the list has been drawn. Removing
+            // it where the button is - and leaving the loop from inside its row, as this did -
+            // ends the frame with a horizontal group still open, which IMGUI reports as a
+            // mismatched layout group for every repaint that follows.
+            int removeAt = -1;
+
+            for (int ii = 0; ii < _actionNames.Count; ii++)
             {
                 EditorGUILayout.BeginHorizontal();
 
-                _actionNames[i] = EditorGUILayout.TextField(_actionNames[i]);
+                _actionNames[ii] = EditorGUILayout.TextField(_actionNames[ii]);
 
                 GUI.backgroundColor = Color.red;
+
                 if (GUILayout.Button("-", GUILayout.Width(30)))
-                {
-                    _actionNames.RemoveAt(i);
-                    break;
-                }
+                    removeAt = ii;
 
                 GUI.backgroundColor = Color.white;
 
@@ -35,6 +41,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             }
 
             EditorGUILayout.EndScrollView();
+
+            if (removeAt >= 0)
+                _actionNames.RemoveAt(removeAt);
         }
     }
 }

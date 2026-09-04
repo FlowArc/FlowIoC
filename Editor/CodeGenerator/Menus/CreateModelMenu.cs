@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.Editor.Inspector;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +16,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
     internal class CreateModelMenu : EditorWindow
     {
         private const string MODULES_PATH = "Modules";
+
+        private const float PANEL_HEADER_HEIGHT = 33f;
+        private const float MODULE_LIST_HEIGHT = 300f;
 
         private const string MODEL_NAME_LABEL = "Model Name: ";
         private const string CREATE_MODEL_BUTTON = "Create Model";
@@ -42,6 +47,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private string _selectedModuleName = string.Empty;
         private bool _useDummyBinding;
         private ED_CodeGenerator _codeGenSettings;
+
+        private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
         private enum GenerationState
         {
@@ -74,6 +81,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void OnGUI()
         {
+            _bar.DrawWindow(FlowRole.Root, "Create Model", "FlowIoC", "An interface and the class behind it",
+                null, null, "Creating a Module");
+
             EditorGUILayout.BeginVertical("box");
             EditorGUILayout.LabelField(MODEL_NAME_LABEL, GUILayout.Width(100));
             _modelName = EditorGUILayout.TextField(_modelName);
@@ -88,16 +98,37 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             DisplayInjectablesSection();
             DisplayParentModuleSelection();
+            GUILayout.FlexibleSpace();
             DisplayCreateModelButton();
             EditorGUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// The module the model lands in, in the shape Add Shared Data asks the same question: a
+        /// bar in the Root's purple over a list tall enough to read, and the pick spelled out
+        /// under it.
+        /// </summary>
         private void DisplayParentModuleSelection()
         {
-            EditorGUILayout.Space(20);
-            EditorGUILayout.LabelField(PARENT_MODULE_LABEL);
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.Height(200));
-            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.Space(10);
+
+            var labelStyle = new GUIStyle(EditorStyles.whiteLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                fontSize = 12,
+                richText = true
+            };
+
+            GUI.backgroundColor = new ModulePanelTheme().Header;
+            EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(PANEL_HEADER_HEIGHT));
+            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"),
+                GUILayout.Width(35), GUILayout.Height(PANEL_HEADER_HEIGHT));
+            EditorGUILayout.LabelField(PARENT_MODULE_LABEL, labelStyle, GUILayout.Height(PANEL_HEADER_HEIGHT));
+            EditorGUILayout.EndHorizontal();
+            GUI.backgroundColor = Color.white;
+
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(MODULE_LIST_HEIGHT));
+            EditorGUILayout.BeginVertical();
 
             // CreateModelMenu never restricted which module kind could host a model.
             ModuleHierarchyDrawer.DrawModuleHierarchy(_registry, MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath,
@@ -105,7 +136,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
-            EditorGUILayout.Space(20);
+
+            if (!string.IsNullOrEmpty(_parentModulePath))
+                EditorGUILayout.LabelField($"Selected: {Path.GetFileName(_parentModulePath)}", EditorStyles.boldLabel);
         }
 
         private void DisplayInjectablesSection()
@@ -123,6 +156,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             float scrollViewHeight = Mathf.Min(150, 30 * _injectableNames.Count);
             _injectablesScrollPosition = EditorGUILayout.BeginScrollView(_injectablesScrollPosition, GUILayout.Height(scrollViewHeight));
+            // Noted here, dropped once the list has been drawn: leaving the loop from inside a row
+            // ends the frame with that row's horizontal group still open, and IMGUI reports an
+            // invalid layout state for every repaint after it.
+            int removeAt = -1;
+
             for (int i = 0; i < _injectableNames.Count; i++)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -130,11 +168,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 _injectableNames[i] = EditorGUILayout.TextField(_injectableNames[i]);
 
                 GUI.backgroundColor = Color.red;
+
                 if (GUILayout.Button("-", GUILayout.Width(30)))
-                {
-                    _injectableNames.RemoveAt(i);
-                    break;
-                }
+                    removeAt = i;
 
                 GUI.backgroundColor = Color.white;
 
@@ -142,6 +178,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             }
 
             EditorGUILayout.EndScrollView();
+
+            if (removeAt >= 0)
+                _injectableNames.RemoveAt(removeAt);
         }
 
         private void DisplayCreateModelButton()

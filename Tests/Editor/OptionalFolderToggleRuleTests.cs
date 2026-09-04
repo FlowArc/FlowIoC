@@ -70,6 +70,41 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
+        /// A screen module's signal holder lives in Shared and is the only way into the screen, so
+        /// the folder is given to it ticked and locked even though the layout calls it optional.
+        /// </summary>
+        [Test]
+        public void A_module_type_the_folder_is_required_for_is_given_it_locked_on()
+        {
+            OptionalFolderToggleState state = new OptionalFolderToggleRule()
+                .For(Optional(), ModuleType.Screen, new ModuleType[0], new[] {ModuleType.Screen});
+
+            Assert.AreEqual(OptionalFolderToggleState.ForcedOn, state);
+        }
+
+        [Test]
+        public void Requiring_one_module_type_leaves_the_others_choosing()
+        {
+            OptionalFolderToggleState state = new OptionalFolderToggleRule()
+                .For(Optional(), ModuleType.Main, new ModuleType[0], new[] {ModuleType.Screen});
+
+            Assert.AreEqual(OptionalFolderToggleState.Selectable, state);
+        }
+
+        /// <summary>
+        /// Withholding wins over requiring as it wins over mandatory: whether a module type is
+        /// offered the folder at all is settled before what the folder says about itself.
+        /// </summary>
+        [Test]
+        public void A_withheld_module_type_is_not_given_a_required_folder()
+        {
+            OptionalFolderToggleState state = new OptionalFolderToggleRule()
+                .For(Optional(), ModuleType.Test, new[] {ModuleType.Test}, new[] {ModuleType.Test});
+
+            Assert.AreEqual(OptionalFolderToggleState.Hidden, state);
+        }
+
+        /// <summary>
         /// Withholding wins over mandatory. A layout that marks the folder mandatory is describing
         /// the folder, not deciding which module types are offered a toggle for it.
         /// </summary>

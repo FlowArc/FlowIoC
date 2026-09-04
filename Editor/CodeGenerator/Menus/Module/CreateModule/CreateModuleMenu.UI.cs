@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.Editor.Inspector;
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Screens;
@@ -17,6 +19,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// replaced them - and a name that happened to match them was read as no name at all.
         /// A label paints over the field instead: it takes no input, so the field underneath is
         /// empty and behaves like one.
+        ///
+        /// The hint goes as soon as the field has focus. It is drawn on top of the field, so
+        /// leaving it up would hide the caret, and clicking would look like nothing happened
+        /// until the first character arrived.
         /// </summary>
         private void DrawNameInputField()
         {
@@ -27,10 +33,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 fontSize = 14
             };
 
+            GUI.SetNextControlName(NAME_CONTROL);
             _moduleName = EditorGUILayout.TextField(
-                _moduleName, style, GUILayout.MaxWidth(400), GUILayout.Height(38));
+                _moduleName, style, GUILayout.ExpandWidth(true), GUILayout.Height(NAME_FIELD_HEIGHT));
 
-            if (!string.IsNullOrEmpty(_moduleName)) return;
+            ReleaseNameFieldFocus(GUILayoutUtility.GetLastRect());
+
+            // The window keeps its keyboard control while another window is in front, so the field
+            // only counts as focused while this window is the focused one - otherwise clicking
+            // away to the Inspector would leave an empty field with no hint and no caret.
+            bool isFocused = GUI.GetNameOfFocusedControl() == NAME_CONTROL && focusedWindow == this;
+
+            if (isFocused || !string.IsNullOrEmpty(_moduleName)) return;
 
             var hintStyle = new GUIStyle(style)
             {
@@ -40,73 +54,231 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             GUI.Label(GUILayoutUtility.GetLastRect(), NAME_PLACEHOLDER, hintStyle);
         }
 
-        private void CustomCheck(string errorMessage, string checkString, string logMessage)
+        /// <summary>
+        /// Lets go of the name field when the click lands somewhere else, or on Escape. IMGUI
+        /// keeps the keyboard on a text field until another control takes it, so clicking the
+        /// window's background left the field focused, the caret blinking and the hint still
+        /// withheld from an empty field.
+        ///
+        /// The mouse event is not consumed - whatever was clicked still gets it, and takes the
+        /// keyboard itself if it wants it.
+        /// </summary>
+        private void ReleaseNameFieldFocus(Rect fieldRect)
         {
+            if (GUI.GetNameOfFocusedControl() != NAME_CONTROL) return;
+
+            Event current = Event.current;
+
+            bool clickedElsewhere = current.type == EventType.MouseDown && !fieldRect.Contains(current.mousePosition);
+            bool cancelled = current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape;
+
+            if (!clickedElsewhere && !cancelled) return;
+
+            GUI.FocusControl(null);
+            GUIUtility.keyboardControl = 0;
+            EditorGUIUtility.editingTextField = false;
+
+            if (cancelled) current.Use();
+
+            Repaint();
+        }
+
+        /// <summary>
+        /// What the name typed beside it is about to produce. The left half names the folder and
+        /// the Context; the right half draws the Root as the inspector will draw it, in the colour
+        /// its role gives it, so the choice of role is read as a picture rather than as a word.
+        ///
+        /// While no name is typed the panel is the error that says so, and the rest of the window
+        /// stays off - the same contract the parent-module panel keeps.
+        /// </summary>
+        private void DrawNamePreviewPanel(float width)
+        {
+            // Margins cleared: three stacked labels each keeping the label style's own vertical
+            // margin is what made the panel tall, and the lines belong together anyway.
             var style = new GUIStyle(EditorStyles.whiteLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
                 fontSize = 12,
-                richText = true
+                richText = true,
+                margin = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(0, 0, 0, 0)
             };
 
-            int height = 33;
-            bool isInvalid = string.IsNullOrEmpty(checkString);
-            if (isInvalid)
+            if (string.IsNullOrEmpty(_moduleName))
             {
                 GUI.backgroundColor = Color.red;
-                EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(height));
-                GUILayout.Label(EditorGUIUtility.IconContent("console.erroricon"), GUILayout.Width(35), GUILayout.Height(height));
-                EditorGUILayout.LabelField(errorMessage, style, GUILayout.Height(height));
+
+                var box = new GUIStyle(EditorStyles.helpBox) {padding = new RectOffset(4, 4, 0, 0)};
+
+                EditorGUILayout.BeginHorizontal(box, GUILayout.Height(NAME_FIELD_HEIGHT));
+
+                // Both fill the box's full height and centre themselves in it. The box gives up its
+                // own vertical padding for that: with padding left in, content the height of the
+                // box pushes the box past the name field beside it, and content short enough to
+                // fit rides at the top of it.
+                // A little top margin under the icon: an image in a style of its own is drawn from
+                // the top of its rect whatever the alignment says, so it needs pushing onto the
+                // line the words sit on.
+                var icon = new GUIStyle(GUIStyle.none)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    margin = new RectOffset(0, 4, 2, 0),
+                    padding = new RectOffset(0, 0, 0, 0)
+                };
+
+                GUILayout.Label(EditorGUIUtility.IconContent("console.erroricon"), icon,
+                    GUILayout.Width(30), GUILayout.Height(NAME_FIELD_HEIGHT));
+                EditorGUILayout.LabelField("<size=12>Please, enter <b>module name</b>!</size>", style,
+                    GUILayout.Height(NAME_FIELD_HEIGHT));
                 EditorGUILayout.EndHorizontal();
-            }
-            else if (!string.IsNullOrEmpty(logMessage))
-            {
+
                 GUI.backgroundColor = Color.white;
-                EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(height));
-                GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.Width(35), GUILayout.Height(height));
-                EditorGUILayout.LabelField(logMessage, style, GUILayout.Height(height));
-                EditorGUILayout.EndHorizontal();
+                GUI.enabled = false;
+                return;
             }
 
-            GUI.enabled = !isInvalid;
+            GUI.enabled = true;
             GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(NAME_FIELD_HEIGHT));
+
+            EditorGUILayout.BeginVertical();
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.Width(18), GUILayout.Height(13));
+            EditorGUILayout.LabelField("<size=10><color=#ffdd00ff>Preview</color></size>", style, GUILayout.Height(13));
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.LabelField(
+                $"<size=10>Folder Name:</size> <size=12><color=#ffdd00ff><u>{_moduleName}{_moduleSuffix}Module</u></color></size>",
+                style, GUILayout.Height(15));
+            EditorGUILayout.EndVertical();
+
+            DrawRootHeaderPreview(width * 0.5f);
+
+            EditorGUILayout.EndHorizontal();
         }
 
-        private void CreateToggles()
+        /// <summary>
+        /// The Root the module will get, drawn the way its own inspector will draw it: the role's
+        /// deep fill, the accent stripe down its left, and the strip underneath naming the assembly
+        /// and the role. It is only shown for a module that gets a Root and a role to colour it.
+        /// </summary>
+        private void DrawRootHeaderPreview(float width)
+        {
+            if (_selectedModuleType != ModuleType.Main || !_createRoot) return;
+
+            FlowRole role = PreviewRole();
+            var palette = new FlowPalette();
+
+            Color deep = palette.Deep(role);
+            Color accent = palette.Accent(role, EditorGUIUtility.isProSkin);
+
+            // No space above it: the bar and its strip fill the panel's height exactly, and a gap
+            // here is what pushed the panel past the name field it stands beside.
+            EditorGUILayout.BeginVertical(GUILayout.Width(width));
+
+            Rect bar = GUILayoutUtility.GetRect(width, 20f);
+            Rect strip = GUILayoutUtility.GetRect(width, 10f);
+
+            EditorGUI.DrawRect(bar, deep);
+            EditorGUI.DrawRect(strip, palette.Strip(deep));
+            EditorGUI.DrawRect(new Rect(bar.x, bar.y, 3f, bar.height + strip.height), accent);
+
+            var title = new GUIStyle(EditorStyles.miniBoldLabel) {alignment = TextAnchor.MiddleLeft};
+            title.normal.textColor = palette.Title;
+
+            var label = new GUIStyle(EditorStyles.miniLabel) {alignment = TextAnchor.MiddleLeft, fontSize = 9};
+            label.normal.textColor = accent;
+
+            GUI.Label(new Rect(bar.x + 9f, bar.y, bar.width - 12f, bar.height),
+                Spaced(_roleNaming.RootName(_moduleName, _effectiveRole)).ToUpperInvariant(), title);
+
+            GUI.Label(new Rect(strip.x + 9f, strip.y, strip.width - 12f, strip.height),
+                $"Modules.{_moduleName} · {RoleLabel(role)}".ToUpperInvariant(), label);
+
+            EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>The role the generated Root will resolve to from its own name.</summary>
+        private FlowRole PreviewRole()
+        {
+            switch (_effectiveRole)
+            {
+                case ModuleRole.System: return FlowRole.System;
+                case ModuleRole.Service: return FlowRole.Service;
+                default: return FlowRole.Root;
+            }
+        }
+
+        /// <summary>
+        /// What the strip calls it. A Root wearing another role's colour still says that it is a
+        /// Root, the way the inspector's own bar does.
+        /// </summary>
+        private string RoleLabel(FlowRole role) => role == FlowRole.Root ? "Root" : $"{role} · Root";
+
+        /// <summary>The class name split at its capitals, so PlayerSystemRoot reads as three words.</summary>
+        private string Spaced(string name)
+        {
+            var spaced = new System.Text.StringBuilder(name.Length + 4);
+
+            for (int ii = 0; ii < name.Length; ii++)
+            {
+                if (ii > 0 && char.IsUpper(name[ii]) && !char.IsUpper(name[ii - 1]))
+                    spaced.Append(' ');
+
+                spaced.Append(name[ii]);
+            }
+
+            return spaced.ToString();
+        }
+
+        /// <summary>
+        /// What the module is made of: the Context, the Root that builds it, and a scene to put
+        /// that Root in. They sit on the module type's own row, because the type is the other half
+        /// of the same answer, and each one gates the next - no Context, no Root; no Root, no scene.
+        ///
+        /// A gated toggle is shown off and disabled rather than hidden. The three together are what
+        /// the module will be written with, and a row that loses an entry as it is ticked reads as
+        /// though the choice went somewhere.
+        /// </summary>
+        private void CreateStructureToggles()
         {
             GUI.backgroundColor = new Color(.6f, .7f, 1f);
 
-            using (new EditorGUI.DisabledScope(_selectedModuleType == ModuleType.Test))
-            {
-                if (_selectedModuleType == ModuleType.Test)
-                {
-                    _createContext = true;
-                    _createRoot = true;
-                    _createScene = true;
-                }
+            bool isTest = _selectedModuleType == ModuleType.Test;
+            bool isScreen = _selectedModuleType == ModuleType.Screen;
 
-                _createContext = EditorGUILayout.ToggleLeft("Create Context", _createContext, GUILayout.Width(125));
-                if (_createContext)
-                {
-                    _createRoot = EditorGUILayout.ToggleLeft("Create Root", _createRoot, GUILayout.Width(125));
-                }
-                else
-                {
-                    _createRoot = false;
-                    _createScene = false;
-                }
+            // A test module is its scene, and the Root and Context that run it, so it is handed all
+            // three rather than asked.
+            if (isTest)
+            {
+                _createContext = true;
+                _createRoot = true;
+                _createScene = true;
             }
 
-            AllowAsSubContextToggle();
-
-            if (_createRoot)
+            using (new EditorGUI.DisabledScope(isTest))
             {
-                _createScene = _selectedModuleType switch
-                {
-                    ModuleType.Main or ModuleType.Test => EditorGUILayout.ToggleLeft("Create Scene", _createScene, GUILayout.Width(125)),
-                    ModuleType.Screen => true,
-                    _ => _createScene
-                };
+                _createContext = EditorGUILayout.ToggleLeft("Create Context", _createContext, GUILayout.Width(120));
+            }
+
+            if (!_createContext) _createRoot = false;
+
+            using (new EditorGUI.DisabledScope(isTest || !_createContext))
+            {
+                _createRoot = EditorGUILayout.ToggleLeft("Create Root", _createRoot, GUILayout.Width(105));
+            }
+
+            if (!_createRoot) _createScene = false;
+
+            // A screen module brings the scene its test module runs in, so the answer is yes and
+            // the toggle only says so.
+            if (isScreen && _createRoot) _createScene = true;
+
+            using (new EditorGUI.DisabledScope(isTest || isScreen || !_createRoot))
+            {
+                _createScene = EditorGUILayout.ToggleLeft("Create Scene", _createScene, GUILayout.Width(115));
             }
 
             GUI.backgroundColor = Color.white;
@@ -144,21 +316,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             if (_selectedModuleType != ModuleType.Main || !_createRoot)
                 return;
 
-            EditorGUILayout.Space(10);
-            EditorGUILayout.BeginHorizontal();
-
             EditorGUILayout.LabelField(MODULE_ROLE_LABEL, EditorStyles.boldLabel, GUILayout.Width(90));
-            _selectedModuleRole = (ModuleRole) EditorGUILayout.EnumPopup(_selectedModuleRole, GUILayout.Width(310));
-
-            if (!string.IsNullOrEmpty(_moduleName))
-            {
-                EditorGUILayout.LabelField(
-                    $"{_roleNaming.RootName(_moduleName, _selectedModuleRole)} · " +
-                    $"{_roleNaming.ContextName(_moduleName, _selectedModuleRole)}",
-                    GUILayout.ExpandWidth(true));
-            }
-
-            EditorGUILayout.EndHorizontal();
+            _selectedModuleRole = (ModuleRole) EditorGUILayout.EnumPopup(_selectedModuleRole, GUILayout.ExpandWidth(true));
         }
 
         /// <summary>
@@ -170,21 +329,35 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _selectedModuleType == ModuleType.Main && _createRoot ? _selectedModuleRole : ModuleRole.Core;
 
         /// <summary>
-        /// The signals holder. A test module wires other modules' signals rather than owning a
-        /// public surface of its own, so it is the one module type never offered one.
-        /// </summary>
-        private void CreateSignalsToggle() =>
-            _createSignals = OptionalFolderToggle(
-                FolderEVO.FolderType.Signals, CREATE_SIGNALS_LABEL, ModuleType.Test);
-
-        /// <summary>
         /// The Shared assembly a module publishes its data and its signal holder through. The main
         /// and screen layouts carry the folder and the test layout does not, so the toggle draws
         /// itself where it belongs without having to name the types. It starts ticked, because a
         /// module created without Shared has nowhere to put its public surface.
+        ///
+        /// A screen module is not asked and not told either: its signals are the only way into the
+        /// screen and they live in Shared, so the folder is simply taken and the row it would have
+        /// occupied goes back to the panels below.
         /// </summary>
         private void CreateSharedToggle() =>
-            OptionalFolderToggle(FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL);
+            OptionalFolderToggle(
+                FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL,
+                withheldFrom: null, requiredFor: new[] {ModuleType.Screen}, drawWhenRequired: false);
+
+        /// <summary>
+        /// Whether the module gets signal holders written. There is no toggle for it any more:
+        /// the public holder lives in Shared and the internal one in the Runtime Signals folder,
+        /// so the answer is simply whether either folder is going to exist - which the reader says
+        /// by ticking them in the folder structure.
+        /// </summary>
+        private bool SignalsWanted() =>
+            FolderWillExist(FolderEVO.FolderType.Signals) || FolderWillExist(FolderEVO.FolderType.Shared);
+
+        private bool FolderWillExist(FolderEVO.FolderType folderType)
+        {
+            FolderEVO folder = FindFolderInConfig(folderType);
+
+            return folder != null && (folder.IsMandatory || _selectedOptionalFolders.Contains(folder));
+        }
 
         /// <summary>
         /// Draws the toggle for one of the layout's optional folders and answers whether the
@@ -199,15 +372,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private bool OptionalFolderToggle(
             FolderEVO.FolderType folderType,
             string label,
-            params ModuleType[] withheldFrom)
+            ModuleType[] withheldFrom = null,
+            ModuleType[] requiredFor = null,
+            bool drawWhenRequired = true)
         {
             FolderEVO folder = FindFolderInConfig(folderType);
 
             OptionalFolderToggleState state =
-                new OptionalFolderToggleRule().For(folder, _selectedModuleType, withheldFrom);
+                new OptionalFolderToggleRule().For(folder, _selectedModuleType, withheldFrom, requiredFor);
 
             if (state == OptionalFolderToggleState.Hidden)
                 return false;
+
+            // A folder the layout calls optional is only created when it is in the selection, so a
+            // locked-on toggle has to put it there rather than only say so.
+            if (state == OptionalFolderToggleState.ForcedOn && folder.IsOptional && !_selectedOptionalFolders.Contains(folder))
+                _selectedOptionalFolders.Add(folder);
+
+            // A folder this module type must have and cannot decline is worth no row of its own:
+            // it is taken, and the row goes to what the reader can actually change.
+            if (state == OptionalFolderToggleState.ForcedOn && !drawWhenRequired)
+                return true;
 
             GUI.backgroundColor = new Color(.6f, .7f, 1f);
 
@@ -305,7 +490,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private void DisplayParentModuleSelection()
         {
             EditorGUILayout.Space(10);
-            GUI.backgroundColor = new Color(.6f, .4f, 1f);
+
+            bool wasEnabled = GUI.enabled;
+            bool hasParent = !string.IsNullOrEmpty(_parentModulePath);
+
             var style = new GUIStyle(EditorStyles.whiteLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
@@ -313,26 +501,40 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 richText = true
             };
 
-            EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(33));
-            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"), GUILayout.Width(35), GUILayout.Height(33));
-            EditorGUILayout.LabelField(PARENT_MODULE_LABEL, style, GUILayout.Height(33));
+            // The panel's own bar carries the ask: red and saying so while no parent is picked,
+            // and the panel's purple heading once one is. A second bar under the list said the same
+            // thing in a place the eye had already left.
+            GUI.backgroundColor = hasParent ? new ModulePanelTheme().Header : Color.red;
+
+            EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(PANEL_HEADER_HEIGHT));
+            GUILayout.Label(EditorGUIUtility.IconContent(hasParent ? "console.infoicon" : "console.erroricon"),
+                GUILayout.Width(35), GUILayout.Height(PANEL_HEADER_HEIGHT));
+            EditorGUILayout.LabelField(
+                hasParent ? PARENT_MODULE_LABEL : "<size=12>Please, select <b>parent module</b>!</size>",
+                style, GUILayout.Height(PANEL_HEADER_HEIGHT));
             EditorGUILayout.EndHorizontal();
+
             GUI.backgroundColor = Color.white;
 
-            _scrollPosition =
-                EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(70),
-                    GUILayout.MaxHeight(_selectedModuleType == ModuleType.Screen ? 190 : 200));
+            float height = PANEL_HEIGHT;
+
+            _scrollPosition = EditorGUILayout.BeginScrollView(
+                _scrollPosition, GUILayout.MinHeight(height), GUILayout.MaxHeight(height));
             EditorGUILayout.BeginVertical();
             DrawModulesHierarchy();
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
 
-            if (GUI.enabled) CustomCheck("<size=12>Please, select <b>parent module</b>!</size>", _parentModulePath, "");
+            // What the bar reports, said again to the rest of the window: no parent, nothing below
+            // this panel is worth pressing.
+            GUI.enabled = wasEnabled && hasParent;
         }
 
         private void DrawModulesHierarchy()
         {
+            GUI.backgroundColor = new ModulePanelTheme().Row;
             EditorGUILayout.BeginHorizontal("box");
+            GUI.backgroundColor = Color.white;
 
             GUILayout.Space(10);
             bool isSelected = _parentModulePath == Path.Combine(Application.dataPath, MODULES_PATH);
@@ -411,7 +613,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _actionNames,
                     _createRoot,
                     _createContext,
-                    _createSignals,
+                    SignalsWanted(),
                     _createScene,
                     _allowAsSubContext,
                     _effectiveRole,

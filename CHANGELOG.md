@@ -7,7 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.5] - 2026-09-04
+
+### Added
+
+- **A module's Root and Context are named for what the Root roots.** Create Module asks a main
+  module that gets a Root for its *Role*: **System** writes `PlayerSystemRoot` and
+  `PlayerSystemContext`, **Service** writes `CounterServiceRoot` and `CounterServiceContext`, and
+  **Core** writes the plain `PlayerRoot` and `PlayerContext`. The Root inspector reads a Root's own
+  name to colour it, so the choice is what makes a Service module's Root draw as a Service. It
+  starts on System, because a module written for the game at hand is one, and the module folder,
+  its assembly and its namespaces are untouched whichever is picked.
+
+- **The name field says what it is about to produce.** Beside it sits a preview panel: the folder
+  the module will land in, and the Root drawn the way its own inspector will draw it - the role's
+  fill, its accent stripe, and the strip naming the assembly and the role.
+
+- **The folder layout is one button away.** The `Config` field left the module type's row for a
+  square button on the Folder Structure bar, which selects the layout asset and pings it in the
+  Project window.
+
 ### Changed
+
+- **Create Module reads as two columns.** Name and preview, type and what the module is made of,
+  role and what it publishes, then the parent module beside the folder structure - each row split
+  45/55 and growing with the window. The panels wear the Root's violet: a header bar over rows
+  tinted a washed-out version of the same, and a screen module's settings wear Screen Scanner's
+  amber for the same reason.
+
+- **A gated toggle is shown off rather than hidden.** Create Root and Create Scene stay in the row
+  when the toggle above them is off, disabled and unticked, so the row does not lose an entry as it
+  is ticked. Create Signals is gone entirely - the public holder lives in Shared and the internal
+  one in the Runtime Signals folder, so ticking those folders is the whole answer - and a screen
+  module is neither asked nor told about Shared, which it must have.
+
+- **The module tree says what it knows.** A module with nothing under it is drawn without a foldout
+  arrow, and `(Screen)` and `(Test)` are the role's own colour rather than words in brackets. The
+  parent panel reports a missing parent in its own bar, in place of the second bar that used to say
+  so under the list.
+
+- **The other generators match.** Create View, Create Model, Create Command, Delete Module and Add
+  Shared Data wear the same header bar, ask for a parent module in the same shape, and keep their
+  action button at the bottom of a window that no longer opens too small to use.
+
+- **A screen module cannot nest under another screen module.** It belongs to the module whose
+  feature it shows, so Main and Sub host it and Screen and Test do not.
 
 - **The Screens panel wears the header bar every FlowIoC component wears.** It says what the window
   is and which module it belongs to, and carries the window's two ways out on its right: the link
@@ -53,6 +97,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now the caller's to make: the startup pass reports, and an install reports once its own repair
   has run. `RescanModules` detects and says nothing, which is what a caller in the middle of
   changing the project needs.
+
+- **Create Command wrote a context that did not compile.** The binding it added said `.To<T>()`
+  closed with `.InSequence()` or `.InParallel()`, for a binder whose methods are `ToSequence<T>()`
+  and `ToParallel<T>()`; it imported `{module}.Commands` while the command lands in `Controllers`;
+  it wrote a second `#if UNITY_EDITOR` above a test context's own; and it collected one duplicate
+  `using` per run. The block is built in one place now, and a block written by the older generator
+  is rewritten into what compiles.
+
+- **Create Command, Create Model and Create View find a context named for its role.** All three
+  looked for `{module}Context.cs` by name, so a module holding `PlayerSystemContext.cs` had its
+  bindings written to a file that was not there.
+
+- **Removing an injectable or an action no longer breaks the window.** The row was dropped from
+  inside its own layout group, which ended the frame with that group still open and left every
+  repaint reporting an invalid GUILayout state.
+
+- **Delete Module takes the Shared assembly's project files with it.** The module's own `.csproj`
+  and `.csproj.DotSettings` were removed; the ones the Shared assembly leaves at the project root
+  stayed behind.
 
 ## [1.4.4] - 2026-09-03
 

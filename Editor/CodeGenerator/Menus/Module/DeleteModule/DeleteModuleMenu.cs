@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.Editor.Inspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +15,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         private Vector2 _scrollPosition;
         private List<ModuleEntry> _modules;
         private string _searchText = "";
+
+        private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
         private struct ModuleEntry
         {
@@ -29,8 +33,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
         private void OnGUI()
         {
+            _bar.DrawWindow(FlowRole.Root, "Delete Module", "FlowIoC",
+                "Folder, assembly, settings, index entry and log channel", null, null, "Creating a Module");
+
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Delete Module", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "Select a module to delete. This will remove the module folder, " +
                 "its assembly definition, namespace settings, log type registration, " +
@@ -64,10 +70,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                 if (hasSearch && module.Name.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) < 0)
                     continue;
 
+                // The same row the other module panels draw: the Root's washed violet behind it,
+                // and the kind in the colour that kind wears everywhere else.
+                GUI.backgroundColor = new ModulePanelTheme().Row;
                 EditorGUILayout.BeginHorizontal("box");
+                GUI.backgroundColor = Color.white;
 
                 EditorGUILayout.LabelField(module.Name, EditorStyles.boldLabel, GUILayout.Width(250));
-                EditorGUILayout.LabelField(module.Type, GUILayout.Width(60));
+                DrawKindLabel(module.Type);
+                GUILayout.FlexibleSpace();
 
                 GUI.backgroundColor = Color.red;
                 if (GUILayout.Button("Delete", GUILayout.Width(60)))
@@ -100,6 +111,45 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             }
 
             EditorGUILayout.EndScrollView();
+        }
+
+        /// <summary>
+        /// What kind of module the row is, in the colour that kind wears in the inspector and in
+        /// the module trees. Main and Sub are the ordinary case and say nothing.
+        /// </summary>
+        private void DrawKindLabel(string kind)
+        {
+            if (!TryRoleOf(kind, out FlowRole role)) return;
+
+            var content = new GUIContent(kind.ToUpperInvariant());
+
+            var style = new GUIStyle(EditorStyles.miniBoldLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                margin = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(0, 0, 0, 0)
+            };
+
+            style.normal.textColor = new FlowPalette().Accent(role, EditorGUIUtility.isProSkin);
+
+            GUILayout.Label(content, style, GUILayout.Width(style.CalcSize(content).x + 10f),
+                GUILayout.Height(EditorGUIUtility.singleLineHeight));
+        }
+
+        private bool TryRoleOf(string kind, out FlowRole role)
+        {
+            switch (kind)
+            {
+                case "Screen":
+                    role = FlowRole.Screen;
+                    return true;
+                case "Test":
+                    role = FlowRole.Test;
+                    return true;
+                default:
+                    role = FlowRole.Root;
+                    return false;
+            }
         }
 
         private void ScanModules()
