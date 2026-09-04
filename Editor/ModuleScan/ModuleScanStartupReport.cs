@@ -18,9 +18,9 @@ namespace FlowIoC.Editor.ModuleScan
         {
             if (report == null || report.IssueCount == 0) return null;
 
-            return "<color=cyan>FlowIoC:</color> Module Scan found "
+            return "<color=cyan>FlowIoC:</color> Module Scanner found "
                    + $"{report.IssueCount} issues across {report.ModulesWithIssues} modules "
-                   + "- Tools/FlowIoC/Module Scan";
+                   + "- Tools/FlowIoC/Module Scanner";
         }
 
         internal void Report()

@@ -68,7 +68,7 @@ namespace FlowIoC.Editor.Inspector
         }
 
         /// <summary>
-        /// The bar for a window that wears a colour no role owns - Module Scan is green because
+        /// The bar for a window that wears a colour no role owns - Module Scanner is green because
         /// the rows under it are, and no FlowRole is about a module's health.
         /// </summary>
         public void DrawWindow(Color deep, Color accent, string title, string module, string label,
@@ -105,11 +105,13 @@ namespace FlowIoC.Editor.Inspector
             EditorGUI.DrawRect(strip, _palette.Strip(deep));
             EditorGUI.DrawRect(new Rect(bar.x, bar.y, StripeWidth, bar.height + strip.height), accent);
 
+            // Upper case, whoever calls. A component's title already arrives that way from the
+            // role resolver, and a window that wrote its own would be the odd one out.
             var titleRect = new Rect(bar.x + StripeWidth + 8f, bar.y, bar.width - 60f, bar.height);
-            GUI.Label(titleRect, title, TitleStyle());
+            GUI.Label(titleRect, title?.ToUpperInvariant(), TitleStyle());
 
             var moduleRect = new Rect(strip.x + StripeWidth + 8f, strip.y, strip.width - 16f, strip.height);
-            GUI.Label(moduleRect, $"{module} · {label}", ModuleStyle(accent));
+            GUI.Label(moduleRect, $"{module} · {label}".ToUpperInvariant(), ModuleStyle(accent));
 
             return bar;
         }
@@ -185,7 +187,13 @@ namespace FlowIoC.Editor.Inspector
         private GUIStyle ModuleStyle(Color color)
         {
             _module ??= new GUIStyle(EditorStyles.miniLabel) {alignment = TextAnchor.MiddleLeft};
+
+            // Every state, so the line under the title never brightens as the pointer crosses it.
+            // Nothing happens when it is clicked, and text that lights up says otherwise.
             _module.normal.textColor = color;
+            _module.hover.textColor = color;
+            _module.active.textColor = color;
+            _module.focused.textColor = color;
 
             return _module;
         }

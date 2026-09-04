@@ -4,6 +4,8 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class ScreensPage : HelpPage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public ScreensPage() : base(null)
         {
         }
@@ -20,12 +22,26 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "single Root's inspector cannot: which layer does each screen open in, and do any "
                 + "two of them want the same one.");
 
+            painter.Image(_images.Get("ScreensWindow.png"),
+                "Tools > FlowIoC > Screens. Two screens registered at manager 0, each with a layer "
+                + "of its own.");
+
+            painter.Paragraph(
+                "A manager's heading selects that ScreenManager in the hierarchy, and a screen's "
+                + "name pings the Root it is listed on - so a row answers where it came from "
+                + "without a search.");
+
             painter.SubHeading("Layer collisions");
             painter.Paragraph(
-                "Two screens on one layer of one manager are tinted red. This is advice, not an "
-                + "error: a screen opening on an occupied layer closes the one already there, which "
-                + "is how a stack of full screen views is meant to behave. The tint says it will "
-                + "happen, so it happens on purpose rather than by surprise.");
+                "A row is green while its screen has its manager's layer to itself, and amber once "
+                + "another screen of the same manager opens on that layer. Amber is the louder of "
+                + "the two on purpose: a settled row is tinted faintly, so the collisions are what "
+                + "the eye lands on.");
+            painter.Paragraph(
+                "Amber is advice, not an error: a screen opening on an occupied layer closes the "
+                + "one already there, which is how a stack of full screen views is meant to "
+                + "behave. The tint says it will happen, so it happens on purpose rather than by "
+                + "surprise.");
 
             painter.SubHeading("Editing");
             painter.Paragraph(

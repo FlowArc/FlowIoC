@@ -4,22 +4,28 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class ModuleScanPage : HelpPage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public ModuleScanPage() : base(null)
         {
         }
 
-        public override string Title => "Module Scan";
+        public override string Title => "Module Scanner";
 
         public override string Icon => "Settings";
 
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Paragraph(
-                "Tools > FlowIoC > Module Scan reads every module in the project and says what "
+                "Tools > FlowIoC > Module Scanner reads every module in the project and says what "
                 + "each one is missing. A module is a folder whose name ends in \"Module\", under "
                 + "Assets/Modules or inside an embedded package, and the panel finds them by "
                 + "walking the folder tree rather than by trusting the index - so it is right "
                 + "even when the index is not.");
+
+            painter.Image(_images.Get("ModuleScannerWindow.png"),
+                "Tools > FlowIoC > Module Scanner. One project finding is fixable, and every "
+                + "module in this project is in order.");
 
             painter.SubHeading("What it checks");
             painter.Bullet(
@@ -62,7 +68,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
             painter.Note(
                 "Important: a module with no assembly definition is invisible to the namespace "
                 + "settings. The writer skips it silently, so its scripts keep whatever namespace "
-                + "they were written with and nothing reports it. Module Scan is where that gap "
+                + "they were written with and nothing reports it. Module Scanner is where that gap "
                 + "becomes visible, and Fix All is what closes it.");
 
             painter.SubHeading("On editor load");

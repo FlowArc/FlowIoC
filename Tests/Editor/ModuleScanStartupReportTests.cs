@@ -44,7 +44,7 @@ namespace FlowIoC.Tests
 
             StringAssert.Contains("2 issues", line);
             StringAssert.Contains("2 modules", line);
-            StringAssert.Contains("Tools/FlowIoC/Module Scan", line);
+            StringAssert.Contains("Tools/FlowIoC/Module Scanner", line);
         }
 
         /// <summary>

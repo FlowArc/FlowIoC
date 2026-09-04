@@ -40,6 +40,13 @@ namespace FlowIoC.Editor.Help
 
         private const float SidebarPadding = 8f;
 
+        /// <summary>
+        /// The smallest the window may be. Wide enough that the screenshots the pages ship draw
+        /// at their own pixels: an editor window resampled to fit is a blurred editor window, and
+        /// the widest picture here is the Screens panel at 880.
+        /// </summary>
+        private static readonly Vector2 MinimumSize = new Vector2(1200f, 600f);
+
         /// <summary>A topic inside a category: shorter than the category above it, and indented.</summary>
         private const float ChildRowHeight = 34f;
 
@@ -70,7 +77,7 @@ namespace FlowIoC.Editor.Help
         internal static void Open(string sectionTitle)
         {
             HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
-            window.minSize = new Vector2(1120f, 600f);
+            window.minSize = MinimumSize;
             window.Show();
 
             if (!string.IsNullOrEmpty(sectionTitle))
@@ -92,7 +99,7 @@ namespace FlowIoC.Editor.Help
         internal static void OpenPage(string pageTitle, string tabTitle)
         {
             HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
-            window.minSize = new Vector2(1120f, 600f);
+            window.minSize = MinimumSize;
             window.Show();
 
             window.GoToPage(pageTitle, tabTitle);

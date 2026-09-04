@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Text;
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.Inspector;
 using UnityEditor;
 using UnityEngine;
@@ -22,54 +21,33 @@ namespace FlowIoC.Editor.ModuleScan
     /// </summary>
     internal class ModuleScanWindow : EditorWindow
     {
+        /// <summary>What the panel is called, in the menu, on the tab and on its bar.</summary>
+        private const string TITLE = "Module Scanner";
+
         private const string ONLY_ISSUES_KEY = "FlowIoC.ModuleScan.OnlyIssues";
         private const string SUMMARY_KEY = "FlowIoC.ModuleScan.Summary";
 
-        private const float ROW_HEIGHT = 20f;
-        private const float STRIPE_WIDTH = 3f;
-        private const float ARROW_WIDTH = 14f;
+        private const float ARROW_WIDTH = 16f;
         private const float ICON_WIDTH = 16f;
         private const float NAME_WIDTH = 220f;
         private const float BADGE_WIDTH = 78f;
         private const float FINDING_INDENT = 26f;
 
-        [MenuItem("Tools/FlowIoC/Module Scan", false, -1249)]
+        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1249)]
         internal static void Open()
         {
-            ModuleScanWindow window = GetWindow<ModuleScanWindow>("Module Scan");
+            ModuleScanWindow window = GetWindow<ModuleScanWindow>(TITLE);
             window.minSize = new Vector2(640, 360);
             window.Show();
         }
-
-        /// <summary>
-        /// A module nothing is wrong with. Green is the whole report a settled row needs, which is
-        /// why the row says it with its icon and its stripe rather than with a word.
-        /// </summary>
-        private readonly Color _okColor = new Color(0.42f, 0.78f, 0.47f);
-
-        /// <summary>
-        /// Something Fix All repairs on its own. Amber rather than red for the same reason the
-        /// Screens panel uses it: it is a job waiting, not a decision anyone has to make.
-        /// </summary>
-        private readonly Color _fixableColor = new Color(1f, 0.8f, 0.35f);
-
-        /// <summary>
-        /// Something a person has to do. Red, because the button on this window will not clear it
-        /// however many times it is pressed.
-        /// </summary>
-        private readonly Color _manualColor = new Color(0.94f, 0.44f, 0.4f);
-
-        /// <summary>
-        /// The bar's fill: the row green, taken down until white title text clears 4.5:1 on it.
-        /// The bar and the list are then one colour rather than two greens beside each other.
-        /// </summary>
-        private readonly Color _barColor = new Color(0.165f, 0.431f, 0.22f);
 
         /// <summary>
         /// Fix All while there is something to fix. A vivid green, because the toolbar tints a
         /// button rather than filling it and anything softer disappears into the strip.
         /// </summary>
         private readonly Color _actionColor = new Color(0.35f, 0.95f, 0.45f);
+
+        private readonly FlowRowPainter _painter = new FlowRowPainter();
 
         private readonly Dictionary<string, bool> _expanded = new Dictionary<string, bool>();
 
@@ -81,14 +59,19 @@ namespace FlowIoC.Editor.ModuleScan
         private bool _projectExpanded = true;
         private string _summary;
         private Vector2 _scroll;
+        private GUIStyle _action;
 
-        private GUIStyle _arrow;
-        private GUIStyle _icon;
-        private GUIStyle _name;
-        private GUIStyle _badge;
 
         private void OnEnable()
         {
+            // The tab is named here rather than only at GetWindow, so a window restored from a
+            // saved layout under the panel's old name renames itself instead of keeping it.
+            titleContent = new GUIContent(TITLE);
+
+            // Without this the window is sent no MouseMove events at all, and a row would only
+            // light up when something else happened to repaint it.
+            wantsMouseMove = true;
+
             _onlyIssues = EditorPrefs.GetBool(ONLY_ISSUES_KEY, true);
             _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
@@ -115,18 +98,31 @@ namespace FlowIoC.Editor.ModuleScan
 
         private void OnGUI()
         {
+            if (Event.current.type == EventType.MouseMove) Repaint();
+
             // The bar wears the same green the settled rows do rather than a role's colour: no
             // FlowRole is about a module's health, and this window is about nothing else.
             _bar.DrawWindow(
-                _barColor, _okColor, "Module Scan", "FlowIoC", "Every module in the project", "Refresh", Rescan,
-                "Module Scan");
+                _painter.Bar, _painter.Ok, TITLE, "FlowIoC", "Every module in the project", "Refresh", Rescan,
+                TITLE);
 
             DrawToolbar();
 
             if (!string.IsNullOrEmpty(_summary))
                 EditorGUILayout.HelpBox(_summary, MessageType.Info);
 
-            if (_report == null) return;
+            DrawList();
+            DrawFixAll();
+        }
+
+        private void DrawList()
+        {
+            if (_report == null)
+            {
+                GUILayout.FlexibleSpace();
+
+                return;
+            }
 
             if (_report.Modules.Count == 0)
             {
@@ -187,11 +183,20 @@ namespace FlowIoC.Editor.ModuleScan
                 EditorPrefs.SetBool(ONLY_ISSUES_KEY, onlyIssues);
             }
 
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// The window's one action, along the foot of it: the same shape a Root's Add Sub Context
+        /// has, because it is the same kind of thing - what this panel is for, rather than one
+        /// control among several in a toolbar.
+        /// </summary>
+        private void DrawFixAll()
+        {
             // Fix All writes asmdefs, which starts a compile. Stacking that on a compile already
             // running, or on play mode, is how a half-written assembly happens.
             bool busy = EditorApplication.isCompiling || EditorApplication.isPlayingOrWillChangePlaymode;
-
-            bool fixable = !busy && issues > 0;
+            bool fixable = !busy && (_report?.IssueCount ?? 0) > 0;
 
             using (new EditorGUI.DisabledScope(!fixable))
             {
@@ -202,15 +207,24 @@ namespace FlowIoC.Editor.ModuleScan
 
                 if (fixable) GUI.backgroundColor = _actionColor;
 
-                // miniButton rather than toolbarButton: a toolbar button's background is all but
-                // transparent, so tinting it green barely shows.
-                if (GUILayout.Button("Fix All", EditorStyles.miniButton, GUILayout.Width(60), GUILayout.Height(16f)))
+                if (GUILayout.Button("Fix All", ActionStyle()))
                     FixAll();
 
                 GUI.backgroundColor = background;
             }
+        }
 
-            EditorGUILayout.EndHorizontal();
+        /// <summary>
+        /// Tall enough to read as the panel's action, and inset a little on every side - the rows
+        /// above run edge to edge, and a button that did the same would not read as a button.
+        /// </summary>
+        private GUIStyle ActionStyle()
+        {
+            return _action ??= new GUIStyle(GUI.skin.button)
+            {
+                fixedHeight = 36f,
+                margin = new RectOffset(6, 6, 4, 6)
+            };
         }
 
         private void FixAll()
@@ -298,34 +312,34 @@ namespace FlowIoC.Editor.ModuleScan
         private bool DrawHeaderRow(bool expanded, ModuleCheckStatus status, string label, string subtitle,
             string badge)
         {
-            Rect rect = Bleed(EditorGUILayout.GetControlRect(false, ROW_HEIGHT));
+            Rect rect = _painter.Row();
             Color accent = ColorFor(status);
 
-            EditorGUI.DrawRect(rect, Fill(accent, status));
-            EditorGUI.DrawRect(new Rect(rect.x, rect.y, STRIPE_WIDTH, rect.height), accent);
+            _painter.Paint(rect, accent, Alpha(status));
 
-            float x = rect.x + STRIPE_WIDTH + 5f;
+            bool hovered = _painter.IsHovered(rect);
+            float x = rect.x + _painter.ContentX - 1f;
 
-            GUI.Label(new Rect(x, rect.y, ARROW_WIDTH, rect.height), expanded ? "▾" : "▸", ArrowStyle());
+            GUI.Label(new Rect(x, rect.y, ARROW_WIDTH, rect.height), expanded ? "▾" : "▸", _painter.Arrow);
             x += ARROW_WIDTH;
 
             Color previous = GUI.color;
             GUI.color = accent;
-            GUI.Label(new Rect(x, rect.y, ICON_WIDTH, rect.height), IconFor(status), IconStyle());
+            GUI.Label(new Rect(x, rect.y, ICON_WIDTH, rect.height), IconFor(status), _painter.Icon);
             GUI.color = previous;
             x += ICON_WIDTH + 4f;
 
-            GUI.Label(new Rect(x, rect.y, NAME_WIDTH, rect.height), label, NameStyle());
+            GUI.Label(new Rect(x, rect.y, NAME_WIDTH, rect.height), label, _painter.Name(hovered));
             x += NAME_WIDTH + 6f;
 
             float room = rect.xMax - BADGE_WIDTH - 10f - x;
 
             if (!string.IsNullOrEmpty(subtitle) && room > 40f)
-                GUI.Label(new Rect(x, rect.y, room, rect.height), subtitle, EditorStyles.miniLabel);
+                GUI.Label(new Rect(x, rect.y, room, rect.height), subtitle, _painter.Mini(hovered));
 
             if (!string.IsNullOrEmpty(badge))
                 GUI.Label(new Rect(rect.xMax - BADGE_WIDTH - 6f, rect.y, BADGE_WIDTH, rect.height), badge,
-                    BadgeStyle());
+                    _painter.Badge(hovered));
 
             // Drawn last and painting nothing, so it takes the click without covering the row.
             if (GUI.Button(rect, GUIContent.none, GUIStyle.none))
@@ -346,7 +360,7 @@ namespace FlowIoC.Editor.ModuleScan
             GUILayout.Space(FINDING_INDENT);
 
             GUI.color = accent;
-            GUILayout.Label(IconFor(finding.Status), IconStyle(), GUILayout.Width(ICON_WIDTH));
+            GUILayout.Label(IconFor(finding.Status), _painter.Icon, GUILayout.Width(ICON_WIDTH));
             GUI.color = previous;
 
             GUILayout.Label(finding.Message, EditorStyles.wordWrappedMiniLabel);
@@ -369,40 +383,31 @@ namespace FlowIoC.Editor.ModuleScan
         /// </summary>
         private void DrawNote(ModuleCheckStatus status, string message)
         {
-            Rect rect = Bleed(EditorGUILayout.GetControlRect(false, ROW_HEIGHT));
+            Rect rect = _painter.Row();
             Color accent = ColorFor(status);
 
-            EditorGUI.DrawRect(rect, Fill(accent, status));
-            EditorGUI.DrawRect(new Rect(rect.x, rect.y, STRIPE_WIDTH, rect.height), accent);
+            _painter.Paint(rect, accent, Alpha(status));
 
-            float x = rect.x + STRIPE_WIDTH + 5f + ARROW_WIDTH;
+            float x = rect.x + _painter.ContentX - 1f + ARROW_WIDTH;
 
             Color previous = GUI.color;
             GUI.color = accent;
-            GUI.Label(new Rect(x, rect.y, ICON_WIDTH, rect.height), IconFor(status), IconStyle());
+            GUI.Label(new Rect(x, rect.y, ICON_WIDTH, rect.height), IconFor(status), _painter.Icon);
             GUI.color = previous;
 
             x += ICON_WIDTH + 4f;
 
-            GUI.Label(new Rect(x, rect.y, rect.width - x - 6f, rect.height), message, EditorStyles.miniLabel);
+            GUI.Label(new Rect(x, rect.y, rect.width - x - 6f, rect.height), message,
+                _painter.Mini(_painter.IsHovered(rect)));
         }
 
         /// <summary>
-        /// A row runs the full width of the window, the way the header bar does, so the list reads
-        /// as one column of rows rather than as a stack of boxes floating inside a margin.
+        /// How hard a row is tinted. A settled row is fainter than a row with something to say, so
+        /// a project of forty green modules does not shout as loudly as the one red row in it.
         /// </summary>
-        private Rect Bleed(Rect rect) => new Rect(0f, rect.y, rect.width + rect.x, rect.height);
-
-        /// <summary>
-        /// The row's own tint: the status colour, washed out until the text on it still reads. A
-        /// settled row is fainter than a row with something to say, so a list of green rows does
-        /// not shout as loudly as the one red row in it.
-        /// </summary>
-        private Color Fill(Color accent, ModuleCheckStatus status)
+        private float Alpha(ModuleCheckStatus status)
         {
-            float alpha = status == ModuleCheckStatus.Ok ? 0.07f : 0.13f;
-
-            return new Color(accent.r, accent.g, accent.b, alpha);
+            return status == ModuleCheckStatus.Ok ? FlowRowPainter.QUIET_ALPHA : FlowRowPainter.FILL_ALPHA;
         }
 
         /// <summary>
@@ -420,13 +425,17 @@ namespace FlowIoC.Editor.ModuleScan
 
         private string Count(int value, string noun) => value == 1 ? $"1 {noun}" : $"{value} {noun}s";
 
+        /// <summary>
+        /// Fixable is amber and not red: it is a job waiting rather than a decision anyone has to
+        /// make. Manual is red, because Fix All will not clear it however many times it is pressed.
+        /// </summary>
         private Color ColorFor(ModuleCheckStatus status)
         {
             switch (status)
             {
-                case ModuleCheckStatus.Fixable: return _fixableColor;
-                case ModuleCheckStatus.Manual: return _manualColor;
-                default: return _okColor;
+                case ModuleCheckStatus.Fixable: return _painter.Warn;
+                case ModuleCheckStatus.Manual: return _painter.Error;
+                default: return _painter.Ok;
             }
         }
 
@@ -438,35 +447,6 @@ namespace FlowIoC.Editor.ModuleScan
                 case ModuleCheckStatus.Manual: return "✖";
                 default: return "✔";
             }
-        }
-
-        // EditorStyles is not loaded when the window's fields are, so the styles are built on use.
-        private GUIStyle ArrowStyle()
-        {
-            return _arrow ??= new GUIStyle(EditorStyles.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 9
-            };
-        }
-
-        private GUIStyle IconStyle()
-        {
-            return _icon ??= new GUIStyle(EditorStyles.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 11
-            };
-        }
-
-        private GUIStyle NameStyle()
-        {
-            return _name ??= new GUIStyle(EditorStyles.boldLabel) {alignment = TextAnchor.MiddleLeft};
-        }
-
-        private GUIStyle BadgeStyle()
-        {
-            return _badge ??= new GUIStyle(EditorStyles.miniLabel) {alignment = TextAnchor.MiddleRight};
         }
     }
 }

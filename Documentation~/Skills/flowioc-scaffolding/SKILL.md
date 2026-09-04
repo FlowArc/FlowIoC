@@ -29,7 +29,7 @@ code generators and namespace tools depend on the exact shape they produce.
 | `Tools/FlowIoC/Create Command` | One Command, in `Controllers/`, in the module's namespace |
 | `Tools/FlowIoC/Create Model` | An interface and an implementation, in `Models/` |
 | `Tools/FlowIoC/Create View` | A View and its Mediator, in `ViewsMediators/` |
-| `Tools/FlowIoC/Module Scan` | Reports every module's folders, assemblies, references and namespace settings, and repairs what is safe to repair |
+| `Tools/FlowIoC/Module Scanner` | Reports every module's folders, assemblies, references and namespace settings, and repairs what is safe to repair |
 | `Tools/FlowIoC/Delete Module` | Removes the folder, asmdef, DotSettings, csproj, index entry and log channel together |
 
 ## Create Module: what to fill in
@@ -78,7 +78,7 @@ gets two files, because a `.csproj.DotSettings` applies solely to the project it
 the module's own file cannot tell Rider to skip `Scripts` on the Shared assembly's behalf.
 
 These files are generated. After moving a module, renaming a folder, or editing the folder layout
-in the code generator settings, run `Module Scan` rather than editing them - it
+in the code generator settings, run `Module Scanner` rather than editing them - it
 rewrites all of them and clears out the ones whose module is gone.
 
 ## Driving the tools without clicking

@@ -118,7 +118,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Space();
             painter.Note(
                 "Which prefixes and suffixes are legal is declared in <Solution>.sln.DotSettings, "
-                + "written by Tools > FlowIoC > Module Scan.");
+                + "written by Tools > FlowIoC > Module Scanner.");
         }
     }
 }

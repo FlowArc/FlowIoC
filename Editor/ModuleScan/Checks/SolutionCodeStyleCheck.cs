@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.ModuleScan
             SolutionDotSettingsWriter writer = WriterFor();
 
             foreach (string removed in writer.CleanupOrphaned())
-                Debug.Log($"[Module Scan] Orphaned solution DotSettings deleted: {Path.GetFileName(removed)}");
+                Debug.Log($"[Module Scanner] Orphaned solution DotSettings deleted: {Path.GetFileName(removed)}");
 
             if (!writer.TryWrite(out string _, out string error, out bool _))
                 Debug.LogError(error);

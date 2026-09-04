@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.BaseModule.Root;
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.Inspector;
 using FlowIoC.Editor.Root;
-using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
+using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -26,25 +25,24 @@ namespace FlowIoC.Editor.Screens
     /// </summary>
     internal class ScreenPanelWindow : EditorWindow
     {
-        [MenuItem("Tools/FlowIoC/Screens", false, -1148)]
+        /// <summary>What the panel is called, in the menu, on the tab and on its bar.</summary>
+        private const string TITLE = "Screens";
+
+        /// <summary>The strip of column names over a group. Shorter than a row: it holds no field.</summary>
+        private const float HEADING_HEIGHT = 16f;
+
+        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1148)]
         internal static void Open()
         {
-            ScreenPanelWindow window = GetWindow<ScreenPanelWindow>("Screens");
-            window.minSize = new Vector2(640, 320);
+            ScreenPanelWindow window = GetWindow<ScreenPanelWindow>(TITLE);
+
+            // Wide enough for every column at once. The columns are fixed widths, so a narrower
+            // window would not shrink them - it would push Load and Reset off the right edge.
+            window.minSize = new Vector2(720, 320);
             window.Show();
         }
 
-        /// <summary>
-        /// A layer no other screen of this manager opens on. Green because it is the settled case,
-        /// not because anything was checked for the reader.
-        /// </summary>
-        private readonly Color _uniqueLayerColor = new Color(0.55f, 0.85f, 0.55f);
-
-        /// <summary>
-        /// A layer another screen of this manager also opens on. Amber rather than red: the runtime
-        /// allows it and a game sometimes wants it, so this is a warning and never a refusal.
-        /// </summary>
-        private readonly Color _sharedLayerColor = new Color(1f, 0.8f, 0.35f);
+        private readonly FlowRowPainter _painter = new FlowRowPainter();
 
         private ScreenSubContextDeclarations _declarations;
         private ScreenPanelScan _scan;
@@ -55,19 +53,27 @@ namespace FlowIoC.Editor.Screens
 
         private List<ScreenRowEVO> _rows = new List<ScreenRowEVO>();
         private HashSet<ScreenRowEVO> _collided = new HashSet<ScreenRowEVO>();
+
+        /// <summary>
+        /// The ScreenManager in the open scenes each id names, so a group heading can select the
+        /// object it is about. An id with no manager is not an error here - the screens are
+        /// registered either way, and the manager's own inspector is what reports duplicates.
+        /// </summary>
+        private Dictionary<int, ScreenManager> _managers = new Dictionary<int, ScreenManager>();
+
         private bool _manyScenes;
         private Vector2 _scroll;
 
-        /// <summary>
-        /// The column headings. miniBoldLabel is authored for a body of text rather than a toolbar
-        /// strip - a 6 pixel top margin over a 3 pixel top padding, aligned upper left - which in a
-        /// 21 pixel toolbar leaves the word sitting near the bottom of its cell. This is that style
-        /// with miniLabel's vertical metrics, which is what the toolbar's own labels already use.
-        /// </summary>
-        private GUIStyle _headerStyle;
-
         private void OnEnable()
         {
+            // The tab is named here rather than only at GetWindow, so a window restored from a
+            // saved layout - or opened by anything but the menu item - never shows the type name.
+            titleContent = new GUIContent(TITLE);
+
+            // Without this the window is sent no MouseMove events at all, and a row would only
+            // light up when something else happened to repaint it.
+            wantsMouseMove = true;
+
             _declarations = new ScreenSubContextDeclarations();
             _scan = new ScreenPanelScan(_declarations);
             _collisions = new ScreenLayerCollisions();
@@ -107,14 +113,44 @@ namespace FlowIoC.Editor.Screens
 
             _rows = _scan.Rows(roots);
             _collided = _collisions.Find(_rows);
+            _managers = FindManagers();
             _manyScenes = SceneManager.sceneCount > 1;
 
             Repaint();
         }
 
+        /// <summary>
+        /// One manager per id. Two managers on one id is a scene that will not behave, and the
+        /// ScreenManager inspector already says so in as many words; here the first one found is
+        /// what the heading selects, because a heading that refuses to select anything would be
+        /// the least helpful answer to a scene in that state.
+        /// </summary>
+        private Dictionary<int, ScreenManager> FindManagers()
+        {
+            var managers = new Dictionary<int, ScreenManager>();
+
+            foreach (ScreenManager manager in Object.FindObjectsByType<ScreenManager>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                int id = manager.ManagerData?.ManagerID ?? 0;
+
+                if (!managers.ContainsKey(id)) managers.Add(id, manager);
+            }
+
+            return managers;
+        }
+
         private void OnGUI()
         {
-            _bar.DrawWindow(FlowRole.Screen, "Screens", "FlowIoC", "Screens in the open scenes", "Refresh", Refresh);
+            if (Event.current.type == EventType.MouseMove) Repaint();
+
+            DropFocusOnClick();
+
+            // The bar wears the green its settled rows do rather than the Screen role's gold, the
+            // way Module Scanner does: what this window reports is a state, not a role.
+            _bar.DrawWindow(
+                _painter.Bar, _painter.Ok, "Screens", "FlowIoC", "Screens in the open scenes", "Refresh", Refresh,
+                "Screens");
 
             if (_rows.Count == 0)
             {
@@ -134,6 +170,21 @@ namespace FlowIoC.Editor.Screens
         }
 
         /// <summary>
+        /// Takes the keyboard focus off whatever holds it whenever the reader clicks, before the
+        /// controls draw - so the field actually under the pointer claims it back during the same
+        /// event, and a click on anything else leaves nothing focused.
+        ///
+        /// This is what makes the manager and layer cells commit. They are delayed fields, which
+        /// write on Return or on losing focus, and an EditorWindow does not drop focus on a click
+        /// into empty space the way the inspector does: without this, typing a layer and clicking
+        /// elsewhere in the panel left the number on screen and nothing written.
+        /// </summary>
+        private void DropFocusOnClick()
+        {
+            if (Event.current.type == EventType.MouseDown) GUIUtility.keyboardControl = 0;
+        }
+
+        /// <summary>
         /// A rescan reads the declarations the context types already loaded hold. Refresh throws
         /// those away first, so a declaration edited in code since the window opened is read again.
         /// </summary>
@@ -149,130 +200,214 @@ namespace FlowIoC.Editor.Screens
 
         private void DrawManagerGroup(int managerId)
         {
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField($"Manager {managerId}", EditorStyles.boldLabel);
-
-            DrawHeaderRow();
-
             List<ScreenRowEVO> group = _rows
                 .Where(row => ManagerOf(row) == managerId)
                 .OrderBy(row => row.Effective?.Layer ?? int.MaxValue)
                 .ThenBy(row => row.ContextName)
                 .ToList();
 
+            DrawGroupHeader(managerId, group);
+
             foreach (ScreenRowEVO row in group)
                 DrawRow(row);
 
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.Space(4);
+            GUILayout.Space(6f);
         }
 
-        private void DrawHeaderRow()
+        /// <summary>
+        /// The group's two lines - which manager it registers at, and what the columns under it
+        /// are - painted as one rect. Two rows would leave the layout's own gap between them, and
+        /// a grey line across a green header is the seam this avoids.
+        /// </summary>
+        private void DrawGroupHeader(int managerId, List<ScreenRowEVO> group)
         {
-            // EditorStyles is not loaded when the window's fields are, so the style is built here.
-            _headerStyle ??= new GUIStyle(EditorStyles.miniBoldLabel)
-            {
-                alignment = TextAnchor.MiddleLeft,
-                margin = new RectOffset(4, 4, 2, 2),
-                padding = new RectOffset(2, 2, 0, 0)
-            };
+            Rect block = _painter.Row(FlowRowPainter.ROW_HEIGHT + HEADING_HEIGHT);
+            _painter.Paint(block, _painter.Ok, FlowRowPainter.HEADING_ALPHA);
 
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label("Screen", _headerStyle, GUILayout.Width(180));
-            GUILayout.Label("Root", _headerStyle, GUILayout.Width(160));
-            GUILayout.Label("Manager", _headerStyle, GUILayout.Width(60));
-            GUILayout.Label("Layer", _headerStyle, GUILayout.Width(50));
-            GUILayout.Label("Tag", _headerStyle, GUILayout.Width(80));
-            GUILayout.Label("Show Anim", _headerStyle, GUILayout.Width(70));
-            GUILayout.Label("Hide Anim", _headerStyle, GUILayout.Width(70));
-            GUILayout.Label("Load", _headerStyle);
-            EditorGUILayout.EndHorizontal();
+            DrawManagerLine(
+                managerId, group, new Rect(block.x, block.y, block.width, FlowRowPainter.ROW_HEIGHT));
+
+            DrawColumnHeadings(
+                new Rect(block.x, block.y + FlowRowPainter.ROW_HEIGHT, block.width, HEADING_HEIGHT));
         }
 
-        private Color LayerColor(bool collided) => collided ? _sharedLayerColor : _uniqueLayerColor;
+        /// <summary>
+        /// Which manager this group registers at, and how many screens it holds. It stays green
+        /// whatever the rows under it say: the heading is where the group starts, and a colour
+        /// that moves would compete with the rows that carry the actual answer.
+        /// </summary>
+        private void DrawManagerLine(int managerId, List<ScreenRowEVO> group, Rect rect)
+        {
+            _managers.TryGetValue(managerId, out ScreenManager manager);
+
+            var label = new Rect(rect.x + _painter.ContentX, rect.y, 220f, rect.height);
+
+            // Only the name lights up, and only while there is a manager to select. A screen row
+            // lights as a whole because the whole row is about one screen; here the rest of the
+            // line does nothing when it is clicked, so it stays where it is.
+            bool hovered = manager != null && _painter.IsHovered(label);
+
+            var content = new GUIContent(
+                $"Manager ID:{managerId}",
+                manager == null
+                    ? "No ScreenManager with this id is in the open scenes."
+                    : $"Select {manager.name} in the hierarchy.");
+
+            // A label when there is nothing to select, so the heading never offers a click that
+            // does nothing.
+            if (manager == null)
+                GUI.Label(label, content, _painter.Strong(false));
+            else if (GUI.Button(label, content, _painter.Strong(hovered)))
+                Select(manager);
+
+            var badge = new Rect(rect.xMax - 96f, rect.y, 90f, rect.height);
+            GUI.Label(badge, group.Count == 1 ? "1 screen" : $"{group.Count} screens", _painter.Badge(false));
+        }
+
+        /// <summary>
+        /// Selecting as well as pinging: a ping alone scrolls the hierarchy to the object and
+        /// leaves the inspector on whatever was there before, which is not what clicking the thing
+        /// the group is named after should do.
+        /// </summary>
+        private void Select(Component component)
+        {
+            Selection.activeGameObject = component.gameObject;
+            EditorGUIUtility.PingObject(component.gameObject);
+        }
+
+        /// <summary>
+        /// The column names, as the header bar's strip does it: the band taken down a shade under
+        /// the line above and the names in the colour that line is tinted with.
+        /// </summary>
+        private void DrawColumnHeadings(Rect rect)
+        {
+            // Everything but the stripe. The stripe runs the height of the whole header in one
+            // tone, so darkening over it would break the line the group hangs from.
+            _painter.Darken(
+                new Rect(
+                    rect.x + FlowRowPainter.STRIPE_WIDTH,
+                    rect.y,
+                    rect.width - FlowRowPainter.STRIPE_WIDTH,
+                    rect.height));
+
+            var columns = new ScreenColumnsEVO(rect, _painter.ContentX);
+            GUIStyle style = _painter.Heading(_painter.Ok);
+
+            GUI.Label(columns.Name, "Screen", style);
+            GUI.Label(columns.Root, "Root", style);
+            GUI.Label(columns.Manager, "Manager", style);
+            GUI.Label(columns.Layer, "Layer", style);
+            GUI.Label(columns.Tag, "Tag", style);
+            GUI.Label(columns.ShowAnimation, "Show Anim", style);
+            GUI.Label(columns.HideAnimation, "Hide Anim", style);
+
+            if (columns.Load.width > 0f)
+                GUI.Label(columns.Load, "Load", style);
+        }
+
+        /// <summary>
+        /// Green when the screen has its manager's layer to itself, amber when another screen of
+        /// the same manager opens on it. Amber rather than red: the runtime allows it and a game
+        /// sometimes wants it, so this is a warning and never a refusal.
+        /// </summary>
+        private Color LayerColor(bool collided) => collided ? _painter.Warn : _painter.Ok;
 
         private void DrawRow(ScreenRowEVO row)
         {
-            EditorGUILayout.BeginHorizontal();
-
             bool collided = _collided.Contains(row);
-            Color previous = GUI.color;
-            GUI.color = LayerColor(collided);
 
-            string name = row.IsOverridden ? row.ContextName + " *" : row.ContextName;
-            GUIContent nameContent = new GUIContent(
-                name,
+            Rect rect = _painter.Row();
+            var columns = new ScreenColumnsEVO(rect, _painter.ContentX);
+
+            // A settled row is tinted faintly and only a collision is filled the full amount, so a
+            // list of screens that are all in order does not read as a wall of green.
+            _painter.Paint(
+                rect,
+                LayerColor(collided),
+                collided ? FlowRowPainter.FILL_ALPHA : FlowRowPainter.QUIET_ALPHA);
+
+            bool hovered = _painter.IsHovered(rect);
+
+            string label = row.IsOverridden ? row.ContextName + " *" : row.ContextName;
+            var nameContent = new GUIContent(
+                label,
                 row.IsOverridden ? "Overridden on " + row.Root.name : row.ContextFullName);
 
-            if (GUILayout.Button(nameContent, EditorStyles.label, GUILayout.Width(180)))
+            if (GUI.Button(columns.Name, nameContent, _painter.Name(hovered)))
                 EditorGUIUtility.PingObject(row.Root);
 
+            // Small, the way Load is: the screen's own name is what the row is about, and where it
+            // is listed and where it loads from are both answers to "and then where".
             string rootLabel = _manyScenes ? $"{row.Root.name}  ({row.SceneName})" : row.Root.name;
-            GUILayout.Label(rootLabel, GUILayout.Width(160));
-
-            GUI.color = previous;
+            GUI.Label(columns.Root, rootLabel, _painter.Mini(hovered));
 
             if (row.Effective == null)
             {
-                EditorGUILayout.LabelField(new GUIContent("declaration unreadable", row.DeclarationError));
-                EditorGUILayout.EndHorizontal();
+                GUI.Label(columns.Message, new GUIContent("declaration unreadable", row.DeclarationError),
+                    _painter.Cell(hovered));
+
                 return;
             }
 
-            DrawEditableCells(row, collided);
-
-            EditorGUILayout.EndHorizontal();
+            DrawEditableCells(row, columns, collided, hovered);
         }
 
-        private void DrawEditableCells(ScreenRowEVO row, bool collided)
+        private void DrawEditableCells(ScreenRowEVO row, ScreenColumnsEVO columns, bool collided, bool hovered)
         {
             EditorGUI.BeginChangeCheck();
 
-            // Delayed, because these two decide where the row sits: the manager picks its box and
+            // Delayed, because these two decide where the row sits: the manager picks its group and
             // the layer sorts it inside one. A plain IntField writes on every keystroke, so typing
-            // 12 committed 1 first, moved the row into a box that did not exist a moment before,
+            // 12 committed 1 first, moved the row into a group that did not exist a moment before,
             // and left the caret on whatever row had slid into that place.
-            int managerId = EditorGUILayout.DelayedIntField(row.Effective.ManagerId, GUILayout.Width(60));
+            int managerId = EditorGUI.DelayedIntField(Field(columns.Manager), row.Effective.ManagerId);
+            int layer = EditorGUI.DelayedIntField(Field(columns.Layer), row.Effective.Layer);
 
-            Color previous = GUI.color;
-            GUI.color = LayerColor(collided);
-
-            int layer = EditorGUILayout.DelayedIntField(row.Effective.Layer, GUILayout.Width(50));
-
-            GUI.color = previous;
-
-            ScreenTag tag = (ScreenTag) EditorGUILayout.EnumPopup(row.Effective.Tag, GUILayout.Width(80));
-            bool show = AnimationToggle(row.Effective.HasShowAnimation);
-            bool hide = AnimationToggle(row.Effective.HasHideAnimation);
+            var tag = (ScreenTag) EditorGUI.EnumPopup(Field(columns.Tag), row.Effective.Tag);
+            bool show = AnimationToggle(columns.ShowAnimation, row.Effective.HasShowAnimation);
+            bool hide = AnimationToggle(columns.HideAnimation, row.Effective.HasHideAnimation);
 
             if (EditorGUI.EndChangeCheck())
                 Write(row, managerId, layer, tag, show, hide);
 
-            GUILayout.Label(
-                new GUIContent(
-                    row.Declaration == null ? "-" : $"{row.Declaration.Load.Kind}: {row.Declaration.Load.Key}",
-                    collided ? "Another screen opens on this layer of this manager. Opening one closes the other." : ""),
-                EditorStyles.miniLabel);
+            if (columns.Load.width > 0f)
+            {
+                GUI.Label(
+                    columns.Load,
+                    new GUIContent(
+                        row.Declaration == null ? "-" : $"{row.Declaration.Load.Kind}: {row.Declaration.Load.Key}",
+                        collided
+                            ? "Another screen opens on this layer of this manager. Opening one closes the other."
+                            : ""),
+                    _painter.Mini(hovered));
+            }
 
             using (new EditorGUI.DisabledScope(!row.IsOverridden))
             {
-                if (GUILayout.Button(
+                if (GUI.Button(
+                        columns.Reset,
                         new GUIContent("Reset", "Drop this Root's override and take what the context declares."),
-                        EditorStyles.miniButton,
-                        GUILayout.Width(52)))
+                        EditorStyles.miniButton))
                     ResetToCode(row);
             }
         }
 
-        /// <summary>
-        /// A checkbox draws at the left edge of whatever width it is given, which left it under the
-        /// first letter of a two word header. The space carries it to the middle of its column.
-        /// </summary>
-        private bool AnimationToggle(bool value)
+        /// <summary>A field is a line tall; the row it sits in is taller, to leave the tint room.</summary>
+        private Rect Field(Rect column)
         {
-            GUILayout.Space(26);
+            return new Rect(column.x, column.y + 1f, column.width, column.height - 2f);
+        }
 
-            return EditorGUILayout.Toggle(value, GUILayout.Width(44));
+        /// <summary>
+        /// A checkbox draws at the left edge of whatever rect it is given, which would leave it
+        /// under the first letter of a two word heading. This centres it in its column instead.
+        /// </summary>
+        private bool AnimationToggle(Rect column, bool value)
+        {
+            const float box = 14f;
+            var rect = new Rect(column.x + (column.width - box) * 0.5f, column.y + 3f, box, box);
+
+            return EditorGUI.Toggle(rect, value);
         }
 
         private void Write(ScreenRowEVO row, int managerId, int layer, ScreenTag tag, bool show, bool hide)

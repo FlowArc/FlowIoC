@@ -12,7 +12,7 @@ namespace FlowIoC.Tests
     ///
     /// The screen layout had `Scriptables` optional in one and mandatory in the other. It went
     /// unnoticed for as long as nothing acted on the flag - Create Module only reads the optional
-    /// ones, to decide which checkboxes to offer. Module Scan is the first tool that reads
+    /// ones, to decide which checkboxes to offer. Module Scanner is the first tool that reads
     /// IsMandatory and creates what is missing, so it duly created a `Scriptables` folder in every
     /// screen module that did not have one.
     /// </summary>
@@ -95,7 +95,7 @@ namespace FlowIoC.Tests
                     folder.Value,
                     $"'{folder.Key}' is declared one way in the field initializer and another in "
                     + "InitializeDefaultFolderStructure. The second is what gets serialized, and "
-                    + "Module Scan creates whatever it calls mandatory.");
+                    + "Module Scanner creates whatever it calls mandatory.");
             }
         }
 
