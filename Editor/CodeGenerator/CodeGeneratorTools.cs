@@ -9,6 +9,13 @@ namespace FlowIoC.Editor.CodeGenerator
 {
     internal static class CodeGeneratorTools
     {
+        /// <summary>
+        /// The floor for the three single-file generators. Each one carries a name, its options, a
+        /// module tree and the button that writes the file, and below this the tree is the part
+        /// that gives way.
+        /// </summary>
+        private static readonly Vector2 GENERATOR_WINDOW_SIZE = new Vector2(520, 640);
+
         [MenuItem("Tools/FlowIoC/Create Module", false, -1301)]
         private static void CreateModule()
         {
@@ -26,19 +33,22 @@ namespace FlowIoC.Editor.CodeGenerator
         [MenuItem("Tools/FlowIoC/Create View", false, -1298)]
         private static void CreateViewV2()
         {
-            EditorWindow.GetWindow<CreateViewMenu>("Create View");
+            var window = EditorWindow.GetWindow<CreateViewMenu>("Create View");
+            window.minSize = GENERATOR_WINDOW_SIZE;
         }
 
         [MenuItem("Tools/FlowIoC/Create Model", false, -1297)]
         private static void CreateModelV2()
         {
-            EditorWindow.GetWindow<CreateModelMenu>("Create Model");
+            var window = EditorWindow.GetWindow<CreateModelMenu>("Create Model");
+            window.minSize = GENERATOR_WINDOW_SIZE;
         }
 
         [MenuItem("Tools/FlowIoC/Create Command", false, -1296)]
         private static void CreateCommandV2()
         {
-            EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
+            var window = EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
+            window.minSize = GENERATOR_WINDOW_SIZE;
         }
     }
 }

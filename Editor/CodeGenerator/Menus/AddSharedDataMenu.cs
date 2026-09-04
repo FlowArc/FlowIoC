@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using FlowIoC.BaseModule.Attributes;
+using FlowIoC.Editor.Inspector;
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
@@ -35,13 +37,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private Dictionary<string, bool> _moduleExpandedState;
         private string _selectedModulePath;
         private string _selectedModuleName;
+        private const float MODULE_LIST_HEIGHT = 300f;
+
         private Vector2 _scrollPosition;
         private string _lastResult;
+
+        private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
         [MenuItem("Tools/FlowIoC/Add Shared Data", false, -1295)]
         private static void ShowWindow()
         {
-            GetWindow<AddSharedDataMenu>(WINDOW_TITLE);
+            var window = GetWindow<AddSharedDataMenu>(WINDOW_TITLE);
+            window.minSize = new Vector2(520, 640);
         }
 
         private void OnEnable()
@@ -56,6 +63,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void OnGUI()
         {
+            _bar.DrawWindow(FlowRole.Root, "Add Shared Data", "FlowIoC",
+                "The Shared assembly on a module that already exists", null, null, "Creating a Module");
+
             EditorGUILayout.BeginVertical("box");
 
             EditorGUILayout.HelpBox(
@@ -90,14 +100,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 richText = true
             };
 
-            GUI.backgroundColor = new Color(.6f, .4f, 1f);
+            GUI.backgroundColor = new ModulePanelTheme().Header;
             EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(33));
             GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"), GUILayout.Width(35), GUILayout.Height(33));
             EditorGUILayout.LabelField(MODULE_LABEL, labelStyle, GUILayout.Height(33));
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
 
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(120));
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(MODULE_LIST_HEIGHT));
             EditorGUILayout.BeginVertical();
             ModuleHierarchyDrawer.DrawModuleHierarchy(
                 _registry, MODULES_PATH, 0, ref _moduleExpandedState, ref _selectedModulePath, ref _selectedModuleName, CanSelect);
