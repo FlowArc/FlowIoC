@@ -27,6 +27,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string ADD_ACTION = "Add Action";
         private const string MODULE_TYPE_LABEL = " Module Type:";
         private const string MODULE_ROLE_LABEL = " Role:";
+        private const string NAME_PLACEHOLDER = "Enter module name here...";
         private const string CONFIG_TYPE_LABEL = "Config:";
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
         private static readonly Color BUTTON_COLOR_IDLE = Color.cyan;
