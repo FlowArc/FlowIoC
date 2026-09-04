@@ -1041,9 +1041,11 @@ that file. The rules land inside a marked block:
 
 Nothing outside the markers is ever touched, so rules you wrote yourself are safe,
 and a malformed marker makes the tool refuse to write rather than guess. FlowIoC
-offers to install the block the first time you open a project and to refresh it when
-the rules change; the offer is remembered, so declining it is permanent until the
-rules themselves change. Removing FlowIoC through the Package Manager removes the
+writes the block whenever it is absent or out of date, without asking — a block
+describing a version you are no longer on helps nobody. A project that would rather
+decide for itself unticks *Keep AGENTS.md and CLAUDE.md up to date automatically* in
+the window, and then nothing is written until **Sync** is pressed. The switch is
+remembered per project. Removing FlowIoC through the Package Manager removes the
 block with it.
 
 The rule text ships in `Documentation~/AgentRules.md`.
@@ -1061,6 +1063,11 @@ the folder is never a mystery — and refreshes one that the package has since c
 files the package owns are ever compared, written or deleted, so a skill you wrote yourself is
 never touched. The window above is for seeing what is installed and for putting a deleted skill
 back without waiting for the next Editor session.
+
+A project that would rather decide for itself unticks *Keep the shipped skills up to date
+automatically* in that window, and then nothing is written until **Install** is pressed. The
+switch is remembered per project and is separate from the one the agent rules carry, so a
+project may take one and refuse the other.
 
 Removing FlowIoC through the Package Manager takes the shipped skills with it, file by file:
 nobody asked for them, so nobody is left with folders they cannot explain. A note left beside a
