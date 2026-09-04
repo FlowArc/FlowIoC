@@ -31,7 +31,7 @@ namespace FlowIoC.Editor.ScreenScanner
         /// <summary>The strip of column names over a group. Shorter than a row: it holds no field.</summary>
         private const float HEADING_HEIGHT = 16f;
 
-        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1250)]
+        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1251)]
         internal static void Open()
         {
             ScreenScannerWindow window = GetWindow<ScreenScannerWindow>(TITLE);

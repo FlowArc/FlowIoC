@@ -36,7 +36,7 @@ namespace FlowIoC.Editor.AgentScanner
         private const float BADGE_WIDTH = 60f;
         private const float SUMMARY_WIDTH = 160f;
 
-        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1251)]
+        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1249)]
         internal static void Open()
         {
             AgentScannerWindow window = GetWindow<AgentScannerWindow>(TITLE);
@@ -67,10 +67,6 @@ namespace FlowIoC.Editor.AgentScanner
             // saved layout under one of the two old names renames itself instead of keeping it.
             titleContent = new GUIContent(TITLE);
 
-            // Without this the window is sent no MouseMove events at all, and a row would only
-            // light up when something else happened to repaint it.
-            wantsMouseMove = true;
-
             _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
             _projectRoot = new ProjectRoot().Resolve();
 
@@ -89,8 +85,6 @@ namespace FlowIoC.Editor.AgentScanner
 
         private void OnGUI()
         {
-            if (Event.current.type == EventType.MouseMove) Repaint();
-
             // The bar wears the same green the settled rows do rather than a role's colour: no
             // FlowRole is about a file being current, and this window is about nothing else.
             _bar.DrawWindow(
@@ -116,10 +110,10 @@ namespace FlowIoC.Editor.AgentScanner
         /// row per file under it. Two sections rather than two windows, because the question each
         /// one answers is the same and a reader wants both answers at once.
         /// </summary>
-        private void DrawGroup(string title, string subtitle, SyncFileState[] states, string badge,
+        private void DrawGroup(string heading, string subtitle, SyncFileState[] states, string badge,
             string emptyMessage)
         {
-            DrawGroupHeader(title, subtitle, states);
+            DrawGroupHeader(heading, subtitle, states);
 
             if (states == null || states.Length == 0)
             {
@@ -140,19 +134,18 @@ namespace FlowIoC.Editor.AgentScanner
         /// is the seam this avoids. It stays green whatever the rows say: the heading is where the
         /// group starts, and a colour that moved would compete with the rows carrying the answer.
         /// </summary>
-        private void DrawGroupHeader(string title, string subtitle, SyncFileState[] states)
+        private void DrawGroupHeader(string heading, string subtitle, SyncFileState[] states)
         {
             Rect block = _painter.Row(FlowRowPainter.ROW_HEIGHT + HEADING_HEIGHT);
             _painter.Paint(block, _painter.Ok, FlowRowPainter.HEADING_ALPHA);
 
             var line = new Rect(block.x, block.y, block.width, FlowRowPainter.ROW_HEIGHT);
-            bool hovered = _painter.IsHovered(block);
 
-            GUI.Label(new Rect(line.x + _painter.ContentX, line.y, 220f, line.height), title,
-                _painter.Strong(hovered));
+            GUI.Label(new Rect(line.x + _painter.ContentX, line.y, 220f, line.height), heading,
+                _painter.Strong(false));
 
             GUI.Label(new Rect(line.xMax - SUMMARY_WIDTH - 6f, line.y, SUMMARY_WIDTH, line.height),
-                Summarise(states), _painter.Badge(hovered));
+                Summarise(states), _painter.Badge(false));
 
             var strip = new Rect(block.x, block.y + FlowRowPainter.ROW_HEIGHT, block.width, HEADING_HEIGHT);
             _painter.Darken(strip);
@@ -189,7 +182,6 @@ namespace FlowIoC.Editor.AgentScanner
 
             _painter.Paint(rect, accent, Alpha(state.Status));
 
-            bool hovered = _painter.IsHovered(rect);
             float x = rect.x + _painter.ContentX;
 
             Color previous = GUI.color;
@@ -199,16 +191,16 @@ namespace FlowIoC.Editor.AgentScanner
             x += ICON_WIDTH + 4f;
 
             GUI.Label(new Rect(x, rect.y, NAME_WIDTH, rect.height), Path.GetFileName(state.Path),
-                _painter.Name(hovered));
+                _painter.Name(false));
             x += NAME_WIDTH + 6f;
 
             float room = rect.xMax - BADGE_WIDTH - 10f - x;
 
             if (room > 40f)
-                GUI.Label(new Rect(x, rect.y, room, rect.height), Describe(state), _painter.Mini(hovered));
+                GUI.Label(new Rect(x, rect.y, room, rect.height), Describe(state), _painter.Mini(false));
 
             GUI.Label(new Rect(rect.xMax - BADGE_WIDTH - 6f, rect.y, BADGE_WIDTH, rect.height), badge,
-                _painter.Badge(hovered));
+                _painter.Badge(false));
         }
 
         /// <summary>
@@ -232,7 +224,7 @@ namespace FlowIoC.Editor.AgentScanner
             x += ICON_WIDTH + 4f;
 
             GUI.Label(new Rect(x, rect.y, rect.width - x - 6f, rect.height), message,
-                _painter.Mini(_painter.IsHovered(rect)));
+                _painter.Mini(false));
         }
 
         /// <summary>
