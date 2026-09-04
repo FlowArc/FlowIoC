@@ -11,6 +11,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 {
     internal partial class CreateModuleMenu
     {
+        /// <summary>
+        /// The module name, with the hint drawn over an empty field rather than typed into it.
+        /// The hint used to be the field's own text, so clicking selected those words and typing
+        /// replaced them - and a name that happened to match them was read as no name at all.
+        /// A label paints over the field instead: it takes no input, so the field underneath is
+        /// empty and behaves like one.
+        /// </summary>
         private void DrawNameInputField()
         {
             var style = new GUIStyle(EditorStyles.textField)
@@ -19,16 +26,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 padding = new RectOffset(12, 0, 0, 0),
                 fontSize = 14
             };
-            if (string.IsNullOrEmpty(_moduleName))
+
+            _moduleName = EditorGUILayout.TextField(
+                _moduleName, style, GUILayout.MaxWidth(400), GUILayout.Height(38));
+
+            if (!string.IsNullOrEmpty(_moduleName)) return;
+
+            var hintStyle = new GUIStyle(style)
             {
-                style.normal.textColor = Color.gray;
-                _moduleName = EditorGUILayout.TextField("Enter module name here...", style, GUILayout.MaxWidth(400), GUILayout.Height(38));
-                if (_moduleName == "Enter module name here...") _moduleName = "";
-            }
-            else
-            {
-                _moduleName = EditorGUILayout.TextField(_moduleName, style, GUILayout.MaxWidth(400), GUILayout.Height(38));
-            }
+                normal = {textColor = Color.gray, background = null}
+            };
+
+            GUI.Label(GUILayoutUtility.GetLastRect(), NAME_PLACEHOLDER, hintStyle);
         }
 
         private void CustomCheck(string errorMessage, string checkString, string logMessage)
