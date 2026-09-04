@@ -89,13 +89,12 @@ namespace FlowIoC.Tests
             CollectionAssert.AreEqual(new[]
             {
                 "Code Generators",
+                "Agent Scanner",
                 "Screen Scanner",
                 "Module Scanner",
                 "Flow Console",
                 "Model Viewer",
-                "Folder Painter",
-                "Agent Rules",
-                "Agent Skills"
+                "Folder Painter"
             }, ChildTitles("Editor Tools"));
         }
 

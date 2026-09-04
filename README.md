@@ -29,7 +29,7 @@ touching the rest of the game.
 - [Functions](#functions)
 - [Bundled Modules](#bundled-modules)
 - [Editor Tools](#editor-tools)
-- [AI Agent Rules](#ai-agent-rules)
+- [Agent Scanner](#agent-scanner)
 - [Module Layout Convention](#module-layout-convention)
 - [Data Types](#data-types)
 - [Documentation Index](#documentation-index)
@@ -997,10 +997,9 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 | `Tools/FlowIoC/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
+| `Tools/FlowIoC/Agent Scanner` | Report the rule block in `AGENTS.md` and the skills under `.claude/skills`, and write whatever is missing or out of date |
 | `Tools/FlowIoC/Screen Scanner` | Every screen context on a Root in the open scenes, with its manager, layer, tag and animation flags editable in place |
 | `Tools/FlowIoC/Module Scanner` | Report every module's folders, assemblies, references and namespace settings, and repair what is safe to repair |
-| `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
-| `Tools/FlowIoC/AI/Agent Skills` | Install the skills FlowIoC ships into the project's `.claude/skills` |
 | `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor. Its Welcome page has a **What's New** tab, read out of the package's `CHANGELOG.md`, and the window opens itself there once after FlowIoC has been updated |
 
 `Module Scanner` also writes `<Solution>.sln.DotSettings`, the ReSharper and Rider
@@ -1020,18 +1019,27 @@ See [`Editor/README.md`](Editor/README.md) and
 
 ---
 
-## AI Agent Rules
+## Agent Scanner
+
+Everything this project tells an AI coding assistant, in one window: the rule block in
+`AGENTS.md` and `CLAUDE.md`, and the skill folders under `.claude/skills`.
+
+> **Tools ▸ FlowIoC ▸ Agent Scanner**
+
+A row is green while its file is current, amber while it is missing or out of date, and
+red when only a person can settle it — a marker somebody has broken, a file that could
+not be written. **Sync** writes everything amber; nothing it does clears a red row.
+
+### Agent rules
 
 FlowIoC imposes an architecture that nothing in the C# type system enforces, so an
 AI coding assistant that has not been told the rules will happily write code that
 compiles and violates every one of them — logic in a Context, one module injecting
 another's model, `[Inject]` on a field where it is silently skipped.
 
-> **Tools ▸ FlowIoC ▸ AI ▸ Agent Rules**
-
-The window writes those rules into your project's root `AGENTS.md` — the convention
-Claude Code, Codex, Cursor, Zed and Gemini CLI all read — and points `CLAUDE.md` at
-that file. The rules land inside a marked block:
+The rules go into your project's root `AGENTS.md` — the convention Claude Code, Codex,
+Cursor, Zed and Gemini CLI all read — and `CLAUDE.md` is pointed at that file. They land
+inside a marked block:
 
 ```
 <!-- FLOWIOC:BEGIN version=<installed> hash=<rule text> | ... -->
@@ -1050,24 +1058,22 @@ block with it.
 
 The rule text ships in `Documentation~/AgentRules.md`.
 
-### Agent Skills
+### Agent skills
 
 The rules are what an assistant is told on every task, so they stay short. A skill is what it
 reaches for when one particular kind of work comes up, and it can afford to be longer.
-
-> **Tools ▸ FlowIoC ▸ AI ▸ Agent Skills**
 
 You do not have to ask for them. FlowIoC writes each skill it ships into the project's
 `.claude/skills` folder when the Editor opens — one folder per skill, logged to the console so
 the folder is never a mystery — and refreshes one that the package has since changed. Only the
 files the package owns are ever compared, written or deleted, so a skill you wrote yourself is
-never touched. The window above is for seeing what is installed and for putting a deleted skill
+never touched. The window is for seeing what is installed and for putting a deleted skill
 back without waiting for the next Editor session.
 
 A project that would rather decide for itself unticks *Keep the shipped skills up to date
-automatically* in that window, and then nothing is written until **Install** is pressed. The
+automatically* in that window, and then nothing is written until **Sync** is pressed. The
 switch is remembered per project and is separate from the one the agent rules carry, so a
-project may take one and refuse the other.
+project may take one and refuse the other. Both sit at the foot of the window.
 
 Removing FlowIoC through the Package Manager takes the shipped skills with it, file by file:
 nobody asked for them, so nobody is left with folders they cannot explain. A note left beside a

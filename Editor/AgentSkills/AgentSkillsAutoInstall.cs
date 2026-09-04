@@ -31,7 +31,7 @@ namespace FlowIoC.Editor.AgentSkills
     /// It is not silent, though: what gets written is logged, so nobody has to wonder where a
     /// folder under .claude came from. Deleting an installed skill puts it back on the next
     /// Editor session. A project that would rather decide for itself turns the switch off in the
-    /// Agent Skills window, and then nothing is written until Install is pressed.
+    /// Agent Scanner window, and then nothing is written until Sync is pressed.
     ///
     /// There is deliberately no session guard, for the reason the agent rules have none: whether
     /// the skills are current is answered by reading them, and a pass that has already installed

@@ -15,6 +15,7 @@ The tools keep those conventions correct so you do not have to.
 | `Tools/FlowIoC/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
+| `Tools/FlowIoC/Agent Scanner` | See the rule block in `AGENTS.md` and the skills under `.claude/skills`, and write whatever is missing or out of date |
 | `Tools/FlowIoC/Screen Scanner` | Every screen context on a Root in the open scenes, with its manager, layer, tag and animation flags editable in place |
 | `Tools/FlowIoC/Module Scanner` | Report every module's folders, assemblies and namespace settings, and repair what is safe to repair |
 
