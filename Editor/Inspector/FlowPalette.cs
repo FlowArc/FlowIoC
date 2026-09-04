@@ -44,12 +44,13 @@ namespace FlowIoC.Editor.Inspector
         public Color Accent(FlowRole role, bool proSkin) => proSkin ? Vivid(role) : Deep(role);
 
         /// <summary>The strip under the bar: the fill, thinned until the module name reads on it.</summary>
-        public Color Strip(FlowRole role)
-        {
-            Color deep = Deep(role);
+        public Color Strip(FlowRole role) => Strip(Deep(role));
 
-            return new Color(deep.r, deep.g, deep.b, 0.22f);
-        }
+        /// <summary>
+        /// The same strip for a fill no role owns. A window may wear a colour of its own - Module
+        /// Scan takes the green its own rows are drawn in - and still needs the strip beneath it.
+        /// </summary>
+        public Color Strip(Color deep) => new Color(deep.r, deep.g, deep.b, 0.22f);
 
         public Color Title => Color.white;
 
