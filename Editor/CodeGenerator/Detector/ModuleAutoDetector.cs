@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.ConsoleModule;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
@@ -42,7 +42,7 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
             // be missing - an assembly, a mandatory folder, a stale namespace settings file - is
             // only visible in Module Scanner, and a panel nobody remembers to open is a panel that
             // never helps.
-            new ModuleScanStartupReport().Report();
+            new ModuleScannerStartupReport().Report();
         }
 
         /// <summary>

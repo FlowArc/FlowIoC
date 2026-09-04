@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using FlowIoC.Editor.Modules;
 using NUnit.Framework;
 

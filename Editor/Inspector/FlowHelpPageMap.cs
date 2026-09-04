@@ -18,7 +18,7 @@ namespace FlowIoC.Editor.Inspector
             {FlowRole.Root, "Root & Context"},
             {FlowRole.View, "View & Mediator"},
             {FlowRole.Mediator, "View & Mediator"},
-            {FlowRole.Screen, "Screens"},
+            {FlowRole.Screen, "Screen Scanner"},
             {FlowRole.Connector, "Connectors"}
         };
 

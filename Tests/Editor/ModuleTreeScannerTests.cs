@@ -13,7 +13,7 @@ namespace FlowIoC.Tests
         [SetUp]
         public void SetUp()
         {
-            _root = Path.Combine(Path.GetTempPath(), "FlowIoCModuleScan_" + Path.GetRandomFileName());
+            _root = Path.Combine(Path.GetTempPath(), "FlowIoCModuleScanner_" + Path.GetRandomFileName());
             Directory.CreateDirectory(Path.Combine(_root, "Modules"));
         }
 

@@ -28,7 +28,6 @@ namespace FlowIoC.Editor.Inspector
         private FlowHelpState _helpState;
         private FlowHeaderBar _bar;
         private FlowInspectorGUI _gui;
-        private FlowInspectorSettings _settings;
 
         private void OnEnable()
         {
@@ -38,7 +37,6 @@ namespace FlowIoC.Editor.Inspector
             _helpState = new FlowHelpState();
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
             _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
-            _settings = new FlowInspectorSettings();
         }
 
         public override void OnInspectorGUI()
@@ -60,7 +58,7 @@ namespace FlowIoC.Editor.Inspector
             type = target != null ? target.GetType() : null;
             role = default;
 
-            if (type == null || !_settings.Enabled)
+            if (type == null)
                 return false;
 
             foreach (UnityEngine.Object each in targets)

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using FlowIoC.Editor.Screens;
+using FlowIoC.Editor.ScreenScanner;
 using FlowIoC.ScreenModule.Data;
 using NUnit.Framework;
 

@@ -12,9 +12,10 @@ The tools keep those conventions correct so you do not have to.
 | `Tools/FlowIoC/Create Model` | Add an `IXModel` / `XModel` pair |
 | `Tools/FlowIoC/Create View` | Add a View, its Mediator and its prefab |
 | `Tools/FlowIoC/Delete Module` | Remove a module and its registrations |
-| `Tools/FlowIoC/Console/Flow Console` | Watch signals, commands and contexts at runtime |
+| `Tools/FlowIoC/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
+| `Tools/FlowIoC/Screen Scanner` | Every screen context on a Root in the open scenes, with its manager, layer, tag and animation flags editable in place |
 | `Tools/FlowIoC/Module Scanner` | Report every module's folders, assemblies and namespace settings, and repair what is safe to repair |
 
 ---

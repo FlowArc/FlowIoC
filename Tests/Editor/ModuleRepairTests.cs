@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using NUnit.Framework;
 
 namespace FlowIoC.Tests
@@ -54,7 +54,7 @@ namespace FlowIoC.Tests
         private static RepairResultEVO Run(ModuleCheckPipeline pipeline, List<ModuleTargetEVO> modules)
         {
             var project = new ProjectTargetEVO();
-            ModuleScanReportEVO report = new ModuleScanRunner(pipeline).Run(project, modules);
+            ModuleScannerReportEVO report = new ModuleScannerRunner(pipeline).Run(project, modules);
 
             return new ModuleRepair(pipeline).Apply(report, project, modules);
         }

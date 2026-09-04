@@ -6,7 +6,7 @@ using FlowIoC.Editor.Addressables;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.CodeGenerator.Detector;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using FlowIoC.Editor.Console;
 using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
@@ -119,7 +119,7 @@ namespace FlowIoC.Editor.SetupModules
 
             // Here, and not from inside RescanModules: the repair above writes the settings files
             // that a scan taken a line earlier would have reported as missing.
-            new ModuleScanStartupReport().Report();
+            new ModuleScannerStartupReport().Report();
         }
 
         /// <summary>

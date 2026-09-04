@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using NUnit.Framework;
 
 namespace FlowIoC.Tests
@@ -72,7 +72,7 @@ namespace FlowIoC.Tests
         [Test]
         public void Running_the_whole_pipeline_over_this_project_reports_without_writing()
         {
-            ModuleScanReportEVO report = new ModuleScanRunner(new ModuleCheckPipeline()).Run(_project, _modules);
+            ModuleScannerReportEVO report = new ModuleScannerRunner(new ModuleCheckPipeline()).Run(_project, _modules);
 
             Assert.AreEqual(_modules.Count, report.Modules.Count);
             Assert.AreEqual(new ModuleCheckPipeline().ProjectChecks.Count, report.Project.Count);

@@ -36,11 +36,11 @@ namespace FlowIoC.Editor.Help
                         new ConnectorsPage()),
                     new HelpSection("Editor Tools", "Settings",
                         new CodeGeneratorsPage(),
-                        new ModuleScanPage(),
+                        new ScreenScannerPage(),
+                        new ModuleScannerPage(),
                         new FlowConsolePage(),
                         new ModelViewerPage(),
                         new FolderPainterPage(),
-                        new ScreensPage(),
                         new AgentRulesPage(),
                         new AgentSkillsPage())),
                 new HelpSection("Modules", "Prefab Icon", ModuleSections())

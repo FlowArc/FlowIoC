@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.CodeGenerator.Detector;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using UnityEditor;
 using UnityEngine;
 
@@ -319,7 +319,7 @@ namespace FlowIoC.Editor.Console
             if (GUILayout.Button("Scan Modules", GUILayout.Width(100)))
             {
                 ModuleAutoDetector.RescanModules();
-                new ModuleScanStartupReport().Report();
+                new ModuleScannerStartupReport().Report();
                 GUIUtility.ExitGUI();
             }
             if (GUILayout.Button("Regenerate", GUILayout.Width(90)))
