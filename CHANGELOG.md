@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The camera module is `CameraModule`.** A module is named for what it does while its Root and
+  Context keep the suffix that says what the Root roots, so the folder is `CameraModule`, the
+  assemblies are `Modules.Camera` and `Modules.Camera.Shared`, the namespaces are
+  `Modules.CameraModule.*`, and the Root and Context stay `CameraSystemRoot` and
+  `CameraSystemContext` - the Context renamed from `CameraContext` so the pair reads together. The
+  Help window lists the module as *Camera*. A project that already has the module installed renames
+  its own copy: the folder, the two asmdefs and the namespaces they hold.
+
 ## [1.4.5] - 2026-09-04
 
 ### Added
