@@ -26,6 +26,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string NEW_ACTION = "NewAction";
         private const string ADD_ACTION = "Add Action";
         private const string MODULE_TYPE_LABEL = " Module Type:";
+        private const string MODULE_ROLE_LABEL = " Role:";
         private const string CONFIG_TYPE_LABEL = "Config:";
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
         private static readonly Color BUTTON_COLOR_IDLE = Color.cyan;
@@ -42,6 +43,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private readonly List<FolderEVO> _selectedOptionalFolders = new();
         private ModuleType _selectedModuleType;
         private static GenerationState _generationState;
+
+        /// <summary>
+        /// What the module's Root roots, which is what the Root inspector paints it as. It is only
+        /// asked of a main module that gets a Root of its own; everywhere else it reads as Core,
+        /// the plain Root the generator has always written.
+        /// </summary>
+        private ModuleRole _selectedModuleRole;
+
+        private readonly ModuleRoleNaming _roleNaming = new();
 
         private bool _createRoot;
         private bool _createContext;
@@ -69,6 +79,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _moduleName = string.Empty;
             InitializeConfigMap();
             _selectedModuleType = ModuleType.Main;
+            _selectedModuleRole = ModuleRole.System;
             _generationState = GenerationState.Idle;
             _createRoot = true;
             _createContext = true;
@@ -128,6 +139,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             CreateSignalsToggle();
             CreateSharedToggle();
             EditorGUILayout.EndHorizontal();
+
+            DrawModuleRole();
 
             if (_selectedModuleType == ModuleType.Screen)
                 DrawScreenSettings();

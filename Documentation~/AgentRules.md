@@ -81,7 +81,11 @@ so follow the rules below deliberately.
   Root takes the colour of whatever it roots, and it decides that from its own name - so
   `CounterRoot` would be drawn as a plain Root while `CounterServiceRoot` is drawn as a Service.
   The module name has no such job, so it says what the module counts, parses or stores rather
-  than repeating the word.
+  than repeating the word. `Create Module` asks for this as *Role* on a main module that gets a
+  Root: **System** writes `PlayerSystemRoot` and `PlayerSystemContext`, **Service** writes
+  `CounterServiceRoot` and `CounterServiceContext`, and **Core** writes the plain `PlayerRoot` and
+  `PlayerContext`. System is what it starts on, because a module written for the game at hand is a
+  System; the module folder, its assembly and its namespaces are untouched whichever is picked.
 - A View holds scene references and raw input. A View with an `if` about game rules is
   doing the Mediator's job.
 - A Mediator drives exactly one View. It listens to signals and dispatches them, and holds

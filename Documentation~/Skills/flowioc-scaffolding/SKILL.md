@@ -45,6 +45,13 @@ and Screen modules go under `zTestModules` and `zScreenModules` of the module yo
 **Parent Module** is `Assets/Modules` for a top level module, and the owning module for anything
 else.
 
+**Role** names the Root and the Context for what the Root roots, and the inspector reads that name
+to colour them. **System** writes `PlayerSystemRoot` and `PlayerSystemContext` and is what the
+dropdown starts on, **Service** writes `CounterServiceRoot` and `CounterServiceContext`, and
+**Core** writes the plain `PlayerRoot` and `PlayerContext`. The module folder, its assembly and its
+namespaces are untouched either way. It is offered on a main module that gets a Root; a screen or
+test module's Root is neither a System nor a Service, so neither is asked.
+
 ### Optional folders default to Signals alone
 
 This is the step that is easiest to get wrong. Only the mandatory folders and Signals are created
