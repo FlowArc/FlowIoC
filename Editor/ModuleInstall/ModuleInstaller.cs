@@ -3,7 +3,7 @@
 using System;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Detector;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using FlowIoC.Editor.Console;
 using UnityEditor;
 using UnityEngine;
@@ -218,7 +218,7 @@ namespace FlowIoC.Editor.ModuleInstall
 
             // After the repair above, for the reason the startup pass has: a scan taken before it
             // reports the settings files that FixAll has just written.
-            new ModuleScanStartupReport().Report();
+            new ModuleScannerStartupReport().Report();
         }
 
         private static void CopyTree(string source, string target)

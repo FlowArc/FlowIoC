@@ -25,7 +25,6 @@ namespace FlowIoC.Editor.Inspector
         private FlowRoleResolver _roles;
         private FlowHelpSource _help;
         private FlowHelpState _state;
-        private FlowInspectorSettings _settings;
         private FlowInspectorGUI _gui;
 
         /// <summary>
@@ -43,16 +42,12 @@ namespace FlowIoC.Editor.Inspector
             _roles = new FlowRoleResolver();
             _help = new FlowHelpSource(new MonoScriptText());
             _state = new FlowHelpState();
-            _settings = new FlowInspectorSettings();
             _gui = new FlowInspectorGUI(palette, _roles, _help, _state);
         }
 
         protected override bool CanDrawValueProperty(InspectorProperty property)
         {
             EnsureBuilt();
-
-            if (!_settings.Enabled)
-                return false;
 
             Type owner = property.ParentType;
 

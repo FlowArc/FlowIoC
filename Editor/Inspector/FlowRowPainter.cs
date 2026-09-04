@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.Inspector
     ///
     /// The colours are about a row's state rather than about a role, which is why they are here
     /// and not in FlowPalette. A settled row is green in every window that has one - Module Scanner
-    /// means "nothing is wrong with this module", the Screens panel means "no other screen opens
+    /// means "nothing is wrong with this module", the Screen Scanner means "no other screen opens
     /// on this layer" - and a reader who learns the colour once has learned it everywhere.
     /// </summary>
     internal class FlowRowPainter

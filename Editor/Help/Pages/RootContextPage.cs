@@ -32,6 +32,10 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Modules.Counter, and inside it sit CounterServiceRoot and CounterServiceContext "
                 + "beside ICounterService. CounterRoot would be drawn as a plain Root instead, and the "
                 + "scene would stop saying at a glance what kind of module that is.");
+            painter.Paragraph(
+                "A test module's Root is read the same way: a name ending in TestRoot is drawn in "
+                + "the Test grey, so a scene says which Roots exercise a module and which are the "
+                + "module. The rule is the Root's alone - a View in a test module is still a View.");
 
             painter.SubHeading("What each phase is for");
             painter.Paragraph(

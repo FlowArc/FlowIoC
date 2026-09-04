@@ -356,6 +356,13 @@ The generator lays out the folder structure, writes the assembly definition, and
 creates the `Root` / `Context` pair. The rest of this section shows what goes
 inside.
 
+A main module that gets a Root also picks a **Role**, which names that pair for
+what the Root roots — the inspector reads the Root's name to colour it. **System**
+writes `PlayerSystemRoot` and `PlayerSystemContext` and is what the dropdown starts
+on, **Service** writes `CounterServiceRoot` and `CounterServiceContext`, and **Core**
+writes the plain `PlayerRoot` and `PlayerContext`. The module folder, its assembly
+and its namespaces are the same either way; the examples below use the plain names.
+
 ### 2. Declare the signals
 
 Split the surface into what the module *listens to* and what it *announces*.
@@ -987,9 +994,10 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 | `Tools/FlowIoC/Create View` | Generate a View, a Mediator, and the prefab |
 | `Tools/FlowIoC/Add Shared Data` | Give an existing module a `Scripts/Shared` assembly and wire the references to it |
 | `Tools/FlowIoC/Delete Module` | Remove a module and its references |
-| `Tools/FlowIoC/Console/Flow Console` | The filterable runtime log window |
+| `Tools/FlowIoC/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
+| `Tools/FlowIoC/Screen Scanner` | Every screen context on a Root in the open scenes, with its manager, layer, tag and animation flags editable in place |
 | `Tools/FlowIoC/Module Scanner` | Report every module's folders, assemblies, references and namespace settings, and repair what is safe to repair |
 | `Tools/FlowIoC/AI/Agent Rules` | Write FlowIoC's architecture rules into the project's `AGENTS.md` |
 | `Tools/FlowIoC/AI/Agent Skills` | Install the skills FlowIoC ships into the project's `.claude/skills` |

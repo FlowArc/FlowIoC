@@ -16,7 +16,6 @@ namespace FlowIoC.Editor.Inspector
         private readonly FlowRoleResolver _roles = new FlowRoleResolver();
         private readonly FlowHelpSource _help = new FlowHelpSource(new MonoScriptText());
         private readonly FlowHelpState _state = new FlowHelpState();
-        private readonly FlowInspectorSettings _settings = new FlowInspectorSettings();
 
         private readonly FlowHeaderBar _bar;
 
@@ -27,7 +26,7 @@ namespace FlowIoC.Editor.Inspector
 
         public void Draw(Type type)
         {
-            if (type == null || !_settings.Enabled || !_roles.TryResolve(type, out FlowRole role))
+            if (type == null || !_roles.TryResolve(type, out FlowRole role))
                 return;
 
             bool open = _state.IsOpen(type, FlowHelpParser.TypeKey);

@@ -45,7 +45,6 @@ namespace FlowIoC.Editor.Inspector
         private FlowHelpState _helpState;
         private FlowHeaderBar _bar;
         private FlowInspectorGUI _gui;
-        private FlowInspectorSettings _settings;
 
         private ViewInjectorEntries _entries;
         private ViewInjectorFoldouts _foldouts;
@@ -60,7 +59,6 @@ namespace FlowIoC.Editor.Inspector
             _helpState = new FlowHelpState();
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
             _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
-            _settings = new FlowInspectorSettings();
 
             _entries = new ViewInjectorEntries();
             _foldouts = new ViewInjectorFoldouts();
@@ -77,8 +75,7 @@ namespace FlowIoC.Editor.Inspector
             if (_injector == null)
                 return;
 
-            if (_settings.Enabled)
-                DrawFlowHeader();
+            DrawFlowHeader();
 
             serializedObject.Update();
 

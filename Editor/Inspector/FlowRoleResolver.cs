@@ -16,8 +16,8 @@ namespace FlowIoC.Editor.Inspector
     /// about itself, then what it derives from, then what it is called. A type that answers none
     /// of the three is not FlowIoC's to decorate, and its inspector is left exactly as it was.
     ///
-    /// Test is deliberately absent from the rules. A View in a test module is still a View, so
-    /// that role is only ever given by hand.
+    /// Test is a Root's answer alone. A View in a test module is still a View, so nothing else
+    /// takes that role from a name - anywhere but a Root it is only ever given by hand.
     /// </summary>
     internal class FlowRoleResolver
     {
@@ -96,12 +96,19 @@ namespace FlowIoC.Editor.Inspector
         /// and a Connector is a sub-context, so their Roots are the only place those colours are
         /// ever seen - ScreenServiceRoot reads as a Service, ConnectorRoot as a Connector, and a
         /// game module's own Root stays a Root.
+        ///
+        /// Test is the one role only a Root wears. The Root is the module's presence in the
+        /// scene, so LocalSaveTestRoot says in its colour that what sits under it is there to
+        /// exercise a module rather than to ship with it.
         /// </summary>
         private FlowRole RoleOfRoot(Type type)
         {
             string rooted = type.Name.EndsWith("Root")
                 ? type.Name.Substring(0, type.Name.Length - "Root".Length)
                 : type.Name;
+
+            if (rooted.EndsWith("Test"))
+                return FlowRole.Test;
 
             return RoleOfName(rooted) ?? FlowRole.Root;
         }

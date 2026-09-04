@@ -96,6 +96,23 @@ namespace FlowIoC.Tests
             Assert.AreEqual(FlowRole.Root, plain);
         }
 
+        private class LocalSaveTestRoot : FlowIoC.BaseModule.Root.RootBase { }
+
+        /// <summary>
+        /// A test module's Root wears the Test colour, so a scene says which Roots are there to
+        /// exercise a module and which are the module. The rule is the Root's alone: a View in a
+        /// test module is still a View.
+        /// </summary>
+        [Test]
+        public void TryResolve_gives_a_test_modules_root_the_test_colour()
+        {
+            var resolver = new FlowRoleResolver();
+
+            resolver.TryResolve(typeof(LocalSaveTestRoot), out FlowRole role);
+
+            Assert.AreEqual(FlowRole.Test, role);
+        }
+
         [Test]
         public void LabelFor_still_says_root_when_a_root_wears_another_colour()
         {

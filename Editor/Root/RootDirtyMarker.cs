@@ -8,7 +8,7 @@ namespace FlowIoC.Editor.Root
     /// <summary>
     /// Marks the thing that actually holds a Root's data, which is one of three places: the prefab
     /// stage it is open in, the prefab asset behind the instance it is part of, or the scene it
-    /// sits in. Both the Root inspector and the Screens panel write to a Root, so neither owns
+    /// sits in. Both the Root inspector and the Screen Scanner write to a Root, so neither owns
     /// this.
     /// </summary>
     internal class RootDirtyMarker

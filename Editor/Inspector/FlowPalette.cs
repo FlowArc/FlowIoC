@@ -48,7 +48,7 @@ namespace FlowIoC.Editor.Inspector
 
         /// <summary>
         /// The same strip for a fill no role owns. A window may wear a colour of its own - Module
-        /// Scan takes the green its own rows are drawn in - and still needs the strip beneath it.
+        /// Scanner takes the green its own rows are drawn in - and still needs the strip beneath it.
         /// </summary>
         public Color Strip(Color deep) => new Color(deep.r, deep.g, deep.b, 0.22f);
 

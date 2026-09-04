@@ -43,7 +43,7 @@ namespace FlowIoC.Editor.Help
         /// <summary>
         /// The smallest the window may be. Wide enough that the screenshots the pages ship draw
         /// at their own pixels: an editor window resampled to fit is a blurred editor window, and
-        /// the widest picture here is the Screens panel at 880.
+        /// the widest picture here is the Screen Scanner at 880.
         /// </summary>
         private static readonly Vector2 MinimumSize = new Vector2(1200f, 600f);
 

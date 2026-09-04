@@ -28,7 +28,6 @@ namespace FlowIoC.Editor.Root
         private FlowHelpState _helpState;
         private FlowHeaderBar _bar;
         private FlowInspectorGUI _gui;
-        private FlowInspectorSettings _settings;
 
         /// <summary>
         /// The rows the bar's help button opens and closes together. They are the fields of
@@ -65,7 +64,6 @@ namespace FlowIoC.Editor.Root
             _helpState = new FlowHelpState();
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
             _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
-            _settings = new FlowInspectorSettings();
         }
 
         /// <summary>
@@ -76,8 +74,7 @@ namespace FlowIoC.Editor.Root
 
         public override void OnInspectorGUI()
         {
-            if (_settings.Enabled)
-                DrawFlowHeader();
+            DrawFlowHeader();
 
             GUIDisableScript();
 

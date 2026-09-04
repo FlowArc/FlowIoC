@@ -15,7 +15,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Paragraph(
-                "Tools > FlowIoC > Console > Flow Console. The framework logs itself into this "
+                "Tools > FlowIoC > Flow Console. The framework logs itself into this "
                 + "window: every signal dispatch, command step, context phase, screen transition "
                 + "and pool operation, on channels you can switch on and off independently.");
             painter.Paragraph(

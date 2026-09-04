@@ -23,7 +23,6 @@ namespace FlowIoC.Editor.Inspector
         private FlowRoleResolver _roles;
         private FlowHelpSource _help;
         private FlowHelpState _state;
-        private FlowInspectorSettings _settings;
         private FlowHeaderBar _bar;
 
         /// <summary>
@@ -39,7 +38,6 @@ namespace FlowIoC.Editor.Inspector
             _roles = new FlowRoleResolver();
             _help = new FlowHelpSource(new MonoScriptText());
             _state = new FlowHelpState();
-            _settings = new FlowInspectorSettings();
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
         }
 
@@ -47,7 +45,7 @@ namespace FlowIoC.Editor.Inspector
         {
             EnsureBuilt();
 
-            if (!_settings.Enabled || !property.IsTreeRoot)
+            if (!property.IsTreeRoot)
                 return false;
 
             return _roles.TryResolve(typeof(T), out _);

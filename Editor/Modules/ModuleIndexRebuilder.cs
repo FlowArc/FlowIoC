@@ -6,7 +6,7 @@ using System.Linq;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.Config.ModuleConfig;
-using FlowIoC.Editor.ModuleScan;
+using FlowIoC.Editor.ModuleScanner;
 using UnityEditor;
 using UnityEngine;
 
@@ -77,7 +77,7 @@ namespace FlowIoC.Editor.Modules
             var scanner = new ModuleTreeScanner(resolver);
             var scanned = new List<ScannedModule>();
 
-            foreach (string modulesRoot in new ModuleScanRoots().All(Path.GetDirectoryName(Application.dataPath)))
+            foreach (string modulesRoot in new ModuleScannerRoots().All(Path.GetDirectoryName(Application.dataPath)))
                 scanned.AddRange(scanner.Scan(modulesRoot));
 
             ED_ModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
