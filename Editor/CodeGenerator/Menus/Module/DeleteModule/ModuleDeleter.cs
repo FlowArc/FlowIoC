@@ -27,8 +27,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             Debug.Log($"<color=cyan>[ModuleDeleter]</color> Deleting module '{moduleName}'...");
 
             RemoveLogType(moduleName, deletedItems);
-            RemoveDotSettingsFile(moduleName, deletedItems);
-            RemoveCsprojFile(moduleName, deletedItems);
+            RemoveProjectFiles(moduleName, deletedItems);
             DeleteModuleFolder(modulePath, deletedItems);
             CleanupEmptyParentFolder(modulePath, deletedItems);
             RemoveFromIndex(folderGuid, deletedItems);
@@ -149,30 +148,33 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             }
         }
 
-        private static void RemoveDotSettingsFile(string moduleName, List<string> deletedItems)
+        /// <summary>
+        /// The project files the module left at the project root. A module publishes through a
+        /// Shared assembly, which is a project of its own, so its `.csproj` and
+        /// `.csproj.DotSettings` sit beside the module's and would otherwise outlive the module
+        /// they belong to.
+        /// </summary>
+        private static void RemoveProjectFiles(string moduleName, List<string> deletedItems)
         {
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             string assemblyName = ConvertToAssemblyName(moduleName);
-            string dotSettingsPath = Path.Combine(projectRoot, assemblyName + ".csproj.DotSettings");
 
-            if (File.Exists(dotSettingsPath))
+            foreach (string assembly in new[] {assemblyName, assemblyName + ".Shared"})
             {
-                File.Delete(dotSettingsPath);
-                Log($"DotSettings deleted: {assemblyName}.csproj.DotSettings", deletedItems);
+                RemoveProjectFile(projectRoot, assembly, ".csproj.DotSettings", "DotSettings", deletedItems);
+                RemoveProjectFile(projectRoot, assembly, ".csproj", "Csproj", deletedItems);
             }
         }
 
-        private static void RemoveCsprojFile(string moduleName, List<string> deletedItems)
+        private static void RemoveProjectFile(
+            string projectRoot, string assemblyName, string extension, string label, List<string> deletedItems)
         {
-            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-            string assemblyName = ConvertToAssemblyName(moduleName);
-            string csprojPath = Path.Combine(projectRoot, assemblyName + ".csproj");
+            string path = Path.Combine(projectRoot, assemblyName + extension);
 
-            if (File.Exists(csprojPath))
-            {
-                File.Delete(csprojPath);
-                Log($"Csproj deleted: {assemblyName}.csproj", deletedItems);
-            }
+            if (!File.Exists(path)) return;
+
+            File.Delete(path);
+            Log($"{label} deleted: {assemblyName}{extension}", deletedItems);
         }
 
         private static string ConvertToAssemblyName(string rawName)
