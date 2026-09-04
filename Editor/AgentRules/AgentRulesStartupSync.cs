@@ -30,7 +30,7 @@ namespace FlowIoC.Editor.AgentRules
     /// question it asked had one sensible answer, because a stale block describes a version of
     /// FlowIoC the project is no longer on and helps nobody. The block is generated text between
     /// two markers, so nothing a reader wrote is ever touched, which is what makes writing it
-    /// without asking honest. A project that wants none of it says so once in the Agent Rules
+    /// without asking honest. A project that wants none of it says so once in the Agent Scanner
     /// window.
     ///
     /// There is deliberately no session guard. Whether the files are current is answered by

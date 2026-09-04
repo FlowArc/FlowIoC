@@ -10,11 +10,11 @@ namespace FlowIoC.Editor.AgentRules
     /// owns, and a project that has FlowIoC installed wants both to describe the version it is on.
     ///
     /// A project may turn it off, and then nothing is written until somebody presses Sync in the
-    /// Agent Rules window. The switch is remembered in EditorPrefs, which is shared by every
+    /// Agent Scanner window. The switch is remembered in EditorPrefs, which is shared by every
     /// project a user opens with the same Editor, so the key carries the project root: turning it
     /// off in one project must not turn it off in every other one.
     /// </summary>
-    internal class AgentRulesAutoSync
+    internal class AgentRulesAutoSync : IAutoSyncSwitch
     {
         private const string KeyPrefix = "FlowIoC.AgentRules.AutoSyncOff.";
         private const string Off = "off";
@@ -29,17 +29,17 @@ namespace FlowIoC.Editor.AgentRules
             return KeyPrefix + new ManagedBlockWriter().ComputeHash(normalized);
         }
 
-        internal bool IsOff(string projectRoot)
+        public bool IsOff(string projectRoot)
         {
             return EditorPrefs.GetString(KeyFor(projectRoot), string.Empty) == Off;
         }
 
-        internal void TurnOff(string projectRoot)
+        public void TurnOff(string projectRoot)
         {
             EditorPrefs.SetString(KeyFor(projectRoot), Off);
         }
 
-        internal void TurnOn(string projectRoot)
+        public void TurnOn(string projectRoot)
         {
             EditorPrefs.DeleteKey(KeyFor(projectRoot));
         }
