@@ -18,7 +18,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createContext,
             bool createSignals,
             bool createScreen,
-            bool allowAsSubContext
+            bool allowAsSubContext,
+            ModuleRole moduleRole
         )
         {
             string rootsAndContextsPath = directoryConfigMap[selectedModuleType]
@@ -28,7 +29,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             {
                 if (createRoot)
                 {
-                    CreateRoot(rootsAndContextsPath, modulePath, moduleName, selectedModuleType == ModuleType.Test);
+                    CreateRoot(rootsAndContextsPath, modulePath, moduleName, moduleRole,
+                        selectedModuleType == ModuleType.Test);
                 }
 
                 if (createContext)
@@ -37,7 +39,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     // Context, so only that module is written with the attribute that puts it
                     // back. A screen module's context never reaches here, and a test module's is
                     // not offered either way.
-                    CreateContext(rootsAndContextsPath, modulePath, moduleName,
+                    CreateContext(rootsAndContextsPath, modulePath, moduleName, moduleRole,
                         selectedModuleType == ModuleType.Test,
                         allowAsSubContext && createRoot && selectedModuleType == ModuleType.Main);
                 }
@@ -50,7 +52,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (createSignals)
             {
                 WriteSignalHolders(
-                    moduleName, modulePath, selectedModuleType, directoryConfigMap, createContext, rootsAndContextsPath);
+                    moduleName, modulePath, selectedModuleType, moduleRole, directoryConfigMap, createContext,
+                    rootsAndContextsPath);
             }
 
             if (createScreen)
@@ -62,11 +65,19 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             }
         }
 
-        private static void CreateRoot(string path, string modulePath, string moduleName, bool isTest)
+        /// <summary>
+        /// The module's Root, named for what it roots. A System module's Root is PlayerSystemRoot
+        /// and a Service module's is CounterServiceRoot, which is what the Root inspector reads to
+        /// paint it; a Core module keeps the plain PlayerRoot. The name is left in EditorPrefs
+        /// because the scene the generator builds after the reload has to find the type again.
+        /// </summary>
+        private static void CreateRoot(string path, string modulePath, string moduleName, ModuleRole moduleRole, bool isTest)
         {
-            string suffix = isTest ? "" : "";
-            string rootName = moduleName + suffix + "Root";
-            string contextName = moduleName + suffix + "Context";
+            var naming = new ModuleRoleNaming();
+            string rootName = naming.RootName(moduleName, moduleRole);
+            string contextName = naming.ContextName(moduleName, moduleRole);
+
+            EditorPrefs.SetString(KEY_ROOT_NAME, rootName);
 
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
             string rootsAndContextsNamespace = $"{moduleNamespace}.RootsContexts";
@@ -83,12 +94,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             );
         }
 
-        private static void CreateContext(string path, string modulePath, string moduleName, bool isTest,
-            bool allowAsSubContext)
+        private static void CreateContext(string path, string modulePath, string moduleName, ModuleRole moduleRole,
+            bool isTest, bool allowAsSubContext)
         {
-            string suffix = isTest ? "" : "";
-            string rootName = moduleName + suffix + "Root";
-            string contextName = moduleName + suffix + "Context";
+            string contextName = new ModuleRoleNaming().ContextName(moduleName, moduleRole);
 
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
             string rootsAndContextsNamespace = $"{moduleNamespace}.RootsContexts";
@@ -123,6 +132,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string moduleName,
             string modulePath,
             ModuleType selectedModuleType,
+            ModuleRole moduleRole,
             Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
             bool createContext,
             string rootsAndContextsPath)
@@ -144,7 +154,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 return;
             }
 
-            string contextPath = rootsAndContextsPath + "/" + moduleName + "Context.cs";
+            string contextName = new ModuleRoleNaming().ContextName(moduleName, moduleRole);
+            string contextPath = rootsAndContextsPath + "/" + contextName + ".cs";
             bool bindInContext = createContext && !string.IsNullOrEmpty(rootsAndContextsPath);
 
             string signalsName = CreateSignals(publicSignalsPath, moduleName + "Signals", "TempSignals",

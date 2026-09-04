@@ -46,6 +46,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createSignals,
             bool createScreen,
             bool allowAsSubContext,
+            ModuleRole moduleRole,
             ScreenModuleSettings screenSettings = null
         )
         {
@@ -104,6 +105,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 createSignals,
                 createScreen,
                 allowAsSubContext,
+                moduleRole,
                 screenSettings,
                 testModulesFolderName
             );
@@ -123,6 +125,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createSignals,
             bool createScreen,
             bool allowAsSubContext,
+            ModuleRole moduleRole,
             ScreenModuleSettings screenSettings,
             string testModulesFolderName
         )
@@ -197,7 +200,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     createContext,
                     createSignals,
                     createScreen,
-                    allowAsSubContext
+                    allowAsSubContext,
+                    moduleRole
                 );
             }
 

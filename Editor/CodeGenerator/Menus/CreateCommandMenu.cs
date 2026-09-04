@@ -282,8 +282,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void InjectSignalInContext(string contextPath)
         {
             string signalClassName = _signalClassName;
-            string contextName = _selectedModuleName + "Context";
-            CodeGeneratorUtils.InjectSignalInContext(contextPath + "/" + contextName + ".cs", signalClassName);
+            CodeGeneratorUtils.InjectSignalInContext(ContextFile(contextPath), signalClassName);
         }
 
         private void BindCommandInContext(string contextPath, string moduleNamespace)
@@ -291,11 +290,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             string commandName = _commandName + "Command";
             string signalClassName = _signalClassName;
             string signalName = _signalName;
-            string contextName = _selectedModuleName + "Context";
 
-            CodeGeneratorUtils.BindCommandInContext(contextPath + "/" + contextName + ".cs", commandName, signalClassName, signalName,
+            CodeGeneratorUtils.BindCommandInContext(ContextFile(contextPath), commandName, signalClassName, signalName,
                 moduleNamespace + $".Commands", _isSequence);
         }
+
+        /// <summary>
+        /// The module's context, whatever it is called. A module whose Root roots a System or a
+        /// Service names its context for that role, so the file is looked up rather than assumed.
+        /// </summary>
+        private string ContextFile(string rootsAndContextsPath) =>
+            new ModuleContextFile().Find(rootsAndContextsPath, _selectedModuleName);
 
         private void EnsureNamespaceImport(string className, string path, string type, string moduleNamespace)
         {

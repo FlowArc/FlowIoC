@@ -122,6 +122,45 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         }
 
         /// <summary>
+        /// What the module's Root roots. The Root inspector reads its colour off the Root's own
+        /// name, so picking a role here is what makes a Service module's Root draw as a Service
+        /// and a System module's as a System; the module, its folder and its assembly keep the
+        /// name that says what they do.
+        ///
+        /// Only a main module that gets a Root is asked. A screen or test module's Root is neither,
+        /// and a module that generates no Root has nothing to colour.
+        /// </summary>
+        private void DrawModuleRole()
+        {
+            if (_selectedModuleType != ModuleType.Main || !_createRoot)
+                return;
+
+            EditorGUILayout.Space(10);
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField(MODULE_ROLE_LABEL, EditorStyles.boldLabel, GUILayout.Width(90));
+            _selectedModuleRole = (ModuleRole) EditorGUILayout.EnumPopup(_selectedModuleRole, GUILayout.Width(310));
+
+            if (!string.IsNullOrEmpty(_moduleName))
+            {
+                EditorGUILayout.LabelField(
+                    $"{_roleNaming.RootName(_moduleName, _selectedModuleRole)} · " +
+                    $"{_roleNaming.ContextName(_moduleName, _selectedModuleRole)}",
+                    GUILayout.ExpandWidth(true));
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// The role the generator is handed. A module that is not offered the dropdown is written
+        /// the way it always was, whatever the dropdown happens to be showing, and the choice is
+        /// kept rather than reset so switching Create Root off and on again does not lose it.
+        /// </summary>
+        private ModuleRole _effectiveRole =>
+            _selectedModuleType == ModuleType.Main && _createRoot ? _selectedModuleRole : ModuleRole.Core;
+
+        /// <summary>
         /// The signals holder. A test module wires other modules' signals rather than owning a
         /// public surface of its own, so it is the one module type never offered one.
         /// </summary>
@@ -366,6 +405,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _createSignals,
                     _createScene,
                     _allowAsSubContext,
+                    _effectiveRole,
                     screenSettings
                 );
 

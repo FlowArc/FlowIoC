@@ -203,8 +203,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 
             CreateModel(modelPath, moduleNamespace);
-            string contextFileName = GetContextFileName(_selectedModuleName, _selectedModuleKind);
-            BindModelInContext(rootsAndContextsPath + "/" + contextFileName,
+            string contextFile = FindContextFile(rootsAndContextsPath, _selectedModuleName, _selectedModuleKind);
+            BindModelInContext(contextFile,
                 _modelName + "Model",
                 "I" + _modelName + "Model",
                 _modelName + "DummyModel",
@@ -214,16 +214,21 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _generationState = GenerationState.Idle;
         }
 
-        private string GetContextFileName(string moduleName, ModuleKind moduleKind)
+        /// <summary>
+        /// The module's context file. The kind decides what sits between the module name and the
+        /// word Context, and the lookup covers the rest: a module whose Root roots a System or a
+        /// Service names its context for that role, so the file may be PlayerSystemContext.cs.
+        /// </summary>
+        private string FindContextFile(string rootsAndContextsPath, string moduleName, ModuleKind moduleKind)
         {
-            string suffix = moduleKind switch
+            string kindSuffix = moduleKind switch
             {
-                ModuleKind.Screen => "ScreenContext",
-                ModuleKind.Test => "TestContext",
-                _ => "Context"
+                ModuleKind.Screen => "Screen",
+                ModuleKind.Test => "Test",
+                _ => string.Empty
             };
 
-            return $"{moduleName}{suffix}.cs";
+            return new ModuleContextFile().Find(rootsAndContextsPath, moduleName, kindSuffix);
         }
 
         private void CreateModel(string path, string moduleNamespace)

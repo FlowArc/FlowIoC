@@ -255,7 +255,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             string suffix = isTest ? "Test" : "";
             string viewName = _viewName + suffix + "View";
             string mediatorName = _viewName + suffix + "Mediator";
-            string contextName = _selectedModuleName + suffix + "Context";
+
+            // A module whose Root roots a System or a Service names its context for that role, so
+            // the file is looked up rather than assumed to be {module}Context.cs.
+            string contextFile = new ModuleContextFile().Find(contextPath, _selectedModuleName, suffix);
 
             ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
@@ -266,12 +269,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             if (isTest)
             {
-                CodeGeneratorUtils.BindMediationInContext(contextPath + "/" + contextName + ".cs", viewName, mediatorName,
+                CodeGeneratorUtils.BindMediationInContext(contextFile, viewName, mediatorName,
                     moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}");
             }
             else
             {
-                CodeGeneratorUtils.BindMediationInContext(contextPath + "/" + contextName + ".cs", viewName, mediatorName,
+                CodeGeneratorUtils.BindMediationInContext(contextFile, viewName, mediatorName,
                     moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}");
             }
         }

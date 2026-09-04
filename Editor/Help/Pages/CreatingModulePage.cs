@@ -85,6 +85,14 @@ namespace FlowIoC.Editor.Help.Pages
                 + "in the scene and its bindings. Leave both on unless you are adding a module that "
                 + "another one launches.");
             painter.Bullet(
+                "Role names the Root and the Context for what the Root roots, which is what the "
+                + "inspector reads to colour it: System writes PlayerSystemRoot and "
+                + "PlayerSystemContext, Service writes CounterServiceRoot and CounterServiceContext, "
+                + "and Core writes the plain PlayerRoot and PlayerContext. It starts on System, "
+                + "because a module written for the game at hand is one. The module folder, its "
+                + "assembly and its namespaces are the same whichever you pick, and the dropdown is "
+                + "offered on a main module that gets a Root.");
+            painter.Bullet(
                 "Allow As Sub Context writes AllowAsSubContext on the context. A context that has a "
                 + "Root of its own is kept out of a Root's Add Sub Context list, because adding it "
                 + "elsewhere would build it a second time; this puts it back, for a module meant to be "

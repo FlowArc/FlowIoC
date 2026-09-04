@@ -97,7 +97,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         {
             string moduleName = EditorPrefs.GetString(KEY_MODULE_NAME);
             string rootPrefixName = moduleName.Replace("View", "");
-            string rootClassName = rootPrefixName + "Root";
+
+            // The Root is named for what it roots, so a System module's is PlayerSystemRoot rather
+            // than PlayerRoot. The generator left the name it wrote behind for this; a module made
+            // before that was recorded still resolves the way it always did.
+            string recordedRootName = EditorPrefs.GetString(KEY_ROOT_NAME);
+            string rootClassName = string.IsNullOrEmpty(recordedRootName) ? rootPrefixName + "Root" : recordedRootName;
             string rootNamespace = EditorPrefs.GetString(KEY_CONTEXT_NAMESPACE);
             string sceneName = EditorPrefs.GetString(KEY_SCREEN_NAME);
             string scenePath = EditorPrefs.GetString(KEY_SCENE_PATH);
@@ -109,7 +114,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             {
                 Type rootType = possibleAssemblyFiles.FirstOrDefault(x => x.Name == rootClassName && x.Namespace == rootNamespace);
 
-                GameObject rootGameObject = new GameObject(rootPrefixName + "Root");
+                GameObject rootGameObject = new GameObject(rootClassName);
                 if (rootType != null)
                 {
                     rootGameObject.AddComponent(rootType);
