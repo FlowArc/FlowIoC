@@ -53,13 +53,30 @@ namespace FlowIoC.Editor.Inspector
         /// The same bar for a window. A window has no fields to explain, so it wears no help toggle;
         /// what sits on the right instead is the window's own action - a Refresh, say - beside the
         /// link to the role's help page.
+        ///
+        /// A window may name that page itself. A window wears a role's colour without being one of
+        /// its components, so the page the role sends a component to is not always the page the
+        /// window is documented on.
         /// </summary>
         public void DrawWindow(FlowRole role, string title, string module, string label, string actionLabel,
-            Action onAction)
+            Action onAction, string helpPage = null)
         {
-            Rect bar = DrawFrame(role, title, module, label, out Color _);
+            bool pro = EditorGUIUtility.isProSkin;
 
-            float right = DrawHelpPageIcon(bar, role);
+            DrawWindow(_palette.Deep(role), _palette.Accent(role, pro), title, module, label, actionLabel, onAction,
+                helpPage ?? _pages.PageFor(role));
+        }
+
+        /// <summary>
+        /// The bar for a window that wears a colour no role owns - Module Scan is green because
+        /// the rows under it are, and no FlowRole is about a module's health.
+        /// </summary>
+        public void DrawWindow(Color deep, Color accent, string title, string module, string label,
+            string actionLabel, Action onAction, string helpPage)
+        {
+            Rect bar = DrawFrame(deep, accent, title, module, label);
+
+            float right = DrawHelpPageIcon(bar, helpPage);
 
             if (!string.IsNullOrEmpty(actionLabel) && onAction != null)
             {
@@ -74,14 +91,18 @@ namespace FlowIoC.Editor.Inspector
 
         private Rect DrawFrame(FlowRole role, string title, string module, string label, out Color accent)
         {
-            bool pro = EditorGUIUtility.isProSkin;
-            accent = _palette.Accent(role, pro);
+            accent = _palette.Accent(role, EditorGUIUtility.isProSkin);
 
+            return DrawFrame(_palette.Deep(role), accent, title, module, label);
+        }
+
+        private Rect DrawFrame(Color deep, Color accent, string title, string module, string label)
+        {
             Rect bar = Bleed(EditorGUILayout.GetControlRect(false, BarHeight));
             Rect strip = Bleed(EditorGUILayout.GetControlRect(false, StripHeight));
 
-            EditorGUI.DrawRect(bar, _palette.Deep(role));
-            EditorGUI.DrawRect(strip, _palette.Strip(role));
+            EditorGUI.DrawRect(bar, deep);
+            EditorGUI.DrawRect(strip, _palette.Strip(deep));
             EditorGUI.DrawRect(new Rect(bar.x, bar.y, StripeWidth, bar.height + strip.height), accent);
 
             var titleRect = new Rect(bar.x + StripeWidth + 8f, bar.y, bar.width - 60f, bar.height);
@@ -104,7 +125,7 @@ namespace FlowIoC.Editor.Inspector
 
         private void DrawIcons(Rect bar, FlowRole role, bool helpOpen, Action onToggleHelp)
         {
-            float right = DrawHelpPageIcon(bar, role);
+            float right = DrawHelpPageIcon(bar, _pages.PageFor(role));
 
             var toggleRect = new Rect(right - IconSize, bar.y + 5f, IconSize, IconSize);
             var content = new GUIContent(helpOpen ? "▾" : "?", "Show what every field here does");
@@ -114,12 +135,11 @@ namespace FlowIoC.Editor.Inspector
         }
 
         /// <summary>
-        /// The link to the role's help page, and the x the next thing on the right may end at. A
-        /// role with no page draws nothing, because an icon opening the wrong page is worse.
+        /// The link to a help page, and the x the next thing on the right may end at. No page
+        /// draws nothing, because an icon opening the wrong page is worse.
         /// </summary>
-        private float DrawHelpPageIcon(Rect bar, FlowRole role)
+        private float DrawHelpPageIcon(Rect bar, string page)
         {
-            string page = _pages.PageFor(role);
             float right = bar.xMax - 6f;
 
             if (page == null)

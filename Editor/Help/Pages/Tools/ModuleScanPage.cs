@@ -40,6 +40,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "The project itself - the module index against the folder tree, orphaned settings "
                 + "files, the Flow Console log types, and the solution code style.");
 
+            painter.SubHeading("Reading a row");
+            painter.Paragraph(
+                "A row wears the worst answer its checks gave: green for a module with nothing "
+                + "wrong, amber for something Fix All repairs on its own, red for something only "
+                + "a person can. The whole row is the foldout, so clicking anywhere on it shows "
+                + "the findings behind the colour, and \"Only issues\" hides every row that is "
+                + "already green.");
+
             painter.SubHeading("Fix All");
             painter.Paragraph(
                 "One button repairs everything that can be repaired without guessing. It creates "

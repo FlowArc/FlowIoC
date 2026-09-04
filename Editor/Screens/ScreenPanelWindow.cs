@@ -99,6 +99,10 @@ namespace FlowIoC.Editor.Screens
         // rather than on every repaint.
         private void Rescan()
         {
+            // A docked window is focused before it is enabled after a domain reload, so OnFocus
+            // can arrive while the scan itself is still null.
+            if (_scan == null) return;
+
             RootBase[] roots = Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             _rows = _scan.Rows(roots);
