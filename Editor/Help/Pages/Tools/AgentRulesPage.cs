@@ -35,10 +35,11 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "safe, and a malformed marker makes the tool refuse to write rather than guess.");
 
             painter.Note(
-                "FlowIoC offers to install the block the first time you open a project, and to "
-                + "refresh it when the rules change. Declining is remembered until the rules "
-                + "themselves change. Removing FlowIoC through the Package Manager takes the block "
-                + "with it.");
+                "FlowIoC writes the block whenever it is absent or out of date, without asking - a "
+                + "block describing a version the project is no longer on helps nobody. A project "
+                + "that would rather decide for itself turns off Keep AGENTS.md and CLAUDE.md up "
+                + "to date automatically in the window, and then nothing is written until Sync is "
+                + "pressed. Removing FlowIoC through the Package Manager takes the block with it.");
         }
     }
 }

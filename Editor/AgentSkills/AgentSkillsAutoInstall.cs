@@ -23,18 +23,25 @@ namespace FlowIoC.Editor.AgentSkills
     }
 
     /// <summary>
-    /// Installs the skills FlowIoC ships as soon as the Editor opens, without asking. A skill is
-    /// reference material for an AI assistant, not a change to the project, so a consumer of the
-    /// package gets one that works out of the box rather than one that waits behind a button.
+    /// Installs the skills FlowIoC ships as soon as the Editor opens, without asking, and writes
+    /// them again whenever they fall out of date. A skill is reference material for an AI
+    /// assistant, not a change to the project, so a consumer of the package gets one that works
+    /// out of the box rather than one that waits behind a button.
     ///
     /// It is not silent, though: what gets written is logged, so nobody has to wonder where a
     /// folder under .claude came from. Deleting an installed skill puts it back on the next
-    /// Editor session - install it through the window if you want it gone for good, or keep the
-    /// package out of that project.
+    /// Editor session. A project that would rather decide for itself turns the switch off in the
+    /// Agent Skills window, and then nothing is written until Install is pressed.
+    ///
+    /// There is deliberately no session guard, for the reason the agent rules have none: whether
+    /// the skills are current is answered by reading them, and a pass that has already installed
+    /// finds nothing left to do - where a flag would have gone on eliding the one event that
+    /// matters, since updating the package is a domain reload inside the same session and
+    /// SessionState outlives one.
     /// </summary>
     internal class AgentSkillsStartup
     {
-        private const string SessionKey = "FlowIoC.AgentSkills.Installed";
+        private readonly AgentSkillsAutoSync _autoSync = new AgentSkillsAutoSync();
 
         internal void Run()
         {
@@ -43,13 +50,13 @@ namespace FlowIoC.Editor.AgentSkills
             if (Application.isBatchMode)
                 return;
 
-            if (SessionState.GetBool(SessionKey, false))
+            string projectRoot = new ProjectRoot().Resolve();
+
+            if (_autoSync.IsOff(projectRoot))
                 return;
 
-            SessionState.SetBool(SessionKey, true);
-
             AgentSkillsInstallReport report =
-                new AgentSkillsAutoInstall(new ProjectRoot().Resolve(), new AgentSkillsSource()).Run();
+                new AgentSkillsAutoInstall(projectRoot, new AgentSkillsSource()).Run();
 
             foreach (string name in report.Installed)
                 Debug.Log($"[FlowIoC] Agent skill installed: {AgentSkillsInstaller.TargetFolder}/{name}");

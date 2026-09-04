@@ -22,8 +22,15 @@ namespace FlowIoC.Editor.Help.Pages.Tools
             painter.Paragraph(
                 "You do not have to ask for them. FlowIoC writes each shipped skill into this "
                 + "project's .claude/skills folder when the Editor opens, one folder per skill, and "
-                + "logs what it wrote. The window is for seeing what is there and for putting a "
-                + "deleted one back - which the next Editor session would do anyway.");
+                + "logs what it wrote. It writes them again whenever they fall behind the version "
+                + "the project is on, so updating the package updates the skills with it. The "
+                + "window is for seeing what is there and for putting a deleted one back - which "
+                + "the next Editor session would do anyway.");
+            painter.Paragraph(
+                "A project that would rather decide for itself turns off Keep the shipped skills "
+                + "up to date automatically in the window, and then nothing is written until "
+                + "Install is pressed. The switch is remembered per project, and it is separate "
+                + "from the one the agent rules carry: a project may take one and refuse the other.");
 
             painter.SubHeading("What ships today");
             painter.Bullet(

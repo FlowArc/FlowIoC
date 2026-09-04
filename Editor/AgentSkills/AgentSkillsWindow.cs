@@ -8,8 +8,8 @@ using UnityEngine;
 namespace FlowIoC.Editor.AgentSkills
 {
     /// <summary>
-    /// Shows which of the skills FlowIoC ships are installed in this project, and installs them
-    /// on request. Nothing is written without the button being pressed.
+    /// Shows which of the skills FlowIoC ships are installed in this project, installs them on
+    /// request, and carries the switch that decides whether FlowIoC keeps them current on its own.
     /// </summary>
     internal class AgentSkillsWindow : EditorWindow
     {
@@ -20,6 +20,8 @@ namespace FlowIoC.Editor.AgentSkills
             window.minSize = new Vector2(460, 240);
             window.Show();
         }
+
+        private readonly AgentSkillsAutoSync _autoSync = new AgentSkillsAutoSync();
 
         private SyncFileState[] _states;
         private string _projectRoot;
@@ -73,6 +75,29 @@ namespace FlowIoC.Editor.AgentSkills
                 if (GUILayout.Button("Refresh", GUILayout.Height(28), GUILayout.Width(90)))
                     Refresh();
             }
+
+            EditorGUILayout.Space();
+            DrawAutoSyncToggle();
+        }
+
+        /// <summary>
+        /// FlowIoC installs a skill whenever it is absent or stale, without asking. A project that
+        /// would rather decide for itself turns that off here, and then nothing is written until
+        /// Install is pressed.
+        /// </summary>
+        private void DrawAutoSyncToggle()
+        {
+            bool on = !_autoSync.IsOff(_projectRoot);
+            bool wanted = EditorGUILayout.ToggleLeft(
+                "Keep the shipped skills up to date automatically", on);
+
+            if (wanted == on)
+                return;
+
+            if (wanted)
+                _autoSync.TurnOn(_projectRoot);
+            else
+                _autoSync.TurnOff(_projectRoot);
         }
 
         private void Refresh() => _states = NewInstaller().Inspect();
