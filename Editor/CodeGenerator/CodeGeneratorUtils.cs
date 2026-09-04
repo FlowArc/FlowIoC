@@ -10,13 +10,6 @@ namespace FlowIoC.Editor.CodeGenerator
 {
     internal static class CodeGeneratorUtils
     {
-        private enum CommandEndingType
-        {
-            None,
-            InSequence,
-            InParallel
-        }
-
         public static void CreateView(string viewName, string tempClassName, string viewPath, string tempClassPath,
             string namespaceName, List<string> actionsList, bool isTest)
         {
@@ -599,13 +592,7 @@ namespace FlowIoC.Editor.CodeGenerator
 
             List<string> newRootContent = new List<string>();
 
-            HashSet<string> usingsToAdd = new HashSet<string>();
-
             string injectableNamespace = FindNamespaceForType(signalClassName);
-            if (!string.IsNullOrEmpty(injectableNamespace))
-            {
-                usingsToAdd.Add($"using {injectableNamespace};");
-            }
 
             // A context that binds the holder itself already declares it as a plain field, so the
             // match is on the declaration rather than on the [Inject] that only one of the two
@@ -630,10 +617,11 @@ namespace FlowIoC.Editor.CodeGenerator
                 newRootContent.Add(content);
             }
 
-            List<string> finalContent = new List<string>(usingsToAdd);
-            finalContent.AddRange(newRootContent);
+            // Added last, and only when the file does not import the holder already - a context
+            // the generator has run over before otherwise collects the same using once per run.
+            InsertUsing(newRootContent, injectableNamespace);
 
-            File.WriteAllLines(contextPath, finalContent.ToArray());
+            File.WriteAllLines(contextPath, newRootContent.ToArray());
             AssetDatabase.Refresh();
         }
 
@@ -648,18 +636,6 @@ namespace FlowIoC.Editor.CodeGenerator
         {
             List<string> allLines = File.ReadAllLines(contextPath).ToList();
             List<string> newRootContent = new List<string>();
-
-            bool hasUnityEditor = allLines.Any(line => line.Contains("#if UNITY_EDITOR"));
-
-            if (hasUnityEditor)
-            {
-                newRootContent.Add("#if UNITY_EDITOR");
-                newRootContent.Add($"using {commandNamespace};");
-            }
-            else
-            {
-                newRootContent.Add($"using {commandNamespace};");
-            }
 
             bool inBlock = false;
             List<string> blockLines = new List<string>();
@@ -693,8 +669,8 @@ namespace FlowIoC.Editor.CodeGenerator
                     {
                         inBlock = false;
 
-                        string updatedBlock = ProcessBlock(
-                            blockLines,
+                        string updatedBlock = new CommandBindingBlock().Merge(
+                            string.Join("\n", blockLines),
                             fullSignal,
                             commandName,
                             isSequence
@@ -710,120 +686,23 @@ namespace FlowIoC.Editor.CodeGenerator
                 int baseIndex = newRootContent.FindIndex(x => x.Contains("base.CommandBindings();"));
                 if (baseIndex >= 0)
                 {
-                    newRootContent.Insert(baseIndex + 1, CreateNewBlock(fullSignal, commandName, isSequence));
+                    newRootContent.Insert(baseIndex + 1, new CommandBindingBlock().Create(fullSignal, commandName, isSequence));
                 }
                 else
                 {
                     newRootContent.Add("");
                     newRootContent.Add("// (No CommandBinder found, adding a new block automatically)");
-                    newRootContent.Add(CreateNewBlock(fullSignal, commandName, isSequence));
+                    newRootContent.Add(new CommandBindingBlock().Create(fullSignal, commandName, isSequence));
                 }
             }
+
+            // Written once the lines are in place, so it lands under a test context's
+            // #if UNITY_EDITOR rather than above a second copy of it, and a context that already
+            // imports the commands is left with the one using it had.
+            InsertUsing(newRootContent, commandNamespace);
 
             File.WriteAllLines(contextPath, newRootContent);
             AssetDatabase.Refresh();
-        }
-
-        private static string ProcessBlock(
-            List<string> blockLines,
-            string targetSignal,
-            string newCommand,
-            bool isSequence)
-        {
-            string joinedBlock = string.Join("\n", blockLines);
-            bool blockHasOurSignal = joinedBlock.Contains($"Bind({targetSignal})");
-
-            Regex toRegex = new Regex(@"\.To<([^>]+)>\(\)", RegexOptions.Multiline);
-            MatchCollection matches = toRegex.Matches(joinedBlock);
-            List<string> commands = new List<string>();
-            foreach (Match m in matches)
-            {
-                string cmd = m.Groups[1].Value.Trim();
-                if (!commands.Contains(cmd))
-                    commands.Add(cmd);
-            }
-
-            bool hadSequence = joinedBlock.Contains(".InSequence()");
-            bool hadParallel = joinedBlock.Contains(".InParallel()");
-
-            if (blockHasOurSignal && !string.IsNullOrEmpty(newCommand))
-            {
-                if (!commands.Contains(newCommand))
-                {
-                    commands.Add(newCommand);
-                }
-            }
-
-            int cmdCount = commands.Count;
-            CommandEndingType finalCommandEnding = CommandEndingType.None;
-
-            if (hadSequence) finalCommandEnding = CommandEndingType.InSequence;
-            else if (hadParallel) finalCommandEnding = CommandEndingType.InParallel;
-
-            if (finalCommandEnding == CommandEndingType.None && cmdCount >= 2)
-            {
-                finalCommandEnding = isSequence ? CommandEndingType.InSequence : CommandEndingType.InParallel;
-            }
-
-            if (cmdCount <= 1)
-            {
-                finalCommandEnding = CommandEndingType.None;
-            }
-
-            return BuildBlock(targetSignal, blockHasOurSignal, commands, finalCommandEnding, joinedBlock);
-        }
-
-        private static string BuildBlock(
-            string targetSignal,
-            bool blockHasOurSignal,
-            List<string> commands,
-            CommandEndingType commandEnding,
-            string oldBlock)
-        {
-            if (!blockHasOurSignal)
-            {
-                return oldBlock;
-            }
-
-            if (commands.Count == 0)
-            {
-                return oldBlock;
-            }
-
-            List<string> sb = new List<string> {$"CommandBinder.Bind({targetSignal})"};
-
-            foreach (string cmd in commands)
-            {
-                sb.Add($"    .To<{cmd}>()");
-            }
-
-            if (commandEnding == CommandEndingType.InSequence)
-            {
-                sb.Add("    .InSequence()");
-            }
-            else if (commandEnding == CommandEndingType.InParallel)
-            {
-                sb.Add("    .InParallel()");
-            }
-
-            int lastIndex = sb.Count - 1;
-            sb[lastIndex] += ";";
-
-            return string.Join("\r\n", sb);
-        }
-
-        private static string CreateNewBlock(string fullSignal, string commandName, bool isSequence)
-        {
-            List<string> lines = new List<string> {$"CommandBinder.Bind({fullSignal})"};
-
-            if (!string.IsNullOrEmpty(commandName))
-            {
-                lines.Add($"    .To<{commandName}>()");
-            }
-
-            lines.Add(isSequence ? "    .InSequence();" : "    .InParallel();");
-
-            return string.Join("\r\n", lines);
         }
 
         /// <summary>

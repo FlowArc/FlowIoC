@@ -285,14 +285,29 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             CodeGeneratorUtils.InjectSignalInContext(ContextFile(contextPath), signalClassName);
         }
 
+        /// <summary>
+        /// The using the context needs is the namespace the command was actually written into, so
+        /// it is read off the same Controllers folder <see cref="CreateCommand"/> writes to. A
+        /// hardcoded ".Commands" left the context importing a namespace no module has.
+        /// </summary>
         private void BindCommandInContext(string contextPath, string moduleNamespace)
         {
             string commandName = _commandName + "Command";
             string signalClassName = _signalClassName;
             string signalName = _signalName;
 
+            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
+            if (codeGenSettings == null)
+            {
+                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
+                return;
+            }
+
+            string commandNamespace =
+                $"{moduleNamespace}.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}";
+
             CodeGeneratorUtils.BindCommandInContext(ContextFile(contextPath), commandName, signalClassName, signalName,
-                moduleNamespace + $".Commands", _isSequence);
+                commandNamespace, _isSequence);
         }
 
         /// <summary>
