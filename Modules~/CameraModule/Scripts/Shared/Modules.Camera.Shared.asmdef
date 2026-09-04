@@ -1,0 +1,16 @@
+{
+  "name": "Modules.Camera.Shared",
+  "references": [
+    "FlowIoC",
+    "Unity.Cinemachine"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -69,7 +69,9 @@ namespace FlowIoC.Editor.Help.Pages
                 + "module's Root for you - and optionally its own scene. List the screen's actions in "
                 + "the panel and they are put on both the View and the Mediator, so the button you "
                 + "name here arrives already wired. A screen belongs to the module whose feature it "
-                + "shows, which is the direction the nesting rule enforces.");
+                + "shows, so its parent is a main or a sub module - a screen module and a test "
+                + "module are not offered as one, and the Parent Module list says so by leaving "
+                + "them without a Select button.");
 
             painter.Rule("Test - editor-only code that may reach anywhere.");
             painter.Paragraph(
