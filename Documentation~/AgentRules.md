@@ -93,6 +93,9 @@ so follow the rules below deliberately.
 - A `ScreenView` wires its buttons in `OnEnable` and drops them in `OnDisable`, never in
   `Awake` or `Start`. A screen is pooled: hiding it deactivates the object and reopening it
   shows the same instance, so `Awake` runs once while the screen opens many times.
+- A screen module belongs to the module whose feature it shows, so it lives in the
+  `zScreenModules` of a main or a sub module and never under another screen module or a test
+  module. `Create Module` offers exactly those parents.
 - A screen module's context declares the screen. It derives from
   `ScreenSubContext<TView, TMediator>`, which binds the View to the Mediator, and it declares
   where the prefab lives and how the screen behaves by default in a `ScreenCVO`:

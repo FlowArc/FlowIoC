@@ -1209,7 +1209,9 @@ with its own Context:
 - **`zSubModules/`** — a feature that belongs to this module but is large enough to
   deserve its own Context, attached to the parent Root as a sub-context.
 - **`zScreenModules/`** — one folder per UI screen, so a screen's signals, commands
-  and views travel together.
+  and views travel together. A screen belongs to the module whose feature it shows,
+  so it nests under a main or a sub module and never under another screen module or
+  a test module.
 - **`zTestModules/`** — an isolated test scene and context, marked `IsTest` so it
   never starts in a real build.
 

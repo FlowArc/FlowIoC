@@ -65,7 +65,7 @@ namespace FlowIoC.Editor.Help
             {
                 new HelpSection(new SetupModulesPage()),
                 new HelpSection(new CounterModulePage()),
-                new HelpSection(new CameraSystemModulePage()),
+                new HelpSection(new CameraModulePage()),
                 new HelpSection(new InputModulePage())
             };
 
