@@ -66,7 +66,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             "Select the folder layout this module type is generated from.";
 
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
-        private static readonly Color BUTTON_COLOR_IDLE = Color.cyan;
 
         private static string _moduleSuffix;
         private static string _moduleName;

@@ -32,7 +32,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string USE_DUMMY_BINDING_LABEL = "Create Dummy Model";
         private const float MODEL_BUTTON_HEIGHT = 40;
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
-        private static readonly Color BUTTON_COLOR_IDLE = Color.cyan;
 
         private static string _modelName;
         private string _parentModulePath;
@@ -185,7 +184,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayCreateModelButton()
         {
-            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : BUTTON_COLOR_IDLE;
+            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
             EditorGUI.BeginDisabledGroup(_generationState == GenerationState.InProgress || string.IsNullOrEmpty(_parentModulePath));
 
             if (GUILayout.Button(CREATE_MODEL_BUTTON, GUILayout.Height(MODEL_BUTTON_HEIGHT)))
