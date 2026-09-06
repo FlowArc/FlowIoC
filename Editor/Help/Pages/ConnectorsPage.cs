@@ -5,6 +5,10 @@ using FlowIoC.Editor.Help.Graph;
 
 namespace FlowIoC.Editor.Help.Pages
 {
+    /// <summary>
+    /// The one place two modules meet, read in four passes: the crossing as a picture, then how
+    /// the wiring is written, then the three cases that need no Connector at all, then the rules.
+    /// </summary>
     internal class ConnectorsPage : HelpPage
     {
         public ConnectorsPage() : base(Build())
@@ -15,38 +19,151 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Icon => "Linked";
 
+        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab("Wiring", DrawWiring),
+            new HelpTab("Exceptions", DrawExceptions),
+            new HelpTab("Rules", DrawRules)
+        };
+
         protected override void DrawBody(HelpPainter painter)
         {
+            painter.Hero(
+                "A module never reaches into another module.",
+                "No type from Modules.A appears in Modules.B. The only crossing point is a "
+                + "Connector, and neither module learns that the other exists.");
+
+            painter.Parts(
+                new HelpPart("Setup",
+                    "Where a Connector does its work. Every Root has finished binding by then, so "
+                    + "both signal holders already exist and are asked for, never bound.",
+                    "InjectionBinderCrossContext.GetInstance<HeroSignals>()"),
+                new HelpPart("Connect",
+                    "What joins them: one module's Outgoing to another's Incoming. It also takes a "
+                    + "plain delegate, and a converter when the payloads differ.",
+                    "outgoing.Connect(incoming)"));
+
+            painter.SubHeading("One announcement, one delivery");
             painter.Paragraph(
-                "A module never reaches into another module. No type from Modules.A appears in "
-                + "Modules.B, and the only crossing point is a Connector.");
-            painter.Paragraph(
-                "A Connector sub-context takes both signal holders and wires one module's Outgoing to "
-                + "another's Incoming. Neither module learns that the other exists.");
-            painter.Paragraph(
-                "It gets those holders, it never binds them. Every module binds its own holder during "
-                + "its binding phase, and by the time any Setup runs all of them exist - so a Connector "
-                + "asks for what is there with GetInstance. Bind would hand it a holder of its own the "
-                + "moment the owning module is missing from the scene: nothing would fail, and nothing "
-                + "would ever arrive either.");
-            painter.Paragraph(
-                "It is listed on the Connector Root and nowhere else. Add Sub Context offers connector "
-                + "sub-contexts on that Root alone, and offers every other Root everything but those, so "
-                + "the wiring between two modules cannot be scattered across the scene by accident. A "
-                + "context counts as a Connector's when its name says so - HeroConnectorSubContext - or "
-                + "when it carries FlowHeader(FlowRole.Connector).");
+                "Three boxes, and the whole of a crossing. Walk them with the buttons under the "
+                + "diagram; the code is on the Wiring tab.");
 
             painter.Space();
             painter.Graph(Graph, Stepper);
 
             painter.Space();
-            painter.SubHeading("The three exceptions");
-            painter.Bullet("A Service crosses directly: reference its assembly and inject its interface.");
-            painter.Bullet("A sub-module may use its parent's types. The direction is one way.");
-            painter.Bullet("A test module under zTestModules may reference anything, wrapped in #if UNITY_EDITOR.");
             painter.Note(
+                "A Connector gets signal holders, it never binds them. Bind would hand it a holder "
+                + "of its own the moment the owning module is missing from the scene: nothing would "
+                + "fail, and nothing would ever arrive either.");
+        }
+
+        /// <summary>
+        /// How the wiring is written: where the sub-context is listed, the two shapes Connect
+        /// takes, and what a failed GetInstance is actually telling you.
+        /// </summary>
+        private void DrawWiring(HelpPainter painter)
+        {
+            painter.Hero(
+                "A Connector is a Context that binds nothing.",
+                "It declares no models, no commands and no signals. It asks for two holders that "
+                + "already exist and joins them.");
+
+            painter.SubHeading("Writing one");
+            painter.Code(
+                "public class HeroConnectorSubContext : Context\n"
+                + "{\n"
+                + "    private HeroSignals          _heroSignals;\n"
+                + "    private PlayerProfileSignals _playerProfileSignals;\n"
+                + "\n"
+                + "    public override void Setup()\n"
+                + "    {\n"
+                + "        _heroSignals          = InjectionBinderCrossContext.GetInstance<HeroSignals>();\n"
+                + "        _playerProfileSignals = InjectionBinderCrossContext.GetInstance<PlayerProfileSignals>();\n"
+                + "\n"
+                + "        _heroSignals.Outgoing.DecreaseCurrency\n"
+                + "            .Connect(_playerProfileSignals.Incoming.DecreaseCurrency);\n"
+                + "    }\n"
+                + "}",
+                "HeroConnectorSubContext.cs");
+            painter.Paragraph(
+                "It reaches each module through that module's Shared assembly - Modules.Hero.Shared "
+                + "and never Modules.Hero - which is what keeps one module's assembly out of "
+                + "another's.");
+
+            painter.Space();
+            painter.SubHeading("Where it is listed");
+            painter.Paragraph(
+                "On the Connector Root, and nowhere else. Add Sub Context offers connector "
+                + "sub-contexts on that Root alone, and offers every other Root everything but "
+                + "those, so the wiring between two modules cannot be scattered across the scene by "
+                + "accident. A context counts as a Connector's when its name says so - "
+                + "HeroConnectorSubContext - or when it carries FlowHeader(FlowRole.Connector).");
+
+            painter.Space();
+            painter.SubHeading("Adapting between two payloads");
+            painter.Paragraph(
                 "Connect also takes a plain delegate, and can adapt between signals whose parameter "
                 + "types differ by taking a converter as its second argument.");
+            painter.Code(
+                "_heroSignals.Outgoing.HeroDied\n"
+                + "    .Connect(_analyticsSignals.Incoming.TrackEvent, hero => hero.Id);\n"
+                + "\n"
+                + "_heroSignals.Outgoing.HeroDied\n"
+                + "    .Connect(OnHeroDied);");
+
+            painter.Space();
+            painter.Note(
+                "Failing to get a holder is the report that the module's Root is not in the scene. "
+                + "Put the Root back rather than binding around it.");
+        }
+
+        /// <summary>
+        /// The three cases a Connector is not needed for. They are the whole list: anything else
+        /// that crosses is a mistake.
+        /// </summary>
+        private void DrawExceptions(HelpPainter painter)
+        {
+            painter.Hero(
+                "Three things cross without a Connector.",
+                "This is the whole list. Anything else that names a type from another module is a "
+                + "mistake, whatever the compiler says about it.");
+
+            painter.SubHeading("A Service crosses directly");
+            painter.Paragraph(
+                "Reference the Service module's assembly and inject its interface. Being usable "
+                + "this way is the point of a Service: it is self-contained, it depends on nothing "
+                + "outside itself, and it answers the input it is given.");
+            painter.Code(
+                "[Inject] private ICounterService _counterService { get; set; }",
+                "In a Command of any module that references Modules.Counter");
+
+            painter.Space();
+            painter.SubHeading("A sub-module reaches the module it lives in");
+            painter.Paragraph(
+                "A screen or sub module may use its parent's types. The direction is one way: a "
+                + "module never knows what sits in its own zScreenModules or zSubModules.");
+
+            painter.Space();
+            painter.SubHeading("A test module reaches anything");
+            painter.Paragraph(
+                "Everything under zTestModules is test code, so it may reference any module in the "
+                + "project. In exchange, every script in it is wrapped in #if UNITY_EDITOR.");
+
+            painter.Space();
+            painter.Note(
+                "If two modules need the same data and neither owns it, that data belongs in a "
+                + "module of its own - the way a shared Service does.");
+        }
+
+        private void DrawRules(HelpPainter painter)
+        {
+            painter.Bullet("A module never reaches into another module. The only crossing point is a Connector.");
+            painter.Bullet("A Connector gets signal holders with GetInstance in Setup. It never binds them.");
+            painter.Bullet("A Connector sub-context is listed on the Connector Root and nowhere else.");
+            painter.Bullet("A Connector reaches a module through Modules.Hero.Shared, never through Modules.Hero.");
+            painter.Bullet("Systems are never added to one another's assemblies. Two Systems talk through signals wired in a Connector.");
+            painter.Bullet("The three exceptions are a Service, a sub-module reaching its parent, and a test module.");
         }
 
         private static HelpGraph Build()
@@ -77,7 +194,7 @@ namespace FlowIoC.Editor.Help.Pages
                     "CommandBinder.Bind(_signals.Incoming.DecreaseCurrency)\n    .ToSequence<DecreaseCurrencyCommand>();")
             };
 
-            return new HelpGraph(nodes, edges, steps);
+            return new HelpGraph(nodes, edges, steps, 1.4f);
         }
     }
 }

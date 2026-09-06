@@ -5,6 +5,11 @@ using FlowIoC.Editor.Help.Graph;
 
 namespace FlowIoC.Editor.Help.Pages
 {
+    /// <summary>
+    /// The pair a module cannot be without, read in four passes: the two of them as a picture,
+    /// then the Root as a scene object, then the Context as a list of declarations, then the
+    /// rules. The introduction carries no code - the walk under the diagram carries all of it.
+    /// </summary>
     internal class RootContextPage : HelpPage
     {
         public RootContextPage() : base(Build())
@@ -15,50 +20,87 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Icon => "UnityEditor.SceneHierarchyWindow";
 
+        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab("Root", DrawRoot),
+            new HelpTab("Context", DrawContext),
+            new HelpTab("Rules", DrawRules)
+        };
+
         protected override void DrawBody(HelpPainter painter)
         {
+            painter.Hero(
+                "A module joins the game by being in the scene.",
+                "Nothing reaches in from outside to start it. The Root puts it there, and the "
+                + "Context says what it is made of.");
+
+            painter.Parts(
+                new HelpPart("Root",
+                    "The module's one presence in the scene, and normally an empty class. Drop it "
+                    + "in and the module starts.",
+                    "class PlayerRoot : Root<PlayerContext>"),
+                new HelpPart("Context",
+                    "What the module is made of, declared and nothing else. A Context that needs "
+                    + "an if is deciding something, and that belongs in a Command.",
+                    "class PlayerContext : Context"));
+
+            painter.SubHeading("From the scene to the first dispatch");
             painter.Paragraph(
-                "A Root is the module's presence in the scene, and it is normally an empty class. "
-                + "Dropping it into a scene starts the module; nothing else has to be wired by hand.");
-            painter.Paragraph(
-                "The Context is where the module declares what it is made of - and nothing else. A "
-                + "Context that needs an if is making a decision, and a decision belongs in a Command.");
+                "Eight steps, and the whole of a module's startup. Walk them with the buttons "
+                + "under the diagram; the phases they name are on the Context tab.");
+
+            painter.Space();
+            painter.Graph(Graph, Stepper);
+
+            painter.Space();
+            painter.Note(
+                "Setup does not run until every Root in the scene has finished binding. That "
+                + "barrier - not the Initialize Order - is what makes reaching across modules safe.");
+        }
+
+        /// <summary>
+        /// The Root as a scene object: what its name says, what hangs off it, what it takes to
+        /// outlive a scene, and what it may host besides its own context.
+        /// </summary>
+        private void DrawRoot(HelpPainter painter)
+        {
+            painter.Hero(
+                "A Root takes the colour of whatever it roots.",
+                "It decides that from its own name, so the name is not decoration - it is what the "
+                + "scene says about the module at a glance.");
 
             painter.SubHeading("What a Root is called");
             painter.Paragraph(
-                "A Root takes the colour of whatever it roots, and it decides that from its own name. "
-                + "So a module that exists to provide a Service keeps the Service suffix on its Root "
-                + "and Context even when the module itself does not: CounterModule holds "
-                + "Modules.Counter, and inside it sit CounterServiceRoot and CounterServiceContext "
-                + "beside ICounterService. CounterRoot would be drawn as a plain Root instead, and the "
-                + "scene would stop saying at a glance what kind of module that is.");
+                "A module that exists to provide a Service keeps the Service suffix on its Root and "
+                + "Context even when the module itself does not. CounterModule holds Modules.Counter, "
+                + "and inside it sit CounterServiceRoot and CounterServiceContext beside "
+                + "ICounterService. CounterRoot would be drawn as a plain Root instead, and the scene "
+                + "would stop saying what kind of module that is.");
             painter.Paragraph(
                 "A test module's Root is read the same way: a name ending in TestRoot is drawn in "
                 + "the Test grey, so a scene says which Roots exercise a module and which are the "
                 + "module. The rule is the Root's alone - a View in a test module is still a View.");
+            painter.Code(
+                "public class CounterServiceRoot : Root<CounterServiceContext> { }\n"
+                + "public class PlayerSystemRoot   : Root<PlayerSystemContext>   { }\n"
+                + "public class PlayerRoot         : Root<PlayerContext>         { }",
+                "Service, System and Core - what Create Module asks as Role");
 
-            painter.SubHeading("What each phase is for");
-            painter.Paragraph(
-                "The binding phases declare. SignalBindings, InjectionBindings, MediationBindings and "
-                + "CommandBindings say what the module is made of, and decide nothing.");
-            painter.Paragraph(
-                "Setup initialises. It does not run until every Root in the scene has finished binding, "
-                + "so this is where a module readies its Models if they need readying - and the only "
-                + "phase that may reach across modules, which is what a Connector does there.");
-            painter.Paragraph(
-                "Launch starts. It runs after every Setup and dispatches the module's first signal; the "
-                + "entry point's Launch is what sets the game going.");
-
+            painter.Space();
             painter.SubHeading("What hangs off a Root");
             painter.Paragraph(
                 "A GameObject the module needs in the scene goes under its Root. The Root is the "
                 + "module's one presence there, so an EventSystem, an adapter, anything the module "
                 + "owns hangs off it rather than sitting loose beside it.");
+
+            painter.Space();
+            painter.SubHeading("Living past a scene");
             painter.Paragraph(
                 "A Root otherwise lives and dies with its scene. A module whose work outlives one - "
                 + "input, audio, analytics - makes its Root persistent in BeforeCreateContext, which "
                 + "runs just before the context is built. The reparenting is not decoration: Unity "
-                + "marks only root level objects as do not destroy.");
+                + "marks only root level objects as do not destroy, so a Root authored under "
+                + "something else has to detach itself before it can survive.");
             painter.Code(
                 "protected override void BeforeCreateContext()\n"
                 + "{\n"
@@ -66,19 +108,21 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    DontDestroyOnLoad(gameObject);\n"
                 + "}");
 
+            painter.Space();
             painter.SubHeading("What Add Sub Context offers");
             painter.Paragraph(
-                "A Root can host contexts other than its own, and the button under the list offers the "
-                + "ones that may honestly go there. A context that some Root declares as its Root<T> is "
-                + "built by that Root already, so it is not offered: adding it to a second Root would "
-                + "build a second instance of it and run the same bindings twice.");
+                "A Root can host contexts other than its own, and the button under the list offers "
+                + "the ones that may honestly go there. A context that some Root declares as its "
+                + "Root<T> is built by that Root already, so it is not offered: adding it to a second "
+                + "Root would build a second instance of it and run the same bindings twice.");
             painter.Paragraph(
                 "A module meant to be hosted on another module's Root says so on its context, and is "
                 + "offered again. ExcludeFromContextWindow says the opposite, and wins over it.");
             painter.Code("[AllowAsSubContext]\npublic class CameraContext : Context { }");
             painter.Paragraph(
-                "Create Module offers the same attribute as a toggle on a main module that gets a Root. "
-                + "It starts unticked, because a module with a Root of its own is the ordinary case.");
+                "Create Module offers the same attribute as a toggle on a main module that gets a "
+                + "Root. It starts unticked, because a module with a Root of its own is the ordinary "
+                + "case.");
             painter.Paragraph(
                 "What is left is offered with the kind it is - SCREEN, CONNECTOR - and with the Roots "
                 + "that already list it, read from the open scenes. Those are sorted to the bottom "
@@ -90,9 +134,87 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Connector Root and nowhere else, and every other Root is offered everything but "
                 + "those. A context counts as a Connector's when its name says so - "
                 + "HeroConnectorSubContext - or when it carries FlowHeader(FlowRole.Connector).");
+        }
+
+        /// <summary>
+        /// The Context as a list of declarations, and the three things each of its phases is for.
+        /// </summary>
+        private void DrawContext(HelpPainter painter)
+        {
+            painter.Hero(
+                "A Context declares. It never decides.",
+                "Three groups of methods, and each answers a different question: what the module is "
+                + "made of, what it has to ready, and what it says first.");
+
+            painter.SubHeading("The binding phases declare");
+            painter.Paragraph(
+                "SignalBindings, InjectionBindings, MediationBindings and CommandBindings say what "
+                + "the module is made of, and decide nothing. They run in that order, because each "
+                + "refers to what the one before it bound.");
+            painter.Code(
+                "public override void SignalBindings()\n"
+                + "{\n"
+                + "    base.SignalBindings();\n"
+                + "    _signals = InjectionBinderCrossContext.Bind<PlayerSignals>();\n"
+                + "}\n"
+                + "\n"
+                + "public override void InjectionBindings()\n"
+                + "{\n"
+                + "    base.InjectionBindings();\n"
+                + "    InjectionBinderCrossContext.Bind<IPlayerModel, PlayerModel>();\n"
+                + "}\n"
+                + "\n"
+                + "public override void MediationBindings()\n"
+                + "{\n"
+                + "    base.MediationBindings();\n"
+                + "    MediationBinder.Bind<HudView>().To<HudMediator>();\n"
+                + "}\n"
+                + "\n"
+                + "public override void CommandBindings()\n"
+                + "{\n"
+                + "    base.CommandBindings();\n"
+                + "\n"
+                + "    CommandBinder.Bind(_signals.Incoming.AddCurrency)\n"
+                + "        .ToSequence<AddCurrencyCommand>()\n"
+                + "        .ToSequence<SavePlayerCommand>();\n"
+                + "}",
+                "PlayerContext.cs");
 
             painter.Space();
-            painter.Graph(Graph, Stepper);
+            painter.SubHeading("Setup initialises");
+            painter.Paragraph(
+                "Setup does not run until every Root in the scene has finished binding, so this is "
+                + "where a module readies its Models if they need readying - and the only phase that "
+                + "may reach across modules, which is what a Connector does there.");
+
+            painter.Space();
+            painter.SubHeading("Launch starts");
+            painter.Paragraph(
+                "Launch runs after every Setup and dispatches the module's first signal. The entry "
+                + "point's Launch is what sets the game going.");
+            painter.Code(
+                "public override void Launch()\n"
+                + "{\n"
+                + "    base.Launch();\n"
+                + "    _signals.Incoming.InitializePlayer.Dispatch();\n"
+                + "}");
+
+            painter.Space();
+            painter.Note(
+                "A module that has to put data in place before anything reads it takes Initialize "
+                + "Order -100 and does the work in PostConstruct, which runs during the binding pass. "
+                + "Setup would already be a frame too late, and a Command later still.");
+        }
+
+        private void DrawRules(HelpPainter painter)
+        {
+            painter.Bullet("A Context declares bindings and nothing else. If it needs an if, that decision belongs in a Command.");
+            painter.Bullet("A Root is normally an empty class. What the module does lives in the Context it names.");
+            painter.Bullet("A Root keeps the suffix of what it roots: CounterServiceRoot, PlayerSystemRoot, PlayerTestRoot.");
+            painter.Bullet("A GameObject the module needs in the scene is parented to the module's Root.");
+            painter.Bullet("A Root that must outlive its scene detaches itself in BeforeCreateContext before DontDestroyOnLoad.");
+            painter.Bullet("Setup is the only phase that may reach across modules. The binding phases declare; Launch dispatches.");
+            painter.Bullet("Initialize Order runs from -100 to 100. Services take the negative band, the game's modules 0 to 97.");
         }
 
         private static HelpGraph Build()
@@ -148,7 +270,7 @@ namespace FlowIoC.Editor.Help.Pages
                     "public override void Launch()\n{\n    base.Launch();\n    _signals.Incoming.InitializePlayer.Dispatch();\n}")
             };
 
-            return new HelpGraph(nodes, edges, steps);
+            return new HelpGraph(nodes, edges, steps, 1.4f);
         }
     }
 }

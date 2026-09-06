@@ -5,6 +5,11 @@ using FlowIoC.Editor.Help.Graph;
 
 namespace FlowIoC.Editor.Help.Pages
 {
+    /// <summary>
+    /// The one place worth reading when you want to know what a module holds. A Model is a single
+    /// thing rather than a folder of several, so the introduction opens with the sentence and the
+    /// diagram instead of a row of cards, and the code sits on the tab beside it.
+    /// </summary>
     internal class ModelPage : HelpPage
     {
         public ModelPage() : base(Build())
@@ -15,12 +20,24 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Icon => "ScriptableObject Icon";
 
+        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab("Writing one", DrawWriting),
+            new HelpTab("Rules", DrawRules)
+        };
+
         protected override void DrawBody(HelpPainter painter)
         {
+            painter.Hero(
+                "A Model owns state, and the rules that keep it valid.",
+                "It knows nothing about Views, Commands, or any other module - which is what makes "
+                + "it the one place worth reading when you want to know what a module actually "
+                + "holds.");
+
+            painter.SubHeading("Nothing reaches in");
             painter.Paragraph(
-                "A Model owns state and the rules that keep it valid. It knows nothing about Views, "
-                + "Commands, or any other module - which is what makes it the one place worth reading "
-                + "when you want to know what a module actually holds.");
+                "The crossed arrow is the whole point of the page. A signal never arrives at a "
+                + "Model: it runs a Command, and the Command calls the Model.");
 
             painter.Space();
             painter.Graph(Graph, Stepper);
@@ -29,6 +46,90 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Note(
                 "A Model may dispatch its own module's outgoing signals to announce that a value it "
                 + "holds has changed. Announcing is allowed; listening is not.");
+        }
+
+        /// <summary>
+        /// The pair every Model ships as, and the one habit that keeps it honest: state that only
+        /// the Model itself may set.
+        /// </summary>
+        private void DrawWriting(HelpPainter painter)
+        {
+            painter.Hero(
+                "An interface and an implementation, like a Service.",
+                "The rest of the module injects the interface, so what a Model offers is a list of "
+                + "questions and a list of changes - never a field.");
+
+            painter.SubHeading("The pair");
+            painter.Code(
+                "public interface IPlayerModel\n"
+                + "{\n"
+                + "    double Currency { get; }\n"
+                + "    void AddCurrency(double amount);\n"
+                + "}",
+                "IPlayerModel.cs - Scripts/Runtime/Models");
+            painter.Code(
+                "public class PlayerModel : IPlayerModel\n"
+                + "{\n"
+                + "    public double Currency { get; private set; }\n"
+                + "\n"
+                + "    public void AddCurrency(double amount) => Currency += amount;\n"
+                + "}",
+                "PlayerModel.cs - Scripts/Runtime/Models");
+            painter.Paragraph(
+                "The private set is not decoration. A settable property is an invitation for a "
+                + "Command to write the field directly, and the moment that happens the rules that "
+                + "keep the value legal live in two places.");
+
+            painter.Space();
+            painter.SubHeading("Binding it");
+            painter.Paragraph(
+                "The Context binds the implementation to the interface once, and everything that "
+                + "needs it injects the interface.");
+            painter.Code(
+                "public override void InjectionBindings()\n"
+                + "{\n"
+                + "    base.InjectionBindings();\n"
+                + "    InjectionBinderCrossContext.Bind<IPlayerModel, PlayerModel>();\n"
+                + "}",
+                "PlayerContext.cs");
+            painter.Code(
+                "[Inject] private IPlayerModel _playerModel { get; set; }",
+                "In the Command that changes it");
+
+            painter.Space();
+            painter.SubHeading("Announcing a change");
+            painter.Paragraph(
+                "A Model that dispatches its module's outgoing signal saves every Command that "
+                + "changes it from remembering to. What it must never do is listen: a Model that "
+                + "subscribes has a second way in, and the Command stops being the only one.");
+            painter.Code(
+                "public class PlayerModel : IPlayerModel\n"
+                + "{\n"
+                + "    [InjectSignal] private PlayerSignals _signals { get; set; }\n"
+                + "\n"
+                + "    public double Currency { get; private set; }\n"
+                + "\n"
+                + "    public void AddCurrency(double amount)\n"
+                + "    {\n"
+                + "        Currency += amount;\n"
+                + "        _signals.Outgoing.CurrencyChanged.Dispatch(Currency);\n"
+                + "    }\n"
+                + "}");
+
+            painter.Space();
+            painter.Note(
+                "Create Model writes both files and the binding. Prefer it over writing them by "
+                + "hand.");
+        }
+
+        private void DrawRules(HelpPainter painter)
+        {
+            painter.Bullet("A Model owns state and the rules that keep it valid.");
+            painter.Bullet("A Model knows nothing about Views, Commands, or any other module.");
+            painter.Bullet("A Model never subscribes to a signal. An incoming signal runs a Command, and the Command calls the Model.");
+            painter.Bullet("A Model may dispatch its own module's outgoing signals. Announcing is allowed; listening is not.");
+            painter.Bullet("A Model is an interface and an implementation: IPlayerModel and PlayerModel.");
+            painter.Bullet("State is readable and privately settable. Nothing outside the Model writes a field on it.");
         }
 
         private static HelpGraph Build()
@@ -62,7 +163,7 @@ namespace FlowIoC.Editor.Help.Pages
                     "_signals.Outgoing.CurrencyChanged.Dispatch(Currency);")
             };
 
-            return new HelpGraph(nodes, edges, steps);
+            return new HelpGraph(nodes, edges, steps, 1.4f);
         }
     }
 }
