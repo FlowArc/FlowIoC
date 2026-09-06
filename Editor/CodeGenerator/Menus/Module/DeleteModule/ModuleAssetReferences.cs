@@ -84,6 +84,41 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>
+        /// The same answer as a list of assets rather than of lines, each named once.
+        ///
+        /// This is what narrows the unwiring: taking a sub-context out of a Root means opening the
+        /// scene or prefab that holds it, and opening every one in the project to find out which
+        /// ones matter would be the expensive half of the job. The dependency query answers that
+        /// from the index, so only these are opened.
+        /// </summary>
+        internal IReadOnlyList<string> AssetsPointingInto(string moduleAssetPath)
+        {
+            var found = new List<string>();
+
+            string module = Folder(moduleAssetPath);
+
+            if (string.IsNullOrEmpty(module)) return found;
+
+            foreach (string candidate in _candidates())
+            {
+                if (IsInside(candidate, module)) continue;
+
+                foreach (string dependency in _dependenciesOf(candidate))
+                {
+                    if (!IsInside(dependency, module)) continue;
+
+                    // Named once however many of the module's files it points at: this list is
+                    // opened, and opening the same scene twice would do the work twice.
+                    found.Add(candidate);
+
+                    break;
+                }
+            }
+
+            return found;
+        }
+
+        /// <summary>
         /// The module folder as a path that can only match inside it. The trailing slash is what
         /// keeps PlayerHudModule out of PlayerModule's answer.
         /// </summary>

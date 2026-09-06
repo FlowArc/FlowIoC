@@ -158,8 +158,23 @@ namespace FlowIoC.Editor.Help.Pages
                 + "exists, Resolve links it in one press - that is an entry authored before this, or "
                 + "one somebody cleared. Where nothing compiles to the name, the module is gone or "
                 + "renamed and there is nothing to press: either the entry goes, or the context comes "
-                + "back. Delete Module names the scenes and prefabs that will be left this way before "
-                + "it deletes anything, and edits none of them.");
+                + "back.");
+
+            painter.Space();
+            painter.SubHeading("Deleting the module a context lives in");
+            painter.Paragraph(
+                "Delete Module takes the module's sub-contexts out of the Roots that list them, and "
+                + "asks first. Remove them from every Root, go through them one at a time, or remove "
+                + "none, see where they are and keep the module. The question comes before anything "
+                + "is deleted, so cancelling leaves the module whole - its assemblies, its settings "
+                + "files and its folder are all still there.");
+            painter.Paragraph(
+                "How far it goes depends on what holds the Root. A prefab is a file and is written. "
+                + "A scene that is not open is opened, written and closed again. A scene that is "
+                + "open is changed and left dirty, because whatever else is unsaved in it belongs to "
+                + "whoever opened it - so save it to keep the change, or close without saving to keep "
+                + "the entry. Every entry removed, skipped or left is named on the console with its "
+                + "Root and its asset.");
         }
 
         /// <summary>
