@@ -32,6 +32,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string NAME_PLACEHOLDER = "Enter module name here...";
         private const string NAME_CONTROL = "flowioc-create-module-name";
 
+        private const string CARD_LABEL = "Module card";
+        private const string CARD_AUDIENCE = "(for AI agents)";
+        private const string PURPOSE_CONTROL = "flowioc-create-module-purpose";
+        private const string CONCEPTS_CONTROL = "flowioc-create-module-concepts";
+        private const string PURPOSE_HINT = "  What this module is for, in one line...";
+        private const string CONCEPTS_HINT = "  Words to search for when work belongs here...";
+
         private const string WINDOW_TITLE = "Create Module";
         private const string WINDOW_SUBTITLE = "Folders, assembly, Root and Context";
         private const string HELP_PAGE = "Creating a Module";
@@ -69,6 +76,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private static string _moduleSuffix;
         private static string _moduleName;
+
+        /// <summary>
+        /// The two lines of the module's card, offered here because the author knows what the
+        /// module is for at the moment they name it and rarely again afterwards. Both are
+        /// optional: an empty one is written as the stub's placeholder and Module Scanner asks
+        /// for it later.
+        /// </summary>
+        private static string _modulePurpose;
+
+        private static string _moduleConcepts;
         private string _parentModulePath;
         private Dictionary<string, bool> _moduleExpandedState;
         private ModuleRegistry _registry;
@@ -118,6 +135,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _moduleExpandedState = new Dictionary<string, bool>();
             _parentModulePath = string.Empty;
             _moduleName = string.Empty;
+            _modulePurpose = string.Empty;
+            _moduleConcepts = string.Empty;
             InitializeConfigMap();
             _selectedModuleType = ModuleType.Main;
             _selectedModuleRole = ModuleRole.System;
@@ -257,6 +276,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             {
                 DisplayActionsSection();
             }
+
+            DrawModuleCardFields();
 
             GUILayout.FlexibleSpace();
             DisplayCreateModuleButton();

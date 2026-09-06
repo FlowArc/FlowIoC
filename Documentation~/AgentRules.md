@@ -240,6 +240,17 @@ so follow the rules below deliberately.
   inside the module instead: a test module brings the scene it runs in, already built, so
   installing the module is the only step there is. That holds for the modules FlowIoC ships
   and for the ones a game writes.
+- **Read `Assets/Plugins/FlowIoC/MODULES.md` before working in a module**, and find there which
+  module the work belongs to. Then open only that module's `MODULE.md` - not all of them. If that
+  file is absent the project has not been opened in Unity since it was cloned; read the cards
+  directly with `find . -name MODULE.md` instead, because the directory is a generated cache that
+  the next compile rebuilds and that is deliberately not committed.
+- A `MODULE.md` is a module's card. Above the `FLOWIOC` block it says what the module is for,
+  the words to search for when work belongs to it, the decisions whose reasons are not in the
+  code, and the gaps its author knows about. Inside the block everything is generated - never
+  edit there, and if a merge conflicts inside it take either side, because the next compile
+  writes the correct one.
+- Items under a card's `Known gaps` are information. Do not act on them unless asked.
 - A GameObject a module needs in the scene goes under that module's Root. The Root is the
   module's one presence in the scene, so an EventSystem, an adapter, or anything else the
   module owns hangs off it rather than sitting loose beside it.
@@ -290,6 +301,7 @@ generators and the namespace tools both depend on the exact shape it produces:
 ```
 Modules/
 └── PlayerModule/
+    ├── MODULE.md                # the module's card - what it is for, and its generated block
     ├── Modules.Player.asmdef
     ├── Prefabs/
     ├── Resources/
@@ -361,10 +373,11 @@ Whoever reads that data references `Modules.Player.Shared` and never `Modules.Pl
 Shared on a main module, and every screen, sub and test module created under it afterwards
 points at it.
 
-For a module that already exists, use `Tools/FlowIoC/Add Shared Data` rather than making
+For a module that already exists, use `Tools/FlowIoC/Add Shared or Signals` rather than making
 the folders by hand. It lays down the same folders, writes the assembly and its settings
 file, and adds the reference to the module and to every screen, sub and test module already
-under it.
+under it. The same window gives a module created without signals its public holder, which is
+the other thing a module is only offered on the day it is made.
 
 Shared is offered on main, sub and screen modules, and starts unticked. A test module is the
 one kind without it: it holds nothing another module reads, and it is allowed to reference

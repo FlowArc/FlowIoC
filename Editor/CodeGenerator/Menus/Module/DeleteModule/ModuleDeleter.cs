@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
+using FlowIoC.Editor.Addressables;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
@@ -26,6 +27,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             var deletedItems = new List<string>();
 
             Debug.Log($"<color=cyan>[ModuleDeleter]</color> Deleting module '{moduleName}'...");
+
+            // Before the folder goes: Addressables identifies an entry by the GUID of an asset
+            // that still exists, so a screen unregistered afterwards cannot be found at all.
+            RemoveScreenAddressables(moduleName, deletedItems);
+            RemoveReferencesToModule(moduleName, modulePath, deletedItems);
 
             RemoveLogType(moduleName, deletedItems);
             RemoveProjectFiles(moduleName, deletedItems);
@@ -138,6 +144,56 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             Log("Removed from module index", deletedItems);
         }
 
+        /// <summary>
+        /// The Addressables registration a screen module was created with. Create Module makes the
+        /// screen prefab addressable in a group of its own, so deleting the module without this
+        /// leaves an empty Local_Screen- group and its schema assets behind - which is what the
+        /// project then carries around, unread by anything.
+        ///
+        /// Only a screen module has one. Asking for any other module finds no group and reports
+        /// nothing, which is cheaper than working out beforehand whether to ask.
+        /// </summary>
+        private static void RemoveScreenAddressables(string moduleName, List<string> deletedItems)
+        {
+            const string moduleSuffix = "Module";
+
+            if (!moduleName.EndsWith(moduleSuffix, StringComparison.Ordinal)) return;
+
+            string screenName = moduleName.Substring(0, moduleName.Length - moduleSuffix.Length);
+
+            ScreenAddressableEntry entry = new ScreenAddressableEntries().For(screenName);
+
+            if (!new ScreenAddressables().Unregister(entry, out string removedGroup)) return;
+
+            Log($"Addressable entry removed: {screenName}", deletedItems);
+
+            if (!string.IsNullOrEmpty(removedGroup))
+                Log($"Addressable group removed: {removedGroup}", deletedItems);
+        }
+
+        /// <summary>
+        /// The module's three assemblies, taken out of every asmdef that named them. Done before
+        /// the deletion so the project is never in the state where a reference points at an
+        /// assembly that has already gone.
+        /// </summary>
+        private static void RemoveReferencesToModule(
+            string moduleName, string modulePath, List<string> deletedItems)
+        {
+            string assemblyName = new ModuleAssemblyName().From(moduleName);
+
+            if (string.IsNullOrEmpty(assemblyName)) return;
+
+            var assemblies = new List<string>
+            {
+                assemblyName,
+                assemblyName + SharedAssemblyDefinition.ASSEMBLY_SUFFIX,
+                assemblyName + SignalsAssemblyDefinition.ASSEMBLY_SUFFIX
+            };
+
+            foreach (string line in new ModuleReferenceCleaner().Clean(modulePath, assemblies))
+                Log(line, deletedItems);
+        }
+
         private static void RemoveLogType(string moduleName, List<string> deletedItems)
         {
             var settings = FlowLogger.Settings;
@@ -158,7 +214,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         private static void RemoveProjectFiles(string moduleName, List<string> deletedItems)
         {
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-            string assemblyName = ConvertToAssemblyName(moduleName);
+
+            // Asked of ModuleAssemblyName rather than worked out here. This method used to carry
+            // its own copy of the rules, and the copy read the suffix off the end without asking
+            // what was left in front of it: "GameplayScreenTestModule" came out as
+            // Modules.GameplayScreen.Test instead of Modules.Gameplay.Screen.Test, and a module
+            // called exactly "ScreenModule" came out as "Modules..Screen". Neither name matched a
+            // file, so nothing was deleted and the module's settings files outlived it - which is
+            // what Module Scanner then reported as orphaned.
+            string assemblyName = new ModuleAssemblyName().From(moduleName);
 
             foreach (string assembly in new[]
                      {
@@ -181,31 +245,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
             File.Delete(path);
             Log($"{label} deleted: {assemblyName}{extension}", deletedItems);
-        }
-
-        private static string ConvertToAssemblyName(string rawName)
-        {
-            const string prefix = "Modules.";
-
-            if (rawName.EndsWith("ScreenModule", StringComparison.OrdinalIgnoreCase))
-            {
-                string coreName = rawName.Substring(0, rawName.Length - "ScreenModule".Length);
-                return prefix + coreName + ".Screen";
-            }
-
-            if (rawName.EndsWith("TestModule", StringComparison.OrdinalIgnoreCase))
-            {
-                string coreName = rawName.Substring(0, rawName.Length - "TestModule".Length);
-                return prefix + coreName + ".Test";
-            }
-
-            if (rawName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
-            {
-                string coreName = rawName.Substring(0, rawName.Length - "Module".Length);
-                return prefix + coreName;
-            }
-
-            return prefix + rawName;
         }
 
         private static string GetUnityAssetPath(string absolutePath)

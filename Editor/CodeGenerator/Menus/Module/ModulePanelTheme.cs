@@ -26,7 +26,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         public Color Header => Lifted(_palette.ChromeDeep, EditorGUIUtility.isProSkin ? 2f : 1.5f);
 
         /// <summary>
-        /// The window's action button - Create Module, Create Command, Add Shared Data. It wears
+        /// The window's action button - Create Module, Create Command, Add Shared or Signals. It wears
         /// the same chrome the panels above it do, so the button belongs to the window rather than
         /// arriving as a colour from nowhere, which the cyan it used to be was. Read rather than
         /// stored: the tint depends on the skin, and the skin can change while the window is open.

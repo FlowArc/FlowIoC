@@ -103,7 +103,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         }
 
         /// <summary>
-        /// The module the model lands in, in the shape Add Shared Data asks the same question: a
+        /// The module the model lands in, in the shape Add Shared or Signals asks the same question: a
         /// bar in the Root's purple over a list tall enough to read, and the pick spelled out
         /// under it.
         /// </summary>

@@ -54,8 +54,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "Namespace settings - the .csproj.DotSettings at the project root that tells "
                 + "Rider which folders produce a namespace.");
             painter.Bullet(
-                "The project itself - the module index against the folder tree, orphaned settings "
-                + "files, the Flow Console log types, and the solution code style.");
+                "Module card - every module but a test module carries a MODULE.md, and its "
+                + "generated block still describes the module. A card whose purpose nobody has "
+                + "written is reported but not written for you: saying what a module is for is "
+                + "the one part of the card nothing can generate.");
+            painter.Bullet(
+                "The project itself - the module index against the folder tree, the module "
+                + "directory and its ignore rule, orphaned settings files, the Flow Console log "
+                + "types, and the solution code style.");
 
             painter.SubHeading("Reading a row");
             painter.Paragraph(
@@ -75,6 +81,12 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "What it will not do is rename an assembly or remove a reference. Renaming one "
                 + "moves every asmdef that names it and the settings file named after it, which "
                 + "is more than a scan should decide. Those rows stay red and say what to do.");
+
+            painter.Note(
+                "Important: Assets/Plugins/FlowIoC/MODULES.md is generated and gitignored - it is "
+                + "a cache the next compile writes again, and two branches adding modules would "
+                + "otherwise conflict over the same list. The rule sits in a .gitignore beside it, "
+                + "inside FlowIoC's own folder; your project's root .gitignore is never touched.");
 
             painter.Note(
                 "Important: a module with no assembly definition is invisible to the namespace "

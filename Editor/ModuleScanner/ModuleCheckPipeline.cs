@@ -12,9 +12,10 @@ namespace FlowIoC.Editor.ModuleScanner
     /// references Shared so Shared comes before it, references are added to an asmdef that must
     /// already exist, and the DotSettings file name derives from the final assembly name. The
     /// signal-reference check reads a finished reference list, so it comes after the one that
-    /// adds to it. On the project side the index is refreshed first, and the orphan sweep runs
-    /// after the assemblies are known so that a newly written one is not mistaken for a stray
-    /// file.
+    /// adds to it, and the card is written last because its block names the assemblies every
+    /// check above it settles. On the project side the index is refreshed first, and the orphan
+    /// sweep runs after the assemblies are known so that a newly written one is not mistaken for
+    /// a stray file.
     ///
     /// The order lives here rather than as an Order property on each check, so that reading it
     /// means opening one file.
@@ -33,11 +34,13 @@ namespace FlowIoC.Editor.ModuleScanner
                 new AssemblyDefinitionCheck(),
                 new AssemblyReferencesCheck(),
                 new SignalReferenceCheck(),
-                new DotSettingsCheck()
+                new DotSettingsCheck(),
+                new ModuleCardCheck()
             },
             new IProjectCheck[]
             {
                 new ModuleIndexCheck(),
+                new ModuleDirectoryCheck(),
                 new OrphanFilesCheck(),
                 new LogTypeCheck(),
                 new SolutionCodeStyleCheck()

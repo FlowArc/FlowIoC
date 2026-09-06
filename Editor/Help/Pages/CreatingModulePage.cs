@@ -113,7 +113,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "Create Shared adds the assembly a module publishes its data through, so a "
                 + "neighbour can read a config asset it authored without gaining access to its "
                 + "Models, its Commands or its signals. Off by default: a module that hands no data "
-                + "to anyone has no use for it. Tools > FlowIoC > Add Shared Data does the same to a "
+                + "to anyone has no use for it. Tools > FlowIoC > Add Shared or Signals does the same to a "
                 + "module that already exists. The public signal holder is not in here - it has an "
                 + "assembly of its own under Scripts/Signals, which every module gets.");
 

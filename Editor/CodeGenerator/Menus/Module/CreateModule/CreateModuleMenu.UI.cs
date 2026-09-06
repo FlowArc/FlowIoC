@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.ModuleCards;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
@@ -52,6 +53,65 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             };
 
             GUI.Label(GUILayoutUtility.GetLastRect(), NAME_PLACEHOLDER, hintStyle);
+        }
+
+        /// <summary>
+        /// The module's card, offered while the author still has the answer in mind: one line for
+        /// what the module is for, one for the words somebody would search for when work belongs
+        /// to it. Both go into MODULE.md, and the first is what the project's module directory
+        /// quotes.
+        ///
+        /// Neither is required. An empty field is written as the stub's placeholder and Module
+        /// Scanner asks for it afterwards - creating a module is never held up on prose. A test
+        /// module carries no card, so the section is not drawn for one.
+        /// </summary>
+        private void DrawModuleCardFields()
+        {
+            if (_selectedModuleType == ModuleType.Test) return;
+
+            EditorGUILayout.Space(6);
+
+            // Who the two lines are written for, beside the heading rather than under it: a
+            // reader who knows the answer skips the section, and one who does not is told why it
+            // is worth filling in at all.
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField(CARD_LABEL, EditorStyles.boldLabel,
+                GUILayout.Width(EditorStyles.boldLabel.CalcSize(new GUIContent(CARD_LABEL)).x + 4f));
+
+            EditorGUILayout.LabelField(CARD_AUDIENCE, EditorStyles.miniLabel);
+
+            EditorGUILayout.EndHorizontal();
+
+            _modulePurpose = DrawHintedField(_modulePurpose, PURPOSE_CONTROL, PURPOSE_HINT);
+            _moduleConcepts = DrawHintedField(_moduleConcepts, CONCEPTS_CONTROL, CONCEPTS_HINT);
+        }
+
+        /// <summary>
+        /// A single line field that says what it wants while it is empty, the way the name field
+        /// above does. The hint is painted over the field rather than put in it, so the field is
+        /// genuinely empty and the caret is not hidden behind a word nobody typed.
+        /// </summary>
+        private string DrawHintedField(string value, string controlName, string hint)
+        {
+            GUI.SetNextControlName(controlName);
+            string written = EditorGUILayout.TextField(value, GUILayout.ExpandWidth(true));
+
+            Rect rect = GUILayoutUtility.GetLastRect();
+
+            bool isFocused = GUI.GetNameOfFocusedControl() == controlName && focusedWindow == this;
+
+            if (isFocused || !string.IsNullOrEmpty(written)) return written;
+
+            var hintStyle = new GUIStyle(EditorStyles.label)
+            {
+                normal = {textColor = Color.gray},
+                padding = new RectOffset(2, 0, 0, 0)
+            };
+
+            GUI.Label(rect, hint, hintStyle);
+
+            return written;
         }
 
         /// <summary>
@@ -380,7 +440,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// It starts unticked. A module that publishes no data does not need the assembly, and it
         /// no longer holds the module's public surface either - the signal holder moved to
         /// Scripts/Signals, which every module gets. Shared is paid for on the day a module
-        /// actually publishes something, and Tools > FlowIoC > Add Shared Data gives it to a
+        /// actually publishes something, and Tools > FlowIoC > Add Shared or Signals gives it to a
         /// module that already exists.
         /// </summary>
         private void CreateSharedToggle() =>
@@ -661,7 +721,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     _createScene,
                     _allowAsSubContext,
                     _effectiveRole,
-                    screenSettings
+                    screenSettings,
+                    new ModuleCardDraftEVO {Purpose = _modulePurpose, Concepts = _moduleConcepts}
                 );
 
                 _generationState = GenerationState.Idle;

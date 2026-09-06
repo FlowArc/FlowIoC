@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.ModuleScanner
     /// The scan itself does not read the index - its targets come from the folder tree - which is
     /// exactly what lets the index be one of the things under test rather than a precondition of
     /// testing anything. Everything downstream reads the index: the generators, the namespace
-    /// settings, Add Shared Data, the Flow log types.
+    /// settings, Add Shared or Signals, the Flow log types.
     /// </summary>
     internal class ModuleIndexCheck : IProjectCheck
     {
