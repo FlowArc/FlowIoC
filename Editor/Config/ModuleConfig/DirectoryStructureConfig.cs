@@ -88,27 +88,37 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         }
 
         /// <summary>
-        /// Adds the Signals folder to a Shared branch written before the public signal holder moved
-        /// into it, and returns whether it changed anything.
+        /// Moves the public signal holder's folder out of Shared and up beside it, and returns
+        /// whether it changed anything.
         ///
-        /// <see cref="EnsureSharedBranch"/> only fires for a config with no Shared folder at all,
-        /// so a project that adopted Shared while it still held data alone would never grow the
-        /// folder its signals now belong in. This is the same append-only heal, one level down.
+        /// The holder used to sit in Scripts/Shared/Signals, which meant that referencing a
+        /// module's Shared assembly to read one published enum also put that module's signal
+        /// holder in scope. Scripts/Signals is an assembly of its own, so the compiler is what
+        /// keeps signals inside a Connector now. A config asset is serialized per project and
+        /// keeps whatever it was written with, so the branch is taken out and the folder added
+        /// here rather than only in the layout's code.
         /// </summary>
-        internal bool EnsureSharedSignalsFolder(ED_CodeGenerator codeGenSettings)
+        internal bool EnsurePublicSignalsFolder(ED_CodeGenerator codeGenSettings)
         {
             if (codeGenSettings == null || RootFolders == null) return false;
-            if (ContainsFolderType(RootFolders, FolderEVO.FolderType.SharedSignals)) return false;
 
-            FolderEVO shared = FindFolderByType(RootFolders, FolderEVO.FolderType.Shared);
-            if (shared == null) return false;
+            bool changed = RemoveFolderType(FolderEVO.FolderType.SharedSignals);
 
-            shared.SubFolders ??= new List<FolderEVO>();
-            shared.SubFolders.Add(
-                CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedSignals, "Signals"),
-                    FolderEVO.FolderType.SharedSignals, null, true));
+            if (ContainsFolderType(RootFolders, FolderEVO.FolderType.PublicSignals)) return changed;
 
-            RegisterSharedFolderNames(codeGenSettings);
+            FolderEVO scripts = FindFolderByName(RootFolders, "Scripts");
+            if (scripts == null)
+            {
+                Debug.LogWarning($"<color=cyan>FlowIoC:</color> the {GetType().Name} directory structure has no 'Scripts' folder, so the " +
+                                 "Signals folder could not be added to it. Add a Signals folder to the config asset by hand if this " +
+                                 "module layout is meant to have one.");
+                return changed;
+            }
+
+            scripts.SubFolders ??= new List<FolderEVO>();
+            scripts.SubFolders.Add(BuildPublicSignalsFolder(codeGenSettings));
+
+            RegisterFolderNames(codeGenSettings, new CodeGeneratorDefaults().PublicSignalsFolderNames);
 
             return true;
         }
@@ -167,8 +177,24 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         }
 
         /// <summary>
-        /// The Shared folder as every layout that has one lays it out: the data a module publishes,
-        /// the enums and constants that data needs, and the module's public signal holder.
+        /// The Signals folder as every layout that has one lays it out: one folder holding the
+        /// module's public signal holder and nothing else, which becomes Modules.X.Signals.
+        ///
+        /// It is mandatory rather than optional, because every module has a public surface - a
+        /// module with no signal holder cannot be reached by a Connector at all. Shared is the
+        /// optional one now: a module pays for that assembly on the day it publishes data.
+        /// </summary>
+        protected FolderEVO BuildPublicSignalsFolder(ED_CodeGenerator codeGenSettings)
+        {
+            return CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.PublicSignals, "Signals"),
+                FolderEVO.FolderType.PublicSignals, null, true);
+        }
+
+        /// <summary>
+        /// The Shared folder as every layout that has one lays it out: the data a module publishes
+        /// and the enums and constants that data needs. The public signal holder is not among them
+        /// - it has an assembly of its own, so that reading a module's data does not hand the
+        /// reader its signals as well.
         /// </summary>
         protected FolderEVO BuildSharedBranch(ED_CodeGenerator codeGenSettings)
         {
@@ -185,9 +211,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedEnums, "Enums"),
                         FolderEVO.FolderType.SharedEnums, null, true),
                     CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedConstants, "Constants"),
-                        FolderEVO.FolderType.SharedConstants, null, true),
-                    CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedSignals, "Signals"),
-                        FolderEVO.FolderType.SharedSignals, null, true)
+                        FolderEVO.FolderType.SharedConstants, null, true)
                 }, false, true);
         }
 
@@ -202,10 +226,18 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// from the settings inspector is a deliberate act, and a heal that ran unconditionally
         /// would put it straight back.
         /// </summary>
-        protected void RegisterSharedFolderNames(ED_CodeGenerator codeGenSettings)
-        {
-            IReadOnlyDictionary<FolderEVO.FolderType, string> defaults = new CodeGeneratorDefaults().SharedFolderNames;
+        protected void RegisterSharedFolderNames(ED_CodeGenerator codeGenSettings) =>
+            RegisterFolderNames(codeGenSettings, new CodeGeneratorDefaults().SharedFolderNames);
 
+        /// <summary>
+        /// Puts <paramref name="defaults"/> into the settings map, skipping every type already
+        /// there. The skip is what makes this safe to call on every pass that adds a branch:
+        /// removing an entry from the settings inspector is a deliberate act, and a heal that
+        /// wrote unconditionally would put it straight back.
+        /// </summary>
+        protected void RegisterFolderNames(
+            ED_CodeGenerator codeGenSettings, IReadOnlyDictionary<FolderEVO.FolderType, string> defaults)
+        {
             bool added = false;
 
             foreach (KeyValuePair<FolderEVO.FolderType, string> entry in defaults)

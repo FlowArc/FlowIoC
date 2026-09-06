@@ -29,7 +29,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             // Each module type has its own config, so the Signals entry the toggle reads is a
             // different object per type and the new one starts unselected.
             SelectSignalsFolderByDefault();
-            SelectSharedFolderByDefault();
+            ClearSharedFolderByDefault();
 
             // A fresh screen starts from the defaults; the previous type's inputs do not carry over.
             _screenSettings = new ScreenModuleSettings();

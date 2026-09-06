@@ -137,6 +137,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 new SharedAssemblyDefinition().FindIn(parentModulePath, directoryConfigMap[ModuleType.Main]);
 
             string sharedAssemblyName = null;
+            string signalsAssemblyName = null;
 
             if (selectedModuleType == ModuleType.Main || selectedModuleType == ModuleType.Test)
             {
@@ -150,21 +151,39 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 sharedAssemblyName = new SharedAssemblyDefinition()
                     .CreateFor(modulePath, directoryConfigMap[selectedModuleType], GetParsedAssemblyName(finalModuleName));
 
+                // The Signals assembly, for the same reason and with its own twist: the holder may
+                // be generic over a type the module publishes, so this assembly references the
+                // module's own Shared. A holder generic over another module's published type needs
+                // that module's Shared added by hand - which survives, because nothing here ever
+                // rewrites a reference list it did not write.
+                signalsAssemblyName = new SignalsAssemblyDefinition()
+                    .CreateFor(modulePath, directoryConfigMap[selectedModuleType], GetParsedAssemblyName(finalModuleName),
+                        sharedAssemblyName);
+
                 // A test module exists to exercise the module it sits under, and is allowed to
-                // reach anything, so it is wired to its parent outright rather than only to the
-                // data that parent publishes through Shared. Every other module type gets Shared
-                // and nothing more - reaching a neighbour's Models and Commands is the one thing
-                // the architecture does not allow.
-                string parentAssemblyName = selectedModuleType == ModuleType.Test
-                    ? ParentModuleAssemblyName(parentModulePath)
-                    : null;
+                // reach anything, so it is wired to its parent outright - the parent's own
+                // assembly, its Shared and its Signals - rather than only to what that parent
+                // publishes. Every other module type gets its parent's Shared and nothing more:
+                // reaching a neighbour's Models, Commands or signals is the one thing the
+                // architecture does not allow.
+                string parentAssemblyName = null;
+                string parentSignalsAssemblyName = null;
+
+                if (selectedModuleType == ModuleType.Test)
+                {
+                    parentAssemblyName = ParentModuleAssemblyName(parentModulePath);
+                    parentSignalsAssemblyName =
+                        new SignalsAssemblyDefinition().FindIn(parentModulePath, directoryConfigMap[ModuleType.Main]);
+                }
 
                 CreateAssemblyDefinitionFile(
-                    asmdefPath, finalModuleName, sharedAssemblyName, parentSharedAssemblyName, parentAssemblyName);
+                    asmdefPath, finalModuleName, sharedAssemblyName, signalsAssemblyName, parentSharedAssemblyName,
+                    parentSignalsAssemblyName, parentAssemblyName);
             }
 
             AddNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath);
-            AddSharedNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath, sharedAssemblyName);
+            AddSubAssemblyNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath, sharedAssemblyName);
+            AddSubAssemblyNamespaceExceptions(directoryConfigMap[selectedModuleType], modulePath, signalsAssemblyName);
 
             AssetDatabase.Refresh();
             new ModuleIndexRegistrar().Register(

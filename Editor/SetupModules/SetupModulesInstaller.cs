@@ -167,7 +167,7 @@ namespace FlowIoC.Editor.SetupModules
 
         /// <summary>
         /// The assembly a payload folder declares. A module folder holds exactly one asmdef at its
-        /// top; the ones for its Shared, screen and test assemblies sit deeper.
+        /// top; the ones for its Shared, Signals, screen and test assemblies sit deeper.
         /// </summary>
         private static string ShippedAssemblyName(string moduleRoot)
         {

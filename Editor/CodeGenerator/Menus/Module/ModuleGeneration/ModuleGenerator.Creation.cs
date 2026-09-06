@@ -131,14 +131,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// Writes the module's two signal holders and binds whichever of them landed into the
         /// Context.
         ///
-        /// The public holder goes into Scripts/Shared/Signals so it compiles into the module's
-        /// Shared assembly: a Connector reaches a module's signals through Modules.X.Shared and
-        /// never through the assembly holding its Models and Commands. A module created without
-        /// Shared has no such folder, and the holder falls back to Scripts/Runtime/Signals so the
-        /// module still works - it just cannot be wired to from outside without a direct reference.
+        /// The public holder goes into Scripts/Signals so it compiles into the module's Signals
+        /// assembly: a Connector reaches a module's signals through Modules.X.Signals, and neither
+        /// the assembly holding its Models and Commands nor the Shared assembly holding its
+        /// published data will do. A module created without that folder falls back to
+        /// Scripts/Runtime/Signals so the module still works - it just cannot be wired to from
+        /// outside without a direct reference.
         ///
         /// The internal holder always goes into Scripts/Runtime/Signals, because it is the module
-        /// talking to its own commands and nothing outside the module may dispatch it.
+        /// talking to its own commands and nothing outside the module may dispatch it. The two
+        /// share a namespace and differ in assembly, which is the whole distinction: one crosses a
+        /// boundary and the other has none to cross.
         /// </summary>
         private static void WriteSignalHolders(
             string moduleName,
@@ -153,12 +156,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             DirectoryStructureConfig config = directoryConfigMap[selectedModuleType];
 
             string signalsPath = config.FindFullFolderPathByID(FolderEVO.FolderType.Signals, modulePath);
-            string sharedSignalsPath = config.FindFullFolderPathByID(FolderEVO.FolderType.SharedSignals, modulePath);
+            string publicSignalsPath = config.FindFullFolderPathByID(FolderEVO.FolderType.PublicSignals, modulePath);
 
-            if (!string.IsNullOrEmpty(sharedSignalsPath) && !Directory.Exists(sharedSignalsPath))
-                sharedSignalsPath = null;
+            if (!string.IsNullOrEmpty(publicSignalsPath) && !Directory.Exists(publicSignalsPath))
+                publicSignalsPath = null;
 
-            string publicSignalsPath = string.IsNullOrEmpty(sharedSignalsPath) ? signalsPath : sharedSignalsPath;
+            if (string.IsNullOrEmpty(publicSignalsPath))
+                publicSignalsPath = signalsPath;
 
             if (string.IsNullOrEmpty(publicSignalsPath))
             {
@@ -195,8 +199,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string tempClassPath, bool isTest, bool makePublic, out string signalsNamespace)
         {
             // Read off the folder rather than assembled from the module namespace and one segment:
-            // the public holder sits two namespace providers deep, under Shared and then Signals,
-            // and this is the lookup that already knows which folders provide a namespace at all.
+            // a Signals folder can be renamed from the code generator settings like any other
+            // tracked folder, and this is the lookup that already knows which folders provide a
+            // namespace at all.
             signalsNamespace = NamespaceUtility.GetFullNamespaceForFile(Path.Combine(path, signalsName + ".cs"));
 
             CodeGeneratorUtils.CreateSignals(

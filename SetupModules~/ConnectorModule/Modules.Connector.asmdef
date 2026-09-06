@@ -3,10 +3,10 @@
     "rootNamespace": "",
     "references": [
         "FlowIoC",
-        "Modules.Main.Shared",
-        "Modules.Main.Screen.Shared",
+        "Modules.Main.Signals",
+        "Modules.Main.Screen.Signals",
         "Modules.Gameplay.Shared",
-        "Modules.Gameplay.Screen.Shared"
+        "Modules.Gameplay.Screen.Signals"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

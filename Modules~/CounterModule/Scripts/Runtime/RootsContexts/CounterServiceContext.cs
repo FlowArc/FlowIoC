@@ -2,7 +2,6 @@ using FlowIoC.BaseModule.Contexts;
 using Modules.CounterModule.Controllers;
 using Modules.CounterModule.Models;
 using Modules.CounterModule.Services;
-using Modules.CounterModule.Shared.Signals;
 using Modules.CounterModule.Signals;
 
 namespace Modules.CounterModule.RootsContexts

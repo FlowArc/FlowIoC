@@ -42,6 +42,12 @@ folders and the same naming. Shared is an assembly of its own - `Modules.Player.
 so a screen or sub module can reference the data without reaching the module's Models and
 Commands. The naming does not change with the folder; only who can see it does.
 
+Shared holds data and nothing else. The module's public signal holder is next door in
+`Scripts/Signals/` (`Modules.Player.Signals`), so referencing a module to read one of its
+value objects does not hand you its signals as well. A value object that a public signal
+carries still belongs in Shared - that is exactly what `Modules.Player.Signals` references
+it for.
+
 ## Example
 
 ```csharp

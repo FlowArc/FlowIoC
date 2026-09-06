@@ -42,7 +42,7 @@ namespace FlowIoC.Editor.CodeGenerator
                 {FolderEVO.FolderType.SharedValueObjects, "ValueObjects"},
                 {FolderEVO.FolderType.SharedEnums, "Enums"},
                 {FolderEVO.FolderType.SharedConstants, "Constants"},
-                {FolderEVO.FolderType.SharedSignals, "Signals"}
+                {FolderEVO.FolderType.PublicSignals, "Signals"}
             };
 
             SharedFolderNames = new Dictionary<FolderEVO.FolderType, string>
@@ -51,8 +51,12 @@ namespace FlowIoC.Editor.CodeGenerator
                 {FolderEVO.FolderType.SharedUnityObjects, FolderNames[FolderEVO.FolderType.SharedUnityObjects]},
                 {FolderEVO.FolderType.SharedValueObjects, FolderNames[FolderEVO.FolderType.SharedValueObjects]},
                 {FolderEVO.FolderType.SharedEnums, FolderNames[FolderEVO.FolderType.SharedEnums]},
-                {FolderEVO.FolderType.SharedConstants, FolderNames[FolderEVO.FolderType.SharedConstants]},
-                {FolderEVO.FolderType.SharedSignals, FolderNames[FolderEVO.FolderType.SharedSignals]}
+                {FolderEVO.FolderType.SharedConstants, FolderNames[FolderEVO.FolderType.SharedConstants]}
+            };
+
+            PublicSignalsFolderNames = new Dictionary<FolderEVO.FolderType, string>
+            {
+                {FolderEVO.FolderType.PublicSignals, FolderNames[FolderEVO.FolderType.PublicSignals]}
             };
 
             var paths = new FlowIoCProjectPaths();
@@ -73,6 +77,13 @@ namespace FlowIoC.Editor.CodeGenerator
         /// has none of these, and a folder is only rename-tracked while its type is in the map.
         /// </summary>
         public IReadOnlyDictionary<FolderEVO.FolderType, string> SharedFolderNames { get; }
+
+        /// <summary>
+        /// The one type the Signals folder introduces, registered the same way and for the same
+        /// reason: a project whose settings asset predates the folder would otherwise carry it
+        /// untracked, so renaming Signals from the settings inspector would move nothing.
+        /// </summary>
+        public IReadOnlyDictionary<FolderEVO.FolderType, string> PublicSignalsFolderNames { get; }
 
         /// <summary>Where each module kind's DirectoryStructureConfig asset lives.</summary>
         public IReadOnlyDictionary<string, string> ConfigPaths { get; }

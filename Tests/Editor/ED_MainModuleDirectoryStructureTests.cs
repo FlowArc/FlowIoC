@@ -239,10 +239,171 @@ namespace FlowIoC.Tests
             }
         }
 
+        /// <summary>
+        /// Signals is a sibling of Runtime and Shared, and mandatory where Shared is optional: a
+        /// module publishes data only if it has any, but every module has a public surface. It is
+        /// out of Shared so that referencing a module's published data does not hand the reader
+        /// its signal holder as well.
+        /// </summary>
+        [Test]
+        public void The_generated_default_carries_a_mandatory_Signals_folder_next_to_Runtime()
+        {
+            InitializeDefaults();
+
+            FolderEVO scripts = Find(_config.RootFolders, "Scripts");
+            FolderEVO signals = scripts.SubFolders.SingleOrDefault(f => f.Type == FolderEVO.FolderType.PublicSignals);
+
+            Assert.IsNotNull(signals, "Scripts should carry a public Signals folder beside Runtime and Shared.");
+            Assert.AreEqual("Signals", signals.FolderName);
+            Assert.IsTrue(signals.IsMandatory, "Every module has a public surface, so the folder is not a tick.");
+            Assert.IsTrue(signals.IsNamespaceProvider);
+        }
+
+        [Test]
+        public void The_field_initializer_carries_a_Signals_folder_too()
+        {
+            FolderEVO scripts = Find(_config.RootFolders, "Scripts");
+
+            Assert.IsNotNull(scripts.SubFolders.SingleOrDefault(f => f.Type == FolderEVO.FolderType.PublicSignals));
+        }
+
+        /// <summary>
+        /// The holder used to sit in Scripts/Shared/Signals. Leaving it there would defeat the
+        /// split, so no layout may lay that folder down again.
+        /// </summary>
+        [Test]
+        public void Shared_no_longer_carries_a_Signals_folder()
+        {
+            InitializeDefaults();
+
+            FolderEVO shared = Find(_config.RootFolders, "Shared");
+
+            CollectionAssert.DoesNotContain(shared.SubFolders.Select(f => f.Type).ToList(), FolderEVO.FolderType.SharedSignals);
+            CollectionAssert.DoesNotContain(shared.SubFolders.Select(f => f.FolderName).ToList(), "Signals");
+        }
+
+        [Test]
+        public void The_public_Signals_folder_type_resolves_under_Scripts_Signals()
+        {
+            InitializeDefaults();
+
+            string path = _config.FindFullFolderPathByID(FolderEVO.FolderType.PublicSignals, "base");
+
+            Assert.AreEqual(Path.Combine("base", "Scripts", "Signals"), path);
+        }
+
+        /// <summary>
+        /// The internal holder keeps its own folder under Runtime, and the two must not resolve to
+        /// the same path - one crosses an assembly boundary and the other has none to cross.
+        /// </summary>
+        [Test]
+        public void The_internal_Signals_folder_still_resolves_under_Scripts_Runtime()
+        {
+            InitializeDefaults();
+
+            string path = _config.FindFullFolderPathByID(FolderEVO.FolderType.Signals, "base");
+
+            Assert.AreEqual(Path.Combine("base", "Scripts", "Runtime", "Signals"), path);
+        }
+
+        /// <summary>
+        /// Every project that already ran the code generator has its own serialized config. One
+        /// written while the holder lived in Shared has to lose that folder and gain this one,
+        /// because GetOrCreateConfig loads the asset rather than the layout's code.
+        /// </summary>
+        [Test]
+        public void EnsurePublicSignalsFolder_moves_the_folder_out_of_Shared_on_a_config_that_predates_it()
+        {
+            InitializeDefaults();
+            AddLegacySharedSignalsFolder();
+            RemovePublicSignalsFolder();
+
+            var settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
+            try
+            {
+                Assert.IsTrue(_config.EnsurePublicSignalsFolder(settings));
+
+                FolderEVO scripts = Find(_config.RootFolders, "Scripts");
+                Assert.IsNotNull(scripts.SubFolders.SingleOrDefault(f => f.Type == FolderEVO.FolderType.PublicSignals));
+
+                FolderEVO shared = Find(_config.RootFolders, "Shared");
+                CollectionAssert.DoesNotContain(
+                    shared.SubFolders.Select(f => f.Type).ToList(), FolderEVO.FolderType.SharedSignals);
+            }
+            finally
+            {
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        /// <summary>
+        /// A folder is only rename-tracked while its type is in the settings map, so the heal that
+        /// adds the folder has to add its name there too.
+        /// </summary>
+        [Test]
+        public void EnsurePublicSignalsFolder_registers_the_folder_name_it_needs()
+        {
+            InitializeDefaults();
+            RemovePublicSignalsFolder();
+
+            var settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
+            try
+            {
+                settings.DirectoryStructureConfigMap.Remove(FolderEVO.FolderType.PublicSignals);
+
+                _config.EnsurePublicSignalsFolder(settings);
+
+                Assert.AreEqual("Signals", settings.DirectoryStructureConfigMap[FolderEVO.FolderType.PublicSignals]);
+            }
+            finally
+            {
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void EnsurePublicSignalsFolder_leaves_a_config_that_already_has_one_alone()
+        {
+            InitializeDefaults();
+
+            var settings = ScriptableObject.CreateInstance<ED_CodeGenerator>();
+            try
+            {
+                Assert.IsFalse(_config.EnsurePublicSignalsFolder(settings));
+
+                FolderEVO scripts = Find(_config.RootFolders, "Scripts");
+                Assert.AreEqual(1, scripts.SubFolders.Count(f => f.Type == FolderEVO.FolderType.PublicSignals));
+            }
+            finally
+            {
+                Object.DestroyImmediate(settings);
+            }
+        }
+
         private void RemoveSharedBranch()
         {
             FolderEVO scripts = Find(_config.RootFolders, "Scripts");
             scripts.SubFolders.RemoveAll(f => f.Type == FolderEVO.FolderType.Shared);
+        }
+
+        private void RemovePublicSignalsFolder()
+        {
+            FolderEVO scripts = Find(_config.RootFolders, "Scripts");
+            scripts.SubFolders.RemoveAll(f => f.Type == FolderEVO.FolderType.PublicSignals);
+        }
+
+        /// <summary>The Shared branch as a config written before the split serialized it.</summary>
+        private void AddLegacySharedSignalsFolder()
+        {
+            FolderEVO shared = Find(_config.RootFolders, "Shared");
+
+            shared.SubFolders.Add(new FolderEVO
+            {
+                FolderName = "Signals",
+                Type = FolderEVO.FolderType.SharedSignals,
+                IsMandatory = true,
+                IsNamespaceProvider = true
+            });
         }
 
         private FolderEVO.FolderType FolderTypeAt(string branchName, string folderName)

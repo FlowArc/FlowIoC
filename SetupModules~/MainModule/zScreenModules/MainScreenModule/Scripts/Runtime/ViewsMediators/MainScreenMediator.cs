@@ -3,7 +3,7 @@ using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.Extensions;
 using Modules.GameplayModule.Shared.Enums;
-using Modules.MainModule.MainScreenModule.Shared.Signals;
+using Modules.MainModule.MainScreenModule.Signals;
 
 namespace Modules.MainModule.MainScreenModule.ViewsMediators
 {

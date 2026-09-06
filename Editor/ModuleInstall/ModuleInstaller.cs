@@ -83,7 +83,7 @@ namespace FlowIoC.Editor.ModuleInstall
 
         /// <summary>
         /// The assembly the shipped module declares. A module folder holds exactly one asmdef at
-        /// its top - the ones for its Shared and test assemblies sit deeper - so anything else is
+        /// its top - the ones for its Shared, Signals and test assemblies sit deeper - so anything else is
         /// a payload this installer does not understand and is reported as nothing.
         /// </summary>
         private string ShippedAssemblyName(string moduleFolderName)

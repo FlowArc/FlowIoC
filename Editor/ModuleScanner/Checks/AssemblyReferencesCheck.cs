@@ -8,9 +8,14 @@ using FlowIoC.Editor.Modules;
 namespace FlowIoC.Editor.ModuleScanner
 {
     /// <summary>
-    /// The references a module's assembly must carry: its own Shared assembly, the Shared
-    /// assembly of the module it lives in, and - for a test module only - that module's own
-    /// assembly, because a test module is allowed to reach anything.
+    /// The references a module's assembly must carry: its own Shared and Signals assemblies, the
+    /// Shared assembly of the module it lives in, and - for a test module only - that module's
+    /// Signals and its own assembly, because a test module is allowed to reach anything and
+    /// drives the module under test through its holder.
+    ///
+    /// A neighbour's Signals assembly is deliberately not on the list for any other kind. That is
+    /// what the split is for: referencing a module's Shared to read a published enum used to put
+    /// its signal holder in scope with it, and now it does not.
     ///
     /// Fix only ever adds, through AssemblyDefinitionReferences, which is the whole reason that
     /// class exists: an asmdef may carry references someone added by hand - a Unity package, a
@@ -22,13 +27,15 @@ namespace FlowIoC.Editor.ModuleScanner
         private readonly Action<string, string> _writeFile;
         private readonly Func<ModuleTargetEVO, string> _asmdefPathOf;
         private readonly Func<ModuleTargetEVO, string> _sharedAssemblyOf;
+        private readonly Func<ModuleTargetEVO, string> _signalsAssemblyOf;
         private readonly AssemblyDefinitionReferences _references = new AssemblyDefinitionReferences();
 
         internal AssemblyReferencesCheck() : this(
             path => File.Exists(path) ? File.ReadAllText(path) : null,
             File.WriteAllText,
             module => SingleAsmdefIn(module.AbsolutePath),
-            module => new SharedAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout))
+            module => new SharedAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout),
+            module => new SignalsAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout))
         {
         }
 
@@ -36,12 +43,14 @@ namespace FlowIoC.Editor.ModuleScanner
             Func<string, string> readAsmdef,
             Action<string, string> writeFile,
             Func<ModuleTargetEVO, string> asmdefPathOf,
-            Func<ModuleTargetEVO, string> sharedAssemblyOf)
+            Func<ModuleTargetEVO, string> sharedAssemblyOf,
+            Func<ModuleTargetEVO, string> signalsAssemblyOf = null)
         {
             _readAsmdef = readAsmdef;
             _writeFile = writeFile;
             _asmdefPathOf = asmdefPathOf;
             _sharedAssemblyOf = sharedAssemblyOf;
+            _signalsAssemblyOf = signalsAssemblyOf ?? (_ => null);
         }
 
         public string Id => "references";
@@ -91,10 +100,18 @@ namespace FlowIoC.Editor.ModuleScanner
             string shared = _sharedAssemblyOf(module);
             if (!string.IsNullOrEmpty(shared)) required.Add(shared);
 
+            string signals = _signalsAssemblyOf(module);
+            if (!string.IsNullOrEmpty(signals)) required.Add(signals);
+
             if (!string.IsNullOrEmpty(module.ParentSharedAssemblyName))
                 required.Add(module.ParentSharedAssemblyName);
 
-            if (module.Kind == ModuleKind.Test && !string.IsNullOrEmpty(module.ParentAssemblyName))
+            if (module.Kind != ModuleKind.Test) return required;
+
+            if (!string.IsNullOrEmpty(module.ParentSignalsAssemblyName))
+                required.Add(module.ParentSignalsAssemblyName);
+
+            if (!string.IsNullOrEmpty(module.ParentAssemblyName))
                 required.Add(module.ParentAssemblyName);
 
             return required;

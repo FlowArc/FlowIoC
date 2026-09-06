@@ -2,7 +2,7 @@
   "name": "Modules.Screen",
   "references": [
     "FlowIoC",
-    "Modules.Screen.Shared"
+    "Modules.Screen.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

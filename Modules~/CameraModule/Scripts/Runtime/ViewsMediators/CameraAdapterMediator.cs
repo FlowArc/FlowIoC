@@ -3,7 +3,7 @@ using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ConsoleModule;
 using Modules.CameraModule.Shared.Data.ValueObjects;
 using Modules.CameraModule.Shared.Enums;
-using Modules.CameraModule.Shared.Signals;
+using Modules.CameraModule.Signals;
 using UnityEngine.Rendering;
 
 namespace Modules.CameraModule.ViewsMediators

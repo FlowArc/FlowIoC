@@ -334,28 +334,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _selectedModuleType == ModuleType.Main && _createRoot ? _selectedModuleRole : ModuleRole.Core;
 
         /// <summary>
-        /// The Shared assembly a module publishes its data and its signal holder through. The main
-        /// and screen layouts carry the folder and the test layout does not, so the toggle draws
-        /// itself where it belongs without having to name the types. It starts ticked, because a
-        /// module created without Shared has nowhere to put its public surface.
+        /// The Shared assembly a module publishes its data through. The main and screen layouts
+        /// carry the folder and the test layout does not, so the toggle draws itself where it
+        /// belongs without having to name the types.
         ///
-        /// A screen module is not asked and not told either: its signals are the only way into the
-        /// screen and they live in Shared, so the folder is simply taken and the row it would have
-        /// occupied goes back to the panels below.
+        /// It starts unticked. A module that publishes no data does not need the assembly, and it
+        /// no longer holds the module's public surface either - the signal holder moved to
+        /// Scripts/Signals, which every module gets. Shared is paid for on the day a module
+        /// actually publishes something, and Tools > FlowIoC > Add Shared Data gives it to a
+        /// module that already exists.
         /// </summary>
         private void CreateSharedToggle() =>
-            OptionalFolderToggle(
-                FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL,
-                withheldFrom: null, requiredFor: new[] {ModuleType.Screen}, drawWhenRequired: false);
+            OptionalFolderToggle(FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL, withheldFrom: null);
 
         /// <summary>
         /// Whether the module gets signal holders written. There is no toggle for it any more:
-        /// the public holder lives in Shared and the internal one in the Runtime Signals folder,
-        /// so the answer is simply whether either folder is going to exist - which the reader says
-        /// by ticking them in the folder structure.
+        /// the public holder lives in Scripts/Signals and the internal one in the Runtime Signals
+        /// folder, so the answer is simply whether either folder is going to exist - which the
+        /// reader says by ticking them in the folder structure.
         /// </summary>
         private bool SignalsWanted() =>
-            FolderWillExist(FolderEVO.FolderType.Signals) || FolderWillExist(FolderEVO.FolderType.Shared);
+            FolderWillExist(FolderEVO.FolderType.Signals) || FolderWillExist(FolderEVO.FolderType.PublicSignals);
 
         private bool FolderWillExist(FolderEVO.FolderType folderType)
         {
@@ -446,20 +445,21 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         }
 
         /// <summary>
-        /// Shared starts ticked. It stays a toggle - a module that publishes nothing can still be
-        /// left without one - but the public signal holder lives in that assembly now, so a module
-        /// created without Shared has nowhere to put the surface every other module talks to it
-        /// through.
+        /// Shared starts unticked, and takes any tick it had with it when the module type changes.
+        ///
+        /// It used to start ticked because the public signal holder lived in that assembly, so a
+        /// module without Shared had no public surface at all. The holder is in Scripts/Signals
+        /// now, which is mandatory, so Shared is back to meaning only what its name says: data
+        /// this module publishes. Most modules publish none, and an assembly that compiles nothing
+        /// is worth not creating.
         /// </summary>
-        private void SelectSharedFolderByDefault()
+        private void ClearSharedFolderByDefault()
         {
             FolderEVO sharedFolder = FindFolderInConfig(FolderEVO.FolderType.Shared);
 
-            if (sharedFolder == null || !sharedFolder.IsOptional) return;
-            if (_selectedModuleType == ModuleType.Test) return;
-            if (_selectedOptionalFolders.Contains(sharedFolder)) return;
+            if (sharedFolder == null) return;
 
-            _selectedOptionalFolders.Add(sharedFolder);
+            _selectedOptionalFolders.Remove(sharedFolder);
         }
 
         private FolderEVO FindSignalsFolder() => FindFolderInConfig(FolderEVO.FolderType.Signals);

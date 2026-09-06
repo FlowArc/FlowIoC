@@ -197,17 +197,22 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                                 IsMandatory = true,
                                 IsNamespaceProvider = true
                             },
-                            new FolderEVO
-                            {
-                                FolderName = "Signals",
-                                Type = FolderEVO.FolderType.SharedSignals,
-                                IsMandatory = true,
-                                IsNamespaceProvider = true
-                            }
                         },
                         Type = FolderEVO.FolderType.Shared,
                         IsMandatory = false,
                         IsOptional = true,
+                        IsNamespaceProvider = true
+                    },
+                    // The module's public signal holder, in an assembly of its own beside Runtime
+                    // and Shared. It is mandatory where Shared is optional: a module publishes
+                    // data only if it has any, but every module has a public surface, and keeping
+                    // the holder out of Shared is what stops a module that reads a neighbour's
+                    // published enum from being handed that neighbour's signals as well.
+                    new FolderEVO
+                    {
+                        FolderName = "Signals",
+                        Type = FolderEVO.FolderType.PublicSignals,
+                        IsMandatory = true,
                         IsNamespaceProvider = true
                     }
                 },
@@ -275,7 +280,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             }
 
             bool healed = config.EnsureSharedBranch(settings);
-            healed |= config.EnsureSharedSignalsFolder(settings);
+            healed |= config.EnsurePublicSignalsFolder(settings);
             healed |= config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
             healed |= config.MakeFolderOptional("Scriptables");
 
@@ -349,23 +354,11 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     // Unlike Runtime it is a namespace provider, so a shared value object lands in
                     // <Module>.Shared.Data.ValueObjects and cannot collide with the Runtime type
                     // of the same name sitting in <Module>.Data.ValueObjects.
-                    CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.Shared, "Shared"), FolderEVO.FolderType.Shared,
-                        new List<FolderEVO>
-                        {
-                            CreateFolder("Data", FolderEVO.FolderType.Folder, new List<FolderEVO>
-                            {
-                                CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedUnityObjects, "UnityObjects"),
-                                    FolderEVO.FolderType.SharedUnityObjects, null, true),
-                                CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedValueObjects, "ValueObjects"),
-                                    FolderEVO.FolderType.SharedValueObjects, null, true)
-                            }, true),
-                            CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedEnums, "Enums"),
-                                FolderEVO.FolderType.SharedEnums, null, true),
-                            CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedConstants, "Constants"),
-                                FolderEVO.FolderType.SharedConstants, null, true),
-                            CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.SharedSignals, "Signals"),
-                                FolderEVO.FolderType.SharedSignals, null, true)
-                        }, false, true)
+                    BuildSharedBranch(codeGenSettings),
+                    // Signals is the third assembly, and the reason Shared holds data alone: a
+                    // module that references a neighbour's Shared to read a published enum must
+                    // not get that neighbour's signal holder in scope with it.
+                    BuildPublicSignalsFolder(codeGenSettings)
                 }, true, false, false),
 
                 CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules], FolderEVO.FolderType.SubModules,

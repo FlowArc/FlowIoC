@@ -59,8 +59,9 @@ namespace FlowIoC.Editor.Help.Pages
 
             painter.Space();
             painter.Note(
-                "A public signal may only carry a type that lives in Shared too. A "
-                + "Signal<CameraCVO> means CameraCVO belongs in Scripts/Shared/Data/ValueObjects.");
+                "A public signal may only carry a type another module can see. A Signal<CameraCVO> "
+                + "means CameraCVO belongs in Scripts/Shared/Data/ValueObjects, and "
+                + "Modules.Player.Signals references Modules.Player.Shared to name it.");
         }
 
         /// <summary>
@@ -70,9 +71,10 @@ namespace FlowIoC.Editor.Help.Pages
         private void DrawHolder(HelpPainter painter)
         {
             painter.Hero(
-                "One class holds them, and it lives in Shared.",
-                "PlayerSignals compiles into Modules.Player.Shared, so a Connector can reach the "
-                + "signals without gaining access to a single Model or Command.");
+                "One class holds them, and it has an assembly to itself.",
+                "PlayerSignals compiles into Modules.Player.Signals, so a Connector can reach the "
+                + "signals without gaining access to a single Model or Command - and a System that "
+                + "references the module's Shared data cannot reach the signals at all.");
 
             painter.SubHeading("Writing one");
             painter.Code(
@@ -92,7 +94,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "{\n"
                 + "    public Signal<double> CurrencyChanged = new();\n"
                 + "}",
-                "PlayerSignals.cs - Scripts/Shared/Signals");
+                "PlayerSignals.cs - Scripts/Signals");
             painter.Paragraph(
                 "Signals come in five arities, from Signal to Signal<T1, T2, T3, T4>. The module "
                 + "that owns a holder is the one that binds it, in SignalBindings - and it binds it "
@@ -161,18 +163,21 @@ namespace FlowIoC.Editor.Help.Pages
                 "Scripts/\n"
                 + "├── Runtime/\n"
                 + "│   └── Signals/          PlayerInternalSignals - Modules.Player\n"
-                + "└── Shared/\n"
-                + "    └── Signals/          PlayerSignals         - Modules.Player.Shared");
+                + "├── Shared/               published data only   - Modules.Player.Shared\n"
+                + "└── Signals/              PlayerSignals         - Modules.Player.Signals");
             painter.Paragraph(
-                "A Connector references Modules.Player.Shared and never Modules.Player, which is "
-                + "what keeps one module's assembly out of another's.");
+                "A Connector references Modules.Player.Signals and nothing else of the module. "
+                + "Shared is kept separate so that reading a module's published data does not hand "
+                + "you its signals as well - while the holder sat in Shared, that reference made a "
+                + "cross-module Dispatch compile, and now it does not.");
         }
 
         private void DrawRules(HelpPainter painter)
         {
             painter.Bullet("A signal is a name and a payload. Incoming is what the module accepts, Outgoing is what it announces.");
-            painter.Bullet("The public holder lives in Scripts/Shared/Signals, so it compiles into the module's Shared assembly.");
-            painter.Bullet("Whatever a public signal carries lives in Shared too, or the holder cannot name it.");
+            painter.Bullet("The public holder lives in Scripts/Signals, an assembly of its own - Modules.Player.Signals.");
+            painter.Bullet("Whatever a public signal carries lives in Shared, and the Signals assembly references it.");
+            painter.Bullet("Only a Connector references another module's .Signals assembly. A test module is the one exception.");
             painter.Bullet("The internal holder lives in Scripts/Runtime/Signals and has no Incoming and no Outgoing.");
             painter.Bullet("The module that owns a holder is the one that binds it. A Connector gets it, and never binds it.");
             painter.Bullet("A Model may dispatch its own module's outgoing signals. It never subscribes to any signal.");

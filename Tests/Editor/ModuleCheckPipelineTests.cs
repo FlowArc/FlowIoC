@@ -8,11 +8,12 @@ namespace FlowIoC.Tests
     public class ModuleCheckPipelineTests
     {
         /// <summary>
-        /// The repairs depend on each other: Scripts/Shared has to exist before its asmdef can be
-        /// written, the module asmdef references the Shared assembly so Shared comes first, the
-        /// references are added to an asmdef that must already exist, and the settings file name
-        /// derives from the final assembly name. Changing this order changes what Fix All
-        /// produces, so it is asserted rather than left to whoever edits the list.
+        /// The repairs depend on each other: Scripts/Shared and Scripts/Signals have to exist
+        /// before their asmdefs can be written, the Signals assembly references Shared so Shared
+        /// comes first, the module asmdef references both so both come before it, the references
+        /// are added to an asmdef that must already exist, and the settings file name derives from
+        /// the final assembly name. Changing this order changes what Fix All produces, so it is
+        /// asserted rather than left to whoever edits the list.
         /// </summary>
         [Test]
         public void Module_checks_run_in_the_order_the_repairs_depend_on()
@@ -20,7 +21,11 @@ namespace FlowIoC.Tests
             List<string> ids = new ModuleCheckPipeline().ModuleChecks.Select(check => check.Id).ToList();
 
             CollectionAssert.AreEqual(
-                new[] {"folders", "shared-assembly", "assembly", "references", "dotsettings"},
+                new[]
+                {
+                    "folders", "shared-assembly", "signals-assembly", "assembly", "references", "signal-references",
+                    "dotsettings"
+                },
                 ids);
         }
 

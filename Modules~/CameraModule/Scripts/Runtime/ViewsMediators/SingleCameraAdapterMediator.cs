@@ -1,6 +1,6 @@
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
-using Modules.CameraModule.Shared.Signals;
+using Modules.CameraModule.Signals;
 
 namespace Modules.CameraModule.ViewsMediators
 {

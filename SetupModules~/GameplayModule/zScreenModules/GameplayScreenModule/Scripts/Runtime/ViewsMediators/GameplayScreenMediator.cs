@@ -1,4 +1,4 @@
-using Modules.GameplayModule.GameplayScreenModule.Shared.Signals;
+using Modules.GameplayModule.GameplayScreenModule.Signals;
 using Modules.GameplayModule.GameplayScreenModule.ViewsMediators;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;

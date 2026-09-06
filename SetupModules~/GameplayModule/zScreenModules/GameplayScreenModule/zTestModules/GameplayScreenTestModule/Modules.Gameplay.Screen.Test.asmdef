@@ -4,7 +4,7 @@
     "FlowIoC",
     "Modules.Gameplay.Screen",
     "Modules.Gameplay.Shared",
-    "Modules.Gameplay.Screen.Shared"
+    "Modules.Gameplay.Screen.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

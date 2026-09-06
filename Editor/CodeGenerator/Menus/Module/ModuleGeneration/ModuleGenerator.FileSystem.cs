@@ -43,27 +43,32 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         }
 
         /// <summary>
-        /// The same entries again, written under the Shared assembly's name.
+        /// The same entries again, written under the name of one of the assemblies the module
+        /// carves out of itself - its Shared or its Signals.
         ///
-        /// A .csproj.DotSettings only applies to the project it is named after, and Scripts/Shared
-        /// is a project of its own - so the module's own file cannot tell Rider to skip the Scripts
-        /// folder on the Shared assembly's behalf. Without this a shared value object would land in
+        /// A .csproj.DotSettings only applies to the project it is named after, and each of those
+        /// folders is a project of its own - so the module's own file cannot tell Rider to skip
+        /// the Scripts folder on their behalf. Without this a shared value object would land in
         /// Modules.PlayerModule.Scripts.Shared.Data.ValueObjects, carrying the Scripts folder in
         /// the middle of its namespace.
+        ///
+        /// A null or empty name means the module has no such assembly, which is an ordinary
+        /// answer: Shared is optional, and a test module has neither.
         /// </summary>
-        internal static void AddSharedNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string sharedAssemblyName)
+        internal static void AddSubAssemblyNamespaceExceptions(
+            DirectoryStructureConfig config, string modulePath, string subAssemblyName)
         {
-            if (string.IsNullOrEmpty(sharedAssemblyName))
+            if (string.IsNullOrEmpty(subAssemblyName))
                 return;
 
-            WriteNamespaceExceptions(config, modulePath, sharedAssemblyName);
+            WriteNamespaceExceptions(config, modulePath, subAssemblyName);
         }
 
         /// <summary>
-        /// Both projects skip the same folders: the ones the config marks as no namespace provider,
-        /// and the z folders the module hangs under. The Shared project holds no file under Runtime
-        /// or the z folders, so the entries it has no use for cost it nothing, and writing the same
-        /// set keeps the two files reading alike.
+        /// Every project skips the same folders: the ones the config marks as no namespace
+        /// provider, and the z folders the module hangs under. A Shared or Signals project holds
+        /// no file under Runtime or the z folders, so the entries it has no use for cost it
+        /// nothing, and writing the same set keeps the files reading alike.
         /// </summary>
         private static void WriteNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string assemblyName)
         {

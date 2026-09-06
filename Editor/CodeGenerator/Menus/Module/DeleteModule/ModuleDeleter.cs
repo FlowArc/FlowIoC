@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
+using FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
 using UnityEngine;
@@ -149,17 +150,22 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>
-        /// The project files the module left at the project root. A module publishes through a
-        /// Shared assembly, which is a project of its own, so its `.csproj` and
-        /// `.csproj.DotSettings` sit beside the module's and would otherwise outlive the module
-        /// they belong to.
+        /// The project files the module left at the project root. A module carves two more
+        /// assemblies out of itself - Shared for the data it publishes and Signals for its public
+        /// holder - and each is a project of its own, so its `.csproj` and `.csproj.DotSettings`
+        /// sit beside the module's and would otherwise outlive the module they belong to.
         /// </summary>
         private static void RemoveProjectFiles(string moduleName, List<string> deletedItems)
         {
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             string assemblyName = ConvertToAssemblyName(moduleName);
 
-            foreach (string assembly in new[] {assemblyName, assemblyName + ".Shared"})
+            foreach (string assembly in new[]
+                     {
+                         assemblyName,
+                         assemblyName + SharedAssemblyDefinition.ASSEMBLY_SUFFIX,
+                         assemblyName + SignalsAssemblyDefinition.ASSEMBLY_SUFFIX
+                     })
             {
                 RemoveProjectFile(projectRoot, assembly, ".csproj.DotSettings", "DotSettings", deletedItems);
                 RemoveProjectFile(projectRoot, assembly, ".csproj", "Csproj", deletedItems);

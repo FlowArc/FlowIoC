@@ -1,4 +1,4 @@
-using Modules.GameplayModule.Shared.Signals;
+using Modules.GameplayModule.Signals;
 using FlowIoC.BaseModule.Contexts;
 
 namespace Modules.GameplayModule.RootsContexts

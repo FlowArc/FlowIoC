@@ -87,9 +87,15 @@ namespace FlowIoC.Editor.Help.Pages
                 + "}",
                 "HeroConnectorSubContext.cs");
             painter.Paragraph(
-                "It reaches each module through that module's Shared assembly - Modules.Hero.Shared "
+                "It reaches each module through that module's Signals assembly - Modules.Hero.Signals "
                 + "and never Modules.Hero - which is what keeps one module's assembly out of "
-                + "another's.");
+                + "another's. Signals sit in an assembly of their own so that a System reading a "
+                + "neighbour's Shared data does not get that neighbour's signals with it.");
+            painter.Note(
+                "A Connector still references the Shared assemblies of whatever its signals carry. "
+                + "Connect<T> has to infer T, so connecting two Signal<DifficultyType> needs "
+                + "Modules.Gameplay.Shared even though the Connector never touches the value - "
+                + "without it the compiler reports CS0012.");
 
             painter.Space();
             painter.SubHeading("Where it is listed");
@@ -161,7 +167,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A module never reaches into another module. The only crossing point is a Connector.");
             painter.Bullet("A Connector gets signal holders with GetInstance in Setup. It never binds them.");
             painter.Bullet("A Connector sub-context is listed on the Connector Root and nowhere else.");
-            painter.Bullet("A Connector reaches a module through Modules.Hero.Shared, never through Modules.Hero.");
+            painter.Bullet("A Connector reaches a module through Modules.Hero.Signals, never through Modules.Hero or Modules.Hero.Shared.");
             painter.Bullet("Systems are never added to one another's assemblies. Two Systems talk through signals wired in a Connector.");
             painter.Bullet("The three exceptions are a Service, a sub-module reaching its parent, and a test module.");
         }

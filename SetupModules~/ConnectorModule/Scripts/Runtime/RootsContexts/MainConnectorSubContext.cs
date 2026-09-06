@@ -1,8 +1,8 @@
 using FlowIoC.BaseModule.Connectors;
 using FlowIoC.BaseModule.Contexts;
-using Modules.GameplayModule.GameplayScreenModule.Shared.Signals;
-using Modules.MainModule.MainScreenModule.Shared.Signals;
-using Modules.MainModule.Shared.Signals;
+using Modules.GameplayModule.GameplayScreenModule.Signals;
+using Modules.MainModule.MainScreenModule.Signals;
+using Modules.MainModule.Signals;
 
 namespace Modules.ConnectorModule.RootsContexts
 {

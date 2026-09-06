@@ -72,8 +72,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 "Adds Scripts/Shared to an existing module: the folders, an assembly of its own, its "
                 + "namespace settings file, and the references that let the module and its screen, "
                 + "sub and test modules read what it holds.\n\n"
-                + "Only main and sub modules are offered it - a screen or test module holds nothing "
-                + "another module reads.",
+                + "Shared is for the data a module publishes. Its public signal holder is not in "
+                + "here - that lives in Scripts/Signals, an assembly every module already has, so "
+                + "that reading a module's data does not hand you its signals as well.\n\n"
+                + "A test module is not offered it: it holds nothing another module reads, and may "
+                + "reference anything directly anyway.",
                 MessageType.Info);
 
             EditorGUILayout.Space(10);
@@ -121,9 +124,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         }
 
         /// <summary>
-        /// Every layout with a Shared folder in it. A screen module has one now that its public
-        /// signal holder lives there; a test module still does not, because it holds nothing
-        /// another module reads.
+        /// Every layout with a Shared folder in it. A screen module has one because it may publish
+        /// data of its own; a test module does not, because it holds nothing another module reads
+        /// and is allowed to reference anything directly anyway.
         /// </summary>
         private bool CanSelect(ModuleKind kind)
         {

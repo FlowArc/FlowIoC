@@ -81,9 +81,9 @@ namespace FlowIoC.Editor.ModuleScanner
         }
 
         /// <summary>
-        /// The module's own assembly and its Shared assembly, read off the files on disk rather
-        /// than derived from the module name - a module may have been renamed since it was
-        /// created, and the settings file has to follow the assembly, not the folder.
+        /// The module's own assembly, its Shared assembly and its Signals assembly, read off the
+        /// files on disk rather than derived from the module name - a module may have been renamed
+        /// since it was created, and the settings file has to follow the assembly, not the folder.
         /// </summary>
         private static IReadOnlyList<string> DefaultSettingsPaths(ModuleTargetEVO module)
         {
@@ -100,6 +100,10 @@ namespace FlowIoC.Editor.ModuleScanner
             string shared = new SharedAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout);
             if (!string.IsNullOrEmpty(shared))
                 paths.Add(Path.Combine(module.ProjectRoot, shared + EXTENSION));
+
+            string signals = new SignalsAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout);
+            if (!string.IsNullOrEmpty(signals))
+                paths.Add(Path.Combine(module.ProjectRoot, signals + EXTENSION));
 
             return paths;
         }

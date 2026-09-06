@@ -2,9 +2,8 @@
   "name": "Modules.Main.Screen",
   "references": [
     "FlowIoC",
-    "Modules.Main.Shared",
     "Modules.Gameplay.Shared",
-    "Modules.Main.Screen.Shared"
+    "Modules.Main.Screen.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

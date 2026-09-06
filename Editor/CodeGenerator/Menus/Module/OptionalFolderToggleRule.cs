@@ -16,11 +16,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
     {
         /// <summary>
         /// <paramref name="folder"/> is the layout's entry for the folder, or null when the layout
-        /// has none. <paramref name="withheldFrom"/> names the module types that are not offered
-        /// this folder whatever the layout says - a test module holds nothing another module reads,
-        /// so it is withheld the Shared assembly. <paramref name="requiredFor"/> names the ones
-        /// that get it whether they want it or not: a screen module's signals are its only way in
-        /// and they live in Shared, so a screen module without one has no public surface at all.
+        /// has none - which is how the test layout declines Shared without anyone naming it here.
+        /// <paramref name="withheldFrom"/> names the module types that are not offered this folder
+        /// whatever the layout says. <paramref name="requiredFor"/> names the ones that get it
+        /// whether they want it or not, for a folder a layout marks optional but some module type
+        /// cannot do without.
         /// </summary>
         public OptionalFolderToggleState For(
             FolderEVO folder,

@@ -1,4 +1,4 @@
-using Modules.ScreenModule.Shared.Signals;
+using Modules.ScreenModule.Signals;
 using FlowIoC.ScreenModule.RootsContexts;
 
 namespace Modules.ScreenModule.RootsContexts
