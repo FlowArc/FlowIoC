@@ -1,49 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
+using FlowIoC.BaseModule.Pooling;
 
 namespace FlowIoC.BaseModule.Bind.Bindings.Pool
 {
     public class BindingPoolController
     {
-        private readonly Dictionary<Type, Queue<IBinding>> _pool = new();
-
-        private Queue<IBinding> GetPoolQueue(Type bindingType)
-        {
-            if (_pool.TryGetValue(bindingType, out Queue<IBinding> queue)) return queue;
-            queue = new Queue<IBinding>();
-            _pool[bindingType] = queue;
-
-            return queue;
-        }
+        private readonly TypePool<IBinding> _pool = new();
 
         internal IBinding GetAvailableBinding(Type bindingType)
         {
-            Queue<IBinding> bindingQueue = GetPoolQueue(bindingType);
-
-            if (bindingQueue.Count == 0)
-                return (IBinding)Activator.CreateInstance(bindingType);
-
-            return bindingQueue.Dequeue();
+            return _pool.TryTake(bindingType, out IBinding binding)
+                ? binding
+                : (IBinding) Activator.CreateInstance(bindingType);
         }
 
         internal TBindingType GetAvailableBinding<TBindingType>()
             where TBindingType : IBinding
         {
-            Type bindingType = typeof(TBindingType);
-            Queue<IBinding> bindingQueue = GetPoolQueue(bindingType);
-
-            if (bindingQueue.Count == 0)
-                return (TBindingType)Activator.CreateInstance(bindingType);
-
-            return (TBindingType)bindingQueue.Dequeue();
+            return (TBindingType) GetAvailableBinding(typeof(TBindingType));
         }
 
         internal void ReturnBindingToPool(IBinding binding)
         {
-            Type bindingType = binding.GetType();
-            Queue<IBinding> poolQueue = GetPoolQueue(bindingType);
+            if (binding == null)
+                return;
+
+            // Cleared before it is parked, not after it is taken: a binding holding its last key
+            // and value is a binding still pointing at whatever was unbound.
             binding.Clear();
-            poolQueue.Enqueue(binding);
+            _pool.Return(binding.GetType(), binding);
         }
+
+        internal void Clear() => _pool.Clear();
     }
 }

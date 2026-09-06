@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using FlowIoC.BaseModule.Pooling;
 
 namespace FlowIoC.BaseModule.ViewsMediators.Mediator
 {
@@ -11,48 +11,25 @@ namespace FlowIoC.BaseModule.ViewsMediators.Mediator
     /// </summary>
     public class MediatorCreatorController
     {
-        private readonly Dictionary<Type, Stack<IMediator>> _pool = new();
-
-        // Membership beside the stack. The guard against pooling the same Mediator twice used to
-        // walk the stack, and a screen with a long list of pooled rows walked it once per row.
-        private readonly HashSet<IMediator> _pooled = new();
+        // Guarded: a View unregistering twice would otherwise park one Mediator for two Views to
+        // find, and both would then drive the same instance.
+        private readonly TypePool<IMediator> _pool = new(guardDoubleReturn: true);
 
         public IMediator GetMediator(Type mediatorType)
         {
-            if (_pool.TryGetValue(mediatorType, out Stack<IMediator> mediatorStack) && mediatorStack.Count > 0)
-            {
-                IMediator mediator = mediatorStack.Pop();
-                _pooled.Remove(mediator);
-                return mediator;
-            }
-
-            return (IMediator) Activator.CreateInstance(mediatorType);
+            return _pool.TryTake(mediatorType, out IMediator mediator)
+                ? mediator
+                : (IMediator) Activator.CreateInstance(mediatorType);
         }
 
         public void ReturnMediatorToPool(IMediator mediator)
         {
-            if (mediator == null || !_pooled.Add(mediator))
+            if (mediator == null)
                 return;
 
-            Type mediatorType = mediator.GetType();
-
-            if (!_pool.TryGetValue(mediatorType, out Stack<IMediator> mediatorStack))
-            {
-                mediatorStack = new Stack<IMediator>();
-                _pool[mediatorType] = mediatorStack;
-            }
-
-            mediatorStack.Push(mediator);
+            _pool.Return(mediator.GetType(), mediator);
         }
 
-        /// <summary>
-        /// Lets go of everything parked. What a run built is of no use to the next one, and a burst
-        /// of pooled Mediators would otherwise be held for as long as the run lasts.
-        /// </summary>
-        public void Clear()
-        {
-            _pool.Clear();
-            _pooled.Clear();
-        }
+        public void Clear() => _pool.Clear();
     }
 }
