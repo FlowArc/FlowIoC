@@ -87,6 +87,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                             "Delete Module",
                             $"Are you sure you want to delete '{module.Name}'?\n\n" +
                             $"Path: {module.Path}\n\n" +
+                            LeftBehind(module) +
                             "This action cannot be undone!",
                             "Delete", "Cancel"))
                     {
@@ -150,6 +151,35 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                     role = FlowRole.Root;
                     return false;
             }
+        }
+
+        /// <summary>
+        /// The scenes and prefabs that point into this module, as a block for the confirmation
+        /// dialog, or nothing at all when none do.
+        ///
+        /// A Root holds its sub-contexts by script reference, so a scene listing one of this
+        /// module's contexts is a dependent asset the engine tracks and this can name it. Delete
+        /// Module still deletes: what it does not do is open the scene and edit it, because that is
+        /// the reader's call. Being told which files to look at afterwards is the difference between
+        /// a scene that silently stops building a sub-context and one somebody knows about.
+        /// </summary>
+        private string LeftBehind(ModuleEntry module)
+        {
+            IReadOnlyList<string> referenced = new ModuleAssetReferences()
+                .Find(new ModuleAssetPathResolver().ToAssetPath(module.Path));
+
+            if (referenced.Count == 0) return string.Empty;
+
+            // A dialog is not a report. Past a handful the list stops being readable, and the console
+            // line the deleter writes carries the rest.
+            const int shown = 6;
+
+            string list = string.Join("\n", referenced.Take(shown));
+
+            if (referenced.Count > shown)
+                list += $"\n...and {referenced.Count - shown} more";
+
+            return "These still point into it and are left as they are:\n" + list + "\n\n";
         }
 
         private void ScanModules()

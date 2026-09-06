@@ -634,10 +634,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Modules.Gameplay.Screen.Test::Modules.GameplayModule.GameplayScreenModule.GameplayScreenTestModule.RootsContexts.GameplayScreenTestRoot
   SubContextTypes:
-  - ContextFullName: Modules.GameplayModule.GameplayScreenModule.RootsContexts.GameplayScreenContext
+  - ContextScript: {fileID: 11500000, guid: 7e664dc3781d6de41a564dd240d87da4, type: 3}
+    ContextFullName: Modules.GameplayModule.GameplayScreenModule.RootsContexts.GameplayScreenContext
     ContextName: GameplayScreenContext
     AutoSetup: 1
     IsTest: 0
+    OverrideScreen: 0
+    ScreenManagerId: 0
+    ScreenLayer: 0
+    ScreenTag: 0
+    ScreenHasShowAnimation: 0
+    ScreenHasHideAnimation: 0
   initializeOrder: 0
   AutoBindInjections: 1
   AutoBindMediations: 1

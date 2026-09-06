@@ -155,6 +155,10 @@ namespace FlowIoC.Editor.Root
                 {
                     _root.SubContextTypes.Add(new SubContextData
                     {
+                        // The script as well as the name, so the entry is a tracked reference: the
+                        // Root then says so when this context is renamed, moved, or deleted with
+                        // its module, instead of holding a name that quietly stops resolving.
+                        ContextScript = new ContextScriptResolver().For(type),
                         ContextFullName = type.FullName,
                         ContextName = type.Name
                     });

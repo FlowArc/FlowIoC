@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A Root holds its sub-contexts by script reference, not by name.** `SubContextData` carries the
+  `MonoScript` the context is declared in, so the entry is a real guid in the scene or prefab rather
+  than a string nothing in the project depends on. Renaming the class inside its file or moving the
+  file now keeps working, and deleting the module a context lives in leaves a reference the Root
+  reports instead of a name that quietly stops resolving - which used to be visible only as an error
+  at play time, if the scene was ever run. `ContextFullName` stays beside it and is still the only
+  half runtime reads, because `MonoScript` is an Editor type and a build nulls the reference; it is
+  rewritten from the script whenever the inspector or a generator touches the entry.
+
+  Entries authored before this carry no script. They keep working, and the Root's inspector offers
+  **Resolve**, which links one in a press. An entry whose name resolves to nothing offers no button:
+  the module is gone, and whether the Root should still list it is a decision.
+
+- **Delete Module says what it is about to leave behind.** Before deleting it names the scenes and
+  prefabs outside the module that point into it, in the confirmation dialog. It still edits none of
+  them - opening and saving somebody's scene is not a tool's decision - so the report is the answer,
+  and it is only possible because a sub-context entry is now a tracked reference.
+
+### Fixed
+
+- **Create Module attached a generated screen to the wrong Root when a module held more than one.**
+  The parent's Root prefab was whichever one under its `Prefabs` folder carried a `RootBase` first,
+  and `MainModule/Prefabs/` holds `PoolServiceRoot.prefab` beside `MainRoot.prefab` - the right one
+  was picked only because the filesystem returned it first. The prefab named after the module wins
+  now, matching the suffix a Root actually carries so that `CounterServiceRoot` and
+  `PlayerSystemRoot` are recognised as their module's own. A folder with several Roots and none of
+  them the module's attaches nothing and says so, because being silently wrong is worse than leaving
+  the step to *Add Sub Context*.
+
 ## [1.6.0] - 2026-09-06
 
 ### Added

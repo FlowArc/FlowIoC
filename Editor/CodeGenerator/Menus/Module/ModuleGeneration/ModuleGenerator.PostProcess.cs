@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.Root;
+using FlowIoC.Editor.Root;
 using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -181,6 +182,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     {
                         new SubContextData
                         {
+                            // This runs after the domain reload the generated code triggered - the
+                            // Root type above was just found in a compiled assembly - so the screen
+                            // context resolves from its name here, which it could not at the moment
+                            // the file was written.
+                            ContextScript = new ContextScriptResolver().ForName(screenContextFullName),
                             ContextFullName = screenContextFullName,
                             ContextName = screenContextFullName.Substring(screenContextFullName.LastIndexOf('.') + 1),
                             AutoSetup = true,

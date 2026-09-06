@@ -45,10 +45,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SubContextTypes:
-  - ContextFullName: Modules.ConnectorModule.RootsContexts.MainConnectorSubContext
+  - ContextScript: {fileID: 11500000, guid: 04eb49830db5b6c439b8a3adfdc6f8f9, type: 3}
+    ContextFullName: Modules.ConnectorModule.RootsContexts.MainConnectorSubContext
     ContextName: MainConnectorSubContext
     AutoSetup: 1
     IsTest: 0
+    OverrideScreen: 0
+    ScreenManagerId: 0
+    ScreenLayer: 0
+    ScreenTag: 0
+    ScreenHasShowAnimation: 0
+    ScreenHasHideAnimation: 0
   initializeOrder: 98
   AutoBindInjections: 1
   AutoBindMediations: 1

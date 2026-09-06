@@ -47,6 +47,18 @@ so follow the rules below deliberately.
   `[FlowHeader(FlowRole.Connector)]`. `Create Module` offers `[AllowAsSubContext]` as a toggle on a
   main module that gets a Root, unticked, because a module with a Root of its own is the ordinary
   case.
+- **A sub-context entry points at the context's script, and the name beside it is a cache.** The
+  Root holds the `MonoScript` the context is declared in, which is what puts a real guid in the
+  scene or prefab: renaming the class inside its file or moving the file keeps working, and deleting
+  the module leaves a reference the Root reports rather than a name that quietly stops resolving.
+  `ContextFullName` stays because `MonoScript.GetClass` is editor-only and a build nulls the
+  reference, so runtime has nothing else to read - and it is rewritten from the script whenever the
+  inspector or a generator touches the entry. Never write an entry with a name alone when the script
+  is in reach: `Add Sub Context` has the `Type`, and a generator that has just written the `.cs` has
+  the file. An entry whose script is missing but whose name still resolves is mended by *Resolve* in
+  the Root's inspector; one whose name resolves to nothing is a decision, and Delete Module names
+  the scenes and prefabs it is about to leave that way before it deletes. It edits none of them,
+  because opening and saving somebody's scene is not a tool's decision.
 - **A decision belongs in a Command, wherever it would otherwise be taken.** That is the rule the
   next several are instances of: a Context declares bindings and nothing else, a View holds no `if`
   about game rules, a Mediator holds none either, and a System type holds no method that does work.

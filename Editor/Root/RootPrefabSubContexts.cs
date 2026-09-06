@@ -18,7 +18,16 @@ namespace FlowIoC.Editor.Root
     /// </summary>
     internal class RootPrefabSubContexts
     {
-        internal bool Add(string prefabAssetPath, string contextFullName, string contextName)
+        /// <summary>
+        /// <paramref name="contextScript"/> is the context's own script asset, which is what makes
+        /// the entry a tracked reference rather than a name that can quietly stop resolving. The
+        /// caller passes it because the caller is the one that knows it: a generator has just
+        /// written the .cs file and can load it before it has compiled, which is exactly when
+        /// nothing could resolve the name to a type yet. Left null the entry still works - the name
+        /// is what runtime reads - and the Root inspector reports the gap with a Resolve button.
+        /// </summary>
+        internal bool Add(
+            string prefabAssetPath, string contextFullName, string contextName, Object contextScript = null)
         {
             GameObject contents = PrefabUtility.LoadPrefabContents(prefabAssetPath);
 
@@ -35,6 +44,7 @@ namespace FlowIoC.Editor.Root
 
                 root.SubContextTypes.Add(new SubContextData
                 {
+                    ContextScript = contextScript,
                     ContextFullName = contextFullName,
                     ContextName = contextName,
                     AutoSetup = true,
