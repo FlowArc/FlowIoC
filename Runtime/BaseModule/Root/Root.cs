@@ -136,9 +136,16 @@ namespace FlowIoC.BaseModule.Root
                 subContextData.Key.DestroyContext();
             }
 
+            // All of them, not three of the seven. A Root that has torn its context down has not
+            // bound anything and has not been through any phase, and saying so in half the flags
+            // left the other half claiming otherwise.
+            signalsBound = false;
             injectionsBound = false;
             mediationsBound = false;
             commandsBound = false;
+            hasInitialized = false;
+            hasSetuped = false;
+            hasLaunched = false;
         }
 
         protected virtual void PauseContext()
@@ -161,7 +168,7 @@ namespace FlowIoC.BaseModule.Root
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
             {
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.Key.GetType().Name + " | ResumeContext!");
-                subContextData.Key.PauseContext();
+                subContextData.Key.ResumeContext();
             }
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Root.Utils;
 using FlowIoC.ConsoleModule;
@@ -31,9 +30,14 @@ namespace FlowIoC.BaseModule.Root
         [HideInInspector] internal bool hasLaunched;
 
         /// <summary>
-        /// Whether this Root binds its injections when the scene starts. With it off nothing is
-        /// injected until something binds them by hand, which is a thing a test does and a
-        /// running game does not.
+        /// Whether this Root declares its bindings when the scene starts. With it off nothing is
+        /// bound until something binds it by hand, which is a thing a test does and a running game
+        /// does not.
+        ///
+        /// It covers signals, injections and commands together - the three phases that declare what
+        /// the module is made of, and that a test taking over has to take over as one. Mediations
+        /// have their own switch because a scene may legitimately want its Views left alone while
+        /// the rest of the module binds.
         /// </summary>
         [HideInInspector] public bool AutoBindInjections = true;
 
@@ -86,11 +90,14 @@ namespace FlowIoC.BaseModule.Root
 
             _subContexts = new Dictionary<IContext, SubContextData>();
 
-            List<Type> assemblyTypes = AssemblyExtensions.GetAllContextTypes();
+            // Asked of the run's own index rather than of the domain: every Root used to walk every
+            // type in every loaded assembly, so a scene of fifteen Roots did that fifteen times.
+            _rootsManager ??= RootsManagerFactory.GetRootsManager() as RootsManager;
+            ContextTypeIndex contextTypes = _rootsManager?.ContextTypes;
 
             foreach (SubContextData subContextData in SubContextTypes)
             {
-                Type contextType = assemblyTypes.FirstOrDefault(x => x.FullName == subContextData.ContextFullName);
+                Type contextType = contextTypes?.Resolve(subContextData.ContextFullName);
                 if (contextType == null)
                 {
                     FlowLogger.LogError(SystemLogType.Context, "Context Type couldn't find! " + subContextData.ContextFullName);
