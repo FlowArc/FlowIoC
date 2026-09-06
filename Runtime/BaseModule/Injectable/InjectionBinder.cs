@@ -219,7 +219,6 @@ namespace FlowIoC.BaseModule.Injectable
             _container[key].Remove(injectionBinding);
             NoteContainerChanged();
 
-            //DeconstructUtils.ExecuteDeconstructMethod(injectionBinding.Value);
             RunDeconstruct(injectionBinding.Value);
 
             _bindingPoolController.ReturnBindingToPool(injectionBinding);

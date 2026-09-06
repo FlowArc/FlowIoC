@@ -8,11 +8,13 @@ namespace FlowIoC.BaseModule.Signals
     {
         private event Action _callbackOnce;
         private event Action _callback;
+
         public Signal(bool hideCommandLog = false, [CallerMemberName] string name = "")
         {
             _name = name;
             _hideCommandLog = hideCommandLog;
         }
+
         public void AddListenerOnce(Action listener)
         {
             _callbackOnce += listener;
@@ -26,6 +28,16 @@ namespace FlowIoC.BaseModule.Signals
         public void RemoveListener(Action listener)
         {
             _callback -= listener;
+        }
+
+        /// <summary>
+        /// Takes back a listener added with AddListenerOnce. Without this a one-shot listener could
+        /// not be dropped at all, so a Mediator that added one and went back to the pool before the
+        /// signal ever came kept it, and answered a dispatch it no longer had anything to do with.
+        /// </summary>
+        public void RemoveListenerOnce(Action listener)
+        {
+            _callbackOnce -= listener;
         }
 
         public void Dispatch()
@@ -45,6 +57,7 @@ namespace FlowIoC.BaseModule.Signals
         void AddListenerOnce(Action listener);
         void AddListener(Action listener);
         void RemoveListener(Action listener);
+        void RemoveListenerOnce(Action listener);
         void Dispatch();
     }
 }
