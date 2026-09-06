@@ -103,8 +103,13 @@ namespace FlowIoC.Editor.Inspector
         /// <summary>
         /// A Root takes the colour of whatever it roots. A Service and a System are not components
         /// and a Connector is a sub-context, so their Roots are the only place those colours are
-        /// ever seen - ScreenServiceRoot reads as a Service, ConnectorRoot as a Connector, and a
-        /// game module's own Root stays a Root.
+        /// ever seen - ScreenServiceRoot reads as a Service, PlayerSystemRoot as a System and
+        /// ConnectorRoot as a Connector.
+        ///
+        /// The plain Root is what is left when a name says none of those and no attribute declares
+        /// one. Nothing in a finished project wears it: a game module is a System, the frame is a
+        /// Core, and Core is the one role that can only come from the attribute. So falling through
+        /// to here says the Root has not said what it roots.
         ///
         /// Test is the one role only a Root wears. The Root is the module's presence in the
         /// scene, so LocalSaveTestRoot says in its colour that what sits under it is there to

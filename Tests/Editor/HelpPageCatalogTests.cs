@@ -78,6 +78,7 @@ namespace FlowIoC.Tests
                 "Signals",
                 "Controllers",
                 "Model",
+                "Systems and Services",
                 "View & Mediator",
                 "Connectors"
             }, ChildTitles("Structure"));
