@@ -45,7 +45,6 @@ namespace FlowIoC.Editor.ModuleScanner
         /// Fix All while there is something to fix. A vivid green, because the toolbar tints a
         /// button rather than filling it and anything softer disappears into the strip.
         /// </summary>
-        private readonly Color _actionColor = new Color(0.35f, 0.95f, 0.45f);
 
         private readonly FlowRowPainter _painter = new FlowRowPainter();
 
@@ -59,7 +58,6 @@ namespace FlowIoC.Editor.ModuleScanner
         private bool _projectExpanded = true;
         private string _summary;
         private Vector2 _scroll;
-        private GUIStyle _action;
 
 
         private void OnEnable()
@@ -205,26 +203,13 @@ namespace FlowIoC.Editor.ModuleScanner
                 // waiting.
                 Color background = GUI.backgroundColor;
 
-                if (fixable) GUI.backgroundColor = _actionColor;
+                if (fixable) GUI.backgroundColor = _painter.Action;
 
-                if (GUILayout.Button("Fix All", ActionStyle()))
+                if (GUILayout.Button("Fix All", _painter.ActionButton))
                     FixAll();
 
                 GUI.backgroundColor = background;
             }
-        }
-
-        /// <summary>
-        /// Tall enough to read as the panel's action, and inset a little on every side - the rows
-        /// above run edge to edge, and a button that did the same would not read as a button.
-        /// </summary>
-        private GUIStyle ActionStyle()
-        {
-            return _action ??= new GUIStyle(GUI.skin.button)
-            {
-                fixedHeight = 36f,
-                margin = new RectOffset(6, 6, 4, 6)
-            };
         }
 
         private void FixAll()
