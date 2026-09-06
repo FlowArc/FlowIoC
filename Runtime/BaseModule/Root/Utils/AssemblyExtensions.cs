@@ -20,12 +20,35 @@ namespace FlowIoC.BaseModule.Root.Utils
             return assemblyList;
         }
 
+        /// <summary>
+        /// Every type in every loaded assembly but the framework's own. An assembly that cannot
+        /// hand over all of its types gives up the ones it loaded rather than taking the whole
+        /// scan down with it - a single broken reference used to stop every Root in the scene.
+        /// </summary>
         private static List<Type> GetTypesInAllAssemblies()
         {
             Assembly[] assemblies = GetAssemblies();
-            List<Type> typeList = assemblies
-                .SelectMany(assembly => assembly.GetTypes())
-                .ToList();
+            List<Type> typeList = new List<Type>();
+
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                Type[] types;
+
+                try
+                {
+                    types = assemblies[i].GetTypes();
+                }
+                catch (ReflectionTypeLoadException exception)
+                {
+                    types = exception.Types;
+                }
+
+                for (int ii = 0; ii < types.Length; ii++)
+                {
+                    if (types[ii] != null)
+                        typeList.Add(types[ii]);
+                }
+            }
 
             return typeList;
         }

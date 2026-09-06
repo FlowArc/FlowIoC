@@ -5,6 +5,7 @@ using FlowIoC.BaseModule.Bind.Bindings.Pool;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Injectable.CrossContext;
 using FlowIoC.BaseModule.Provider.Coroutine;
+using FlowIoC.BaseModule.Root.Utils;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ConsoleModule;
 
@@ -24,6 +25,12 @@ namespace FlowIoC.BaseModule.Root
         /// </summary>
         internal int BindingGeneration;
 
+        /// <summary>
+        /// The run's lookup from a context's full name to its type. Owned here so it is built once
+        /// and goes away with the run, rather than every Root asking the domain for its types.
+        /// </summary>
+        internal ContextTypeIndex ContextTypes { get; private set; }
+
         private readonly List<IRoot> _contextRootList = new List<IRoot>();
         private readonly Dictionary<string, IRoot> _contextRootMap = new();
 
@@ -42,6 +49,7 @@ namespace FlowIoC.BaseModule.Root
             BindingPoolController = new BindingPoolController();
             InjectionBinderCrossContext = new InjectionBinderCrossContext();
             MediatorCreatorController = new MediatorCreatorController();
+            ContextTypes = new ContextTypeIndex();
 
             FlowLogger.Log(SystemLogType.Context, "RootsManager | Initialize Completed!");
         }

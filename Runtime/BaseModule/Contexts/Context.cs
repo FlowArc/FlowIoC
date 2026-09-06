@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using FlowIoC.BaseModule.Controller.Binders;
 using FlowIoC.BaseModule.Function.Provider;
 using FlowIoC.BaseModule.Injectable;
@@ -27,7 +26,8 @@ namespace FlowIoC.BaseModule.Contexts
 
         public int InitializeOrder { get; set; }
 
-        public void Initialize(GameObject contextGameObject, int initializeOrder, InjectionBinderCrossContext injectionBinderCrossContext, List<IContext> subContexts, bool isTest = false)
+        public void Initialize(GameObject contextGameObject, int initializeOrder, InjectionBinderCrossContext injectionBinderCrossContext,
+            List<IContext> subContexts, bool isTest = false)
         {
             _gameObject = contextGameObject;
             InitializeOrder = initializeOrder;
@@ -35,8 +35,11 @@ namespace FlowIoC.BaseModule.Contexts
             SubContexts = subContexts;
             IsTest = isTest;
 
-            AllContexts = subContexts;
-            AllContexts.Insert(0, this);
+            // A list of its own. AllContexts used to be the same object as SubContexts with this
+            // context pushed onto the front, so a context appeared among its own sub-contexts and
+            // anything walking SubContexts met the parent as well.
+            AllContexts = new List<IContext>(subContexts.Count + 1) {this};
+            AllContexts.AddRange(subContexts);
         }
 
         public void Start()
@@ -48,14 +51,16 @@ namespace FlowIoC.BaseModule.Contexts
 
         void IContext.InjectAllInstances()
         {
-            List<InjectionBinding> injectionBindings = InjectionBinder.GetAllInjectionBindings();
-            List<InjectionBinding> crossContextInjectedBindings = InjectionBinderCrossContext.GetAllInjectionBindings();
+            Inject(InjectionBinder.GetAllInjectionBindings());
+            Inject(InjectionBinderCrossContext.GetAllInjectionBindings());
+        }
 
-            injectionBindings = injectionBindings.Concat(crossContextInjectedBindings).ToList();
-
-
-            foreach (InjectionBinding binding in injectionBindings)
+        private void Inject(List<InjectionBinding> bindings)
+        {
+            for (int i = 0; i < bindings.Count; i++)
             {
+                InjectionBinding binding = bindings[i];
+
                 if (binding == null)
                     continue;
 
@@ -114,31 +119,47 @@ namespace FlowIoC.BaseModule.Contexts
             functionProvider.Context = this;
         }
 
-        public virtual void SignalBindings() { }
+        public virtual void SignalBindings()
+        {
+        }
 
-        public virtual void InjectionBindings() { }
+        public virtual void InjectionBindings()
+        {
+        }
 
-        public virtual void MediationBindings() { }
+        public virtual void MediationBindings()
+        {
+        }
 
-        public virtual void CommandBindings() { }
+        public virtual void CommandBindings()
+        {
+        }
 
-        public virtual void Setup() { }
+        public virtual void Setup()
+        {
+        }
 
-        public virtual void Launch() { }
+        public virtual void Launch()
+        {
+        }
 
         public virtual void DestroyContext()
         {
             IsStarted = false;
 
             InjectionBinderCrossContext.UnBind<GameObject>(GetType().Name);
-            
+
             MediationBinder?.UnBindAll();
             CommandBinder?.UnBindAll();
             InjectionBinder?.UnBindAll();
         }
 
-        public virtual void PauseContext() { }
+        public virtual void PauseContext()
+        {
+        }
 
-        public virtual void ResumeContext() { }
+        public virtual void ResumeContext()
+        {
+        }
     }
 }
