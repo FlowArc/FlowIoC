@@ -3,46 +3,38 @@ using FlowIoC.ScreenModule.Enums;
 
 namespace FlowIoC.ScreenModule.Extensions
 {
+    /// <summary>
+    /// A screen's state is a set of flags rather than one value, because a screen can be in use and
+    /// animating at the same time. These read and write that set.
+    /// </summary>
     public static class ScreenDataExtensions
     {
-        /// <summary>
-        /// 🔹 Belirli bir flag'i ekleme (Add)
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="value"></param>
+        /// <summary>Adds a state, leaving the others as they are.</summary>
         public static void AddState(this ScreenVO data, ScreenState value)
         {
-            data.State = data.State | value;
+            data.State |= value;
+        }
+
+        /// <summary>Takes a state away, leaving the others as they are.</summary>
+        public static void RemoveState(this ScreenVO data, ScreenState value)
+        {
+            data.State &= ~value;
         }
 
         /// <summary>
-        /// 🔹 Belirli bir flag'i çıkarma (Remove)
+        /// Whether the state is set. Tested with a mask rather than <c>Enum.HasFlag</c>, which boxes
+        /// both sides on Unity's runtimes - and a screen's Mediator asks this on every handler it
+        /// has, which is the guard that keeps a tap during an animation from becoming a signal.
         /// </summary>
-        /// <param name="data"></param>
-        /// <param name="value"></param>
-        public static void RemoveState(this ScreenVO data, ScreenState value)
-        {
-            data.State = data.State &~ value;
-        }
-        /// <summary>
-        /// 🔹 Belirli bir flag'i içeriyor mu? (Has)
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="value"></param>
         public static bool HasState(this ScreenVO data, ScreenState value)
         {
-            // data.State = data.State & value;
-            return data.State.HasFlag(value);
+            return (data.State & value) == value;
         }
-        
-        /// <summary>
-        /// 🔹 Belirli bir flag'i toggle yapma (varsa çıkar, yoksa ekle)
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="value"></param>
+
+        /// <summary>Adds the state if it is missing and takes it away if it is there.</summary>
         public static void ToggleState(this ScreenVO data, ScreenState value)
         {
-            data.State = data.State ^ value;
+            data.State ^= value;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace FlowIoC.BaseModule.Bind.Binders
                 return default;
             }
 
-            TBindingType binding = (TBindingType)_bindingPoolController.GetAvailableBinding(typeof(TBindingType));
+            TBindingType binding = (TBindingType) _bindingPoolController.GetAvailableBinding(typeof(TBindingType));
             binding.SetKey(keyType);
             _bindings.Add(keyType, binding);
             return binding;
@@ -46,7 +46,7 @@ namespace FlowIoC.BaseModule.Bind.Binders
                 return default;
             }
 
-            TBindingType binding = (TBindingType)_bindingPoolController.GetAvailableBinding(typeof(TBindingType));
+            TBindingType binding = (TBindingType) _bindingPoolController.GetAvailableBinding(typeof(TBindingType));
             binding.SetKey(key);
             _bindings.Add(key, binding);
             return binding;
@@ -76,7 +76,10 @@ namespace FlowIoC.BaseModule.Bind.Binders
         {
             _bindings.Remove(binding.Key);
             _bindingPoolController.ReturnBindingToPool(binding);
-            FlowLogger.LogWarning(SystemLogType.Injection, "UnBind: " + binding.Key);
+
+            // Unbinding is what a context does on the way out, not something to warn about. As a
+            // warning it painted the console yellow every time a scene was left.
+            FlowLogger.Log(SystemLogType.Injection, "UnBind: " + binding.Key);
         }
 
         #endregion
