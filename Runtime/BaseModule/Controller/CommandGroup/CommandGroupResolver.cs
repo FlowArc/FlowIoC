@@ -142,7 +142,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (step.ExecutionType == CommandExecutionType.Parallel)
             {
                 _completionCount--;
-                if (_completionCount == 0)
+
+                if (_completionCount == 0 && _executionIndex >= _steps.Count)
                     CompleteGroupExecution();
             }
             else
@@ -178,13 +179,20 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 CheckExecuteNextStep(commandParameters);
         }
 
+        /// <summary>
+        /// Marks one step done and decides whether the group is. Both halves matter: nothing is
+        /// still running, and there is nothing left to start. A parallel step that finishes inside
+        /// its own Execute used to satisfy the first on its own, so a group of parallel steps that
+        /// were all synchronous ended after the first one and the rest were never reached.
+        /// </summary>
         private void HandleStepCompletion(CommandStepVO step, object[] commandParameters)
         {
             if (step.ExecutionType == CommandExecutionType.Sequence)
                 CheckExecuteNextStep(commandParameters);
 
             _completionCount--;
-            if (_completionCount == 0)
+
+            if (_completionCount == 0 && _executionIndex >= _steps.Count)
                 CompleteGroupExecution();
         }
 
