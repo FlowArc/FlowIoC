@@ -14,6 +14,11 @@ namespace FlowIoC.Tests
     {
         private ED_MainModuleDirectoryStructure _config;
 
+        /// <summary>Retired folder types, by number: the names went with the enum values.</summary>
+        private const FolderEVO.FolderType ScreenConfigs = (FolderEVO.FolderType) 9;
+
+        private const FolderEVO.FolderType SharedSignals = (FolderEVO.FolderType) 24;
+
         [SetUp]
         public void SetUp() => _config = ScriptableObject.CreateInstance<ED_MainModuleDirectoryStructure>();
 
@@ -34,26 +39,26 @@ namespace FlowIoC.Tests
         [Test]
         public void The_defaults_no_longer_lay_down_a_screen_configs_folder()
         {
-            Assert.IsFalse(Contains(_config.RootFolders, FolderEVO.FolderType.ScreenConfigs));
+            Assert.IsFalse(Contains(_config.RootFolders, ScreenConfigs));
         }
 
         [Test]
         public void A_retired_folder_is_removed_wherever_it_sits()
         {
             FolderEVO scriptables = _config.RootFolders.Find(folder => folder.FolderName == "Scriptables");
-            scriptables.SubFolders.Add(new FolderEVO { FolderName = "ScreenConfigs", Type = FolderEVO.FolderType.ScreenConfigs });
+            scriptables.SubFolders.Add(new FolderEVO { FolderName = "ScreenConfigs", Type = ScreenConfigs });
 
-            bool removed = _config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
+            bool removed = _config.RemoveFolderType(ScreenConfigs);
 
             Assert.IsTrue(removed);
-            Assert.IsFalse(Contains(_config.RootFolders, FolderEVO.FolderType.ScreenConfigs));
+            Assert.IsFalse(Contains(_config.RootFolders, ScreenConfigs));
             Assert.IsNotNull(_config.RootFolders.Find(folder => folder.FolderName == "Scriptables"));
         }
 
         [Test]
         public void Removing_a_folder_that_is_not_there_reports_nothing_changed()
         {
-            Assert.IsFalse(_config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs));
+            Assert.IsFalse(_config.RemoveFolderType(ScreenConfigs));
         }
     }
 }
