@@ -183,6 +183,44 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "Notice what is not there: no decision about whether the player can afford it. The "
                 + "Mediator dispatches, and the Command decides.");
+
+            painter.Space();
+            painter.SubHeading("A screen's Mediator, which subscribes twice over");
+            painter.Paragraph(
+                "OnRegister on a screen wires two events and nothing else. The view's actions are "
+                + "taken on ShowCompleted and dropped on HideCompleted - for the same reason the "
+                + "View wires its buttons in OnEnable: a screen is pooled, so OnRegister runs once "
+                + "and the screen opens many times.");
+            painter.Code(
+                "public void OnRegister()\n"
+                + "{\n"
+                + "    _view.ShowCompleted += OnScreenShown;\n"
+                + "    _view.HideCompleted += OnScreenHidden;\n"
+                + "}\n"
+                + "\n"
+                + "private void OnScreenShown(IScreenBody screen) => _view.Play += PlayClicked;\n"
+                + "private void OnScreenHidden(IScreenBody screen) => _view.Play -= PlayClicked;");
+
+            painter.Space();
+            painter.SubHeading("And guards every handler with the screen's state");
+            painter.Code(
+                "private void PlayClicked()\n"
+                + "{\n"
+                + "    if (_view.Data.State != ScreenState.AvailableToSendSignal) return;\n"
+                + "\n"
+                + "    _signals.Outgoing.Play.Dispatch();\n"
+                + "    _view.Hide();\n"
+                + "}");
+            painter.Paragraph(
+                "AvailableToSendSignal is InUse and nothing else, so a tap that lands while the "
+                + "screen is animating in or out does not become a signal. It is not queued and not "
+                + "replayed; it does not happen.");
+
+            painter.Space();
+            painter.Note(
+                "Important: an overridden PlayShowAnimation or PlayHideAnimation must invoke "
+                + "ShowCompleted or HideCompleted. Forget it and the Mediator never subscribes - "
+                + "the screen opens, every button is dead, and nothing is logged.");
         }
 
         private void DrawRules(HelpPainter painter)
@@ -193,6 +231,11 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A prefab cannot reference a Root in the scene. One that must reach a Root outside itself uses Root Name.");
             painter.Bullet("A ScreenView wires its buttons in OnEnable and drops them in OnDisable, never in Awake or Start.");
             painter.Bullet("OnRegister and OnRemove mirror each other. Every subscription in one has its match in the other.");
+            painter.Bullet(
+                "A screen's Mediator subscribes on ShowCompleted and unsubscribes on HideCompleted. OnRegister wires those two and nothing else.");
+            painter.Bullet("Every handler in a screen's Mediator is guarded by _view.Data.State == ScreenState.AvailableToSendSignal.");
+            painter.Bullet("An overridden PlayShowAnimation or PlayHideAnimation must invoke ShowCompleted or HideCompleted.");
+            painter.Bullet("A View translates raw input into the action it already offers. A swipe left calls the same method the button does.");
         }
 
         private static HelpGraph Build()

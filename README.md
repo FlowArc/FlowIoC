@@ -819,6 +819,17 @@ pooled — hiding it deactivates the object and reopening it shows the same inst
 wire its buttons in `OnEnable` and drop them in `OnDisable` instead. See
 [Screens](Runtime/ScreenModule/Documentation/ScreenModule.md).
 
+A screen's Mediator subscribes twice over, for the same reason. `OnRegister` wires
+`ShowCompleted` and `HideCompleted` and nothing else; the view's actions are taken when the screen
+has finished showing and dropped when it has finished hiding. And every handler is guarded by
+`_view.Data.State == ScreenState.AvailableToSendSignal` — `InUse` and nothing else — so a tap that
+lands while the screen is animating in or out does not become a signal. It is not queued and not
+replayed; it does not happen.
+
+> **Important:** an overridden `PlayShowAnimation` or `PlayHideAnimation` must invoke
+> `ShowCompleted` or `HideCompleted`. Forget it and the Mediator never subscribes — the screen
+> opens, every button is dead, and nothing is logged.
+
 The `ViewInjector` component lists every `IView` on the GameObject and resolves
 which Context each one belongs to. Each entry says so with **Context Source** —
 `Bubble Up` walks the hierarchy to the first Root above the View and is the
