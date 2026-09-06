@@ -211,7 +211,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                 Debug.Log($"DirectoryStructureConfig created at: {configPath}");
             }
 
-            bool healed = config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
+            bool healed = config.RemoveRetiredFolderTypes();
             healed |= config.MakeFolderOptional("Scriptables");
 
             if (healed)

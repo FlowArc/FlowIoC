@@ -281,7 +281,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 
             bool healed = config.EnsureSharedBranch(settings);
             healed |= config.EnsurePublicSignalsFolder(settings);
-            healed |= config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
+            healed |= config.RemoveRetiredFolderTypes();
             healed |= config.MakeFolderOptional("Scriptables");
 
             if (healed)

@@ -31,67 +31,72 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 
         [SerializeReference] public List<FolderEVO> SubFolders;
 
+        /// <summary>
+        /// Every value carries its number, because these are serialized as ints in every FolderEVO,
+        /// ED_CodeGenerator and ModuleDescriptorEVO asset on disk. Written out, a value can be
+        /// deleted without moving the ones below it, and a new one takes the next free number
+        /// rather than whatever position it happens to be typed into.
+        ///
+        /// 2, 9 and 24 are gone and are not to be reused: ScreenViews, because a screen's View and
+        /// Mediator are generated straight into ViewsMediators; ScreenConfigs, because a screen
+        /// declares itself in its context and there is no config asset; and SharedSignals, because
+        /// the public signal holder has an assembly of its own. `DirectoryStructureConfig.Heal`
+        /// takes their folders out of a layout written before they went.
+        ///
+        /// The Shared branch mirrors a few of the Runtime folders above but has to carry types of
+        /// its own. A FolderType resolves to exactly one path per module (FindFullFolderPathByID)
+        /// and to exactly one GUID per module (ModuleDescriptorEVO.FolderGuids), so reusing
+        /// UnityObjects or ValueObjects there would make both lookups ambiguous - and
+        /// MainModuleDirectoryStructureConfigEditor already reports a locked type used twice as an
+        /// error.
+        /// </summary>
         public enum FolderType
         {
-            Folder,
-            ViewsAndMediators,
+            Folder = 0,
+            ViewsAndMediators = 1,
+            RootsAndContexts = 3,
+            Services = 4,
+            Controllers = 5,
+            Models = 6,
+            UnityObjects = 7,
+            ValueObjects = 8,
+            SubModules = 10,
+            TestModules = 11,
+            ScreenModules = 12,
+            Editor = 13,
+            Resources = 14,
+            Prefabs = 15,
+            Scenes = 16,
+            Systems = 17,
+            Signals = 18,
+            Shared = 19,
+            SharedUnityObjects = 20,
+            SharedValueObjects = 21,
+            SharedEnums = 22,
+            SharedConstants = 23,
 
-            // Retired: a screen's View and Mediator are generated straight into ViewsMediators,
-            // so no config lays this folder down any more. The value stays because every
-            // FolderEVO, ED_CodeGenerator and ModuleDescriptorEVO asset already on disk
-            // serializes these as ints - removing it would silently renumber everything below.
-            ScreenViews,
-
-            RootsAndContexts,
-            Services,
-            Controllers,
-            Models,
-            UnityObjects,
-            ValueObjects,
-
-            // Retired: a screen declares itself in its context, so there is no config asset and no
-            // folder for one. The value stays for the same reason ScreenViews' does.
-            ScreenConfigs,
-
-            SubModules,
-            TestModules,
-            ScreenModules,
-            Editor,
-            Resources,
-            Prefabs,
-            Scenes,
-            Systems,
-            Signals,
-
-            // The Shared branch mirrors a few of the Runtime folders above but has to carry types
-            // of its own. A FolderType resolves to exactly one path per module
-            // (FindFullFolderPathByID) and to exactly one GUID per module
-            // (ModuleDescriptorEVO.FolderGuids), so reusing UnityObjects or ValueObjects here would
-            // make both lookups ambiguous - and MainModuleDirectoryStructureConfigEditor already
-            // reports a locked type used twice as an error. New values are appended rather than
-            // inserted because every FolderEVO and ED_CodeGenerator asset already on disk
-            // serializes these as ints.
-            Shared,
-            SharedUnityObjects,
-            SharedValueObjects,
-            SharedEnums,
-            SharedConstants,
-
-            // Retired: the public signal holder no longer sits inside Shared. Referencing Shared
-            // for a published enum would have carried the signal holder along with it, and
-            // nothing but discipline then stopped a direct cross-module Dispatch. The holder has
-            // its own assembly now - see PublicSignals. The value stays for the same reason
-            // ScreenViews' does.
-            SharedSignals,
-
-            // Scripts/Signals, a sibling of Scripts/Runtime and Scripts/Shared, which becomes
-            // Modules.X.Signals. The module's public signal holder lives here and nowhere else,
-            // so a module that references a neighbour's Shared assembly to read a published enum
-            // does not get that neighbour's signals in scope, and the compiler is what stops the
-            // cross-module Dispatch rather than the reader's memory. Signals above keeps its name
-            // and holds the internal holder, which never crosses an assembly boundary at all.
-            PublicSignals
+            /// <summary>
+            /// Scripts/Signals, a sibling of Scripts/Runtime and Scripts/Shared, which becomes
+            /// Modules.X.Signals. The module's public signal holder lives here and nowhere else, so
+            /// a module that references a neighbour's Shared assembly to read a published enum does
+            /// not get that neighbour's signals in scope, and the compiler is what stops the
+            /// cross-module Dispatch rather than the reader's memory. Signals above keeps its name
+            /// and holds the internal holder, which never crosses an assembly boundary at all.
+            /// </summary>
+            PublicSignals = 25
         }
+
+        /// <summary>
+        /// The numbers of the folder types that no longer exist, for the heal that takes them out
+        /// of a layout written while they did. They are numbers rather than names because the names
+        /// are gone - which is the point of numbering the enum in the first place.
+        /// </summary>
+        internal static readonly FolderType[] RetiredFolderTypes =
+        {
+            (FolderType) 2, // ScreenViews
+            (FolderType) 9, // ScreenConfigs
+            (FolderType) 24 // SharedSignals
+        };
     }
 }
 #endif

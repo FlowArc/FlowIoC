@@ -519,6 +519,14 @@ types differ by taking a converter as its second argument.
 The code style is declared in `<Solution>.sln.DotSettings` at the project root - naming rules,
 prefixes and suffixes, spacing. Read it before writing C# and follow what it says.
 
+**Every enum value carries its number.** Write `Folder = 0, ViewsAndMediators = 1` rather than
+letting the compiler count, because Unity serializes an enum as an int: a value inserted in the
+middle, or a value deleted, silently renumbers everything below it and every asset already on disk
+then reads back as the wrong thing. Numbered, a value can be deleted outright and a new one takes
+the next free number rather than whatever position it was typed into. A number a deleted value used
+is never reused - `FolderEVO.RetiredFolderTypes` is what that looks like, a list of the numbers that
+are gone so a heal can take their folders out of a config written while they existed.
+
 ### Never hand-edit
 
 `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` is generated from the modules present in the

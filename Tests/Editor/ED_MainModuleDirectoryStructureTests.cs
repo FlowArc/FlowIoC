@@ -13,6 +13,11 @@ namespace FlowIoC.Tests
     {
         private ED_MainModuleDirectoryStructure _config;
 
+        /// <summary>Retired folder types, by number: the names went with the enum values.</summary>
+        private const FolderEVO.FolderType ScreenConfigs = (FolderEVO.FolderType) 9;
+
+        private const FolderEVO.FolderType SharedSignals = (FolderEVO.FolderType) 24;
+
         [SetUp]
         public void SetUp() => _config = ScriptableObject.CreateInstance<ED_MainModuleDirectoryStructure>();
 
@@ -278,7 +283,7 @@ namespace FlowIoC.Tests
 
             FolderEVO shared = Find(_config.RootFolders, "Shared");
 
-            CollectionAssert.DoesNotContain(shared.SubFolders.Select(f => f.Type).ToList(), FolderEVO.FolderType.SharedSignals);
+            CollectionAssert.DoesNotContain(shared.SubFolders.Select(f => f.Type).ToList(), SharedSignals);
             CollectionAssert.DoesNotContain(shared.SubFolders.Select(f => f.FolderName).ToList(), "Signals");
         }
 
@@ -328,7 +333,7 @@ namespace FlowIoC.Tests
 
                 FolderEVO shared = Find(_config.RootFolders, "Shared");
                 CollectionAssert.DoesNotContain(
-                    shared.SubFolders.Select(f => f.Type).ToList(), FolderEVO.FolderType.SharedSignals);
+                    shared.SubFolders.Select(f => f.Type).ToList(), SharedSignals);
             }
             finally
             {
@@ -400,7 +405,7 @@ namespace FlowIoC.Tests
             shared.SubFolders.Add(new FolderEVO
             {
                 FolderName = "Signals",
-                Type = FolderEVO.FolderType.SharedSignals,
+                Type = SharedSignals,
                 IsMandatory = true,
                 IsNamespaceProvider = true
             });

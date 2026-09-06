@@ -102,7 +102,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         {
             if (codeGenSettings == null || RootFolders == null) return false;
 
-            bool changed = RemoveFolderType(FolderEVO.FolderType.SharedSignals);
+            bool changed = RemoveRetiredFolderTypes();
 
             if (ContainsFolderType(RootFolders, FolderEVO.FolderType.PublicSignals)) return changed;
 
@@ -129,6 +129,21 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// so the asset catches up the next time the Editor opens.
         /// </summary>
         internal bool RemoveFolderType(FolderEVO.FolderType folderType) => RemoveFolderType(RootFolders, folderType);
+
+        /// <summary>
+        /// Takes out every folder whose type no longer exists. A config asset is serialized per
+        /// project and keeps whatever it was written with, so a layout authored before a type was
+        /// retired still holds its folder - by number, the name having gone with the enum value.
+        /// </summary>
+        internal bool RemoveRetiredFolderTypes()
+        {
+            bool removed = false;
+
+            foreach (FolderEVO.FolderType retired in FolderEVO.RetiredFolderTypes)
+                removed |= RemoveFolderType(retired);
+
+            return removed;
+        }
 
         /// <summary>
         /// Marks a folder optional in a config asset that has it as mandatory. The screen layout

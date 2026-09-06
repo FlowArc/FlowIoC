@@ -24,7 +24,6 @@ namespace FlowIoC.Editor.CodeGenerator
                 {FolderEVO.FolderType.TestModules, "zTestModules"},
                 {FolderEVO.FolderType.ScreenModules, "zScreenModules"},
                 {FolderEVO.FolderType.ViewsAndMediators, "ViewsMediators"},
-                {FolderEVO.FolderType.ScreenConfigs, "ScreenConfigs"},
                 {FolderEVO.FolderType.RootsAndContexts, "RootsContexts"},
                 {FolderEVO.FolderType.Services, "Services"},
                 {FolderEVO.FolderType.Systems, "Systems"},

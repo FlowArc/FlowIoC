@@ -73,8 +73,31 @@ namespace FlowIoC.Editor.CodeGenerator
 
         private void OnEnable()
         {
-            if (RestoreDefaultsIfEmpty())
+            bool changed = RestoreDefaultsIfEmpty();
+
+            changed |= RemoveRetiredFolderTypes();
+
+            if (changed)
                 EditorUtility.SetDirty(this);
+        }
+
+        /// <summary>
+        /// Drops the entries for folder types that no longer exist. The heal above is all or
+        /// nothing because a reader removing an entry is deliberate; a retired type is the one case
+        /// that cannot be - the value is gone from the enum, so nothing reads the entry and nothing
+        /// ever will. Deleting the asset would clear them too, since a fresh instance is built from
+        /// the defaults, but that also throws away whatever folder names the project renamed.
+        /// </summary>
+        internal bool RemoveRetiredFolderTypes()
+        {
+            if (DirectoryStructureConfigMap == null) return false;
+
+            bool removed = false;
+
+            foreach (FolderEVO.FolderType retired in FolderEVO.RetiredFolderTypes)
+                removed |= DirectoryStructureConfigMap.Remove(retired);
+
+            return removed;
         }
 
         /// <summary>
