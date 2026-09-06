@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-06
+
+### Added
+
+- **Every module carries a card.** `MODULE.md` at the top of a module says what it is for and what
+  it is about in the author's own words, and holds a generated block underneath - kind, assemblies,
+  Root and Context, the signals it announces and accepts, the modules under it - written by Module
+  Scanner and refreshed after every compile. It is what an agent reads to decide whether a piece of
+  work belongs to that module, so `ModuleCardCheck` reports a card that is missing or has fallen
+  behind. The two authored lines are asked for in Create Module, at the moment somebody knows what
+  the module is for and rarely again afterwards. A test module carries no card: nothing is routed to
+  one, and the module it drives already lists it.
+
+- **A `flowioc-screens` skill**, the sixth. It carries the chain a screen opens through, the rule
+  that the opening Command fills the screen because it is holding the instance it awaited, when a
+  change goes through a signal and when a Command may fetch the screen instead, the Mediator's two
+  guards, how an animation reports that it finished, and where a pooled screen is reset.
+
+### Changed
+
+- **`Tools/FlowIoC/Add Shared Data` is now `Add Shared or Signals`**, and offers either assembly to
+  a module that already exists rather than only Shared.
+
+- **`MainModule` announces that it started.** `MainSignals.Outgoing.OpenMainScene` was an order
+  sitting on Outgoing; it is `Started`, and the Connector joins that to
+  `MainScreenSignals.Incoming.OpenMainScreen`, which was already an order and already right.
+  MainModule does not decide that opening the main screen is what starting means. `Launch` moved out
+  of the public holder into `MainInternalSignals`, which is what it always was - dispatched by
+  `MainContext` and handled by `MainContext`. A project that already installed MainModule keeps its
+  own copy; this is what a new install gets.
+
+- **How a screen's Mediator guards itself is written down.** It subscribes on `ShowCompleted` and
+  unsubscribes on `HideCompleted` - `OnRegister` wires those two and nothing else, because a screen
+  is pooled and `OnRegister` runs once while the screen opens many times - and every handler is
+  guarded by `ScreenState.AvailableToSendSignal`, so a tap landing during an animation does not
+  become a signal.
+
+- **An animation reports when it finished, not when it started.** The state stays `InShowAnimation`
+  until the View invokes `ShowCompleted`, which is what that guard is made of. A timeline waits for
+  its duration; a set of staggered tweens hangs `OnComplete` on the last one only. And a pooled
+  screen is reset in `BeforeScreenActivation` rather than by the hide animation, which is only for
+  the look of it.
+
 ## [1.5.1] - 2026-09-06
 
 ### Added
