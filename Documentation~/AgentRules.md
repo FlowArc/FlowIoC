@@ -63,8 +63,17 @@ so follow the rules below deliberately.
   dispatches the module's first signal.
 - A Command does one unit of work, holds no state between runs, and returns no value. It
   injects models and services, mutates state, and dispatches outgoing signals.
-- A Function returns a value and does not orchestrate. If you want the step visible in the
-  Flow Console, write a Command, not a Function.
+- **A Command is a step in a flow; a Function is called from inside one.** A sequence is read in
+  order, one Command after another, and that reading is what a Command is for. A Function does its
+  work without depending on where it sits, so it is what a Command reaches for mid-`Execute` - to
+  go somewhere, do something and come back - or what several Commands share. It returns a value
+  when it has one to return and derives from `FunctionVoid` when it does not; the return type is
+  not what makes it a Function.
+- Reach for a Function when the work happens more than once inside one `Execute`, or when more than
+  one Command needs it. The same work is often a Command instead, and that is the right answer when
+  it is a step somebody should be able to read in the sequence.
+- The trade a Function makes is the Flow Console: it is not a step there. **A step you want to see
+  in the console is a Command.**
 - A Model owns the module's state and its data, and the rules that keep both valid. It knows
   nothing about Views, Commands, or any other module.
 - A Model never subscribes to a signal. Nothing reaches in and changes its state: an

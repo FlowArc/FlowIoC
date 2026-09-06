@@ -170,9 +170,21 @@ namespace FlowIoC.Editor.Help.Pages
         private void DrawFunction(HelpPainter painter)
         {
             painter.Hero(
-                "A Function answers a question and goes away.",
-                "It returns a value, it orchestrates nothing, and it is called where the answer is "
-                + "wanted rather than dispatched at.");
+                "A Command is a step in a flow. A Function is called from inside one.",
+                "A sequence is read in order, and that reading is what a Command is for. A Function "
+                + "does its work without depending on where it sits, so it is what a Command "
+                + "reaches for mid-Execute, and what several Commands share.");
+
+            painter.SubHeading("When to reach for one");
+            painter.Bullet("The work happens more than once inside one Execute.");
+            painter.Bullet("More than one Command needs it. Map's FindEditHexLinksFunction is called from twelve.");
+            painter.Bullet(
+                "The Command has to go somewhere, do something and come back, rather than hand the "
+                + "next step of the flow on.");
+            painter.Paragraph(
+                "The same work is often a Command instead, and that is the right answer when it is "
+                + "a step somebody should be able to read in the sequence. The trade a Function "
+                + "makes is the Flow Console: it is not a step there.");
 
             painter.SubHeading("Writing one");
             painter.Paragraph(
@@ -214,7 +226,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("What needs no decision is not one. A close button that always closes is the Mediator calling _view.Hide().");
             painter.Bullet("A Command does one unit of work, holds no state between runs, and returns no value.");
             painter.Bullet("A Command never touches another module's model. What it needs from elsewhere arrives as a signal.");
-            painter.Bullet("A Function returns a value and does not orchestrate. Want the step in the Flow Console? Write a Command.");
+            painter.Bullet("A Command is a step in a flow. A Function is called from inside one, and is not a step in the console.");
+            painter.Bullet("Reach for a Function when the work happens twice inside one Execute, or when more than one Command needs it.");
             painter.Bullet("Injection targets properties. A plain field is skipped silently - no error, no warning, null at runtime.");
             painter.Bullet("A Command lives in Scripts/Runtime/Controllers, a Function in Scripts/Runtime/Functions.");
             painter.Bullet("Create Command writes the file and its binding. Prefer it over writing either by hand.");
