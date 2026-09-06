@@ -5,15 +5,16 @@ using Modules.MainModule.Signals;
 
 namespace Modules.MainModule.RootsContexts
 {
-   
     public class MainContext : Context
     {
         private MainSignals _mainSignals;
+        private MainInternalSignals _internalSignals;
 
         public override void SignalBindings()
         {
             base.SignalBindings();
             _mainSignals = InjectionBinderCrossContext.Bind<MainSignals>();
+            _internalSignals = InjectionBinderCrossContext.Bind<MainInternalSignals>();
         }
 
         public override void InjectionBindings()
@@ -30,9 +31,9 @@ namespace Modules.MainModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_mainSignals.Launch)
+            CommandBinder.Bind(_internalSignals.Launch)
                 .ToSequence<LogStartupCommand>()
-                .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.OpenMainScene);
+                .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.Started);
         }
 
         public override void Setup()
@@ -43,7 +44,7 @@ namespace Modules.MainModule.RootsContexts
         public override void Launch()
         {
             base.Launch();
-            _mainSignals.Launch.Dispatch();
+            _internalSignals.Launch.Dispatch();
         }
     }
 }

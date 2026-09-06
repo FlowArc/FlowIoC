@@ -26,7 +26,7 @@ namespace Modules.ConnectorModule.RootsContexts
 
         private void IncomingSignals()
         {
-            _mainSignals.Outgoing.OpenMainScene.Connect(_mainScreenSignals.Incoming.OpenMainScreen);
+            _mainSignals.Outgoing.Started.Connect(_mainScreenSignals.Incoming.OpenMainScreen);
         }
 
         private void OutGoingSignals()
@@ -43,7 +43,7 @@ namespace Modules.ConnectorModule.RootsContexts
         }
 
         private void UnbindIncomingSignals() =>
-            _mainSignals.Outgoing.OpenMainScene.Disconnect();
+            _mainSignals.Outgoing.Started.Disconnect();
 
         private void UnbindOutGoingSignals() =>
             _mainScreenSignals.Outgoing.DifficultySelected.Disconnect();
