@@ -17,6 +17,11 @@ namespace FlowIoC.ConsoleModule
         public static Action<ConsoleLog> OnLogAdded;
 
         private const int MaxMessageLength = 15000;
+        private const int LogTrimChunk = 256;
+
+        private const string NotCaptured =
+            "Source not captured. Raise Stack Trace Capture in the Flow Console settings to see it.";
+
         private const char ArrowDown = '\u21d3';
         private const char ArrowUp = '\u21d1';
 
@@ -207,8 +212,7 @@ namespace FlowIoC.ConsoleModule
             if (Settings.TryGetLogType(logTypeValue, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
-            Logs.Add(log);
-            OnLogAdded?.Invoke(log);
+            AppendLog(log);
 #endif
 
             Debug.LogError(string.IsNullOrEmpty(unityMessage) ? message : unityMessage, context);
@@ -292,8 +296,7 @@ namespace FlowIoC.ConsoleModule
             if (Settings.TryGetLogType((int) systemLogType, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
-            Logs.Add(log);
-            OnLogAdded?.Invoke(log);
+            AppendLog(log);
 #endif
 
             ForwardToUnityConsole((int) systemLogType, message, logType);
@@ -311,8 +314,7 @@ namespace FlowIoC.ConsoleModule
             if (Settings.TryGetLogType(logTypeValue, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
-            Logs.Add(log);
-            OnLogAdded?.Invoke(log);
+            AppendLog(log);
 #endif
 
             ForwardToUnityConsole(logTypeValue, message, logType);
@@ -332,8 +334,44 @@ namespace FlowIoC.ConsoleModule
                 LogType = logType
             };
 
-            GetSourceInfo(log);
+            if (CapturesSourceFor(logType))
+                GetSourceInfo(log);
+            else
+                log.SourceTrace = log.StackTrace = NotCaptured;
+
             return log;
+        }
+
+        private static bool CapturesSourceFor(LogType logType)
+        {
+            switch (Settings.StackTraceCapture)
+            {
+                case FlowStackTraceCapture.Always:
+                    return true;
+
+                case FlowStackTraceCapture.WarningsAndErrors:
+                    return logType != LogType.Log;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Keeps the console's own list to the size the settings ask for. Trimmed in one block once
+        /// it has run past the limit rather than one entry per log, because dropping the front of a
+        /// list moves everything behind it.
+        /// </summary>
+        private static void AppendLog(ConsoleLog log)
+        {
+            Logs.Add(log);
+            OnLogAdded?.Invoke(log);
+
+            int maxLogCount = Settings.MaxLogCount;
+            if (maxLogCount <= 0 || Logs.Count <= maxLogCount + LogTrimChunk)
+                return;
+
+            Logs.RemoveRange(0, Logs.Count - maxLogCount);
         }
 #endif
 

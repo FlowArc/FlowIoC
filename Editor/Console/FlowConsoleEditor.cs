@@ -40,6 +40,7 @@ namespace FlowIoC.Editor.Console
         private int _cachedErrorCount;
         private const float LogEntryLineHeight = 16f;
         private const float LogEntryPadding = 6f;
+        private const int LogTrimChunk = 256;
 
         private float[] _cachedLogHeights;
         private float[] _cumulativeHeights;
@@ -177,6 +178,7 @@ namespace FlowIoC.Editor.Console
                 _scrollToSelectedLog = true;
                 _needsRepaint = true;
             }
+
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.EndHorizontal();
@@ -231,11 +233,12 @@ namespace FlowIoC.Editor.Console
                         SetAllSystemTypesVisible(!allVisible);
                         OnLogTypeSelectionChanged();
                     }
+
                     GUI.backgroundColor = Color.white;
                 }
                 else
                 {
-                    if (!_settings.TryGetLogType((int)consoleLogType, out var typeInfo)) continue;
+                    if (!_settings.TryGetLogType((int) consoleLogType, out var typeInfo)) continue;
 
                     GUI.backgroundColor = typeInfo.IsVisible ? Color.green : Color.white;
 
@@ -245,6 +248,7 @@ namespace FlowIoC.Editor.Console
                         EditorUtility.SetDirty(_settings);
                         OnLogTypeSelectionChanged();
                     }
+
                     GUI.backgroundColor = Color.white;
                 }
             }
@@ -286,6 +290,7 @@ namespace FlowIoC.Editor.Console
                         else
                             hi = mid;
                     }
+
                     _layoutFirstVisible = Mathf.Clamp(lo, 0, totalCount - 1);
 
                     float visibleEnd = scrollY + viewportHeight;
@@ -296,6 +301,7 @@ namespace FlowIoC.Editor.Console
                             break;
                         _layoutLastVisible = i;
                     }
+
                     _layoutLastVisible = Mathf.Min(_layoutLastVisible + 1, totalCount - 1);
                 }
 
@@ -333,6 +339,7 @@ namespace FlowIoC.Editor.Console
                     _isResizingDetailPanel = true;
                     e.Use();
                 }
+
                 if (e.type == EventType.MouseDrag && _isResizingDetailPanel)
                 {
                     _detailPanelHeight -= e.delta.y;
@@ -340,6 +347,7 @@ namespace FlowIoC.Editor.Console
                     Repaint();
                     e.Use();
                 }
+
                 if (e.type == EventType.MouseUp && _isResizingDetailPanel)
                 {
                     _isResizingDetailPanel = false;
@@ -376,12 +384,12 @@ namespace FlowIoC.Editor.Console
                             if (string.IsNullOrEmpty(_cachedTraceLines[i])) continue;
 
                             if (_cachedTraceFilePaths[i] != null)
-                                DrawCachedClickableTrace(_cachedTraceDisplayTexts[i], _cachedTraceFilePaths[i], _cachedTraceLineNumbers[i], _cachedTraceClassNames[i]);
+                                DrawCachedClickableTrace(_cachedTraceDisplayTexts[i], _cachedTraceFilePaths[i], _cachedTraceLineNumbers[i],
+                                    _cachedTraceClassNames[i]);
                             else
                                 DrawNonClickableTraceLine(_cachedTraceDisplayTexts[i]);
                         }
                     }
-
                 }
                 else
                 {
@@ -405,7 +413,8 @@ namespace FlowIoC.Editor.Console
             _logFilter[LogType.Log] = EditorGUILayout.ToggleLeft("Log(" + _cachedLogCount + ")", _logFilter[LogType.Log], GUILayout.Width(75));
 
             GUI.backgroundColor = Color.yellow;
-            _logFilter[LogType.Warning] = EditorGUILayout.ToggleLeft("War(" + _cachedWarningCount + ")", _logFilter[LogType.Warning], GUILayout.Width(75));
+            _logFilter[LogType.Warning] =
+                EditorGUILayout.ToggleLeft("War(" + _cachedWarningCount + ")", _logFilter[LogType.Warning], GUILayout.Width(75));
 
             GUI.backgroundColor = Color.red;
             _logFilter[LogType.Error] = EditorGUILayout.ToggleLeft("Err(" + _cachedErrorCount + ")", _logFilter[LogType.Error], GUILayout.Width(75));
@@ -434,6 +443,7 @@ namespace FlowIoC.Editor.Console
             {
                 ShowProjectTypesMenu();
             }
+
             GUI.backgroundColor = Color.white;
 
             EditorGUILayout.EndHorizontal();
@@ -487,6 +497,7 @@ namespace FlowIoC.Editor.Console
                 if (!logType.IsMandatory)
                     logType.IsVisible = enabled;
             }
+
             EditorUtility.SetDirty(_settings);
             OnLogTypeSelectionChanged();
         }
@@ -498,6 +509,7 @@ namespace FlowIoC.Editor.Console
                 typeInfo.IsVisible = !typeInfo.IsVisible;
                 EditorUtility.SetDirty(_settings);
             }
+
             OnLogTypeSelectionChanged();
         }
 
@@ -506,9 +518,10 @@ namespace FlowIoC.Editor.Console
             for (int i = 0; i < _settings.LogTypes.Count; i++)
             {
                 var lt = _settings.LogTypes[i];
-                if (lt.IsMandatory && lt.Value != (int)SystemLogType.All && !lt.IsVisible)
+                if (lt.IsMandatory && lt.Value != (int) SystemLogType.All && !lt.IsVisible)
                     return false;
             }
+
             return true;
         }
 
@@ -517,9 +530,10 @@ namespace FlowIoC.Editor.Console
             for (int i = 0; i < _settings.LogTypes.Count; i++)
             {
                 var lt = _settings.LogTypes[i];
-                if (lt.IsMandatory && lt.Value != (int)SystemLogType.All)
+                if (lt.IsMandatory && lt.Value != (int) SystemLogType.All)
                     lt.IsVisible = visible;
             }
+
             EditorUtility.SetDirty(_settings);
         }
 
@@ -535,8 +549,12 @@ namespace FlowIoC.Editor.Console
                 for (int i = 0; i < _settings.LogTypes.Count; i++)
                 {
                     var lt = _settings.LogTypes[i];
-                    if (lt.Value == (int)SystemLogType.All) continue;
-                    if (!lt.IsVisible) { allTypesVisible = false; break; }
+                    if (lt.Value == (int) SystemLogType.All) continue;
+                    if (!lt.IsVisible)
+                    {
+                        allTypesVisible = false;
+                        break;
+                    }
                 }
             }
 
@@ -560,7 +578,7 @@ namespace FlowIoC.Editor.Console
 
                     if (isSystemLog)
                     {
-                        if (_settings.TryGetLogType((int)log.SystemLogType, out var sysType) && sysType.IsVisible)
+                        if (_settings.TryGetLogType((int) log.SystemLogType, out var sysType) && sysType.IsVisible)
                         {
                             _multiTypeFilterBuffer.Add(log);
                             continue;
@@ -650,6 +668,7 @@ namespace FlowIoC.Editor.Console
                 {
                     if (msg[c] == '\n') lineCount++;
                 }
+
                 _cachedLogHeights[i] = lineCount * LogEntryLineHeight + LogEntryPadding;
                 _cumulativeHeights[i + 1] = _cumulativeHeights[i] + _cachedLogHeights[i];
             }
@@ -671,7 +690,8 @@ namespace FlowIoC.Editor.Console
                 EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), new Color(0.3f, 0.7f, 1f, 1f));
             }
 
-            var date = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" + consoleLog.Second.ToString("00") + ":" + consoleLog.Millisecond.ToString("000");
+            var date = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" + consoleLog.Second.ToString("00") + ":" +
+                       consoleLog.Millisecond.ToString("000");
             Rect textRect = new Rect(rect.x + 4, rect.y, rect.width - 8, rect.height);
             GUI.Label(textRect, date + " | " + consoleLog.Message, _richTextStyle);
 
@@ -741,6 +761,7 @@ namespace FlowIoC.Editor.Console
                     _logsPanelScroll.y = logTop - (viewportHeight - logHeight) / 2f;
                     _logsPanelScroll.y = Mathf.Max(0, _logsPanelScroll.y);
                 }
+
                 return;
             }
         }
@@ -755,8 +776,23 @@ namespace FlowIoC.Editor.Console
         private void OnLogAdded(ConsoleLog log)
         {
             _allLogs.Add(log);
+            TrimToMaxLogCount();
             _logsDirty = true;
             _needsRepaint = true;
+        }
+
+        /// <summary>
+        /// The window keeps its own copy of the logs, so it has to honour the same limit the
+        /// settings put on FlowLogger - otherwise a window left open through a long session grows
+        /// without end while the list it was built from stays capped.
+        /// </summary>
+        private void TrimToMaxLogCount()
+        {
+            int maxLogCount = FlowLogger.Settings.MaxLogCount;
+            if (maxLogCount <= 0 || _allLogs.Count <= maxLogCount + LogTrimChunk)
+                return;
+
+            _allLogs.RemoveRange(0, _allLogs.Count - maxLogCount);
         }
 
         private void OpenSourceFile(string filePath, int lineNumber)
@@ -1129,7 +1165,9 @@ namespace FlowIoC.Editor.Console
                             }
                         }
                     }
-                    catch (Exception) { }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
 
