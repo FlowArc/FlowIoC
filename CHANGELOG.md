@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-06
+
+### Added
+
+- **Role ticks the folder it implies.** `Services/` and `Systems/` were already optional folders in
+  the main layout and already tickable in the structure panel, but both started clear whatever Role
+  said - so choosing Service and finding no `Services/` folder in the module was the ordinary
+  outcome. System now arrives with `Systems/` ticked, Service with `Services/`, Core with neither,
+  and either tick may still be changed before pressing Create.
+
+### Changed
+
+- **Every enum value carries its number**, and `FolderEVO.FolderType` is written out. Unity
+  serializes an enum as an int, so a value inserted or deleted in the middle renumbers everything
+  below it and every asset on disk then reads back as the wrong thing. Numbered, a value can be
+  deleted without moving the rest. The rule is in the agent rules under Code style.
+
+- **What a Function is, said by what it is for.** The rule read "a Function returns a value and does
+  not orchestrate", and neither half survives a real module: the eight Functions in HitNPoP's
+  MapModule are all `FunctionVoid`, one of them dispatching signals from inside itself. A Command is
+  a step in a flow, read in order; a Function is called from inside one, does its work without
+  depending on where it sits, and returns a value only when it has one. The half that holds is the
+  trade: a Function is not a step in the Flow Console, so a step somebody should read in the
+  sequence is a Command.
+
+- **A decision belongs in a Command, said once.** It was in the documents three times and never by
+  itself - a Context needs no `if`, a View holds no `if` about game rules, a Mediator holds none
+  either. Those are now instances of it, along with the System type that holds no method doing work.
+  With the other half stated too: what needs no decision is not one, so a close button that always
+  closes is the Mediator calling `_view.Hide()`.
+
+- **A flow is read from one Context, and a Connector does not decide.** A Command whose only job is
+  to dispatch is not written - `DispatchSignalCommand` is bound with the signal and its payload, so
+  the signal leaving is a line in the Context. A list of consequences hung off one announcement
+  belongs in the sequence that owns it: binding `GameOver` to `OpenGameEndScreen` and to
+  `ResetPlayerData` puts both only in the wiring, and reads as though the Connector decided that
+  ending a game resets the player's data.
+
+### Removed
+
+- **Three retired `FolderType` values**: `ScreenViews`, `ScreenConfigs` and `SharedSignals`, kept
+  alive only to hold their positions. Their numbers - 2, 9 and 24 - are in
+  `FolderEVO.RetiredFolderTypes` and are never reused; the heals that removed one type each remove
+  all three now, which is the first time `ScreenViews` was removed from anything. A settings asset
+  carrying keys for them prunes them on load rather than needing to be deleted.
+
 ## [1.5.0] - 2026-09-06
 
 ### Added
