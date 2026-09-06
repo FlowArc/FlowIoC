@@ -21,12 +21,45 @@ namespace FlowIoC.BaseModule.Function.Provider
         private readonly Dictionary<Type, Stack<FunctionDataContainer>> _functionDataContainerPool;
         private readonly Dictionary<Type, Stack<IFunctionBody>> _functionPool;
 
+        // A function's Execute is found once per type. It was looked up on every call, and a
+        // Function is what a Command reaches for mid-Execute - so it runs as often as they do.
+        private readonly Dictionary<Type, MethodInfo> _executeMethods = new();
+
         internal IContext Context;
 
         public FunctionProvider()
         {
             _functionDataContainerPool = new Dictionary<Type, Stack<FunctionDataContainer>>();
             _functionPool = new Dictionary<Type, Stack<IFunctionBody>>();
+        }
+
+        private MethodInfo GetExecuteMethod(Type functionType)
+        {
+            if (_executeMethods.TryGetValue(functionType, out MethodInfo cached))
+                return cached;
+
+            cached = functionType.GetMethod("Execute");
+            _executeMethods[functionType] = cached;
+
+            if (cached == null)
+                FlowLogger.LogError(SystemLogType.Function, "No public Execute found on " + functionType.Name + ".");
+
+            return cached;
+        }
+
+        private void ReturnDataContainerToPool(FunctionDataContainer functionDataContainer)
+        {
+            functionDataContainer.Dispose();
+
+            Type containerType = functionDataContainer.GetType();
+
+            if (!_functionDataContainerPool.TryGetValue(containerType, out Stack<FunctionDataContainer> pool))
+            {
+                pool = new Stack<FunctionDataContainer>();
+                _functionDataContainerPool[containerType] = pool;
+            }
+
+            pool.Push(functionDataContainer);
         }
 
         private FunctionDataContainer GetFunctionDataContainer<TDataContainerType>() where TDataContainerType : FunctionDataContainer, new()
@@ -79,58 +112,57 @@ namespace FlowIoC.BaseModule.Function.Provider
         internal void ExecuteFunction(FunctionDataContainer functionDataContainer)
         {
             IFunctionBody function = GetFunction(functionDataContainer);
-            MethodInfo executeMethodInfo = functionDataContainer.FunctionType.GetMethod("Execute");
+            MethodInfo executeMethodInfo = GetExecuteMethod(functionDataContainer.FunctionType);
 
             Context.TryToInjectFunction(function);
             executeMethodInfo?.Invoke(function, functionDataContainer.ExecuteParameters);
-            FlowLogger.LogWarning(SystemLogType.Function, "Function Executed! " + function.GetType().Name);
-            
+            FlowLogger.Log(SystemLogType.Function, "Function Executed! " + function.GetType().Name);
+
             if (!function.HasRetain)
             {
                 ReturnFunctionToPool(function);
             }
-            
-            functionDataContainer.Dispose();
-            _functionDataContainerPool[functionDataContainer.GetType()].Push(functionDataContainer);
+
+            ReturnDataContainerToPool(functionDataContainer);
         }
 
         internal TReturnType ExecuteFunction<TReturnType>(FunctionDataContainer functionDataContainer)
         {
             IFunctionBody function = GetFunction(functionDataContainer);
-            MethodInfo executeMethodInfo = functionDataContainer.FunctionType.GetMethod("Execute");
+            MethodInfo executeMethodInfo = GetExecuteMethod(functionDataContainer.FunctionType);
 
             Context.TryToInjectFunction(function);
             object result = executeMethodInfo?.Invoke(function, functionDataContainer.ExecuteParameters);
-            FlowLogger.LogWarning(SystemLogType.Function, "Function Executed! " + function.GetType().Name);
+            FlowLogger.Log(SystemLogType.Function, "Function Executed! " + function.GetType().Name);
 
-            functionDataContainer.Dispose();
-            _functionDataContainerPool[functionDataContainer.GetType()].Push(functionDataContainer);
-            
+            ReturnDataContainerToPool(functionDataContainer);
+
+
             if (!function.HasRetain)
             {
                 ReturnFunctionToPool(function);
             }
-            
-            return (TReturnType)result;
+
+            return (TReturnType) result;
         }
 
         internal IEnumerator ExecuteAsyncFunction(FunctionDataContainer functionDataContainer)
         {
             AsyncFunctionBody function = GetFunction(functionDataContainer) as AsyncFunctionBody;
-            object functionCompletedCallback = functionDataContainer.GetType().GetProperty("FunctionCompletedCallback")?.GetValue(functionDataContainer);
+            object functionCompletedCallback =
+                functionDataContainer.GetType().GetProperty("FunctionCompletedCallback")?.GetValue(functionDataContainer);
 
             function?.GetType().GetProperty("FunctionCompletedCallback")?.SetValue(function, functionCompletedCallback);
             Context.TryToInjectFunction(function);
             yield return function?.Execute();
-            FlowLogger.LogWarning(SystemLogType.Function, "Function Executed! " + function?.GetType().Name);
-            
+            FlowLogger.Log(SystemLogType.Function, "Function Executed! " + function?.GetType().Name);
+
             if (function != null && !function.HasRetain)
             {
                 ReturnFunctionToPool(function);
             }
-            
-            functionDataContainer.Dispose();
-            _functionDataContainerPool[functionDataContainer.GetType()].Push(functionDataContainer);
+
+            ReturnDataContainerToPool(functionDataContainer);
         }
 
         public void ReleaseFunctionManually(IFunctionBody function)
@@ -157,7 +189,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             functionBody.Dispose();
             pool.Push(functionBody);
 
-            FlowLogger.LogWarning(SystemLogType.Function, "Function Returned to Pool! " + functionType.Name);
+            FlowLogger.Log(SystemLogType.Function, "Function Returned to Pool! " + functionType.Name);
         }
 
         private IFunctionBody GetFunction(FunctionDataContainer functionDataContainer)
@@ -170,12 +202,11 @@ namespace FlowIoC.BaseModule.Function.Provider
                 _functionPool[functionType] = pool;
             }
 
-            IFunctionBody function = pool.Count > 0 ? pool.Pop() : (IFunctionBody)Activator.CreateInstance(functionType);
+            if (pool.Count > 0)
+                return pool.Pop();
 
-            if (function == null)
-            {
-                FlowLogger.LogWarning(SystemLogType.Function, "Function Created! " + functionType.Name);
-            }
+            IFunctionBody function = (IFunctionBody) Activator.CreateInstance(functionType);
+            FlowLogger.Log(SystemLogType.Function, "Function Created! " + functionType.Name);
 
             return function;
         }

@@ -43,7 +43,8 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
         {
             if (view.IsRegistered)
             {
-                Debug.LogWarning("View is already registered. \nviewType: " + view.GetType().Name);
+                // Said once, and through the framework's own logger. The extra Debug call wrote the
+                // same line to Unity's console whatever the Flow Console settings asked for.
                 FlowLogger.LogWarning(SystemLogType.Injection, "View is already registered. \nviewType: " + view.GetType().Name);
                 return false;
             }
