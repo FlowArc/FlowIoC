@@ -156,6 +156,12 @@ namespace FlowIoC.Editor.Help.Pages
                 + "for line. What the Mediator does in between is turn one into the other: a "
                 + "callback from the View into a dispatch, and a signal from the module into a value "
                 + "on the View.");
+            painter.Note(
+                "Important: a Mediator is pooled, so the mirror is not a tidiness rule - it is what "
+                + "makes the next use correct. The View and the signal holders are injected again "
+                + "when the instance comes back out, but a subscription OnRegister made and OnRemove "
+                + "did not undo is still live, and anything the Mediator wrote to a plain field is "
+                + "still there. A handler left behind answers a View that is no longer on screen.");
             painter.Code(
                 "public class HudMediator : IMediator\n"
                 + "{\n"

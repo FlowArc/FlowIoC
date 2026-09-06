@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Root;
@@ -248,14 +247,12 @@ namespace FlowIoC.BaseModule.Injectable.Components
             _waitingForContexts = false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RegisterView(ViewInjectorData viewInjectorData)
         {
             if (viewInjectorData.AutoRegister)
                 TryToInject((IView) viewInjectorData.View);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool TryToInject(IView viewComponent)
         {
             ViewInjectorData injectorData = GetViewInjectorData(viewComponent);
@@ -267,7 +264,6 @@ namespace FlowIoC.BaseModule.Injectable.Components
             return injectResult;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ViewInjectorData GetViewInjectorData(IView view)
         {
             for (int i = 0; i < viewDataList.Count; i++)

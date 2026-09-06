@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -6,6 +7,7 @@ using FlowIoC.BaseModule.Constructables;
 using FlowIoC.ConsoleModule;
 using FlowIoC.PoolModule.Entities;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace FlowIoC.PoolModule.Models.Runtime
 {
@@ -200,15 +202,21 @@ namespace FlowIoC.PoolModule.Models.Runtime
             }
         }
 
+        /// <summary>
+        /// A copy, not the pool's own list. Callers of these walk the items and destroy them, and
+        /// handing back the live list makes the caller responsible for knowing that a Destroy is
+        /// deferred - one day one of them does something that is not, and removes from the
+        /// collection it is walking.
+        /// </summary>
         public IEnumerable GetAllActiveItemsByItemKey(string itemKey, string groupKey)
             => TryGetBucket(itemKey, groupKey, out PoolBucket bucket)
-                ? bucket.Active.Items
-                : System.Array.Empty<IPoolableItem>();
+                ? new List<IPoolableItem>(bucket.Active.Items)
+                : Array.Empty<IPoolableItem>();
 
         public IEnumerable GetAllPassiveItemsByItemKey(string itemKey, string groupKey)
             => TryGetBucket(itemKey, groupKey, out PoolBucket bucket)
-                ? bucket.Passive.Items
-                : System.Array.Empty<IPoolableItem>();
+                ? new List<IPoolableItem>(bucket.Passive.Items)
+                : Array.Empty<IPoolableItem>();
 
         #endregion
 
