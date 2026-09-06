@@ -20,7 +20,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
         [Inject] private LoadSubService _load { get; set; }
         [Inject] private IScreenBuilderSubService _builder { get; set; }
         [Inject] private HideSubService _hide { get; set; }
-        
+
 
         public async Task<T> ShowNewScreen<T>() where T : IScreenBody
         {
@@ -28,7 +28,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
             T screenBody;
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Show.NewScreen] Showing screen new! {screenData.ScreenType.Name}");
-            
+
             screenBody = (T) await _load.Screen(screenData);
             if (screenBody == null) return default;
             screenBody.Data = screenData;
@@ -50,13 +50,17 @@ namespace FlowIoC.ScreenModule.Service.Sub
         private void AfterShowScreen<T>(T screenBody) where T : IScreenBody
         {
             _runtimeModel.AddToActivePools(screenBody);
+
+            // Dropped first for the same reason the hide side does it: a screen shown again before
+            // its last show finished would otherwise carry two subscriptions.
+            screenBody.ShowCompleted -= ShowAnimationCompleted;
             screenBody.ShowCompleted += ShowAnimationCompleted;
             _hide.Setup(screenBody);
             _setupService.SetupScreen(screenBody);
-            
+
             if (!screenBody.IsRegistered)
                 screenBody.Register();
-            
+
             screenBody.Show();
 
             //TODO: History
@@ -67,6 +71,5 @@ namespace FlowIoC.ScreenModule.Service.Sub
             screenBody.Data.RemoveState(ScreenState.InShowAnimation);
             screenBody.ShowCompleted -= ShowAnimationCompleted;
         }
-
     }
 }

@@ -22,6 +22,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
                 Screen(screenBody, isForce);
             }
         }
+
         public void ScreensAtManager(int managerId, bool isForce = false)
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Hide.AllScreensAtManager][isForce({isForce})] manager({managerId})!");
@@ -32,12 +33,13 @@ namespace FlowIoC.ScreenModule.Service.Sub
                 Screen(screenBody, isForce);
             }
         }
+
         public void ScreenInLayer(int layerIndex, int managerId = 0, bool isForce = false)
         {
             if (_runtimeModel.IsLayerFull(layerIndex, managerId, out IScreenBody screenBody))
             {
                 FlowLogger.Log(SystemLogType.Screen,
-                $"[ScreenService.Hide][isForce({isForce})] Layer({layerIndex}) at manager({managerId})!");
+                    $"[ScreenService.Hide][isForce({isForce})] Layer({layerIndex}) at manager({managerId})!");
 
                 Screen(screenBody, isForce);
             }
@@ -47,6 +49,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
                     $"[ScreenService.Hide][isForce({isForce})] Layer({layerIndex}) is empty at manager({managerId})!");
             }
         }
+
         public void ScreensByTag(ScreenTag tag, int managerId = 0, bool isForce = false)
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Hide.ScreensByTag][isForce({isForce})] tag:{tag.ToString()}");
@@ -59,6 +62,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
                 Screen(screenBody, isForce);
             }
         }
+
         public void Screen<T>(int managerId = 0, bool isForce = false) where T : IScreenBody
         {
             if (_runtimeModel.IsScreenActive(typeof(T), managerId, out IScreenBody screenBody))
@@ -69,6 +73,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
                 FlowLogger.LogWarning(SystemLogType.Screen,
                     $"[ScreenService.Hide][isForce({isForce})] Screen ({typeof(T).Name}) is not active at manager({managerId})!");
         }
+
         public void Screen(IScreenBody screenBody, bool isForce = false)
         {
             if (screenBody == null)
@@ -91,13 +96,15 @@ namespace FlowIoC.ScreenModule.Service.Sub
             }
             else
             {
-                FlowLogger.LogWarning(SystemLogType.Screen, $"[ScreenService.Hide.Screen] Cant close {screenBody.Data.ScreenType.Name}, state: {screenBody.Data.State}");
+                FlowLogger.LogWarning(SystemLogType.Screen,
+                    $"[ScreenService.Hide.Screen] Cant close {screenBody.Data.ScreenType.Name}, state: {screenBody.Data.State}");
             }
         }
+
         private void HideAnimationCompleted(IScreenBody screenBody)
         {
             screenBody.HideCompleted -= HideAnimationCompleted;
-            
+
             screenBody.Data.RemoveState(ScreenState.InHideAnimation);
             _runtimeModel.RemoveFromActivePools(screenBody);
             _runtimeModel.AddToPassivePool(screenBody);
@@ -106,8 +113,15 @@ namespace FlowIoC.ScreenModule.Service.Sub
             if (screenBody.Data.HasState(ScreenState.Unloading))
                 _unload.AfterHide(screenBody);
         }
+
+        /// <summary>
+        /// Wires the screen's hide completion. Dropped first: a screen shown again before it was
+        /// hidden - which is what force-opening over a duplicate does - would otherwise carry two
+        /// subscriptions, and one hide would then park the same instance in the pool twice.
+        /// </summary>
         internal void Setup<T>(T screenBody) where T : IScreenBody
         {
+            screenBody.HideCompleted -= HideAnimationCompleted;
             screenBody.HideCompleted += HideAnimationCompleted;
         }
     }

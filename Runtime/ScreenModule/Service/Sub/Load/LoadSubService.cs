@@ -19,24 +19,43 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         [Inject] private AddressableLoadSubService _addressableLoadService { get; set; }
         [Inject] private ResourceLoadSubService _resourceLoadSubService { get; set; }
 
-        public async void All(bool isTest = false, Action completeCallback = null, Action<int, int> loadingProgressCallback = null)
+        public void All(bool isTest = false, Action completeCallback = null, Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.All]");
-            await LoadEntries(_registry.GetAllEntries(), completeCallback, loadingProgressCallback);
+            Run(LoadEntries(_registry.GetAllEntries(), completeCallback, loadingProgressCallback), nameof(All));
         }
 
-        public async void ScreensAtManager(int managerId = 0, bool isTest = false, Action completeCallback = null,
+        public void ScreensAtManager(int managerId = 0, bool isTest = false, Action completeCallback = null,
             Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.ScreensAtManager]");
-            await LoadEntries(_registry.GetManagerEntries(managerId), completeCallback, loadingProgressCallback);
+            Run(LoadEntries(_registry.GetManagerEntries(managerId), completeCallback, loadingProgressCallback),
+                nameof(ScreensAtManager));
         }
 
-        public async void ByTag(ScreenTag tag, bool isTest = false, Action completeCallback = null,
+        public void ByTag(ScreenTag tag, bool isTest = false, Action completeCallback = null,
             Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.ByTag] {tag}");
-            await LoadEntries(_registry.GetTagEntries(tag), completeCallback, loadingProgressCallback);
+            Run(LoadEntries(_registry.GetTagEntries(tag), completeCallback, loadingProgressCallback), nameof(ByTag));
+        }
+
+        /// <summary>
+        /// Starts a load nobody awaits. These three return void because a Command calls them and
+        /// hears back through the callback - but an unguarded async void swallows whatever went
+        /// wrong, so the load stopped, the callback never came, and nothing was written down.
+        /// </summary>
+        private async void Run(Task load, string caller)
+        {
+            try
+            {
+                await load;
+            }
+            catch (Exception exception)
+            {
+                FlowLogger.LogError(SystemLogType.Screen,
+                    $"[ScreenService.Load.{caller}] stopped: {exception.Message}\n{exception}");
+            }
         }
 
         private async Task LoadEntries(List<ScreenEntry> entries, Action completeCallback, Action<int, int> loadingProgressCallback)
