@@ -15,7 +15,7 @@ namespace FlowIoC.Editor.Inspector
     /// The fill is flat. The gradient this replaces built a Texture2D on every repaint, which
     /// leaked one texture per frame and said nothing the colour alone does not.
     /// </summary>
-    internal class FlowHeaderBar
+    public class FlowHeaderBar
     {
         private const float BarHeight = 30f;
         private const float StripHeight = 16f;
