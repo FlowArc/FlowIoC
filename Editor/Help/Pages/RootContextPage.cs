@@ -83,8 +83,15 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Code(
                 "public class CounterServiceRoot : Root<CounterServiceContext> { }\n"
                 + "public class PlayerSystemRoot   : Root<PlayerSystemContext>   { }\n"
-                + "public class PlayerRoot         : Root<PlayerContext>         { }",
+                + "\n"
+                + "[FlowHeader(FlowRole.Core)]\n"
+                + "public class MainRoot           : Root<MainContext>           { }",
                 "Service, System and Core - what Create Module asks as Role");
+            painter.Paragraph(
+                "Core is the one role a name cannot carry. A Core module is part of the project's "
+                + "frame rather than of its game - there is one Main, one Screen and one Connector "
+                + "in a project - so its name has nothing to disambiguate from and takes no suffix. "
+                + "The attribute is what tells the bar, and it wins over every other reading.");
 
             painter.Space();
             painter.SubHeading("What hangs off a Root");

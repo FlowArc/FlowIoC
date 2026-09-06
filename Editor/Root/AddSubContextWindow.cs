@@ -83,7 +83,11 @@ namespace FlowIoC.Editor.Root
                                 x.GetCustomAttribute<AllowAsSubContextAttribute>() != null)
                     .Where(x => _root.SubContextTypes?.All(a => a.ContextFullName != x.FullName) ?? true)
                     .Where(x => x.GetCustomAttribute<ExcludeFromContextWindowAttribute>() == null)
-                    .Where(x => IsConnector(_roles, x) == (_rootRole == FlowRole.Connector))
+                    // A Connector sub-context is offered on the Connector Root and nowhere else,
+                    // and every other Root is offered everything but those: the wiring between two
+                    // modules lives in one place, and the list says so before the reader has to
+                    // know it.
+                    .Where(x => _roles.IsConnector(x) == (_rootRole == FlowRole.Connector))
                     .OrderBy(x => _usage.UsedBy(x.FullName) == null ? 0 : 1)
                     .ThenBy(x => x.Name)
                     .ToList();
@@ -101,15 +105,6 @@ namespace FlowIoC.Editor.Root
         /// </summary>
         private bool IsNotABaseContext(Type type) =>
             type != typeof(Context) && type != typeof(BaseScreenContext);
-
-        /// <summary>
-        /// Whether a context is a Connector's. A Connector sub-context is offered on the Connector
-        /// Root and nowhere else, and every other Root is offered everything but those: the wiring
-        /// between two modules lives in one place, and the list says so before the reader has to
-        /// know it.
-        /// </summary>
-        private bool IsConnector(FlowRoleResolver roles, Type type) =>
-            roles.TryResolve(type, out FlowRole role) && role == FlowRole.Connector;
 
         private void OnGUI()
         {
@@ -222,7 +217,7 @@ namespace FlowIoC.Editor.Root
                 return;
             }
 
-            if (IsConnector(_roles, type))
+            if (_roles.IsConnector(type))
             {
                 badge = "CONNECTOR";
                 color = _palette.Accent(FlowRole.Connector, proSkin);

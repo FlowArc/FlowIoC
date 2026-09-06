@@ -23,16 +23,26 @@ namespace FlowIoC.Tests
             public GameObject gameObject => null;
         }
 
-        private class CounterService { }
+        private class CounterService
+        {
+        }
 
-        private class MapSystem { }
+        private class MapSystem
+        {
+        }
 
-        private class Loose { }
+        private class Loose
+        {
+        }
 
-        private class PlayerRoot { }
+        private class PlayerRoot
+        {
+        }
 
         [FlowHeader(FlowRole.Adapter, "Screen Manager")]
-        private class Renamed { }
+        private class Renamed
+        {
+        }
 
         [Test]
         public void TryResolve_prefers_the_attribute_over_the_interface()
@@ -76,11 +86,17 @@ namespace FlowIoC.Tests
             Assert.IsFalse(found);
         }
 
-        private class ScreenServiceRoot : FlowIoC.BaseModule.Root.RootBase { }
+        private class ScreenServiceRoot : FlowIoC.BaseModule.Root.RootBase
+        {
+        }
 
-        private class InventoryRoot : FlowIoC.BaseModule.Root.RootBase { }
+        private class InventoryRoot : FlowIoC.BaseModule.Root.RootBase
+        {
+        }
 
-        private class MainConnectorRoot : FlowIoC.BaseModule.Root.RootBase { }
+        private class MainConnectorRoot : FlowIoC.BaseModule.Root.RootBase
+        {
+        }
 
         [Test]
         public void TryResolve_gives_a_root_the_colour_of_what_it_roots()
@@ -96,7 +112,9 @@ namespace FlowIoC.Tests
             Assert.AreEqual(FlowRole.Root, plain);
         }
 
-        private class LocalSaveTestRoot : FlowIoC.BaseModule.Root.RootBase { }
+        private class LocalSaveTestRoot : FlowIoC.BaseModule.Root.RootBase
+        {
+        }
 
         /// <summary>
         /// A test module's Root wears the Test colour, so a scene says which Roots are there to
@@ -118,7 +136,7 @@ namespace FlowIoC.Tests
         {
             var resolver = new FlowRoleResolver();
 
-            Assert.AreEqual("SERVICE � ROOT", resolver.LabelFor(typeof(ScreenServiceRoot), FlowRole.Service));
+            Assert.AreEqual("SERVICE · ROOT", resolver.LabelFor(typeof(ScreenServiceRoot), FlowRole.Service));
             Assert.AreEqual("ROOT", resolver.LabelFor(typeof(InventoryRoot), FlowRole.Root));
         }
 
@@ -129,7 +147,9 @@ namespace FlowIoC.Tests
         }
 
         [FlowHeader(FlowRole.Mediator, label: "View Injector")]
-        private class Labelled { }
+        private class Labelled
+        {
+        }
 
         [Test]
         public void TitleFor_spaces_out_the_type_name()
@@ -141,6 +161,72 @@ namespace FlowIoC.Tests
         public void TitleFor_prefers_the_title_the_attribute_names()
         {
             Assert.AreEqual("SCREEN MANAGER", new FlowRoleResolver().TitleFor(typeof(Renamed)));
+        }
+
+        private class HeroConnectorSubContext
+        {
+        }
+
+        [FlowHeader(FlowRole.Connector)]
+        private class WiresTheHero
+        {
+        }
+
+        private class InventorySubContext
+        {
+        }
+
+        /// <summary>
+        /// Both halves of the rule that decides where a sub-context is offered: a context is a
+        /// Connector's when its name says so, and equally when it carries the attribute instead.
+        /// The attribute half is the one a caller checking the name itself would miss.
+        /// </summary>
+        [Test]
+        public void IsConnector_reads_the_name_and_the_attribute_alike()
+        {
+            var resolver = new FlowRoleResolver();
+
+            Assert.IsTrue(resolver.IsConnector(typeof(HeroConnectorSubContext)));
+            Assert.IsTrue(resolver.IsConnector(typeof(WiresTheHero)));
+            Assert.IsFalse(resolver.IsConnector(typeof(InventorySubContext)));
+        }
+
+        [Test]
+        public void IsConnector_answers_false_rather_than_throwing_for_no_type()
+        {
+            Assert.IsFalse(new FlowRoleResolver().IsConnector(null));
+        }
+
+        [FlowHeader(FlowRole.Core)]
+        private class MainRoot : FlowIoC.BaseModule.Root.RootBase
+        {
+        }
+
+        private class SettingsCoreRoot : FlowIoC.BaseModule.Root.RootBase
+        {
+        }
+
+        /// <summary>
+        /// Core is the one role a Root can only be given by hand. A Core module carries no suffix -
+        /// there is one Main and one Screen in a project, so the name has nothing to disambiguate
+        /// from - which is why a name ending in Core is read as the plain Root it looks like.
+        /// </summary>
+        [Test]
+        public void TryResolve_takes_core_from_the_attribute_and_never_from_the_name()
+        {
+            var resolver = new FlowRoleResolver();
+
+            resolver.TryResolve(typeof(MainRoot), out FlowRole declared);
+            resolver.TryResolve(typeof(SettingsCoreRoot), out FlowRole named);
+
+            Assert.AreEqual(FlowRole.Core, declared);
+            Assert.AreEqual(FlowRole.Root, named);
+        }
+
+        [Test]
+        public void LabelFor_still_says_root_when_a_root_wears_the_core_colour()
+        {
+            Assert.AreEqual("CORE · ROOT", new FlowRoleResolver().LabelFor(typeof(MainRoot), FlowRole.Core));
         }
     }
 }

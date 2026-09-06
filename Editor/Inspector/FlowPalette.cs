@@ -21,6 +21,7 @@ namespace FlowIoC.Editor.Inspector
         public FlowPalette()
         {
             Add(FlowRole.Root, "#6C3FD1", "#9966FF");
+            Add(FlowRole.Core, "#A8324A", "#E86D8C");
             Add(FlowRole.Service, "#2A6FC4", "#3C8CE7");
             Add(FlowRole.System, "#136E69", "#2FA8A0");
             Add(FlowRole.View, "#9E4E0B", "#F0873C");

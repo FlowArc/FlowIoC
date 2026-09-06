@@ -276,7 +276,7 @@ namespace FlowIoC.Editor.Root
                 badge = "SCREEN";
                 color = _palette.Accent(FlowRole.Screen, EditorGUIUtility.isProSkin);
             }
-            else if (contextData.ContextName != null && contextData.ContextName.Contains("Connector"))
+            else if (_roles.IsConnector(contextType))
             {
                 badge = "CONNECTOR";
                 color = _palette.Accent(FlowRole.Connector, EditorGUIUtility.isProSkin);

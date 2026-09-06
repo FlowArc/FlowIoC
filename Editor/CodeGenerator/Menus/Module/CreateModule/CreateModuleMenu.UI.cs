@@ -200,14 +200,19 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             EditorGUILayout.EndVertical();
         }
 
-        /// <summary>The role the generated Root will resolve to from its own name.</summary>
+        /// <summary>
+        /// The role the generated Root will resolve to. System and Service are read back from the
+        /// Root's own name; Core has no suffix to be read from, so the generated Root is written
+        /// with the attribute that declares it instead. Only a main module that gets a Root reaches
+        /// here, which is what makes the effective role the selected one.
+        /// </summary>
         private FlowRole PreviewRole()
         {
             switch (_effectiveRole)
             {
                 case ModuleRole.System: return FlowRole.System;
                 case ModuleRole.Service: return FlowRole.Service;
-                default: return FlowRole.Root;
+                default: return FlowRole.Core;
             }
         }
 

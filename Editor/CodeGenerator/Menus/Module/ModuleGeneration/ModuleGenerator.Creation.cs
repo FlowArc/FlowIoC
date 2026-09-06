@@ -29,8 +29,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             {
                 if (createRoot)
                 {
+                    // Only a main module is ever the project's frame. Every other kind arrives here
+                    // carrying Core as "no role at all", which is why the type is asked as well as
+                    // the role - a test module's Root must read as a Test, not as the frame.
                     CreateRoot(rootsAndContextsPath, modulePath, moduleName, moduleRole,
-                        selectedModuleType == ModuleType.Test);
+                        selectedModuleType == ModuleType.Test,
+                        moduleRole == ModuleRole.Core && selectedModuleType == ModuleType.Main);
                 }
 
                 if (createContext)
@@ -71,7 +75,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// paint it; a Core module keeps the plain PlayerRoot. The name is left in EditorPrefs
         /// because the scene the generator builds after the reload has to find the type again.
         /// </summary>
-        private static void CreateRoot(string path, string modulePath, string moduleName, ModuleRole moduleRole, bool isTest)
+        private static void CreateRoot(string path, string modulePath, string moduleName, ModuleRole moduleRole,
+            bool isTest, bool isCore)
         {
             var naming = new ModuleRoleNaming();
             string rootName = naming.RootName(moduleName, moduleRole);
@@ -82,6 +87,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
             string rootsAndContextsNamespace = $"{moduleNamespace}.RootsContexts";
 
+            // A System and a Service say what they root in the Root's own name, which is what the
+            // inspector reads. Core carries no suffix - there is one Main and one Screen in a
+            // project, so the name has nothing to disambiguate - and the attribute is what tells
+            // the bar that this Root is the project's frame.
+            string attribute = isCore ? "[FlowHeader(FlowRole.Core)]" : null;
+
             CodeGeneratorUtils.CreateRoot(
                 rootName,
                 contextName,
@@ -90,7 +101,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 path,
                 CodeGeneratorStrings.TempRootPath,
                 rootsAndContextsNamespace,
-                isTest
+                isTest,
+                attribute
             );
         }
 

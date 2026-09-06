@@ -90,7 +90,9 @@ namespace FlowIoC.Editor.Help.Pages
                 "Role names the Root and the Context for what the Root roots, which is what the "
                 + "inspector reads to colour it: System writes PlayerSystemRoot and "
                 + "PlayerSystemContext, Service writes CounterServiceRoot and CounterServiceContext, "
-                + "and Core writes the plain PlayerRoot and PlayerContext. It starts on System, "
+                + "and Core writes the plain PlayerRoot and PlayerContext with FlowHeader(FlowRole.Core) "
+                + "above the Root, because a Core module carries no suffix for the colour to be read "
+                + "from. It starts on System, "
                 + "because a module written for the game at hand is one. The module folder, its "
                 + "assembly and its namespaces are the same whichever you pick, and the dropdown is "
                 + "offered on a main module that gets a Root.");
