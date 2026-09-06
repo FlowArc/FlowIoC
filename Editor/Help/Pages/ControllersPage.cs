@@ -161,6 +161,38 @@ namespace FlowIoC.Editor.Help.Pages
                 + "{\n"
                 + "    public override void Execute(IPlayerModel playerModel) => playerModel.Save();\n"
                 + "}");
+
+            painter.Space();
+            painter.SubHeading("A flow is read from one Context");
+            painter.Paragraph(
+                "Somebody should see what an operation does by reading the sequence it is bound to, "
+                + "without opening a Command or crossing to the Connector. Two habits keep that "
+                + "true.");
+            painter.Paragraph(
+                "A Command whose only job is to dispatch is not written. Bind DispatchSignalCommand "
+                + "with the signal and its payload, and the signal leaving becomes a line in the "
+                + "Context rather than something a reader finds by opening a class.");
+            painter.Paragraph(
+                "And a step that orders another module about - hide the nav bar, switch the "
+                + "camera - is dispatched from the sequence, so the sequence says what the "
+                + "operation manages.");
+            painter.Code(
+                "CommandBinder.Bind(_mapSignals.Incoming.PlayRequest)\n"
+                + "    .ToSequence<ClaimPlayRequestCommand>()\n"
+                + "    .ToSequence<PrepareMatchDataCommand>()\n"
+                + "    .ToSequence<DispatchSignalCommand<string>>(_signals.Outgoing.SwitchCamera, \"Match\")\n"
+                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.HideNavBar)\n"
+                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.HideTopBar)\n"
+                + "    .ToSequence<BakeNavmeshCommand>()\n"
+                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.LoadGameScene);",
+                "Starting a match, read without leaving the Context");
+
+            painter.Space();
+            painter.Note(
+                "The other side of it: a list of consequences hung off one announcement belongs "
+                + "here, in the sequence, and not in the Connector. A Connector translates one "
+                + "announcement into one order; it does not decide what a thing having happened "
+                + "should cause.");
         }
 
         /// <summary>
@@ -223,6 +255,8 @@ namespace FlowIoC.Editor.Help.Pages
         private void DrawRules(HelpPainter painter)
         {
             painter.Bullet("A decision belongs in a Command, wherever it would otherwise be taken - a Context, a View, a Mediator, a System.");
+            painter.Bullet("A flow is read from one Context. A Command whose only job is to dispatch is not written - bind DispatchSignalCommand.");
+            painter.Bullet("A list of consequences hung off one announcement belongs in the sequence, not in the Connector.");
             painter.Bullet("What needs no decision is not one. A close button that always closes is the Mediator calling _view.Hide().");
             painter.Bullet("A Command does one unit of work, holds no state between runs, and returns no value.");
             painter.Bullet("A Command never touches another module's model. What it needs from elsewhere arrives as a signal.");
