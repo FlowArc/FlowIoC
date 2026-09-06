@@ -292,6 +292,11 @@ because a module pays for that assembly on the day it actually publishes somethi
 carved out by an asmdef sitting in the folder - Unity gives every file to the nearest asmdef
 above it - so the module references both to reach its own published data and its own holder.
 
+**The folder is mandatory, the assembly is not.** A module with no public signals leaves
+`Scripts/Signals/` empty and writes no asmdef in it, and Module Scanner reads that as Ok rather
+than as a finding - demanding one would ship a DLL with nothing in it. `ConnectorModule` is the
+case this exists for: it wires other modules' signals and announces none of its own.
+
 ### Publishing data through Shared
 
 Everything a module offers the rest of the project goes in `Scripts/Shared/`: the value
