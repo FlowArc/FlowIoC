@@ -22,12 +22,18 @@ namespace FlowIoC.BaseModule.Injectable
 
         protected List<IConstructable> _constructables;
 
+        protected RootsManager _rootsManager;
+
+        // What an assignable-type scan settled on last time, misses kept as null. Cleared whenever
+        // the container changes, which is the only thing that can make an answer wrong.
+        private readonly Dictionary<Type, Type> _assignableTypes = new();
+
         public InjectionBinder()
         {
             _container = new Dictionary<Type, List<InjectionBinding>>();
             _constructables = new List<IConstructable>();
-            RootsManager rootsManager = RootsManagerFactory.GetRootsManager() as RootsManager;
-            _bindingPoolController = rootsManager?.BindingPoolController;
+            _rootsManager = RootsManagerFactory.GetRootsManager() as RootsManager;
+            _bindingPoolController = _rootsManager?.BindingPoolController;
         }
 
         #region Bind
@@ -36,6 +42,13 @@ namespace FlowIoC.BaseModule.Injectable
         {
             _bindedContext = context;
         }
+
+        /// <summary>
+        /// How many times any binder in this run has gained or lost a binding. Injection results
+        /// are remembered against it, so what a pooled command resolved stays good until the
+        /// container it resolved from actually changes.
+        /// </summary>
+        internal int BindingGeneration => _rootsManager?.BindingGeneration ?? 0;
 
         public TBindingType Bind<TBindingType>(string name = "")
             where TBindingType : new()
@@ -98,6 +111,7 @@ namespace FlowIoC.BaseModule.Injectable
             FlowLogger.Log(SystemLogType.Injection,
                 _bindedContext.GetType().Name + " | Binding: " + injectionType.Name + (name != "" ? (" Name: " + name) : ""));
             _container[injectionType].Add(injectionBinding);
+            NoteContainerChanged();
         }
 
         public void BindInstance<TAbstract>(object instance, string name = "")
@@ -123,6 +137,7 @@ namespace FlowIoC.BaseModule.Injectable
             FlowLogger.Log(SystemLogType.Injection,
                 _bindedContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
             _container[injectionType].Add(injectionBinding);
+            NoteContainerChanged();
         }
 
         public TAbstract BindMonoBehaviorInstance<TAbstract, TConcrete>(string name = "")
@@ -151,6 +166,11 @@ namespace FlowIoC.BaseModule.Injectable
 
         #region UnBind
 
+        /// <summary>
+        /// Empties the container. The inner loop used to advance its index while UnBind removed
+        /// the entry it had just read, so a type bound under more than one name kept about half of
+        /// them: their Deconstruct never ran and their bindings never reached the pool.
+        /// </summary>
         public virtual void UnBindAll()
         {
             List<Type> keys = _container.Keys.ToList();
@@ -159,9 +179,14 @@ namespace FlowIoC.BaseModule.Injectable
             {
                 Type keyType = keys[i];
 
-                for (int ii = 0; ii < _container[keyType].Count; ii++)
+                if (!_container.TryGetValue(keyType, out List<InjectionBinding> bindings))
+                    continue;
+
+                InjectionBinding[] snapshot = bindings.ToArray();
+
+                for (int ii = 0; ii < snapshot.Length; ii++)
                 {
-                    InjectionBinding injectionBinding = _container[keyType][0];
+                    InjectionBinding injectionBinding = snapshot[ii];
                     Type type = injectionBinding.Key as Type;
                     Type key = type ?? injectionBinding.Key.GetType();
 
@@ -192,6 +217,7 @@ namespace FlowIoC.BaseModule.Injectable
         {
             InjectionBinding injectionBinding = GetInjectionBinding(key, name);
             _container[key].Remove(injectionBinding);
+            NoteContainerChanged();
 
             //DeconstructUtils.ExecuteDeconstructMethod(injectionBinding.Value);
             RunDeconstruct(injectionBinding.Value);
@@ -218,8 +244,8 @@ namespace FlowIoC.BaseModule.Injectable
             if (!_container.TryGetValue(bindingType, out List<InjectionBinding> bindings))
             {
                 FlowLogger.LogError(SystemLogType.Injection, "Nothing is bound to " + bindingType.Name
-                                                            + NameSuffix(name) + ". Whoever owns it either never "
-                                                            + "bound it or is not in the scene.");
+                                                                                    + NameSuffix(name) + ". Whoever owns it either never "
+                                                                                    + "bound it or is not in the scene.");
                 return default;
             }
 
@@ -237,22 +263,61 @@ namespace FlowIoC.BaseModule.Injectable
 
         private string NameSuffix(string name) => name == "" ? "" : " under the name '" + name + "'";
 
+        /// <summary>
+        /// The instance bound to a type, or to something assignable to it, or null when this binder
+        /// holds neither. Injection asks every context in turn, so most calls land on a binder that
+        /// has nothing - and the miss used to cost a copy of the whole key set before the scan even
+        /// started. What the scan settles on is remembered instead, misses included, and forgotten
+        /// again whenever a binding is added or taken away.
+        /// </summary>
         public object GetInstance(Type instanceType, string name = "")
         {
-            Type type = instanceType;
-            if (!_container.ContainsKey(instanceType))
+            if (!_container.TryGetValue(instanceType, out List<InjectionBinding> values))
             {
-                List<Type> injectedTypes = _container.Keys.ToList();
-                Type assignedType = injectedTypes.FirstOrDefault(instanceType.IsAssignableFrom);
+                Type assignedType = ResolveAssignableType(instanceType);
                 if (assignedType == null)
                     return null;
 
-                type = assignedType;
+                values = _container[assignedType];
             }
 
-            List<InjectionBinding> values = _container[type];
-            InjectionBinding binding = values.FirstOrDefault(x => x.Name == name);
-            return binding == null ? null : binding.Value;
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (values[i].Name == name)
+                    return values[i].Value;
+            }
+
+            return null;
+        }
+
+        private Type ResolveAssignableType(Type instanceType)
+        {
+            if (_assignableTypes.TryGetValue(instanceType, out Type remembered))
+                return remembered;
+
+            Type assignedType = null;
+            foreach (KeyValuePair<Type, List<InjectionBinding>> bound in _container)
+            {
+                if (!instanceType.IsAssignableFrom(bound.Key))
+                    continue;
+
+                assignedType = bound.Key;
+                break;
+            }
+
+            _assignableTypes[instanceType] = assignedType;
+            return assignedType;
+        }
+
+        /// <summary>
+        /// Says the container's shape changed. Injection results are remembered against this, so a
+        /// binding added or removed is what makes anything holding an older number resolve again.
+        /// </summary>
+        private void NoteContainerChanged()
+        {
+            _assignableTypes.Clear();
+            if (_rootsManager != null)
+                _rootsManager.BindingGeneration++;
         }
 
         #endregion
@@ -319,6 +384,7 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.BindedContext = _bindedContext;
 
             _container[injectionType].Add(injectionBinding);
+            NoteContainerChanged();
             AddConstructable(instance);
 
             return instance;
@@ -340,6 +406,7 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.BindedContext = _bindedContext;
 
             _container[injectionType].Add(injectionBinding);
+            NoteContainerChanged();
             AddConstructable(instance);
 
             return instance;
@@ -365,10 +432,17 @@ namespace FlowIoC.BaseModule.Injectable
             _constructables.Remove(constructable);
         }
 
+        /// <summary>
+        /// Runs PostConstruct on everything bound that has one. Indexed rather than a foreach,
+        /// because this is the phase where a module puts its data in place and a PostConstruct is
+        /// allowed to bind - which grows the list it is being read from.
+        /// </summary>
         public void RunPostConstructs()
         {
-            foreach (var constructable in _constructables)
+            for (int i = 0; i < _constructables.Count; i++)
             {
+                IConstructable constructable = _constructables[i];
+
                 if (constructable.IsPostConstructed) continue;
                 if (constructable.IsDeConstructed) continue;
 
@@ -379,12 +453,12 @@ namespace FlowIoC.BaseModule.Injectable
 
         public List<InjectionBinding> GetAllInjectionBindings()
         {
-            return _container.Values
-                .ToList()
-                .SelectMany(list => list)
-                .ToList()
-                .Select(x => x)
-                .ToList();
+            List<InjectionBinding> all = new List<InjectionBinding>();
+
+            foreach (KeyValuePair<Type, List<InjectionBinding>> bound in _container)
+                all.AddRange(bound.Value);
+
+            return all;
         }
 
         internal InjectionBinding GetInjectionBinding(Type key, string name = "")
