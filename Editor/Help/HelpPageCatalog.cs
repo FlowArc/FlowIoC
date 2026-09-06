@@ -32,6 +32,7 @@ namespace FlowIoC.Editor.Help
                         new SignalsPage(),
                         new ControllersPage(),
                         new ModelPage(),
+                        new SystemsServicesPage(),
                         new ViewMediatorPage(),
                         new ConnectorsPage()),
                     new HelpSection("Editor Tools", "Settings",

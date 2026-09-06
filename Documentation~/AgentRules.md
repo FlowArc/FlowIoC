@@ -59,22 +59,63 @@ so follow the rules below deliberately.
   injects models and services, mutates state, and dispatches outgoing signals.
 - A Function returns a value and does not orchestrate. If you want the step visible in the
   Flow Console, write a Command, not a Function.
-- A Model owns state and the rules that keep it valid. It knows nothing about Views,
-  Commands, or any other module.
+- A Model owns the module's state and its data, and the rules that keep both valid. It knows
+  nothing about Views, Commands, or any other module.
 - A Model never subscribes to a signal. Nothing reaches in and changes its state: an
   incoming signal runs a Command, and the Command calls the Model.
 - A Model may dispatch its own module's outgoing signals to announce that a value it
   holds has changed. Announcing is allowed; listening is not.
+- **Which of the three a module is, is something you can see.** A Service has files under
+  `Services/`; a screen module has a context deriving from `ScreenSubContext<TView, TMediator>`;
+  everything else is a System. There is no fourth question to ask.
 - A Service is a self-contained unit of work. It is not specific to the game it sits in and
   depends on nothing outside itself: it answers the input it is given. A countdown, a
   parser, a storage wrapper. A Service that more than one module needs gets its own module.
+- A Service knows nobody - not another Service, not a System, not a Screen - and **a finished
+  Service's assembly gets no later additions.** Work that arrives afterwards goes somewhere else,
+  or the Service turns into a module of the game it happens to sit in. What FlowIoC embeds in
+  itself is the one exception: the package's own services may lean on each other.
+- **A Service is driven in two ways and answers in two ways.** In: a caller injects its interface
+  and calls it, or dispatches one of the Commands it ships. It ships a Command for the case where
+  the caller needs the work to be a step in a sequence with the next step waiting on it -
+  `ToSequence<DispatchSignalCommand>` starts the same work but the sequence carries on without it.
+  Out: a signal when what happened may concern the whole game, and a callback the caller handed in
+  when the answer is only for whoever asked - which is what every `Action` on `ICounterService` is.
+  So a Service gets a signal holder when something outside it has to be told and no subscription
+  already carries that, and not before.
 - A System is specific to this game. It may lean on other Systems and Services - waiting on
   a signal they raise, or working from data they share - which is exactly what a Service
   may not do.
 - Systems and Services both dispatch outgoing signals when they have something to announce,
   and a Command drives their work the same way it drives a Model's.
-- A Service lives in `Services/`, a System in `Systems/`. Both are an interface and an
-  implementation, the way a Model is: `ICounterService` and `CounterService`.
+- A Service is an interface and an implementation, the way a Model is: `ICounterService` and
+  `CounterService`, under `Services/`.
+- **A System needs no `System.cs`.** The work is followed through the command flow its Context
+  declares, and a module can be a complete System without a type named `...System`. One arrives
+  when the module wants a surface: to collapse many injections into one, so a Command injects
+  `IMapSystem` once and writes `_map.Grid.Build(...)`, or to make what is available discoverable.
+  It lives under `Systems/` and is an interface and an implementation like the rest.
+- **A System type holds injected members and no method that does work.** The moment a method on it
+  does something, that work belongs in a Command - which is what keeps the step in the Flow Console
+  and lets a sequence wait for it. `PostConstruct` may assemble the surface, and that is the whole
+  allowance.
+- A System is built out of sub systems. Models appear among its members where the module's own
+  state lives, but the sub system is the unit it is assembled from. When a module has a System, a
+  Command reaches that module's own Models **through it** rather than injecting a Model directly; a
+  module without a System is the ordinary case and its Commands inject Models as they always have.
+- **A Model owns the module's state and data; a sub system computes**, and may read what other
+  modules publish. A sub system may hold data of its own, and how far its scope reaches decides
+  where that data lives: its own working data stays in it, the module's state belongs to a Model,
+  and data that is large or reaches past this module belongs to a module of its own.
+- A Service and a System both split into `Services/Sub/` and `Systems/Sub/`, for two reasons and
+  not one: the unit grew, or a chained surface is wanted so that pressing `.` offers a short list
+  rather than thirty verbs. `IScreenService` is the worked example of the second - `Load`, `Check`,
+  `Hide` group the verbs under nouns, and `Open<T>()` returns a builder where nothing happens until
+  `Show()`. A sub service or sub system is reached through the Service or System that owns it and
+  is never bound across contexts on its own.
+- `Services/` and `Systems/` are optional folders on a main module. `Create Module` ticks them from
+  *Role* - **System** arrives with `Systems/` ticked, **Service** with `Services/` ticked - and
+  either tick may be changed before the module is written.
 - A module that exists to provide a Service is named for what it does, and its Root and Context
   keep the `Service` suffix: `CounterModule` holds `Modules.Counter`, and inside it sit
   `CounterServiceRoot` and `CounterServiceContext`. The suffix is what the inspector reads - a
@@ -86,6 +127,14 @@ so follow the rules below deliberately.
   `CounterServiceRoot` and `CounterServiceContext`, and **Core** writes the plain `PlayerRoot` and
   `PlayerContext`. System is what it starts on, because a module written for the game at hand is a
   System; the module folder, its assembly and its namespaces are untouched whichever is picked.
+- **Core is the one role a name cannot carry.** A Core module is part of the project's frame rather
+  than of its game: the project holds exactly one, its Initialize Order is reserved rather than
+  chosen, and a game extends it instead of authoring it - a screen module listed on a Root, a
+  Connector sub-context added to the Connector. `MainRoot` and `ScreenRoot` are what it means. There
+  being one Main and one Screen in a project, the name has nothing to disambiguate from and takes no
+  suffix, so the Root says it with `[FlowHeader(FlowRole.Core)]` instead and `Create Module` writes
+  that line for Role = Core. The attribute wins over every other reading, which is also how a
+  context that is not named for the job declares itself a Connector's.
 - A View holds scene references and raw input. A View with an `if` about game rules is
   doing the Mediator's job.
 - A Mediator drives exactly one View. It listens to signals and dispatches them, and holds
@@ -210,9 +259,9 @@ Modules/
         │   ├── Functions/
         │   ├── Models/
         │   ├── RootsContexts/
-        │   ├── Services/            # self-contained, reusable
+        │   ├── Services/            # optional - self-contained, reusable; Sub/ when it splits
         │   ├── Signals/             # PlayerInternalSignals - the module's own traffic
-        │   ├── Systems/             # specific to this game
+        │   ├── Systems/             # optional - specific to this game; Sub/ when it splits
         │   └── ViewsMediators/
         ├── Shared/                  # Modules.Player.Shared.asmdef - optional, unticked
         │   ├── Constants/
@@ -313,6 +362,8 @@ means is the table above.
 | Model | `IPlayerModel` and `PlayerModel` |
 | Service | `ICounterService` and `CounterService` |
 | System | `IMapSystem` and `MapSystem` |
+| Sub service | `AssetLoadSubService`, `ScreenBuilderSubService` |
+| Sub system | `MapLevelSubSystem` |
 | Data asset | `CD_Maps`, `RD_Maps`, `PD_Maps` |
 | Value object | `PlayerStateVO`, `MapCVO`, `MapRVO` |
 | View and Mediator | `HudView` and `HudMediator` |

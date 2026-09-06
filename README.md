@@ -202,9 +202,10 @@ flowchart LR
 | **Signal** | Naming an event in the module's vocabulary, typed. `Incoming` is what the module accepts, `Outgoing` is what it announces. | Carry behaviour. A signal is a name and a payload, never a method call in disguise. |
 | **Command** | One unit of work triggered by a signal. Injects models and services, mutates state, dispatches outgoing signals. | Hold state between runs, touch another module's model, or return a value — use a Function for that. |
 | **Function** | An injectable method you call directly and get an answer from: a calculation, a lookup, a raycast. | Mutate state that a Command should own, or replace a Command in a flow you want visible in the console. |
-| **Model** | State, and the rules that keep that state valid. Injected wherever it is needed. May dispatch an outgoing signal to announce that a value it holds has changed. | Know about Views, Commands, or any other module. Subscribe to a signal — an incoming signal runs a Command, and the Command calls the Model. |
-| **Service** | A self-contained unit of work that answers the input it is given — a countdown, a parser, a storage wrapper. Reusable in any project, and the one thing another module may reference directly: add its assembly, inject its interface. | Depend on anything outside itself, or wait on another module's signal. A Service more than one module needs gets its own module. |
-| **System** | The game-specific work a module owns. May lean on other Systems and Services: waiting on a signal they raise, or working from data they share. | Appear in another module's assembly. Two Systems in separate modules meet through a Connector, never through a reference. |
+| **Model** | The module's state and its data, and the rules that keep both valid. Injected wherever it is needed. May dispatch an outgoing signal to announce that a value it holds has changed. | Know about Views, Commands, or any other module. Subscribe to a signal — an incoming signal runs a Command, and the Command calls the Model. |
+| **Service** | A self-contained unit of work that answers the input it is given — a countdown, a parser, a storage wrapper. Reusable in any project, and the one thing another module may reference directly: add its assembly, inject its interface. | Depend on anything outside itself, or wait on another module's signal. A Service more than one module needs gets its own module, and a finished Service's assembly gets no later additions. |
+| **System** | The game-specific work a module owns, and the surface a Command injects to reach it. May lean on other Systems and Services: waiting on a signal they raise, or working from data they share. | Appear in another module's assembly, or hold a method that does work — that work is a Command. Two Systems in separate modules meet through a Connector, never through a reference. |
+| **Sub system / sub service** | One part of a System or a Service, under `Systems/Sub/` or `Services/Sub/`. Exists because the unit grew, or because a chained surface reads better than thirty verbs on one interface. | Be bound across contexts. It is reached through the System or Service that owns it. |
 | **View** | Scene references and raw input. Exposes fields and callbacks. | Contain logic, or reach for a model. A View that has an `if` about game rules is doing the Mediator's job. |
 | **Mediator** | Driving one View: subscribes to signals in `OnRegister`, unsubscribes in `OnRemove`, and turns view callbacks into outgoing signals. | Do the work itself. A Mediator dispatches; a Command decides. |
 | **Connector** | Wiring one module's `Outgoing` signals to another's `Incoming` signals, in one readable place. | Transform game state. A converter that reshapes a payload is fine; a rule is not. |
@@ -215,6 +216,23 @@ keep the `Service` suffix — `CounterModule` holds `Modules.Counter`, and insid
 inspector reads: a Root takes the colour of whatever it roots and decides that from its own name,
 so `CounterRoot` would be drawn as a plain Root while `CounterServiceRoot` is drawn as a Service.
 The module name has no such job, so it says what the module counts, parses or stores.
+
+**Which of the three a module is, is something you can see.** A Service has files under
+`Services/`; a screen module has a context deriving from `ScreenSubContext<TView, TMediator>`;
+everything else is a System.
+
+**A System needs no `System.cs`.** The work is followed through the command flow the Context
+declares, and most modules never write one. A `MapSystem` arrives when the module wants a surface —
+to collapse eight injections into one, so a Command injects `IMapSystem` and writes
+`_map.Grid.Build(...)`, or to make what is available discoverable. It is built out of sub systems,
+with Models among its members where the module's own state lives, and when a module has one its
+Commands reach that module's Models through it rather than injecting them directly.
+
+**A Service is driven in two ways and answers in two ways.** A caller injects its interface and
+calls it, or dispatches one of the Commands it ships — the second for the case where the work has
+to be a step in a sequence with the next step waiting on it. It answers with a signal when what
+happened may concern the whole game, and with a callback the caller handed in when the answer is
+only for whoever asked, which is what every `Action` on `ICounterService` is.
 
 ---
 
