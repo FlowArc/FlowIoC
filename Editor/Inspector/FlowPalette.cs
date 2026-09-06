@@ -20,7 +20,7 @@ namespace FlowIoC.Editor.Inspector
 
         public FlowPalette()
         {
-            Add(FlowRole.Core, "#6C3FD1", "#9966FF");
+            Add(FlowRole.Core, "#6E3364", "#C070B8");
 
             // Nothing in a finished project wears this. Every Root is a Core, a System, a Service,
             // a Connector, an Adapter or a Test, so the plain Root is what a Root that has not said
@@ -41,13 +41,15 @@ namespace FlowIoC.Editor.Inspector
         /// FlowIoC's own colour, owned by no role. The generator windows and the Help banner are
         /// tools rather than things in the project, so they wear this instead of borrowing a role's
         /// fill - which is what they used to do, and what made them change colour the day the plain
-        /// Root's did. It is kept clear of every role that can appear beside it in Create Module's
-        /// Root preview, and clear of the red and the amber that already mean an error and a
-        /// warning.
+        /// Root's did.
+        ///
+        /// It is the violet the tools have always been. What moved is Core, which had taken it for
+        /// a while: the two sit together in Create Module, where the window is chrome and the Root
+        /// preview inside it is the role, so they are the one pair that must not be the same fill.
         /// </summary>
-        public Color ChromeDeep => Parse("#6E3364");
+        public Color ChromeDeep => Parse("#6C3FD1");
 
-        public Color ChromeVivid => Parse("#C070B8");
+        public Color ChromeVivid => Parse("#9966FF");
 
         public Color Chrome(bool proSkin) => proSkin ? ChromeVivid : ChromeDeep;
 
