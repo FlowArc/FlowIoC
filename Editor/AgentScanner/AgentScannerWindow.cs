@@ -59,7 +59,6 @@ namespace FlowIoC.Editor.AgentScanner
         private SyncFileState[] _rules;
         private SyncFileState[] _skills;
         private Vector2 _scroll;
-        private GUIStyle _action;
 
         private void OnEnable()
         {
@@ -270,24 +269,11 @@ namespace FlowIoC.Editor.AgentScanner
 
                 if (pending) GUI.backgroundColor = _actionColor;
 
-                if (GUILayout.Button("Sync", ActionStyle()))
+                if (GUILayout.Button("Sync", _painter.ActionButton))
                     Sync();
 
                 GUI.backgroundColor = background;
             }
-        }
-
-        /// <summary>
-        /// Tall enough to read as the panel's action, and inset a little on every side - the rows
-        /// above run edge to edge, and a button that did the same would not read as a button.
-        /// </summary>
-        private GUIStyle ActionStyle()
-        {
-            return _action ??= new GUIStyle(GUI.skin.button)
-            {
-                fixedHeight = 36f,
-                margin = new RectOffset(6, 6, 4, 6)
-            };
         }
 
         private void Sync()

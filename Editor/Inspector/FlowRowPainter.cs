@@ -53,6 +53,7 @@ namespace FlowIoC.Editor.Inspector
         private GUIStyle _heading;
         private GUIStyle _icon;
         private GUIStyle _arrow;
+        private GUIStyle _action;
 
         /// <summary>Nothing to report. Green because it is settled, not because it was checked.</summary>
         public Color Ok { get; } = new Color(0.42f, 0.78f, 0.47f);
@@ -71,6 +72,15 @@ namespace FlowIoC.Editor.Inspector
         /// clears 4.5:1, so the bar and the rows under it read as one colour.
         /// </summary>
         public Color Bar { get; } = new Color(0.165f, 0.431f, 0.22f);
+
+        /// <summary>
+        /// The button under the list - Fix All, Publish All Changed. Green because it is the
+        /// window's action, not because of what the rows above it say: a button tinted with the
+        /// state it acts on says the state twice and the action not at all. Brighter than the row
+        /// green, because GUI.backgroundColor multiplies the skin's button texture and the calmer
+        /// value comes back muddy.
+        /// </summary>
+        public Color Action { get; } = new Color(0.35f, 0.95f, 0.45f);
 
         /// <summary>One row's worth of vertical space, reaching both edges of the window.</summary>
         public Rect Row(float height = ROW_HEIGHT) => Bleed(EditorGUILayout.GetControlRect(false, height));
@@ -191,6 +201,18 @@ namespace FlowIoC.Editor.Inspector
 
             return style;
         }
+
+        /// <summary>
+        /// The button under a list: tall enough to read as the panel's action, and inset a little
+        /// on every side - the rows above run edge to edge, and a button that did the same would
+        /// not read as a button. Every window with one draws it the same, so it is built here
+        /// rather than copied into each of them.
+        /// </summary>
+        public GUIStyle ActionButton => _action ??= new GUIStyle(GUI.skin.button)
+        {
+            fixedHeight = 36f,
+            margin = new RectOffset(6, 6, 4, 6)
+        };
 
         public GUIStyle Icon => _icon ??= new GUIStyle(EditorStyles.label)
         {
