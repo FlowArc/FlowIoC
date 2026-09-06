@@ -18,7 +18,7 @@ namespace FlowIoC.ScreenModule.Service
         /// </summary>
         /// <typeparam name="T">IScreenBody (Example:NewScreenView)</typeparam>
         /// <returns></returns>
-        IScreenBuilderSubService Open<T>(int managerId = 0) where T : IScreenBody;
+        IScreenBuilder Open<T>(int managerId = 0) where T : IScreenBody;
         // internal Task<T> ShowNewScreen<T>() where T : IScreenBody;
         // internal Task<T> ShowPooledScreen<T>() where T : IScreenBody;
         

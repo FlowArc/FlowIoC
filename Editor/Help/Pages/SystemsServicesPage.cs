@@ -215,7 +215,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    CheckSubService Check { get; set; }\n"
                 + "    HideSubService  Hide  { get; set; }\n"
                 + "\n"
-                + "    IScreenBuilderSubService Open<T>(int managerId = 0) where T : IScreenBody;\n"
+                + "    IScreenBuilder Open<T>(int managerId = 0) where T : IScreenBody;\n"
                 + "}",
                 "IScreenService - five nouns instead of thirty verbs");
             painter.Code(

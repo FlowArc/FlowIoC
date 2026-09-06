@@ -16,7 +16,7 @@ namespace FlowIoC.ScreenModule.Service
         [Inject] public HideSubService Hide { get; set; }
         [Inject] public UnloadSubService Unload { get; set; }
 
-        public IScreenBuilderSubService Open<T>(int managerId = 0) where T : IScreenBody
+        public IScreenBuilder Open<T>(int managerId = 0) where T : IScreenBody
         {
             return _builder.Open<T>(managerId);
         }

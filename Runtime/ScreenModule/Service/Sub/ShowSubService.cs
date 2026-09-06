@@ -7,44 +7,53 @@ using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.Extensions;
 using FlowIoC.ScreenModule.Model.Runtime;
-using FlowIoC.ScreenModule.Service.Sub.Builder;
 using FlowIoC.ScreenModule.Service.Sub.Load;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 
 namespace FlowIoC.ScreenModule.Service.Sub
 {
+    /// <summary>
+    /// Puts a screen on screen. It is handed the screen it is to show rather than asking the
+    /// builder for it: the builder is one object per open, and reaching back into it for the
+    /// current one is what made two opens in the same frame each other's business.
+    /// </summary>
     internal class ShowSubService
     {
         [Inject] private IScreenRuntimeModel _runtimeModel { get; set; }
         [Inject] private SetupSubService _setupService { get; set; }
         [Inject] private LoadSubService _load { get; set; }
-        [Inject] private IScreenBuilderSubService _builder { get; set; }
         [Inject] private HideSubService _hide { get; set; }
 
-
-        public async Task<T> ShowNewScreen<T>() where T : IScreenBody
+        public async Task<T> ShowNewScreen<T>(ScreenVO screenData) where T : IScreenBody
         {
-            ScreenVO screenData = _builder.GetAndFlushScreenData();
-
-            T screenBody;
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Show.NewScreen] Showing screen new! {screenData.ScreenType.Name}");
 
-            screenBody = (T) await _load.Screen(screenData);
+            T screenBody = (T) await _load.Screen(screenData);
             if (screenBody == null) return default;
+
             screenBody.Data = screenData;
 
             AfterShowScreen(screenBody);
             return screenBody;
         }
 
-        public Task<T> ShowPooledScreen<T>() where T : IScreenBody
+        /// <summary>
+        /// Nothing here is awaited - the instance is already built and parked - so this answers
+        /// straight away rather than handing back a task that is already finished.
+        /// </summary>
+        public T ShowPooledScreen<T>(IScreenBody screenBody) where T : IScreenBody
         {
-            var screenBody = _builder.GetAndFlushScreenBody<T>();
+            if (screenBody == null)
+            {
+                FlowLogger.LogError(SystemLogType.Screen, "[ScreenService.Show.ShowPooledScreen] Screen body is null");
+                return default;
+            }
+
             FlowLogger.Log(SystemLogType.Screen,
                 $"[ScreenService.Show.ShowPooledScreen] Showing screen from Pool {screenBody.Data.ScreenType.Name}");
 
             AfterShowScreen(screenBody);
-            return Task.FromResult(screenBody);
+            return (T) screenBody;
         }
 
         private void AfterShowScreen<T>(T screenBody) where T : IScreenBody
@@ -55,6 +64,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
             // its last show finished would otherwise carry two subscriptions.
             screenBody.ShowCompleted -= ShowAnimationCompleted;
             screenBody.ShowCompleted += ShowAnimationCompleted;
+
             _hide.Setup(screenBody);
             _setupService.SetupScreen(screenBody);
 
