@@ -76,22 +76,6 @@ namespace FlowIoC.BaseModule.Contexts
 
         void IContext.ExecutePostConstructMethods()
         {
-            /*
-            List<InjectionBinding> injectedTypes = InjectionBinder.GetAllInjectionBindings();
-            List<InjectionBinding> injectedCrossContextTypes = InjectionBinderCrossContext.GetAllInjectionBindings();
-
-            injectedTypes = injectedTypes.Concat(injectedCrossContextTypes).ToList();
-
-            foreach (InjectionBinding injectedType in injectedTypes)
-            {
-                if (InjectionBinderCrossContext.PostConstructedObjects.Contains(injectedType.Value))
-                    continue;
-
-                PostConstructUtils.ExecutePostConstructMethod(injectedType.Value);
-
-                InjectionBinderCrossContext.PostConstructedObjects.Push(injectedType.Value);
-            }
-            */
             InjectionBinder.RunPostConstructs();
             InjectionBinderCrossContext.RunPostConstructs();
         }
