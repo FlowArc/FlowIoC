@@ -84,17 +84,25 @@ namespace FlowIoC.Editor.Help.Pages
             painter.SubHeading("Binding it");
             painter.Paragraph(
                 "The Context binds the implementation to the interface once, and everything that "
-                + "needs it injects the interface.");
+                + "needs it injects the interface. It binds it to InjectionBinder rather than to "
+                + "InjectionBinderCrossContext, because a Model is the module's own: the only way "
+                + "into it is a Command of that same module, so nothing outside the Context has any "
+                + "business seeing it.");
             painter.Code(
                 "public override void InjectionBindings()\n"
                 + "{\n"
                 + "    base.InjectionBindings();\n"
-                + "    InjectionBinderCrossContext.Bind<IPlayerModel, PlayerModel>();\n"
+                + "    InjectionBinder.Bind<IPlayerModel, PlayerModel>();\n"
                 + "}",
                 "PlayerContext.cs");
             painter.Code(
                 "[Inject] private IPlayerModel _playerModel { get; set; }",
                 "In the Command that changes it");
+            painter.Paragraph(
+                "A Model goes cross-context only when something outside the Context genuinely "
+                + "reaches it, and that is rare enough to be worth a comment where it happens: "
+                + "LocalSaveModule binds its model across because the Root writes the save on quit, "
+                + "when a Command dispatched during shutdown might not finish in time.");
 
             painter.Space();
             painter.SubHeading("Announcing a change");
@@ -130,6 +138,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Model may dispatch its own module's outgoing signals. Announcing is allowed; listening is not.");
             painter.Bullet("A Model is an interface and an implementation: IPlayerModel and PlayerModel.");
             painter.Bullet("State is readable and privately settable. Nothing outside the Model writes a field on it.");
+            painter.Bullet("A Model is bound with InjectionBinder, not InjectionBinderCrossContext. It belongs to its own Context.");
         }
 
         private static HelpGraph Build()

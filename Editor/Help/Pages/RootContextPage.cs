@@ -161,7 +161,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "public override void InjectionBindings()\n"
                 + "{\n"
                 + "    base.InjectionBindings();\n"
-                + "    InjectionBinderCrossContext.Bind<IPlayerModel, PlayerModel>();\n"
+                + "    InjectionBinder.Bind<IPlayerModel, PlayerModel>();\n"
                 + "}\n"
                 + "\n"
                 + "public override void MediationBindings()\n"
@@ -179,6 +179,73 @@ namespace FlowIoC.Editor.Help.Pages
                 + "        .ToSequence<SavePlayerCommand>();\n"
                 + "}",
                 "PlayerContext.cs");
+
+            painter.Space();
+            painter.SubHeading("Two binders, and the one question that picks between them");
+            painter.Paragraph(
+                "Every Context makes an InjectionBinder of its own the moment it starts. "
+                + "InjectionBinderCrossContext is not its own: RootsManager makes one for the whole "
+                + "scene and hands that same instance to every Context in it. The two have the same "
+                + "methods, and differ only in who can see what they hold.");
+            painter.Bullet(
+                "InjectionBinder - this Context. Models, sub-services, and whichever implementation "
+                + "the module picked for itself.");
+            painter.Bullet(
+                "InjectionBinderCrossContext - every Context in the scene. The signal holder, and "
+                + "the Service interface other modules inject.");
+            painter.Paragraph(
+                "Bind across when something outside this Context has to see the object, and locally "
+                + "when it must not. A Model is local: Create Model writes InjectionBinder.Bind, and "
+                + "the only way into a Model is a Command of its own module anyway.");
+            painter.Code(
+                "public override void InjectionBindings()\n"
+                + "{\n"
+                + "    base.InjectionBindings();\n"
+                + "\n"
+                + "    InjectionBinder.Bind<ICounterModel, CounterModel>();\n"
+                + "    InjectionBinder.Bind<ITimeSource, DeviceTimeSource>();\n"
+                + "\n"
+                + "    // The one type other modules reference directly, which is what makes this a Service.\n"
+                + "    InjectionBinderCrossContext.Bind<ICounterService, CounterService>();\n"
+                + "}",
+                "CounterServiceContext.cs - the module that ships with the package");
+            painter.Paragraph(
+                "The signal holder is the other cross-context binding, and for the same reason: a "
+                + "Connector has to reach it. Bind it locally and the Connector's GetInstance finds "
+                + "nothing.");
+
+            painter.Space();
+            painter.SubHeading("Which one an [Inject] finds");
+            painter.Paragraph(
+                "The injector asks the local binders first and the shared one last, so a local "
+                + "binding of a type hides a cross-context binding of the same type.");
+            painter.Code(
+                "// A Context asks, in this order:\n"
+                + "//   1. its own InjectionBinder\n"
+                + "//   2. the InjectionBinder of each of its sub-contexts\n"
+                + "//   3. InjectionBinderCrossContext\n"
+                + "//\n"
+                + "// A sub-context asks, in this order:\n"
+                + "//   1. its own InjectionBinder\n"
+                + "//   2. InjectionBinderCrossContext");
+            painter.Note(
+                "Important: the list is not symmetrical. A Context reaches into its sub-contexts, "
+                + "and a sub-context does not reach back. A screen sub-context that injects its "
+                + "parent module's Model gets null unless that Model was bound across.");
+            painter.Paragraph(
+                "The two providers are there without being bound at all, because the Context binds "
+                + "them across for you.");
+            painter.Code(
+                "[Inject] private ICoroutineProvider _coroutineProvider { get; set; }\n"
+                + "[Inject] private IUpdateProvider    _updateProvider    { get; set; }");
+
+            painter.Space();
+            painter.SubHeading("What DestroyContext takes back");
+            painter.Paragraph(
+                "Tearing a Context down unbinds its own binder and leaves the shared one alone - it "
+                + "belongs to the scene rather than to any one module. So a cross-context binding "
+                + "outlives the Context that made it, which is one more reason to put there only "
+                + "what really is the application's.");
 
             painter.Space();
             painter.SubHeading("Setup initialises");
@@ -214,6 +281,10 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A GameObject the module needs in the scene is parented to the module's Root.");
             painter.Bullet("A Root that must outlive its scene detaches itself in BeforeCreateContext before DontDestroyOnLoad.");
             painter.Bullet("Setup is the only phase that may reach across modules. The binding phases declare; Launch dispatches.");
+            painter.Bullet("InjectionBinder is this Context's own. InjectionBinderCrossContext is the scene's, and every Context shares it.");
+            painter.Bullet(
+                "Bind across only what something outside the Context must see: the signal holder, and a Service interface. A Model is local.");
+            painter.Bullet("A Context reaches into its sub-contexts' bindings. A sub-context does not reach back into its parent's.");
             painter.Bullet("Initialize Order runs from -100 to 100. Services take the negative band, the game's modules 0 to 97.");
         }
 
@@ -257,8 +328,8 @@ namespace FlowIoC.Editor.Help.Pages
                     "The signal holder is bound first, because the other bindings refer to it.",
                     "public override void SignalBindings()\n{\n    base.SignalBindings();\n    _signals = InjectionBinderCrossContext.Bind<PlayerSignals>();\n}"),
                 new HelpGraphStep("injection",
-                    "Models, services and systems are bound to their interfaces here.",
-                    "public override void InjectionBindings()\n{\n    base.InjectionBindings();\n    InjectionBinderCrossContext.Bind<IPlayerModel, PlayerModel>();\n}"),
+                    "Models, services and systems are bound to their interfaces here - locally when the module keeps them, across when another module must see them.",
+                    "public override void InjectionBindings()\n{\n    base.InjectionBindings();\n\n    InjectionBinder.Bind<IPlayerModel, PlayerModel>();\n    InjectionBinderCrossContext.Bind<IPlayerService, PlayerService>();\n}"),
                 new HelpGraphStep("mediation",
                     "Each View is paired with the one Mediator that drives it.",
                     "public override void MediationBindings()\n{\n    base.MediationBindings();\n    MediationBinder.Bind<HudView>().To<HudMediator>();\n}"),

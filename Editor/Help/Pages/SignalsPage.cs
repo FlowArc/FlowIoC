@@ -95,10 +95,16 @@ namespace FlowIoC.Editor.Help.Pages
                 "PlayerSignals.cs - Scripts/Shared/Signals");
             painter.Paragraph(
                 "Signals come in five arities, from Signal to Signal<T1, T2, T3, T4>. The module "
-                + "that owns a holder is the one that binds it, in SignalBindings.");
+                + "that owns a holder is the one that binds it, in SignalBindings - and it binds it "
+                + "to InjectionBinderCrossContext, which every Context in the scene shares. A holder "
+                + "bound to the Context's own InjectionBinder is invisible outside it, so the "
+                + "Connector's GetInstance would find nothing.");
             painter.Code(
                 "_signals = InjectionBinderCrossContext.Bind<PlayerSignals>();",
                 "PlayerContext.cs - SignalBindings");
+            painter.Paragraph(
+                "The internal holder is bound the same way, because a sub-context of the module "
+                + "reaches it and a sub-context does not see its parent's local bindings.");
 
             painter.Space();
             painter.SubHeading("Answering one");
