@@ -357,8 +357,19 @@ namespace FlowIoC.Editor.Help
             {
                 // The banner is drawn outside the scroll view, so the page title and its tabs stay
                 // put while the reader scrolls the body under them.
-                _selected.SelectedTab = _painter.Banner(_selected.Title, _selected.Tabs,
-                    _selected.SelectedTab, _selected.Action);
+                int previous = _selected.SelectedTab;
+                int chosen = _painter.Banner(_selected.Title, _selected.Tabs, previous,
+                    _selected.Action);
+
+                _selected.SelectedTab = chosen;
+
+                // A new reading starts at its own beginning. Carrying the scroll position across
+                // drops the reader into the middle of a page they have not read a line of.
+                if (chosen != previous)
+                {
+                    _scroll = Vector2.zero;
+                    GUI.FocusControl(null);
+                }
 
                 using (EditorGUILayout.ScrollViewScope scroll = new EditorGUILayout.ScrollViewScope(_scroll))
                 {

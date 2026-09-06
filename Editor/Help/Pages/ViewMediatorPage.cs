@@ -5,6 +5,11 @@ using FlowIoC.Editor.Help.Graph;
 
 namespace FlowIoC.Editor.Help.Pages
 {
+    /// <summary>
+    /// The pair that puts a module on screen, read in four passes: the two of them as a picture
+    /// and the round trip a click makes, then the View as a scene object, then the Mediator as an
+    /// injected class, then the rules.
+    /// </summary>
     internal class ViewMediatorPage : HelpPage
     {
         public ViewMediatorPage() : base(Build())
@@ -15,53 +20,92 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Icon => "Canvas Icon";
 
+        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        {
+            new HelpTab("View", DrawView),
+            new HelpTab("Mediator", DrawMediator),
+            new HelpTab("Rules", DrawRules)
+        };
+
         protected override void DrawBody(HelpPainter painter)
         {
+            painter.Hero(
+                "Neither half knows a game rule.",
+                "The View reports what happened on screen, the Mediator turns it into a signal, and "
+                + "the decision is taken somewhere neither of them can see.");
+
+            painter.Parts(
+                new HelpPart("View",
+                    "The MonoBehaviour in the scene. It holds references and raises callbacks. A "
+                    + "View with an if about game rules is doing the Mediator's job.",
+                    "class HudView : MonoBehaviour, IView"),
+                new HelpPart("Mediator",
+                    "A plain injected class that drives exactly one View. It listens to signals and "
+                    + "dispatches them, and holds no game rules either.",
+                    "class HudMediator : IMediator"));
+
+            painter.SubHeading("The round trip a click makes");
             painter.Paragraph(
-                "A View is the MonoBehaviour in the scene: it holds references and raises callbacks. "
-                + "A View with an if about game rules is doing the Mediator's job.");
-            painter.Paragraph(
-                "A Mediator is a plain injected class that drives exactly one View. It listens to "
-                + "signals and dispatches them, and holds no game rules either - those live in "
-                + "Commands and Models.");
+                "Six steps, and the loop closes without either end knowing the other. Walk them "
+                + "with the buttons under the diagram.");
 
             painter.Space();
             painter.Graph(Graph, Stepper);
 
             painter.Space();
-            painter.SubHeading("Binding the pair");
-            painter.Paragraph("Create View writes both files, and the Context binds them together:");
-            painter.Code(
-                "public override void MediationBindings()\n"
-                + "{\n"
-                + "    base.MediationBindings();\n"
-                + "    MediationBinder.Bind<HudView>().To<HudMediator>();\n"
-                + "}");
             painter.Note(
-                "The ViewInjector component on the GameObject resolves which Context each IView "
-                + "belongs to. Registration happens as soon as that Context starts, and OnRemove runs "
-                + "when the object is destroyed.");
+                "The rule lives in the Command. That is the only place the purchase is allowed or "
+                + "refused - not in the View, and not in the Mediator.");
+        }
+
+        /// <summary>
+        /// The View as a scene object: what it may hold, how it finds the Context it belongs to,
+        /// and the one case - a pooled screen - where Awake and Start are the wrong place.
+        /// </summary>
+        private void DrawView(HelpPainter painter)
+        {
+            painter.Hero(
+                "A View holds scene references and raw input.",
+                "It does not know what the button means. It says that the button was pressed and "
+                + "leaves the meaning to whoever is listening.");
+
+            painter.SubHeading("Writing one");
+            painter.Code(
+                "[RequireComponent(typeof(ViewInjector))]\n"
+                + "public class HudView : MonoBehaviour, IView\n"
+                + "{\n"
+                + "    public bool IsRegistered { get; set; }\n"
+                + "\n"
+                + "    public Action Buy { get; set; }\n"
+                + "\n"
+                + "    public Button BuyButton;\n"
+                + "    public Text   CurrencyLabel;\n"
+                + "\n"
+                + "    private void Start() => BuyButton.onClick.AddListener(() => Buy?.Invoke());\n"
+                + "}",
+                "HudView.cs - Scripts/Runtime/ViewsMediators");
 
             painter.Space();
             painter.SubHeading("Which Context a View belongs to");
             painter.Paragraph(
-                "The injector lists one entry per IView on the object, and each entry says where its "
-                + "Context comes from. A View authored under its module's Root wants Bubble Up, which "
-                + "is the default and walks the hierarchy until it finds a Root.");
+                "The ViewInjector component lists one entry per IView on the object, and each entry "
+                + "says where its Context comes from. A View authored under its module's Root wants "
+                + "Bubble Up, which is the default.");
             painter.Bullet("Bubble Up - the first Root above the View in the hierarchy.");
             painter.Bullet("Selected Root - the Root named on the entry, wherever it sits in the scene.");
             painter.Bullet("Root Name - the Root whose GameObject carries that name, resolved at startup.");
             painter.Paragraph(
                 "A screen is the one case that answers none of the three: the screen service "
-                + "instantiates it and parents it under a layer, so it names the owning Context on the "
-                + "injector itself. That assignment outranks whatever the entry says.");
+                + "instantiates it and parents it under a layer, so it names the owning Context on "
+                + "the injector itself. That assignment outranks whatever the entry says.");
             painter.Note(
                 "Important: a prefab cannot hold a reference to a Root in the scene. Selecting one "
-                + "inside a prefab looks like it worked and is empty again when the asset is saved, so "
-                + "a prefab that has to reach a Root outside its own hierarchy names it with Root Name.");
+                + "inside a prefab looks like it worked and is empty again when the asset is saved, "
+                + "so a prefab that has to reach a Root outside its own hierarchy names it with Root "
+                + "Name.");
 
             painter.Space();
-            painter.SubHeading("Screen views are pooled");
+            painter.SubHeading("A screen view is pooled");
             painter.Paragraph(
                 "Start is fine for a View that lives and dies with its GameObject. A ScreenView does "
                 + "not: hiding it deactivates the object and opening it again shows that same "
@@ -76,7 +120,79 @@ namespace FlowIoC.Editor.Help.Pages
                 + "private void OnDisable()\n"
                 + "{\n"
                 + "    _buyButton.onClick.RemoveAllListeners();\n"
-                + "}");
+                + "}",
+                "SettingsScreenView.cs");
+        }
+
+        /// <summary>
+        /// The Mediator as an injected class: how it is paired with its View, and the two methods
+        /// that are the whole of its life.
+        /// </summary>
+        private void DrawMediator(HelpPainter painter)
+        {
+            painter.Hero(
+                "A Mediator drives exactly one View.",
+                "It is a plain injected class, not a MonoBehaviour, and it exists for as long as "
+                + "the View it was registered against.");
+
+            painter.SubHeading("Binding the pair");
+            painter.Paragraph("Create View writes both files, and the Context binds them together:");
+            painter.Code(
+                "public override void MediationBindings()\n"
+                + "{\n"
+                + "    base.MediationBindings();\n"
+                + "    MediationBinder.Bind<HudView>().To<HudMediator>();\n"
+                + "}",
+                "PlayerContext.cs");
+            painter.Note(
+                "The ViewInjector component on the GameObject resolves which Context each IView "
+                + "belongs to. Registration happens as soon as that Context starts, and OnRemove "
+                + "runs when the object is destroyed.");
+
+            painter.Space();
+            painter.SubHeading("Writing one");
+            painter.Paragraph(
+                "OnRegister subscribes and OnRemove unsubscribes, and they mirror each other line "
+                + "for line. What the Mediator does in between is turn one into the other: a "
+                + "callback from the View into a dispatch, and a signal from the module into a value "
+                + "on the View.");
+            painter.Code(
+                "public class HudMediator : IMediator\n"
+                + "{\n"
+                + "    [Inject]       private HudView       _view    { get; set; }\n"
+                + "    [InjectSignal] private PlayerSignals _signals { get; set; }\n"
+                + "\n"
+                + "    public void OnRegister()\n"
+                + "    {\n"
+                + "        _view.Buy += Buy;\n"
+                + "        _signals.Outgoing.CurrencyChanged.AddListener(OnCurrencyChanged);\n"
+                + "    }\n"
+                + "\n"
+                + "    public void OnRemove()\n"
+                + "    {\n"
+                + "        _view.Buy -= Buy;\n"
+                + "        _signals.Outgoing.CurrencyChanged.RemoveListener(OnCurrencyChanged);\n"
+                + "    }\n"
+                + "\n"
+                + "    private void Buy() => _signals.Incoming.AddCurrency.Dispatch(-10d);\n"
+                + "\n"
+                + "    private void OnCurrencyChanged(double currency) =>\n"
+                + "        _view.CurrencyLabel.text = currency.ToString();\n"
+                + "}",
+                "HudMediator.cs - Scripts/Runtime/ViewsMediators");
+            painter.Paragraph(
+                "Notice what is not there: no decision about whether the player can afford it. The "
+                + "Mediator dispatches, and the Command decides.");
+        }
+
+        private void DrawRules(HelpPainter painter)
+        {
+            painter.Bullet("A View holds scene references and raw input. A View with an if about game rules is doing the Mediator's job.");
+            painter.Bullet("A Mediator drives exactly one View, and holds no game rules either.");
+            painter.Bullet("A View is authored under its module's Root, so Bubble Up finds the Context on its own.");
+            painter.Bullet("A prefab cannot reference a Root in the scene. One that must reach a Root outside itself uses Root Name.");
+            painter.Bullet("A ScreenView wires its buttons in OnEnable and drops them in OnDisable, never in Awake or Start.");
+            painter.Bullet("OnRegister and OnRemove mirror each other. Every subscription in one has its match in the other.");
         }
 
         private static HelpGraph Build()
@@ -121,7 +237,7 @@ namespace FlowIoC.Editor.Help.Pages
                     "public void OnRegister()\n{\n    _view.Buy += Buy;\n    _signals.Outgoing.CurrencyChanged.AddListener(OnCurrencyChanged);\n}\n\nprivate void OnCurrencyChanged(double currency) =>\n    _view.CurrencyLabel.text = currency.ToString();")
             };
 
-            return new HelpGraph(nodes, edges, steps);
+            return new HelpGraph(nodes, edges, steps, 1.4f);
         }
     }
 }

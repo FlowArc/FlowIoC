@@ -20,6 +20,12 @@ namespace FlowIoC.Editor.Help
         private readonly HelpTheme _theme;
         private readonly HelpGraphPainter _graphPainter;
 
+        /// <summary>
+        /// The position a diagram drawn as a map is at: nowhere, because it has no steps. One
+        /// instance answers for every such diagram, since none of them can be walked.
+        /// </summary>
+        private readonly HelpGraphStepper _mapStepper = new HelpGraphStepper(0);
+
         internal HelpPainter(HelpTheme theme)
         {
             _theme = theme;
@@ -122,14 +128,189 @@ namespace FlowIoC.Editor.Help
 
         public void Space() => EditorGUILayout.Space();
 
-        public void Code(string code)
+        /// <summary>
+        /// The one line a page opens with, and the line under it that qualifies it. A reader who
+        /// gets no further than this should still leave knowing what the topic is for.
+        /// </summary>
+        public void Hero(string headline, string tagline = null)
+        {
+            if (!string.IsNullOrEmpty(headline))
+                EditorGUILayout.LabelField(headline, _theme.Hero);
+
+            if (string.IsNullOrEmpty(tagline))
+                return;
+
+            Color previous = GUI.color;
+            GUI.color = _theme.MutedText;
+            EditorGUILayout.LabelField(tagline, _theme.HeroTagline);
+            GUI.color = previous;
+        }
+
+        /// <summary>
+        /// What the topic is made of, as a row of cards across the page. Every card is the height
+        /// of the wordiest one, so the row reads as a set rather than as a ragged list, and the
+        /// cards share the diagram's fill and hairline so the page speaks one visual language.
+        ///
+        /// The row fills the page, so the cards line up with the edges of the banner above them
+        /// the way every other panel in FlowIoC does. That takes two widths: the height has to be
+        /// known before the row is reserved, and a reserved rectangle is only the right width on
+        /// repaint. So the height is measured against what the view says is left after the
+        /// sidebar - which is never wider than the truth, and so never measures a card too short -
+        /// and the cards are then laid out across the rectangle the layout hands back.
+        /// </summary>
+        public void Parts(params HelpPart[] parts)
+        {
+            if (parts == null || parts.Length == 0)
+                return;
+
+            float gap = _theme.CardGap;
+            float gaps = gap * (parts.Length - 1);
+            float measured = Mathf.Max(_theme.CardMinWidth,
+                (EditorGUIUtility.currentViewWidth - _theme.ContentMargin - gaps) / parts.Length);
+
+            float height = 0f;
+
+            foreach (HelpPart part in parts)
+                height = Mathf.Max(height, CardHeight(part, measured));
+
+            Rect row = GUILayoutUtility.GetRect(_theme.CardMinWidth * parts.Length + gaps, height,
+                GUILayout.ExpandWidth(true));
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                float width = Mathf.Max(_theme.CardMinWidth, (row.width - gaps) / parts.Length);
+
+                for (int index = 0; index < parts.Length; index++)
+                {
+                    Rect rect = new Rect(row.x + index * (width + gap), row.y, width, height);
+                    DrawPart(rect, parts[index]);
+                }
+            }
+
+            Space();
+        }
+
+        /// <summary>
+        /// A code block, and above it the file the code is from. The caption is worth more than
+        /// the same path commented into the snippet's first line, because the snippet then reads
+        /// as the file rather than as a comment about one.
+        /// </summary>
+        public void Code(string code, string caption = null)
         {
             if (string.IsNullOrEmpty(code))
                 return;
 
+            if (!string.IsNullOrEmpty(caption))
+            {
+                Color previous = GUI.color;
+                GUI.color = _theme.MutedText;
+                EditorGUILayout.LabelField(caption, _theme.CodeCaption);
+                GUI.color = previous;
+            }
+
             float height = _theme.Code.CalcHeight(new GUIContent(code), EditorGUIUtility.currentViewWidth) + 4f;
 
             EditorGUILayout.SelectableLabel(code, _theme.Code, GUILayout.Height(height));
+        }
+
+        /// <summary>
+        /// What one card needs: its title row, its summary, and the signature under a hairline
+        /// when it carries one.
+        /// </summary>
+        private float CardHeight(HelpPart part, float width)
+        {
+            float inner = width - _theme.CardPadding * 2f;
+            float height = _theme.CardPadding * 2f;
+
+            height += TitleRowHeight(part, inner);
+            height += 6f;
+            height += _theme.PartSummary.CalcHeight(new GUIContent(part.Summary), inner);
+
+            if (!string.IsNullOrEmpty(part.Signature))
+            {
+                height += 10f;
+                height += 1f;
+                height += 6f;
+                height += _theme.PartSignature.CalcHeight(new GUIContent(part.Signature), inner);
+            }
+
+            return height;
+        }
+
+        /// <summary>
+        /// The title, or the icon beside it, whichever is taller. A card with no icon gives the
+        /// title the whole row.
+        /// </summary>
+        private float TitleRowHeight(HelpPart part, float inner)
+        {
+            float titleWidth = string.IsNullOrEmpty(part.Icon)
+                ? inner
+                : inner - _theme.CardIconSize - 6f;
+
+            float height = _theme.PartTitle.CalcHeight(new GUIContent(part.Title), titleWidth);
+
+            return string.IsNullOrEmpty(part.Icon) ? height : Mathf.Max(height, _theme.CardIconSize);
+        }
+
+        private void DrawPart(Rect rect, HelpPart part)
+        {
+            EditorGUI.DrawRect(rect, _theme.CardFill);
+
+            Handles.BeginGUI();
+            Handles.color = _theme.CardBorder;
+            Handles.DrawAAPolyLine(1.5f,
+                new Vector3(rect.xMin, rect.yMin), new Vector3(rect.xMax, rect.yMin),
+                new Vector3(rect.xMax, rect.yMax), new Vector3(rect.xMin, rect.yMax),
+                new Vector3(rect.xMin, rect.yMin));
+            Handles.EndGUI();
+
+            float padding = _theme.CardPadding;
+            float inner = rect.width - padding * 2f;
+            float x = rect.x + padding;
+            float y = rect.y + padding;
+
+            float titleRow = TitleRowHeight(part, inner);
+            float titleX = x;
+            float titleWidth = inner;
+
+            if (!string.IsNullOrEmpty(part.Icon))
+            {
+                GUIContent icon = EditorGUIUtility.IconContent(part.Icon);
+
+                if (icon != null && icon.image != null)
+                {
+                    GUI.DrawTexture(
+                        new Rect(x, y + (titleRow - _theme.CardIconSize) * 0.5f,
+                            _theme.CardIconSize, _theme.CardIconSize),
+                        icon.image, ScaleMode.ScaleToFit);
+                }
+
+                titleX += _theme.CardIconSize + 6f;
+                titleWidth -= _theme.CardIconSize + 6f;
+            }
+
+            GUI.Label(new Rect(titleX, y, titleWidth, titleRow), part.Title, _theme.PartTitle);
+
+            y += titleRow + 6f;
+
+            float summaryHeight = _theme.PartSummary.CalcHeight(new GUIContent(part.Summary), inner);
+            GUI.Label(new Rect(x, y, inner, summaryHeight), part.Summary, _theme.PartSummary);
+
+            if (string.IsNullOrEmpty(part.Signature))
+                return;
+
+            y += summaryHeight + 10f;
+
+            EditorGUI.DrawRect(new Rect(x, y, inner, 1f), _theme.CardBorder);
+
+            y += 1f + 6f;
+
+            float signatureHeight = _theme.PartSignature.CalcHeight(new GUIContent(part.Signature), inner);
+
+            Color previous = GUI.color;
+            GUI.color = _theme.MutedText;
+            GUI.Label(new Rect(x, y, inner, signatureHeight), part.Signature, _theme.PartSignature);
+            GUI.color = previous;
         }
 
         /// <summary>
@@ -169,6 +350,13 @@ namespace FlowIoC.Editor.Help
         }
 
         internal void Tree(HelpTreeNode root) => DrawTree(root, 0);
+
+        /// <summary>
+        /// A diagram drawn as a map rather than as a walk: every box at once, no Previous and
+        /// Next, and no rule or code underneath. A page owns one stepped diagram, so this is how
+        /// a second picture - a command sequence beside the flow that runs it - gets drawn.
+        /// </summary>
+        internal void Graph(HelpGraph graph) => Graph(graph, _mapStepper);
 
         internal void Graph(HelpGraph graph, HelpGraphStepper stepper)
         {

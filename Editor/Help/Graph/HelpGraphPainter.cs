@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +18,27 @@ namespace FlowIoC.Editor.Help.Graph
         private const float RowGap = 40f;
         private const float Padding = 10f;
 
+        /// <summary>
+        /// What an arrow is marked with, and where. An arrow is drawn before the boxes so that it
+        /// disappears under them rather than crossing them, but its marking has to survive that:
+        /// a word wider than the gap between two boxes would be painted over and read as cut in
+        /// half. So the markings are collected here while the arrows are drawn and written on top
+        /// once every box is down.
+        /// </summary>
+        private class EdgeLabel
+        {
+            public EdgeLabel(Vector3 centre, string text)
+            {
+                Centre = centre;
+                Text = text;
+            }
+
+            public Vector3 Centre { get; }
+            public string Text { get; }
+        }
+
         private readonly HelpTheme _theme;
+        private readonly List<EdgeLabel> _edgeLabels = new List<EdgeLabel>();
 
         private float _scale = 1f;
         private float _rowHeight;
@@ -31,8 +52,15 @@ namespace FlowIoC.Editor.Help.Graph
 
         private float NodeW => NodeWidth * _scale;
         private float NodeH => NodeHeight * _scale;
-        private float ColumnSpace => ColumnGap * (1f + (_scale - 1f) * 0.5f);
-        private float RowSpace => RowGap * (1f + (_scale - 1f) * 0.5f);
+
+        /// <summary>
+        /// The gaps grow with the boxes rather than at half their rate. The words on the arrows
+        /// grow too, and a gap that fell behind them left every marking wider than the space it
+        /// had - which is how a word ends up written across the box beside it.
+        /// </summary>
+        private float ColumnSpace => ColumnGap * _scale;
+
+        private float RowSpace => RowGap * _scale;
 
         public void Draw(HelpGraph graph, HelpGraphStepper stepper)
         {
@@ -63,11 +91,16 @@ namespace FlowIoC.Editor.Help.Graph
 
             if (Event.current.type == EventType.Repaint)
             {
+                _edgeLabels.Clear();
+
                 foreach (HelpGraphEdge edge in graph.Edges)
                     DrawEdge(canvas, graph, edge, activeNodeId);
 
                 foreach (HelpGraphNode node in graph.Nodes)
                     DrawNode(canvas, node, node.Id == activeNodeId);
+
+                foreach (EdgeLabel label in _edgeLabels)
+                    DrawEdgeLabel(label);
             }
 
             DrawControls(stepper);
@@ -322,13 +355,26 @@ namespace FlowIoC.Editor.Help.Graph
             if (string.IsNullOrEmpty(edge.Label))
                 return;
 
-            Vector3 middle = Midpoint(start, startTangent, endTangent, end);
-            float labelWidth = 96f * _scale;
-            float labelHeight = 16f * _scale;
-            Rect labelRect = new Rect(middle.x - labelWidth * 0.5f, middle.y - labelHeight - 5f,
-                labelWidth, labelHeight);
+            _edgeLabels.Add(new EdgeLabel(Midpoint(start, startTangent, endTangent, end), edge.Label));
+        }
 
-            GUI.Label(labelRect, edge.Label, _edgeLabel);
+        /// <summary>
+        /// The marking on an arrow, written after every box is down. It carries a strip of the
+        /// page's own background behind it, because a word that reaches over a box would otherwise
+        /// be two words - one on the page and one on the box - in two different shades.
+        /// </summary>
+        private void DrawEdgeLabel(EdgeLabel label)
+        {
+            GUIContent content = new GUIContent(label.Text);
+            Vector2 size = _edgeLabel.CalcSize(content);
+            float width = size.x + 4f;
+            float height = size.y;
+
+            Rect rect = new Rect(label.Centre.x - width * 0.5f, label.Centre.y - height - 5f,
+                width, height);
+
+            EditorGUI.DrawRect(rect, _theme.PageFill);
+            GUI.Label(rect, content, _edgeLabel);
         }
 
         private void DrawArrowHead(Vector3 tip, Vector3 direction, Color color)
