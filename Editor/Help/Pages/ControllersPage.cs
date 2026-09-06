@@ -88,6 +88,95 @@ namespace FlowIoC.Editor.Help.Pages
                 "PlayerContext.cs");
 
             painter.Space();
+            painter.SubHeading("The shapes a binding takes");
+            painter.Paragraph(
+                "Five, and they combine freely in one binding. What you are choosing between is "
+                + "when a step starts and what it is handed.");
+
+            painter.Rule("Sequence - each step waits for the one before it");
+            painter.Paragraph(
+                "The ordinary shape. Use it where a step needs what the step before it did: the "
+                + "save has to see the decreased balance.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.DecreaseCurrency)\n"
+                + "    .ToSequence<DecreaseCurrencyCommand>()\n"
+                + "    .ToSequence<SavePlayerCommand>();");
+
+            painter.Space();
+            painter.Rule("Parallel - steps start together");
+            painter.Paragraph(
+                "Use it where the steps do not touch each other's results. Three loads of 400 ms "
+                + "cost 400 ms rather than 1200. The group carries on when the last of them is "
+                + "done, so the sequence step after them still waits for all three.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.LoadAssets)\n"
+                + "    .ToSequence<ShowLoadingScreenCommand>()\n"
+                + "    .ToParallel<LoadTexturesCommand>()\n"
+                + "    .ToParallel<LoadAudioCommand>()\n"
+                + "    .ToParallel<LoadModelsCommand>()\n"
+                + "    .ToSequence<HideLoadingScreenCommand>();");
+
+            painter.Space();
+            painter.Rule("Parameters fixed at bind time");
+            painter.Paragraph(
+                "Both terminators take arguments, and they are handed to that step's typed Execute. "
+                + "This is how a decision stays out of the Context: the Context declares which "
+                + "signals are in play, the Command picks which one fires.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.StartTutorial)\n"
+                + "    .ToSequence<BranchCommand>(true, _internalSignals.PathA, _internalSignals.PathB);\n"
+                + "\n"
+                + "public class BranchCommand : Command<bool, Signal, Signal>\n"
+                + "{\n"
+                + "    public override void Execute(bool condition, Signal onTrue, Signal onFalse)\n"
+                + "    {\n"
+                + "        Retain();\n"
+                + "        (condition ? onTrue : onFalse).Dispatch();\n"
+                + "        Release();\n"
+                + "    }\n"
+                + "}");
+
+            painter.Space();
+            painter.Rule("Dispatching a signal is a step, not a Command you write");
+            painter.Paragraph(
+                "A Command whose only job is to dispatch is not written. Bind DispatchSignalCommand "
+                + "with the signal and its payload, and the signal leaving is a line in the Context "
+                + "rather than a class to open.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.GameOver)\n"
+                + "    .ToSequence<SaveScoreCommand>()\n"
+                + "    .ToSequence<DispatchSignalCommand<int>>(_signals.Outgoing.ScoreSubmitted, _score);");
+
+            painter.Space();
+            painter.Rule("Group - another signal's whole chain, spliced into this one");
+            painter.Paragraph(
+                "ToGroupAsSequence and ToGroupAsParallel run everything bound to another signal as "
+                + "one step of this binding. Declare a shared sub-flow once and reuse it. As a "
+                + "sequence the chain waits for the whole sub-flow; as a parallel it starts it and "
+                + "moves on. The group's own signal is dispatched with the outer payload unless the "
+                + "step names its own.");
+            painter.Code(
+                "// The shared sub-flow, bound once.\n"
+                + "CommandBinder.Bind(_internalSignals.RefreshWallet)\n"
+                + "    .ToSequence<ReadWalletCommand>()\n"
+                + "    .ToSequence<PushWalletToHudCommand>();\n"
+                + "\n"
+                + "// Two flows that both need it.\n"
+                + "CommandBinder.Bind(_signals.Incoming.AddCurrency)\n"
+                + "    .ToSequence<AddCurrencyCommand>()\n"
+                + "    .ToGroupAsSequence(_internalSignals.RefreshWallet)\n"
+                + "    .ToSequence<SavePlayerCommand>();\n"
+                + "\n"
+                + "CommandBinder.Bind(_signals.Incoming.PurchaseCompleted)\n"
+                + "    .ToSequence<GrantPurchaseCommand>()\n"
+                + "    .ToGroupAsParallel(_internalSignals.RefreshWallet, CurrencyType.Soft);",
+                "PlayerContext.cs");
+            painter.Note(
+                "A group step naming a signal no Context has bound reports \"GroupKey '...' could "
+                + "not be found in any context\" and is skipped. The rest of the chain still runs, "
+                + "so the symptom is a sub-flow that quietly did not happen.");
+
+            painter.Space();
             painter.Graph(Sequence());
 
             painter.Space();
@@ -97,11 +186,60 @@ namespace FlowIoC.Editor.Help.Pages
                 + "filled from that payload, and the property is what is filled - a field of the "
                 + "same name is skipped without a word.");
             painter.Note(
-                "Important: the payload does not reach Execute. Execute's parameters have exactly "
-                + "two sources - the arguments the binding gave the step, ToSequence<T>(...), and "
-                + "what the command before it passed to Release(). A Command<int> bound to a "
-                + "Signal<int> does not receive the dispatched number: it reports \"Execute "
-                + "signature mismatch\" and does not run. Read the payload with [SignalParam].");
+                "Important: the signal's payload does not reach Execute. A Command<int> bound to a "
+                + "Signal<int> does not receive the dispatched number - it reports \"Execute "
+                + "signature mismatch\" and does not run. The payload arrives through [SignalParam].");
+
+            painter.Space();
+            painter.SubHeading("Where a command's data comes from");
+            painter.Paragraph(
+                "Three doors, and each value uses exactly one of them. Knowing which door a value "
+                + "arrives through is most of knowing how to write the class.");
+            painter.Bullet("The signal's payload arrives in [SignalParam] properties.");
+            painter.Bullet("Execute's parameters come from the binding, or from the previous command's Release.");
+            painter.Bullet("Models, services and signal holders arrive in [Inject] and [InjectSignal] properties.");
+            painter.Paragraph(
+                "Execute has exactly those two sources and the signal is neither of them. When a "
+                + "step has both, the binding wins: arguments written at bind time are what that "
+                + "step is given, whatever the command before it released.");
+            painter.Code(
+                "// Bound to Signal<int>, dispatched with 7.\n"
+                + "\n"
+                + "public class WrongCommand : Command<int>\n"
+                + "{\n"
+                + "    // Never runs: the binding gave Execute nothing, so this reports\n"
+                + "    // \"it takes 1 parameter(s) and the signal carried 0\".\n"
+                + "    public override void Execute(int amount) { }\n"
+                + "}\n"
+                + "\n"
+                + "public class RightCommand : Command\n"
+                + "{\n"
+                + "    [SignalParam] private int _amount { get; set; }   // 7\n"
+                + "\n"
+                + "    public override void Execute() { }\n"
+                + "}");
+            painter.Paragraph(
+                "The other way in is the step before. What a retained command passes to Release "
+                + "becomes the next sequence step's Execute parameters, which is how one step hands "
+                + "its result to the next without either of them knowing a signal.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.Connect)\n"
+                + "    .ToSequence<LoadConfigCommand>()\n"
+                + "    .ToSequence<ConnectToServerCommand>();\n"
+                + "\n"
+                + "public class LoadConfigCommand : Command\n"
+                + "{\n"
+                + "    public override void Execute()\n"
+                + "    {\n"
+                + "        Retain();\n"
+                + "        LoadConfig(config => Release(config.ServerUrl, config.Timeout));\n"
+                + "    }\n"
+                + "}\n"
+                + "\n"
+                + "public class ConnectToServerCommand : Command<string, int>\n"
+                + "{\n"
+                + "    public override void Execute(string url, int timeout) { }\n"
+                + "}");
             painter.Code(
                 "public class PlayerSignalsIncoming\n"
                 + "{\n"
