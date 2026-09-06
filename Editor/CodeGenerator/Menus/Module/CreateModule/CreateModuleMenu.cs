@@ -77,6 +77,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private Vector2 _folderPreviewScrollPosition;
         private Dictionary<ModuleType, DirectoryStructureConfig> _directoryConfigMap;
         private readonly List<FolderEVO> _selectedOptionalFolders = new();
+
+        // The role's folder is ticked once when the dropdown is first drawn, and again whenever the
+        // role changes - not every frame, or unticking Systems by hand would last one repaint.
+        private bool _roleFoldersApplied;
         private ModuleType _selectedModuleType;
         private static GenerationState _generationState;
 

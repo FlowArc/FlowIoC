@@ -47,21 +47,34 @@ else.
 
 **Role** names the Root and the Context for what the Root roots, and the inspector reads that name
 to colour them. **System** writes `PlayerSystemRoot` and `PlayerSystemContext` and is what the
-dropdown starts on, **Service** writes `CounterServiceRoot` and `CounterServiceContext`, and
-**Core** writes the plain `PlayerRoot` and `PlayerContext`. The module folder, its assembly and its
-namespaces are untouched either way. It is offered on a main module that gets a Root; a screen or
-test module's Root is neither a System nor a Service, so neither is asked.
+dropdown starts on, because a module written for the game at hand is a System. **Service** writes
+`CounterServiceRoot` and `CounterServiceContext`.
 
-### Optional folders default to Signals alone
+**Core** writes the plain `PlayerRoot` and `PlayerContext`, and adds `[FlowHeader(FlowRole.Core)]`
+above the Root. It is the one role a name cannot carry: a Core module is part of the project's frame
+rather than of its game - the project holds exactly one, its Initialize Order is reserved rather
+than chosen, and a game extends it instead of authoring it, the way a screen module is listed on a
+Root or a Connector sub-context is added to the Connector. `MainRoot` and `ScreenRoot` are what it
+means. There being one Main and one Screen in a project, the name has nothing to disambiguate from
+and takes no suffix, so the attribute is what tells the inspector.
 
-This is the step that is easiest to get wrong. Only the mandatory folders and Signals are created
-unless you tick more, so a module that needs a Service comes out without a `Services/` folder.
-Decide before pressing Create:
+The role also ticks the folder it implies in the structure panel: System ticks `Systems/`, Service
+ticks `Services/`, and Core ticks neither. The tick stays editable, so a module that wants both says
+so before pressing Create.
+
+The module folder, its assembly and its namespaces are untouched whichever is picked. Role is
+offered on a main module that gets a Root; a screen or test module's Root is none of the three, so
+none is asked.
+
+### Optional folders
+
+Only the mandatory folders, Signals, and whatever Role ticked are created unless you tick more.
+Decide the rest before pressing Create:
 
 | Folder | Tick it when |
 |---|---|
-| `Services` | the module has an interface and implementation that answer the input they are given, and that other modules may inject |
-| `Systems` | the module has an interface and implementation specific to this game, leaning on other Systems and Services |
+| `Services` | ticked for you by **Role = Service**. The module has an interface and implementation that answer the input they are given, and that other modules may inject |
+| `Systems` | ticked for you by **Role = System**. The module wants a surface - one injection instead of eight, or a chained list of what is available. A System needs no `System.cs`, so untick it for a module whose work is followed through its Context's command flow |
 | `Constants`, `Enums` | the module has either |
 | `Scenes`, `Resources`, `Art`, `Scriptables` | the module owns assets of that kind |
 | `Shared` | the module publishes data other modules read. Starts unticked. The public signal holder is **not** in here - that lives in `Scripts/Signals/`, which every module gets |

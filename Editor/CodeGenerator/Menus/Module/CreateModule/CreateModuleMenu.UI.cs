@@ -322,7 +322,46 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 return;
 
             EditorGUILayout.LabelField(MODULE_ROLE_LABEL, EditorStyles.boldLabel, GUILayout.Width(90));
+
+            EditorGUI.BeginChangeCheck();
             _selectedModuleRole = (ModuleRole) EditorGUILayout.EnumPopup(_selectedModuleRole, GUILayout.ExpandWidth(true));
+
+            if (EditorGUI.EndChangeCheck() || !_roleFoldersApplied)
+                ApplyRoleToFolders();
+        }
+
+        /// <summary>
+        /// Ticks the folder the role implies in the structure panel, and unticks the other one:
+        /// **System** arrives with `Systems/`, **Service** with `Services/`, and **Core** with
+        /// neither, because the project's frame is not where either lives.
+        ///
+        /// Both stay optional in the layout, and the tick stays editable - a module that wants both
+        /// says so in the panel. What the role does is choose the sensible one, so that picking
+        /// Service and then finding no `Services/` folder in the module stops happening.
+        /// </summary>
+        private void ApplyRoleToFolders()
+        {
+            _roleFoldersApplied = true;
+
+            SetFolderSelected(FolderEVO.FolderType.Systems, _selectedModuleRole == ModuleRole.System);
+            SetFolderSelected(FolderEVO.FolderType.Services, _selectedModuleRole == ModuleRole.Service);
+        }
+
+        private void SetFolderSelected(FolderEVO.FolderType folderType, bool selected)
+        {
+            FolderEVO folder = FindFolderInConfig(folderType);
+
+            if (folder == null || !folder.IsOptional) return;
+
+            if (selected)
+            {
+                if (!_selectedOptionalFolders.Contains(folder))
+                    _selectedOptionalFolders.Add(folder);
+            }
+            else
+            {
+                _selectedOptionalFolders.Remove(folder);
+            }
         }
 
         /// <summary>
