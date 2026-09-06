@@ -210,6 +210,8 @@ namespace FlowIoC.Editor.Help.Pages
 
         private void DrawRules(HelpPainter painter)
         {
+            painter.Bullet("A decision belongs in a Command, wherever it would otherwise be taken - a Context, a View, a Mediator, a System.");
+            painter.Bullet("What needs no decision is not one. A close button that always closes is the Mediator calling _view.Hide().");
             painter.Bullet("A Command does one unit of work, holds no state between runs, and returns no value.");
             painter.Bullet("A Command never touches another module's model. What it needs from elsewhere arrives as a signal.");
             painter.Bullet("A Function returns a value and does not orchestrate. Want the step in the Flow Console? Write a Command.");
