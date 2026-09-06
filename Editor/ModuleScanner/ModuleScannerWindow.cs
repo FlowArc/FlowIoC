@@ -32,6 +32,7 @@ namespace FlowIoC.Editor.ModuleScanner
         private const float NAME_WIDTH = 220f;
         private const float BADGE_WIDTH = 78f;
         private const float FINDING_INDENT = 26f;
+        private const float STATUS_WIDTH = 55f;
 
         [MenuItem("Tools/FlowIoC/" + TITLE, false, -1250)]
         internal static void Open()
@@ -45,7 +46,6 @@ namespace FlowIoC.Editor.ModuleScanner
         /// Fix All while there is something to fix. A vivid green, because the toolbar tints a
         /// button rather than filling it and anything softer disappears into the strip.
         /// </summary>
-
         private readonly FlowRowPainter _painter = new FlowRowPainter();
 
         private readonly Dictionary<string, bool> _expanded = new Dictionary<string, bool>();
@@ -58,7 +58,6 @@ namespace FlowIoC.Editor.ModuleScanner
         private bool _projectExpanded = true;
         private string _summary;
         private Vector2 _scroll;
-
 
         private void OnEnable()
         {
@@ -81,7 +80,20 @@ namespace FlowIoC.Editor.ModuleScanner
             Rescan();
         }
 
-        private void OnFocus() => Rescan();
+        private void OnFocus() => Refresh();
+
+        /// <summary>
+        /// A rescan that also drops the repair summary. The summary describes one press of Fix
+        /// All, and it outlives the domain reload that press causes - but not the next time
+        /// somebody comes back to the window, by which point the rows underneath it may say
+        /// something else entirely. Fix All rescans without this, so its own summary survives the
+        /// rescan it triggers.
+        /// </summary>
+        private void Refresh()
+        {
+            _summary = string.Empty;
+            Rescan();
+        }
 
         private void Rescan()
         {
@@ -101,7 +113,7 @@ namespace FlowIoC.Editor.ModuleScanner
             // The bar wears the same green the settled rows do rather than a role's colour: no
             // FlowRole is about a module's health, and this window is about nothing else.
             _bar.DrawWindow(
-                _painter.Bar, _painter.Ok, TITLE, "FlowIoC", "Every module in the project", "Refresh", Rescan,
+                _painter.Bar, _painter.Ok, TITLE, "FlowIoC", "Every module in the project", "Refresh", Refresh,
                 TITLE);
 
             DrawToolbar();
@@ -333,33 +345,71 @@ namespace FlowIoC.Editor.ModuleScanner
             return expanded;
         }
 
+        /// <summary>
+        /// One finding under a row. A finding that names an asset takes the reader to it: the row
+        /// lights up under the pointer, the cursor turns into a link, and clicking pings the file
+        /// in the Project window. A finding that names nothing stays quiet and takes no click,
+        /// because a highlight that promises a click doing nothing is worse than no highlight.
+        /// </summary>
         private void DrawFinding(FindingEVO finding)
         {
             if (_onlyIssues && finding.Status == ModuleCheckStatus.Ok) return;
 
+            Object asset = AssetFor(finding);
+
+            float statusWidth = finding.Status == ModuleCheckStatus.Ok ? 0f : STATUS_WIDTH;
+            float textX = FINDING_INDENT + ICON_WIDTH + 4f;
+            float textWidth = Mathf.Max(40f, position.width - textX - statusWidth - 18f);
+
+            float height = Mathf.Max(
+                FlowRowPainter.ROW_HEIGHT,
+                _painter.MiniWrapped(false).CalcHeight(new GUIContent(finding.Message), textWidth));
+
+            Rect rect = _painter.Row(height);
             Color accent = ColorFor(finding.Status);
+            bool hovered = asset != null && _painter.IsHovered(rect);
+
+            if (hovered) _painter.Paint(rect, accent);
+
             Color previous = GUI.color;
-
-            EditorGUILayout.BeginHorizontal();
-
-            GUILayout.Space(FINDING_INDENT);
-
             GUI.color = accent;
-            GUILayout.Label(IconFor(finding.Status), _painter.Icon, GUILayout.Width(ICON_WIDTH));
+            GUI.Label(new Rect(rect.x + FINDING_INDENT, rect.y, ICON_WIDTH, FlowRowPainter.ROW_HEIGHT),
+                IconFor(finding.Status), _painter.Icon);
             GUI.color = previous;
 
-            GUILayout.Label(finding.Message, EditorStyles.wordWrappedMiniLabel);
-            GUILayout.FlexibleSpace();
+            GUI.Label(new Rect(rect.x + textX, rect.y, textWidth, rect.height), finding.Message,
+                _painter.MiniWrapped(hovered));
 
             if (finding.Status != ModuleCheckStatus.Ok)
             {
                 GUI.color = accent;
-                GUILayout.Label(finding.Status.ToString(), EditorStyles.miniLabel, GUILayout.Width(55));
+                GUI.Label(new Rect(rect.xMax - statusWidth - 6f, rect.y, statusWidth, FlowRowPainter.ROW_HEIGHT),
+                    finding.Status.ToString(), EditorStyles.miniLabel);
                 GUI.color = previous;
             }
 
-            EditorGUILayout.EndHorizontal();
+            if (asset == null) return;
+
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+
+            // Drawn last and painting nothing, so it takes the click without covering the row.
+            if (!GUI.Button(rect, GUIContent.none, GUIStyle.none)) return;
+
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
         }
+
+        /// <summary>
+        /// The asset a finding points at, or null when it names none or names one that is no
+        /// longer there - a card deleted since the scan, say.
+        /// </summary>
+        private Object AssetFor(FindingEVO finding)
+        {
+            return string.IsNullOrEmpty(finding.AssetPath)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<Object>(finding.AssetPath);
+        }
+
 
         /// <summary>
         /// What the list has to say when it has no rows to say it with. It wears the same tint a

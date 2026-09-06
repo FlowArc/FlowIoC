@@ -5,6 +5,7 @@ using System.Linq;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.AgentSkills;
 using FlowIoC.Editor.Inspector;
+using FlowIoC.Editor.ModuleCards;
 using UnityEditor;
 using UnityEngine;
 
@@ -53,11 +54,13 @@ namespace FlowIoC.Editor.AgentScanner
         private readonly FlowRowPainter _painter = new FlowRowPainter();
         private readonly AgentRulesAutoSync _rulesAutoSync = new AgentRulesAutoSync();
         private readonly AgentSkillsAutoSync _skillsAutoSync = new AgentSkillsAutoSync();
+        private readonly ModuleCardsAutoSync _cardsAutoSync = new ModuleCardsAutoSync();
 
         private FlowHeaderBar _bar;
         private string _projectRoot;
         private SyncFileState[] _rules;
         private SyncFileState[] _skills;
+        private SyncFileState[] _cards;
         private Vector2 _scroll;
 
         private void OnEnable()
@@ -78,6 +81,7 @@ namespace FlowIoC.Editor.AgentScanner
         {
             _rules = new AgentRulesSynchronizer(_projectRoot, new AgentRulesSource()).Inspect();
             _skills = new AgentSkillsInstaller(_projectRoot, new AgentSkillsSource()).Inspect();
+            _cards = new ModuleCardsInspector(_projectRoot).Inspect();
 
             Repaint();
         }
@@ -97,6 +101,9 @@ namespace FlowIoC.Editor.AgentScanner
 
             DrawGroup("Agent skills", AgentSkillsInstaller.TargetFolder, _skills, "SKILL",
                 "This version of FlowIoC ships no skills.");
+
+            DrawGroup("Module cards", "MODULE.md in every module, and MODULES.md at the project root", _cards,
+                "CARD", "This project has no modules yet.");
 
             EditorGUILayout.EndScrollView();
 
@@ -238,6 +245,7 @@ namespace FlowIoC.Editor.AgentScanner
 
             DrawAutoSyncToggle(_rulesAutoSync, "Keep AGENTS.md and CLAUDE.md up to date automatically");
             DrawAutoSyncToggle(_skillsAutoSync, "Keep the shipped skills up to date automatically");
+            DrawAutoSyncToggle(_cardsAutoSync, "Keep the module cards and MODULES.md up to date automatically");
         }
 
         private void DrawAutoSyncToggle(IAutoSyncSwitch autoSync, string label)
@@ -259,7 +267,7 @@ namespace FlowIoC.Editor.AgentScanner
         /// </summary>
         private void DrawSync()
         {
-            bool pending = Pending(_rules) || Pending(_skills);
+            bool pending = Pending(_rules) || Pending(_skills) || Pending(_cards);
 
             using (new EditorGUI.DisabledScope(!pending))
             {
@@ -280,6 +288,7 @@ namespace FlowIoC.Editor.AgentScanner
         {
             new AgentRulesSynchronizer(_projectRoot, new AgentRulesSource()).Sync();
             new AgentSkillsInstaller(_projectRoot, new AgentSkillsSource()).Install();
+            new ModuleCardsRefresher().Refresh();
 
             AssetDatabase.Refresh();
             Rescan();

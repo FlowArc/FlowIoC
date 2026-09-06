@@ -61,6 +61,66 @@ namespace FlowIoC.Editor.Addressables
             EditorUtility.SetDirty(settings);
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, created, true);
         }
+
+        /// <summary>
+        /// Takes a screen back out: the entry first, then the group if that entry was the last
+        /// thing in it. Registering creates a group per screen, so deleting the screen and leaving
+        /// the group behind is how a project ends up with a list of empty Local_Screen- groups and
+        /// their schema assets, none of which anything reads.
+        ///
+        /// Called before the prefab is deleted, so the entry is found by the asset it still has.
+        /// Afterwards there is nothing to look up: Addressables identifies an entry by GUID, and a
+        /// deleted asset has none.
+        ///
+        /// A group that still holds something is left alone. Two screens can share a group when a
+        /// project names them so, and the one being deleted does not get to take the other's
+        /// registration with it.
+        /// </summary>
+        internal bool Unregister(ScreenAddressableEntry entry, out string removedGroup)
+        {
+            removedGroup = null;
+
+            if (entry == null) return false;
+
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(false);
+            if (settings == null) return false;
+
+            AddressableAssetGroup group = settings.FindGroup(entry.GroupName);
+            if (group == null) return false;
+
+            bool removed = RemoveEntry(settings, group, entry);
+
+            if (group.entries.Count == 0)
+            {
+                removedGroup = group.Name;
+                settings.RemoveGroup(group);
+                removed = true;
+            }
+
+            if (removed) EditorUtility.SetDirty(settings);
+
+            return removed;
+        }
+
+        private bool RemoveEntry(
+            AddressableAssetSettings settings, AddressableAssetGroup group, ScreenAddressableEntry entry)
+        {
+            AddressableAssetEntry found = null;
+
+            foreach (AddressableAssetEntry candidate in group.entries)
+            {
+                if (candidate.address != entry.Address) continue;
+
+                found = candidate;
+                break;
+            }
+
+            if (found == null) return false;
+
+            settings.RemoveAssetEntry(found.guid, false);
+
+            return true;
+        }
     }
 }
 

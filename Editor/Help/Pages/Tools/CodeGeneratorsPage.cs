@@ -40,16 +40,20 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "component is easy to forget by hand, and a View without it silently never "
                 + "registers - no error, just a screen that does nothing.");
 
-            painter.SubHeading("Add Shared Data");
+            painter.SubHeading("Add Shared or Signals");
             painter.Paragraph(
-                "Tools > FlowIoC > Add Shared Data. Shared is an unticked box in Create Module, so a "
-                + "module is only offered it on the day it is created - and the need usually turns "
-                + "up later, when a second module wants its data. Pick a main, sub or screen module "
-                + "and this gives it the same thing Create Module would have: the Scripts/Shared "
-                + "folders, an assembly of its own, its namespace settings file, and the references "
-                + "from the module and from every screen, sub and test module already under it. It "
-                + "is for data alone - the public signal holder has its own assembly under "
-                + "Scripts/Signals, which every module already has.");
+                "Tools > FlowIoC > Add Shared or Signals. Both are ticks in Create Module, so a "
+                + "module is only offered them on the day it is created - and the need usually "
+                + "turns up later, when a second module wants its data or a Connector wants its "
+                + "signals. Every module is listed against the two, so the window says which ones "
+                + "the answer is yes for rather than leaving you to remember.");
+            painter.Paragraph(
+                "Add Shared gives a module the same thing Create Module would have: the "
+                + "Scripts/Shared folders, an assembly of its own, its namespace settings file, and "
+                + "the references from the module and from every screen, sub and test module "
+                + "already under it. Add Signals writes the public holder into Scripts/Signals - "
+                + "the folder every module already has - along with its assembly and the binding "
+                + "that puts it in the module's Context.");
             painter.Note(
                 "Every step checks before it writes, so running it on a module that already has "
                 + "Shared repairs whatever is missing and reports that the rest was already in "

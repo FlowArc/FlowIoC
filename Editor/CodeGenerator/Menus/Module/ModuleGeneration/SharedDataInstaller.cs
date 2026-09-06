@@ -34,9 +34,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             _references = references;
         }
 
-        public SharedDataReport Install(ModuleRegistry registry, ModuleDescriptorEVO module, string modulePath, DirectoryStructureConfig config)
+        public ModuleInstallReport Install(ModuleRegistry registry, ModuleDescriptorEVO module, string modulePath, DirectoryStructureConfig config)
         {
-            var report = new SharedDataReport();
+            var report = new ModuleInstallReport("Add Shared");
 
             FolderEVO sharedFolder = FindFolderByType(config?.RootFolders, FolderEVO.FolderType.Shared);
             string sharedPath = config?.FindFullFolderPathByID(FolderEVO.FolderType.Shared, modulePath);
@@ -77,7 +77,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             AssetDatabase.Refresh();
 
-            report.SharedAssemblyName = sharedAssemblyName;
+            report.AssemblyName = sharedAssemblyName;
             return report;
         }
 
@@ -86,7 +86,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// selection and all of them land at once - the same thing ticking Shared in Create Module
         /// does.
         /// </summary>
-        private void CreateFolders(string sharedPath, FolderEVO sharedFolder, SharedDataReport report)
+        private void CreateFolders(string sharedPath, FolderEVO sharedFolder, ModuleInstallReport report)
         {
             bool existed = Directory.Exists(sharedPath);
 
@@ -96,7 +96,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (!existed) report.CreatedFolders(sharedPath);
         }
 
-        private string WriteSharedAssembly(string modulePath, DirectoryStructureConfig config, string moduleAssemblyName, SharedDataReport report)
+        private string WriteSharedAssembly(string modulePath, DirectoryStructureConfig config, string moduleAssemblyName, ModuleInstallReport report)
         {
             string existing = _sharedAssembly.FindIn(modulePath, config);
             if (!string.IsNullOrEmpty(existing)) return existing;
@@ -112,7 +112,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// parent that already publishes. A grandchild reaches its own parent, not this one.
         /// </summary>
         private void AddReferenceToChildren(
-            ModuleRegistry registry, ModuleDescriptorEVO module, string sharedAssemblyName, SharedDataReport report)
+            ModuleRegistry registry, ModuleDescriptorEVO module, string sharedAssemblyName, ModuleInstallReport report)
         {
             if (registry == null || module == null) return;
 
@@ -133,7 +133,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             }
         }
 
-        private void AddReference(string asmdefPath, string sharedAssemblyName, string assemblyName, SharedDataReport report)
+        private void AddReference(string asmdefPath, string sharedAssemblyName, string assemblyName, ModuleInstallReport report)
         {
             // An assembly never references itself - the Shared assembly is one of the files this
             // walk can reach when a module sits directly above it.
@@ -168,54 +168,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             }
 
             return null;
-        }
-    }
-
-    /// <summary>
-    /// What the install actually changed, so the window can say so rather than claim work it
-    /// skipped. Running on a module that is already set up is expected to report nothing.
-    /// </summary>
-    internal class SharedDataReport
-    {
-        private readonly List<string> _lines = new List<string>();
-
-        public string SharedAssemblyName { get; set; }
-        public string Error { get; private set; }
-        public bool Succeeded => string.IsNullOrEmpty(Error);
-
-        /// <summary>
-        /// Whether something was actually created or wired. The namespace settings file is left
-        /// out on purpose: it is rewritten from the folder layout every time, the way it is for a
-        /// module, so counting it would make every run look like it had work to do.
-        /// </summary>
-        public bool ChangedAnything { get; private set; }
-
-        public void Fail(string reason) => Error = reason;
-
-        public void CreatedFolders(string path) => Record($"Created {NamespaceUtility.GetUnityAssetPath(path)}");
-        public void CreatedAssembly(string name) => Record($"Created {name}.asmdef");
-        public void Referenced(string assemblyName) => Record($"{assemblyName} now references it");
-        public void WroteNamespaceSettings(string fileName) => _lines.Add($"Refreshed {fileName}");
-
-        private void Record(string line)
-        {
-            ChangedAnything = true;
-            _lines.Add(line);
-        }
-
-        public string Summary() => ChangedAnything
-            ? string.Join("\n", _lines)
-            : "Everything was already in place.";
-
-        public void Log(string moduleName)
-        {
-            if (!Succeeded)
-            {
-                Debug.LogError($"<color=cyan>FlowIoC:</color> Add Shared Data on '{moduleName}' - {Error}");
-                return;
-            }
-
-            Debug.Log($"<color=cyan>FlowIoC:</color> Add Shared Data on '{moduleName}'\n{Summary()}");
         }
     }
 }

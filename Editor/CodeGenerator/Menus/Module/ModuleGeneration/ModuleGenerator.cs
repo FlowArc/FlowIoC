@@ -5,6 +5,7 @@ using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule;
 using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.ModuleCards;
 using UnityEditor;
 using UnityEngine;
 
@@ -47,7 +48,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createScreen,
             bool allowAsSubContext,
             ModuleRole moduleRole,
-            ScreenModuleSettings screenSettings = null
+            ScreenModuleSettings screenSettings = null,
+            ModuleCardDraftEVO card = null
         )
         {
             EditorPrefs.SetBool(MODULE_GENERATION_WORKING, true);
@@ -107,7 +109,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 allowAsSubContext,
                 moduleRole,
                 screenSettings,
-                testModulesFolderName
+                testModulesFolderName,
+                card
             );
         }
 
@@ -127,7 +130,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool allowAsSubContext,
             ModuleRole moduleRole,
             ScreenModuleSettings screenSettings,
-            string testModulesFolderName
+            string testModulesFolderName,
+            ModuleCardDraftEVO card
         )
         {
             // The module this one lives in, if any. A top level module is parented to
@@ -227,7 +231,21 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (selectedModuleType != ModuleType.Test)
             {
                 RegisterModuleLogType(moduleName);
+                WriteModuleCard(moduleName, modulePath, card);
             }
+        }
+
+        /// <summary>
+        /// The module's card, written for both kinds of module rather than inside one of the two
+        /// branches above - a screen module owes one as much as any other.
+        ///
+        /// The authored half only. Its generated block names assemblies that do not exist until
+        /// this module compiles, so Module Scanner writes that on the next scan, and reports the
+        /// placeholders above it until somebody says what the module is for.
+        /// </summary>
+        private static void WriteModuleCard(string moduleName, string modulePath, ModuleCardDraftEVO card)
+        {
+            new ModuleCardFile().Write(modulePath, new ModuleCardStub().For(moduleName, card));
         }
 
         private static void RegisterModuleLogType(string moduleName)

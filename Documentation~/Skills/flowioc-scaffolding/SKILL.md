@@ -25,7 +25,7 @@ code generators and namespace tools depend on the exact shape they produce.
 | Menu item | What it does |
 |---|---|
 | `Tools/FlowIoC/Create Module` | A whole module: folders, asmdef, Root, Context, Signals, DotSettings, index entry, log channel |
-| `Tools/FlowIoC/Add Shared Data` | Adds the `Scripts/Shared/` assembly to a module that already exists, and points its screen, sub and test modules at it |
+| `Tools/FlowIoC/Add Shared or Signals` | Adds the `Scripts/Shared/` assembly to a module that already exists and points its screen, sub and test modules at it, or writes the public signal holder a module was created without |
 | `Tools/FlowIoC/Create Command` | One Command, in `Controllers/`, in the module's namespace |
 | `Tools/FlowIoC/Create Model` | An interface and an implementation, in `Models/` |
 | `Tools/FlowIoC/Create View` | A View and its Mediator, in `ViewsMediators/` |
@@ -87,8 +87,9 @@ the folders that are missing, and untick **Create Root**, **Create Context** and
 Signals**. Existing files are left alone; the missing folders appear and the module index is
 refreshed so the other generators can find them.
 
-For `Shared` specifically, prefer `Tools/FlowIoC/Add Shared Data` - it also adds the reference to
-every screen, sub and test module already under the module.
+For `Shared` specifically, prefer `Tools/FlowIoC/Add Shared or Signals` - it also adds the reference
+to every screen, sub and test module already under the module, and the same window writes a public
+signal holder for a module created without one.
 
 ## Where the DotSettings go
 

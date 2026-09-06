@@ -48,6 +48,7 @@ namespace FlowIoC.Editor.Inspector
         private readonly GUIStyle[] _strong = new GUIStyle[2];
         private readonly GUIStyle[] _cell = new GUIStyle[2];
         private readonly GUIStyle[] _mini = new GUIStyle[2];
+        private readonly GUIStyle[] _miniWrapped = new GUIStyle[2];
         private readonly GUIStyle[] _badge = new GUIStyle[2];
 
         private GUIStyle _heading;
@@ -147,6 +148,24 @@ namespace FlowIoC.Editor.Inspector
         public GUIStyle Mini(bool hovered)
         {
             return Style(_mini, hovered, EditorStyles.miniLabel, TextAnchor.MiddleLeft, IdleMuted, HoverMuted);
+        }
+
+        /// <summary>
+        /// The same quiet grey, wrapped, for a row whose text is a sentence rather than a label -
+        /// a scanner finding, say. It is built here rather than by copying <see cref="Mini"/>,
+        /// because a GUIStyle copied from a style that was itself copied out of EditorStyles
+        /// loses the editor skin behind it and comes back black at the wrong size.
+        /// </summary>
+        public GUIStyle MiniWrapped(bool hovered)
+        {
+            GUIStyle style = Style(_miniWrapped, hovered, EditorStyles.miniLabel, TextAnchor.MiddleLeft, IdleMuted,
+                HoverMuted);
+
+            // Set every call rather than once: the cache hands back the same instance, so this
+            // costs an assignment and saves a second cache to say whether it has been done.
+            style.wordWrap = true;
+
+            return style;
         }
 
         /// <summary>
