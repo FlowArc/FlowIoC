@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-06
+
+### Added
+
+- **The public signal holder has an assembly of its own.** It moves from `Scripts/Shared/Signals/`
+  to `Scripts/Signals/`, which is `Modules.Player.Signals`. A System or a Screen that references a
+  neighbour's Shared assembly to read an enum can no longer see that module's signals, so the rule
+  that signals cross through a Connector is the compiler's now rather than the reader's. Module
+  Scanner gained `SignalReferenceCheck`, which reports any assembly other than a Connector's that
+  references a `.Signals`. The folder is mandatory and the assembly is not: a module with no public
+  signals leaves it empty and Module Scanner reads that as Ok, which is what `ConnectorModule` does.
+
+- **`FlowRole.Core`.** A Core module is part of the project's frame rather than of its game - one
+  per project, a reserved Initialize Order, extended rather than authored. `MainRoot` and
+  `ScreenRoot` declare it with `[FlowHeader(FlowRole.Core)]`, and it is the one role a Root can only
+  take from the attribute, because a Core module carries no suffix for the name to be read from.
+  Create Module writes that line for Role = Core on a main module.
+
+- **A Systems and Services page** in the Help window's Structure category, and a
+  `flowioc-systems-services` skill beside the four already installed. Both carry the rules the
+  architecture had never written down: a System needs no `System.cs`, one arrives when the module
+  wants a surface, it holds injected members and no method that does work, it is built out of sub
+  systems, a Model owns the module's state and data while a sub system computes, and a Service is
+  driven by a call or by a Command it ships and answers with a signal or a callback.
+
+- **FlowIoC's editor look is offered rather than hidden.** `FlowPalette`, `FlowRowPainter`,
+  `FlowHeaderBar` and `FlowHelpPageMap` are public, so a project writing tooling of its own can draw
+  a FlowIoC window - the header bar, the row colours, the action button under a list.
+
 ### Changed
 
 - **The camera module is `CameraModule`.** A module is named for what it does while its Root and
@@ -16,6 +45,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CameraSystemContext` - the Context renamed from `CameraContext` so the pair reads together. The
   Help window lists the module as *Camera*. A project that already has the module installed renames
   its own copy: the folder, the two asmdefs and the namespaces they hold.
+
+- **Shared is optional everywhere and starts unticked**, including on a screen module, where it used
+  to be forced on. A module pays for that assembly on the day it publishes something.
+
+- **`Services/` and `Systems/` are optional folders**, ticked from *Role* in Create Module: System
+  arrives with `Systems/` ticked, Service with `Services/` ticked, and either may be changed.
+
+- **The windows wear FlowIoC's own colour rather than a role's.** The generator windows, the Help
+  banner and the Create Module panels were painted with `FlowRole.Root`, which made them all change
+  colour the day that fill did. They take a chrome violet no role owns, and their action button
+  takes it too - it used to be `Color.cyan`, which belonged to nothing else on screen. Core is
+  indigo, deliberately apart from the chrome it sits beside in Create Module's Root preview, and the
+  plain Root is red: nothing in a finished project wears it, so it now means a Root that has not
+  said what it roots.
+
+- **Folder Painter wears the header bar**, with Refresh and Select Asset on the right of it, and its
+  Enabled switch moved under the rules it governs - a tick and the row green while it is on, a
+  warning icon and the amber while it is off.
+
+- **Whether a context belongs to a Connector is asked through `FlowRoleResolver` everywhere.** The
+  Root inspector was reading the name itself, so a context that declared itself with
+  `[FlowHeader(FlowRole.Connector)]` was offered correctly by Add Sub Context and drawn without the
+  badge.
+
+### Removed
+
+- **`InputModule`.** It is gone from `Modules~`, from the Help sidebar, and with it
+  `InputModulePage`. Nothing in the package referenced it. It will be written again if it is wanted.
+
+- `ScreenHistoryData`, a sub service nothing used.
 
 ## [1.4.5] - 2026-09-04
 
