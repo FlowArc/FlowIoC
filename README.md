@@ -217,6 +217,14 @@ inspector reads: a Root takes the colour of whatever it roots and decides that f
 so `CounterRoot` would be drawn as a plain Root while `CounterServiceRoot` is drawn as a Service.
 The module name has no such job, so it says what the module counts, parses or stores.
 
+**A decision belongs in a Command, wherever it would otherwise be taken.** Most of the table above
+is that one rule seen from different places: a Context declares bindings and nothing else, a View
+holds no `if` about game rules, a Mediator holds none either, a System type holds no method that
+does work. Each is somewhere a decision tries to settle, and the answer is always the same —
+dispatch, and let a Command read the conditions and decide. What needs no decision is not a
+decision: a close button that always closes is the Mediator calling `_view.Hide()`, and routing that
+out to a Command and back answers a question nobody asked.
+
 **Which of the three a module is, is something you can see.** A Service has files under
 `Services/`; a screen module has a context deriving from `ScreenSubContext<TView, TMediator>`;
 everything else is a System.

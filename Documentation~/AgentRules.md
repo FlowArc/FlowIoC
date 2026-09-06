@@ -47,8 +47,14 @@ so follow the rules below deliberately.
   `[FlowHeader(FlowRole.Connector)]`. `Create Module` offers `[AllowAsSubContext]` as a toggle on a
   main module that gets a Root, unticked, because a module with a Root of its own is the ordinary
   case.
-- A Context declares bindings and nothing else. If a Context needs an `if`, that decision
-  belongs in a Command.
+- **A decision belongs in a Command, wherever it would otherwise be taken.** That is the rule the
+  next several are instances of: a Context declares bindings and nothing else, a View holds no `if`
+  about game rules, a Mediator holds none either, and a System type holds no method that does work.
+  Each of them is somewhere a decision tries to settle, and the answer is the same every time -
+  dispatch, and let a Command read the conditions and decide. What needs no decision is not a
+  decision: a close button that always closes is the Mediator calling `_view.Hide()`, and routing
+  that out to a Command and back answers a question nobody asked.
+- A Context declares bindings and nothing else.
 - The binding phases declare, `Setup` initialises, `Launch` starts. `SignalBindings`,
   `InjectionBindings`, `MediationBindings` and `CommandBindings` only say what the module is
   made of. `Setup` runs once **every** Root in the scene has finished binding, so that is where
@@ -135,10 +141,10 @@ so follow the rules below deliberately.
   suffix, so the Root says it with `[FlowHeader(FlowRole.Core)]` instead and `Create Module` writes
   that line for Role = Core. The attribute wins over every other reading, which is also how a
   context that is not named for the job declares itself a Connector's.
-- A View holds scene references and raw input. A View with an `if` about game rules is
-  doing the Mediator's job.
-- A Mediator drives exactly one View. It listens to signals and dispatches them, and holds
-  no game rules either.
+- A View holds scene references and raw input.
+- A Mediator drives exactly one View. It listens to signals and dispatches them. It acts on the
+  view itself only where nothing is being decided - hiding a screen whose close button always
+  closes - and dispatches wherever something is.
 - A `ScreenView` wires its buttons in `OnEnable` and drops them in `OnDisable`, never in
   `Awake` or `Start`. A screen is pooled: hiding it deactivates the object and reopening it
   shows the same instance, so `Awake` runs once while the screen opens many times.
