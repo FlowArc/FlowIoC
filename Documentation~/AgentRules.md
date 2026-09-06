@@ -56,9 +56,16 @@ so follow the rules below deliberately.
   inspector or a generator touches the entry. Never write an entry with a name alone when the script
   is in reach: `Add Sub Context` has the `Type`, and a generator that has just written the `.cs` has
   the file. An entry whose script is missing but whose name still resolves is mended by *Resolve* in
-  the Root's inspector; one whose name resolves to nothing is a decision, and Delete Module names
-  the scenes and prefabs it is about to leave that way before it deletes. It edits none of them,
-  because opening and saving somebody's scene is not a tool's decision.
+  the Root's inspector; one whose name resolves to nothing is a decision.
+- **A tool unwires a thing from everywhere it is referenced, then deletes.** Warning and leaving a
+  broken project behind is not the answer: `Delete Module` unregisters the screen's Addressables
+  entry and group, strips the module's three assemblies out of every asmdef that named them, and
+  takes its sub-contexts out of the Roots that list them - and only then deletes the folder. It asks
+  which of three things to do about those Roots before anything is deleted, so cancelling leaves the
+  module whole. How far it goes depends on what holds the Root: a prefab is written, a closed scene
+  is opened and written, and a scene that is **open** is changed and left dirty, because whatever
+  else is unsaved in it belongs to whoever opened it. That last line is the one a tool never
+  crosses - saving somebody's open scene destroys the only escape they had.
 - **A decision belongs in a Command, wherever it would otherwise be taken.** That is the rule the
   next several are instances of: a Context declares bindings and nothing else, a View holds no `if`
   about game rules, a Mediator holds none either, and a System type holds no method that does work.

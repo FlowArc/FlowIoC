@@ -137,6 +137,71 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
+        /// The unwiring opens the assets it changes, so what it needs is the list of assets rather
+        /// than the list of lines. Opening every scene and prefab in the project to find out which
+        /// ones matter would be the expensive half of the job; the dependency query answers it from
+        /// the index instead.
+        /// </summary>
+        [Test]
+        public void The_assets_pointing_into_the_module_come_back_as_paths()
+        {
+            ModuleAssetReferences references = References(
+                new List<string> {"Assets/Scenes/A.unity", "Assets/Prefabs/B.prefab", "Assets/Scenes/C.unity"},
+                new Dictionary<string, IReadOnlyList<string>>
+                {
+                    {"Assets/Scenes/A.unity", new List<string> {CONTEXT}},
+                    {"Assets/Prefabs/B.prefab", new List<string> {CONTEXT}},
+                    {"Assets/Scenes/C.unity", new List<string> {"Assets/Other.cs"}}
+                });
+
+            Assert.AreEqual(
+                new[] {"Assets/Scenes/A.unity", "Assets/Prefabs/B.prefab"},
+                references.AssetsPointingInto(MODULE));
+        }
+
+        /// <summary>
+        /// The line report names one asset once per file of the module it points at; this one is
+        /// about opening the asset, and opening it twice would do the work twice.
+        /// </summary>
+        [Test]
+        public void An_asset_naming_two_of_the_modules_files_comes_back_once()
+        {
+            ModuleAssetReferences references = References(
+                new List<string> {"Assets/Scenes/MainScene.unity"},
+                new Dictionary<string, IReadOnlyList<string>>
+                {
+                    {"Assets/Scenes/MainScene.unity", new List<string> {CONTEXT, MODULE + "/Prefabs/PlayerRoot.prefab"}}
+                });
+
+            Assert.AreEqual(1, references.AssetsPointingInto(MODULE).Count);
+        }
+
+        [Test]
+        public void An_asset_inside_the_module_is_not_one_to_open()
+        {
+            string ownScene = MODULE + "/Scenes/PlayerTestScene.unity";
+
+            ModuleAssetReferences references = References(
+                new List<string> {ownScene},
+                new Dictionary<string, IReadOnlyList<string>> {{ownScene, new List<string> {CONTEXT}}});
+
+            Assert.IsEmpty(references.AssetsPointingInto(MODULE));
+        }
+
+        [Test]
+        public void An_empty_module_path_names_no_assets_to_open()
+        {
+            ModuleAssetReferences references = References(
+                new List<string> {"Assets/Scenes/MainScene.unity"},
+                new Dictionary<string, IReadOnlyList<string>>
+                {
+                    {"Assets/Scenes/MainScene.unity", new List<string> {CONTEXT}}
+                });
+
+            Assert.IsEmpty(references.AssetsPointingInto(string.Empty));
+        }
+
+        /// <summary>
         /// Delete Module is driven from a window on Windows, where a module path arrives with
         /// backslashes while the asset database speaks forward slashes.
         /// </summary>

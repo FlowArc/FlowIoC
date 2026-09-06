@@ -22,10 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **Resolve**, which links one in a press. An entry whose name resolves to nothing offers no button:
   the module is gone, and whether the Root should still list it is a decision.
 
-- **Delete Module says what it is about to leave behind.** Before deleting it names the scenes and
-  prefabs outside the module that point into it, in the confirmation dialog. It still edits none of
-  them - opening and saving somebody's scene is not a tool's decision - so the report is the answer,
-  and it is only possible because a sub-context entry is now a tracked reference.
+- **Delete Module takes the module's sub-contexts out of the Roots that list them.** It asks first,
+  and there are three answers: remove them from every Root, go through them one at a time, or remove
+  none, see where they are and keep the module. This is the rule the rest of the tool already
+  follows - unwire a thing from everywhere it is referenced, then delete - reaching the one place
+  that used to be exempt, and it is only possible because a sub-context entry is a tracked reference
+  now rather than a name nothing depended on.
+
+  The question comes **before** anything is deleted, so cancelling leaves the module whole: its
+  assemblies, its settings files and its folder are all still there.
+
+  Which asset holds the Root decides how far it goes. A prefab is a file and is written. A scene
+  that is not open is opened, written and closed again. A scene that **is** open is changed and left
+  dirty, because whatever else is unsaved in it belongs to whoever opened it - the summary says so,
+  and saving is theirs. Every entry removed, skipped or left is named on the console with its Root
+  and its asset.
 
 ### Fixed
 

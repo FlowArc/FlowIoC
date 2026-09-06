@@ -1364,9 +1364,17 @@ is rewritten from the script whenever the inspector or a generator touches the e
 
 An entry with no script says which of two things it is. Where the context still exists,
 *Resolve* links it in one press. Where nothing compiles to the name, the module is gone and
-the entry is a decision rather than a repair. `Tools/FlowIoC/Delete Module` names the scenes
-and prefabs that will be left that way **before** it deletes anything, and edits none of
-them — opening and saving somebody's scene is not a tool's decision.
+the entry is a decision rather than a repair.
+
+`Tools/FlowIoC/Delete Module` takes the module's sub-contexts out of the Roots that list them,
+and asks first. Three answers: remove them from every Root, go through them one at a time, or
+remove none, see where they are and keep the module. The question comes **before** anything is
+deleted, so cancelling leaves the module whole.
+
+How far it goes depends on what holds the Root. A prefab is a file and is written. A scene that
+is not open is opened, written and closed again. A scene that **is** open is changed and left
+dirty — whatever else is unsaved in it belongs to whoever opened it, so saving is theirs. Every
+entry removed, skipped or left is named on the console with its Root and its asset.
 
 ---
 

@@ -87,10 +87,19 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                             "Delete Module",
                             $"Are you sure you want to delete '{module.Name}'?\n\n" +
                             $"Path: {module.Path}\n\n" +
-                            LeftBehind(module) +
                             "This action cannot be undone!",
                             "Delete", "Cancel"))
                     {
+                        // Before anything is deleted, so that answering "cancel" here leaves the
+                        // module whole: the assemblies, the settings files and the folder are all
+                        // still there, and the reader is back where they started.
+                        if (!UnwireSubContexts(module))
+                        {
+                            GUIUtility.ExitGUI();
+
+                            return;
+                        }
+
                         IReadOnlyList<string> deleted =
                             ModuleDeleter.DeleteModule(module.Name, module.Path, module.FolderGuid);
 
@@ -154,32 +163,115 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>
-        /// The scenes and prefabs that point into this module, as a block for the confirmation
-        /// dialog, or nothing at all when none do.
+        /// The Roots elsewhere in the project that list this module's sub-contexts, and what to do
+        /// about them. Answers false when the reader chose to stop, in which case nothing at all has
+        /// been deleted yet - which is why this runs before the deleter rather than inside it.
         ///
-        /// A Root holds its sub-contexts by script reference, so a scene listing one of this
-        /// module's contexts is a dependent asset the engine tracks and this can name it. Delete
-        /// Module still deletes: what it does not do is open the scene and edit it, because that is
-        /// the reader's call. Being told which files to look at afterwards is the difference between
-        /// a scene that silently stops building a sub-context and one somebody knows about.
+        /// Three answers, because there are three honest ones. Take them all out; go through them
+        /// one at a time; or take none out, see where they are, and keep the module. A module
+        /// nothing lists asks nothing and goes straight through.
         /// </summary>
-        private string LeftBehind(ModuleEntry module)
+        private bool UnwireSubContexts(ModuleEntry module)
         {
-            IReadOnlyList<string> referenced = new ModuleAssetReferences()
-                .Find(new ModuleAssetPathResolver().ToAssetPath(module.Path));
+            string moduleAssetPath = new ModuleAssetPathResolver().ToAssetPath(module.Path);
 
-            if (referenced.Count == 0) return string.Empty;
+            var unwirer = new SubContextUnwirer();
+            IReadOnlyList<string> found = unwirer.Report(moduleAssetPath);
 
-            // A dialog is not a report. Past a handful the list stops being readable, and the console
-            // line the deleter writes carries the rest.
+            if (found.Count == 0) return true;
+
+            int answer = EditorUtility.DisplayDialogComplex(
+                "Sub-contexts elsewhere",
+                $"'{module.Name}' is listed as a sub-context on Roots outside it:\n\n"
+                + Listed(found)
+                + "\n\nLeft alone, those Roots list a context that will not exist.",
+                "Remove from all",
+                "Cancel, just report",
+                "Ask me for each");
+
+            // Cancel is the middle button so that a stray Escape or a closed window lands on the
+            // answer that changes nothing, rather than on the one that edits every scene.
+            if (answer == 1)
+            {
+                Report(module, found);
+
+                return false;
+            }
+
+            bool askEach = answer == 2;
+
+            IReadOnlyList<SubContextUnwireEVO> outcomes = unwirer.Remove(
+                moduleAssetPath, entry => !askEach || Asked(module, entry));
+
+            Announce(module, outcomes);
+
+            return true;
+        }
+
+        /// <summary>One entry, one question. Skipping is a real answer and is logged as one.</summary>
+        private bool Asked(ModuleEntry module, SubContextUnwireEVO entry)
+        {
+            return EditorUtility.DisplayDialog(
+                "Remove sub-context",
+                $"{entry.RootName} in {entry.AssetPath}\nlists {entry.ContextName}, which belongs to "
+                + $"'{module.Name}'.\n\nRemove it from this Root?",
+                "Remove", "Leave it");
+        }
+
+        /// <summary>
+        /// What the cancelling answer leaves the reader with: every place to look, on the console
+        /// where it can be read at leisure and copied, and the module still where it was.
+        /// </summary>
+        private void Report(ModuleEntry module, IReadOnlyList<string> found)
+        {
+            Debug.Log($"<color=cyan>[FlowIoC]</color> '{module.Name}' was not deleted. It is listed as a "
+                      + $"sub-context in {found.Count} place(s):\n{string.Join("\n", found)}");
+
+            EditorUtility.DisplayDialog(
+                "Nothing deleted",
+                $"'{module.Name}' is still here.\n\n{Listed(found)}\n\nThe full list is on the console.",
+                "OK");
+        }
+
+        /// <summary>
+        /// What was done, line by line, on the console and in a dialog. A skipped entry and one
+        /// removed from an open scene both say so, because both leave something for the reader.
+        /// </summary>
+        private void Announce(ModuleEntry module, IReadOnlyList<SubContextUnwireEVO> outcomes)
+        {
+            if (outcomes.Count == 0) return;
+
+            var lines = new List<string>();
+
+            foreach (SubContextUnwireEVO outcome in outcomes)
+                lines.Add(outcome.Line());
+
+            Debug.Log($"<color=cyan>[FlowIoC]</color> Sub-contexts of '{module.Name}':\n"
+                      + string.Join("\n", lines));
+
+            bool unsaved = outcomes.Any(o => o.Outcome == SubContextUnwireOutcome.RemovedNotSaved);
+
+            EditorUtility.DisplayDialog(
+                "Sub-contexts",
+                Listed(lines)
+                + (unsaved
+                    ? "\n\nAn open scene was changed and not saved. Save it to keep the change, or "
+                      + "close without saving to keep the entry."
+                    : string.Empty),
+                "OK");
+        }
+
+        /// <summary>
+        /// A dialog is not a report. Past a handful the list stops being readable, and the console
+        /// line beside it carries the rest.
+        /// </summary>
+        private string Listed(IReadOnlyList<string> lines)
+        {
             const int shown = 6;
 
-            string list = string.Join("\n", referenced.Take(shown));
+            string list = string.Join("\n", lines.Take(shown));
 
-            if (referenced.Count > shown)
-                list += $"\n...and {referenced.Count - shown} more";
-
-            return "These still point into it and are left as they are:\n" + list + "\n\n";
+            return lines.Count > shown ? list + $"\n...and {lines.Count - shown} more" : list;
         }
 
         private void ScanModules()
