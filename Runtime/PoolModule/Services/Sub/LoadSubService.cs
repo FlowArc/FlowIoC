@@ -23,6 +23,7 @@ namespace FlowIoC.PoolModule.Services.Sub
                 {
                     await _addressableLoadService.PreloadItemAsync(preloadAddressable.AddressablePrefab);
                 }
+
                 return;
             }
 
@@ -40,10 +41,18 @@ namespace FlowIoC.PoolModule.Services.Sub
         {
             IPoolableItem poolableItem = null;
 
-            var poolData = itemConfig as PoolItemVO;
+            if (itemConfig is not PoolItemVO poolData)
+            {
+                FlowLogger.LogError(SystemLogType.Pool,
+                    "[LoadSubService] Item config is a " + (itemConfig == null ? "null" : itemConfig.GetType().Name) +
+                    " rather than a PoolItemVO, so there is no prefab to build from.");
+                return null;
+            }
+
             if ((poolData.IsAddressable && poolData.AddressablePrefab == null) || (!poolData.IsAddressable && poolData.Prefab == null))
             {
-                FlowLogger.LogError(SystemLogType.Pool, "[LoadSubService] Null prefab in item config for type: " + itemConfig.GetType() + " (PoolKey: " + itemConfig.PoolKey + ")");
+                FlowLogger.LogError(SystemLogType.Pool,
+                    "[LoadSubService] Null prefab in item config for type: " + itemConfig.GetType() + " (PoolKey: " + itemConfig.PoolKey + ")");
                 return null;
             }
 
@@ -60,7 +69,8 @@ namespace FlowIoC.PoolModule.Services.Sub
                     poolableItem = instance.GetComponent<IPoolableItem>();
                     if (poolableItem == null)
                     {
-                        FlowLogger.LogError(SystemLogType.Pool, $"Instantiated prefab does not have an IPoolableItem component. (PoolKey:{itemConfig.PoolKey})");
+                        FlowLogger.LogError(SystemLogType.Pool,
+                            $"Instantiated prefab does not have an IPoolableItem component. (PoolKey:{itemConfig.PoolKey})");
                         Object.Destroy(instance);
                     }
                 }
@@ -72,8 +82,8 @@ namespace FlowIoC.PoolModule.Services.Sub
                 poolableItem.OnInitialized();
                 return poolableItem;
             }
-            
+
             return null;
         }
     }
-} 
+}
