@@ -13,14 +13,17 @@ namespace FlowIoC.Editor.Inspector
     /// help box. The accent swaps between them by skin, because the vivid value dissolves on a
     /// light background.
     /// </summary>
-    internal class FlowPalette
+    public class FlowPalette
     {
         private readonly Dictionary<FlowRole, Color> _deep = new Dictionary<FlowRole, Color>();
         private readonly Dictionary<FlowRole, Color> _vivid = new Dictionary<FlowRole, Color>();
 
         public FlowPalette()
         {
-            Add(FlowRole.Core, "#6E3364", "#C070B8");
+            // Indigo, and deliberately not the violet the tools wear: the two sit together in
+            // Create Module, where the window is chrome and the Root preview inside it is the role,
+            // so the deep values are far enough apart to be told at a glance.
+            Add(FlowRole.Core, "#37307E", "#8B82EA");
 
             // Nothing in a finished project wears this. Every Root is a Core, a System, a Service,
             // a Connector, an Adapter or a Test, so the plain Root is what a Root that has not said

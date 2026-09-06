@@ -14,7 +14,7 @@ namespace FlowIoC.Editor.Inspector
     /// means "nothing is wrong with this module", the Screen Scanner means "no other screen opens
     /// on this layer" - and a reader who learns the colour once has learned it everywhere.
     /// </summary>
-    internal class FlowRowPainter
+    public class FlowRowPainter
     {
         public const float ROW_HEIGHT = 20f;
         public const float STRIPE_WIDTH = 3f;

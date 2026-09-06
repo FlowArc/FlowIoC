@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.Inspector
     /// Service and System are the two without a page today; writing one is all it takes for their
     /// icon to appear.
     /// </summary>
-    internal class FlowHelpPageMap
+    public class FlowHelpPageMap
     {
         private readonly Dictionary<FlowRole, string> _pages = new Dictionary<FlowRole, string>
         {
