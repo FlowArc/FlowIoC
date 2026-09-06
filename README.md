@@ -826,9 +826,21 @@ has finished showing and dropped when it has finished hiding. And every handler 
 lands while the screen is animating in or out does not become a signal. It is not queued and not
 replayed; it does not happen.
 
+An animation reports when it **finished**, not when it started. `HasShowAnimation` false and
+`ShowCompleted` fires at once; true and the screen takes `ScreenState.InShowAnimation`,
+`PlayShowAnimation()` runs, and the state stays until the View invokes `ShowCompleted` — which is
+what the guard above is made of. A timeline waits for its duration in a coroutine; a set of
+staggered tweens hangs `OnComplete` on the last one only, because hanging it on the wrong one lets
+the screen leave `InShowAnimation` while it is still moving.
+
 > **Important:** an overridden `PlayShowAnimation` or `PlayHideAnimation` must invoke
 > `ShowCompleted` or `HideCompleted`. Forget it and the Mediator never subscribes — the screen
 > opens, every button is dead, and nothing is logged.
+
+A screen may have a show animation and no hide animation; nothing depends on the pair. What a pooled
+screen is reset in is `BeforeScreenActivation`, which runs immediately before `Show()` — the same
+instance comes back carrying whatever the last opening left on it. `AfterScreenActivation` runs on
+the other side of the RectTransform work, for anything that has to wait for the layout.
 
 The `ViewInjector` component lists every `IView` on the GameObject and resolves
 which Context each one belongs to. Each entry says so with **Context Source** —

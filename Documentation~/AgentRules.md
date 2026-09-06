@@ -179,9 +179,21 @@ so follow the rules below deliberately.
   `if (_view.Data.State == ScreenState.AvailableToSendSignal)`, which is `InUse` and nothing else,
   so a tap that lands while the screen is animating in or out does not become a signal. It is not
   queued and not replayed; it does not happen.
+- **An animation reports when it finished, not when it started.** `ScreenBody` gates it:
+  `HasShowAnimation` false and `ShowCompleted` fires at once; true and the screen takes
+  `ScreenState.InShowAnimation`, `PlayShowAnimation()` runs, and the state stays until the View
+  invokes `ShowCompleted`. That is what the handler guard above is made of, so the View has to
+  report the end. A timeline waits for its duration in a coroutine; a set of staggered tweens hangs
+  `OnComplete` on **the last one only**. Hang it on the wrong tween and the screen leaves
+  `InShowAnimation` while it is still moving - the guard lifting early rather than loudly.
 - **An overridden `PlayShowAnimation` or `PlayHideAnimation` must invoke `ShowCompleted` or
   `HideCompleted`.** Forget it and the Mediator never subscribes: the screen opens, every button is
   dead, and nothing is logged.
+- A screen may have a show animation and no hide animation; nothing depends on the pair. **What a
+  pooled screen is reset in is `BeforeScreenActivation`**, which runs immediately before `Show()` -
+  the same instance comes back carrying whatever the last opening left on it. `AfterScreenActivation`
+  runs on the other side of the RectTransform work, for anything that has to wait for the layout. A
+  hide animation is for the look of it, and resetting is not its job.
 - A View translates raw input into the action it already offers - a swipe left calls the same
   `NextMapClicked()` the button does - so the Mediator never learns which one it was. And a View's
   other methods are named for what they show, `ShowPlayButton` and `WaitingCountdownTick`: those are

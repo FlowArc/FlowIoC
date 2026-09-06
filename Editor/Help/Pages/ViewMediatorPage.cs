@@ -217,6 +217,38 @@ namespace FlowIoC.Editor.Help.Pages
                 + "replayed; it does not happen.");
 
             painter.Space();
+            painter.SubHeading("An animation reports when it finished");
+            painter.Paragraph(
+                "ScreenBody gates it. HasShowAnimation false and ShowCompleted fires at once; true "
+                + "and the screen takes ScreenState.InShowAnimation, PlayShowAnimation runs, and the "
+                + "state stays until the View invokes ShowCompleted - which is what the guard above "
+                + "is made of. So the View reports the end of the animation, never its start.");
+            painter.Code(
+                "// a timeline: wait for its duration\n"
+                + "protected override void PlayShowAnimation()\n"
+                + "{\n"
+                + "    _director.Play();\n"
+                + "    StartCoroutine(WaitForTimelineFinish());\n"
+                + "}\n"
+                + "\n"
+                + "// staggered tweens: only the last one reports\n"
+                + "protected override void PlayShowAnimation()\n"
+                + "{\n"
+                + "    BackBtn.transform.DOScale(1, .5f).SetDelay(.1f);\n"
+                + "    SaveBtn.transform.DOScale(1, .5f).SetDelay(.3f)\n"
+                + "        .OnComplete(() => ShowCompleted?.Invoke(this));\n"
+                + "}");
+            painter.Paragraph(
+                "Hang OnComplete on the wrong tween and the screen leaves InShowAnimation while it "
+                + "is still moving - the guard lifting early rather than loudly.");
+            painter.Paragraph(
+                "A screen may have a show animation and no hide animation; nothing depends on the "
+                + "pair. What a pooled screen is reset in is BeforeScreenActivation, which runs "
+                + "immediately before Show() - the same instance comes back carrying whatever the "
+                + "last opening left on it. AfterScreenActivation runs on the other side of the "
+                + "RectTransform work, for anything that has to wait for the layout.");
+
+            painter.Space();
             painter.Note(
                 "Important: an overridden PlayShowAnimation or PlayHideAnimation must invoke "
                 + "ShowCompleted or HideCompleted. Forget it and the Mediator never subscribes - "
@@ -235,6 +267,8 @@ namespace FlowIoC.Editor.Help.Pages
                 "A screen's Mediator subscribes on ShowCompleted and unsubscribes on HideCompleted. OnRegister wires those two and nothing else.");
             painter.Bullet("Every handler in a screen's Mediator is guarded by _view.Data.State == ScreenState.AvailableToSendSignal.");
             painter.Bullet("An overridden PlayShowAnimation or PlayHideAnimation must invoke ShowCompleted or HideCompleted.");
+            painter.Bullet("An animation reports when it finished. With staggered tweens, only the last one hangs OnComplete.");
+            painter.Bullet("A pooled screen is reset in BeforeScreenActivation, not in the hide animation.");
             painter.Bullet("A View translates raw input into the action it already offers. A swipe left calls the same method the button does.");
         }
 
