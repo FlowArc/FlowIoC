@@ -57,7 +57,7 @@ namespace FlowIoC.Tests
             public TryGetSubService TryGet { get; set; }
             public HideSubService Hide { get; set; }
             public UnloadSubService Unload { get; set; }
-            public IScreenBuilderSubService Open<T>(int managerId = 0) where T : IScreenBody => null;
+            public IScreenBuilder Open<T>(int managerId = 0) where T : IScreenBody => null;
         }
 
         private InjectionBinderCrossContext _crossContext;

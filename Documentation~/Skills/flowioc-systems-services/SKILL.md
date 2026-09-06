@@ -174,7 +174,7 @@ public interface IScreenService
     CheckSubService Check { get; set; }
     HideSubService  Hide  { get; set; }
 
-    IScreenBuilderSubService Open<T>(int managerId = 0) where T : IScreenBody;
+    IScreenBuilder Open<T>(int managerId = 0) where T : IScreenBody;
 }
 
 // a builder: every step returns the builder, and nothing happens until Show()
