@@ -4,6 +4,7 @@ using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Bind.Binders;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.CommandGroup;
+using FlowIoC.BaseModule.Pooling;
 using FlowIoC.BaseModule.Signals;
 using FlowIoC.ConsoleModule;
 
@@ -13,7 +14,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
     public class CommandBinder : Binder<CommandBinding>, ICommandBinder
     {
         private readonly Dictionary<Type, bool> _hideCommandLogCache = new();
-        private readonly Dictionary<Type, Stack<CommandBody>> _commandPool = new();
+        private readonly TypePool<CommandBody> _commandPool = new();
         private readonly Stack<ICommandGroupResolver> _commandGroupPool = new();
 
         internal IContext Context;
@@ -103,12 +104,9 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
         internal CommandBody GetCommand(Type commandType)
         {
-            if (_commandPool.TryGetValue(commandType, out Stack<CommandBody> stack) && stack.Count > 0)
-            {
-                return stack.Pop();
-            }
-
-            return (CommandBody) Activator.CreateInstance(commandType);
+            return _commandPool.TryTake(commandType, out CommandBody command)
+                ? command
+                : (CommandBody) Activator.CreateInstance(commandType);
         }
 
         internal void ReturnCommandToPool(ICommandBody commandBody)
@@ -116,15 +114,9 @@ namespace FlowIoC.BaseModule.Controller.Binders
             commandBody.Clean();
             Type commandType = commandBody.GetType();
 
-            if (!_commandPool.TryGetValue(commandType, out Stack<CommandBody> stack))
-            {
-                stack = new Stack<CommandBody>();
-                _commandPool.Add(commandType, stack);
-            }
-
             // Safe by construction: a step type is constrained to CommandBody, and the pool only
             // ever sees back what GetCommand handed out.
-            stack.Push((CommandBody) commandBody);
+            _commandPool.Return(commandType, (CommandBody) commandBody);
             if (!HasHideCommandLog(commandType))
                 FlowLogger.Log(SystemLogType.CommandOperation, $"Command is returned to pool! - {commandType.Name}");
         }

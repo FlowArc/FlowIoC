@@ -8,6 +8,7 @@ using FlowIoC.BaseModule.Function.AsyncFunctions;
 using FlowIoC.BaseModule.Function.AsyncFunctions.DataContainer;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.Injectable.Utils;
+using FlowIoC.BaseModule.Pooling;
 using FlowIoC.BaseModule.Provider.Coroutine;
 using FlowIoC.ConsoleModule;
 
@@ -18,20 +19,14 @@ namespace FlowIoC.BaseModule.Function.Provider
     {
         [Inject] private ICoroutineProvider _coroutineProvider { get; set; }
 
-        private readonly Dictionary<Type, Stack<FunctionDataContainer>> _functionDataContainerPool;
-        private readonly Dictionary<Type, Stack<IFunctionBody>> _functionPool;
+        private readonly TypePool<FunctionDataContainer> _functionDataContainerPool = new();
+        private readonly TypePool<IFunctionBody> _functionPool = new();
 
         // A function's Execute is found once per type. It was looked up on every call, and a
         // Function is what a Command reaches for mid-Execute - so it runs as often as they do.
         private readonly Dictionary<Type, MethodInfo> _executeMethods = new();
 
         internal IContext Context;
-
-        public FunctionProvider()
-        {
-            _functionDataContainerPool = new Dictionary<Type, Stack<FunctionDataContainer>>();
-            _functionPool = new Dictionary<Type, Stack<IFunctionBody>>();
-        }
 
         private MethodInfo GetExecuteMethod(Type functionType)
         {
@@ -50,28 +45,17 @@ namespace FlowIoC.BaseModule.Function.Provider
         private void ReturnDataContainerToPool(FunctionDataContainer functionDataContainer)
         {
             functionDataContainer.Dispose();
-
-            Type containerType = functionDataContainer.GetType();
-
-            if (!_functionDataContainerPool.TryGetValue(containerType, out Stack<FunctionDataContainer> pool))
-            {
-                pool = new Stack<FunctionDataContainer>();
-                _functionDataContainerPool[containerType] = pool;
-            }
-
-            pool.Push(functionDataContainer);
+            _functionDataContainerPool.Return(functionDataContainer.GetType(), functionDataContainer);
         }
 
         private FunctionDataContainer GetFunctionDataContainer<TDataContainerType>() where TDataContainerType : FunctionDataContainer, new()
         {
             Type dataContainerType = typeof(TDataContainerType);
-            if (!_functionDataContainerPool.TryGetValue(dataContainerType, out Stack<FunctionDataContainer> pool))
-            {
-                pool = new Stack<FunctionDataContainer>();
-                _functionDataContainerPool[dataContainerType] = pool;
-            }
 
-            FunctionDataContainer availableFunctionDataContainer = pool.Count > 0 ? pool.Pop() : new TDataContainerType();
+            FunctionDataContainer availableFunctionDataContainer =
+                _functionDataContainerPool.TryTake(dataContainerType, out FunctionDataContainer parked)
+                    ? parked
+                    : new TDataContainerType();
 
             availableFunctionDataContainer.FunctionProvider = this;
             if (availableFunctionDataContainer is AsyncFunctionDataContainerBase asyncDataContainer)
@@ -180,14 +164,9 @@ namespace FlowIoC.BaseModule.Function.Provider
         private void ReturnFunctionToPool(IFunctionBody functionBody)
         {
             Type functionType = functionBody.GetType();
-            if (!_functionPool.TryGetValue(functionType, out Stack<IFunctionBody> pool))
-            {
-                pool = new Stack<IFunctionBody>();
-                _functionPool[functionType] = pool;
-            }
 
             functionBody.Dispose();
-            pool.Push(functionBody);
+            _functionPool.Return(functionType, functionBody);
 
             FlowLogger.Log(SystemLogType.Function, "Function Returned to Pool! " + functionType.Name);
         }
@@ -196,14 +175,8 @@ namespace FlowIoC.BaseModule.Function.Provider
         {
             Type functionType = functionDataContainer.FunctionType;
 
-            if (!_functionPool.TryGetValue(functionType, out Stack<IFunctionBody> pool))
-            {
-                pool = new Stack<IFunctionBody>();
-                _functionPool[functionType] = pool;
-            }
-
-            if (pool.Count > 0)
-                return pool.Pop();
+            if (_functionPool.TryTake(functionType, out IFunctionBody parked))
+                return parked;
 
             IFunctionBody function = (IFunctionBody) Activator.CreateInstance(functionType);
             FlowLogger.Log(SystemLogType.Function, "Function Created! " + functionType.Name);
