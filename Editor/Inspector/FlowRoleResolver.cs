@@ -69,6 +69,15 @@ namespace FlowIoC.Editor.Inspector
             return role.ToString().ToUpperInvariant();
         }
 
+        /// <summary>
+        /// Whether a context belongs to a Connector. Asking through the resolver is what lets a
+        /// context declare itself with <c>[FlowHeader(FlowRole.Connector)]</c> as well as by being
+        /// named for the job, so every caller reads the same answer - a name check of its own would
+        /// miss the declared half.
+        /// </summary>
+        public bool IsConnector(Type type) =>
+            type != null && TryResolve(type, out FlowRole role) && role == FlowRole.Connector;
+
         private FlowRole? Resolve(Type type)
         {
             var header = (FlowHeaderAttribute) Attribute.GetCustomAttribute(type, typeof(FlowHeaderAttribute));

@@ -10,6 +10,12 @@ namespace FlowIoC.Editor.CodeGenerator
 {
     internal static class CodeGeneratorUtils
     {
+        private const string ATTRIBUTES_USING = "using FlowIoC.BaseModule.Attributes;";
+
+        /// <summary>The indentation a line already carries, so a line written above it lines up.</summary>
+        private static string LeadingWhitespace(string line) =>
+            line.Substring(0, line.Length - line.TrimStart().Length);
+
         public static void CreateView(string viewName, string tempClassName, string viewPath, string tempClassPath,
             string namespaceName, List<string> actionsList, bool isTest)
         {
@@ -193,8 +199,13 @@ namespace FlowIoC.Editor.CodeGenerator
             AssetDatabase.Refresh();
         }
 
+        /// <param name="attribute">
+        /// An attribute to write above the class, such as <c>[FlowHeader(FlowRole.Core)]</c>, or
+        /// null for none. A Core module is the case that needs it: it carries no role suffix, so
+        /// the attribute is the only thing that can tell the inspector what the Root roots.
+        /// </param>
         public static void CreateRoot(string rootName, string contextName, string tempContextName, string tempRootName,
-            string rootPath, string tempClassPath, string namespaceName, bool isTest)
+            string rootPath, string tempClassPath, string namespaceName, bool isTest, string attribute = null)
         {
             var directoryPath = rootPath;
             var path = directoryPath + "/" + rootName + ".cs";
@@ -208,6 +219,13 @@ namespace FlowIoC.Editor.CodeGenerator
             for (var ii = 0; ii < tempRootContent.Length; ii++)
             {
                 var content = tempRootContent[ii];
+
+                // The template carries the attributes using so a Core Root can be written without
+                // touching it here. Every other Root drops the line rather than being generated
+                // with a using nothing in the file needs.
+                if (attribute == null && content.Contains(ATTRIBUTES_USING))
+                    continue;
+
                 if (content.Contains("namespace "))
                 {
                     content = "namespace " + namespaceName;
@@ -217,6 +235,9 @@ namespace FlowIoC.Editor.CodeGenerator
                     content = content.Replace("internal class", "public class");
                     content = content.Replace(tempRootName, rootName);
                     content = content.Replace(tempContextName, contextName);
+
+                    if (attribute != null)
+                        newRootContent.Add(LeadingWhitespace(content) + attribute);
                 }
 
                 newRootContent.Add(content);
