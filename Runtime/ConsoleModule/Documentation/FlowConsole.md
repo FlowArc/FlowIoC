@@ -127,7 +127,9 @@ The `CD_FlowConsole` asset controls the whole layer.
 | Setting | Effect |
 |---|---|
 | `IsLoggingEnabled` | Master switch. Off: nothing is recorded. |
-| `DeepAnalysis` | On: each log captures class name and full stack trace, and the detail panel shows them. Off: only the source line. Editor-only capture — on device no `ConsoleLog` object is created at all. |
+| `DeepAnalysis` | On: the detail panel shows the class name and the full stack trace. Off: only the source line. Editor-only — on device no `ConsoleLog` object is created at all. |
+| `StackTraceCapture` | Which logs work out where they came from. `WarningsAndErrors` is the default and the one to leave alone: capturing a source builds the whole managed stack as a string and picks it apart, and the framework logs every signal, injection and command, so this is the most expensive thing the console does. Raise it to `Always` while following a flow and put it back afterwards. `Never` is the cheapest and shows no source for anything. |
+| `MaxLogCount` | How many logs are kept. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. `0` keeps all of them. |
 | `SendLogsToUnityConsole` | Mirror everything into Unity's own console, for when you need the two side by side. |
 | `AutoAddEnableLogDefine` | Manage the `ENABLE_LOG` scripting define automatically. |
 | `LogTypes` | The channel list: name, value, colour, visibility, and whether the channel is mandatory or auto-registered. |
@@ -279,6 +281,19 @@ FlowLogger.LogError(FlowLogType.ShopModule, "Player cannot afford this item.");
 Check in this order: `IsLoggingEnabled` in the settings; the channel's `IsVisible`
 toggle in the window; and whether `ENABLE_LOG` is defined. Without the define every
 `FlowLogger` call is compiled away, so the code looks correct and produces nothing.
+
+### A log says "Source not captured"
+
+That is `StackTraceCapture`, and it is the default rather than a fault. Ordinary
+logs do not work out where they came from, because doing so is the console's most
+expensive operation and the framework writes a log for every signal, injection and
+command. Warnings and errors still carry their source. Set `StackTraceCapture` to
+`Always` while following a particular flow, and put it back when you are done.
+
+### The console forgets old logs
+
+`MaxLogCount` caps what is kept, at 5000 by default, and the oldest go first. Raise
+it, or set it to `0` for no limit, if a long session has to be read back whole.
 
 ### `FlowLogType.MyModule` does not exist
 

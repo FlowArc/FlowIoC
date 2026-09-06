@@ -11,16 +11,27 @@ namespace FlowIoC.ConsoleModule
         [Tooltip("If true, the entire FlowConsole logging system is active. If false, no logs will be processed or displayed.")]
         public bool IsLoggingEnabled = true;
 
-        [Tooltip("Controls detail panel display. If true, shows class info and full stack trace. If false, shows only the source line. Data is captured in Editor only; on mobile, no ConsoleLog is created.")]
+        [Tooltip(
+            "Controls detail panel display. If true, shows class info and full stack trace. If false, shows only the source line. Data is captured in Editor only; on mobile, no ConsoleLog is created.")]
         public bool DeepAnalysis;
+
+        [Tooltip(
+            "Which logs work out where they came from. Capturing a source means building the whole managed stack as a string and picking it apart, and the framework logs every signal, injection and command - so this is the most expensive thing the console does. Warnings and errors are the ones somebody follows back, so they are what it is spent on by default. Raise it to Always while following a flow.")]
+        public FlowStackTraceCapture StackTraceCapture = FlowStackTraceCapture.WarningsAndErrors;
+
+        [Tooltip(
+            "How many logs the console keeps. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. Zero keeps all of them.")]
+        [Min(0)]
+        public int MaxLogCount = 5000;
 
         [Tooltip("Sends logged messages to Unity console as well")]
         public bool SendLogsToUnityConsole;
 
-        [Tooltip("If true, FlowIoC keeps the ENABLE_LOG scripting define present on every platform. Turn this off when the project owns ENABLE_LOG itself (e.g. a build-mode tool that strips it for release builds) - otherwise the two would fight and recompile forever.")]
+        [Tooltip(
+            "If true, FlowIoC keeps the ENABLE_LOG scripting define present on every platform. Turn this off when the project owns ENABLE_LOG itself (e.g. a build-mode tool that strips it for release builds) - otherwise the two would fight and recompile forever.")]
         public bool AutoAddEnableLogDefine = true;
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         public static event Action OnProjectLogTypesChanged;
         public static event Action OnSettingsValidated;
 
@@ -33,12 +44,9 @@ namespace FlowIoC.ConsoleModule
         {
             OnProjectLogTypesChanged?.Invoke();
         }
-        #endif
+#endif
 
-        [Space]
-        [Header("Log Types")]
-        [Tooltip("All log types (system and custom)")]
-        [SerializeField]
+        [Space] [Header("Log Types")] [Tooltip("All log types (system and custom)")] [SerializeField]
         private List<FlowConsoleLogTypeCVO> _logTypes = new();
 
         public List<FlowConsoleLogTypeCVO> LogTypes
@@ -50,6 +58,7 @@ namespace FlowIoC.ConsoleModule
                     _logTypes = new List<FlowConsoleLogTypeCVO>();
                     ResetToDefaults();
                 }
+
                 return _logTypes;
             }
             private set => _logTypes = value;
@@ -91,6 +100,7 @@ namespace FlowIoC.ConsoleModule
                 {
                     return Value == other.Value || string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
                 }
+
                 return false;
             }
 
@@ -100,10 +110,7 @@ namespace FlowIoC.ConsoleModule
             }
         }
 
-        [Space]
-        [Header("Log Profiles")]
-        [Tooltip("Reusable formatting profiles that can be assigned to log types")]
-        [SerializeField]
+        [Space] [Header("Log Profiles")] [Tooltip("Reusable formatting profiles that can be assigned to log types")] [SerializeField]
         private List<FlowLogProfileData> _logProfiles = new();
 
         public List<FlowLogProfileData> LogProfiles
@@ -114,12 +121,13 @@ namespace FlowIoC.ConsoleModule
                 {
                     _logProfiles = new List<FlowLogProfileData>();
                 }
+
                 return _logProfiles;
             }
             private set => _logProfiles = value;
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
         private static void RegisterCallbacks()
         {
@@ -137,7 +145,7 @@ namespace FlowIoC.ConsoleModule
             }
         }
 
-        #endif
+#endif
 
         private void OnEnable()
         {
@@ -156,9 +164,9 @@ namespace FlowIoC.ConsoleModule
             SortProjectLogTypes();
             InvalidateProfileCache();
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             OnSettingsValidated?.Invoke();
-            #endif
+#endif
         }
 
         private void EnsureLogTypesHaveProfile()
@@ -178,9 +186,9 @@ namespace FlowIoC.ConsoleModule
 
             if (needsUpdate)
             {
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 UnityEditor.EditorUtility.SetDirty(this);
-                #endif
+#endif
             }
         }
 
@@ -211,7 +219,7 @@ namespace FlowIoC.ConsoleModule
             foreach (SystemLogType defaultType in Enum.GetValues(typeof(SystemLogType)))
             {
                 string name = defaultType.ToString();
-                int value = (int)defaultType;
+                int value = (int) defaultType;
 
                 if (existingLogTypes.ContainsKey(name))
                 {
@@ -245,9 +253,9 @@ namespace FlowIoC.ConsoleModule
 
             if (needsUpdate)
             {
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 UnityEditor.EditorUtility.SetDirty(this);
-                #endif
+#endif
             }
         }
 
@@ -282,9 +290,9 @@ namespace FlowIoC.ConsoleModule
                 ProfileName = "Default"
             });
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
-            #endif
+#endif
         }
 
         private void EnsureDefaultProfileExists()
@@ -301,10 +309,11 @@ namespace FlowIoC.ConsoleModule
                     {
                         profile.IsMandatory = true;
                         profile.IsEditable = false;
-                        #if UNITY_EDITOR
+#if UNITY_EDITOR
                         UnityEditor.EditorUtility.SetDirty(this);
-                        #endif
+#endif
                     }
+
                     break;
                 }
             }
@@ -321,9 +330,9 @@ namespace FlowIoC.ConsoleModule
                     PostfixColor = Color.white,
                 });
 
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 UnityEditor.EditorUtility.SetDirty(this);
-                #endif
+#endif
             }
         }
 
@@ -433,16 +442,16 @@ namespace FlowIoC.ConsoleModule
                 _logTypes.Add(new FlowConsoleLogTypeCVO
                 {
                     Name = defaultType.ToString(),
-                    Value = (int)defaultType,
+                    Value = (int) defaultType,
                     IsVisible = true,
                     IsMandatory = true,
                     LogColor = GetDefaultColorForLogType(defaultType)
                 });
             }
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
-            #endif
+#endif
         }
 
         private Color GetDefaultColorForLogType(SystemLogType logType)
@@ -497,7 +506,6 @@ namespace FlowIoC.ConsoleModule
 
         public FlowConsoleLogTypeCVO AddLogType(string name, int value = -1, Color? color = null)
         {
-
             if (string.IsNullOrWhiteSpace(name))
             {
                 Debug.LogError("Log type name cannot be empty.");
@@ -520,6 +528,7 @@ namespace FlowIoC.ConsoleModule
                 {
                     usedValues.Add(logType.Value);
                 }
+
                 value = FindNextAvailableValue(usedValues);
             }
             else
@@ -534,6 +543,7 @@ namespace FlowIoC.ConsoleModule
                         {
                             usedValues.Add(lt.Value);
                         }
+
                         value = FindNextAvailableValue(usedValues);
                         break;
                     }
@@ -555,9 +565,9 @@ namespace FlowIoC.ConsoleModule
             _logTypeByName = null;
             InvalidateProfileCache();
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
-            #endif
+#endif
 
             return newLogType;
         }
@@ -580,9 +590,9 @@ namespace FlowIoC.ConsoleModule
                     _logTypeByName = null;
                     InvalidateProfileCache();
 
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     UnityEditor.EditorUtility.SetDirty(this);
-                    #endif
+#endif
                     return true;
                 }
             }
@@ -608,9 +618,9 @@ namespace FlowIoC.ConsoleModule
                     _logTypeByName = null;
                     InvalidateProfileCache();
 
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     UnityEditor.EditorUtility.SetDirty(this);
-                    #endif
+#endif
                     return true;
                 }
             }
@@ -692,9 +702,9 @@ namespace FlowIoC.ConsoleModule
             _logProfiles.Add(newProfile);
             InvalidateProfileCache();
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
-            #endif
+#endif
 
             return newProfile;
         }
@@ -726,9 +736,9 @@ namespace FlowIoC.ConsoleModule
                     _logProfiles.RemoveAt(i);
                     InvalidateProfileCache();
 
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     UnityEditor.EditorUtility.SetDirty(this);
-                    #endif
+#endif
                     return true;
                 }
             }
