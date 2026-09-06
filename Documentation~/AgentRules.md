@@ -170,6 +170,26 @@ so follow the rules below deliberately.
 - A `ScreenView` wires its buttons in `OnEnable` and drops them in `OnDisable`, never in
   `Awake` or `Start`. A screen is pooled: hiding it deactivates the object and reopening it
   shows the same instance, so `Awake` runs once while the screen opens many times.
+- **A screen's Mediator subscribes on `ShowCompleted` and unsubscribes on `HideCompleted`.**
+  `OnRegister` wires those two events and nothing else, for the same reason the View wires its
+  buttons in `OnEnable`: `OnRegister` runs once and the screen opens many times. The two layers
+  answer different questions - `OnEnable` joins Unity's `Button.onClick` to the View's own method,
+  `ShowCompleted` joins the View's `Action` to the Mediator's handler.
+- **Every handler in a screen's Mediator is guarded by the screen's state.**
+  `if (_view.Data.State == ScreenState.AvailableToSendSignal)`, which is `InUse` and nothing else,
+  so a tap that lands while the screen is animating in or out does not become a signal. It is not
+  queued and not replayed; it does not happen.
+- **An overridden `PlayShowAnimation` or `PlayHideAnimation` must invoke `ShowCompleted` or
+  `HideCompleted`.** Forget it and the Mediator never subscribes: the screen opens, every button is
+  dead, and nothing is logged.
+- A View translates raw input into the action it already offers - a swipe left calls the same
+  `NextMapClicked()` the button does - so the Mediator never learns which one it was. And a View's
+  other methods are named for what they show, `ShowPlayButton` and `WaitingCountdownTick`: those are
+  what a Command calls to fill the screen at open, and what the Mediator calls when a signal says a
+  value changed.
+- A screen dispatches its module's **Outgoing** for what leaves it and its **internal** holder for
+  what stays. Paging between the maps on a match board is the screen module's own business and never
+  crosses a Connector; playing one of them leaves.
 - A screen module belongs to the module whose feature it shows, so it lives in the
   `zScreenModules` of a main or a sub module and never under another screen module or a test
   module. `Create Module` offers exactly those parents.
