@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System.IO;
 using FlowIoC.Editor.Config.ModuleConfig;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
@@ -14,70 +13,32 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     /// every file to the nearest asmdef above it - so the module has to reference the Shared
     /// assembly to reach its own shared data.
     ///
+    /// It holds data alone. The module's public signal holder is next door in
+    /// <see cref="SignalsAssemblyDefinition"/>, because a module that references this one to read
+    /// a published enum must not be handed the neighbour's signals along with it.
+    ///
     /// It also puts the namespace where it belongs: a value object under
     /// Scripts/Shared/Data/ValueObjects lands in Modules.PlayerModule.Shared.Data.ValueObjects
     /// and cannot collide with the Runtime type of the same name in
     /// Modules.PlayerModule.Data.ValueObjects. That needs a .csproj.DotSettings of its own -
-    /// see ModuleGenerator.AddSharedNamespaceExceptions - because such a file only applies to
+    /// see ModuleGenerator.AddSubAssemblyNamespaceExceptions - because such a file only applies to
     /// the project it is named after.
     /// </summary>
-    internal class SharedAssemblyDefinition
+    internal class SharedAssemblyDefinition : ModuleSubAssemblyDefinition
     {
         internal const string ASSEMBLY_SUFFIX = ".Shared";
-
-        private readonly AssemblyDefinitionTemplate _template;
 
         public SharedAssemblyDefinition() : this(new AssemblyDefinitionTemplate())
         {
         }
 
-        internal SharedAssemblyDefinition(AssemblyDefinitionTemplate template)
+        internal SharedAssemblyDefinition(AssemblyDefinitionTemplate template) : base(template)
         {
-            _template = template;
         }
 
-        /// <summary>
-        /// Writes the Shared assembly for the module at <paramref name="modulePath"/> and hands
-        /// back its name, or null when that module has no Shared folder - which is the ordinary
-        /// case: Shared is an optional folder, and the screen and test module layouts do not offer
-        /// it at all.
-        /// </summary>
-        public string CreateFor(string modulePath, DirectoryStructureConfig config, string moduleAssemblyName)
-        {
-            string sharedFolderPath = ResolveSharedFolder(modulePath, config);
-            if (string.IsNullOrEmpty(sharedFolderPath)) return null;
+        protected override string AssemblySuffix => ASSEMBLY_SUFFIX;
 
-            string sharedAssemblyName = moduleAssemblyName + ASSEMBLY_SUFFIX;
-            File.WriteAllText(
-                Path.Combine(sharedFolderPath, sharedAssemblyName + ".asmdef"),
-                _template.Build(sharedAssemblyName, null));
-
-            return sharedAssemblyName;
-        }
-
-        /// <summary>
-        /// The name of the Shared assembly the module at <paramref name="modulePath"/> publishes,
-        /// or null when it publishes none. Read off the file rather than derived from the module
-        /// name, because the module may have been created before Shared existed, or renamed since.
-        /// </summary>
-        public string FindIn(string modulePath, DirectoryStructureConfig config)
-        {
-            string sharedFolderPath = ResolveSharedFolder(modulePath, config);
-            if (string.IsNullOrEmpty(sharedFolderPath)) return null;
-
-            string[] asmdefFiles = Directory.GetFiles(sharedFolderPath, "*.asmdef", SearchOption.TopDirectoryOnly);
-
-            return asmdefFiles.Length == 0 ? null : Path.GetFileNameWithoutExtension(asmdefFiles[0]);
-        }
-
-        private string ResolveSharedFolder(string modulePath, DirectoryStructureConfig config)
-        {
-            if (string.IsNullOrEmpty(modulePath) || config == null) return null;
-
-            string sharedFolderPath = config.FindFullFolderPathByID(FolderEVO.FolderType.Shared, modulePath);
-
-            return string.IsNullOrEmpty(sharedFolderPath) || !Directory.Exists(sharedFolderPath) ? null : sharedFolderPath;
-        }
+        protected override FolderEVO.FolderType FolderType => FolderEVO.FolderType.Shared;
     }
 }
 #endif

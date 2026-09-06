@@ -148,9 +148,9 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     {
                         FolderName = "Editor", Type = FolderEVO.FolderType.Editor, IsMandatory = true, IsNamespaceProvider = true
                     },
-                    // A screen module publishes its signal holder the way any other module does, and
-                    // a Connector reaches that holder through this assembly rather than through the
-                    // screen's own. Shared is no longer a main module privilege for that reason.
+                    // A screen module publishes data the way any other module does, so Shared is no
+                    // longer a main module privilege. It stays optional: most screens publish
+                    // nothing and only need the Signals folder below.
                     new FolderEVO
                     {
                         FolderName = "Shared",
@@ -190,17 +190,20 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                                 IsMandatory = true,
                                 IsNamespaceProvider = true
                             },
-                            new FolderEVO
-                            {
-                                FolderName = "Signals",
-                                Type = FolderEVO.FolderType.SharedSignals,
-                                IsMandatory = true,
-                                IsNamespaceProvider = true
-                            }
                         },
                         Type = FolderEVO.FolderType.Shared,
                         IsMandatory = false,
                         IsOptional = true,
+                        IsNamespaceProvider = true
+                    },
+                    // A screen's signal holder is the only way into the screen, so this folder is
+                    // mandatory here as it is on a main module. A Connector reaches the screen
+                    // through Modules.X.Screen.Signals and through nothing else.
+                    new FolderEVO
+                    {
+                        FolderName = "Signals",
+                        Type = FolderEVO.FolderType.PublicSignals,
+                        IsMandatory = true,
                         IsNamespaceProvider = true
                     }
                 },
@@ -269,7 +272,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             }
 
             bool healed = config.EnsureSharedBranch(settings);
-            healed |= config.EnsureSharedSignalsFolder(settings);
+            healed |= config.EnsurePublicSignalsFolder(settings);
             healed |= config.RemoveFolderType(FolderEVO.FolderType.ScreenConfigs);
             healed |= config.MakeFolderOptional("Scriptables");
 
@@ -334,7 +337,8 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     }, true, false, false),
                     CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Editor], FolderEVO.FolderType.Editor, null,
                         true),
-                    BuildSharedBranch(codeGenSettings)
+                    BuildSharedBranch(codeGenSettings),
+                    BuildPublicSignalsFolder(codeGenSettings)
                 }, true, false, false),
                 CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules], FolderEVO.FolderType.SubModules,
                     null, false, true, false),

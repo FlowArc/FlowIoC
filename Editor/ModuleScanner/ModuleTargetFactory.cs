@@ -76,6 +76,7 @@ namespace FlowIoC.Editor.ModuleScanner
             var configs = new DirectoryStructureConfigProvider();
             var names = new ModuleAssemblyName();
             var shared = new SharedAssemblyDefinition();
+            var signals = new SignalsAssemblyDefinition();
             var paths = new ModuleAssetPathResolver();
 
             var modules = new List<ModuleTargetEVO>();
@@ -95,6 +96,9 @@ namespace FlowIoC.Editor.ModuleScanner
                     ParentSharedAssemblyName = parent == null
                         ? null
                         : shared.FindIn(parent, configs.ConfigFor(ModuleKind.Main)),
+                    ParentSignalsAssemblyName = parent == null
+                        ? null
+                        : signals.FindIn(parent, configs.ConfigFor(ModuleKind.Main)),
                     ParentAssemblyName = parent == null ? null : names.From(Path.GetFileName(parent)),
                     ExpectedAssemblyName = names.From(module.Name),
                     ProjectRoot = projectRoot

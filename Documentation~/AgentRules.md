@@ -117,11 +117,24 @@ so follow the rules below deliberately.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
   what it announces. A module's signals are its public surface - together with the
   interface of a Service, which is the one thing another module may reference directly.
-- The public signal holder lives in `Scripts/Shared/Signals/`, so it compiles into the
-  module's Shared assembly. A Connector reaches a module's signals through
-  `Modules.Player.Shared` and never through `Modules.Player`, which is what keeps one
-  module's assembly from having to reference another's. Whatever a public signal carries
-  lives in Shared too.
+- The public signal holder lives in `Scripts/Signals/`, an assembly of its own -
+  `Modules.Player.Signals` beside `Modules.Player` and `Modules.Player.Shared`. A Connector
+  reaches a module's signals through `Modules.Player.Signals` and through nothing else. The
+  holder is not in Shared, because a System or a screen legitimately references a neighbour's
+  Shared assembly to read a published enum, and that reference would otherwise put the
+  neighbour's signal holder in scope with it - `[InjectSignal] private GameplaySignals` would
+  compile. Now it does not, and the compiler is what keeps a cross-module `Dispatch` inside a
+  Connector rather than the reader's memory.
+- **Only a Connector references another module's `.Signals` assembly.** A test module is the
+  one exception, because it drives the module it sits under and may reference anything.
+- A `.Signals` assembly is not dependency free. A public signal generic over a published type
+  means the holder's assembly references the Shared assembly that type lives in - its own
+  module's, and sometimes another module's: `Signal<DifficultyType>` on a screen's holder
+  makes `Modules.Main.Screen.Signals` reference `Modules.Gameplay.Shared`. A Connector needs
+  those same Shared references for the same reason, because `Connect<T>` has to infer `T`;
+  without them the compiler reports **CS0012**. A Connector's reference list is therefore the
+  longest in the project, and that is correct: the Connector is the one place allowed to know
+  the game's shape.
 - `Scripts/Runtime/Signals/` holds the module's **internal** holder,
   `PlayerInternalSignals`: what the module says to its own commands, dispatched by nothing
   outside its own assembly. It has no `Incoming` and no `Outgoing` - those two halves
@@ -201,44 +214,57 @@ Modules/
         │   ├── Signals/             # PlayerInternalSignals - the module's own traffic
         │   ├── Systems/             # specific to this game
         │   └── ViewsMediators/
-        └── Shared/                  # Modules.Player.Shared.asmdef - ticked by default
-            ├── Constants/
-            ├── Data/
-            │   ├── UnityObjects/
-            │   └── ValueObjects/
-            ├── Enums/
-            └── Signals/             # PlayerSignals - the module's public surface
+        ├── Shared/                  # Modules.Player.Shared.asmdef - optional, unticked
+        │   ├── Constants/
+        │   ├── Data/
+        │   │   ├── UnityObjects/
+        │   │   └── ValueObjects/
+        │   └── Enums/
+        └── Signals/                 # Modules.Player.Signals.asmdef - always
+            PlayerSignals            # the module's public surface
 ```
 
 `Create Command`, `Create Model` and `Create View` place their files correctly on their
 own. Prefer them over writing files by hand.
 
+### A module's three assemblies
+
+A module carves itself into three, and which of the three a reader references is what the
+architecture actually enforces:
+
+| Folder | Assembly | Holds | Who references it |
+|---|---|---|---|
+| `Scripts/Runtime/` | `Modules.Player` | Models, Commands, Views, Systems, the internal signal holder | the module itself, and its test module |
+| `Scripts/Shared/` | `Modules.Player.Shared` | the data the module publishes, and the enums and constants that data needs | anyone who reads that data |
+| `Scripts/Signals/` | `Modules.Player.Signals` | `PlayerSignals`, and nothing else | a Connector, and the module's own test module |
+
+`Scripts/Signals/` is always there; `Scripts/Shared/` is a tick in `Create Module`, unticked,
+because a module pays for that assembly on the day it actually publishes something. Both are
+carved out by an asmdef sitting in the folder - Unity gives every file to the nearest asmdef
+above it - so the module references both to reach its own published data and its own holder.
+
 ### Publishing data through Shared
 
-Everything a module offers the rest of the project goes in `Scripts/Shared/`, which is an
-assembly of its own - `Modules.Player.Shared` beside `Modules.Player`. That is the public
-signal holder, the value objects and ScriptableObjects the module publishes, and the enums
-and constants those need. No Model, no Command, no View.
+Everything a module offers the rest of the project goes in `Scripts/Shared/`: the value
+objects and ScriptableObjects it publishes, and the enums and constants those need. No Model,
+no Command, no View - and not the signal holder, which is the whole point of the split above.
 
-Because the holder lives there, a public signal may only carry a type that lives there too.
-A `Signal<CameraCVO>` means `CameraCVO` belongs in `Shared/Data/ValueObjects/`, not in the
-Runtime folder of the same name.
+A public signal may only carry a type another module can see. A `Signal<CameraCVO>` means
+`CameraCVO` belongs in `Shared/Data/ValueObjects/`, not in the Runtime folder of the same
+name, and `Modules.Player.Signals` references `Modules.Player.Shared` to see it.
 
 Whoever reads that data references `Modules.Player.Shared` and never `Modules.Player`. So
-`PlayerScreenModule` can read `CD_PlayerRules` without gaining access to `PlayerModel` or
-`AddCurrencyCommand`. `Create Module` writes the reference for you: tick Shared on a main
-module, and every screen, sub and test module created under it afterwards points at it.
+`PlayerScreenModule` can read `CD_PlayerRules` without gaining access to `PlayerModel`,
+`AddCurrencyCommand` **or `PlayerSignals`**. `Create Module` writes the reference for you: tick
+Shared on a main module, and every screen, sub and test module created under it afterwards
+points at it.
 
 For a module that already exists, use `Tools/FlowIoC/Add Shared Data` rather than making
 the folders by hand. It lays down the same folders, writes the assembly and its settings
 file, and adds the reference to the module and to every screen, sub and test module already
 under it.
 
-The parent module references its own Shared assembly too. The asmdef inside
-`Scripts/Shared/` takes that folder out of `Modules.Player`, so without the reference a
-module could not read the data it publishes.
-
-Shared is offered on main, sub and screen modules, and starts ticked. A test module is the
+Shared is offered on main, sub and screen modules, and starts unticked. A test module is the
 one kind without it: it holds nothing another module reads, and it is allowed to reference
 anything directly anyway. If two modules need the same data and neither owns it, that data
 belongs in a module of its own, the way a shared Service does.
@@ -246,10 +272,12 @@ belongs in a module of its own, the way a shared Service does.
 Namespaces follow the folder, the way they already do for a module: a value object under
 `Scripts/Shared/Data/ValueObjects/` is in `Modules.PlayerModule.Shared.Data.ValueObjects`,
 which is why it cannot collide with the Runtime type of the same name in
-`Modules.PlayerModule.Data.ValueObjects`. `Create Module` writes
-`Modules.Player.Shared.csproj.DotSettings` for this: a `.csproj.DotSettings` only applies to
-the project it is named after, so the module's own file cannot tell Rider to skip `Scripts`
-on the Shared assembly's behalf.
+`Modules.PlayerModule.Data.ValueObjects`. The public holder under `Scripts/Signals/` lands in
+`Modules.PlayerModule.Signals`, which is the namespace the internal holder is already in - one
+`using` reaches both, and the assembly boundary is what tells them apart. `Create Module`
+writes `Modules.Player.Shared.csproj.DotSettings` and `Modules.Player.Signals.csproj.DotSettings`
+for this: a `.csproj.DotSettings` only applies to the project it is named after, so the
+module's own file cannot tell Rider to skip `Scripts` on their behalf.
 
 ### Data types
 
@@ -295,7 +323,7 @@ means is the table above.
 
 ### The smallest complete flow
 
-Signals - the module's whole public surface, in `Scripts/Shared/Signals/`:
+Signals - the module's whole public surface, in `Scripts/Signals/`:
 
 ```csharp
 public class PlayerSignals : ISignalHolder

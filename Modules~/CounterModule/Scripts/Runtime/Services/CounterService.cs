@@ -2,7 +2,6 @@ using System;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using Modules.CounterModule.Data.ValueObjects;
 using Modules.CounterModule.Models;
-using Modules.CounterModule.Shared.Signals;
 using Modules.CounterModule.Signals;
 
 namespace Modules.CounterModule.Services

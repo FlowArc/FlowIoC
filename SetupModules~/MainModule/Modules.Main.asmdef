@@ -2,7 +2,7 @@
   "name": "Modules.Main",
   "references": [
     "FlowIoC",
-    "Modules.Main.Shared"
+    "Modules.Main.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

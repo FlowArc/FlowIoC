@@ -3,7 +3,7 @@
   "references": [
     "FlowIoC",
     "Modules.Gameplay.Shared",
-    "Modules.Gameplay.Screen.Shared"
+    "Modules.Gameplay.Screen.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

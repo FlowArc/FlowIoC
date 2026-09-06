@@ -2,7 +2,7 @@ using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.RootsContexts;
 using Modules.GameplayModule.GameplayScreenModule.Controllers;
-using Modules.GameplayModule.GameplayScreenModule.Shared.Signals;
+using Modules.GameplayModule.GameplayScreenModule.Signals;
 using Modules.GameplayModule.GameplayScreenModule.ViewsMediators;
 
 namespace Modules.GameplayModule.GameplayScreenModule.RootsContexts

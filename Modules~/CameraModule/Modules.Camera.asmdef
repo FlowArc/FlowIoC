@@ -4,7 +4,8 @@
     "FlowIoC",
     "Unity.Cinemachine",
     "Unity.RenderPipelines.Core.Runtime",
-    "Modules.Camera.Shared"
+    "Modules.Camera.Shared",
+    "Modules.Camera.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

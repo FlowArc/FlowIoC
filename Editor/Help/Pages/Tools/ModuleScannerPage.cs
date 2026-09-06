@@ -34,11 +34,22 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "Shared assembly - a module with a Scripts/Shared folder must have the assembly "
                 + "that folder is for, or the data it means to publish stays inside its own.");
             painter.Bullet(
+                "Signals assembly - a module whose Scripts/Signals folder holds a signal holder "
+                + "must have the assembly that folder is for, or nothing outside the module can "
+                + "reach its public surface. An empty folder is left alone: a Connector announces "
+                + "nothing, so it owes no assembly.");
+            painter.Bullet(
                 "Assembly definition - one asmdef at the module root, named to the module "
                 + "convention.");
             painter.Bullet(
-                "References - its own Shared assembly, the Shared assembly of the module it lives "
-                + "in, and for a test module that module's own assembly.");
+                "References - its own Shared and Signals assemblies, the Shared assembly of the "
+                + "module it lives in, and for a test module that module's Signals and its own "
+                + "assembly.");
+            painter.Bullet(
+                "Signal references - no module but a Connector names another module's .Signals "
+                + "assembly. Reading a neighbour's Shared data is ordinary; reaching its signals "
+                + "is the crossing a Connector exists for. The row reports and does not repair: "
+                + "what to do instead is a decision about the game.");
             painter.Bullet(
                 "Namespace settings - the .csproj.DotSettings at the project root that tells "
                 + "Rider which folders produce a namespace.");

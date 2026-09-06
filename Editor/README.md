@@ -65,8 +65,10 @@ one is missing:
 |---|---|
 | Mandatory folders | The folders this module type's layout says must exist |
 | Shared assembly | A module with a `Scripts/Shared` folder must have the assembly that folder is for |
+| Signals assembly | A module whose `Scripts/Signals` folder holds a signal holder must have the assembly that folder is for |
 | Assembly definition | One asmdef at the module root, named to the module convention |
-| References | Its own Shared assembly, its parent's Shared assembly, and for a test module its parent's own assembly |
+| References | Its own Shared and Signals assemblies, its parent's Shared assembly, and for a test module its parent's Signals assembly and its parent's own assembly |
+| Signal references | No module but a Connector names another module's `.Signals` assembly — signals cross through a Connector, and this is the row that says so |
 | Namespace settings | The root `.csproj.DotSettings` that tells Rider which folders produce a namespace |
 | The project | The module index against the folder tree, orphaned settings files, the Flow log types, the solution code style |
 

@@ -101,7 +101,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "{\n"
                 + "    public Signal<CurrencyType, int> DecreaseCurrency = new();\n"
                 + "}",
-                "PlayerSignals.cs - Scripts/Shared/Signals");
+                "PlayerSignals.cs - Scripts/Signals");
             painter.Code(
                 "public class DecreaseCurrencyCommand : Command\n"
                 + "{\n"

@@ -64,7 +64,7 @@ Decide before pressing Create:
 | `Systems` | the module has an interface and implementation specific to this game, leaning on other Systems and Services |
 | `Constants`, `Enums` | the module has either |
 | `Scenes`, `Resources`, `Art`, `Scriptables` | the module owns assets of that kind |
-| `Shared` | the module publishes data other modules read. Main modules only |
+| `Shared` | the module publishes data other modules read. Starts unticked. The public signal holder is **not** in here - that lives in `Scripts/Signals/`, which every module gets |
 | `zSubModules`, `zTestModules`, `zScreenModules` | other modules will hang under this one |
 
 ### Adding a folder afterwards
@@ -80,9 +80,10 @@ every screen, sub and test module already under the module.
 ## Where the DotSettings go
 
 `<Assembly>.csproj.DotSettings` is written to the **project root**, beside the `.csproj` Unity
-generates - not inside the module. Rider only reads it from there. A module with a Shared assembly
-gets two files, because a `.csproj.DotSettings` applies solely to the project it is named after and
-the module's own file cannot tell Rider to skip `Scripts` on the Shared assembly's behalf.
+generates - not inside the module. Rider only reads it from there. A module gets one file per
+assembly it has - its own, its `Scripts/Signals/` one, and its `Scripts/Shared/` one when it has
+Shared - because a `.csproj.DotSettings` applies solely to the project it is named after, and the
+module's own file cannot tell Rider to skip `Scripts` on the others' behalf.
 
 These files are generated. After moving a module, renaming a folder, or editing the folder layout
 in the code generator settings, run `Module Scanner` rather than editing them - it

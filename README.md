@@ -532,10 +532,20 @@ _signals.Incoming.AddCurrency.Dispatch(100d);
 A module keeps two holders, and where each one lives decides who can reach it.
 
 `PlayerSignals`, with its `Incoming` and `Outgoing` nested classes, is the module's
-public surface and lives in `Scripts/Shared/Signals/` — inside the module's Shared
-assembly. A Connector references `Modules.Player.Shared` and never `Modules.Player`,
-which is what keeps one module's assembly out of another's. Whatever a public signal
-carries has to live in Shared too.
+public surface and lives in `Scripts/Signals/` — an assembly of its own,
+`Modules.Player.Signals`. A Connector references that assembly and nothing else of the
+module; no System, screen or sub module references it at all.
+
+Keeping the holder out of `Scripts/Shared/` is what makes the rule hold by itself. A
+System legitimately references a neighbour's Shared assembly to read a published enum,
+and while the holder sat in Shared that same reference put the neighbour's signals in
+scope — `[InjectSignal] private GameplaySignals` compiled, and only discipline stopped
+a direct cross-module `Dispatch`. Now it does not compile, so signals cross through a
+Connector because the compiler says so.
+
+The `.Signals` assembly is not dependency free: whatever a public signal carries has to
+be visible to it, so `Signal<CameraCVO>` makes `Modules.Player.Signals` reference the
+Shared assembly `CameraCVO` lives in.
 
 `PlayerInternalSignals` lives in `Scripts/Runtime/Signals/` and is what the module
 says to its own commands. It is `internal`, so nothing outside the module's assembly
@@ -1122,45 +1132,59 @@ Modules/
     │   │   ├── Signals/           # PlayerInternalSignals — the module's own traffic
     │   │   ├── Systems/           # this game's own logic
     │   │   └── ViewsMediators/
-    │   └── Shared/                # Modules.Player.Shared.asmdef — ticked by default
-    │       ├── Constants/
-    │       ├── Data/
-    │       │   ├── UnityObjects/
-    │       │   └── ValueObjects/
-    │       ├── Enums/
-    │       └── Signals/           # PlayerSignals — the module's public surface
+    │   ├── Shared/                # Modules.Player.Shared.asmdef — a tick, unticked
+    │   │   ├── Constants/
+    │   │   ├── Data/
+    │   │   │   ├── UnityObjects/
+    │   │   │   └── ValueObjects/
+    │   │   └── Enums/
+    │   └── Signals/               # Modules.Player.Signals.asmdef — every module has one
+    │       └── PlayerSignals      # the module's public surface
     ├── zScreenModules/
     ├── zSubModules/
     └── zTestModules/
 ```
 
+### A module's three assemblies
+
+| Folder | Assembly | Holds | Who references it |
+|---|---|---|---|
+| `Scripts/Runtime/` | `Modules.Player` | Models, Commands, Views, Systems, the internal holder | the module, and its test module |
+| `Scripts/Shared/` | `Modules.Player.Shared` | published data, and the enums and constants it needs | anyone who reads that data |
+| `Scripts/Signals/` | `Modules.Player.Signals` | `PlayerSignals`, and nothing else | a Connector, and the module's test module |
+
+Both extra assemblies are carved out by an asmdef sitting in the folder — Unity gives
+every file to the nearest asmdef above it — so the module references both to reach its
+own published data and its own holder.
+
+`Scripts/Signals/` is on every module. `Scripts/Shared/` is a tick in **Create Module**,
+unticked, because a module pays for that assembly on the day it publishes something.
+
 ### Publishing data through `Shared`
 
-`Scripts/Shared/` is an assembly of its own — `Modules.Player.Shared`, beside
-`Modules.Player` — and it is how a module hands data to another module without
-handing over its logic. Only data belongs there: value objects, the
-ScriptableObjects built out of them, and the enums and constants those need.
+`Scripts/Shared/` is how a module hands data to another module without handing over its
+logic. Only data belongs there: value objects, the ScriptableObjects built out of them,
+and the enums and constants those need.
 
 Whoever reads that data references `Modules.Player.Shared`, never `Modules.Player`.
 A `PlayerScreenModule` can read `CD_PlayerRules` and still has no way to reach
-`PlayerModel` or `AddCurrencyCommand`. Tick **Shared** when creating a main module
-and `Create Module` writes the reference for you — into the module's own assembly,
-and into every screen, sub and test module created under it afterwards.
-
-The parent references its own Shared assembly as well: the asmdef inside
-`Scripts/Shared/` carves that folder out of `Modules.Player`, so the reference is
-what lets the module read the data it publishes.
+`PlayerModel`, `AddCurrencyCommand` **or `PlayerSignals`**. Tick **Shared** when creating
+a main module and `Create Module` writes the reference for you — into the module's own
+assembly, and into every screen, sub and test module created under it afterwards.
 
 Namespaces follow the folder, as they already do for a module: a value object under
 `Scripts/Shared/Data/ValueObjects/` is in
 `Modules.PlayerModule.Shared.Data.ValueObjects`, so it cannot collide with the
-Runtime type of the same name in `Modules.PlayerModule.Data.ValueObjects`. The
-generator writes `Modules.Player.Shared.csproj.DotSettings` alongside the module's
-own — a `.csproj.DotSettings` applies only to the project it is named after, so the
-module's file cannot skip the `Scripts` folder on the Shared assembly's behalf.
-*Tools ▸ FlowIoC ▸ Module Scanner* rewrites both.
+Runtime type of the same name in `Modules.PlayerModule.Data.ValueObjects`. The public
+holder under `Scripts/Signals/` lands in `Modules.PlayerModule.Signals` — the same
+namespace the internal holder is already in, so one `using` reaches both and the assembly
+boundary is what tells them apart. The generator writes
+`Modules.Player.Shared.csproj.DotSettings` and `Modules.Player.Signals.csproj.DotSettings`
+alongside the module's own — a `.csproj.DotSettings` applies only to the project it is
+named after, so the module's file cannot skip the `Scripts` folder on their behalf.
+*Tools ▸ FlowIoC ▸ Module Scanner* rewrites all three.
 
-Shared is offered on main modules only. If two modules need the same data and
+Shared is offered on main, sub and screen modules. If two modules need the same data and
 neither owns it, that data belongs in a module of its own — the same answer as for
 a Service more than one module needs.
 

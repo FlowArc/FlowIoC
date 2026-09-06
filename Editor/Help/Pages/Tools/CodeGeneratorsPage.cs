@@ -42,12 +42,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
             painter.SubHeading("Add Shared Data");
             painter.Paragraph(
-                "Tools > FlowIoC > Add Shared Data. Shared is a tick in Create Module, so a module "
-                + "is only offered it on the day it is created - and the need usually turns up "
-                + "later, when a second module wants its data. Pick a main or sub module and this "
-                + "gives it the same thing Create Module would have: the Scripts/Shared folders, an "
-                + "assembly of its own, its namespace settings file, and the references from the "
-                + "module and from every screen, sub and test module already under it.");
+                "Tools > FlowIoC > Add Shared Data. Shared is an unticked box in Create Module, so a "
+                + "module is only offered it on the day it is created - and the need usually turns "
+                + "up later, when a second module wants its data. Pick a main, sub or screen module "
+                + "and this gives it the same thing Create Module would have: the Scripts/Shared "
+                + "folders, an assembly of its own, its namespace settings file, and the references "
+                + "from the module and from every screen, sub and test module already under it. It "
+                + "is for data alone - the public signal holder has its own assembly under "
+                + "Scripts/Signals, which every module already has.");
             painter.Note(
                 "Every step checks before it writes, so running it on a module that already has "
                 + "Shared repairs whatever is missing and reports that the rest was already in "

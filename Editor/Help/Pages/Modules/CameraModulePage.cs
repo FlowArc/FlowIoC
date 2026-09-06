@@ -150,8 +150,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("What lands in the project");
             painter.Bullet("Modules.Camera - the model, the commands, the adapters.");
             painter.Bullet(
-                "Modules.Camera.Shared - the CameraName enum on its own, so a module that "
-                + "names a camera references the data and not the module.");
+                "Modules.Camera.Shared - the CameraName enum and CameraCVO on their own, so a "
+                + "module that names a camera references the data and not the module.");
+            painter.Bullet(
+                "Modules.Camera.Signals - CameraSignals, which only a Connector references.");
             painter.Bullet("Prefabs/CameraRoot - the module's presence in the scene.");
             painter.Bullet("Scriptables/CD_CameraCustomBlends - the blend table.");
 

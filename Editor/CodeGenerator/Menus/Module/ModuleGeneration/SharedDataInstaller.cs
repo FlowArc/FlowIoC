@@ -72,7 +72,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             AddReferenceToChildren(registry, module, sharedAssemblyName, report);
 
-            ModuleGenerator.AddSharedNamespaceExceptions(config, modulePath, sharedAssemblyName);
+            ModuleGenerator.AddSubAssemblyNamespaceExceptions(config, modulePath, sharedAssemblyName);
             report.WroteNamespaceSettings(sharedAssemblyName + ".csproj.DotSettings");
 
             AssetDatabase.Refresh();

@@ -4,7 +4,7 @@ using FlowIoC.ConsoleModule;
 using Modules.CounterModule.Data.ValueObjects;
 using Modules.CounterModule.Models;
 using Modules.CounterModule.Services;
-using Modules.CounterModule.Shared.Signals;
+using Modules.CounterModule.Signals;
 using UnityEngine;
 
 namespace Modules.CounterModule.Controllers

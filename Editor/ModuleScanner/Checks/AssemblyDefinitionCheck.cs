@@ -26,6 +26,7 @@ namespace FlowIoC.Editor.ModuleScanner
         private readonly Func<string, string[]> _asmdefsIn;
         private readonly Action<string, string> _writeFile;
         private readonly Func<ModuleTargetEVO, string> _sharedAssemblyOf;
+        private readonly Func<ModuleTargetEVO, string> _signalsAssemblyOf;
         private readonly AssemblyDefinitionTemplate _template = new AssemblyDefinitionTemplate();
 
         internal AssemblyDefinitionCheck() : this(
@@ -33,18 +34,21 @@ namespace FlowIoC.Editor.ModuleScanner
                 ? Directory.GetFiles(folder, "*" + EXTENSION, SearchOption.TopDirectoryOnly)
                 : new string[0],
             File.WriteAllText,
-            module => new SharedAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout))
+            module => new SharedAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout),
+            module => new SignalsAssemblyDefinition().FindIn(module.AbsolutePath, module.Layout))
         {
         }
 
         internal AssemblyDefinitionCheck(
             Func<string, string[]> asmdefsIn,
             Action<string, string> writeFile,
-            Func<ModuleTargetEVO, string> sharedAssemblyOf)
+            Func<ModuleTargetEVO, string> sharedAssemblyOf,
+            Func<ModuleTargetEVO, string> signalsAssemblyOf = null)
         {
             _asmdefsIn = asmdefsIn;
             _writeFile = writeFile;
             _sharedAssemblyOf = sharedAssemblyOf;
+            _signalsAssemblyOf = signalsAssemblyOf ?? (_ => null);
         }
 
         public string Id => "assembly";
@@ -84,22 +88,31 @@ namespace FlowIoC.Editor.ModuleScanner
         /// FlowIoC is added by the template itself, and anything null or empty is dropped there
         /// too - which is what a top level module's absent parent comes through as.
         ///
-        /// The module's own Shared assembly is named only when it exists. Writing the reference
-        /// regardless would leave the asmdef pointing at an assembly nothing produces, which is
-        /// the same trap ModuleGenerator avoids by passing whatever CreateFor actually made.
-        /// Shared is repaired earlier in the pipeline than this check, so by now it is there if
-        /// the module owns one.
+        /// The module's own Shared and Signals assemblies are named only when they exist. Writing
+        /// a reference regardless would leave the asmdef pointing at an assembly nothing produces,
+        /// which is the same trap ModuleGenerator avoids by passing whatever CreateFor actually
+        /// made. Both are repaired earlier in the pipeline than this check, so by now they are
+        /// there if the module owns them.
+        ///
+        /// A test module also names its parent's assembly and its parent's Signals: it drives the
+        /// module under test through that holder, and asmdef references are not transitive. Every
+        /// other kind gets the parent's Shared and nothing more - a neighbour's signals are for a
+        /// Connector to reach, which is the whole reason the holder has an assembly of its own.
         /// </summary>
         private IEnumerable<string> References(ModuleTargetEVO module)
         {
             var references = new List<string>
             {
                 _sharedAssemblyOf(module),
+                _signalsAssemblyOf(module),
                 module.ParentSharedAssemblyName
             };
 
             if (module.Kind == ModuleKind.Test)
+            {
+                references.Add(module.ParentSignalsAssemblyName);
                 references.Add(module.ParentAssemblyName);
+            }
 
             return references;
         }

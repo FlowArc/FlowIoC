@@ -39,13 +39,13 @@ namespace FlowIoC.Editor.Help.Pages
                     new HelpTreeNode("Signals", "PlayerInternalSignals - what the module says to itself"),
                     new HelpTreeNode("Systems", "specific to this game, may lean on other systems"),
                     new HelpTreeNode("ViewsMediators", "scene references, and the mediator that drives them")),
-                new HelpTreeNode("Shared", "an assembly of its own, holding everything this module publishes",
+                new HelpTreeNode("Shared", "Modules.Player.Shared - the data this module publishes",
                     new HelpTreeNode("Constants", "constants the shared data needs"),
                     new HelpTreeNode("Data", "",
                         new HelpTreeNode("UnityObjects", "shared ScriptableObject assets"),
                         new HelpTreeNode("ValueObjects", "shared plain data")),
-                    new HelpTreeNode("Enums", "enumerations the shared data needs"),
-                    new HelpTreeNode("Signals", "PlayerSignals - the module's whole public surface"))),
+                    new HelpTreeNode("Enums", "enumerations the shared data needs")),
+                new HelpTreeNode("Signals", "Modules.Player.Signals - PlayerSignals, the module's whole public surface")),
             new HelpTreeNode("zScreenModules", "screens of this module - each one a module of its own"),
             new HelpTreeNode("zSubModules", "sub modules, which may use their parent's types"),
             new HelpTreeNode("zTestModules", "test code, wrapped in #if UNITY_EDITOR, may reference anything"));
@@ -80,31 +80,41 @@ namespace FlowIoC.Editor.Help.Pages
                 + "the module is the only step there is. Nothing a module owns belongs on the "
                 + "Tools > FlowIoC menu, which stays the framework's own.");
 
-            painter.SubHeading("Publishing data through Shared");
+            painter.SubHeading("Three assemblies, and who may reference each");
             painter.Paragraph(
-                "Scripts/Shared is an assembly of its own - Modules.Player.Shared, beside "
-                + "Modules.Player - and it is everything a module offers the rest of the project "
-                + "without handing over its logic: the public signal holder, the value objects and "
-                + "ScriptableObjects it publishes, and the enums and constants those need. Because "
-                + "the holder lives there, a public signal may only carry a type that lives there "
-                + "too.");
+                "Scripts/Runtime is Modules.Player - the Models, Commands, Views and the internal "
+                + "signal holder, which nothing outside the module ever sees. Scripts/Shared is "
+                + "Modules.Player.Shared - the data this module publishes, and the enums and "
+                + "constants that data needs. Scripts/Signals is Modules.Player.Signals - "
+                + "PlayerSignals, and nothing else.");
+            painter.Paragraph(
+                "The split between the last two is what makes the architecture hold by itself. A "
+                + "System legitimately references a neighbour's Shared assembly to read a published "
+                + "enum, and while the holder lived in Shared that same reference put the "
+                + "neighbour's signals in scope - a cross-module Dispatch compiled, and only "
+                + "discipline stopped it. Now it does not compile, and signals cross through a "
+                + "Connector because the compiler says so.");
             painter.Paragraph(
                 "Whoever reads that data references Modules.Player.Shared, never Modules.Player. A "
                 + "PlayerScreenModule can read CD_PlayerRules and still has no way to reach "
-                + "PlayerModel or AddCurrencyCommand. Tick Shared when creating a main module and "
-                + "Create Module writes the reference for you - into the module's own assembly, and "
-                + "into every screen, sub and test module created under it afterwards.");
+                + "PlayerModel, AddCurrencyCommand or PlayerSignals. Tick Shared when creating a "
+                + "main module and Create Module writes the reference for you - into the module's "
+                + "own assembly, and into every screen, sub and test module created under it "
+                + "afterwards.");
             painter.Paragraph(
                 "Namespaces follow the folder here too: a value object under "
                 + "Scripts/Shared/Data/ValueObjects is in "
                 + "Modules.PlayerModule.Shared.Data.ValueObjects, so it cannot collide with the "
-                + "Runtime type of the same name. The generator writes a "
-                + "Modules.Player.Shared.csproj.DotSettings for that, beside the module's own.");
+                + "Runtime type of the same name. The public holder under Scripts/Signals lands in "
+                + "Modules.PlayerModule.Signals - the namespace the internal holder is already in, "
+                + "so one using reaches both. The generator writes a .csproj.DotSettings per "
+                + "assembly for that, beside the module's own.");
             painter.Note(
-                "Shared is offered on main, sub and screen modules, and starts ticked. A test "
-                + "module is the one kind without it. If two modules need the same data and "
-                + "neither owns it, that data belongs in a module of its own - the same answer as "
-                + "for a Service more than one module needs.");
+                "Signals is on every module. Shared is offered on main, sub and screen modules and "
+                + "starts unticked - a module pays for that assembly on the day it publishes "
+                + "something. A test module is the one kind without it. If two modules need the "
+                + "same data and neither owns it, that data belongs in a module of its own - the "
+                + "same answer as for a Service more than one module needs.");
         }
     }
 }

@@ -21,6 +21,14 @@ namespace FlowIoC.Editor.ModuleScanner
         internal DirectoryStructureConfig Layout { get; set; }
         internal string ParentAbsolutePath { get; set; }
         internal string ParentSharedAssemblyName { get; set; }
+
+        /// <summary>
+        /// The Signals assembly of the module this one lives in. Only a test module is owed it -
+        /// it drives the module under test through that holder - so for every other kind the
+        /// field is carried and left unused rather than resolved twice.
+        /// </summary>
+        internal string ParentSignalsAssemblyName { get; set; }
+
         internal string ParentAssemblyName { get; set; }
         internal string ExpectedAssemblyName { get; set; }
         internal string ProjectRoot { get; set; }

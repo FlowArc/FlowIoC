@@ -3,7 +3,7 @@
   "references": [
     "FlowIoC",
     "Modules.Main.Screen",
-    "Modules.Main.Screen.Shared"
+    "Modules.Main.Screen.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

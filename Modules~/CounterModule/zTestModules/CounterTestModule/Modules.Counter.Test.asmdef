@@ -3,7 +3,7 @@
   "references": [
     "FlowIoC",
     "Modules.Counter",
-    "Modules.Counter.Shared"
+    "Modules.Counter.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

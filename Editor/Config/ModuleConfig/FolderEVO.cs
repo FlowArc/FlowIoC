@@ -77,10 +77,20 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             SharedEnums,
             SharedConstants,
 
-            // The module's public signal holder lives here, beside the data it publishes, so a
-            // Connector reaches it through Modules.X.Shared and no module assembly has to
-            // reference another. Signals above keeps its name and now holds the internal holder.
-            SharedSignals
+            // Retired: the public signal holder no longer sits inside Shared. Referencing Shared
+            // for a published enum would have carried the signal holder along with it, and
+            // nothing but discipline then stopped a direct cross-module Dispatch. The holder has
+            // its own assembly now - see PublicSignals. The value stays for the same reason
+            // ScreenViews' does.
+            SharedSignals,
+
+            // Scripts/Signals, a sibling of Scripts/Runtime and Scripts/Shared, which becomes
+            // Modules.X.Signals. The module's public signal holder lives here and nowhere else,
+            // so a module that references a neighbour's Shared assembly to read a published enum
+            // does not get that neighbour's signals in scope, and the compiler is what stops the
+            // cross-module Dispatch rather than the reader's memory. Signals above keeps its name
+            // and holds the internal holder, which never crosses an assembly boundary at all.
+            PublicSignals
         }
     }
 }

@@ -110,6 +110,13 @@ does in `DestroyContext` for what it wired.
 - A Connector that decides something. If a connection needs an `if`, the decision belongs in a
   Command on the receiving side; the Connector's job is the edge, not the rule.
 - A sub-context written but never added to the Root's Sub Context Types.
-- Reaching a module's signals through `Modules.Player` rather than `Modules.Player.Shared`. The
-  public holder lives in the Shared assembly precisely so a Connector can see it without seeing
-  the module's Models and Commands.
+- Reaching a module's signals through `Modules.Player` or `Modules.Player.Shared` rather than
+  `Modules.Player.Signals`. The public holder has an assembly of its own precisely so a Connector
+  can see it without seeing the module's Models and Commands - and so that a System referencing
+  `Modules.Player.Shared` to read a published enum cannot see the holder at all.
+- Forgetting that a Connector still needs the Shared assemblies. `Connect<T>` has to infer `T`,
+  so connecting two `Signal<DifficultyType>` needs `Modules.Gameplay.Shared` on the Connector's
+  asmdef even though the Connector never touches the value. Without it the compiler reports
+  **CS0012, "The type 'DifficultyType' is defined in an assembly that is not referenced."** A
+  Connector's reference list is the longest in the project, and that is correct: it is the one
+  place allowed to know the game's shape.

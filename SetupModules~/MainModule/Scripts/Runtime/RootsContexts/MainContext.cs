@@ -1,7 +1,7 @@
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.Commands;
 using Modules.MainModule.Controllers;
-using Modules.MainModule.Shared.Signals;
+using Modules.MainModule.Signals;
 
 namespace Modules.MainModule.RootsContexts
 {
