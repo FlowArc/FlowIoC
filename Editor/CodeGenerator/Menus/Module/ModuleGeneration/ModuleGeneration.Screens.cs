@@ -123,10 +123,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames, false, signalsName, signalsNamespace);
 
             string contextFullName = CreateScreenContext(rootsAndContextsPath, modulePath, moduleName,
-                screenSettings ?? new ScreenModuleSettings {AddressableKey = moduleName}, signalsName, signalsNamespace);
+                screenSettings ?? new ScreenModuleSettings {AddressableKey = moduleName}, signalsName, signalsNamespace,
+                out string contextScriptPath);
 
             RegisterScreenContextOnParentRoot(parentModulePath, directoryConfigMap[ModuleType.Main],
-                contextFullName, moduleName + "Context");
+                contextFullName, moduleName + "Context", contextScriptPath);
 
             EditorPrefs.SetString(KEY_SCREEN_CONTEXT_FULL_NAME, contextFullName);
 
@@ -145,6 +146,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// The screen's one declaration: its context, deriving from ScreenSubContext with the view
         /// and mediator as type arguments and the Screen block filled from the window. Returns the
         /// context's full name, which is what a Root's SubContextTypes entry stores.
+        ///
+        /// <paramref name="contextScriptPath"/> comes back with it because the entry stores the
+        /// script asset too, and this is the one place that knows where the file was written. The
+        /// type has not compiled yet at this point, so nothing could find the script from the name.
         /// </summary>
         private static string CreateScreenContext(
             string rootsAndContextsPath,
@@ -152,8 +157,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string moduleName,
             ScreenModuleSettings screenSettings,
             string signalsName,
-            string signalsNamespace)
+            string signalsNamespace,
+            out string contextScriptPath)
         {
+            contextScriptPath = null;
+
             if (string.IsNullOrEmpty(rootsAndContextsPath))
             {
                 Debug.LogWarning(ROOTS_CONTEXTS_WARNING);
@@ -178,42 +186,61 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (!string.IsNullOrEmpty(signalsName))
                 CodeGeneratorUtils.BindSignalsInContext(contextPath, signalsName, signalsNamespace);
 
+            contextScriptPath = NamespaceUtility.GetUnityAssetPath(contextPath);
+
             return $"{contextNamespace}.{contextName}";
         }
 
         /// <summary>
         /// A screen context is a sub-context of the module it lives in, so the parent's Root prefab
-        /// gets the entry. The prefab is whichever one under the parent's Prefabs folder carries a
-        /// RootBase. When there is none - a parent created without a Root, or one kept in a scene -
-        /// the step is left to the inspector's Add Sub Context, and says so.
+        /// gets the entry. Which prefab that is, out of everything under the parent's Prefabs folder
+        /// carrying a RootBase, is ParentRootPrefabPick's answer - MainModule/Prefabs holds
+        /// PoolServiceRoot beside MainRoot, and taking whichever came first was right only by
+        /// accident of the filesystem's order.
+        ///
+        /// When the folder has no Root, or more than one and none of them the module's own, nothing
+        /// is attached and the warning says why. The step is then the inspector's Add Sub Context,
+        /// which is a person choosing rather than a generator guessing.
         /// </summary>
         private static void RegisterScreenContextOnParentRoot(
             string parentModulePath,
             DirectoryStructureConfig parentConfig,
             string contextFullName,
-            string contextName)
+            string contextName,
+            string contextScriptPath)
         {
             if (string.IsNullOrEmpty(contextFullName))
                 return;
 
             string prefabsPath = parentConfig.FindFullFolderPathByID(FolderEVO.FolderType.Prefabs, parentModulePath);
 
-            string prefabAssetPath = string.IsNullOrEmpty(prefabsPath) || !Directory.Exists(prefabsPath)
-                ? null
+            List<string> rootPrefabs = string.IsNullOrEmpty(prefabsPath) || !Directory.Exists(prefabsPath)
+                ? new List<string>()
                 : Directory.GetFiles(prefabsPath, "*.prefab")
                     .Select(NamespaceUtility.GetUnityAssetPath)
-                    .FirstOrDefault(path => AssetDatabase.LoadAssetAtPath<GameObject>(path)?.GetComponent<RootBase>() != null);
+                    .Where(path => AssetDatabase.LoadAssetAtPath<GameObject>(path)?.GetComponent<RootBase>() != null)
+                    .ToList();
+
+            string prefabAssetPath = new ParentRootPrefabPick()
+                .From(rootPrefabs, Path.GetFileName(parentModulePath), out string refusal);
 
             if (prefabAssetPath == null)
             {
                 Debug.LogWarning(
-                    $"<color=cyan>[FlowIoC]</color> No Root prefab was found under '{prefabsPath}', so {contextName} is not attached to a Root yet. "
+                    $"<color=cyan>[FlowIoC]</color> Under '{prefabsPath}' {refusal}, so {contextName} is not attached to a Root yet. "
                     + "Select the parent module's Root, press Add Sub Context in its inspector, pick "
                     + $"{contextName} and leave Auto Setup ticked - the screen registers itself in Setup.");
                 return;
             }
 
-            new RootPrefabSubContexts().Add(prefabAssetPath, contextFullName, contextName);
+            // The script rather than only the name: the entry's reference is what makes deleting or
+            // renaming this context something the project can see. It is loaded from the path the
+            // file was just written to, because the type has not compiled yet.
+            Object contextScript = string.IsNullOrEmpty(contextScriptPath)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<MonoScript>(contextScriptPath);
+
+            new RootPrefabSubContexts().Add(prefabAssetPath, contextFullName, contextName, contextScript);
             Debug.Log($"<color=cyan>[FlowIoC]</color> {contextName} added to the sub-contexts of '{prefabAssetPath}'.");
         }
 

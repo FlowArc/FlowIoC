@@ -21,6 +21,8 @@ namespace FlowIoC.Editor.Root
         private ScreenOverrideSummary _summary;
         private SubContextFoldouts _foldouts;
         private RootDirtyMarker _dirtyMarker;
+        private SubContextEntryStates _entryStates;
+        private SubContextNameSync _nameSync;
 
         private FlowPalette _palette;
         private FlowRoleResolver _roles;
@@ -28,6 +30,9 @@ namespace FlowIoC.Editor.Root
         private FlowHelpState _helpState;
         private FlowHeaderBar _bar;
         private FlowInspectorGUI _gui;
+
+        /// <summary>Only for the warn and error colours the two broken entry states wear.</summary>
+        private FlowRowPainter _painter;
 
         /// <summary>
         /// The rows the bar's help button opens and closes together. They are the fields of
@@ -58,6 +63,12 @@ namespace FlowIoC.Editor.Root
 
             _dirtyMarker = new RootDirtyMarker();
 
+            // Rebuilt with the declarations above and for the same reason: both ask what the project
+            // compiled, and a recompile must not be answered from a cache taken before it.
+            _entryStates = new SubContextEntryStates();
+            _nameSync = new SubContextNameSync();
+
+            _painter = new FlowRowPainter();
             _palette = new FlowPalette();
             _roles = new FlowRoleResolver();
             _help = new FlowHelpSource(new MonoScriptText());
@@ -228,6 +239,8 @@ namespace FlowIoC.Editor.Root
 
                     EditorGUILayout.EndHorizontal();
 
+                    GUI_SubContextLink(ii, contextData);
+
                     if (expanded)
                     {
                         EditorGUI.indentLevel++;
@@ -386,6 +399,50 @@ namespace FlowIoC.Editor.Root
                 EditorGUILayout.Toggle("Has Show Animation", declaration.HasShowAnimation);
                 EditorGUILayout.Toggle("Has Hide Animation", declaration.HasHideAnimation);
             }
+        }
+
+        /// <summary>
+        /// What an entry's script reference amounts to, drawn only when it amounts to a problem.
+        ///
+        /// A Linked entry says nothing: the reference is there, and a row of green ticks under every
+        /// sub-context would be noise. The other two are what deleting or renaming a module used to
+        /// look like from here, which was nothing at all - the name stopped resolving, the
+        /// sub-context was quietly not built, and the only report came at play time.
+        ///
+        /// Unlinked offers Resolve, because the context is still in the project and one press mends
+        /// it. Unresolved offers nothing to press: the context is gone, and whether this Root should
+        /// still list it is a decision rather than a repair.
+        /// </summary>
+        private void GUI_SubContextLink(int index, SubContextData contextData)
+        {
+            SubContextEntryStatus status = _entryStates.Of(contextData);
+
+            if (status == SubContextEntryStatus.Linked)
+                return;
+
+            bool unlinked = status == SubContextEntryStatus.Unlinked;
+            Color accent = unlinked ? _painter.Warn : _painter.Error;
+
+            EditorGUILayout.BeginHorizontal();
+
+            Color previous = GUI.color;
+            GUI.color = accent;
+
+            EditorGUILayout.LabelField(
+                unlinked
+                    ? "No script reference. Resolve links it to " + contextData.ContextName + "."
+                    : "Nothing compiles to " + contextData.ContextFullName + ". Its module is gone or renamed.",
+                EditorStyles.miniLabel);
+
+            GUI.color = previous;
+
+            if (_entryStates.CanResolve(status) && GUILayout.Button("Resolve", _gui.EntryAction, GUILayout.Width(60)))
+            {
+                contextData.ContextScript = _entryStates.ScriptFor(contextData);
+                WriteSubContext(index, _nameSync.Applied(contextData));
+            }
+
+            EditorGUILayout.EndHorizontal();
         }
 
         private void WriteSubContext(int index, SubContextData contextData)

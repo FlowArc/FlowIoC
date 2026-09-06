@@ -129,7 +129,13 @@ namespace FlowIoC.Editor.Migration
             string contextFullName = $"{contextNamespace}.{step.ContextName}";
             string rootPrefab = FindParentRootPrefab(step.ContextPath);
 
-            if (rootPrefab != null && new RootPrefabSubContexts().Add(rootPrefab, contextFullName, step.ContextName))
+            // The context was written a moment ago and has not compiled, so its script is loaded
+            // from the path rather than resolved from the name - the same reason Create Module
+            // hands the file over instead of looking the type up.
+            MonoScript contextScript = AssetDatabase.LoadAssetAtPath<MonoScript>(step.ContextPath);
+
+            if (rootPrefab != null
+                && new RootPrefabSubContexts().Add(rootPrefab, contextFullName, step.ContextName, contextScript))
             {
                 Debug.Log(Prefix
                           + $"{step.ContextName} was generated at '{step.ContextPath}' and added to the sub-contexts of '{rootPrefab}'.");

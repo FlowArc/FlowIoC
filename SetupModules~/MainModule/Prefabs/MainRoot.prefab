@@ -45,10 +45,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SubContextTypes:
-  - ContextFullName: Modules.MainModule.MainScreenModule.RootsContexts.MainScreenContext
+  - ContextScript: {fileID: 11500000, guid: 0f233c55a7f0eb749929c3fab239fe7d, type: 3}
+    ContextFullName: Modules.MainModule.MainScreenModule.RootsContexts.MainScreenContext
     ContextName: MainScreenContext
     AutoSetup: 1
     IsTest: 0
+    OverrideScreen: 0
+    ScreenManagerId: 0
+    ScreenLayer: 0
+    ScreenTag: 0
+    ScreenHasShowAnimation: 0
+    ScreenHasHideAnimation: 0
   initializeOrder: 100
   AutoBindInjections: 1
   AutoBindMediations: 1

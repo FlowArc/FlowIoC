@@ -1355,6 +1355,19 @@ Sub-contexts are attached from the Root's inspector (*Add Sub Context*), which
 lists every `Context` type in the project. Mark a context with
 `[ExcludeFromContextWindow]` to keep it out of that list.
 
+An entry holds the context's **script asset**, not only its name. That is what makes the
+wiring visible to the project: renaming the class inside its file or moving the file keeps
+working, and deleting the module a context lives in leaves a reference the Root reports
+rather than a name that quietly stops resolving. The name is kept beside it and is what the
+game reads at runtime, because `MonoScript` is an Editor type and a build carries none; it
+is rewritten from the script whenever the inspector or a generator touches the entry.
+
+An entry with no script says which of two things it is. Where the context still exists,
+*Resolve* links it in one press. Where nothing compiles to the name, the module is gone and
+the entry is a decision rather than a repair. `Tools/FlowIoC/Delete Module` names the scenes
+and prefabs that will be left that way **before** it deletes anything, and edits none of
+them — opening and saving somebody's scene is not a tool's decision.
+
 ---
 
 ## Data Types

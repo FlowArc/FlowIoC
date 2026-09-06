@@ -141,6 +141,25 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Connector Root and nowhere else, and every other Root is offered everything but "
                 + "those. A context counts as a Connector's when its name says so - "
                 + "HeroConnectorSubContext - or when it carries FlowHeader(FlowRole.Connector).");
+
+            painter.Space();
+            painter.SubHeading("An entry points at the context's script");
+            painter.Paragraph(
+                "A Root's entry holds the context's own script asset, not just its name. That is what "
+                + "makes the wiring something the project can see: renaming the class inside its file "
+                + "or moving the file keeps working, and deleting the module the context lives in "
+                + "leaves a reference the Root reports instead of a name that quietly stops resolving.");
+            painter.Paragraph(
+                "The name is still there and is what the game reads at runtime, because MonoScript is "
+                + "an Editor type and a build has none. It is rewritten from the script whenever the "
+                + "inspector or a generator touches the entry, so the two never drift apart.");
+            painter.Paragraph(
+                "An entry with no script says which of two things it is. Where the context still "
+                + "exists, Resolve links it in one press - that is an entry authored before this, or "
+                + "one somebody cleared. Where nothing compiles to the name, the module is gone or "
+                + "renamed and there is nothing to press: either the entry goes, or the context comes "
+                + "back. Delete Module names the scenes and prefabs that will be left this way before "
+                + "it deletes anything, and edits none of them.");
         }
 
         /// <summary>
