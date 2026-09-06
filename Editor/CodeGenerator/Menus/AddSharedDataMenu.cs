@@ -63,7 +63,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void OnGUI()
         {
-            _bar.DrawWindow(FlowRole.Root, "Add Shared Data", "FlowIoC",
+            _bar.DrawWindow("Add Shared Data", "FlowIoC",
                 "The Shared assembly on a module that already exists", null, null, "Creating a Module");
 
             EditorGUILayout.BeginVertical("box");

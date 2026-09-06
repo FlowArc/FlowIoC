@@ -62,7 +62,7 @@ namespace FlowIoC.Editor.Help
         /// window and the bar on top of a Root read as one tool - and dark enough that the white
         /// title on it clears 4.5:1, which the lighter purple it used to be did not.
         /// </summary>
-        public Color Banner => _palette.Deep(FlowRole.Root);
+        public Color Banner => _palette.ChromeDeep;
 
         public float BannerHeight => 38f;
 

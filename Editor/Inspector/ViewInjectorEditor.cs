@@ -196,7 +196,7 @@ namespace FlowIoC.Editor.Inspector
                 .enumValueIndex;
 
             Color previous = GUI.color;
-            GUI.color = _palette.Accent(FlowRole.Root, EditorGUIUtility.isProSkin);
+            GUI.color = _palette.Chrome(EditorGUIUtility.isProSkin);
 
             EditorGUILayout.LabelField(BadgeFor(source), EditorStyles.miniBoldLabel, GUILayout.Width(92));
 

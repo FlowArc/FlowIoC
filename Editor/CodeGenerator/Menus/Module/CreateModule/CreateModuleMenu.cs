@@ -134,7 +134,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             // The Root's purple, not the scanners' green: those windows report a state, this one
             // writes the Root and Context a module is built around.
             _bar.DrawWindow(
-                FlowRole.Root, WINDOW_TITLE, "FlowIoC", WINDOW_SUBTITLE, null, null, HELP_PAGE);
+                WINDOW_TITLE, "FlowIoC", WINDOW_SUBTITLE, null, null, HELP_PAGE);
 
             EditorGUILayout.BeginVertical("box");
 
