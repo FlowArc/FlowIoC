@@ -1,4 +1,5 @@
 ﻿using System;
+using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.CommandGroup;
 using FlowIoC.ConsoleModule;
 
@@ -9,6 +10,15 @@ namespace FlowIoC.BaseModule.Controller
         public ICommandGroupResolver CommandGroupResolver { get; set; }
         public bool IsRetain { get; set; }
         public bool HasRetain { get; set; }
+
+        /// <summary>
+        /// The context this instance was last filled from, and the binding generation it was filled
+        /// at. A pooled command asks for the same models and signals on every run and the container
+        /// answers the same way, so the members are resolved again only once one of these two moves.
+        /// </summary>
+        internal IContext InjectedContext;
+
+        internal int InjectionStamp = -1;
 
         public virtual void Retain()
         {

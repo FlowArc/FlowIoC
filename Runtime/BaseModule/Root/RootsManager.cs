@@ -17,6 +17,13 @@ namespace FlowIoC.BaseModule.Root
         public BindingPoolController BindingPoolController { get; private set; }
         public Action<IContext> OnContextReady;
 
+        /// <summary>
+        /// Bumped whenever any binder in the run gains or loses a binding. What a pooled command
+        /// resolved is remembered against this number, so injection is repeated when the container
+        /// has actually changed and skipped when it has not.
+        /// </summary>
+        internal int BindingGeneration;
+
         private readonly List<IRoot> _contextRootList = new List<IRoot>();
         private readonly Dictionary<string, IRoot> _contextRootMap = new();
 
