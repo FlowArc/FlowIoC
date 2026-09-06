@@ -74,6 +74,50 @@ module through a Connector without touching the command itself.
 
 ## Writing a Command
 
+### Where a command's data comes from
+
+A command is filled from three places, and each one has its own door. Knowing which
+door a value arrives through is most of knowing how to write the class.
+
+| What arrives | How it arrives | Where it was decided |
+|---|---|---|
+| The signal's payload | `[SignalParam]` properties | whoever dispatched the signal |
+| `Execute`'s parameters | the typed `Execute` overload | the Context, or the previous command |
+| Models, services, signal holders | `[Inject]` and `[InjectSignal]` properties | the module's bindings |
+
+**The signal's payload does not reach `Execute`.** It is easy to expect that
+`Command<int>` bound to a `Signal<int>` receives the dispatched number, and it does
+not: `Execute`'s parameters have exactly two sources, and neither of them is the
+signal.
+
+```csharp
+// Bound to Signal<int>, dispatched with 7.
+public class WrongCommand : Command<int>
+{
+    // Never runs. The binding gave Execute nothing, so this reports a signature
+    // mismatch: "it takes 1 parameter(s) and the signal carried 0".
+    public override void Execute(int amount) { }
+}
+
+public class RightCommand : Command
+{
+    [SignalParam] private int _amount { get; set; }   // 7
+
+    public override void Execute() { }
+}
+```
+
+The two sources that *do* fill `Execute` are:
+
+1. **The binding.** `ToSequence<T>(...)` and `ToParallel<T>(...)` take arguments and
+   hand them to the step's `Execute` — see *Parameters fixed at bind time*.
+2. **The previous command's `Release`.** What a retained command passes to `Release()`
+   becomes the next sequence step's `Execute` parameters — see *Handing data to the
+   next command*.
+
+When a step has both, the binding wins: parameters written at bind time are what that
+step is given, whatever the command before it released.
+
 ### Reading the signal's payload
 
 Each `[SignalParam]` property is filled from the payload of the signal that triggered
@@ -615,6 +659,10 @@ A command retained and never released. Look for an early `return`, an exception
 thrown after `Retain()`, or a callback path that forgets to resolve. There is no
 timeout — a hung group waits forever.
 
+A group step is the other candidate: `ToGroupAsSequence` on a signal no Context has
+bound reports `GroupKey '...' could not be found in any context` and skips the step,
+so the chain carries on but the sub-flow you expected never ran.
+
 ### `Command must be retained to call RELEASE!` / `... to call STOP!`
 
 You called `Release()` or `Stop()` on a command that never called `Retain()`. The
@@ -643,11 +691,19 @@ public class CollectRewardsCommand : Command
 Initialize local state at the top of `Execute()`, or better, keep no state on the
 command at all — that is what Models are for.
 
+### `Execute signature mismatch on X: it takes 1 parameter(s) and the signal carried 0`
+
+A typed `Execute` was written to read the signal's payload. It cannot: `Execute`'s
+parameters come from the binding or from the previous command's `Release`, and the
+payload arrives through `[SignalParam]` instead. Either give the step its arguments
+at bind time — `ToSequence<X>(...)` — or make the command a plain `Command` with
+`[SignalParam]` properties. See *Where a command's data comes from*.
+
 ### The parameters arrive wrong
 
 `[SignalParam]` properties are filled from the signal's payload by type, and typed
-`Execute(...)` overloads are matched against what the previous step released. If
-either shape changes, update both ends.
+`Execute(...)` overloads are matched against what the binding or the previous step
+gave them. If either shape changes, update both ends.
 
 Two `[SignalParam]` properties of the same type are distinguished by their index:
 `[SignalParam(0)]` and `[SignalParam(1)]` take the first and second value of that

@@ -27,6 +27,7 @@ namespace FlowIoC.Tests
         internal static int SeenNumber;
         internal static bool RetainOnce;
         internal static CommandBody LastRetained;
+        internal static readonly List<CommandBody> Retained = new();
 
         private CommandBinder _commandBinder;
 
@@ -38,6 +39,7 @@ namespace FlowIoC.Tests
             SeenNumber = 0;
             RetainOnce = false;
             LastRetained = null;
+            Retained.Clear();
 
             _commandBinder = new CommandBinder {Context = new StandInContext()};
         }
@@ -70,6 +72,52 @@ namespace FlowIoC.Tests
 
             Assert.That(Steps, Does.Contain("first"));
             Assert.That(Steps, Does.Contain("second"));
+        }
+
+        [Test]
+        public void A_parallel_step_before_a_sequence_step_does_not_end_the_group()
+        {
+            Signal signal = new Signal(true);
+            _commandBinder.Bind(signal)
+                .ToParallel<FirstCommand>()
+                .ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"first", "second"}));
+        }
+
+        [Test]
+        public void A_sequence_step_before_a_parallel_step_does_not_end_the_group()
+        {
+            Signal signal = new Signal(true);
+            _commandBinder.Bind(signal)
+                .ToSequence<FirstCommand>()
+                .ToParallel<SecondCommand>()
+                .ToParallel<ThirdCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"first", "second", "third"}));
+        }
+
+        [Test]
+        public void A_group_of_retained_parallel_steps_ends_when_the_last_one_releases()
+        {
+            Signal signal = new Signal(true);
+            _commandBinder.Bind(signal)
+                .ToParallel<RetainingCommand>()
+                .ToParallel<RetainingCommand>()
+                .ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Retained, Has.Count.EqualTo(2), "both parallel steps started");
+
+            Retained[0].Release();
+            Retained[1].Release();
+
+            Assert.That(Steps, Does.Contain("second"), "the step behind them ran once both had released");
         }
 
         [Test]
@@ -150,6 +198,49 @@ namespace FlowIoC.Tests
 
         #endregion
 
+        #region Command groups
+
+        [Test]
+        public void A_group_step_runs_the_other_signal_s_chain_in_place()
+        {
+            Signal outer = new Signal(true);
+            Signal inner = new Signal(true);
+
+            _commandBinder.Bind(inner).ToSequence<SecondCommand>();
+            _commandBinder.Bind(outer)
+                .ToSequence<FirstCommand>()
+                .ToGroupAsSequence(inner)
+                .ToSequence<ThirdCommand>();
+
+            outer.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"first", "second", "third"}));
+        }
+
+        /// <summary>
+        /// A group step used to return without counting itself started or finished, so the sequence
+        /// waited on a sub-group that would never report and the resolver never went back to the
+        /// pool. The step is skipped now, loudly, and the rest of the chain still runs.
+        /// </summary>
+        [Test]
+        public void A_group_step_whose_signal_is_bound_nowhere_is_reported_and_skipped()
+        {
+            Signal outer = new Signal(true);
+            Signal neverBound = new Signal(true);
+
+            _commandBinder.Bind(outer)
+                .ToGroupAsSequence(neverBound)
+                .ToSequence<SecondCommand>();
+
+            LogAssert.Expect(LogType.Error, new Regex("could not be found in any context"));
+
+            outer.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"second"}), "the step behind the missing group still ran");
+        }
+
+        #endregion
+
         #region Payload
 
         /// <summary>
@@ -166,6 +257,25 @@ namespace FlowIoC.Tests
             signal.Dispatch();
 
             Assert.That(SeenNumber, Is.EqualTo(7));
+        }
+
+        /// <summary>
+        /// The other half of the same rule: what a retained command passes to Release is what the
+        /// next step's Execute is handed. Between them, the binding and the previous Release are
+        /// the only two things that fill Execute's parameters.
+        /// </summary>
+        [Test]
+        public void Execute_is_handed_what_the_previous_command_released()
+        {
+            Signal signal = new Signal(true);
+            _commandBinder.Bind(signal)
+                .ToSequence<ReleasingWithDataCommand>()
+                .ToSequence<NumberCommand>();
+
+            signal.Dispatch();
+            LastRetained.Release(9);
+
+            Assert.That(SeenNumber, Is.EqualTo(9));
         }
 
         [Test]
@@ -245,6 +355,7 @@ namespace FlowIoC.Tests
             {
                 Retain();
                 LastRetained = this;
+                Retained.Add(this);
                 Steps.Add("retaining");
             }
         }
@@ -258,6 +369,15 @@ namespace FlowIoC.Tests
                 if (!RetainOnce)
                     return;
 
+                Retain();
+                LastRetained = this;
+            }
+        }
+
+        public class ReleasingWithDataCommand : Command
+        {
+            public override void Execute()
+            {
                 Retain();
                 LastRetained = this;
             }
