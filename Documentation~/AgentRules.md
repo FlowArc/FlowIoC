@@ -55,6 +55,19 @@ so follow the rules below deliberately.
   decision: a close button that always closes is the Mediator calling `_view.Hide()`, and routing
   that out to a Command and back answers a question nobody asked.
 - A Context declares bindings and nothing else.
+- **A flow is read from one Context.** Somebody should be able to see what an operation does by
+  reading the sequence it is bound to, without opening a Command or crossing to the Connector. Two
+  habits keep that true. A Command whose only job is to dispatch is not written - bind
+  `DispatchSignalCommand<T>` with the signal and its payload, so the signal leaving is a line in the
+  Context. And a step that orders another module about - hide the nav bar, switch the camera - is
+  dispatched from the sequence, so the sequence says what the operation manages.
+- **The Connector translates, it does not decide.** One module's announcement joined to another
+  module's order is a crossing, and that is what a Connector is for. A list of consequences hung off
+  one announcement is not: binding `GameOver` to `OpenGameEndScreen` and to `ResetPlayerData` puts
+  both only in the wiring, and it reads as though the Connector decided that ending a game resets
+  the player's data. `GameOver` is an announcement; what follows it is a decision, and it belongs
+  where the deciding happens - dispatched from the Command, or as sequence steps under it in that
+  module's Context. The decision is then the group of bound Commands, which has a name and a place.
 - The binding phases declare, `Setup` initialises, `Launch` starts. `SignalBindings`,
   `InjectionBindings`, `MediationBindings` and `CommandBindings` only say what the module is
   made of. `Setup` runs once **every** Root in the scene has finished binding, so that is where

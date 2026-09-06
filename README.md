@@ -217,6 +217,18 @@ inspector reads: a Root takes the colour of whatever it roots and decides that f
 so `CounterRoot` would be drawn as a plain Root while `CounterServiceRoot` is drawn as a Service.
 The module name has no such job, so it says what the module counts, parses or stores.
 
+**A flow is read from one Context.** Somebody should see what an operation does by reading the
+sequence it is bound to, without opening a Command or crossing to the Connector. So a Command whose
+only job is to dispatch is not written — `DispatchSignalCommand<T>` is bound with the signal and its
+payload, and the signal leaving becomes a line in the Context — and a step that orders another
+module about is dispatched from the sequence, where it says what the operation manages.
+
+**The Connector translates, it does not decide.** One module's announcement joined to another
+module's order is a crossing. A list of consequences hung off one announcement is a flow, and a flow
+belongs in the Context of the module that owns it — otherwise binding `GameOver` to
+`OpenGameEndScreen` and to `ResetPlayerData` reads as though the wiring decided that ending a game
+resets the player's data.
+
 **A decision belongs in a Command, wherever it would otherwise be taken.** Most of the table above
 is that one rule seen from different places: a Context declares bindings and nothing else, a View
 holds no `if` about game rules, a Mediator holds none either, a System type holds no method that

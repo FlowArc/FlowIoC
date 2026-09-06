@@ -19,6 +19,25 @@ Connectors live in a module of their own - `ConnectorModule` - whose Root lists 
 sub-context in **Sub Context Types**. A sub-context is not found by reflection; the Root that
 owns it names it, and a class nobody named compiles and never runs.
 
+## A Connector translates, it does not decide
+
+An `Outgoing` signal announces what happened; an `Incoming` signal orders something done. Joining
+one to the other is a crossing, and that is the whole job.
+
+A **list of consequences** hung off one announcement is not a crossing, it is a flow. Bind
+`GameOver` to `OpenGameEndScreen` and, beside it, to `ResetPlayerData`, and both exist only in the
+wiring - it now reads as though the Connector decided that ending a game resets the player's data.
+Nobody decided it; the two lines just happen to sit together.
+
+`GameOver` is an announcement, but what follows it - reset the data, close the panel, disable input
+- is a decision. It belongs where the deciding happens: dispatched from the Command that made it,
+or as sequence steps under that Command in its own module's Context. The decision is then the group
+of bound Commands, which has a name and a place a reader can find.
+
+The test: if you are about to write a second `Connect` from the same signal, ask whether those two
+things are one consequence of one decision. If they are, they belong in that module's sequence, and
+the Connector carries one line to it.
+
 ## The rule that matters most: get, never bind
 
 ```csharp

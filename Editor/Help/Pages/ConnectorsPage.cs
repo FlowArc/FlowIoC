@@ -119,6 +119,27 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    .Connect(OnHeroDied);");
 
             painter.Space();
+            painter.SubHeading("A Connector translates, it does not decide");
+            painter.Paragraph(
+                "An Outgoing signal announces what happened; an Incoming signal orders something "
+                + "done. Joining one to the other is a crossing, and that is the whole job.");
+            painter.Paragraph(
+                "A list of consequences hung off one announcement is not a crossing, it is a flow. "
+                + "Bind GameOver to OpenGameEndScreen and, beside it, to ResetPlayerData, and both "
+                + "exist only in the wiring - it reads as though the Connector decided that ending "
+                + "a game resets the player's data. Nobody decided it; the two lines just happen to "
+                + "sit together.");
+            painter.Paragraph(
+                "GameOver is an announcement, but what follows it - reset the data, close the "
+                + "panel, disable input - is a decision, and it belongs where the deciding happens: "
+                + "dispatched from the Command that made it, or as sequence steps under that "
+                + "Command in its own module's Context.");
+            painter.Note(
+                "About to write a second Connect from the same signal? Ask whether those two things "
+                + "are one consequence of one decision. If they are, they belong in that module's "
+                + "sequence, and the Connector carries one line to it.");
+
+            painter.Space();
             painter.Note(
                 "Failing to get a holder is the report that the module's Root is not in the scene. "
                 + "Put the Root back rather than binding around it.");
@@ -165,6 +186,8 @@ namespace FlowIoC.Editor.Help.Pages
         private void DrawRules(HelpPainter painter)
         {
             painter.Bullet("A module never reaches into another module. The only crossing point is a Connector.");
+            painter.Bullet("A Connector translates, it does not decide. One announcement joined to one order is a crossing.");
+            painter.Bullet("A list of consequences hung off one announcement is a flow, and a flow belongs in the Context that owns it.");
             painter.Bullet("A Connector gets signal holders with GetInstance in Setup. It never binds them.");
             painter.Bullet("A Connector sub-context is listed on the Connector Root and nowhere else.");
             painter.Bullet("A Connector reaches a module through Modules.Hero.Signals, never through Modules.Hero or Modules.Hero.Shared.");
