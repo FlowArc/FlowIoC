@@ -28,7 +28,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string MODULE_LABEL = "Module:";
         private const float ADD_BUTTON_HEIGHT = 40;
 
-        private static readonly Color BUTTON_COLOR_IDLE = Color.cyan;
 
         private readonly DirectoryStructureConfigProvider _configProvider = new DirectoryStructureConfigProvider();
         private readonly ModuleAssetPathResolver _pathResolver = new ModuleAssetPathResolver();
@@ -135,7 +134,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayAddButton()
         {
-            GUI.backgroundColor = BUTTON_COLOR_IDLE;
+            GUI.backgroundColor = new ModulePanelTheme().Action;
             EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(_selectedModulePath));
 
             if (GUILayout.Button(ADD_BUTTON, GUILayout.Height(ADD_BUTTON_HEIGHT)))

@@ -31,7 +31,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string ISTEST_LABEL = "IsTest: ";
         private const float VIEW_BUTTON_HEIGHT = 40;
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
-        private static readonly Color BUTTON_COLOR_IDLE = Color.cyan;
 
         private static string _viewName;
         private string _parentModulePath;
@@ -186,7 +185,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayCreateViewButton()
         {
-            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : BUTTON_COLOR_IDLE;
+            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
             EditorGUI.BeginDisabledGroup(_generationState == GenerationState.InProgress || string.IsNullOrEmpty(_parentModulePath));
 
             if (GUILayout.Button(CREATE_VIEW_BUTTON, GUILayout.Height(VIEW_BUTTON_HEIGHT)))

@@ -34,7 +34,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
         private const float COMMAND_BUTTON_HEIGHT = 40;
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
-        private static readonly Color BUTTON_COLOR_IDLE = Color.cyan;
 
         private static string _commandName;
         private static string _signalClassName;
@@ -204,7 +203,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayCreateCommandButton()
         {
-            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : BUTTON_COLOR_IDLE;
+            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
             EditorGUI.BeginDisabledGroup(_generationState == GenerationState.InProgress || string.IsNullOrEmpty(_parentModulePath));
 
             if (GUILayout.Button(CREATE_COMMAND_BUTTON, GUILayout.Height(COMMAND_BUTTON_HEIGHT)))
