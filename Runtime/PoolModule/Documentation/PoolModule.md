@@ -140,12 +140,19 @@ var bullet = _poolService.Get<Bullet>("bullet_basic", _projectileRoot);
 IPoolableItem item = _poolService.Get("vfx_hit", _vfxRoot);
 
 // With a callback, for items that may load asynchronously.
-_poolService.Get<Enemy>("enemy_grunt", _enemyRoot, spawned => spawned.SetActive(true));
+_poolService.Get<Enemy>("enemy_grunt", _enemyRoot, spawned => spawned.Aim(_player));
 ```
 
 The `parent` argument is where the object is parented on checkout. Keeping an
 "active" root separate from the pool's own storage root makes the hierarchy readable
-while the game runs.
+while the game runs. It is applied whether or not you pass one: a recycled object is
+sitting under the pool's own `[Pools]` root, and a null parent means the scene root
+rather than "leave it where it is".
+
+**The pool activates what it hands out.** An object is deactivated on its way into
+the pool and activated again on checkout, so `Get` answers with a live object whether
+the instance was recycled or built on the spot. Do not call `SetActive(true)` on it
+yourself; reset its state in `OnGetFromPool()` instead.
 
 Returning happens three ways:
 
