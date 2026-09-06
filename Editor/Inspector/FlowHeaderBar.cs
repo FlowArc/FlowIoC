@@ -68,6 +68,18 @@ namespace FlowIoC.Editor.Inspector
         }
 
         /// <summary>
+        /// The bar for a FlowIoC tool - the generator windows. They are not components and root
+        /// nothing, so they wear FlowIoC's own colour rather than borrowing a role's; borrowing one
+        /// is what made every generator window change colour the day the plain Root's fill did.
+        /// </summary>
+        public void DrawWindow(string title, string module, string label, string actionLabel,
+            Action onAction, string helpPage = null)
+        {
+            DrawWindow(_palette.ChromeDeep, _palette.Chrome(EditorGUIUtility.isProSkin), title, module, label,
+                actionLabel, onAction, helpPage);
+        }
+
+        /// <summary>
         /// The bar for a window that wears a colour no role owns - Module Scanner is green because
         /// the rows under it are, and no FlowRole is about a module's health.
         /// </summary>

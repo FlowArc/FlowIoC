@@ -37,6 +37,20 @@ namespace FlowIoC.Editor.Inspector
             Add(FlowRole.Test, "#5A5A5A", "#8A8A8A");
         }
 
+        /// <summary>
+        /// FlowIoC's own colour, owned by no role. The generator windows and the Help banner are
+        /// tools rather than things in the project, so they wear this instead of borrowing a role's
+        /// fill - which is what they used to do, and what made them change colour the day the plain
+        /// Root's did. It is kept clear of every role that can appear beside it in Create Module's
+        /// Root preview, and clear of the red and the amber that already mean an error and a
+        /// warning.
+        /// </summary>
+        public Color ChromeDeep => Parse("#6E3364");
+
+        public Color ChromeVivid => Parse("#C070B8");
+
+        public Color Chrome(bool proSkin) => proSkin ? ChromeVivid : ChromeDeep;
+
         /// <summary>The bar's fill. White title text is legible on every one of these.</summary>
         public Color Deep(FlowRole role) => _deep[role];
 

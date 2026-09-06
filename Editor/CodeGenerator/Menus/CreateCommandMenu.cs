@@ -86,7 +86,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void OnGUI()
         {
-            _bar.DrawWindow(FlowRole.Root, "Create Command", "FlowIoC", "One unit of work, bound to a signal",
+            _bar.DrawWindow("Create Command", "FlowIoC", "One unit of work, bound to a signal",
                 null, null, "Creating a Module");
 
             EditorGUILayout.BeginVertical("box");

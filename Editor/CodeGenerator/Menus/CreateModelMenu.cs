@@ -81,7 +81,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void OnGUI()
         {
-            _bar.DrawWindow(FlowRole.Root, "Create Model", "FlowIoC", "An interface and the class behind it",
+            _bar.DrawWindow("Create Model", "FlowIoC", "An interface and the class behind it",
                 null, null, "Creating a Module");
 
             EditorGUILayout.BeginVertical("box");

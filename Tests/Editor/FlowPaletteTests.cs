@@ -47,6 +47,38 @@ namespace FlowIoC.Tests
             }
         }
 
+        /// <summary>
+        /// The chrome is owned by no role, so the three loops above never reach it. It carries a
+        /// window title and sits on both skins exactly as a role's fill does, and it has to clear
+        /// the same bars.
+        /// </summary>
+        [Test]
+        public void The_chrome_reads_everywhere_a_roles_fill_does()
+        {
+            var palette = new FlowPalette();
+
+            Assert.GreaterOrEqual(Contrast(palette.ChromeDeep, Color.white), 4.5f,
+                "chrome deep fails white title contrast");
+            Assert.GreaterOrEqual(Contrast(palette.ChromeVivid, DarkSkin), 3f,
+                "chrome vivid disappears on the dark skin");
+            Assert.GreaterOrEqual(Contrast(palette.ChromeDeep, LightSkin), 3f,
+                "chrome deep disappears on the light skin");
+        }
+
+        /// <summary>
+        /// The generator windows wear the chrome because they are tools rather than roles. Reading
+        /// it off a role is what made every one of them change colour the day the plain Root's fill
+        /// did, so the two are asserted to be different things.
+        /// </summary>
+        [Test]
+        public void The_chrome_is_no_roles_colour()
+        {
+            var palette = new FlowPalette();
+
+            foreach (FlowRole role in Enum.GetValues(typeof(FlowRole)))
+                Assert.AreNotEqual(palette.Deep(role), palette.ChromeDeep, $"the chrome is {role}'s fill");
+        }
+
         [Test]
         public void Accent_follows_the_skin()
         {
