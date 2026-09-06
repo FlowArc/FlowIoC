@@ -68,14 +68,26 @@ namespace FlowIoC.ScreenModule.Model.Runtime
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenRuntimeModel][AddToPassivePool] {screenBody.Data.ScreenType.Name}");
 
-            screenBody.Data.AddState(ScreenState.InPool);
-
             (int, Type) key = (screenBody.Data.ManagerId, screenBody.Data.ScreenType);
 
-            if (!_passiveScreens.ContainsKey(key))
-                _passiveScreens[key] = new List<IScreenBody>();
+            if (!_passiveScreens.TryGetValue(key, out List<IScreenBody> pooled))
+            {
+                pooled = new List<IScreenBody>();
+                _passiveScreens[key] = pooled;
+            }
 
-            _passiveScreens[key].Add(screenBody);
+            // A screen shown twice used to be told to hide twice, and each hide parked it - so the
+            // same instance sat in the pool twice and was opened as two screens at once.
+            if (pooled.Contains(screenBody))
+            {
+                FlowLogger.LogWarning(SystemLogType.Screen,
+                    $"[ScreenRuntimeModel.AddToPassivePool] {screenBody.Data.ScreenType.Name} is already pooled at manager {screenBody.Data.ManagerId}. Skipping duplicate return.");
+                return;
+            }
+
+            screenBody.Data.AddState(ScreenState.InPool);
+
+            pooled.Add(screenBody);
             screenBody.transform.SetParent(_poolParent);
             //screenBody.gameObject.SetActive(false);
         }
@@ -130,20 +142,41 @@ namespace FlowIoC.ScreenModule.Model.Runtime
             if (!_activeTagScreens[managerId].ContainsKey(screenBody.Data.Tag))
                 _activeTagScreens[managerId].Add(screenBody.Data.Tag, new List<IScreenBody>());
 
-            _activeTagScreens[managerId][screenBody.Data.Tag].Add(screenBody);
+            List<IScreenBody> tagged = _activeTagScreens[managerId][screenBody.Data.Tag];
+
+            // The other two registers are keyed, so showing a screen twice overwrites its entry.
+            // This one is a list and would hold the same screen twice.
+            if (!tagged.Contains(screenBody))
+                tagged.Add(screenBody);
         }
 
+        /// <summary>
+        /// Takes a screen out of the three active registers. Each one is checked for this screen
+        /// rather than for its slot: a screen force-opened over another takes that other's layer,
+        /// and the one it replaced closing later would otherwise clear the layer out from under
+        /// the screen now standing in it.
+        /// </summary>
         public void RemoveFromActivePools(IScreenBody screenBody)
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenRuntimeModel][RemoveFromActivePools] {screenBody.Data.ScreenType.Name}");
 
             screenBody.Data.RemoveState(ScreenState.InUse);
 
-            var managerId = screenBody.Data.ManagerId;
+            int managerId = screenBody.Data.ManagerId;
 
-            _activeScreens[managerId].Remove(screenBody.Data.ScreenType);
-            _activeLayerScreens[managerId].Remove(screenBody.Data.LayerIndex);
-            _activeTagScreens[managerId][screenBody.Data.Tag].Remove(screenBody);
+            if (_activeScreens.TryGetValue(managerId, out Dictionary<Type, IScreenBody> byType)
+                && byType.TryGetValue(screenBody.Data.ScreenType, out IScreenBody registered)
+                && registered == screenBody)
+                byType.Remove(screenBody.Data.ScreenType);
+
+            if (_activeLayerScreens.TryGetValue(managerId, out Dictionary<int, IScreenBody> byLayer)
+                && byLayer.TryGetValue(screenBody.Data.LayerIndex, out IScreenBody inLayer)
+                && inLayer == screenBody)
+                byLayer.Remove(screenBody.Data.LayerIndex);
+
+            if (_activeTagScreens.TryGetValue(managerId, out Dictionary<ScreenTag, List<IScreenBody>> byTag)
+                && byTag.TryGetValue(screenBody.Data.Tag, out List<IScreenBody> tagged))
+                tagged.Remove(screenBody);
         }
 
         public bool IsLayerFull(int layerIndex, int managerId, out IScreenBody screenBody)
@@ -183,13 +216,23 @@ namespace FlowIoC.ScreenModule.Model.Runtime
             return list != null;
         }
 
+        /// <summary>
+        /// A copy, the way <see cref="GetActiveManagerScreens"/> already answered. Hiding the
+        /// screens of a tag takes each one out of this very list, and handing back the live one
+        /// meant the caller was removing from the collection it was walking.
+        /// </summary>
         public bool GetActiveTagScreens(ScreenTag tag, int managerId, out List<IScreenBody> list)
         {
             list = null;
-            if (!_activeTagScreens.ContainsKey(managerId)) return false;
-            if (!_activeTagScreens[managerId].ContainsKey(tag)) return false;
-            list = _activeTagScreens[managerId][tag];
-            return list != null;
+
+            if (!_activeTagScreens.TryGetValue(managerId, out Dictionary<ScreenTag, List<IScreenBody>> byTag))
+                return false;
+
+            if (!byTag.TryGetValue(tag, out List<IScreenBody> tagged))
+                return false;
+
+            list = new List<IScreenBody>(tagged);
+            return true;
         }
     }
 }
