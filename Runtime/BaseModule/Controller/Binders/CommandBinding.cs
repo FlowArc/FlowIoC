@@ -19,7 +19,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             Context = context;
         }
 
-        public ICommandBinding ToSequence<T>() where T : CommandBody
+        public ICommandBinding ToSequence<T>() where T : CommandBody, new()
         {
             _steps.Add(new CommandStepVO
             {
@@ -29,7 +29,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             return this;
         }
 
-        public ICommandBinding ToSequence<T>(params object[] parameters) where T : CommandBody
+        public ICommandBinding ToSequence<T>(params object[] parameters) where T : CommandBody, new()
         {
             _steps.Add(new CommandStepVO
             {
@@ -40,7 +40,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             return this;
         }
 
-        public ICommandBinding ToParallel<T>() where T : CommandBody
+        public ICommandBinding ToParallel<T>() where T : CommandBody, new()
         {
             _steps.Add(new CommandStepVO
             {
@@ -50,7 +50,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             return this;
         }
 
-        public ICommandBinding ToParallel<T>(params object[] parameters) where T : CommandBody
+        public ICommandBinding ToParallel<T>(params object[] parameters) where T : CommandBody, new()
         {
             _steps.Add(new CommandStepVO
             {

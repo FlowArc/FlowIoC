@@ -213,7 +213,14 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             ICommandBinding groupBinding = _commandBinder.GetBinding(step.GroupKey);
             if (groupBinding == null)
             {
-                FlowLogger.LogError(SystemLogType.CommandOperation, $"GroupKey '{step.GroupKey.Name}' could not be found in any context.");
+                FlowLogger.LogError(SystemLogType.CommandOperation,
+                    $"GroupKey '{step.GroupKey.Name}' could not be found in any context. The step is skipped.");
+
+                // Counted and then closed, so the steps behind it still run. Returning here left
+                // the step neither started nor finished: the sequence waited for a sub-group that
+                // was never going to report, and the resolver never went back to the pool.
+                _completionCount++;
+                HandleStepCompletion(step, null);
                 return;
             }
 

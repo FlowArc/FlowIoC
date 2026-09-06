@@ -96,6 +96,12 @@ namespace FlowIoC.Editor.Help.Pages
                 "The signal declares what it carries. Each [SignalParam] property in the command is "
                 + "filled from that payload, and the property is what is filled - a field of the "
                 + "same name is skipped without a word.");
+            painter.Note(
+                "Important: the payload does not reach Execute. Execute's parameters have exactly "
+                + "two sources - the arguments the binding gave the step, ToSequence<T>(...), and "
+                + "what the command before it passed to Release(). A Command<int> bound to a "
+                + "Signal<int> does not receive the dispatched number: it reports \"Execute "
+                + "signature mismatch\" and does not run. Read the payload with [SignalParam].");
             painter.Code(
                 "public class PlayerSignalsIncoming\n"
                 + "{\n"
