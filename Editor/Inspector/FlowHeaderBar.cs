@@ -73,10 +73,11 @@ namespace FlowIoC.Editor.Inspector
         /// is what made every generator window change colour the day the plain Root's fill did.
         /// </summary>
         public void DrawWindow(string title, string module, string label, string actionLabel,
-            Action onAction, string helpPage = null)
+            Action onAction, string helpPage = null, string secondActionLabel = null,
+            Action onSecondAction = null)
         {
             DrawWindow(_palette.ChromeDeep, _palette.Chrome(EditorGUIUtility.isProSkin), title, module, label,
-                actionLabel, onAction, helpPage);
+                actionLabel, onAction, helpPage, secondActionLabel, onSecondAction);
         }
 
         /// <summary>
@@ -84,21 +85,36 @@ namespace FlowIoC.Editor.Inspector
         /// the rows under it are, and no FlowRole is about a module's health.
         /// </summary>
         public void DrawWindow(Color deep, Color accent, string title, string module, string label,
-            string actionLabel, Action onAction, string helpPage)
+            string actionLabel, Action onAction, string helpPage, string secondActionLabel = null,
+            Action onSecondAction = null)
         {
             Rect bar = DrawFrame(deep, accent, title, module, label);
 
             float right = DrawHelpPageIcon(bar, helpPage);
 
-            if (!string.IsNullOrEmpty(actionLabel) && onAction != null)
-            {
-                var actionRect = new Rect(right - ActionWidth, bar.y + 6f, ActionWidth, ActionHeight);
-
-                if (GUI.Button(actionRect, actionLabel, EditorStyles.miniButton))
-                    onAction();
-            }
+            right = DrawAction(bar, right, actionLabel, onAction);
+            DrawAction(bar, right, secondActionLabel, onSecondAction);
 
             GUILayout.Space(2f);
+        }
+
+        /// <summary>
+        /// One of the bar's buttons, laid out from the right. A window with two of them - Folder
+        /// Painter refreshes and selects its asset - reads right to left in the order they are
+        /// passed, so the first one named is the one nearest the edge.
+        /// </summary>
+        private float DrawAction(Rect bar, float right, string label, Action onAction)
+        {
+            if (string.IsNullOrEmpty(label) || onAction == null)
+                return right;
+
+            float width = Mathf.Max(ActionWidth, EditorStyles.miniButton.CalcSize(new GUIContent(label)).x + 12f);
+            var rect = new Rect(right - width, bar.y + 6f, width, ActionHeight);
+
+            if (GUI.Button(rect, label, EditorStyles.miniButton))
+                onAction();
+
+            return rect.x - 4f;
         }
 
         private Rect DrawFrame(FlowRole role, string title, string module, string label, out Color accent)

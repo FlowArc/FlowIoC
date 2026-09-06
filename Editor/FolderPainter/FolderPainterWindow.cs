@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Inspector;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,6 +27,9 @@ namespace FlowIoC.Editor.FolderPainter
         private readonly GUIContent _folderRulesLabel = new GUIContent(
             "Folder Rules",
             "Colors one specific folder asset. Takes priority over the path rules.");
+
+        private readonly FlowRowPainter _painter = new FlowRowPainter();
+        private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
         private ED_FolderPainter _config;
         private SerializedObject _serializedConfig;
@@ -63,7 +67,8 @@ namespace FlowIoC.Editor.FolderPainter
 
             _serializedConfig.Update();
 
-            DrawToolbar(_serializedConfig.FindProperty("Enabled"));
+            _bar.DrawWindow("Folder Painter", "FlowIoC", "Colours the Project window's folders",
+                "Refresh", RepaintFolders, "Folder Painter", "Select Asset", SelectConfig);
 
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
             EditorGUILayout.PropertyField(_serializedConfig.FindProperty("PathRules"), _pathRulesLabel, true);
@@ -71,30 +76,42 @@ namespace FlowIoC.Editor.FolderPainter
             EditorGUILayout.PropertyField(_serializedConfig.FindProperty("FolderRules"), _folderRulesLabel, true);
             EditorGUILayout.EndScrollView();
 
+            DrawEnabled(_serializedConfig.FindProperty("Enabled"));
+
             if (_serializedConfig.ApplyModifiedProperties()) RepaintFolders();
         }
 
-        private void DrawToolbar(SerializedProperty enabled)
+        /// <summary>
+        /// The switch, under the rules it governs, where the other windows keep their action. It is
+        /// a toggle rather than an action, so it says which way it is set rather than what pressing
+        /// it would do: a tick and the row green while the painter is on, a warning and the amber
+        /// while it is off - because rules that are written and not applied is the state worth
+        /// noticing.
+        /// </summary>
+        private void DrawEnabled(SerializedProperty enabled)
         {
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
-                EditorGUI.BeginChangeCheck();
-                bool value = GUILayout.Toggle(enabled.boolValue, "Enabled", EditorStyles.toolbarButton, GUILayout.Width(70));
-                if (EditorGUI.EndChangeCheck()) enabled.boolValue = value;
+            bool on = enabled.boolValue;
+            var content = new GUIContent(
+                on ? " Enabled" : " Disabled",
+                EditorGUIUtility.IconContent(on ? "TestPassed" : "console.warnicon.sml").image,
+                on
+                    ? "The folder colours are being applied. Click to stop painting."
+                    : "The rules below are not being applied. Click to start painting.");
 
-                GUILayout.FlexibleSpace();
+            Color background = GUI.backgroundColor;
+            GUI.backgroundColor = on ? _painter.Ok : _painter.Warn;
 
-                if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(60)))
-                {
-                    RepaintFolders();
-                }
+            EditorGUI.BeginChangeCheck();
+            bool value = GUILayout.Toggle(on, content, _painter.ActionButton, GUILayout.ExpandWidth(true));
+            if (EditorGUI.EndChangeCheck()) enabled.boolValue = value;
 
-                if (GUILayout.Button("Select Asset", EditorStyles.toolbarButton, GUILayout.Width(90)))
-                {
-                    Selection.activeObject = _config;
-                    EditorGUIUtility.PingObject(_config);
-                }
-            }
+            GUI.backgroundColor = background;
+        }
+
+        private void SelectConfig()
+        {
+            Selection.activeObject = _config;
+            EditorGUIUtility.PingObject(_config);
         }
 
         private void DrawMissingConfig()
