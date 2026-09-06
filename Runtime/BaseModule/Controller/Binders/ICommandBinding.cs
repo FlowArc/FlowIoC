@@ -11,10 +11,10 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
         IContext Context { get; }
 
-        ICommandBinding ToSequence<T>() where T : ICommandBody;
-        ICommandBinding ToSequence<T>(params object[] parameters) where T : ICommandBody;
-        ICommandBinding ToParallel<T>() where T : ICommandBody;
-        ICommandBinding ToParallel<T>(params object[] parameters) where T : ICommandBody;
+        ICommandBinding ToSequence<T>() where T : CommandBody;
+        ICommandBinding ToSequence<T>(params object[] parameters) where T : CommandBody;
+        ICommandBinding ToParallel<T>() where T : CommandBody;
+        ICommandBinding ToParallel<T>(params object[] parameters) where T : CommandBody;
         ICommandBinding ToGroupAsSequence(ISignalBody key, params object[] signalParameters);
         ICommandBinding ToGroupAsParallel(ISignalBody key, params object[] signalParameters);
 

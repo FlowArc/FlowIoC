@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using FlowIoC.BaseModule.Controller.Binders;
 using FlowIoC.BaseModule.Injectable.Utils;
 using FlowIoC.BaseModule.Signals;
@@ -30,8 +28,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         private object[] _signalParameters;
         private List<CommandStepVO> _steps;
-        private Dictionary<Guid, CommandStepVO> _stepsDictionary;
-        private Dictionary<ICommandBody, Guid> _retainedCommands;
+
+        // Retained commands, each against the index of the step that is waiting on it. The
+        // dictionary belongs to the resolver rather than to a run, because the resolver is pooled
+        // and allocating a fresh one per dispatch gave back half of what pooling saved.
+        private readonly Dictionary<ICommandBody, int> _retainedCommands = new();
+
         private int _executionIndex;
         private int _completionCount;
         private bool _isDisposed;
@@ -47,29 +49,37 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _signalParameters = signalParameters;
 
             _steps = _commandBinding.GetCommandSteps();
-            _stepsDictionary = new Dictionary<Guid, CommandStepVO>(_steps.Count);
-            _retainedCommands = new Dictionary<ICommandBody, Guid>();
-
-            for (int i = 0; i < _steps.Count; i++)
-                _stepsDictionary[_steps[i].Id] = _steps[i];
+            _retainedCommands.Clear();
 
             _executionIndex = 0;
             _completionCount = 0;
             _isDisposed = false;
             IsHideLog = commandBinding.Key is ISignalBody signal && signal.HideCommandLog;
 
-            CheckExecuteNextStep();
+            CheckExecuteNextStep(null);
         }
 
+        /// <summary>
+        /// Ends the run and hands back what it still holds. A command retained when the group is
+        /// stopped has no one left to release it, so the pool would never see it again - it is
+        /// returned here instead, and the empty dictionary is what tells a late Release that its
+        /// group is gone.
+        /// </summary>
         public void Dispose()
         {
             if (_isDisposed) return;
             _isDisposed = true;
 
+            if (_retainedCommands.Count > 0)
+            {
+                foreach (KeyValuePair<ICommandBody, int> retained in _retainedCommands)
+                    _commandBinder.ReturnCommandToPool(retained.Key);
+
+                _retainedCommands.Clear();
+            }
+
             GroupExecutionFinished = null;
             _steps = null;
-            _stepsDictionary?.Clear();
-            _retainedCommands?.Clear();
             _signalParameters = null;
             _executionIndex = 0;
             _completionCount = 0;
@@ -84,23 +94,25 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         {
             if (!command.IsRetain)
             {
-                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call manual RELEASE! Command: {command.GetType().Name}");
+                FlowLogger.LogError(SystemLogType.CommandOperation,
+                    $"Command must be retained to call manual RELEASE! Command: {command.GetType().Name}");
                 return;
             }
 
-            Guid stepId = Guid.Empty;
-            bool wasTracked = _retainedCommands != null && _retainedCommands.TryGetValue(command, out stepId);
-            if (wasTracked)
+            if (!_retainedCommands.Remove(command, out int stepIndex))
             {
-                _retainedCommands.Remove(command);
+                // Nothing is waiting on this command any more - its group finished or was stopped,
+                // and Dispose already handed it back. Returning it a second time would put the same
+                // instance in the pool twice and hand it to two dispatches at once.
+                FlowLogger.LogWarning(SystemLogType.CommandOperation,
+                    $"RELEASE arrived after the group ended. Command: {command.GetType().Name}");
+                return;
             }
 
             _commandBinder.ReturnCommandToPool(command);
 
-            if (!_isDisposed && wasTracked && _stepsDictionary != null && _stepsDictionary.TryGetValue(stepId, out var step))
-            {
-                HandleStepCompletion(step, commandParameters);
-            }
+            if (!_isDisposed && stepIndex >= 0 && stepIndex < _steps.Count)
+                HandleStepCompletion(_steps[stepIndex], commandParameters);
         }
 
         public void StopCommand(ICommandBody command)
@@ -110,30 +122,32 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {command.GetType().Name}");
                 return;
             }
-            
+
             if (_isDisposed) return;
 
-            Guid stepId = Guid.Empty;
-            bool wasTracked = _retainedCommands != null && _retainedCommands.TryGetValue(command, out stepId);
-            if (wasTracked)
+            if (!_retainedCommands.Remove(command, out int stepIndex))
             {
-                _retainedCommands.Remove(command);
+                FlowLogger.LogWarning(SystemLogType.CommandOperation,
+                    $"STOP arrived after the group ended. Command: {command.GetType().Name}");
+                return;
             }
 
             _commandBinder.ReturnCommandToPool(command);
 
-            if (wasTracked && _stepsDictionary != null && _stepsDictionary.TryGetValue(stepId, out var step))
+            if (stepIndex < 0 || stepIndex >= _steps.Count)
+                return;
+
+            CommandStepVO step = _steps[stepIndex];
+
+            if (step.ExecutionType == CommandExecutionType.Parallel)
             {
-                if (step.ExecutionType == CommandExecutionType.Parallel)
-                {
-                    _completionCount--;
-                    if (_completionCount == 0)
-                        CompleteGroupExecution();
-                }
-                else
-                {
+                _completionCount--;
+                if (_completionCount == 0)
                     CompleteGroupExecution();
-                }
+            }
+            else
+            {
+                CompleteGroupExecution();
             }
         }
 
@@ -141,7 +155,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         #region Execution Flow
 
-        private void CheckExecuteNextStep(params object[] commandParameters)
+        private void CheckExecuteNextStep(object[] commandParameters)
         {
             if (_isDisposed) return;
 
@@ -152,12 +166,13 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
-            var step = _steps[_executionIndex++];
+            int stepIndex = _executionIndex++;
+            CommandStepVO step = _steps[stepIndex];
 
             if (step.GroupKey != null)
                 ExecuteGroupStep(step);
             else if (step.CommandType != null)
-                ExecuteCommandStep(step, commandParameters);
+                ExecuteCommandStep(step, stepIndex, commandParameters);
 
             if (step.ExecutionType == CommandExecutionType.Parallel)
                 CheckExecuteNextStep(commandParameters);
@@ -169,7 +184,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 CheckExecuteNextStep(commandParameters);
 
             _completionCount--;
-            if (_completionCount == 0 )
+            if (_completionCount == 0)
                 CompleteGroupExecution();
         }
 
@@ -187,18 +202,18 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         private void ExecuteGroupStep(CommandStepVO step)
         {
-            var groupBinding = _commandBinder.GetBinding(step.GroupKey);
+            ICommandBinding groupBinding = _commandBinder.GetBinding(step.GroupKey);
             if (groupBinding == null)
             {
                 FlowLogger.LogError(SystemLogType.CommandOperation, $"GroupKey '{step.GroupKey.Name}' could not be found in any context.");
                 return;
             }
 
-            var subGroup = _commandBinder.GetAvailableGroup();
+            ICommandGroupResolver subGroup = _commandBinder.GetAvailableGroup();
             _completionCount++;
 
             Action<ICommandGroupResolver> onFinish = null;
-            onFinish = (g) =>
+            onFinish = g =>
             {
                 g.GroupExecutionFinished -= onFinish;
                 _commandBinder.ReturnGroupToPool(g);
@@ -209,25 +224,29 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!step.GroupKey.HideCommandLog)
                 FlowLogger.Log(SystemLogType.CommandOperation, $"Command SubGroup is executed : '{step.GroupKey.Name}'.");
 
-            var parametersToUse = step.SignalParameters?.Length > 0 ? step.SignalParameters : _signalParameters;
+            object[] parametersToUse = step.SignalParameters?.Length > 0 ? step.SignalParameters : _signalParameters;
             subGroup.Initialize(groupBinding, _commandBinder, parametersToUse);
         }
 
-        private void ExecuteCommandStep(CommandStepVO step, object[] commandParameters)
+        private void ExecuteCommandStep(CommandStepVO step, int stepIndex, object[] commandParameters)
         {
-            var command = _commandBinder.GetCommand(step.CommandType);
-            command.CommandGroupResolver = this;
-            
+            CommandBody command = _commandBinder.GetCommand(step.CommandType);
+
+            // Both retain flags belong to this run and to no other. They used to survive in the
+            // pooled instance, so a command that retained once was treated as retained on every
+            // later run and its sequence stopped waiting for a Release nobody would send.
+            command.BeginRun(this);
+
             _commandBinding.Context.InjectCommand(command, _signalParameters);
 
-            _retainedCommands[command] = step.Id;
+            _retainedCommands[command] = stepIndex;
 
             _completionCount++;
 
             if (!_commandBinder.HasHideCommandLog(step.CommandType))
                 FlowLogger.Log(SystemLogType.Command, $"[Command] Execute as {step.ExecutionType.ToString()} : {step.CommandType.Name}");
-            
-            InvokeCommandExecute(command, step.CommandParameters ?? commandParameters);
+
+            command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());
 
             if (!command.HasRetain)
             {
@@ -235,77 +254,6 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 _commandBinder.ReturnCommandToPool(command);
                 HandleStepCompletion(step, null);
             }
-        }
-
-        private void InvokeCommandExecute(ICommandBody command, object[] parameters)
-        {
-            parameters ??= Array.Empty<object>();
-
-            var type = command.GetType();
-            var method = type.GetMethod("Execute", BindingFlags.Public | BindingFlags.Instance);//.Where(m => m.Name == "Execute").ToArray();
-
-            // if (methods.Length == 0)
-            // {
-            //     FlowConsoleLogger.LogError(ConsoleLogType.Command, $"No public instance 'Execute' method found on '{type.Name}'.");
-            //     return;
-            // }
-            //
-            if (method == null)
-            {
-                FlowLogger.LogError(SystemLogType.CommandOperation, $"Multiple 'Execute' overloads found on '{type.Name}'. This invoker expects exactly one.");
-                return;
-            }
-            //var method = methods[0];
-            var paramInfos = method.GetParameters();
-
-            bool isParamsArray = paramInfos.Length == 1 &&
-                                 paramInfos[0].GetCustomAttribute<ParamArrayAttribute>() != null &&
-                                 paramInfos[0].ParameterType == typeof(object[]);
-
-            object[] invokeArgs = null;
-
-            if (paramInfos.Length == 0)
-            {
-                invokeArgs = null;
-            }
-            else if (isParamsArray)
-            {
-                invokeArgs = new object[] {parameters};
-            }
-            else
-            {
-                if (paramInfos.Length != parameters.Length)
-                {
-                    var expected = string.Join(", ", paramInfos.Select(p => p.ParameterType.Name));
-                    var actual = string.Join(", ", parameters.Select(p => p?.GetType().Name ?? "null"));
-                    FlowLogger.LogError(SystemLogType.CommandOperation, $"Signature mismatch for Execute. Expected: ({expected}) | Provided: [{actual}]");
-                    return;
-                }
-
-                for (int i = 0; i < paramInfos.Length; i++)
-                {
-                    var pi = paramInfos[i];
-                    var arg = parameters[i];
-
-                    if (arg == null)
-                    {
-                        if (pi.ParameterType.IsValueType && Nullable.GetUnderlyingType(pi.ParameterType) == null)
-                        {
-                            FlowLogger.LogError(SystemLogType.CommandOperation, $"Parameter {i} is null but '{pi.ParameterType.Name}' is non-nullable.");
-                            return;
-                        }
-                    }
-                    else if (!pi.ParameterType.IsInstanceOfType(arg))
-                    {
-                        FlowLogger.LogError(SystemLogType.CommandOperation, $"Type mismatch at parameter {i}. Expected '{pi.ParameterType.Name}', got '{arg.GetType().Name}'.");
-                        return;
-                    }
-                }
-
-                invokeArgs = parameters;
-            }
-            
-            method.Invoke(command, invokeArgs);
         }
 
         #endregion
