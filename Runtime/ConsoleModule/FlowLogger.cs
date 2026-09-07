@@ -27,11 +27,21 @@ namespace FlowIoC.ConsoleModule
 
         private static CD_FlowConsole _settings;
 
+        private static readonly CollapseKeyBuilder CollapseKeys = new();
+
+        /// <summary>
+        /// True while a log of ours is being handed to Unity's console. The editor bridge reads
+        /// it to drop the message Unity hands straight back, so a log that made that round trip
+        /// is recorded once rather than twice.
+        /// </summary>
+        public static bool IsWritingToUnityConsole { get; private set; }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             Logs.Clear();
             _settings = null;
+            IsWritingToUnityConsole = false;
             // OnLogAdded intentionally NOT cleared: the FlowConsole editor window
             // subscribes once in OnEnable and would otherwise silently lose its
             // subscription on every Play entry when domain reload is disabled.
@@ -252,7 +262,19 @@ namespace FlowIoC.ConsoleModule
             AppendLog(log);
 #endif
 
-            Debug.LogError(string.IsNullOrEmpty(unityMessage) ? message : unityMessage, context);
+            // Unlike an ordinary log, an error always reaches Unity's console - it is not gated
+            // on SendLogsToUnityConsole. The flag is raised anyway, because the editor bridge
+            // would otherwise take this back through Application.logMessageReceived and record
+            // the error a second time.
+            IsWritingToUnityConsole = true;
+            try
+            {
+                Debug.LogError(string.IsNullOrEmpty(unityMessage) ? message : unityMessage, context);
+            }
+            finally
+            {
+                IsWritingToUnityConsole = false;
+            }
         }
 
         // ======================== LogLong ========================
@@ -318,6 +340,50 @@ namespace FlowIoC.ConsoleModule
             }
         }
 
+        // ======================== External intake ========================
+
+        /// <summary>
+        /// The door Unity's own logs come in through. It carries no [Conditional] attribute and
+        /// consults no setting, because a developer who turned logging off - or never defined
+        /// ENABLE_LOG - still has to be able to read Unity's console in this window. That is the
+        /// whole promise of Flow Console being the console rather than a second one.
+        /// Only the editor bridge calls it.
+        /// </summary>
+        public static void AddExternalLog(LogSource source, LogType logType, string message,
+            string stackTrace, string filePath, int lineNumber)
+        {
+#if UNITY_EDITOR
+            int channel = source == LogSource.Compiler
+                ? (int) SystemLogType.Compiler
+                : (int) SystemLogType.Unity;
+
+            var now = DateTime.Now;
+            var log = new ConsoleLog
+            {
+                Hour = now.Hour,
+                Minute = now.Minute,
+                Second = now.Second,
+                Millisecond = now.Millisecond,
+                Message = message,
+                LogType = logType,
+                Source = source,
+                LogTypeValue = channel,
+                SystemLogType = (SystemLogType) channel,
+                StackTrace = stackTrace,
+                SourceTrace = stackTrace,
+                SourceFilePath = filePath,
+                SourceLineNumber = lineNumber,
+                Frame = Time.frameCount,
+                Realtime = Time.realtimeSinceStartup
+            };
+
+            if (Settings.TryGetLogType(channel, out var typeInfo))
+                log.LogColor = typeInfo.LogColor;
+
+            AppendLog(log);
+#endif
+        }
+
         // ======================== Internal ========================
 
         [HideInCallstack]
@@ -376,6 +442,9 @@ namespace FlowIoC.ConsoleModule
             else
                 log.SourceTrace = log.StackTrace = NotCaptured;
 
+            log.Frame = Time.frameCount;
+            log.Realtime = Time.realtimeSinceStartup;
+
             return log;
         }
 
@@ -401,6 +470,8 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         private static void AppendLog(ConsoleLog log)
         {
+            log.CollapseKey = CollapseKeys.Build(log.Message, log.StackTrace, log.LogTypeValue);
+
             Logs.Add(log);
             OnLogAdded?.Invoke(log);
 
@@ -416,14 +487,24 @@ namespace FlowIoC.ConsoleModule
         {
             if (!Settings.SendLogsToUnityConsole || !Settings.IsLogTypeVisible(logTypeValue)) return;
 
-            switch (logType)
+            // Raised so the editor bridge can tell this log apart from somebody else's when
+            // Unity hands it straight back through Application.logMessageReceived.
+            IsWritingToUnityConsole = true;
+            try
             {
-                case LogType.Log:
-                    Debug.Log(message);
-                    break;
-                case LogType.Warning:
-                    Debug.LogWarning(message);
-                    break;
+                switch (logType)
+                {
+                    case LogType.Log:
+                        Debug.Log(message);
+                        break;
+                    case LogType.Warning:
+                        Debug.LogWarning(message);
+                        break;
+                }
+            }
+            finally
+            {
+                IsWritingToUnityConsole = false;
             }
         }
 

@@ -467,6 +467,8 @@ namespace FlowIoC.ConsoleModule
                 case SystemLogType.Screen: return new Color(0.3f, 0.8f, 0.8f);
                 case SystemLogType.Pool: return new Color(1f, 0.4f, 0.7f);
                 case SystemLogType.Model: return new Color(0.6f, 1f, 0.6f);
+                case SystemLogType.Unity: return new Color(0.75f, 0.75f, 0.75f);
+                case SystemLogType.Compiler: return new Color(1f, 0.55f, 0.4f);
                 default: return Color.white;
             }
         }
