@@ -43,6 +43,47 @@ namespace FlowIoC.ConsoleModule
             return false;
         }
 
+        /// <summary>
+        /// Reads the "(at Assets/A.cs:22)" a Unity stack frame ends with. It is the only place a
+        /// log taken from Application.logMessageReceived says where it came from, so without this
+        /// double-clicking one of Unity's own messages has nothing to open.
+        /// </summary>
+        public bool TryParseFrame(string traceLine, out string filePath, out int lineNumber)
+        {
+            filePath = null;
+            lineNumber = 0;
+
+            if (string.IsNullOrEmpty(traceLine)) return false;
+
+            int atIndex = traceLine.LastIndexOf("(at ", StringComparison.Ordinal);
+            if (atIndex < 0) return false;
+
+            int closeIndex = traceLine.LastIndexOf(')');
+            if (closeIndex <= atIndex) return false;
+
+            string inside = traceLine.Substring(atIndex + 4, closeIndex - atIndex - 4);
+            int lastColon = inside.LastIndexOf(':');
+            if (lastColon < 0) return false;
+
+            if (!int.TryParse(inside.Substring(lastColon + 1), out lineNumber)) return false;
+
+            filePath = inside.Substring(0, lastColon);
+            return !string.IsNullOrEmpty(filePath);
+        }
+
+        /// <summary>The class name a Unity stack frame starts with, or null.</summary>
+        public string ParseClassName(string traceLine)
+        {
+            if (string.IsNullOrEmpty(traceLine)) return null;
+
+            int colon = traceLine.IndexOf(':');
+            if (colon <= 0) return null;
+
+            string fullName = traceLine.Substring(0, colon);
+            int slash = fullName.IndexOf('/');
+            return slash > 0 ? fullName.Substring(0, slash) : fullName;
+        }
+
         /// <summary>The index of the first frame the game owns, or -1 when there is none.</summary>
         public int FindFirstGameFrame(string[] traceLines)
         {

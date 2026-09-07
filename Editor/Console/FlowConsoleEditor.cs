@@ -59,11 +59,28 @@ namespace FlowIoC.Editor.Console
             (SystemLogType[]) Enum.GetValues(typeof(SystemLogType));
 
         private readonly FlowSourceNavigator _navigator = new();
+        private readonly FlowConsoleState _state = new();
 
         private CD_FlowConsole _settings;
         private GUIStyle _richTextStyle;
         private GUIStyle _detailRichTextStyle;
         private GUIStyle _linkStyle;
+        private GUIStyle _secondLineStyle;
+
+        // Unity's own console icons, fetched once. IconContent is a lookup and a row draws many
+        // times a second.
+        private Texture _infoIcon;
+        private Texture _warningIcon;
+        private Texture _errorIcon;
+        private Texture _infoIconSmall;
+        private Texture _warningIconSmall;
+        private Texture _errorIconSmall;
+
+        /// <summary>
+        /// How many lines of a message a row shows. Unity's console shows two - the message and
+        /// the frame it came from - and that is what this starts on.
+        /// </summary>
+        private int _rowLineCount = 2;
 
         private ConsoleLog _cachedTraceLog;
         private string[] _cachedTraceLines;
@@ -77,6 +94,8 @@ namespace FlowIoC.Editor.Console
         {
             _selectedLog = null;
             InvalidateTraceCache();
+
+            _rowLineCount = _state.RowLineCount;
 
             _logFilter = new Dictionary<LogType, bool>
             {
@@ -112,6 +131,105 @@ namespace FlowIoC.Editor.Console
             _linkStyle.hover.textColor = new Color(0.5f, 0.85f, 1f);
             _linkStyle.active.textColor = new Color(0.2f, 0.6f, 0.9f);
             _linkStyle.wordWrap = false;
+
+            // Unity ships each console icon at two sizes. Scaling the large one down to 14px is
+            // what made the shapes come out ragged, so each is drawn at the size it was authored
+            // for: the small one on a one-line row, the large one on a two-line row.
+            _secondLineStyle = new GUIStyle();
+            _secondLineStyle.richText = false;
+            _secondLineStyle.wordWrap = false;
+            _secondLineStyle.clipping = TextClipping.Clip;
+            _secondLineStyle.fontSize = 10;
+            _secondLineStyle.normal.textColor = new Color(0.65f, 0.65f, 0.65f);
+
+            _infoIcon = EditorGUIUtility.IconContent("console.infoicon").image;
+            _warningIcon = EditorGUIUtility.IconContent("console.warnicon").image;
+            _errorIcon = EditorGUIUtility.IconContent("console.erroricon").image;
+
+            _infoIconSmall = EditorGUIUtility.IconContent("console.infoicon.sml").image;
+            _warningIconSmall = EditorGUIUtility.IconContent("console.warnicon.sml").image;
+            _errorIconSmall = EditorGUIUtility.IconContent("console.erroricon.sml").image;
+        }
+
+        /// <summary>
+        /// Why a double-click went nowhere. Nearly always the capture setting rather than a
+        /// missing file, so the answer names the switch that fixes it.
+        /// </summary>
+        private string NoSourceHint()
+        {
+            return _settings.StackTraceCapture == FlowStackTraceCapture.Always
+                ? "No source was found for this log."
+                : "This log captured no source.\nRaise Source in the toolbar to Always.";
+        }
+
+        /// <summary>
+        /// What each capture setting costs, said where it is chosen. Always is what makes an
+        /// ordinary log clickable, and it is also the most expensive thing the console does.
+        /// </summary>
+        private static string CaptureLabel(FlowStackTraceCapture capture)
+        {
+            switch (capture)
+            {
+                case FlowStackTraceCapture.Never: return "Never  ·  cheapest, nothing is clickable";
+                case FlowStackTraceCapture.WarningsAndErrors: return "Warnings and errors  ·  the default";
+                default: return "Always  ·  every log clickable, costs the most";
+            }
+        }
+
+        /// <summary>
+        /// The first line of a message. A row is one height for every log, so a message carrying
+        /// newlines is read in the detail panel rather than pushing the rows below it off screen.
+        /// </summary>
+        private static string LineOf(string message, int index)
+        {
+            if (string.IsNullOrEmpty(message)) return index == 0 ? string.Empty : null;
+
+            int start = 0;
+
+            for (int i = 0; i < index; i++)
+            {
+                int next = message.IndexOf('\n', start);
+                if (next < 0) return null;
+                start = next + 1;
+            }
+
+            int end = message.IndexOf('\n', start);
+            return end < 0 ? message.Substring(start) : message.Substring(start, end - start);
+        }
+
+        /// <summary>
+        /// What a two-line row says underneath the message: where the log came from, or the
+        /// channel when nothing was captured. Never left blank, because an empty second line
+        /// reads as a rendering fault rather than as missing information.
+        /// </summary>
+        private static string SecondLineFor(ConsoleLog log)
+        {
+            if (!string.IsNullOrEmpty(log.SourceFilePath))
+                return Path.GetFileName(log.SourceFilePath) + ":" + log.SourceLineNumber;
+
+            if (!string.IsNullOrEmpty(log.BlameTypeName))
+                return log.BlameTypeName;
+
+            if (!string.IsNullOrEmpty(log.SourceClassName))
+                return log.SourceClassName;
+
+            // Said on the row rather than discovered by double-clicking it and getting nothing.
+            // Ordinary logs capture no source by default, because working one out builds the whole
+            // managed stack as a string and the framework writes a log per signal and command.
+            if (FlowLogger.Settings.StackTraceCapture != FlowStackTraceCapture.Always)
+                return log.SystemLogType + "  ·  source not captured";
+
+            return log.SystemLogType.ToString();
+        }
+
+        private Texture IconFor(LogType logType, bool small)
+        {
+            switch (logType)
+            {
+                case LogType.Warning: return small ? _warningIconSmall : _warningIcon;
+                case LogType.Log: return small ? _infoIconSmall : _infoIcon;
+                default: return small ? _errorIconSmall : _errorIcon;
+            }
         }
 
         private void OnDisable()
@@ -181,6 +299,50 @@ namespace FlowIoC.Editor.Console
             }
 
             EditorGUI.EndDisabledGroup();
+
+            if (GUILayout.Button(_rowLineCount + " line" + (_rowLineCount == 1 ? "" : "s"),
+                    EditorStyles.toolbarDropDown, GUILayout.Width(60)))
+            {
+                var menu = new GenericMenu();
+
+                for (int lines = 1; lines <= 3; lines++)
+                {
+                    int chosen = lines;
+                    menu.AddItem(new GUIContent(lines + " line" + (lines == 1 ? "" : "s")),
+                        _rowLineCount == lines,
+                        () =>
+                        {
+                            _rowLineCount = chosen;
+                            _state.RowLineCount = chosen;
+                            _logsDirty = true;
+                            _needsRepaint = true;
+                        });
+                }
+
+                menu.ShowAsContext();
+            }
+
+            // The setting that decides whether double-clicking a row can go anywhere. It lives in
+            // the settings asset, but it is raised and lowered while following one flow, so it
+            // belongs where the flow is being read rather than three windows away.
+            FlowStackTraceCapture capture = _settings.StackTraceCapture;
+            if (GUILayout.Button("Source: " + capture, EditorStyles.toolbarDropDown, GUILayout.Width(150)))
+            {
+                var menu = new GenericMenu();
+
+                foreach (FlowStackTraceCapture value in Enum.GetValues(typeof(FlowStackTraceCapture)))
+                {
+                    FlowStackTraceCapture chosen = value;
+                    menu.AddItem(new GUIContent(CaptureLabel(value)), capture == value, () =>
+                    {
+                        _settings.StackTraceCapture = chosen;
+                        EditorUtility.SetDirty(_settings);
+                        _needsRepaint = true;
+                    });
+                }
+
+                menu.ShowAsContext();
+            }
 
             EditorGUILayout.EndHorizontal();
         }
@@ -315,7 +477,7 @@ namespace FlowIoC.Editor.Console
 
                 for (int i = firstVisible; i <= lastVisible; i++)
                 {
-                    LogGUI(_cachedVisibleLogs[i], _cachedLogHeights[i]);
+                    LogGUI(_cachedVisibleLogs[i], _cachedLogHeights[i], i);
                 }
 
                 float spaceAfter = _cumulativeHeights[totalCount] - _cumulativeHeights[lastVisible + 1];
@@ -452,40 +614,85 @@ namespace FlowIoC.Editor.Console
 
             _cumulativeHeights[0] = 0;
 
+            // Every row is the same height, the way Unity's console draws it. A message longer
+            // than the row is clipped and read in full in the detail panel; letting one log with
+            // forty newlines take the whole window is what the clamp is for.
+            float rowHeight = _rowLineCount * LogEntryLineHeight + LogEntryPadding;
+
             for (int i = 0; i < count; i++)
             {
-                int lineCount = 1;
-                string msg = _cachedVisibleLogs[i].Message;
-                for (int c = 0; c < msg.Length; c++)
-                {
-                    if (msg[c] == '\n') lineCount++;
-                }
-
-                _cachedLogHeights[i] = lineCount * LogEntryLineHeight + LogEntryPadding;
-                _cumulativeHeights[i + 1] = _cumulativeHeights[i] + _cachedLogHeights[i];
+                _cachedLogHeights[i] = rowHeight;
+                _cumulativeHeights[i + 1] = _cumulativeHeights[i] + rowHeight;
             }
         }
 
-        private void LogGUI(ConsoleLog consoleLog, float entryHeight)
+        private void LogGUI(ConsoleLog consoleLog, float entryHeight, int rowIndex)
         {
-            var bgColor = consoleLog.LogType == LogType.Log ? consoleLog.LogColor :
-                consoleLog.LogType == LogType.Warning ? Color.yellow : Color.red;
-
-            GUI.backgroundColor = bgColor;
-
             Rect rect = GUILayoutUtility.GetRect(0, entryHeight, GUILayout.ExpandWidth(true));
-            GUI.Box(rect, GUIContent.none, "box");
+
+            // Unity's console reads severity from an icon and uses the row background only to
+            // separate one row from the next. Tinting a whole row yellow or red made a page of
+            // warnings unreadable, so the severity moved to the icon and the row keeps the
+            // alternating band.
+            if (rowIndex % 2 == 1)
+                EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.08f));
 
             if (_selectedLog == consoleLog)
-            {
                 EditorGUI.DrawRect(rect, new Color(0.17f, 0.36f, 0.53f, 1f));
-                EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), new Color(0.3f, 0.7f, 1f, 1f));
+
+            // The one piece of information Unity's console has no equivalent for: which channel
+            // wrote this. It keeps the colour the settings give the channel.
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), consoleLog.LogColor);
+
+            bool small = _rowLineCount < 2;
+            Texture icon = IconFor(consoleLog.LogType, small);
+
+            // Drawn at the size the texture was authored for - 16 for the .sml variant, 32 for the
+            // large one - because scaling either of them is what made the shapes come out ragged.
+            if (icon != null)
+            {
+                float size = small ? 16f : 32f;
+                float y = rect.y + (rect.height - size) * 0.5f;
+                GUI.DrawTexture(new Rect(rect.x + 6f, y, size, size), icon, ScaleMode.StretchToFill);
             }
 
+            float textLeft = rect.x + (small ? 26f : 42f);
             var date = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" + consoleLog.Second.ToString("00") + ":" +
                        consoleLog.Millisecond.ToString("000");
-            Rect textRect = new Rect(rect.x + 4, rect.y, rect.width - 8, rect.height);
-            GUI.Label(textRect, date + " | " + consoleLog.Message, _richTextStyle);
+
+            float textWidth = rect.width - (textLeft - rect.x) - 4f;
+
+            // Unity's own row: the message, and underneath it where the message came from. That
+            // last line is what tells a reader which of forty identical warnings is theirs, so it
+            // follows the message rather than sitting at the bottom of the row.
+            int messageSlots = small ? _rowLineCount : _rowLineCount - 1;
+
+            int drawnLines = 0;
+            while (drawnLines < messageSlots && LineOf(consoleLog.Message, drawnLines) != null)
+                drawnLines++;
+
+            if (drawnLines == 0) drawnLines = 1;
+
+            // Centred on what is actually drawn, not on what the row could hold. Centring on the
+            // maximum left a gap in the middle of a three-line row whenever the message was one
+            // line long, and the source line ended up stranded at the bottom.
+            float blockHeight = (drawnLines + (small ? 0 : 1)) * LogEntryLineHeight;
+            float textTop = rect.y + (rect.height - blockHeight) * 0.5f;
+
+            for (int line = 0; line < drawnLines; line++)
+            {
+                string text = LineOf(consoleLog.Message, line) ?? string.Empty;
+
+                Rect lineRect = new Rect(textLeft, textTop + line * LogEntryLineHeight, textWidth, LogEntryLineHeight);
+                GUI.Label(lineRect, line == 0 ? date + " | " + text : text, _richTextStyle);
+            }
+
+            if (!small)
+            {
+                Rect sourceRect = new Rect(textLeft, textTop + drawnLines * LogEntryLineHeight,
+                    textWidth, LogEntryLineHeight);
+                GUI.Label(sourceRect, SecondLineFor(consoleLog), _secondLineStyle);
+            }
 
             Event currentEvent = Event.current;
             if (currentEvent.type == EventType.MouseDown && rect.Contains(currentEvent.mousePosition))
@@ -494,11 +701,12 @@ namespace FlowIoC.Editor.Console
                 {
                     if (currentEvent.clickCount == 2)
                     {
-                        bool hasFileInfo = !string.IsNullOrEmpty(consoleLog.SourceFilePath);
-                        bool hasClassInfo = !string.IsNullOrEmpty(consoleLog.SourceClassName);
+                        _selectedLog = consoleLog;
 
-                        if (hasFileInfo || hasClassInfo)
-                            TryOpenSourceFile(consoleLog);
+                        // Silently doing nothing reads as a broken window. The row either opens
+                        // its file or says why it cannot.
+                        if (!_navigator.Open(consoleLog))
+                            ShowNotification(new GUIContent(NoSourceHint()), 3d);
                     }
                     else
                     {
@@ -586,7 +794,6 @@ namespace FlowIoC.Editor.Console
 
             _allLogs.RemoveRange(0, _allLogs.Count - maxLogCount);
         }
-
     }
 }
 #endif

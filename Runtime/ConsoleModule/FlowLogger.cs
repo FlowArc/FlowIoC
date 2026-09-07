@@ -469,9 +469,36 @@ namespace FlowIoC.ConsoleModule
             if (Settings.TryGetLogType(channel, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
+            // A log from Application.logMessageReceived says where it came from only inside its
+            // stack trace, so it is read out here. Without this a Unity message has no source and
+            // double-clicking it in the console does nothing.
+            if (string.IsNullOrEmpty(log.SourceFilePath) && !string.IsNullOrEmpty(stackTrace))
+                FillSourceFromTrace(log, stackTrace);
+
             AppendLog(log);
 #endif
         }
+
+#if UNITY_EDITOR
+        private static void FillSourceFromTrace(ConsoleLog log, string stackTrace)
+        {
+            string[] lines = stackTrace.Split('\n');
+
+            int index = StackFrames.FindFirstGameFrame(lines);
+            if (index < 0) return;
+
+            string frame = lines[index];
+
+            log.SourceClassName = StackFrames.ParseClassName(frame);
+            log.SourceTrace = frame;
+
+            if (StackFrames.TryParseFrame(frame, out string filePath, out int lineNumber))
+            {
+                log.SourceFilePath = filePath;
+                log.SourceLineNumber = lineNumber;
+            }
+        }
+#endif
 
         // ======================== Internal ========================
 
