@@ -23,18 +23,28 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Command", DrawCommand),
-            new HelpTab("Function", DrawFunction),
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("Command", DrawCommand,
+                "A Command is bound in the Context and run by a signal.",
+                "It never constructs itself and nothing calls it by name. The binding is the whole "
+                + "of what decides when it runs."),
+            new HelpTab("Function", DrawFunction,
+                "A Command is a step in a flow. A Function is called from inside one.",
+                "A sequence is read in order, and that reading is what a Command is for. A Function "
+                + "does its work without depending on where it sits, so it is what a Command "
+                + "reaches for mid-Execute, and what several Commands share."),
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "What a Command may hold, where a Function belongs, and what the Context is left saying.")
         };
+
+        protected override string BodyHeadline => "Controllers is where a module thinks.";
+
+        protected override string BodyTagline =>
+            "Two kinds of code live in the folder, and they are told apart by one question: does "
+            + "it answer you, or does it announce?";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Hero(
-                "Controllers is where a module thinks.",
-                "Two kinds of code live in the folder, and they are told apart by one question: "
-                + "does it answer you, or does it announce?");
-
             painter.Parts(
                 new HelpPart("Command",
                     "One unit of work. A signal runs it. It changes state and announces what "
@@ -65,11 +75,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawCommand(HelpPainter painter)
         {
-            painter.Hero(
-                "A Command is bound in the Context and run by a signal.",
-                "It never constructs itself and nothing calls it by name. The binding is the whole "
-                + "of what decides when it runs.");
-
             painter.SubHeading("Where a Command is bound");
             painter.Paragraph(
                 "One signal, and the commands that answer it, in the order they are written. "
@@ -87,7 +92,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "}",
                 "PlayerContext.cs");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The shapes a binding takes");
             painter.Paragraph(
                 "Five, and they combine freely in one binding. What you are choosing between is "
@@ -179,7 +184,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Space();
             painter.Graph(Sequence());
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Taking the signal's parameters");
             painter.Paragraph(
                 "The signal declares what it carries. Each [SignalParam] property in the command is "
@@ -190,7 +195,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Signal<int> does not receive the dispatched number - it reports \"Execute "
                 + "signature mismatch\" and does not run. The payload arrives through [SignalParam].");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Where a command's data comes from");
             painter.Paragraph(
                 "Three doors, and each value uses exactly one of them. Knowing which door a value "
@@ -263,7 +268,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "}",
                 "DecreaseCurrencyCommand.cs - Scripts/Runtime/Controllers");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Two values of one type");
             painter.Paragraph(
                 "When a signal carries more than one value of the same type, write the index of the "
@@ -279,7 +284,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "A property with no index takes the first value of its type that no other property "
                 + "has claimed, so two same-typed properties resolve correctly on their own too.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Holding the sequence open");
             painter.Paragraph(
                 "A command that finishes asynchronously has to say so, or the step after it starts "
@@ -353,7 +358,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "own operator; an IScreenBody is an interface and does not, so a destroyed screen "
                 + "would not read as null.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("A flow is read from one Context");
             painter.Paragraph(
                 "Somebody should see what an operation does by reading the sequence it is bound to, "
@@ -392,12 +397,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawFunction(HelpPainter painter)
         {
-            painter.Hero(
-                "A Command is a step in a flow. A Function is called from inside one.",
-                "A sequence is read in order, and that reading is what a Command is for. A Function "
-                + "does its work without depending on where it sits, so it is what a Command "
-                + "reaches for mid-Execute, and what several Commands share.");
-
             painter.SubHeading("When to reach for one");
             painter.Bullet("The work happens more than once inside one Execute.");
             painter.Bullet("More than one Command needs it. Map's FindEditHexLinksFunction is called from twelve.");
@@ -409,6 +408,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "a step somebody should be able to read in the sequence. The trade a Function "
                 + "makes is the Flow Console: it is not a step there.");
 
+            painter.Separator();
             painter.SubHeading("Writing one");
             painter.Paragraph(
                 "FunctionReturn takes the return type first and the parameters after it, up to "
@@ -424,7 +424,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "}",
                 "CalculateDamageFunction.cs - Scripts/Runtime/Functions");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Calling one");
             painter.Paragraph(
                 "The function provider is injected wherever the answer is needed - a Command, "

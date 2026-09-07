@@ -22,18 +22,27 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Root", DrawRoot),
-            new HelpTab("Context", DrawContext),
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("Root", DrawRoot,
+                "A Root takes the colour of whatever it roots.",
+                "It decides that from its own name, so the name is not decoration - it is what the "
+                + "scene says about the module at a glance."),
+            new HelpTab("Context", DrawContext,
+                "A Context declares. It never decides.",
+                "Three groups of methods, and each answers a different question: what the module is "
+                + "made of, what it has to ready, and what it says first."),
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "What a Root carries into the scene, and what a Context is allowed to declare.")
         };
+
+        protected override string BodyHeadline => "A module joins the game by being in the scene.";
+
+        protected override string BodyTagline =>
+            "Nothing reaches in from outside to start it. The Root puts it there, and the Context "
+            + "says what it is made of.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Hero(
-                "A module joins the game by being in the scene.",
-                "Nothing reaches in from outside to start it. The Root puts it there, and the "
-                + "Context says what it is made of.");
-
             painter.Parts(
                 new HelpPart("Root",
                     "The module's one presence in the scene, and normally an empty class. Drop it "
@@ -64,11 +73,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawRoot(HelpPainter painter)
         {
-            painter.Hero(
-                "A Root takes the colour of whatever it roots.",
-                "It decides that from its own name, so the name is not decoration - it is what the "
-                + "scene says about the module at a glance.");
-
             painter.SubHeading("What a Root is called");
             painter.Paragraph(
                 "A module that exists to provide a Service keeps the Service suffix on its Root and "
@@ -93,14 +97,14 @@ namespace FlowIoC.Editor.Help.Pages
                 + "in a project - so its name has nothing to disambiguate from and takes no suffix. "
                 + "The attribute is what tells the bar, and it wins over every other reading.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("What hangs off a Root");
             painter.Paragraph(
                 "A GameObject the module needs in the scene goes under its Root. The Root is the "
                 + "module's one presence there, so an EventSystem, an adapter, anything the module "
                 + "owns hangs off it rather than sitting loose beside it.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Living past a scene");
             painter.Paragraph(
                 "A Root otherwise lives and dies with its scene. A module whose work outlives one - "
@@ -115,7 +119,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    DontDestroyOnLoad(gameObject);\n"
                 + "}");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("What Add Sub Context offers");
             painter.Paragraph(
                 "A Root can host contexts other than its own, and the button under the list offers "
@@ -142,7 +146,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "those. A context counts as a Connector's when its name says so - "
                 + "HeroConnectorSubContext - or when it carries FlowHeader(FlowRole.Connector).");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("An entry points at the context's script");
             painter.Paragraph(
                 "A Root's entry holds the context's own script asset, not just its name. That is what "
@@ -160,7 +164,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "renamed and there is nothing to press: either the entry goes, or the context comes "
                 + "back.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Deleting the module a context lives in");
             painter.Paragraph(
                 "Delete Module takes the module's sub-contexts out of the Roots that list them, and "
@@ -182,11 +186,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawContext(HelpPainter painter)
         {
-            painter.Hero(
-                "A Context declares. It never decides.",
-                "Three groups of methods, and each answers a different question: what the module is "
-                + "made of, what it has to ready, and what it says first.");
-
             painter.SubHeading("The binding phases declare");
             painter.Paragraph(
                 "SignalBindings, InjectionBindings, MediationBindings and CommandBindings say what "
@@ -221,7 +220,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "}",
                 "PlayerContext.cs");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Two binders, and the one question that picks between them");
             painter.Paragraph(
                 "Every Context makes an InjectionBinder of its own the moment it starts. "
@@ -255,7 +254,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Connector has to reach it. Bind it locally and the Connector's GetInstance finds "
                 + "nothing.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Which one an [Inject] finds");
             painter.Paragraph(
                 "The injector asks the local binders first and the shared one last, so a local "
@@ -280,7 +279,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "[Inject] private ICoroutineProvider _coroutineProvider { get; set; }\n"
                 + "[Inject] private IUpdateProvider    _updateProvider    { get; set; }");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("What DestroyContext takes back");
             painter.Paragraph(
                 "Tearing a Context down empties its own binder and takes out of the shared one "
@@ -293,7 +292,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "The holder goes last, after the Context's own binder, so a Deconstruct that "
                 + "dispatches still has a holder to dispatch through.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Setup initialises");
             painter.Paragraph(
                 "Setup does not run until every Root in the scene has finished binding, so this is "

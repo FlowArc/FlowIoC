@@ -22,18 +22,23 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Writing one", DrawWriting),
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("Writing one", DrawWriting,
+                "An interface and an implementation, like a Service.",
+                "The rest of the module injects the interface, so what a Model offers is a list of "
+                + "questions and a list of changes - never a field."),
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "What a Model owns, and the one thing it must never do.")
         };
+
+        protected override string BodyHeadline => "A Model owns state, and the rules that keep it valid.";
+
+        protected override string BodyTagline =>
+            "It knows nothing about Views, Commands, or any other module - which is what makes it "
+            + "the one place worth reading when you want to know what a module actually holds.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Hero(
-                "A Model owns state, and the rules that keep it valid.",
-                "It knows nothing about Views, Commands, or any other module - which is what makes "
-                + "it the one place worth reading when you want to know what a module actually "
-                + "holds.");
-
             painter.SubHeading("Nothing reaches in");
             painter.Paragraph(
                 "The crossed arrow is the whole point of the page. A signal never arrives at a "
@@ -54,11 +59,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawWriting(HelpPainter painter)
         {
-            painter.Hero(
-                "An interface and an implementation, like a Service.",
-                "The rest of the module injects the interface, so what a Model offers is a list of "
-                + "questions and a list of changes - never a field.");
-
             painter.SubHeading("The pair");
             painter.Code(
                 "public interface IPlayerModel\n"
@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Command to write the field directly, and the moment that happens the rules that "
                 + "keep the value legal live in two places.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Binding it");
             painter.Paragraph(
                 "The Context binds the implementation to the interface once, and everything that "
@@ -104,7 +104,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "LocalSaveModule binds its model across because the Root writes the save on quit, "
                 + "when a Command dispatched during shutdown might not finish in time.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Announcing a change");
             painter.Paragraph(
                 "A Model that dispatches its module's outgoing signal saves every Command that "

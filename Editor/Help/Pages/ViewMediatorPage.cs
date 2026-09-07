@@ -22,18 +22,27 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("View", DrawView),
-            new HelpTab("Mediator", DrawMediator),
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("View", DrawView,
+                "A View holds scene references and raw input.",
+                "It does not know what the button means. It says that the button was pressed and "
+                + "leaves the meaning to whoever is listening."),
+            new HelpTab("Mediator", DrawMediator,
+                "A Mediator drives exactly one View.",
+                "It is a plain injected class, not a MonoBehaviour, and it exists for as long as "
+                + "the View it was registered against."),
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "What a View may hold, and what a Mediator has to guard.")
         };
+
+        protected override string BodyHeadline => "Neither half knows a game rule.";
+
+        protected override string BodyTagline =>
+            "The View reports what happened on screen, the Mediator turns it into a signal, and "
+            + "the decision is taken somewhere neither of them can see.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Hero(
-                "Neither half knows a game rule.",
-                "The View reports what happened on screen, the Mediator turns it into a signal, and "
-                + "the decision is taken somewhere neither of them can see.");
-
             painter.Parts(
                 new HelpPart("View",
                     "The MonoBehaviour in the scene. It holds references and raises callbacks. A "
@@ -64,11 +73,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawView(HelpPainter painter)
         {
-            painter.Hero(
-                "A View holds scene references and raw input.",
-                "It does not know what the button means. It says that the button was pressed and "
-                + "leaves the meaning to whoever is listening.");
-
             painter.SubHeading("Writing one");
             painter.Code(
                 "[RequireComponent(typeof(ViewInjector))]\n"
@@ -85,7 +89,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "}",
                 "HudView.cs - Scripts/Runtime/ViewsMediators");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Which Context a View belongs to");
             painter.Paragraph(
                 "The ViewInjector component lists one entry per IView on the object, and each entry "
@@ -104,7 +108,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "so a prefab that has to reach a Root outside its own hierarchy names it with Root "
                 + "Name.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("A screen view is pooled");
             painter.Paragraph(
                 "Start is fine for a View that lives and dies with its GameObject. A ScreenView does "
@@ -130,11 +134,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawMediator(HelpPainter painter)
         {
-            painter.Hero(
-                "A Mediator drives exactly one View.",
-                "It is a plain injected class, not a MonoBehaviour, and it exists for as long as "
-                + "the View it was registered against.");
-
             painter.SubHeading("Binding the pair");
             painter.Paragraph("Create View writes both files, and the Context binds them together:");
             painter.Code(
@@ -149,7 +148,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "belongs to. Registration happens as soon as that Context starts, and OnRemove "
                 + "runs when the object is destroyed.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Writing one");
             painter.Paragraph(
                 "OnRegister subscribes and OnRemove unsubscribes, and they mirror each other line "
@@ -190,7 +189,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "Notice what is not there: no decision about whether the player can afford it. The "
                 + "Mediator dispatches, and the Command decides.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("A screen's Mediator, which subscribes twice over");
             painter.Paragraph(
                 "OnRegister on a screen wires two events and nothing else. The view's actions are "
@@ -222,7 +221,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "screen is animating in or out does not become a signal. It is not queued and not "
                 + "replayed; it does not happen.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("An animation reports when it finished");
             painter.Paragraph(
                 "ScreenBody gates it. HasShowAnimation false and ShowCompleted fires at once; true "

@@ -43,8 +43,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Usage", DrawUsage),
-            new HelpTab("Time Source", DrawTimeSource)
+            new HelpTab("Usage", DrawUsage,
+                "Inject the service and start a countdown.",
+                "CountDownInstantly starts from now and hands back the moment it started from, "
+                + "which is what you save if the countdown has to survive a restart."),
+            new HelpTab("Time Source", DrawTimeSource,
+                "Everything the module counts with comes from one interface.",
+                "It ships with the device clock behind it, which needs no network and is ready the "
+                + "moment it is asked - that is what lets the module work as soon as it is installed.")
         };
 
         /// <summary>
@@ -85,13 +91,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             EditorUtility.DisplayDialog("Counter", error, "OK");
         }
 
+        protected override string BodyHeadline => "Named counters that call back once a second.";
+
+        protected override string BodyTagline =>
+            "A chest that opens in an hour, an energy bar that refills, a round timer - all of them "
+            + "are one call and a callback rather than a coroutine of their own.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Runs named counters in either direction and calls back once a second while they last. A chest that "
-                + "opens in an hour, an energy bar that refills, a round timer - all of them are "
-                + "one call and a callback rather than a coroutine of their own.");
-
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "A counter is a string id. Several callers may listen to the same one: the first "
@@ -127,10 +134,6 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawUsage(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Inject the service and start a countdown. CountDownInstantly starts from now and "
-                + "hands back the moment it started from, which is what you save if the countdown "
-                + "has to survive a restart.");
             painter.Code(
                 "[Inject] private ICounterService _counter { get; set; }\n"
                 + "\n"
@@ -183,10 +186,6 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawTimeSource(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Everything the module counts with comes from one interface. It ships with the "
-                + "device clock behind it, which needs no network and is ready the moment it is "
-                + "asked - that is what lets the module work as soon as it is installed.");
             painter.Code(
                 "public interface ITimeSource\n"
                 + "{\n"

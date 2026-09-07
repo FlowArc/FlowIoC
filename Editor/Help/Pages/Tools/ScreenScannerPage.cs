@@ -14,14 +14,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Icon => "Canvas Icon";
 
+        protected override string BodyHeadline => "Every screen in the open scenes, under the manager it registers at.";
+
+        protected override string BodyTagline =>
+            "Tools > FlowIoC > Screen Scanner answers what a single Root's inspector cannot: which "
+            + "layer each screen opens in, and whether two of them want the same one.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Tools > FlowIoC > Screen Scanner. Every screen context attached to a Root in the open "
-                + "scenes, grouped by the ScreenManager it registers at. It answers the question a "
-                + "single Root's inspector cannot: which layer does each screen open in, and do any "
-                + "two of them want the same one.");
-
             painter.Image(_images.Get("ScreenScannerWindow.png"),
                 "Tools > FlowIoC > Screen Scanner. Two screens registered at manager 0, each with a layer "
                 + "of its own.");

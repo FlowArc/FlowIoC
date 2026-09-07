@@ -17,6 +17,11 @@ namespace FlowIoC.Editor.Help
     /// </summary>
     public class HelpPainter
     {
+        /// <summary>How tall the bar between two topics is, and what it keeps clear either side.</summary>
+        private const float SeparatorHeight = 5f;
+
+        private const float SeparatorMargin = 10f;
+
         private readonly HelpTheme _theme;
         private readonly HelpGraphPainter _graphPainter;
         private readonly HelpCodeHighlighter _highlighter;
@@ -35,16 +40,14 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
-        /// The purple bar every page wears: its title on the left, and the readings it offers as
-        /// buttons on the right. The window draws this outside the scroll view, so the title and
-        /// the tabs stay put while the page scrolls under them.
+        /// The purple bar every page wears: its title on the left, and whatever the page can do on
+        /// the right. The readings it offers are not here - they are a strip along the foot of the
+        /// band below, where a tab sits directly on top of the page it opens.
         /// </summary>
-        internal int Banner(string title, IReadOnlyList<HelpTab> tabs, int selected, HelpAction action = null)
+        internal void Banner(string title, HelpAction action = null)
         {
             Color previous = GUI.backgroundColor;
             GUI.backgroundColor = _theme.Banner;
-
-            int chosen = selected;
 
             using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox,
                        GUILayout.Height(_theme.BannerHeight)))
@@ -57,30 +60,10 @@ namespace FlowIoC.Editor.Help
 
                 GUILayout.FlexibleSpace();
 
-                if (tabs != null && tabs.Count > 1)
-                {
-                    // The buttons are drawn in the ordinary button colour: purple on purple would
-                    // leave them invisible against the bar they sit in.
-                    GUI.backgroundColor = previous;
-
-                    var titles = new string[tabs.Count];
-
-                    for (int index = 0; index < tabs.Count; index++)
-                        titles[index] = tabs[index].Title;
-
-                    chosen = GUILayout.Toolbar(selected, titles, _theme.BannerTab,
-                        GUILayout.Height(_theme.BannerTabHeight),
-                        GUILayout.Width(_theme.BannerTabWidth * titles.Length));
-
-                    GUI.backgroundColor = _theme.Banner;
-                }
-
                 DrawAction(action);
             }
 
             GUI.backgroundColor = previous;
-
-            return chosen;
         }
 
         /// <summary>
@@ -131,21 +114,33 @@ namespace FlowIoC.Editor.Help
         public void Space() => EditorGUILayout.Space();
 
         /// <summary>
-        /// The one line a page opens with, and the line under it that qualifies it. A reader who
-        /// gets no further than this should still leave knowing what the topic is for.
+        /// The bar a page parts two topics with. Five pixels rather than one, because it ends a
+        /// block rather than parting two rows: a dark edge, a body of the same dark, and a light
+        /// line under it that reads as the page starting again.
+        ///
+        /// It is the page's mark to make. Nothing draws it for a page, so a heading that follows
+        /// on from what came before is left to follow on, and the bar means a change of subject.
         /// </summary>
-        public void Hero(string headline, string tagline = null)
+        public void Separator()
         {
-            if (!string.IsNullOrEmpty(headline))
-                EditorGUILayout.LabelField(headline, _theme.Hero);
+            GUILayout.Space(SeparatorMargin);
 
-            if (string.IsNullOrEmpty(tagline))
+            Rect row = GUILayoutUtility.GetRect(0f, SeparatorHeight, GUILayout.ExpandWidth(true));
+
+            GUILayout.Space(SeparatorMargin);
+
+            if (Event.current.type != EventType.Repaint)
                 return;
 
-            Color previous = GUI.color;
-            GUI.color = _theme.MutedText;
-            EditorGUILayout.LabelField(tagline, _theme.HeroTagline);
-            GUI.color = previous;
+            // The margins the page is written inside are taken back off, so the bar runs the whole
+            // width of the page. A rule that stops where the text stops reads as part of the
+            // paragraph above it; one that reaches both edges is what says a topic has ended.
+            Rect bar = new Rect(row.x - _theme.PageBodyPadding, row.y,
+                row.width + _theme.PageBodyPadding * 2f, row.height);
+
+            EditorGUI.DrawRect(bar, _theme.PageSeparatorFill);
+            EditorGUI.DrawRect(new Rect(bar.x, bar.y, bar.width, 1f), _theme.PageSeparatorEdge);
+            EditorGUI.DrawRect(new Rect(bar.x, bar.yMax - 1f, bar.width, 1f), _theme.PageSeparatorLight);
         }
 
         /// <summary>
