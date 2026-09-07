@@ -19,6 +19,7 @@ namespace FlowIoC.Editor.Help
     {
         private readonly HelpTheme _theme;
         private readonly HelpGraphPainter _graphPainter;
+        private readonly HelpCodeHighlighter _highlighter;
 
         /// <summary>
         /// The position a diagram drawn as a map is at: nowhere, because it has no steps. One
@@ -30,6 +31,7 @@ namespace FlowIoC.Editor.Help
         {
             _theme = theme;
             _graphPainter = new HelpGraphPainter(theme);
+            _highlighter = new HelpCodeHighlighter(theme);
         }
 
         /// <summary>
@@ -200,17 +202,53 @@ namespace FlowIoC.Editor.Help
             if (string.IsNullOrEmpty(code))
                 return;
 
-            if (!string.IsNullOrEmpty(caption))
+            CodeCaption(code, caption);
+
+            var content = new GUIContent(_highlighter.Highlight(code));
+            float height = _theme.Code.CalcHeight(content, EditorGUIUtility.currentViewWidth) + 4f;
+
+            Rect rect = GUILayoutUtility.GetRect(content, _theme.Code,
+                GUILayout.Height(height), GUILayout.ExpandWidth(true));
+
+            if (Event.current.type == EventType.Repaint)
             {
-                Color previous = GUI.color;
-                GUI.color = _theme.MutedText;
-                EditorGUILayout.LabelField(caption, _theme.CodeCaption);
-                GUI.color = previous;
+                EditorGUI.DrawRect(rect, _theme.CodeFill);
+
+                Handles.BeginGUI();
+                Handles.color = _theme.CodeBorder;
+                Handles.DrawAAPolyLine(1.5f,
+                    new Vector3(rect.xMin, rect.yMin), new Vector3(rect.xMax, rect.yMin),
+                    new Vector3(rect.xMax, rect.yMax), new Vector3(rect.xMin, rect.yMax),
+                    new Vector3(rect.xMin, rect.yMin));
+                Handles.EndGUI();
             }
 
-            float height = _theme.Code.CalcHeight(new GUIContent(code), EditorGUIUtility.currentViewWidth) + 4f;
+            GUI.Label(rect, content, _theme.Code);
+        }
 
-            EditorGUILayout.SelectableLabel(code, _theme.Code, GUILayout.Height(height));
+        /// <summary>
+        /// The row above a code block: which file the snippet is from on the left, and the button
+        /// that puts it on the clipboard on the right. The button is here rather than inside the
+        /// block because a snippet is one long line as often as not, and a control floating over
+        /// the code would sit on top of it.
+        /// </summary>
+        private void CodeCaption(string code, string caption)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (!string.IsNullOrEmpty(caption))
+                {
+                    Color previous = GUI.color;
+                    GUI.color = _theme.MutedText;
+                    GUILayout.Label(caption, _theme.CodeCaption, GUILayout.ExpandWidth(false));
+                    GUI.color = previous;
+                }
+
+                GUILayout.FlexibleSpace();
+
+                if (GUILayout.Button("Copy", _theme.CodeCopy, GUILayout.Width(_theme.CodeCopyWidth)))
+                    EditorGUIUtility.systemCopyBuffer = code;
+            }
         }
 
         /// <summary>
