@@ -1063,12 +1063,36 @@ after the dot offers all three at once, rather than making you know in advance w
 function needs. `ExecuteAndGetResult<double>` is longer than a bare verb so its type parameter reads
 as what it is — `double` is what comes back, not something being passed in.
 
+An `AsyncFunction` runs on a coroutine, so its `Execute` returns `IEnumerator` and it answers
+through the callback the caller handed in rather than by returning. `CallAsync<T, TValue>()` is the
+form that carries a value into the callback; `CallAsync<T>()` is the one that carries none.
+
+```csharp
+public class LoadProfileFunction : AsyncFunction<Profile>
+{
+    [Inject] private IProfileService _profileService { get; set; }
+
+    public override IEnumerator Execute()
+    {
+        yield return _profileService.FetchRoutine();
+
+        FunctionCompletedCallback?.Invoke(_profileService.Profile);
+    }
+}
+```
+
 ```csharp
 _functionProvider
-    .CallAsync<LoadProfileFunction>()
+    .CallAsync<LoadProfileFunction, Profile>()
     .AddFunctionCompletedCallback(OnProfileLoaded)
     .ExecuteAsync();
 ```
+
+A function goes back to the pool the moment its `Execute` returns, so one that hands its instance
+to something outliving the call says `Retain()` and keeps it until `Release()`. Unlike a Command, a
+Function must not do both inside one `Execute`: `Release()` pools the instance and clears the flag,
+and the run's own check then finds nothing retained and pools it a second time. An `AsyncFunction`
+needs neither — the provider runs its coroutine to the end before it pools anything.
 
 ---
 
