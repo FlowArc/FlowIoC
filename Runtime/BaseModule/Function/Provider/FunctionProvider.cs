@@ -66,7 +66,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             return availableFunctionDataContainer;
         }
 
-        public IFunctionDataContainer Execute<TFunctionType>() where TFunctionType : IFunctionBody
+        public IFunctionDataContainer Call<TFunctionType>() where TFunctionType : IFunctionBody
         {
             Type functionType = typeof(TFunctionType);
             FunctionDataContainer functionDataContainer = GetFunctionDataContainer<FunctionDataContainer>();
@@ -75,7 +75,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             return functionDataContainer;
         }
 
-        public IAsyncFunctionDataContainer ExecuteAsync<TFunctionType>() where TFunctionType : IAsyncFunction
+        public IAsyncFunctionDataContainer CallAsync<TFunctionType>() where TFunctionType : IAsyncFunction
         {
             Type functionType = typeof(TFunctionType);
             FunctionDataContainer functionDataContainer = GetFunctionDataContainer<AsyncFunctionDataContainer>();
@@ -84,7 +84,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             return functionDataContainer as IAsyncFunctionDataContainer;
         }
 
-        public IAsyncFunctionDataContainer<TParam1> ExecuteAsync<TFunctionType, TParam1>() where TFunctionType : IAsyncFunction<TParam1>
+        public IAsyncFunctionDataContainer<TParam1> CallAsync<TFunctionType, TParam1>() where TFunctionType : IAsyncFunction<TParam1>
         {
             Type functionType = typeof(TFunctionType);
             FunctionDataContainer functionDataContainer = GetFunctionDataContainer<AsyncFunctionDataContainer<TParam1>>();

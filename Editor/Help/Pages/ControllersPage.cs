@@ -433,18 +433,20 @@ namespace FlowIoC.Editor.Help.Pages
                 "[Inject] private IFunctionProvider _functionProvider { get; set; }\n"
                 + "\n"
                 + "var damage = _functionProvider\n"
-                + "    .Execute<CalculateDamageFunction>()\n"
+                + "    .Call<CalculateDamageFunction>()\n"
                 + "    .AddParams(weaponId)\n"
-                + "    .RunAndGetResult<double>();\n"
+                + "    .ExecuteAndGetResult<double>();\n"
                 + "\n"
-                + "_functionProvider.Execute<RefreshHudFunction>().Run();");
+                + "_functionProvider.Call<RefreshHudFunction>().Execute();");
             painter.Paragraph(
-                "Nothing happens until the chain is ended, and the three ways to end it share the "
-                + "Run prefix on purpose: typing R after the dot offers all three rather than making "
-                + "you know which one this function needs. Run() for a FunctionVoid, "
-                + "RunAndGetResult<T>() for a FunctionReturn, RunAsync() for an AsyncFunction. The "
-                + "type parameter is spelled out for the same reason - double is what comes back, "
-                + "not something being passed in.");
+                "Call<T>() names the function and hands back a chain; nothing happens until one of "
+                + "the three terminators is called. That is why the provider says Call and the "
+                + "terminator says Execute - the same word the function's own method carries. The "
+                + "three share the Execute prefix on purpose: typing E after the dot offers all "
+                + "three rather than making you know in advance which one this function needs. "
+                + "Execute() for a FunctionVoid, ExecuteAndGetResult<T>() for a FunctionReturn, "
+                + "ExecuteAsync() for an AsyncFunction - and the type parameter is spelled out so it "
+                + "reads as what it is: double is what comes back, not something being passed in.");
 
             painter.Space();
             painter.Note(

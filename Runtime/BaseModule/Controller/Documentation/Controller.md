@@ -551,9 +551,9 @@ public class ApplyDamageCommand : Command
     public override void Execute()
     {
         var damage = _functionProvider
-            .Execute<CalculateDamageFunction>()
+            .Call<CalculateDamageFunction>()
             .AddParams(_weaponId)
-            .RunAndGetResult<double>();
+            .ExecuteAndGetResult<double>();
 
         _unitsModel.ApplyDamage(_targetId, damage);
     }
