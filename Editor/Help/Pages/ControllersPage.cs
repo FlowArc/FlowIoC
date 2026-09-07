@@ -409,11 +409,32 @@ namespace FlowIoC.Editor.Help.Pages
                 + "makes is the Flow Console: it is not a step there.");
 
             painter.Separator();
+            painter.SubHeading("The three kinds");
+            painter.Paragraph(
+                "Which base type a function derives from is decided by one question: what it hands "
+                + "back. Each takes up to four parameters after that, so there are five arities of "
+                + "each - FunctionVoid through FunctionVoid<T1, T2, T3, T4> - and AsyncFunction has "
+                + "two, one carrying a value into its callback and one carrying nothing.");
+            painter.Parts(
+                new HelpPart("Answers with a value",
+                    "The return type comes first and the parameters after it. This is the ordinary "
+                    + "Function.",
+                    "class CalculateDamageFunction : FunctionReturn<double, string>"),
+                new HelpPart("Answers with nothing",
+                    "Work that happens where you stand and hands nothing back - a redraw, a reset, "
+                    + "a write.",
+                    "class RefreshHudFunction : FunctionVoid"),
+                new HelpPart("Answers later",
+                    "Runs on a coroutine and reports through the callback the caller handed in. Its "
+                    + "Execute returns IEnumerator.",
+                    "class LoadProfileFunction : AsyncFunction<Profile>"));
+
+            painter.Separator();
             painter.SubHeading("Writing one");
             painter.Paragraph(
-                "FunctionReturn takes the return type first and the parameters after it, up to "
-                + "four. A function that answers nothing is a FunctionVoid instead. It injects "
-                + "whatever it needs, the way a Command does.");
+                "A function injects whatever it needs, the way a Command does, and writes one "
+                + "Execute. Nothing about it says where it is called from - that is the whole "
+                + "difference from a Command.");
             painter.Code(
                 "public class CalculateDamageFunction : FunctionReturn<double, string>\n"
                 + "{\n"
@@ -423,6 +444,29 @@ namespace FlowIoC.Editor.Help.Pages
                 + "        _weaponsModel.GetConfigVO(weaponId).baseDamage;\n"
                 + "}",
                 "CalculateDamageFunction.cs - Scripts/Runtime/Functions");
+            painter.Code(
+                "public class RefreshHudFunction : FunctionVoid\n"
+                + "{\n"
+                + "    [Inject] private IHudModel _hudModel { get; set; }\n"
+                + "\n"
+                + "    public override void Execute() => _hudModel.MarkDirty();\n"
+                + "}");
+            painter.Paragraph(
+                "An AsyncFunction's Execute returns IEnumerator, so it yields the way a coroutine "
+                + "does, and it reports by invoking the callback the caller handed in rather than "
+                + "by returning.");
+            painter.Code(
+                "public class LoadProfileFunction : AsyncFunction<Profile>\n"
+                + "{\n"
+                + "    [Inject] private IProfileService _profileService { get; set; }\n"
+                + "\n"
+                + "    public override IEnumerator Execute()\n"
+                + "    {\n"
+                + "        yield return _profileService.FetchRoutine();\n"
+                + "\n"
+                + "        FunctionCompletedCallback?.Invoke(_profileService.Profile);\n"
+                + "    }\n"
+                + "}");
 
             painter.Separator();
             painter.SubHeading("Calling one");
@@ -437,16 +481,76 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    .AddParams(weaponId)\n"
                 + "    .ExecuteAndGetResult<double>();\n"
                 + "\n"
-                + "_functionProvider.Call<RefreshHudFunction>().Execute();");
+                + "_functionProvider.Call<RefreshHudFunction>().Execute();\n"
+                + "\n"
+                + "_functionProvider\n"
+                + "    .CallAsync<LoadProfileFunction, Profile>()\n"
+                + "    .AddFunctionCompletedCallback(OnProfileLoaded)\n"
+                + "    .ExecuteAsync();");
             painter.Paragraph(
                 "Call<T>() names the function and hands back a chain; nothing happens until one of "
                 + "the three terminators is called. That is why the provider says Call and the "
-                + "terminator says Execute - the same word the function's own method carries. The "
-                + "three share the Execute prefix on purpose: typing E after the dot offers all "
-                + "three rather than making you know in advance which one this function needs. "
-                + "Execute() for a FunctionVoid, ExecuteAndGetResult<T>() for a FunctionReturn, "
-                + "ExecuteAsync() for an AsyncFunction - and the type parameter is spelled out so it "
-                + "reads as what it is: double is what comes back, not something being passed in.");
+                + "terminator says Execute - the same word the function's own method carries, and "
+                + "the same word a Command runs under. The three share the Execute prefix on "
+                + "purpose: typing E after the dot offers all three rather than making you know in "
+                + "advance which one this function needs, and the type parameter of "
+                + "ExecuteAndGetResult is spelled out so it reads as what it is - double is what "
+                + "comes back, not something being passed in.");
+
+            painter.Space();
+            painter.Rule("Which terminator");
+            painter.Parts(
+                new HelpPart("FunctionReturn",
+                    "Answers with a value, so the call site reads as an assignment.",
+                    "Call<T>().ExecuteAndGetResult<double>()"),
+                new HelpPart("FunctionVoid",
+                    "Answers with nothing, so the call is a statement of its own.",
+                    "Call<T>().Execute()"),
+                new HelpPart("AsyncFunction",
+                    "Started here and answered later, through the callback. CallAsync, not Call.",
+                    "CallAsync<T, TValue>().ExecuteAsync()"));
+
+            painter.Space();
+            painter.Rule("Parameters");
+            painter.Paragraph(
+                "AddParams lines the values up for the typed Execute, in the order it declares "
+                + "them. Too few, too many, or one of the wrong type is reported by name and the "
+                + "function does not run - the answer comes back as the return type's default "
+                + "rather than as an exception, because the mistake is in a call site somebody has "
+                + "to be able to find.");
+            painter.Code(
+                "_functionProvider\n"
+                + "    .Call<FindLinksFunction>()\n"
+                + "    .AddParams(hexId, radius, includeDiagonals)\n"
+                + "    .ExecuteAndGetResult<List<HexLink>>();");
+
+            painter.Space();
+            painter.Rule("Holding one open");
+            painter.Paragraph(
+                "A function goes back to the pool the moment its Execute returns, so a function "
+                + "that hands its instance to something outliving the call - a subscription, a "
+                + "service that will call back - says Retain() and keeps it until Release(). An "
+                + "AsyncFunction needs neither: the provider runs its coroutine to the end before "
+                + "it pools anything.");
+            painter.Code(
+                "public class WatchDownloadFunction : FunctionVoid<string>\n"
+                + "{\n"
+                + "    [Inject] private IDownloadService _downloadService { get; set; }\n"
+                + "\n"
+                + "    public override void Execute(string url)\n"
+                + "    {\n"
+                + "        Retain();\n"
+                + "        _downloadService.Watch(url, OnFinished);\n"
+                + "    }\n"
+                + "\n"
+                + "    private void OnFinished() => Release();\n"
+                + "}");
+            painter.Note(
+                "Release belongs on the way back in, not before Execute returns. A Command may "
+                + "retain and release inside one Execute; a Function may not - Release pools the "
+                + "instance and clears the flag, and the run's own check then finds nothing retained "
+                + "and pools it a second time. Release on a function that never retained is "
+                + "reported and does nothing.");
 
             painter.Space();
             painter.Note(
