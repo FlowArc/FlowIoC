@@ -31,6 +31,13 @@ namespace FlowIoC.Editor.Console
             set => EditorPrefs.SetBool(PREFIX + nameof(ClearOnBuild), value);
         }
 
+        /// <summary>Whether equal rows are folded into one with a count.</summary>
+        public bool Collapse
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(Collapse), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(Collapse), value);
+        }
+
         /// <summary>
         /// How many lines a row shows. Two by default, which is what Unity's console does: the
         /// message, and underneath it where the message came from.
