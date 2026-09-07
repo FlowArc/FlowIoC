@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-07
+
+### Added
+
+- **A one-shot listener can be taken back.** `AddListenerOnce` had no counterpart, so a listener
+  waiting for a signal that then never arrived stayed on it for the run. `RemoveListenerOnce` sits
+  on all five signal arities and on the interfaces they declare, beside the `RemoveListener` that
+  was always there.
+
+- **The Flow Console says how much it keeps and how much it traces.** `CD_FlowConsole` gained
+  `StackTraceCapture` - `Never`, `WarningsAndErrors` or `Always` - and `MaxLogCount`, which defaults
+  to 5000. Working out where a log came from is the expensive half of logging and only the console's
+  source column reads it, so the default captures it for warnings and errors and leaves everything
+  else alone. The list is trimmed in blocks of 256 rather than one entry at a time, so a run that
+  logs steadily no longer shifts the whole list on every line. Before this the list had no ceiling
+  at all: a long play session grew it until the domain reloaded.
+
+- **Sixty-two tests for the parts that carry a flow**, none of them needing a scene: the command
+  group resolver, signal listeners and `Connect`, the pool's runtime model, the function provider,
+  the shared instance pool, and the screen builder. Two real defects were found by writing them, and
+  both are in Fixed below.
+
 ### Changed
+
+- **`IScreenService.Open<T>()` hands back an `IScreenBuilder`.** It used to hand back the sub
+  service itself, which is one object for the whole run - so the screen being opened lived in that
+  object's fields, and two commands opening a screen in the same frame wrote over each other. The
+  chain a caller writes is unchanged, and so is every call that reads `Open<T>().Show()`; what
+  changes is the declared return type, which a project storing it in a local has to update.
 
 - **A Root holds its sub-contexts by script reference, not by name.** `SubContextData` carries the
   `MonoScript` the context is declared in, so the entry is a real guid in the scene or prefab rather
@@ -38,7 +66,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and saving is theirs. Every entry removed, skipped or left is named on the console with its Root
   and its asset.
 
+- **A command runs without reflection.** `CommandBody` declares `InvokeExecute`, and each arity
+  overrides it to call its own `Execute` - so dispatching a signal no longer does a `GetMethod` and
+  an `Invoke` per command, and no longer allocates the parameter array those needed. Filling a
+  command's `[SignalParam]` properties is a typed assignment rather than a `SetValue`.
+
+- **Injection is resolved once per type and remembered.** `InjectionExtensions` built the list of
+  members to fill on every injection, walking the type's declaration chain and reading attributes
+  each time. It builds that list once per type now and keeps it, and the cache is stamped with the
+  binder's generation so a rebind invalidates it rather than being missed. The file is roughly half
+  the size it was.
+
+- **Context types are indexed once for the run, not looked up per Root.** `RootsManager` owns a
+  `ContextTypeIndex` built from the loaded assemblies, so a scene with twenty Roots sweeps them
+  once instead of twenty times. The sweep also survives an assembly it cannot load, which used to
+  throw `ReflectionTypeLoadException` and take the whole index with it.
+
+- **A pool checkout and a return are constant time.** The runtime model kept its items in lists it
+  searched linearly, so a pool of a few hundred cost more on every checkout than the object it was
+  saving. Items sit in a set that carries its own index and removes by swapping the last item into
+  the gap. The buckets are keyed by pool and by item, which is what makes a lookup a lookup rather
+  than a scan.
+
+- **The pool activates what it hands out.** A checkout parents the item and sets it active, rather
+  than leaving that to whoever asked. A caller that was already activating the item still works; one
+  that assumed it came back inactive has to say so.
+
+- **Four pools of instances become one.** Commands, functions, function data containers, bindings
+  and mediators each had their own dictionary of stacks and their own take-and-return code.
+  `TypePool<T>` is that code, once, and the double-return guard the mediator pool needs is a
+  constructor flag rather than a list walk.
+
+- **Ordinary work stops reporting itself as a warning.** Unbinding something, creating a function
+  and returning a container to its pool were logged at warning level, which meant a console filtered
+  to warnings filled with the framework doing its job. They log at the normal level; what is
+  actually wrong still warns.
+
+- **The Controllers help page shows every binding shape** - sequence, parallel, bind-time
+  parameters, `DispatchSignalCommand`, and a group as a step - and both the page and
+  `Controller.md` now say where a command's data comes from: the signal reaches the bound method,
+  and `[SignalParam]` is filled from the binding's parameters or from the previous step's
+  `Release`. Getting that wrong was the most common way to reach a null payload.
+
 ### Fixed
+
+- **A group of synchronous parallel steps ran only the first of them.** A group ended as soon as
+  nothing was running, and a step that finishes inside its own `Execute` leaves nothing running - so
+  `ToParallel` with no async step in it dispatched one command and closed. A group ends when nothing
+  is running *and* every step has been reached. Found by the new resolver tests.
+
+- **A group step bound to nothing stopped the chain instead of being skipped.** The resolver waited
+  on a step that would never report, so everything after it in the sequence was never reached. It is
+  skipped, and says so once.
+
+- **`ResumeContext` paused every sub context it owned.** The loop logged `ResumeContext!` and called
+  `PauseContext()`, so resuming a Root left its sub contexts asleep. It also reset three of the
+  seven lifecycle flags on teardown, leaving the other four claiming the context had bound and
+  launched when it had done neither.
+
+- **`UnBindAll` unbound half the bindings of any key that had more than one.** It counted up to the
+  live list's `Count` while always taking element `0`, and unbinding removes from that list - so the
+  index chased a shrinking list and stopped in the middle. It works from a snapshot.
+
+- **A screen left the active registers by identity, and is parked once.** Removal matched on type
+  and manager rather than on the instance, so with two screens of a type registered the wrong one
+  could be taken out; and a screen hidden twice was added to the passive pool twice, which the pool
+  then handed out as two different screens.
+
+- **A screen shown or hidden twice carried two subscriptions.** `ShowCompleted` and `HideCompleted`
+  were subscribed without being dropped first, so a screen reopened before its last show finished
+  ran the completion handler once per open.
+
+- **A screen whose load failed lost the exception.** The load ran as `async void`, so anything it
+  threw went nowhere and the screen simply never appeared. It is awaited and caught, and says which
+  screen and what went wrong.
+
+- **A command's retain flag belonged to the pooled instance rather than to the run.** A command that
+  retained once kept `HasRetain` set when it came back out of the pool, so a later run of the same
+  command type was waited on for a `Release` that was never coming. The flags are set at the start
+  of every run.
+
+- **An open belonged to the service rather than to the call that made it.** Two opens in flight at
+  once shared the sub service's fields, so what one of them was told - its layer, its parameters,
+  its force flags - reached the other. Each open carries its own builder, shows once, and returns
+  its pooled instance if it is refused.
+
+- **A screen registered nowhere was reported twice**, once by the registry lookup and once by
+  `Open`. The lookup is quiet and `Open` is the voice.
+
+- **The mediator pool walked its whole stack to refuse a double return.** It refuses on a set
+  instead, so returning a mediator costs the same whether the pool holds two or two hundred.
+
+- **The function provider said "Function Created!" when it had reused one from the pool**, and
+  looked up the `Execute` method by reflection on every call. The methods are cached per type and
+  the message says which of the two happened.
 
 - **Create Module attached a generated screen to the wrong Root when a module held more than one.**
   The parent's Root prefab was whichever one under its `Prefabs` folder carried a `RootBase` first,
@@ -48,6 +169,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PlayerSystemRoot` are recognised as their module's own. A folder with several Roots and none of
   them the module's attaches nothing and says so, because being silently wrong is worse than leaving
   the step to *Add Sub Context*.
+
+### Removed
+
+- `InjectionCaching`, `PostConstructUtils` and `DeconstructUtils` - three files nothing called since
+  injection was rewritten around a per-type entry.
+
+- `CommandStepVO.Id`, and the resolver's `_stepsDictionary` and `CommandBinder._activeCommandGroup`
+  with it. A `Guid` was generated per step and the dictionaries keyed by it were written to and
+  never read.
 
 ## [1.6.0] - 2026-09-06
 
