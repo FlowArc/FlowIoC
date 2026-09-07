@@ -308,7 +308,19 @@ _signals.Incoming.AddCurrency.Dispatch(100d);
 _signals.Outgoing.CurrencyChanged.AddListener(OnCurrencyChanged);
 _signals.Outgoing.CurrencyChanged.AddListenerOnce(OnFirstChangeOnly);
 _signals.Outgoing.CurrencyChanged.RemoveListener(OnCurrencyChanged);
+_signals.Outgoing.CurrencyChanged.RemoveAllListeners();
 ```
+
+`Dispatch` runs three things, always in this order: the once-listeners, then the commands
+bound to the signal, then the ordinary listeners. So a listener added with `AddListenerOnce`
+sees the dispatch before the command that acts on it has run, and a listener added with
+`AddListener` sees it after — which is what makes `AddListener` the one a Mediator uses to
+redraw from a value a command has just written.
+
+`RemoveAllListeners` drops both listener lists at once and leaves the bound commands alone,
+because what a signal runs in the middle belongs to the context that bound it. A Mediator's
+`OnRemove` is otherwise the only teardown path there is, so a signal that outlives the
+objects listening to it keeps every listener a destroyed one left behind.
 
 ### The Incoming / Outgoing convention
 

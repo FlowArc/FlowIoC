@@ -72,8 +72,6 @@ namespace FlowIoC.ScreenModule.Service.Sub
                 screenBody.Register();
 
             screenBody.Show();
-
-            //TODO: History
         }
 
         private void ShowAnimationCompleted(IScreenBody screenBody)

@@ -163,7 +163,6 @@ namespace FlowIoC.ScreenModule.Model.Registry
             screenData.HasShowAnimation = screen.HasShowAnimation;
             screenData.ForceOpenAtFullLayer = false;
             screenData.ForceOpenAtDuplication = false;
-            screenData.AddToHistory = false;
             screenData.Parameters = null;
         }
     }

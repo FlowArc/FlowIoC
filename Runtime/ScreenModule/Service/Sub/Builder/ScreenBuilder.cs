@@ -72,14 +72,6 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
             return this;
         }
 
-        public IScreenBuilder AddToHistory()
-        {
-            if (_screenData != null)
-                _screenData.AddToHistory = true;
-
-            return this;
-        }
-
         public IScreenBuilder SkipShowAnimation()
         {
             if (_screenData != null)

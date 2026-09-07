@@ -121,8 +121,21 @@ namespace FlowIoC.Editor.Help.Pages
                 "_signals.Outgoing.CurrencyChanged.AddListener(OnCurrencyChanged);\n"
                 + "_signals.Outgoing.CurrencyChanged.AddListenerOnce(OnFirstChangeOnly);\n"
                 + "_signals.Outgoing.CurrencyChanged.RemoveListener(OnCurrencyChanged);\n"
+                + "_signals.Outgoing.CurrencyChanged.RemoveAllListeners();\n"
                 + "\n"
                 + "_signals.Incoming.AddCurrency.Dispatch(100d);");
+            painter.Paragraph(
+                "Dispatch runs three things, always in this order: the once-listeners, then the "
+                + "commands bound to the signal, then the ordinary listeners. So a once-listener "
+                + "sees the dispatch before the command that acts on it has run and an ordinary "
+                + "listener sees it after, which is what makes AddListener the one a Mediator uses "
+                + "to redraw from a value a command has just written.");
+            painter.Paragraph(
+                "RemoveAllListeners drops both listener lists at once and leaves the bound commands "
+                + "alone, because what a signal runs in the middle belongs to the context that "
+                + "bound it. A Mediator's OnRemove is otherwise the only teardown path there is, so "
+                + "a signal that outlives the objects listening to it keeps every listener a "
+                + "destroyed one left behind.");
 
             painter.Space();
             painter.Note(
