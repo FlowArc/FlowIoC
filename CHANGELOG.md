@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-09-07
+
 ### Added
 
 - **`FlowLogger.IsEnabled`, and log overloads that take the message in parts.** `[Conditional]`
@@ -24,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hide-during-show, the function provider's mismatches, and unbinding by instance.** Twenty of them.
 
 ### Changed
+
+- **The command path hands the logger its parts rather than a built string.** Every dispatch, every
+  command taken and returned, and every sub group built its message before the logger was asked
+  whether anyone wanted it. The five `Dispatch` overloads, the binder and the group resolver pass
+  the pieces instead, and the one line that pays for an enum's name asks `FlowLogger.IsEnabled`
+  first.
 
 - **The binder builds one delegate for the pool return instead of one per dispatch.** Writing the
   method group at the subscription made a new `Action` every time a signal was dispatched, which a
