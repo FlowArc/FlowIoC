@@ -69,7 +69,13 @@ namespace FlowIoC.PoolModule.Models.Config
         }
 
         public bool TryGetItemConfig(string itemKey, out PoolItemBaseCVO itemConfig) => _itemConfigMap.TryGetValue(itemKey, out itemConfig);
-        public string GetGroupConfigOfItem(string itemKey) => _itemToGroupConfigMap[itemKey];
+        /// <summary>
+        /// The group an item was registered under, or null for an item nobody registered. Null
+        /// rather than a thrown key: every service asks this first, and a key with a typo in it is
+        /// the ordinary way a mistake reaches the pool.
+        /// </summary>
+        public string GetGroupConfigOfItem(string itemKey)
+            => itemKey != null && _itemToGroupConfigMap.TryGetValue(itemKey, out string group) ? group : null;
         public Dictionary<string, PoolGroupCVO> GetGroupConfigMap() => _groupConfigMap;
         public PoolGroupCVO GetGroupConfig(string groupConfigKey) => _groupConfigMap[groupConfigKey];
         public bool IsGroupConfigExist(string groupConfigKey) => _groupConfigMap.ContainsKey(groupConfigKey);

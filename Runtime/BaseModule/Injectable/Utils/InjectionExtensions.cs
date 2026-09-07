@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using FlowIoC.BaseModule.Contexts;
@@ -35,7 +35,8 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         /// One injectable property, with everything the resolver needs already worked out. The
         /// attribute used to be read back off the property on every injection, which meant a
         /// reflection lookup and a fresh attribute object per property per command execution -
-        /// for an answer that cannot change after the type is compiled.
+        /// for an answer that cannot change after the type is compiled. The setter is a delegate
+        /// for the same reason: SetValue is a reflective call, and this one runs on every fill.
         /// </summary>
         private class InjectEntry
         {
@@ -43,13 +44,14 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             public Type Type;
             public string Name;
             public bool IsSignal;
+            public Action<object, object> Set;
         }
 
         #region Entry Points
 
         internal static bool TryToInjectObject(this InjectionBinding binding)
         {
-            InjectMembers(binding.Value, binding.BindedContext);
+            InjectMembers(binding.Value, binding.BoundContext);
             return true;
         }
 
@@ -59,8 +61,26 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             return true;
         }
 
+        /// <summary>
+        /// Fills a function the way a command is filled: resolved once and remembered against the
+        /// binding generation, because a Function is what a Command reaches for mid-Execute and
+        /// runs as often as one.
+        /// </summary>
         internal static void TryToInjectFunction(this IContext context, IFunctionBody functionBody)
         {
+            if (functionBody is FunctionBody body)
+            {
+                int generation = context?.InjectionBinderCrossContext?.BindingGeneration ?? 0;
+
+                if (body.InjectedContext == context && body.InjectionStamp == generation)
+                    return;
+
+                InjectMembers(functionBody, context);
+                body.InjectedContext = context;
+                body.InjectionStamp = generation;
+                return;
+            }
+
             InjectMembers(functionBody, context);
         }
 
@@ -121,7 +141,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                     continue;
                 }
 
-                entry.Property.SetValue(target, value);
+                entry.Set(target, value);
             }
         }
 
@@ -147,14 +167,14 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                         continue;
                     }
 
-                    entry.Property.SetValue(mediator, signal);
+                    entry.Set(mediator, signal);
                     continue;
                 }
 
                 if (entry.Type == viewType || viewType.IsSubclassOf(entry.Type) ||
                     (entry.Type.IsInterface && entry.Type.IsAssignableFrom(viewType)))
                 {
-                    entry.Property.SetValue(mediator, view);
+                    entry.Set(mediator, view);
                     continue;
                 }
 
@@ -256,12 +276,21 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                         continue;
                     }
 
+                    Action<object, object> set = PropertySetter.For(property);
+                    if (set == null)
+                    {
+                        LogAttributeMisuse(targetType, property,
+                            "The property has no setter, so nothing can be injected into it. Give it { get; set; }.");
+                        continue;
+                    }
+
                     entries.Add(new InjectEntry
                     {
                         Property = property,
                         Type = property.PropertyType,
                         Name = signalAttribute != null ? signalAttribute.Name : injectAttribute.Name,
-                        IsSignal = signalAttribute != null
+                        IsSignal = signalAttribute != null,
+                        Set = set
                     });
                 }
             }
@@ -320,7 +349,29 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         private static List<SignalParamEntry> GetSignalParamEntries(Type commandType)
         {
             CachedInjectableData data = GetCachedData(commandType);
-            return data.SignalParamEntries ??= new SignalParamEntryBuilder().Build(commandType);
+            return data.SignalParamEntries ??= BuildSignalParamEntries(commandType);
+        }
+
+        /// <summary>
+        /// What the builder found, less any property that cannot be written. A [SignalParam] with
+        /// no setter would otherwise throw on every execution of its command; it is reported here,
+        /// once, and left out.
+        /// </summary>
+        private static List<SignalParamEntry> BuildSignalParamEntries(Type commandType)
+        {
+            List<SignalParamEntry> entries = new SignalParamEntryBuilder().Build(commandType);
+
+            for (int i = entries.Count - 1; i >= 0; i--)
+            {
+                if (entries[i].Set != null)
+                    continue;
+
+                LogAttributeMisuse(commandType, entries[i].Property,
+                    "The property has no setter, so the payload cannot be written into it. Give it { get; set; }.");
+                entries.RemoveAt(i);
+            }
+
+            return entries;
         }
 
         private static void LogSignalParamDiagnostic(SignalParamDiagnostic diagnostic)

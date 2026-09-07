@@ -33,25 +33,23 @@ namespace FlowIoC.PoolModule.Services.Sub.Getter
             if (!_configModel.TryGetItemConfig(itemKey, out PoolItemBaseCVO itemConfig))
                 return ReportEmpty<T>(itemKey, groupConfigKey, "Get");
 
-            if (itemConfig is PoolItemVO addressableItem && addressableItem.IsAddressable)
+            if (itemConfig is PoolItemCVO addressableItem && addressableItem.IsAddressable)
             {
                 FlowLogger.LogError(SystemLogType.Pool,
                     $"[PoolGetterSubService.Get] Item '{itemKey}' is Addressable. Use GetAsync instead.");
                 return null;
             }
 
-            // Nothing here awaits: the addressable path is the only one that does and it was just
-            // turned away, so the task the loader hands back has already run to completion.
             if (itemConfig.LazyLoad)
             {
-                T created = FillLazily(itemKey, groupConfigKey, itemConfig, () => _load.CreateItem(itemConfig).Result as T);
+                T created = FillLazily(itemKey, groupConfigKey, itemConfig, () => _load.CreateItemSync(itemConfig) as T);
                 if (created != null)
                     return CheckOut(created, itemKey, groupConfigKey, parent, callback);
             }
 
             if (itemConfig.IsExtendable)
             {
-                T extended = _load.CreateItem(itemConfig).Result as T;
+                T extended = _load.CreateItemSync(itemConfig) as T;
                 if (extended != null)
                     return CheckOut(extended, itemKey, groupConfigKey, parent, callback);
             }

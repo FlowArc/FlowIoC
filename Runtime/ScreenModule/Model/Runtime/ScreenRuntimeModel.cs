@@ -94,18 +94,28 @@ namespace FlowIoC.ScreenModule.Model.Runtime
 
         public bool GetScreen<T>(int managerId, out T screen) where T : IScreenBody
         {
-            (int, Type) key = (managerId, typeof(T));
+            if (GetScreen(managerId, typeof(T), out IScreenBody pooledScreen))
+            {
+                screen = (T) pooledScreen;
+                return true;
+            }
+
+            screen = default;
+            return false;
+        }
+
+        public bool GetScreen(int managerId, Type screenType, out IScreenBody screen)
+        {
+            (int, Type) key = (managerId, screenType);
 
             if (!_passiveScreens.TryGetValue(key, out List<IScreenBody> pooled) || pooled.Count == 0)
             {
-                screen = default;
+                screen = null;
                 return false;
             }
 
-            IScreenBody pooledScreen = pooled[0];
+            screen = pooled[0];
             pooled.RemoveAt(0);
-
-            screen = (T) pooledScreen;
             return true;
         }
 

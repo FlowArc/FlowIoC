@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.ViewsMediators.View;
-using FlowIoC.PoolModule.Entities;
+using FlowIoC.PoolModule.Data.ValueObjects;
 using UnityEngine;
 using UnityEngine.Rendering;
 

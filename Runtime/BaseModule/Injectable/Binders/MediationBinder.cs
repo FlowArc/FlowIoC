@@ -37,7 +37,7 @@ namespace FlowIoC.BaseModule.Injectable.Binders
             if (key is not IView)
             {
                 string viewTypeName = key?.GetType().Name ?? "Unknown";
-                FlowLogger.LogError(SystemLogType.Injection, "Binding View requires inheriting from IMVCView interface! " + viewTypeName);
+                FlowLogger.LogError(SystemLogType.Injection, "A View bound to a Mediator has to implement IView. " + viewTypeName + " does not.");
                 return null;
             }
 

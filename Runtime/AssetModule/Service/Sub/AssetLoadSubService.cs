@@ -71,7 +71,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             if (handle.Status != AsyncOperationStatus.Succeeded || result == null)
             {
                 FlowLogger.LogError(SystemLogType.Asset, $"[AssetService] LoadAsset failed: {regKey}");
-                _signals.OutGoing.AssetLoadFailed.Dispatch(regKey);
+                _signals.Outgoing.AssetLoadFailed.Dispatch(regKey);
                 _release.HardRelease(regKey);
                 return default;
             }
@@ -119,7 +119,7 @@ namespace FlowIoC.AssetModule.Service.Sub
                 if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
                 {
                     FlowLogger.LogError(SystemLogType.Asset, $"[AssetService] Load failed: {regKey}");
-                    _signals.OutGoing.AssetLoadFailed.Dispatch(regKey);
+                    _signals.Outgoing.AssetLoadFailed.Dispatch(regKey);
                     _release.HardRelease(regKey);
                     return null;
                 }

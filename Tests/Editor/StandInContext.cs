@@ -38,7 +38,7 @@ namespace FlowIoC.Tests
             AllContexts = new List<IContext> {this};
 
             InjectionBinder = new InjectionBinder();
-            InjectionBinder.SetBindedContext(this);
+            InjectionBinder.SetBoundContext(this);
         }
 
         public void Initialize(GameObject contextGameObject, int initializeOrder,

@@ -122,6 +122,14 @@ namespace FlowIoC.ConsoleModule
             return -1;
         }
 
+        /// <summary>
+        /// Whether a log written now would be kept. For a call site that pays to build its message -
+        /// an interpolation, an enum's name - and sits on a hot path: <c>[Conditional]</c> only removes
+        /// the call when the define is absent, and a project that defines it still builds every
+        /// message with logging switched off.
+        /// </summary>
+        public static bool IsEnabled => Settings.IsLoggingEnabled;
+
         // ======================== Log ========================
 
         [HideInCallstack]
@@ -129,6 +137,35 @@ namespace FlowIoC.ConsoleModule
         internal static void Log(SystemLogType systemLogType, string message)
         {
             AddLog(systemLogType, message, LogType.Log);
+        }
+
+        /// <summary>
+        /// The parts of a message, joined only when logging is on. The hot paths - a dispatch, a
+        /// command, a function - log through these so that logging switched off costs them nothing
+        /// but the call.
+        /// </summary>
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void Log(SystemLogType systemLogType, string part1, string part2)
+        {
+            if (!Settings.IsLoggingEnabled) return;
+            AddLog(systemLogType, part1 + part2, LogType.Log);
+        }
+
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void Log(SystemLogType systemLogType, string part1, string part2, string part3)
+        {
+            if (!Settings.IsLoggingEnabled) return;
+            AddLog(systemLogType, part1 + part2 + part3, LogType.Log);
+        }
+
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void Log(SystemLogType systemLogType, string part1, string part2, string part3, string part4)
+        {
+            if (!Settings.IsLoggingEnabled) return;
+            AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log);
         }
 
         [HideInCallstack]

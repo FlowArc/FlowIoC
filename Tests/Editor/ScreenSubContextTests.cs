@@ -144,6 +144,9 @@ namespace FlowIoC.Tests
                 unregistered = viewType;
             });
 
+            // Registered first: a context that never reached Setup registered nothing, and has
+            // nothing to take back.
+            _context.Setup();
             _context.DestroyContext();
 
             Assert.AreEqual(0, managerId);

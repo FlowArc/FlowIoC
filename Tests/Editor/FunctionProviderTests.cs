@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using FlowIoC.BaseModule.Function;
 using FlowIoC.BaseModule.Function.Provider;
 using FlowIoC.BaseModule.Function.ReturnableFunctions;
 using FlowIoC.BaseModule.Function.VoidFunctions;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace FlowIoC.Tests
 {
@@ -58,6 +61,30 @@ namespace FlowIoC.Tests
             string answer = _provider.Execute<JoinFunction>().AddParams("a", "b").SetReturn<string>();
 
             Assert.That(answer, Is.EqualTo("ab"));
+        }
+
+        /// <summary>
+        /// The parameters reach Execute through the function's own typed entry, so a mismatch is
+        /// a report naming the function rather than a reflection exception from inside the provider.
+        /// </summary>
+        [Test]
+        public void A_parameter_of_the_wrong_type_is_reported_and_the_function_does_not_run()
+        {
+            LogAssert.Expect(LogType.Error, new Regex("Execute parameter"));
+
+            int answer = _provider.Execute<DoubleFunction>().AddParams("not a number").SetReturn<int>();
+
+            Assert.That(answer, Is.Zero);
+        }
+
+        [Test]
+        public void A_function_given_fewer_parameters_than_it_takes_is_reported()
+        {
+            LogAssert.Expect(LogType.Error, new Regex("Execute signature mismatch"));
+
+            int answer = _provider.Execute<DoubleFunction>().SetReturn<int>();
+
+            Assert.That(answer, Is.Zero);
         }
 
         [Test]

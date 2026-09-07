@@ -8,8 +8,8 @@ namespace FlowIoC.PoolModule.Data.UnityObjects
     public class CD_PoolGroup : ScriptableObject
     {
         [SerializeField]
-        private List<PoolItemVO> _items = new();
+        private List<PoolItemCVO> _items = new();
 
-        public List<PoolItemVO> Items => _items;
+        public List<PoolItemCVO> Items => _items;
     }
 }

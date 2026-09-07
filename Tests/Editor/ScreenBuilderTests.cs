@@ -110,6 +110,18 @@ namespace FlowIoC.Tests
             Assert.That(_runtimeModel.LastTypeAsked, Is.Null, "it never got as far as a check");
         }
 
+        /// <summary>
+        /// The pooled instance is taken at Show, not at Open. An open that never reached Show used
+        /// to keep the instance it had taken out of the pool for good.
+        /// </summary>
+        [Test]
+        public void Open_leaves_the_pool_alone_until_Show()
+        {
+            _builderSubService.Open<FirstScreen>(FirstManager).OpenInLayer(5).SetParameters(1, 2);
+
+            Assert.That(_runtimeModel.PoolAsked, Is.Zero);
+        }
+
         [Test]
         public async System.Threading.Tasks.Task A_builder_shows_once()
         {
@@ -165,6 +177,7 @@ namespace FlowIoC.Tests
             public int LastLayerAsked = -1;
             public int LastManagerAsked = -1;
             public Type LastTypeAsked;
+            public int PoolAsked;
 
             public bool IsScreenActive(Type screenType, int managerId, out IScreenBody screenBody)
             {
@@ -184,7 +197,15 @@ namespace FlowIoC.Tests
 
             public bool GetScreen<T>(int managerId, out T screen) where T : IScreenBody
             {
+                PoolAsked++;
                 screen = default;
+                return false;
+            }
+
+            public bool GetScreen(int managerId, Type screenType, out IScreenBody screen)
+            {
+                PoolAsked++;
+                screen = null;
                 return false;
             }
 

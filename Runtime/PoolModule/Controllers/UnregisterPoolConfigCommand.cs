@@ -1,7 +1,7 @@
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
-using FlowIoC.PoolModule.Entities;
+using FlowIoC.PoolModule.Data.ValueObjects;
 using FlowIoC.PoolModule.Models.Config;
 using UnityEngine.Rendering;
 
@@ -16,7 +16,7 @@ namespace FlowIoC.PoolModule.Controllers
         {
             if (_configs == null)
             {
-                FlowLogger.LogError(SystemLogType.Screen, "[PoolService][RegisterPoolConfigCommand] Cannot register null screen configs!");
+                FlowLogger.LogError(SystemLogType.Pool, "[PoolService][UnregisterPoolConfigCommand] Cannot unregister null pool configs!");
                 return;
             }
 
@@ -24,7 +24,7 @@ namespace FlowIoC.PoolModule.Controllers
             {
                 if (config.Value == null)
                 {
-                    FlowLogger.LogWarning(SystemLogType.Screen, $"[PoolService][RegisterPoolConfigCommand] Null config found in screen configs list! index:{config}");
+                    FlowLogger.LogWarning(SystemLogType.Pool, $"[PoolService][UnregisterPoolConfigCommand] Null config found in pool configs! key:{config.Key}");
                     continue;
                 }
 

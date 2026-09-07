@@ -15,9 +15,7 @@ namespace FlowIoC.PoolModule.Models.Runtime
         
         int GetActiveItemCount(string itemKey, string tag);
         int GetPassiveItemCount(string itemKey, string tag);
-        
-        //List<IPoolableItem> GetAllActiveItems();
-        // List<IPoolableItem> GetAllActiveItemsByTag(string tag);
+
         IEnumerable<IPoolableItem> GetAllActiveItemsByGroupKey(string tag);
         IEnumerable<IPoolableItem> GetAllPassiveItemsByGroupKey(string tag);
 

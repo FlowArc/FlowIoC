@@ -99,6 +99,11 @@ namespace FlowIoC.BaseModule.Injectable.Components
                 }
             });
 
+            // An injector added from code and destroyed before its Start never had the list
+            // written; there is nothing to unregister.
+            if (viewDataList == null)
+                return;
+
             for (int i = 0; i < viewDataList.Count; i++)
             {
                 ViewInjectorData viewInjectorData = viewDataList[i];

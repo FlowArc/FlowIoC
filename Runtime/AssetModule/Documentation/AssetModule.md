@@ -122,15 +122,15 @@ The module exposes signals so other modules can drive it without injecting the
 service:
 
 ```csharp
-_assetSignals.InComing.LoadGroupByLabel.Dispatch("menu_icons");
-_assetSignals.InComing.ReleaseGroup.Dispatch("menu_icons");
-_assetSignals.InComing.ReleaseAsset.Dispatch("icon_sword");
+_assetSignals.Incoming.LoadGroupByLabel.Dispatch("menu_icons");
+_assetSignals.Incoming.ReleaseGroup.Dispatch("menu_icons");
+_assetSignals.Incoming.ReleaseAsset.Dispatch("icon_sword");
 ```
 
 ```csharp
-_assetSignals.OutGoing.GroupLoaded.Connect(_menuSignals.Incoming.IconsReady);
-_assetSignals.OutGoing.GroupReleased.Connect(_menuSignals.Incoming.IconsGone);
-_assetSignals.OutGoing.AssetLoadFailed.Connect(_diagnosticsSignals.Incoming.ReportAssetFailure);
+_assetSignals.Outgoing.GroupLoaded.Connect(_menuSignals.Incoming.IconsReady);
+_assetSignals.Outgoing.GroupReleased.Connect(_menuSignals.Incoming.IconsGone);
+_assetSignals.Outgoing.AssetLoadFailed.Connect(_diagnosticsSignals.Incoming.ReportAssetFailure);
 ```
 
 Use the signals when a whole phase of the game is loading — the connector wiring makes

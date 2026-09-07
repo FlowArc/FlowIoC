@@ -11,7 +11,7 @@ namespace FlowIoC.BaseModule.Root
     {
         [HideInInspector] public List<SubContextData> SubContextTypes;
 
-        [HideInInspector] protected Dictionary<IContext, SubContextData> _subContexts = new();
+        protected Dictionary<IContext, SubContextData> _subContexts = new();
 
         /// <summary>
         /// Where this Root sits in the binding order, from -100 to 100. -100 is the earliest a
@@ -26,7 +26,7 @@ namespace FlowIoC.BaseModule.Root
         [HideInInspector] internal bool mediationsBound;
         [HideInInspector] internal bool commandsBound;
         [HideInInspector] internal bool hasInitialized;
-        [HideInInspector] internal bool hasSetuped;
+        [HideInInspector] internal bool hasSetUp;
         [HideInInspector] internal bool hasLaunched;
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace FlowIoC.BaseModule.Root
         {
         }
 
-        protected virtual void AfterStarBeforeLaunchContext()
+        protected virtual void AfterStartBeforeLaunchContext()
         {
         }
 
@@ -223,12 +223,12 @@ namespace FlowIoC.BaseModule.Root
             if (!AutoSetup && !forceToSetup)
                 return;
 
-            if (hasSetuped)
+            if (hasSetUp)
                 return;
 
             FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Setup! ");
             Context.Setup();
-            hasSetuped = true;
+            hasSetUp = true;
 
             foreach (KeyValuePair<IContext, SubContextData> subContext in _subContexts)
             {

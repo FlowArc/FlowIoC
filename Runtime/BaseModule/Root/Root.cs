@@ -118,7 +118,7 @@ namespace FlowIoC.BaseModule.Root
                 subContextData.Key.ExecutePostConstructMethods();
             }
 
-            AfterStarBeforeLaunchContext();
+            AfterStartBeforeLaunchContext();
 
             _rootsManager.OnContextReady?.Invoke(Context);
         }
@@ -144,7 +144,7 @@ namespace FlowIoC.BaseModule.Root
             mediationsBound = false;
             commandsBound = false;
             hasInitialized = false;
-            hasSetuped = false;
+            hasSetUp = false;
             hasLaunched = false;
         }
 

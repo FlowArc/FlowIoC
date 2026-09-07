@@ -109,11 +109,5 @@ namespace FlowIoC.BaseModule.Root
                 }
             });
         }
-
-        // public bool IsContextReady(IContext context)
-        // {
-        //     IRoot foundContext = _contextRootList.FirstOrDefault(contextRoot => contextRoot.GetContext() == context);
-        //     return foundContext != null && foundContext.GetContext().ContextStarted;
-        // }
     }
 }

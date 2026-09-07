@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FlowIoC.ScreenModule.Layer;
+using FlowIoC.ConsoleModule;
 using UnityEngine;
 
 namespace FlowIoC.ScreenModule.Entity
@@ -73,7 +74,7 @@ namespace FlowIoC.ScreenModule.Entity
         }
         private void SafeAreaChanged()
         {
-            Debug.Log("Safe Area changed from " + _lastSafeArea + " to " + UnityEngine.Screen.safeArea + " at " + Time.time);
+            FlowLogger.Log(SystemLogType.Screen, "Safe Area changed from " + _lastSafeArea + " to " + UnityEngine.Screen.safeArea + " at " + Time.time);
 
             _lastSafeArea = UnityEngine.Screen.safeArea;
             
@@ -82,7 +83,7 @@ namespace FlowIoC.ScreenModule.Entity
 
         private void OrientationChanged()
         {
-            Debug.Log("Orientation changed from " + _lastOrientation + " to " + UnityEngine.Screen.orientation + " at " + Time.time);
+            FlowLogger.Log(SystemLogType.Screen, "Orientation changed from " + _lastOrientation + " to " + UnityEngine.Screen.orientation + " at " + Time.time);
 
             _lastOrientation = UnityEngine.Screen.orientation;
             _lastResolution.x = UnityEngine.Screen.width;
@@ -91,7 +92,7 @@ namespace FlowIoC.ScreenModule.Entity
 
         private void ResolutionChanged()
         {
-            Debug.Log("Resolution changed from " + _lastResolution + " to (" + UnityEngine.Screen.width + ", " + UnityEngine.Screen.height + ") at " + Time.time);
+            FlowLogger.Log(SystemLogType.Screen, "Resolution changed from " + _lastResolution + " to (" + UnityEngine.Screen.width + ", " + UnityEngine.Screen.height + ") at " + Time.time);
 
             _lastResolution.x = UnityEngine.Screen.width;
             _lastResolution.y = UnityEngine.Screen.height;

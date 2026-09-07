@@ -20,8 +20,19 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         public List<int> Find(Type type, object[] values)
         {
             var candidates = new List<int>();
+            Find(type, values, candidates);
+            return candidates;
+        }
+
+        /// <summary>
+        /// The same answer written into a list the caller owns, so a resolver that runs on every
+        /// command execution can keep its lists rather than allocate one per property type.
+        /// </summary>
+        public void Find(Type type, object[] values, List<int> candidates)
+        {
+            candidates.Clear();
             if (type == null || values == null)
-                return candidates;
+                return;
 
             _exact.Clear();
             _assignable.Clear();
@@ -60,7 +71,6 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             // but nulls. Preferring it there would hide a real value the assignable pass
             // found later in the payload.
             candidates.AddRange(hasNonNullExact ? _exact : _assignable);
-            return candidates;
         }
 
         public bool CanHoldNull(Type type)

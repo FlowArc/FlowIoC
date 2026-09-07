@@ -153,8 +153,8 @@ namespace FlowIoC.Editor.Root
                 Application.isPlaying && !_root.hasInitialized, out bool runInitialize);
 
             bool setup = _gui.Phase(type, nameof(RootBase.AutoSetup), "Setup",
-                _root.AutoSetup, _root.hasSetuped,
-                Application.isPlaying && _root.hasInitialized && !_root.hasSetuped, out bool runSetup);
+                _root.AutoSetup, _root.hasSetUp,
+                Application.isPlaying && _root.hasInitialized && !_root.hasSetUp, out bool runSetup);
 
             bool launch = _gui.Phase(type, nameof(RootBase.AutoLaunch), "Launch",
                 _root.AutoLaunch, _root.hasLaunched,

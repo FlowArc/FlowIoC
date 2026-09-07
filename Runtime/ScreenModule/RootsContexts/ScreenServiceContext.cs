@@ -10,15 +10,27 @@ using FlowIoC.ScreenModule.Signals;
 
 namespace FlowIoC.ScreenModule.RootsContexts
 {
+    /// <summary>
+    /// The screen service's own context, declared in the same four phases every module's context
+    /// is. It used to do all of this in CoreBindings, which runs when the context starts whatever
+    /// the Root's phase switches say - the one context in the package that did not keep to the
+    /// rule the package asks of everyone else.
+    /// </summary>
     internal class ScreenServiceContext : Context
     {
         private ScreenServiceInternalSignals _screenServiceInternalSignals;
 
-        protected override void CoreBindings()
+        public override void SignalBindings()
         {
-            base.CoreBindings();
+            base.SignalBindings();
 
             _screenServiceInternalSignals = InjectionBinderCrossContext.Bind<ScreenServiceInternalSignals>();
+        }
+
+        public override void InjectionBindings()
+        {
+            base.InjectionBindings();
+
             InjectionBinderCrossContext.Bind<IScreenService, ScreenService>();
             InjectionBinder.Bind<IScreenRegistryModel, ScreenRegistryModel>();
             InjectionBinder.Bind<IScreenRuntimeModel, ScreenRuntimeModel>();
@@ -35,6 +47,11 @@ namespace FlowIoC.ScreenModule.RootsContexts
             InjectionBinder.Bind<TryGetSubService>();
             InjectionBinder.Bind<HideSubService>();
             InjectionBinder.Bind<UnloadSubService>();
+        }
+
+        public override void CommandBindings()
+        {
+            base.CommandBindings();
 
             CommandBinder.Bind(_screenServiceInternalSignals.RegisterManager).ToSequence<RegisterScreenManagerCommand>();
             CommandBinder.Bind(_screenServiceInternalSignals.RegisterScreen).ToSequence<RegisterScreenCommand>();

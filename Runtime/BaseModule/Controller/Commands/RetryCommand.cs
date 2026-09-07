@@ -1,44 +1,49 @@
-using System.Threading.Tasks;
+using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.BaseModule.Provider.Coroutine;
 using FlowIoC.ConsoleModule;
 
 namespace FlowIoC.BaseModule.Controller.Commands
 {
-    public abstract class RetryCommand : Command <int,float>
+    /// <summary>
+    /// A command that tries something and, when told it failed, tries again up to a limit with a
+    /// pause in between. The pause runs on the framework's coroutine provider in real time: it
+    /// used to be a Task.Delay on an async void, which swallowed whatever the retry threw, could
+    /// not be stopped with the scene, and never fired on WebGL.
+    /// </summary>
+    public abstract class RetryCommand : Command<int, float>
     {
+        [Inject] private ICoroutineProvider _coroutineProvider { get; set; }
+
         protected int _retryCount;
         protected int _retryLimit;
         protected float _retryDelay;
-        
+
         public override void Execute(int retryLimit, float delay)
         {
             Retain();
             _retryCount = 0;
-            _retryLimit =  retryLimit;
+            _retryLimit = retryLimit;
             _retryDelay = delay;
         }
 
         protected abstract void Try();
-        
-        protected async void TryFailed()
+
+        protected void TryFailed()
         {
             FlowLogger.Log(SystemLogType.Command, "[RetryCommand.TryFailed] failed");
+
             if (_retryCount == _retryLimit)
                 RetryFailLimitReached();
             else if (_retryDelay <= 0)
                 Retry();
             else
-                await WaitAndRetry();
-        }
-        private async Task WaitAndRetry()
-        {
-            await Task.Delay((int)(_retryDelay * 1000));
-            Retry();
+                _coroutineProvider.WaitForSecondsRealTime(_retryDelay, Retry);
         }
 
         protected virtual void Retry()
         {
             _retryCount++;
-            FlowLogger.Log(SystemLogType.Command, $"[RetryCommand.Retry] Count:{_retryCount}");
+            FlowLogger.Log(SystemLogType.Command, "[RetryCommand.Retry] Count:", _retryCount.ToString());
             Try();
         }
 

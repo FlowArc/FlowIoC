@@ -10,7 +10,8 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
     /// What <c>Open&lt;T&gt;()</c> hands back: everything one screen needs to be shown, and nothing
     /// belonging to any other. The checks that can refuse the open - a screen already on screen, a
     /// layer already occupied - run at <c>Show()</c>, because the calls in between are what decide
-    /// whether being refused is the right answer.
+    /// whether being refused is the right answer. So does the pool: an open that never reaches
+    /// Show has taken nothing out of it.
     /// </summary>
     internal sealed class ScreenBuilder : IScreenBuilder
     {
@@ -18,18 +19,14 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
         private readonly ShowSubService _show;
         private readonly HideSubService _hide;
 
+        // Null when Open already refused - a screen registered nowhere - and said so.
         private readonly ScreenVO _screenData;
-        private readonly IScreenBody _pooledScreen;
-        private readonly bool _aborted;
 
         private bool _shown;
 
-        internal ScreenBuilder(ScreenVO screenData, IScreenBody pooledScreen, bool aborted,
-            IScreenRuntimeModel runtimeModel, ShowSubService show, HideSubService hide)
+        internal ScreenBuilder(ScreenVO screenData, IScreenRuntimeModel runtimeModel, ShowSubService show, HideSubService hide)
         {
             _screenData = screenData;
-            _pooledScreen = pooledScreen;
-            _aborted = aborted;
             _runtimeModel = runtimeModel;
             _show = show;
             _hide = hide;
@@ -110,9 +107,16 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
             if (!CanShow())
                 return default;
 
-            return _pooledScreen == null
-                ? await _show.ShowNewScreen<T>(_screenData)
-                : _show.ShowPooledScreen<T>(_pooledScreen);
+            // Taken from the pool here and not at Open. A pooled instance carries the data of its
+            // last opening, so it takes this opening's instead, with its pool state carried over.
+            if (_runtimeModel.GetScreen(_screenData.ManagerId, _screenData.ScreenType, out IScreenBody pooled))
+            {
+                _screenData.State = pooled.Data.State;
+                pooled.Data = _screenData;
+                return _show.ShowPooledScreen<T>(pooled);
+            }
+
+            return await _show.ShowNewScreen<T>(_screenData);
         }
 
         /// <summary>
@@ -122,11 +126,8 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
         /// </summary>
         private bool CanShow()
         {
-            if (_aborted || _screenData == null)
-            {
-                ReturnPooledScreen();
+            if (_screenData == null)
                 return false;
-            }
 
             if (_shown)
             {
@@ -153,8 +154,6 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
             {
                 FlowLogger.LogError(SystemLogType.Screen,
                     $"[ScreenService] Manager({_screenData.ManagerId}) Screen: {_screenData.ScreenType.Name} is already active");
-
-                ReturnPooledScreen();
                 return true;
             }
 
@@ -174,8 +173,6 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
             {
                 FlowLogger.LogError(SystemLogType.Screen,
                     $"[ScreenService.Builder] Manager({_screenData.ManagerId}) Layer {_screenData.LayerIndex} is not empty");
-
-                ReturnPooledScreen();
                 return true;
             }
 
@@ -184,16 +181,6 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
 
             _hide.ScreenInLayer(_screenData.LayerIndex, _screenData.ManagerId, !_screenData.ForceOpenAtFullLayerWithHideAnim);
             return false;
-        }
-
-        /// <summary>
-        /// An open that came out of the pool and then did not happen has taken an instance nobody
-        /// is going to show. It goes back, or the pool loses it.
-        /// </summary>
-        private void ReturnPooledScreen()
-        {
-            if (_pooledScreen != null)
-                _runtimeModel.AddToPassivePool(_pooledScreen);
         }
 
         #endregion
