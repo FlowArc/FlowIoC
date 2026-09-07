@@ -13,7 +13,7 @@ namespace FlowIoC.BaseModule.Function.AsyncFunctions.DataContainer
             return this;
         }
 
-        public void SetAsync()
+        public void RunAsync()
         {
             CoroutineProvider.StartCoroutine(FunctionProvider.ExecuteAsyncFunction(this));
         }
@@ -28,6 +28,6 @@ namespace FlowIoC.BaseModule.Function.AsyncFunctions.DataContainer
     public interface IAsyncFunctionDataContainer : IFunctionDataContainer
     {
         IAsyncFunctionDataContainer AddFunctionCompletedCallback(Action callback);
-        void SetAsync();
+        void RunAsync();
     }
 }

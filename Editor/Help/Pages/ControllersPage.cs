@@ -435,7 +435,16 @@ namespace FlowIoC.Editor.Help.Pages
                 + "var damage = _functionProvider\n"
                 + "    .Execute<CalculateDamageFunction>()\n"
                 + "    .AddParams(weaponId)\n"
-                + "    .SetReturn<double>();");
+                + "    .RunAndGetResult<double>();\n"
+                + "\n"
+                + "_functionProvider.Execute<RefreshHudFunction>().Run();");
+            painter.Paragraph(
+                "Nothing happens until the chain is ended, and the three ways to end it share the "
+                + "Run prefix on purpose: typing R after the dot offers all three rather than making "
+                + "you know which one this function needs. Run() for a FunctionVoid, "
+                + "RunAndGetResult<T>() for a FunctionReturn, RunAsync() for an AsyncFunction. The "
+                + "type parameter is spelled out for the same reason - double is what comes back, "
+                + "not something being passed in.");
 
             painter.Space();
             painter.Note(

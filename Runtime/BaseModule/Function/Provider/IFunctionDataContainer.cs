@@ -3,7 +3,7 @@
     public interface IFunctionDataContainer
     {
         IFunctionDataContainer AddParams(params object[] executeParameters);
-        TReturnType SetReturn<TReturnType>();
-        void SetVoid();
+        TReturnType RunAndGetResult<TReturnType>();
+        void Run();
     }
 }

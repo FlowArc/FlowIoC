@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The function provider's three terminators are `Run()`, `RunAsync()` and
+  `RunAndGetResult<T>()`.** They were `SetVoid()`, `SetAsync()` and `SetReturn<T>()`, and `Set` said
+  assignment about the line that actually runs the function - `Execute<T>()` builds a chain and
+  nothing happens until one of these is called. They share the `Run` prefix on purpose: typing `R`
+  after the dot offers all three at once, rather than making a caller know in advance which one this
+  function needs. `RunAndGetResult<T>` is longer than a bare verb for the reason `SetReturn` was
+  named that way in the first place - the type parameter is what comes back, and a shorter
+  `Run<double>()` would read as a parameter being passed in.
+
 ### Fixed
 
 - **A screen test scene clears its authored screen in `Awake`, and no longer calls a Unity message

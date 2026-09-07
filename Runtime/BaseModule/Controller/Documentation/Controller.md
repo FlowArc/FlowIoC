@@ -553,7 +553,7 @@ public class ApplyDamageCommand : Command
         var damage = _functionProvider
             .Execute<CalculateDamageFunction>()
             .AddParams(_weaponId)
-            .SetReturn<double>();
+            .RunAndGetResult<double>();
 
         _unitsModel.ApplyDamage(_targetId, damage);
     }
