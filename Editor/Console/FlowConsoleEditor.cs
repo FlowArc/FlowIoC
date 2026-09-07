@@ -60,6 +60,10 @@ namespace FlowIoC.Editor.Console
 
         private readonly FlowSourceNavigator _navigator = new();
         private readonly FlowConsoleState _state = new();
+        private readonly FlowConsoleCollapse _collapse = new();
+
+        private bool _collapseRows;
+        private int[] _collapseCounts;
 
         private CD_FlowConsole _settings;
         private GUIStyle _richTextStyle;
@@ -96,6 +100,7 @@ namespace FlowIoC.Editor.Console
             InvalidateTraceCache();
 
             _rowLineCount = _state.RowLineCount;
+            _collapseRows = _state.Collapse;
 
             _logFilter = new Dictionary<LogType, bool>
             {
@@ -262,6 +267,15 @@ namespace FlowIoC.Editor.Console
                 _searchText = "";
                 _logsDirty = true;
                 Repaint();
+            }
+
+            bool collapse = GUILayout.Toggle(_collapseRows, "Collapse", EditorStyles.toolbarButton, GUILayout.Width(70));
+            if (collapse != _collapseRows)
+            {
+                _collapseRows = collapse;
+                _state.Collapse = collapse;
+                _logsDirty = true;
+                _needsRepaint = true;
             }
 
             GUILayout.FlexibleSpace();
@@ -600,7 +614,35 @@ namespace FlowIoC.Editor.Console
                 _cachedVisibleLogs.Add(log);
             }
 
+            FoldVisibleLogs();
             RebuildLogHeights();
+        }
+
+        /// <summary>
+        /// Folds equal rows into counted ones when Collapse is on. The visible list keeps holding
+        /// one log per row - the first occurrence - and the counts travel beside it, so nothing
+        /// downstream has to know whether folding happened.
+        /// </summary>
+        private void FoldVisibleLogs()
+        {
+            if (!_collapseRows)
+            {
+                _collapseCounts = null;
+                return;
+            }
+
+            List<CollapsedRow> rows = _collapse.Fold(_cachedVisibleLogs);
+
+            _cachedVisibleLogs.Clear();
+
+            if (_collapseCounts == null || _collapseCounts.Length < rows.Count)
+                _collapseCounts = new int[Mathf.Max(rows.Count, 64)];
+
+            for (int i = 0; i < rows.Count; i++)
+            {
+                _cachedVisibleLogs.Add(rows[i].Log);
+                _collapseCounts[i] = rows[i].Count;
+            }
         }
 
         private void RebuildLogHeights()
@@ -661,6 +703,25 @@ namespace FlowIoC.Editor.Console
                        consoleLog.Millisecond.ToString("000");
 
             float textWidth = rect.width - (textLeft - rect.x) - 4f;
+
+            // The count of a folded row, right-aligned so the messages stay lined up under each
+            // other. Drawn before the text so the text knows how much room it has left.
+            int foldedCount = _collapseRows && _collapseCounts != null && rowIndex < _collapseCounts.Length
+                ? _collapseCounts[rowIndex]
+                : 1;
+
+            if (foldedCount > 1)
+            {
+                var badge = new GUIContent(foldedCount.ToString());
+                Vector2 badgeSize = EditorStyles.miniButton.CalcSize(badge);
+                float badgeWidth = Mathf.Max(badgeSize.x, 22f);
+
+                var badgeRect = new Rect(rect.xMax - badgeWidth - 6f,
+                    rect.y + (rect.height - 16f) * 0.5f, badgeWidth, 16f);
+
+                GUI.Label(badgeRect, badge, EditorStyles.miniButton);
+                textWidth -= badgeWidth + 10f;
+            }
 
             // Unity's own row: the message, and underneath it where the message came from. That
             // last line is what tells a reader which of forty identical warnings is theirs, so it
