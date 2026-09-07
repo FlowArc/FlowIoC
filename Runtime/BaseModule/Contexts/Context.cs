@@ -135,15 +135,24 @@ namespace FlowIoC.BaseModule.Contexts
         {
         }
 
+        /// <summary>
+        /// Tears the context down. Its own binder goes first, then what it bound across: a
+        /// Deconstruct above may still dispatch through the holder, so the holder is the last
+        /// thing to go. Taking the cross-context bindings back is what makes a module's public
+        /// surface live exactly as long as its Root - a scene's module goes with the scene and is
+        /// bound fresh when the scene comes back, and a persistent Root's Service lives for the
+        /// run. What was handed in with BindInstance belongs to the run and stays.
+        /// </summary>
         public virtual void DestroyContext()
         {
             IsStarted = false;
 
-            InjectionBinderCrossContext.UnBind<GameObject>(GetType().Name);
-
             MediationBinder?.UnBindAll();
             CommandBinder?.UnBindAll();
             InjectionBinder?.UnBindAll();
+
+            InjectionBinderCrossContext?.UnBind<GameObject>(GetType().Name);
+            InjectionBinderCrossContext?.UnBindAllBoundBy(this);
         }
 
         public virtual void PauseContext()

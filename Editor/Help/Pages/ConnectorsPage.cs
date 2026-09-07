@@ -189,6 +189,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Connector translates, it does not decide. One announcement joined to one order is a crossing.");
             painter.Bullet("A list of consequences hung off one announcement is a flow, and a flow belongs in the Context that owns it.");
             painter.Bullet("A Connector gets signal holders with GetInstance in Setup. It never binds them.");
+            painter.Bullet(
+                "A Connector disconnects in DestroyContext what it connected in Setup, so a scene that comes back does not wire the same crossing twice onto a holder that outlived it.");
             painter.Bullet("A Connector sub-context is listed on the Connector Root and nowhere else.");
             painter.Bullet("A Connector reaches a module through Modules.Hero.Signals, never through Modules.Hero or Modules.Hero.Shared.");
             painter.Bullet("Systems are never added to one another's assemblies. Two Systems talk through signals wired in a Connector.");

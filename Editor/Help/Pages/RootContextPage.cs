@@ -283,10 +283,15 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Space();
             painter.SubHeading("What DestroyContext takes back");
             painter.Paragraph(
-                "Tearing a Context down unbinds its own binder and leaves the shared one alone - it "
-                + "belongs to the scene rather than to any one module. So a cross-context binding "
-                + "outlives the Context that made it, which is one more reason to put there only "
-                + "what really is the application's.");
+                "Tearing a Context down empties its own binder and takes out of the shared one "
+                + "everything this Context bound there - its signal holder, its Service - so a "
+                + "module's public surface lives exactly as long as its Root. A scene's module goes "
+                + "with the scene and is bound fresh when the scene comes back; a persistent Root's "
+                + "Service lives for the run, because that Root is never torn down. What was handed "
+                + "in with BindInstance, the two providers say, belongs to the run and stays.");
+            painter.Paragraph(
+                "The holder goes last, after the Context's own binder, so a Deconstruct that "
+                + "dispatches still has a holder to dispatch through.");
 
             painter.Space();
             painter.SubHeading("Setup initialises");
@@ -326,6 +331,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet(
                 "Bind across only what something outside the Context must see: the signal holder, and a Service interface. A Model is local.");
             painter.Bullet("A Context reaches into its sub-contexts' bindings. A sub-context does not reach back into its parent's.");
+            painter.Bullet(
+                "A Context takes back what it bound across. A module's holder and Service live exactly as long as its Root; what BindInstance handed in lives for the run.");
             painter.Bullet("Initialize Order runs from -100 to 100. Services take the negative band, the game's modules 0 to 97.");
         }
 
