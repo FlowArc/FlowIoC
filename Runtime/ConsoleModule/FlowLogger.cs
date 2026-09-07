@@ -28,6 +28,7 @@ namespace FlowIoC.ConsoleModule
         private static CD_FlowConsole _settings;
 
         private static readonly CollapseKeyBuilder CollapseKeys = new();
+        private static readonly FlowStackFrameFilter StackFrames = new();
 
         /// <summary>
         /// True while a log of ours is being handed to Unity's console. The editor bridge reads
@@ -202,6 +203,18 @@ namespace FlowIoC.ConsoleModule
             AddLog(systemLogType, message, LogType.Warning);
         }
 
+        /// <summary>
+        /// A framework warning that names the type it is about. Double-clicking it opens that
+        /// type's script, which matters when the offending object was never on the stack - an
+        /// asynchronous release, or a resolver noticing a step later than it happened.
+        /// </summary>
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void LogWarning(SystemLogType systemLogType, string message, Type blame)
+        {
+            AddLog(systemLogType, message, LogType.Warning, blame);
+        }
+
         [HideInCallstack]
         [Conditional("ENABLE_LOG")]
         public static void LogWarning(int logTypeValue, string message)
@@ -226,6 +239,17 @@ namespace FlowIoC.ConsoleModule
             WriteError((int) systemLogType, systemLogType, message, unityMessage, context);
         }
 
+        /// <summary>
+        /// A framework error that names the type it is about, so the log points at the code
+        /// whose author has to change something rather than at the guard clause that caught it.
+        /// </summary>
+        [HideInCallstack]
+        internal static void LogError(SystemLogType systemLogType, string message, Type blame,
+            string unityMessage = "", UnityEngine.Object context = null)
+        {
+            WriteError((int) systemLogType, systemLogType, message, unityMessage, context, blame);
+        }
+
         [HideInCallstack]
         public static void LogError(int logTypeValue, string message, UnityEngine.Object context = null)
         {
@@ -247,10 +271,10 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         [HideInCallstack]
         private static void WriteError(int logTypeValue, SystemLogType? systemLogType, string message,
-            string unityMessage, UnityEngine.Object context)
+            string unityMessage, UnityEngine.Object context, Type blame = null)
         {
 #if UNITY_EDITOR
-            var log = CreateLogEntry(message, LogType.Error);
+            var log = CreateLogEntry(message, LogType.Error, blame);
             log.LogTypeValue = logTypeValue;
 
             if (systemLogType.HasValue)
@@ -387,12 +411,12 @@ namespace FlowIoC.ConsoleModule
         // ======================== Internal ========================
 
         [HideInCallstack]
-        private static void AddLog(SystemLogType systemLogType, string message, LogType logType)
+        private static void AddLog(SystemLogType systemLogType, string message, LogType logType, Type blame = null)
         {
             if (!Settings.IsLoggingEnabled) return;
 
 #if UNITY_EDITOR
-            var log = CreateLogEntry(message, logType);
+            var log = CreateLogEntry(message, logType, blame);
             log.SystemLogType = systemLogType;
             log.LogTypeValue = (int) systemLogType;
 
@@ -406,12 +430,12 @@ namespace FlowIoC.ConsoleModule
         }
 
         [HideInCallstack]
-        private static void AddCustomLog(int logTypeValue, string message, LogType logType)
+        private static void AddCustomLog(int logTypeValue, string message, LogType logType, Type blame = null)
         {
             if (!Settings.IsLoggingEnabled) return;
 
 #if UNITY_EDITOR
-            var log = CreateLogEntry(message, logType);
+            var log = CreateLogEntry(message, logType, blame);
             log.LogTypeValue = logTypeValue;
 
             if (Settings.TryGetLogType(logTypeValue, out var typeInfo))
@@ -424,7 +448,7 @@ namespace FlowIoC.ConsoleModule
         }
 
 #if UNITY_EDITOR
-        private static ConsoleLog CreateLogEntry(string message, LogType logType)
+        private static ConsoleLog CreateLogEntry(string message, LogType logType, Type blame = null)
         {
             var now = DateTime.Now;
             var log = new ConsoleLog
@@ -444,6 +468,7 @@ namespace FlowIoC.ConsoleModule
 
             log.Frame = Time.frameCount;
             log.Realtime = Time.realtimeSinceStartup;
+            log.BlameTypeName = blame?.FullName;
 
             return log;
         }
@@ -581,16 +606,13 @@ namespace FlowIoC.ConsoleModule
                 string line = lines[i];
                 if (string.IsNullOrEmpty(line)) continue;
 
-                if (line.StartsWith("FlowIoC.ConsoleModule.", StringComparison.Ordinal) ||
-                    line.StartsWith("FlowIoC.Editor.Console.", StringComparison.Ordinal) ||
-                    line.StartsWith("UnityEngine.Debug:", StringComparison.Ordinal) ||
-                    line.StartsWith("UnityEngine.StackTraceUtility:", StringComparison.Ordinal) ||
-                    line.StartsWith("UnityEngine.Logger:", StringComparison.Ordinal) ||
-                    line.StartsWith("UnityEngine.DebugLogHandler:", StringComparison.Ordinal) ||
-                    line.StartsWith("System.Reflection.", StringComparison.Ordinal) ||
-                    line.StartsWith("System.Runtime.CompilerServices.", StringComparison.Ordinal) ||
-                    line.StartsWith("System.Threading.", StringComparison.Ordinal) ||
-                    line.StartsWith("UnityEngine.Events.", StringComparison.Ordinal))
+                // Every frame the framework owns is stepped over while looking for the source,
+                // so a diagnostic points at the game's code rather than at the guard clause that
+                // caught it. Once the source is found the frames go back into the trace: the
+                // detail panel shows the whole stack, because somebody chasing a bug in FlowIoC
+                // itself needs it. Only the frame the log points at changes.
+                bool isFrameworkFrame = StackFrames.IsFrameworkFrame(line);
+                if (isFrameworkFrame && !sourceFound)
                     continue;
 
                 if (!sourceFound)

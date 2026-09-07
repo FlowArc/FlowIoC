@@ -396,6 +396,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                 "<b><color=#FF6666>► Property:</color><color=#FFEFD5> " + diagnostic.PropertyName + "</color></b>\n" +
                 "<b><color=#FF6666>► Type:</color><color=#FFEFD5> " + diagnostic.PropertyType.Name + "</color></b>\n" +
                 "<b><color=#FF6666>► Reason:</color><color=#FFEFD5> " + reason + "</color></b>",
+                diagnostic.TargetType,
                 "► Signal Param could not be bound!\n" +
                 "► Command: " + diagnostic.TargetType.Name + "\n" +
                 "► Property: " + diagnostic.PropertyName + "\n" +

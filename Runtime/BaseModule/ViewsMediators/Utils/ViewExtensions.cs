@@ -45,14 +45,14 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
             {
                 // Said once, and through the framework's own logger. The extra Debug call wrote the
                 // same line to Unity's console whatever the Flow Console settings asked for.
-                FlowLogger.LogWarning(SystemLogType.Injection, "View is already registered. \nviewType: " + view.GetType().Name);
+                FlowLogger.LogWarning(SystemLogType.Injection, "View is already registered. \nviewType: " + view.GetType().Name, view.GetType());
                 return false;
             }
 
             if (context != null)
                 return view.RegisterIn(context);
 
-            FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name);
+            FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name, view.GetType());
 
             return false;
         }
@@ -67,13 +67,13 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
             ViewBindingData viewBindingData = context.GetBindingData(view);
             if (viewBindingData.Equals(default))
             {
-                FlowLogger.LogError(SystemLogType.Injection, "There is no view binding! " + view.GetType());
+                FlowLogger.LogError(SystemLogType.Injection, "There is no view binding! " + view.GetType(), view.GetType());
                 return false;
             }
 
             if (viewBindingData.Context == null)
             {
-                FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name);
+                FlowLogger.LogError(SystemLogType.Injection, "There is no Context \nviewType: " + view.GetType().Name, view.GetType());
                 return false;
             }
 
@@ -102,7 +102,7 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
                 InjectedMediatorData injectedMediatorData = mediationBinder.GetOrCreateInjectedMediatorData(view);
                 if (injectedMediatorData == null)
                 {
-                    FlowLogger.LogError(SystemLogType.Injection, "Injection Data not found!", context: view.gameObject);
+                    FlowLogger.LogError(SystemLogType.Injection, "Injection Data not found!", view.GetType(), context: view.gameObject);
                     return false;
                 }
 
