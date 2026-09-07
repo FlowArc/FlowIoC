@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-09-07
+
+### Fixed
+
+- **A signal could not be bound again once the Context that owned it was torn down.** 1.7.0 gave a
+  signal's command callback an owner, so that a second Context binding the same signal is refused
+  rather than silently taking it over. Nothing gave that ownership back: `UnBindAll` dropped the
+  bindings and left the callback pointing at a binder that had none, so the next Context to bind the
+  signal was refused on behalf of a run that was already over and its commands never ran again.
+  Reloading a scene is exactly that - every Context is rebuilt while the signal holder, which lives
+  in the cross-context binder, is the same instance it was. The binder now takes its own callback
+  off every signal it unbinds, and only its own: a signal another binder has since taken over is
+  left alone. The guard itself is unchanged, so two live Contexts still do not share a signal.
+
+- **A command group could be closed by a run that had already finished.** The resolver is pooled,
+  and it told its listener the run was over *before* ending it - the listener being the binder
+  putting it back in the pool. A sub group finishing therefore parked its resolver while the parent
+  carried straight on, and a step of the parent that dispatched a signal took that same resolver
+  back out and started a new run on it. The finished run's frames were still on the stack
+  underneath, and their `Dispose` then closed the new run mid-flight: its retained command went back
+  to the pool with nothing waiting on it, and every step behind that command was never reached, with
+  nothing logged. The run is ended before the callback now, so there is nothing left for those
+  frames to do, and each run carries an id that the places which carry on after calling out check
+  before they touch anything.
+
 ## [1.7.0] - 2026-09-07
 
 ### Added

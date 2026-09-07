@@ -40,6 +40,7 @@ namespace FlowIoC.Tests
             RetainOnce = false;
             LastRetained = null;
             Retained.Clear();
+            DispatchingCommand.Target = null;
 
             _commandBinder = new CommandBinder {Context = new StandInContext()};
         }
@@ -239,6 +240,104 @@ namespace FlowIoC.Tests
             Assert.That(Steps, Is.EqualTo(new[] {"second"}), "the step behind the missing group still ran");
         }
 
+        /// <summary>
+        /// A sub group finishing puts its resolver back in the pool and the parent carries straight
+        /// on - so a step of the parent that dispatches a signal takes that same resolver out
+        /// again. The finished run's frames are still on the stack underneath it, and they used to
+        /// dispose the run that had just taken it: the retained command went back to the pool
+        /// mid-flight and the step behind it never ran.
+        /// </summary>
+        [Test]
+        public void A_resolver_taken_out_of_the_pool_again_is_not_closed_by_the_run_that_left_it()
+        {
+            Signal outer = new Signal(true);
+            Signal sub = new Signal(true);
+            Signal late = new Signal(true);
+
+            DispatchingCommand.Target = late;
+
+            _commandBinder.Bind(sub).ToSequence<SecondCommand>();
+            _commandBinder.Bind(late)
+                .ToSequence<RetainingCommand>()
+                .ToSequence<ThirdCommand>();
+            _commandBinder.Bind(outer)
+                .ToGroupAsSequence(sub)
+                .ToSequence<DispatchingCommand>();
+
+            outer.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"second", "dispatching", "retaining"}));
+
+            LastRetained.Release();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"second", "dispatching", "retaining", "third"}),
+                "the step behind the retained command still had its group");
+        }
+
+        #endregion
+
+        #region Signal ownership
+
+        /// <summary>
+        /// A signal carries one command callback, and the binder that put it there gives it back
+        /// when it is unbound. Without that the signal still points at a torn-down context:
+        /// reloading a scene rebuilds every context while the signal holder, which lives in the
+        /// cross-context binder, is the same instance - and the new binder was then refused on
+        /// behalf of a run that was already over.
+        /// </summary>
+        [Test]
+        public void A_signal_can_be_bound_again_after_the_binder_that_owned_it_unbound_everything()
+        {
+            Signal signal = new Signal(true);
+
+            CommandBinder gone = new CommandBinder {Context = new StandInContext()};
+            gone.Bind(signal).ToSequence<FirstCommand>();
+            gone.UnBindAll();
+
+            _commandBinder.Bind(signal).ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"second"}));
+        }
+
+        [Test]
+        public void A_signal_unbound_by_key_can_be_bound_again()
+        {
+            Signal signal = new Signal(true);
+
+            CommandBinder gone = new CommandBinder {Context = new StandInContext()};
+            gone.Bind(signal).ToSequence<FirstCommand>();
+            gone.UnBind(signal);
+
+            _commandBinder.Bind(signal).ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"second"}));
+        }
+
+        /// <summary>
+        /// The guard it was written for still holds: two binders alive at once do not share a
+        /// signal, and the one that had it keeps it.
+        /// </summary>
+        [Test]
+        public void A_signal_bound_in_a_live_binder_is_refused_a_second_owner()
+        {
+            Signal signal = new Signal(true);
+
+            CommandBinder owner = new CommandBinder {Context = new StandInContext()};
+            owner.Bind(signal).ToSequence<FirstCommand>();
+
+            LogAssert.Expect(LogType.Error, new Regex("already bound to commands"));
+
+            _commandBinder.Bind(signal).ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"first"}));
+        }
+
         #endregion
 
         #region Payload
@@ -347,6 +446,19 @@ namespace FlowIoC.Tests
         public class ThirdCommand : Command
         {
             public override void Execute() => Steps.Add("third");
+        }
+
+        /// <summary>Dispatches another signal from inside its own Execute, the way a step that
+        /// hands work to another module does.</summary>
+        public class DispatchingCommand : Command
+        {
+            internal static Signal Target;
+
+            public override void Execute()
+            {
+                Steps.Add("dispatching");
+                Target?.Dispatch();
+            }
         }
 
         public class RetainingCommand : Command
