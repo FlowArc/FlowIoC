@@ -168,7 +168,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             commandGroupResolver.GroupExecutionFinished += _returnGroupToPool;
 
             if (!signal.HideCommandLog)
-                FlowLogger.Log(SystemLogType.CommandOperation, $"[CommandGroup][InitializeGroupWithSignal] : '{signal.Name}'.");
+                FlowLogger.Log(SystemLogType.CommandOperation, "[CommandGroup][InitializeGroupWithSignal] : '", signal.Name, "'.");
             commandGroupResolver.Initialize(binding, this, commandParameters);
         }
 
@@ -192,7 +192,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             _commandGroupPool.Push(groupResolver);
 
             if (!hideLog)
-                FlowLogger.Log(SystemLogType.CommandOperation, $"CommandGroup is returned to pool!");
+                FlowLogger.Log(SystemLogType.CommandOperation, "CommandGroup is returned to pool!");
         }
 
         #endregion
@@ -215,7 +215,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             // ever sees back what GetCommand handed out.
             _commandPool.Return(commandType, (CommandBody) commandBody);
             if (!HasHideCommandLog(commandType))
-                FlowLogger.Log(SystemLogType.CommandOperation, $"Command is returned to pool! - {commandType.Name}");
+                FlowLogger.Log(SystemLogType.CommandOperation, "Command is returned to pool! - ", commandType.Name);
         }
 
         public bool HasHideCommandLog(Type type)
