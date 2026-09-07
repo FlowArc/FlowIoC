@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A screen test scene clears its authored screen in `Awake`, and no longer calls a Unity message
+  by hand.** The scene keeps the screen's prefab in it so it can be edited there, and the run opens
+  the screen from code instead - so the authored instance has to go before anything registers it.
+  `BaseScreenTestRoot` was clearing it in `AfterCreateBeforeStartContext`, which is the middle of
+  Unity's Start phase: the screen's own `ViewInjector` may have started first, found no context
+  started yet, and subscribed to `OnContextReady` - which `StartContext` raises a few lines later.
+  The instance on its way out then had its Mediator built and registered, and undoing that is why
+  the Root called `ViewInjector.OnDestroy` itself. Clearing in `BeforeCreateContext` is before every
+  `Start`, so there is nothing to undo and the hand-written call is gone. The screen is deactivated
+  before it is destroyed, because `Destroy` is deferred to the end of the frame and deactivating
+  says now, without depending on when the frame ends.
+
 ### Changed
 
 - **The naming and API nits a review had left alone, now that there is nothing to break.** Each one
