@@ -455,6 +455,62 @@ public override void Execute()
 }
 ```
 
+An `await` has three ways out, not one, and the two nobody writes are the ones that
+hang: the work came back with nothing, and the work threw. `async void` makes the
+second one worse — the exception leaves `Execute` at the `await`, so neither `Release`
+nor `Stop` is reached, and it surfaces through Unity's unhandled-exception handler with
+nothing in it to say which command was running.
+
+```csharp
+// ✅ All three ways out resolve the retain.
+public override async void Execute()
+{
+    Retain();
+
+    try
+    {
+        var screen = await _screenService.Open<MainScreenView>().Show<MainScreenView>();
+
+        if (screen == null)
+        {
+            FlowLogger.LogError(FlowLogType.MainScreenModule,
+                $"{nameof(OpenMainScreenCommand)} - the screen did not open.");
+            Stop();
+            return;
+        }
+
+        screen.ShowPlayButton(true);
+        Release();
+    }
+    catch (Exception exception)
+    {
+        FlowLogger.LogError(FlowLogType.MainScreenModule,
+            $"{nameof(OpenMainScreenCommand)} threw while opening the screen: {exception}");
+        Stop();
+    }
+}
+```
+
+```csharp
+// ❌ Only the success path resolves the retain. A throw inside the await leaves
+//    Execute at that line: the group waits forever, with no timeout, and the only
+//    sign of it is an unhandled exception that does not name this command.
+public override async void Execute()
+{
+    Retain();
+    await _screenService.Open<MainScreenView>().Show();
+    Release();
+}
+```
+
+> What the `catch` does is your decision, not the framework's — `Stop()`, a `Release()`
+> that carries on regardless, or a signal that opens a different screen. That is why
+> nothing writes it for you. What is *not* a decision is that the retain has to be
+> resolved on all three paths.
+>
+> Prefer `Show<T>()` over `Show()`. A typed view compares against `null` through
+> Unity's own operator; an `IScreenBody` is an interface and does not.
+
 ### Typed parameters, not an object bag
 
 ```csharp
