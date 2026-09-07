@@ -265,7 +265,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             subGroup.GroupExecutionFinished += onFinish;
 
             if (!step.GroupKey.HideCommandLog)
-                FlowLogger.Log(SystemLogType.CommandOperation, $"Command SubGroup is executed : '{step.GroupKey.Name}'.");
+                FlowLogger.Log(SystemLogType.CommandOperation, "Command SubGroup is executed : '", step.GroupKey.Name, "'.");
 
             object[] parametersToUse = step.SignalParameters?.Length > 0 ? step.SignalParameters : _signalParameters;
             subGroup.Initialize(groupBinding, _commandBinder, parametersToUse);
@@ -287,8 +287,10 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
             _completionCount++;
 
-            if (!_commandBinder.HasHideCommandLog(step.CommandType))
-                FlowLogger.Log(SystemLogType.Command, $"[Command] Execute as {step.ExecutionType.ToString()} : {step.CommandType.Name}");
+            // Asked before the message is built rather than inside the call: an enum's name is a
+            // lookup and an allocation, and this line runs for every command of every dispatch.
+            if (FlowLogger.IsEnabled && !_commandBinder.HasHideCommandLog(step.CommandType))
+                FlowLogger.Log(SystemLogType.Command, "[Command] Execute as ", step.ExecutionType.ToString(), " : ", step.CommandType.Name);
 
             command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());
 
