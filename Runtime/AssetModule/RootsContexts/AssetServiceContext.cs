@@ -33,9 +33,9 @@ namespace FlowIoC.AssetModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_signals.InComing.LoadGroupByLabel).ToSequence<LoadGroupCommand>();
-            CommandBinder.Bind(_signals.InComing.ReleaseGroup).ToSequence<ReleaseGroupCommand>();
-            CommandBinder.Bind(_signals.InComing.ReleaseAsset).ToSequence<ReleaseAssetCommand>();
+            CommandBinder.Bind(_signals.Incoming.LoadGroupByLabel).ToSequence<LoadGroupCommand>();
+            CommandBinder.Bind(_signals.Incoming.ReleaseGroup).ToSequence<ReleaseGroupCommand>();
+            CommandBinder.Bind(_signals.Incoming.ReleaseAsset).ToSequence<ReleaseAssetCommand>();
         }
     }
 }

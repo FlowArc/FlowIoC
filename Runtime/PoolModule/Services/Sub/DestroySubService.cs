@@ -25,7 +25,7 @@ namespace FlowIoC.PoolModule.Services.Sub
 
             foreach (var item in _configModel.GetGroupConfigMap()[groupKey].Group.Items)
             {
-                if (item is PoolItemVO poolItem && poolItem.IsAddressable)
+                if (item is PoolItemCVO poolItem && poolItem.IsAddressable)
                 {
                     _addressableLoadService.UnloadItem(poolItem.AddressablePrefab);
                 }
@@ -55,7 +55,7 @@ namespace FlowIoC.PoolModule.Services.Sub
             foreach (IPoolableItem item in _runtimeModel.GetAllPassiveItemsByItemKey(itemKey, tag))
                 Object.Destroy(item.transform.gameObject);
             
-            if (itemConfig is PoolItemVO addressableCfg && addressableCfg.IsAddressable)
+            if (itemConfig is PoolItemCVO addressableCfg && addressableCfg.IsAddressable)
             {
                 _addressableLoadService.UnloadItem(addressableCfg.AddressablePrefab);
             }

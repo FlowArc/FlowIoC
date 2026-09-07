@@ -51,10 +51,12 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
 
             if (screenBody == null) return;
 
+            // Resources.UnloadUnusedAssets is not called here. It sweeps the whole heap and is a
+            // hitch every time, and a single screen going away is not the moment for it; the game
+            // schedules that sweep where a hitch is affordable, a loading screen say.
             try
             {
                 UnityEngine.Object.Destroy(screenBody.gameObject);
-                Resources.UnloadUnusedAssets();
             }
             catch (Exception e)
             {

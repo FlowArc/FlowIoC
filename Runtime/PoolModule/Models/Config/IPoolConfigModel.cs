@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using FlowIoC.PoolModule.Data.ValueObjects;
-using FlowIoC.PoolModule.Entities;
 
 namespace FlowIoC.PoolModule.Models.Config
 {

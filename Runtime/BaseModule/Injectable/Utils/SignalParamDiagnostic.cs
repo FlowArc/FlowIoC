@@ -5,13 +5,13 @@ namespace FlowIoC.BaseModule.Injectable.Utils
     internal enum SignalParamDiagnosticKind
     {
         /// <summary>The written index is past the last value of that type in the payload.</summary>
-        IndexOutOfRange,
+        IndexOutOfRange = 0,
 
         /// <summary>Another property already took the slot this index points at.</summary>
-        DuplicateClaim,
+        DuplicateClaim = 1,
 
         /// <summary>No unclaimed value of this property's type is left in the payload.</summary>
-        NoFreeSlot
+        NoFreeSlot = 2
     }
 
     /// <summary>

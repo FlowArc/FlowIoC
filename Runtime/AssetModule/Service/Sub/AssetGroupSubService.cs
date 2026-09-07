@@ -31,7 +31,7 @@ namespace FlowIoC.AssetModule.Service.Sub
                     $"[AssetService] No '{typeof(T).Name}' locations found for label '{label}'. Are the assets labelled?");
                 if (locHandle.IsValid()) Addressables.Release(locHandle);
                 _registry.GetOrCreateGroup(groupId).IsLoaded = true;
-                _signals.OutGoing.GroupLoaded.Dispatch(groupId);
+                _signals.Outgoing.GroupLoaded.Dispatch(groupId);
                 return;
             }
 
@@ -43,7 +43,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             await Task.WhenAll(tasks);
 
             _registry.GetOrCreateGroup(groupId).IsLoaded = true;
-            _signals.OutGoing.GroupLoaded.Dispatch(groupId);
+            _signals.Outgoing.GroupLoaded.Dispatch(groupId);
             FlowLogger.Log(SystemLogType.Asset,
                 $"[AssetService] Group loaded by label '{label}' -> '{groupId}' ({tasks.Count} assets)");
         }
@@ -59,7 +59,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             await Task.WhenAll(tasks);
 
             _registry.GetOrCreateGroup(groupId).IsLoaded = true;
-            _signals.OutGoing.GroupLoaded.Dispatch(groupId);
+            _signals.Outgoing.GroupLoaded.Dispatch(groupId);
         }
 
         public void AddToGroup(string groupId, object key)

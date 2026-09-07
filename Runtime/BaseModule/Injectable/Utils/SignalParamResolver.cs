@@ -15,6 +15,10 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         private readonly List<SignalParamDiagnostic> _diagnostics = new List<SignalParamDiagnostic>();
         private string[] _claimedBy = Array.Empty<string>();
 
+        // Candidate lists from earlier resolves, kept for the next one. A resolve used to build a
+        // fresh list per property type on every command execution.
+        private readonly Stack<List<int>> _spareCandidateLists = new Stack<List<int>>();
+
         public IReadOnlyList<SignalParamDiagnostic> Diagnostics => _diagnostics;
 
         /// <summary>
@@ -40,7 +44,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
         private void ResolveCore(object target, IReadOnlyList<SignalParamEntry> entries, object[] values)
         {
             _diagnostics.Clear();
-            _candidatesByType.Clear();
+            RecycleCandidateLists();
 
             if (target == null || entries == null || entries.Count == 0)
                 return;
@@ -83,7 +87,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                 }
 
                 _claimedBy[slot] = entry.Property.Name;
-                entry.Property.SetValue(target, values[slot]);
+                entry.Set(target, values[slot]);
             }
         }
 
@@ -133,7 +137,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                 }
 
                 _claimedBy[slot] = entry.Property.Name;
-                entry.Property.SetValue(target, values[slot]);
+                entry.Set(target, values[slot]);
             }
         }
 
@@ -142,9 +146,21 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             if (_candidatesByType.TryGetValue(type, out List<int> cached))
                 return cached;
 
-            List<int> candidates = _candidateFinder.Find(type, values);
+            List<int> candidates = _spareCandidateLists.Count > 0 ? _spareCandidateLists.Pop() : new List<int>();
+            _candidateFinder.Find(type, values, candidates);
             _candidatesByType[type] = candidates;
             return candidates;
+        }
+
+        private void RecycleCandidateLists()
+        {
+            foreach (KeyValuePair<Type, List<int>> candidates in _candidatesByType)
+            {
+                candidates.Value.Clear();
+                _spareCandidateLists.Push(candidates.Value);
+            }
+
+            _candidatesByType.Clear();
         }
 
         private void Report(SignalParamDiagnosticKind kind, Type targetType, SignalParamEntry entry, int candidateCount, int claimedCount, string claimingPropertyName)

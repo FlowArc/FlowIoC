@@ -106,6 +106,10 @@ namespace FlowIoC.ScreenModule.Service.Sub
             screenBody.HideCompleted -= HideAnimationCompleted;
 
             screenBody.Data.RemoveState(ScreenState.InHideAnimation);
+
+            // A forced hide skips the screen's own Hide and can land mid show animation, which
+            // would otherwise leave the flag on the pooled instance.
+            screenBody.Data.RemoveState(ScreenState.InShowAnimation);
             _runtimeModel.RemoveFromActivePools(screenBody);
             _runtimeModel.AddToPassivePool(screenBody);
             screenBody.ScreenHidden();

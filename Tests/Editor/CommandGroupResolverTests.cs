@@ -26,6 +26,7 @@ namespace FlowIoC.Tests
         internal static readonly List<object> Instances = new();
         internal static int SeenNumber;
         internal static bool RetainOnce;
+        internal static bool ReleaseInsideExecuteOnce;
         internal static CommandBody LastRetained;
         internal static readonly List<CommandBody> Retained = new();
 
@@ -38,6 +39,7 @@ namespace FlowIoC.Tests
             Instances.Clear();
             SeenNumber = 0;
             RetainOnce = false;
+            ReleaseInsideExecuteOnce = false;
             LastRetained = null;
             Retained.Clear();
             DispatchingCommand.Target = null;
@@ -197,6 +199,56 @@ namespace FlowIoC.Tests
                 "the second run did not retain, so the sequence should have carried straight on");
         }
 
+        /// <summary>
+        /// A command that retains and releases inside its own Execute hands its instance back while
+        /// its frame is still on the stack. If the next step is the same type it takes that very
+        /// instance out of the pool, and when the outer frame resumes it must not read the nested
+        /// run's flags as its own - it used to, and returned the instance to the pool a second time.
+        /// </summary>
+        [Test]
+        public void A_command_released_inside_Execute_is_not_returned_twice_when_the_same_type_follows()
+        {
+            Signal signal = new Signal(true);
+            _commandBinder.Bind(signal)
+                .ToSequence<ReleasingInsideExecuteCommand>()
+                .ToSequence<ReleasingInsideExecuteCommand>()
+                .ToSequence<SecondCommand>();
+
+            ReleaseInsideExecuteOnce = true;
+            signal.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"releasing", "releasing", "second"}));
+            Assert.That(Instances, Has.Count.EqualTo(2));
+            Assert.That(Instances[0], Is.SameAs(Instances[1]),
+                "the second step reused the instance the first had just released");
+        }
+
+        /// <summary>
+        /// Stop ends the group while another step may still be holding its command for work that
+        /// has not come back yet. Parking that command would hand it to the next dispatch while the
+        /// old work still holds it, so the group lets go of it instead and the next dispatch builds
+        /// a fresh one.
+        /// </summary>
+        [Test]
+        public void A_command_still_retained_when_its_group_stops_is_not_handed_to_the_next_dispatch()
+        {
+            Signal signal = new Signal(true);
+            _commandBinder.Bind(signal)
+                .ToParallel<RetainingCommand>()
+                .ToSequence<StoppingCommand>();
+
+            signal.Dispatch();
+            CommandBody stillWorking = Retained[0];
+
+            Signal again = new Signal(true);
+            _commandBinder.Bind(again).ToSequence<RetainingCommand>();
+            again.Dispatch();
+
+            Assert.That(Retained, Has.Count.EqualTo(2));
+            Assert.That(Retained[1], Is.Not.SameAs(stillWorking),
+                "the instance the stopped group let go of is still busy and must not be reused");
+        }
+
         #endregion
 
         #region Command groups
@@ -339,6 +391,26 @@ namespace FlowIoC.Tests
         }
 
         #endregion
+
+        /// <summary>
+        /// The same signal bound twice in one Context is a mistake, and it used to be reported by a
+        /// null reference at the second chain's first ToSequence. It is reported by name now, the
+        /// second chain is accepted so the line still reads, and only the first chain runs.
+        /// </summary>
+        [Test]
+        public void Binding_a_signal_twice_in_one_context_is_reported_and_only_the_first_chain_runs()
+        {
+            Signal signal = new Signal(true);
+            _commandBinder.Bind(signal).ToSequence<FirstCommand>();
+
+            LogAssert.Expect(LogType.Error, new Regex("bound twice"));
+
+            _commandBinder.Bind(signal).ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"first"}));
+        }
 
         #region Payload
 
@@ -492,6 +564,34 @@ namespace FlowIoC.Tests
             {
                 Retain();
                 LastRetained = this;
+            }
+        }
+
+        /// <summary>Retains and releases inside its own Execute on the first run, and does neither on the next.</summary>
+        public class ReleasingInsideExecuteCommand : Command
+        {
+            public override void Execute()
+            {
+                Steps.Add("releasing");
+                Instances.Add(this);
+
+                if (!ReleaseInsideExecuteOnce)
+                    return;
+
+                ReleaseInsideExecuteOnce = false;
+                Retain();
+                Release();
+            }
+        }
+
+        /// <summary>Ends its group from inside its own Execute, the way a step that finds nothing to do does.</summary>
+        public class StoppingCommand : Command
+        {
+            public override void Execute()
+            {
+                Steps.Add("stopping");
+                Retain();
+                Stop();
             }
         }
 

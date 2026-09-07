@@ -9,6 +9,13 @@ namespace FlowIoC.ScreenModule.Model.Runtime
     {
         void AddToPassivePool(IScreenBody screenBody);
         bool GetScreen<T>(int managerId, out T screen) where T : IScreenBody;
+
+        /// <summary>
+        /// The same checkout by type, for a caller that holds the screen's type as a value - the
+        /// builder, which was opened with a type parameter it no longer has at Show.
+        /// </summary>
+        bool GetScreen(int managerId, Type screenType, out IScreenBody screen);
+
         void AddToActivePools(IScreenBody screenBody);
         void RemoveFromActivePools(IScreenBody screenBody);
         void RemoveFromPassivePool(IScreenBody screenBody);

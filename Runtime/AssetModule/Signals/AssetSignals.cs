@@ -4,10 +4,10 @@ namespace FlowIoC.AssetModule.Signals
 {
     public class AssetSignals : ISignalHolder
     {
-        public AssetSignalsInComing InComing = new();
-        public AssetSignalsOutGoing OutGoing = new();
+        public AssetSignalsIncoming Incoming = new();
+        public AssetSignalsOutgoing Outgoing = new();
 
-        public class AssetSignalsInComing
+        public class AssetSignalsIncoming
         {
             // label is also used as the runtime groupId
             public Signal<string> LoadGroupByLabel = new();
@@ -15,7 +15,7 @@ namespace FlowIoC.AssetModule.Signals
             public Signal<string> ReleaseAsset = new();
         }
 
-        public class AssetSignalsOutGoing
+        public class AssetSignalsOutgoing
         {
             public Signal<string> GroupLoaded = new();
             public Signal<string> GroupReleased = new();

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FlowIoC.PoolModule.Data.ValueObjects
 {
     [Serializable]
-    public class PoolItemVO : PoolItemBaseCVO
+    public class PoolItemCVO : PoolItemBaseCVO
     {
         [Header("Asset Config - Direct Prefab")]
         public GameObject Prefab;

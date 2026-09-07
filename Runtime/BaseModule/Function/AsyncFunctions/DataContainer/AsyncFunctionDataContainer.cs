@@ -17,8 +17,14 @@ namespace FlowIoC.BaseModule.Function.AsyncFunctions.DataContainer
         {
             CoroutineProvider.StartCoroutine(FunctionProvider.ExecuteAsyncFunction(this));
         }
+
+        internal override void ApplyCallback(AsyncFunctionBody function)
+        {
+            if (function is AsyncFunction asyncFunction)
+                asyncFunction.FunctionCompletedCallback = FunctionCompletedCallback;
+        }
     }
-    
+
     public interface IAsyncFunctionDataContainer : IFunctionDataContainer
     {
         IAsyncFunctionDataContainer AddFunctionCompletedCallback(Action callback);

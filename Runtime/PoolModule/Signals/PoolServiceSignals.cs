@@ -1,5 +1,5 @@
 using FlowIoC.BaseModule.Signals;
-using FlowIoC.PoolModule.Entities;
+using FlowIoC.PoolModule.Data.ValueObjects;
 using UnityEngine.Rendering;
 
 namespace FlowIoC.PoolModule.Signals

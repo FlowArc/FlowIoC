@@ -46,7 +46,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             }
 
             _registry.Groups.Remove(groupId);
-            _signals.OutGoing.GroupReleased.Dispatch(groupId);
+            _signals.Outgoing.GroupReleased.Dispatch(groupId);
             FlowLogger.Log(SystemLogType.Asset, $"[AssetService] Group released: {groupId}");
         }
 

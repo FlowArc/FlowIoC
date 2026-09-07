@@ -24,7 +24,7 @@ namespace FlowIoC.Tests
         public void SetUp()
         {
             _binder = new InjectionBinder();
-            _binder.SetBindedContext(new Context());
+            _binder.SetBoundContext(new Context());
         }
 
         [Test]
@@ -51,6 +51,43 @@ namespace FlowIoC.Tests
             Holder bound = _binder.Bind<Holder>();
 
             Assert.AreSame(bound, _binder.GetInstance<Holder>());
+        }
+
+        /// <summary>
+        /// Unbinding by instance used to check the wrong variable for null and then read the
+        /// binding it had not found, so an instance that was never bound threw instead of being
+        /// left alone.
+        /// </summary>
+        [Test]
+        public void Unbinding_an_instance_that_was_never_bound_changes_nothing()
+        {
+            Holder bound = _binder.Bind<Holder>();
+
+            _binder.UnBind<Holder>(new Holder());
+
+            Assert.AreSame(bound, _binder.GetInstance<Holder>());
+        }
+
+        [Test]
+        public void Unbinding_an_instance_of_a_type_nobody_bound_changes_nothing()
+        {
+            _binder.UnBind<Holder>(new Holder());
+
+            LogAssert.Expect(LogType.Error, new Regex("Nothing is bound to Holder"));
+
+            Assert.IsNull(_binder.GetInstance<Holder>());
+        }
+
+        [Test]
+        public void Unbinding_by_instance_takes_that_binding_out()
+        {
+            Holder bound = _binder.Bind<Holder>();
+
+            _binder.UnBind<Holder>(bound);
+
+            LogAssert.Expect(LogType.Error, new Regex("Nothing is bound to Holder"));
+
+            Assert.IsNull(_binder.GetInstance<Holder>());
         }
     }
 }

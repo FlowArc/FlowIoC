@@ -6,7 +6,7 @@ namespace FlowIoC.BaseModule.Attributes
     /// </summary>
     public enum FlowRole
     {
-        Root,
+        Root = 0,
 
         /// <summary>
         /// Part of the project's frame rather than of its game. A project holds exactly one, its
@@ -16,14 +16,14 @@ namespace FlowIoC.BaseModule.Attributes
         /// and one Screen in a project and the name has nothing to disambiguate from, so this is
         /// the one role a Root can only take from the attribute.
         /// </summary>
-        Core,
-        Service,
-        System,
-        View,
-        Mediator,
-        Screen,
-        Connector,
-        Adapter,
-        Test
+        Core = 1,
+        Service = 2,
+        System = 3,
+        View = 4,
+        Mediator = 5,
+        Screen = 6,
+        Connector = 7,
+        Adapter = 8,
+        Test = 9
     }
 }

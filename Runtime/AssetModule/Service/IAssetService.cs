@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 namespace FlowIoC.AssetModule.Service
 {
     /// <summary>
-    /// <i><b>&gt;FlowIoC&lt;</b></i> — merkezî Addressable asset yönetimi.
-    /// Asset yükle/kullan/release et; runtime grupları ile toplu yükle/release/gruba-ekle.
-    /// LOAD-ONCE: bir asset yalnız bir kez yüklenir; tekrar çağrılar cache'i verir veya
-    /// devam eden yüklemeyi bekler. Instantiate ETMEZ — prefab gerekiyorsa çağıran kendi Instantiate eder.
+    /// Addressable assets, loaded once and shared. A key asked for twice is loaded once: the second
+    /// call gets the cached asset, or waits on the load already in flight. Groups load, release and
+    /// gather assets in bulk. Nothing here instantiates - a caller that needs a prefab instance
+    /// instantiates what it was handed.
     /// </summary>
     public interface IAssetService
     {

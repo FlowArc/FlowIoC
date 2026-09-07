@@ -36,8 +36,8 @@ namespace FlowIoC.PoolModule.Services.Sub
                 return;
             }
 
-            // Materialize first because Item(...) mutates the LinkedList that
-            // GetAllActiveItemsByGroupKey enumerates via yield-return.
+            // Copied first: Item(...) takes each item out of the active half that
+            // GetAllActiveItemsByGroupKey is still walking.
             var items = _runtimeModel.GetAllActiveItemsByGroupKey(groupKey).ToList();
             foreach (var item in items)
             {

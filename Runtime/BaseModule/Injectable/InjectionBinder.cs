@@ -18,7 +18,7 @@ namespace FlowIoC.BaseModule.Injectable
 
         protected BindingPoolController _bindingPoolController;
 
-        protected IContext _bindedContext;
+        protected IContext _boundContext;
 
         protected List<IConstructable> _constructables;
 
@@ -38,10 +38,17 @@ namespace FlowIoC.BaseModule.Injectable
 
         #region Bind
 
-        public void SetBindedContext(IContext context)
+        public void SetBoundContext(IContext context)
         {
-            _bindedContext = context;
+            _boundContext = context;
         }
+
+        /// <summary>
+        /// Whether something is bound under this type and name. The quiet question: GetInstance
+        /// reports a miss, because whoever asks it expects an answer, and this is for the caller
+        /// who only wants to know before binding one itself.
+        /// </summary>
+        public bool HasBinding<TBindingType>(string name = "") => HasInstanceExist<TBindingType>(name);
 
         /// <summary>
         /// How many times any binder in this run has gained or lost a binding. Injection results
@@ -54,7 +61,7 @@ namespace FlowIoC.BaseModule.Injectable
             where TBindingType : new()
         {
             FlowLogger.Log(SystemLogType.Injection,
-                _bindedContext.GetType().Name + " | Binding: " + typeof(TBindingType).Name + (name != "" ? (" Name: " + name) : ""));
+                _boundContext.GetType().Name + " | Binding: " + typeof(TBindingType).Name + (name != "" ? (" Name: " + name) : ""));
             return GetOrCreateInstance<TBindingType>(name);
         }
 
@@ -62,7 +69,7 @@ namespace FlowIoC.BaseModule.Injectable
             where TConcrete : TAbstract, new()
         {
             FlowLogger.Log(SystemLogType.Injection,
-                _bindedContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
+                _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
             return GetOrCreateInstance<TAbstract, TConcrete>(name);
         }
 
@@ -73,17 +80,17 @@ namespace FlowIoC.BaseModule.Injectable
             // The dummy is an Editor affordance only: a build always gets the real implementation,
             // whatever a Root left ticked in a scene.
 #if UNITY_EDITOR
-            if (_bindedContext.IsTest)
+            if (_boundContext.IsTest)
             {
                 FlowLogger.Log(SystemLogType.Injection,
-                    _bindedContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name +
-                    (name != "" ? (" Name: " + name) : "" + " To: " + typeof(TDummy).Name));
+                    _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name +
+                    (name != "" ? " Name: " + name : "") + " To: " + typeof(TDummy).Name);
                 return GetOrCreateInstance<TAbstract, TDummy>(name);
             }
 #endif
             FlowLogger.Log(SystemLogType.Injection,
-                _bindedContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name +
-                (name != "" ? (" Name: " + name) : "" + " To: " + typeof(TConcrete).Name));
+                _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name +
+                (name != "" ? " Name: " + name : "") + " To: " + typeof(TConcrete).Name);
             return GetOrCreateInstance<TAbstract, TConcrete>(name);
         }
 
@@ -93,7 +100,7 @@ namespace FlowIoC.BaseModule.Injectable
             if (hasInstanceExist != null)
             {
                 FlowLogger.LogWarning(SystemLogType.Injection,
-                    _bindedContext.GetType().Name + " | There is a same injection! Type: " + instance.GetType().Name +
+                    _boundContext.GetType().Name + " | There is a same injection! Type: " + instance.GetType().Name +
                     (name != "" ? (" Name: " + name) : ""));
                 return;
             }
@@ -109,7 +116,7 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.SetKey(injectionType);
 
             FlowLogger.Log(SystemLogType.Injection,
-                _bindedContext.GetType().Name + " | Binding: " + injectionType.Name + (name != "" ? (" Name: " + name) : ""));
+                _boundContext.GetType().Name + " | Binding: " + injectionType.Name + (name != "" ? (" Name: " + name) : ""));
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
         }
@@ -121,7 +128,7 @@ namespace FlowIoC.BaseModule.Injectable
             if (hasInstanceExist != null)
             {
                 FlowLogger.LogWarning(SystemLogType.Injection,
-                    _bindedContext.GetType().Name + " | There is a same injection! Type: " + typeof(TAbstract).Name +
+                    _boundContext.GetType().Name + " | There is a same injection! Type: " + typeof(TAbstract).Name +
                     (name != "" ? (" Name: " + name) : ""));
                 return;
             }
@@ -135,7 +142,7 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.SetKey(injectionType);
 
             FlowLogger.Log(SystemLogType.Injection,
-                _bindedContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
+                _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
         }
@@ -149,7 +156,7 @@ namespace FlowIoC.BaseModule.Injectable
             {
                 instance = GetInstance<TAbstract>(name);
                 FlowLogger.LogWarning(SystemLogType.Injection,
-                    _bindedContext.GetType().Name + " | There is a same injection! Type: " + typeof(TAbstract).Name +
+                    _boundContext.GetType().Name + " | There is a same injection! Type: " + typeof(TAbstract).Name +
                     (name != "" ? (" Name: " + name) : ""));
                 return instance;
             }
@@ -204,10 +211,15 @@ namespace FlowIoC.BaseModule.Injectable
             UnBind(typeof(TBindingType), name);
         }
 
+        /// <summary>
+        /// Takes out the binding that holds this instance. An instance nobody bound is left alone:
+        /// this used to test the wrong variable for null and then read the binding it had not
+        /// found, so unbinding something that was never bound threw instead of doing nothing.
+        /// </summary>
         public virtual void UnBind<TBindingType>(object injectedObject)
         {
             InjectionBinding injectionBinding = GetInjectionBinding<TBindingType>(injectedObject);
-            if (injectedObject == null)
+            if (injectionBinding == null)
                 return;
 
             UnBind(typeof(TBindingType), injectionBinding.Name);
@@ -216,7 +228,17 @@ namespace FlowIoC.BaseModule.Injectable
         protected void UnBind(Type key, string name = "")
         {
             InjectionBinding injectionBinding = GetInjectionBinding(key, name);
-            _container[key].Remove(injectionBinding);
+            if (injectionBinding == null)
+                return;
+
+            List<InjectionBinding> bindings = _container[key];
+            bindings.Remove(injectionBinding);
+
+            // A type with nothing left under it is not bound, and is answered for as such rather
+            // than as "bound, but not under this name".
+            if (bindings.Count == 0)
+                _container.Remove(key);
+
             NoteContainerChanged();
 
             RunDeconstruct(injectionBinding.Value);
@@ -380,7 +402,7 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.Name = name;
             injectionBinding.SetValue(instance);
             injectionBinding.SetKey(injectionType);
-            injectionBinding.BindedContext = _bindedContext;
+            injectionBinding.BoundContext = _boundContext;
 
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
@@ -402,7 +424,7 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.Name = name;
             injectionBinding.SetValue(instance);
             injectionBinding.SetKey(injectionType);
-            injectionBinding.BindedContext = _bindedContext;
+            injectionBinding.BoundContext = _boundContext;
 
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
@@ -462,15 +484,16 @@ namespace FlowIoC.BaseModule.Injectable
 
         internal InjectionBinding GetInjectionBinding(Type key, string name = "")
         {
-            InjectionBinding injectionBinding = _container[key].FirstOrDefault(x => x.Name == name);
-            return injectionBinding;
+            return _container.TryGetValue(key, out List<InjectionBinding> bindings)
+                ? bindings.FirstOrDefault(x => x.Name == name)
+                : null;
         }
 
         internal InjectionBinding GetInjectionBinding<TBindingType>(object value)
         {
-            Type key = typeof(TBindingType);
-            InjectionBinding injectionBinding = _container[key].FirstOrDefault(x => x.Value == value);
-            return injectionBinding;
+            return _container.TryGetValue(typeof(TBindingType), out List<InjectionBinding> bindings)
+                ? bindings.FirstOrDefault(x => x.Value == value)
+                : null;
         }
 
         protected bool HasInstanceExist<TBindingType>(string name = "")

@@ -1,9 +1,9 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using FlowIoC.BaseModule.Injectable.Attributes;
-using FlowIoC.ConsoleModule;
+using FlowIoC.PoolModule.Data.ValueObjects;
 using FlowIoC.PoolModule.Models.Config;
 using FlowIoC.PoolModule.Models.Runtime;
-using FlowIoC.PoolModule.Services.Sub.Load;
-using FlowIoC.PoolModule.Entities;
 
 namespace FlowIoC.PoolModule.Services.Sub
 {
@@ -13,15 +13,24 @@ namespace FlowIoC.PoolModule.Services.Sub
         [Inject] private IPoolRuntimeModel _runtimeModel { get; set; }
         [Inject] private LoadSubService _load { get; set; }
 
-        public void Group(string groupKey, PoolGroupCVO poolGroupConfig)
+        /// <summary>
+        /// Registers every pool of the group and fills them. The task ends when the last pool is
+        /// full, which for a direct prefab is before this returns and for an addressable one is
+        /// after its load. It used to be dropped on the floor, so a fill that failed said nothing.
+        /// </summary>
+        public Task Group(string groupKey, PoolGroupCVO poolGroupConfig)
         {
-            foreach (var item in poolGroupConfig.Group.Items)
+            List<Task> fills = new List<Task>(poolGroupConfig.Group.Items.Count);
+
+            foreach (PoolItemCVO item in poolGroupConfig.Group.Items)
             {
-                var poolKey = poolGroupConfig.GroupSpecificPools ? $"{groupKey}_{item.PoolKey}" : item.PoolKey;
-                
+                string poolKey = poolGroupConfig.GroupSpecificPools ? $"{groupKey}_{item.PoolKey}" : item.PoolKey;
+
                 _runtimeModel.RegisterPool(poolKey, groupKey);
-                _load.Item(item, groupKey, poolKey).ConfigureAwait(false);
+                fills.Add(_load.Item(item, groupKey, poolKey));
             }
+
+            return Task.WhenAll(fills);
         }
     }
-} 
+}

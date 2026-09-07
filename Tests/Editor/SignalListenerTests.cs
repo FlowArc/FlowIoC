@@ -91,6 +91,40 @@ namespace FlowIoC.Tests
             Assert.That(heard, Is.EqualTo(42));
         }
 
+        /// <summary>
+        /// A once listener that re-arms itself is the "listen until the answer is right" shape.
+        /// Dispatch used to invoke the once list and then null the field, which threw away whatever
+        /// the listeners had just added to it.
+        /// </summary>
+        [Test]
+        public void A_once_listener_added_during_a_dispatch_is_heard_on_the_next_one()
+        {
+            Signal signal = new Signal(true);
+            int nested = 0;
+
+            signal.AddListenerOnce(() => signal.AddListenerOnce(() => nested++));
+
+            signal.Dispatch();
+            Assert.That(nested, Is.Zero, "the nested listener waits for the next dispatch");
+
+            signal.Dispatch();
+            Assert.That(nested, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void A_once_listener_with_a_payload_added_during_a_dispatch_is_heard_on_the_next_one()
+        {
+            Signal<int> signal = new Signal<int>(true);
+            int heard = 0;
+
+            signal.AddListenerOnce(_ => signal.AddListenerOnce(value => heard = value));
+
+            signal.Dispatch(1);
+            signal.Dispatch(2);
+
+            Assert.That(heard, Is.EqualTo(2));
+        }
+
         [Test]
         public void A_once_listener_with_a_payload_can_be_taken_back()
         {

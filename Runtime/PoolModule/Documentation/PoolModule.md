@@ -212,10 +212,11 @@ This is the difference between a scene that references every VFX prefab it might
 show — and therefore loads all of them with the scene — and one that pulls them in on
 demand. For anything large or rarely used, prefer addressable.
 
-Addressable items load asynchronously, so a `Get` on a cold pool may not be able to
-hand you the object in the same frame. Use the callback overload, or warm the group
-first with `InitializeGroup` and be certain `IsGroupCreated` is true before you rely
-on a synchronous return.
+Addressable items load asynchronously, so a `Get` on a cold pool cannot hand you the
+object in the same frame and refuses. Ask with `GetAsync`, which awaits the load, or
+warm the group first - `await _poolService.InitializeGroupAsync("vfx")` ends when the
+last pool is full - and be certain `IsGroupCreated` is true before you rely on a
+synchronous `Get`.
 
 ---
 

@@ -67,19 +67,18 @@ namespace FlowIoC.ScreenModule.RootsContexts
             };
         }
 
-        protected override void CoreBindings()
-        {
-            base.CoreBindings();
-
-            _screenService = InjectionBinderCrossContext.GetInstance<IScreenService>();
-            _internalSignals = InjectionBinderCrossContext.GetInstance<ScreenServiceInternalSignals>();
-        }
-
         // Setup is the phase that may reach another module, and it runs once every Root has bound -
-        // so the service's commands are in place whichever Root started first.
+        // so the service and its commands are in place whichever Root started first. Both are
+        // fetched here for that reason, and not in a binding phase.
         public override void Setup()
         {
             base.Setup();
+
+            if (InjectionBinderCrossContext.HasBinding<IScreenService>())
+                _screenService = InjectionBinderCrossContext.GetInstance<IScreenService>();
+
+            if (InjectionBinderCrossContext.HasBinding<ScreenServiceInternalSignals>())
+                _internalSignals = InjectionBinderCrossContext.GetInstance<ScreenServiceInternalSignals>();
 
             if (_internalSignals == null)
             {

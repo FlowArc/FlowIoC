@@ -116,7 +116,7 @@ The inspector exposes the switches that matter:
 A Root should stay empty. If you find yourself adding fields to one, the state
 belongs in a Model and the behaviour in a Command. The four `protected virtual`
 hooks — `BeforeCreateContext`, `AfterCreateBeforeStartContext`,
-`AfterBindingsBeforeInjections`, `AfterStarBeforeLaunchContext` — exist for
+`AfterBindingsBeforeInjections`, `AfterStartBeforeLaunchContext` — exist for
 framework-level extensions, not for game logic.
 
 ---

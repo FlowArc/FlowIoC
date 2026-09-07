@@ -7,11 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`FlowLogger.IsEnabled`, and log overloads that take the message in parts.** `[Conditional]`
+  removes a log call only where `ENABLE_LOG` is not defined; a project that defines it - this one
+  does, for Standalone, Android and WebGL - still built every interpolated message with logging
+  switched off. The parts overloads join them only when logging is on, and `IsEnabled` is for a
+  call site that has to build something before it can log.
+
+- **`IPoolService.GetAsync`, `InitializeGroupAsync` and `Destroy`.** An addressable item could only
+  be fetched through the sub service, because the asynchronous Get was never on the interface; the
+  fill of a group could not be waited on; and the destroy surface was on the service but not on
+  what a caller injects.
+
+- **Tests for the setter delegate, the injection entries, the pool's config model, a screen's own
+  hide-during-show, the function provider's mismatches, and unbinding by instance.** Twenty of them.
+
 ### Changed
 
 - **The binder builds one delegate for the pool return instead of one per dispatch.** Writing the
   method group at the subscription made a new `Action` every time a signal was dispatched, which a
   signal that fires each frame notices.
+
+- **`[Inject]`, `[InjectSignal]` and `[SignalParam]` properties are written through a setter
+  delegate.** 1.7.0 said filling a `[SignalParam]` was a typed assignment rather than a `SetValue`;
+  the code still called `SetValue`, on every execution of every command. Each entry now carries a
+  delegate built once with it - a typed setter in a generic box, so a fill is a delegate call and
+  two casts - and falls back to the reflective setter where the box cannot be built.
+
+- **A function runs without reflection and is injected once.** Each shipped arity - `FunctionVoid`
+  and `FunctionReturn`, up to four parameters - calls its own typed `Execute`, and a parameter that
+  does not fit is reported naming the function and the slot rather than thrown from inside the
+  provider. `FunctionBody` remembers the context and binding generation it was filled at, the way a
+  pooled command does. The asynchronous completion callback is handed over by the data container
+  that knows its type, instead of being found by name on both objects with reflection.
+
+- **The pooled screen instance is taken at Show, not at Open.** `Open<T>()` used to take the
+  instance out of the pool before anything was decided, so a builder that never reached `Show` kept
+  it out of the pool for good. The builder reads the declaration at Open and asks the pool at Show,
+  after the duplication and layer checks - there is nothing to give back on a refusal any more.
+
+- **The screen contexts declare in the four phases like every other context.** `ScreenServiceContext`
+  did its binding in `CoreBindings`, which runs when a context starts whatever its Root's phase
+  switches say; it binds in `SignalBindings`, `InjectionBindings` and `CommandBindings` now.
+  `BaseScreenContext` binds its manager's mediation in `MediationBindings`, and both it and every
+  screen context reach the screen service in `Setup`, the phase that may reach another module.
+
+- **Filling a pool group is a Task, and the synchronous Get builds without one.** `CreateSubService.Group`
+  returns the fill; `InitializeGroup` starts it and reports what went wrong, where it used to be
+  dropped on the floor. The synchronous `Get` builds a direct prefab through `CreateItemSync` rather
+  than reading a Task's `Result`, which held only for as long as nothing on the way awaited. The
+  `Check` questions answer without warning: a caller asking whether a group is ready is usually
+  about to make it ready.
+
+- **`RetryCommand` waits on the coroutine provider**, in real time. It was a `Task.Delay` inside an
+  `async void`, which swallowed whatever the retry threw, could not stop with the scene, and never
+  fired on WebGL.
+
+- **A screen unloaded from Resources no longer sweeps the heap.** `Resources.UnloadUnusedAssets` ran
+  on every single unload, a hitch each time; scheduling that sweep is the game's, on a loading
+  screen say.
+
+- **The shared cross-context binder and the two providers are bound once.** Every context asked to
+  bind them again and was answered with a warning - three per context, for the framework doing what
+  it always does.
+
+- **Names.** `InjectionBinding.BoundContext` and `SetBoundContext` (were `Binded`), `hasSetUp`,
+  `AfterStartBeforeLaunchContext`, `AssetSignals.Incoming` and `Outgoing` (were `InComing` and
+  `OutGoing`), `PoolItemCVO` (was `PoolItemVO`, and is config data), and `PoolGroupCVO` under
+  `Data/ValueObjects/` rather than `Entities/`. `ScreenTag`, `ScreenLoadType`, `FlowRole` and
+  `SignalParamDiagnosticKind` carry their numbers, as the rule says every enum does - `ScreenTag`
+  is serialized on every Root that overrides a screen. `MediationBinder`'s refusal names `IView`
+  rather than an interface that does not exist, and `ScreenSafeArea` logs through the Flow Console.
 
 ### Fixed
 
@@ -36,6 +103,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in a Context was reported as a null reference somewhere inside the framework. It is named now, and
   a binding nothing can reach is handed back so the line the caller wrote still reads and only the
   first chain runs.
+
+- **`PoolConfigModel.GetGroupConfigOfItem` threw on an item nobody registered.** Every pool service
+  asked it first and expected null, so the "No GroupConfigKey found" report behind it was never
+  reached and a typo in an item key was a dictionary exception. It answers null.
+
+- **`InjectionBinder.UnBind<T>(object)` threw for an instance that was never bound.** It tested the
+  wrong variable for null and then read the binding it had not found; a type nobody had bound threw
+  a key error on top. A type left with nothing under it is also forgotten, so asking for it is
+  answered "nothing is bound" rather than "bound, but not under this name".
+
+- **A view with no `ViewInjector` threw on Register and UnRegister**, and an injector added from
+  code and destroyed before its Start threw in `OnDestroy`. A view without an injector is mediated
+  and not injected, which is what an injector entry with Injectable View unticked says too.
+
+- **A hide asked for during the show animation was dropped.** The service checks InUse, and a screen
+  animating in is InUse as well, so the hide reached the screen and the screen ignored it: the screen
+  stayed on stage, and one being unloaded stayed marked as unloading for good. The screen holds the
+  hide and plays it the moment the show reports done, and a forced hide clears the animation flag it
+  could land in the middle of.
+
+- **A `[Inject]` or `[SignalParam]` property with no setter threw on every injection.** It is
+  reported once, when the type's entries are built, and left out.
+
+- **The pool's config commands said "screen configs"**, and the unregister command logged under the
+  Screen channel with the register command's name.
+
+### Removed
+
+- `SignalExtensions` - `ConnectWithConversion` and `ConnectEnumToInt`, which `Connect` with a
+  converter already does and which registered no disconnector; `SubContextAttribute`, used nowhere;
+  the commented-out `PostConstructAttribute` and `DeconstructAttribute` files;
+  `InjectionBinderCrossContext.PostConstructedObjects`; and the commented history block in
+  `IScreenService`.
 
 ## [1.7.1] - 2026-09-07
 

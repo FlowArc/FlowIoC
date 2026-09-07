@@ -64,7 +64,7 @@ namespace FlowIoC.BaseModule.Contexts
                 if (binding == null)
                     continue;
 
-                if (binding.BindedContext == null)
+                if (binding.BoundContext == null)
                     this.TryToInjectObject(binding.Value);
                 else
                     binding.TryToInjectObject();
@@ -83,10 +83,15 @@ namespace FlowIoC.BaseModule.Contexts
         protected virtual void CoreBindings()
         {
             InjectionBinder = new InjectionBinder();
-            InjectionBinder.SetBindedContext(this);
+            InjectionBinder.SetBoundContext(this);
 
-            InjectionBinderCrossContext.SetBindedContext(this);
-            InjectionBinderCrossContext.BindInstance(InjectionBinderCrossContext);
+            InjectionBinderCrossContext.SetBoundContext(this);
+
+            // Shared by every context in the run, so whichever context starts first binds them and
+            // the rest find them there. Asking to bind them again used to answer with a warning per
+            // context, three of them, for the framework doing what it always does.
+            if (!InjectionBinderCrossContext.HasBinding<InjectionBinderCrossContext>())
+                InjectionBinderCrossContext.BindInstance(InjectionBinderCrossContext);
 
             MediationBinder = InjectionBinder.Bind<MediationBinder>();
 
@@ -96,8 +101,11 @@ namespace FlowIoC.BaseModule.Contexts
             InjectionBinderCrossContext.BindInstance<GameObject>(_gameObject, GetType().Name);
             InjectionBinder.BindInstance<GameObject>(_gameObject, nameof(IContext));
 
-            InjectionBinderCrossContext.BindMonoBehaviorInstance<IUpdateProvider, UpdateProvider>();
-            InjectionBinderCrossContext.BindMonoBehaviorInstance<ICoroutineProvider, CoroutineProvider>();
+            if (!InjectionBinderCrossContext.HasBinding<IUpdateProvider>())
+                InjectionBinderCrossContext.BindMonoBehaviorInstance<IUpdateProvider, UpdateProvider>();
+
+            if (!InjectionBinderCrossContext.HasBinding<ICoroutineProvider>())
+                InjectionBinderCrossContext.BindMonoBehaviorInstance<ICoroutineProvider, CoroutineProvider>();
 
             FunctionProvider functionProvider = (FunctionProvider) InjectionBinder.Bind<IFunctionProvider, FunctionProvider>();
             functionProvider.Context = this;

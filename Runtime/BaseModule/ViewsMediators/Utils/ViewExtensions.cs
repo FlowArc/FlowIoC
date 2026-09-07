@@ -77,10 +77,12 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
                 return false;
             }
 
+            // A view registered by hand may carry no injector at all. It is then mediated and not
+            // injected, which is what an injector entry with Injectable View unticked says too.
             ViewInjector viewInjector = view.transform.GetComponent<ViewInjector>();
-            ViewInjectorData viewInjectionData = viewInjector.GetViewInjectorData(view);
+            ViewInjectorData viewInjectionData = viewInjector == null ? null : viewInjector.GetViewInjectorData(view);
 
-            if (viewInjectionData.InjectableView)
+            if (viewInjectionData != null && viewInjectionData.InjectableView)
                 context.TryToInjectObject(view);
 
             MediationBinder mediationBinder = viewBindingData.Context.MediationBinder;
@@ -104,7 +106,11 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
                     return false;
                 }
 
-                injectedMediatorData.viewInjector.ViewInjectionCompleted(view);
+                if (injectedMediatorData.viewInjector != null)
+                    injectedMediatorData.viewInjector.ViewInjectionCompleted(view);
+                else
+                    view.IsRegistered = true;
+
                 injectedMediatorData.mediator = mediator;
             }
 
@@ -150,9 +156,10 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
             InjectedMediatorData injectedMediatorData = mediationBinder.GetInjectedMediatorData(view);
 
             ViewInjector viewInjectorComponent = injectedMediatorData.viewInjector;
+            ViewInjectorData viewInjectorData = viewInjectorComponent == null ? null : viewInjectorComponent.GetViewInjectorData(view);
 
-            ViewInjectorData viewInjectorData = viewInjectorComponent.GetViewInjectorData(view);
-            if (!viewInjectorData.IsRegistered)
+            bool registered = viewInjectorData?.IsRegistered ?? view.IsRegistered;
+            if (!registered)
                 return;
 
             IMediator mediator = injectedMediatorData.mediator;
@@ -161,7 +168,8 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
             view.IsRegistered = false;
 
             injectedMediatorData.mediator = null;
-            viewInjectorData.IsRegistered = false;
+            if (viewInjectorData != null)
+                viewInjectorData.IsRegistered = false;
 
             if (mediator is Object mediatorObject)
                 Object.Destroy(mediatorObject as Component);
