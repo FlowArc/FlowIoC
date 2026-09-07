@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and released around `ExecuteAsync` was built for this and reverted the same day for taking that
   decision into the package.
 
+- **`AssetModule`'s `LoadGroupCommand` follows the same rule.** It released only when the load
+  finished, so an exception in it hung the group. It also let an empty label through: the service
+  answers one with a finished task, no group and no `GroupLoaded`, so the steps behind it carried on
+  believing the group was in memory. The command names that case before it starts and stops, stops
+  on a throw, and releases when the group is actually loaded.
+
 ### Added
 
 - **`RemoveAllListeners()` on every signal.** A Mediator's `OnRemove` was the only teardown path a
