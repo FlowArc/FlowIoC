@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-09-07
+
+### Added
+
+- **The Help window colours its code blocks.** Snippets are lexed and drawn in Rider's own palette -
+  Rider Dark under the dark skin, Rider Light under the light one - so a snippet in the window and
+  the same lines open in the IDE read alike. The block paints its own fill and hairline and carries
+  a Copy button, because a rich text label cannot be selected the way the plain one it replaces
+  could.
+
 ### Changed
 
 - **A context takes back what it bound across.** `DestroyContext` emptied the context's own binder
