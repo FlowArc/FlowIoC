@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `abstract` now, which it always was in practice: it is never instantiated, only inherited by the
   five arities.
 
+- **The tests the engine was missing.** `StopCommand` on a parallel step, which ends that step alone
+  while a sequence step's Stop ends the group; a Release or a Stop arriving after its group already
+  ended, which must change nothing and above all must not pool a busy command twice; the injection
+  binder's assignable-type cache, whose remembered answer - a miss included - has to be forgotten
+  when the container changes, and the binding generation that makes a pooled command resolve again;
+  `ShowSubService` and `HideSubService` against a runtime model that only records what it was asked;
+  and a scene reload driven through real Roots rather than bare contexts, where a Connector rebuilt
+  with its scene has to be wiring the holders the rebuilt modules bound. 1119 tests, up from 1084.
+
 ### Changed
 
 - **`Signal.Dispatch`'s order is written down.** Once-listeners, then the commands bound to the
