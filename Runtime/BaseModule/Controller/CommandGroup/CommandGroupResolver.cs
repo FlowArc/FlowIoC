@@ -38,6 +38,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private int _completionCount;
         private bool _isDisposed;
 
+        // Which run the resolver is on. The resolver is pooled, so a frame of a finished run can
+        // still be on the stack when a nested dispatch takes the same instance back out of the pool
+        // and starts a new run on it. Every place that carries on after calling out reads this and
+        // stops if it has moved: the frame belongs to a run that is over.
+        private int _runId;
+
         #endregion
 
         #region Initialization and Cleanup
@@ -54,6 +60,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _executionIndex = 0;
             _completionCount = 0;
             _isDisposed = false;
+            _runId++;
             IsHideLog = commandBinding.Key is ISignalBody signal && signal.HideCommandLog;
 
             CheckExecuteNextStep(null);
@@ -83,7 +90,9 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _signalParameters = null;
             _executionIndex = 0;
             _completionCount = 0;
-            IsHideLog = false;
+
+            // IsHideLog is deliberately left where it is. The binder reads it on the way to the
+            // pool, which is after this now, and Initialize sets it for the next run anyway.
         }
 
         #endregion
@@ -167,6 +176,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
+            int runId = _runId;
+
             int stepIndex = _executionIndex++;
             CommandStepVO step = _steps[stepIndex];
 
@@ -175,7 +186,10 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             else if (step.CommandType != null)
                 ExecuteCommandStep(step, stepIndex, commandParameters);
 
-            if (step.ExecutionType == CommandExecutionType.Parallel)
+            // The step may have finished the group and sent the resolver back to the pool, and a
+            // command it ran may have dispatched a signal that took it out again. Starting the next
+            // parallel step then would start it on somebody else's run.
+            if (step.ExecutionType == CommandExecutionType.Parallel && runId == _runId)
                 CheckExecuteNextStep(commandParameters);
         }
 
@@ -187,8 +201,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         /// </summary>
         private void HandleStepCompletion(CommandStepVO step, object[] commandParameters)
         {
+            int runId = _runId;
+
             if (step.ExecutionType == CommandExecutionType.Sequence)
                 CheckExecuteNextStep(commandParameters);
+
+            if (runId != _runId || _isDisposed) return;
 
             _completionCount--;
 
@@ -196,12 +214,19 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 CompleteGroupExecution();
         }
 
+        /// <summary>
+        /// Ends the run before it says so. The listener is the binder putting the resolver back in
+        /// its pool, and a step of whatever runs next can take it straight out again - so anything
+        /// this method did after the callback would be done to somebody else's run. Disposing first
+        /// means there is nothing left to do after it.
+        /// </summary>
         private void CompleteGroupExecution()
         {
             if (_isDisposed) return;
 
-            GroupExecutionFinished?.Invoke(this);
+            Action<ICommandGroupResolver> finished = GroupExecutionFinished;
             Dispose();
+            finished?.Invoke(this);
         }
 
         #endregion
@@ -227,12 +252,19 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             ICommandGroupResolver subGroup = _commandBinder.GetAvailableGroup();
             _completionCount++;
 
+            // The run this step belongs to. The sub group reports back through a closure, and by
+            // then this resolver may itself have finished, gone to the pool and been taken out for
+            // something else - in which case the step it is reporting no longer exists.
+            int runId = _runId;
+
             Action<ICommandGroupResolver> onFinish = null;
             onFinish = g =>
             {
                 g.GroupExecutionFinished -= onFinish;
                 _commandBinder.ReturnGroupToPool(g);
-                OnSubGroupFinished(step);
+
+                if (runId == _runId)
+                    OnSubGroupFinished(step);
             };
             subGroup.GroupExecutionFinished += onFinish;
 

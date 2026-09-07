@@ -17,6 +17,12 @@ namespace FlowIoC.BaseModule.Controller.Binders
         private readonly TypePool<CommandBody> _commandPool = new();
         private readonly Stack<ICommandGroupResolver> _commandGroupPool = new();
 
+        /// <summary>
+        /// The signals whose command callback this binder put there. It is what UnBind gives back,
+        /// and a list because a context binds a handful of signals and never searches this.
+        /// </summary>
+        private readonly List<ISignalBody> _ownedSignals = new();
+
         internal IContext Context;
 
         /// <summary>
@@ -31,13 +37,62 @@ namespace FlowIoC.BaseModule.Controller.Binders
             Action<ISignalBody, object[]> boundElsewhere = key.InternalCallback;
 
             if (boundElsewhere != null && !ReferenceEquals(boundElsewhere.Target, this))
+            {
                 LogSignalAlreadyOwned(key, boundElsewhere);
+            }
             else
+            {
+                if (boundElsewhere == null)
+                    _ownedSignals.Add(key);
+
                 key.InternalCallback = InitializeGroupWithSignal;
+            }
 
             CommandBinding binding = base.Bind(key);
             binding?.SetContext(Context);
             return binding;
+        }
+
+        /// <summary>
+        /// Ownership goes back with the binding. This binder put the callback on the signal, so
+        /// tearing the binder down has to take it off again - a signal still pointing at a binder
+        /// with no bindings left refuses the next Context that binds it, for a run that is already
+        /// over. Reloading a scene is exactly that: the contexts are rebuilt while the signal
+        /// holder, which lives in the cross-context binder, is the same instance it was.
+        /// </summary>
+        public override void UnBind(object key)
+        {
+            if (key is ISignalBody signal)
+                ReleaseSignal(signal);
+
+            base.UnBind(key);
+        }
+
+        public override void UnBindAll()
+        {
+            for (int i = 0; i < _ownedSignals.Count; i++)
+                ReleaseOwnership(_ownedSignals[i]);
+
+            _ownedSignals.Clear();
+            base.UnBindAll();
+        }
+
+        private void ReleaseSignal(ISignalBody signal)
+        {
+            if (!_ownedSignals.Remove(signal))
+                return;
+
+            ReleaseOwnership(signal);
+        }
+
+        /// <summary>
+        /// Only the callback this binder put there is taken off. A signal another binder has since
+        /// taken over is left alone, so an unbind never silences somebody else's commands.
+        /// </summary>
+        private void ReleaseOwnership(ISignalBody signal)
+        {
+            if (ReferenceEquals(signal.InternalCallback?.Target, this))
+                signal.InternalCallback = null;
         }
 
         private void LogSignalAlreadyOwned(ISignalBody key, Action<ISignalBody, object[]> boundElsewhere)
