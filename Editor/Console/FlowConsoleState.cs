@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
 
 namespace FlowIoC.Editor.Console
 {
@@ -28,6 +29,16 @@ namespace FlowIoC.Editor.Console
         {
             get => EditorPrefs.GetBool(PREFIX + nameof(ClearOnBuild), false);
             set => EditorPrefs.SetBool(PREFIX + nameof(ClearOnBuild), value);
+        }
+
+        /// <summary>
+        /// How many lines a row shows. Two by default, which is what Unity's console does: the
+        /// message, and underneath it where the message came from.
+        /// </summary>
+        public int RowLineCount
+        {
+            get => Mathf.Clamp(EditorPrefs.GetInt(PREFIX + nameof(RowLineCount), 2), 1, 3);
+            set => EditorPrefs.SetInt(PREFIX + nameof(RowLineCount), Mathf.Clamp(value, 1, 3));
         }
 
         public bool ErrorPause
