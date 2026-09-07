@@ -21,6 +21,7 @@ namespace FlowIoC.BaseModule.Function
                 "<b><color=#FF6666>► Function:</color><color=#FFEFD5> " + function.GetType().Name + "</color></b>\n" +
                 "<b><color=#FF6666>► Expects:</color><color=#FFEFD5> " + expected + " parameter(s)</color></b>\n" +
                 "<b><color=#FF6666>► AddParams gave:</color><color=#FFEFD5> " + provided + "</color></b>",
+                function.GetType(),
                 "Execute signature mismatch on " + function.GetType().Name + ": it takes " + expected +
                 " parameter(s) and AddParams gave " + provided + ".");
 
@@ -64,6 +65,7 @@ namespace FlowIoC.BaseModule.Function
                 "<b><color=#FF6666>► Parameter:</color><color=#FFEFD5> " + index + "</color></b>\n" +
                 "<b><color=#FF6666>► Expected:</color><color=#FFEFD5> " + expectedTypeName + "</color></b>\n" +
                 "<b><color=#FF6666>► Provided:</color><color=#FFEFD5> " + providedTypeName + "</color></b>",
+                function.GetType(),
                 "Execute parameter " + index + " of " + function.GetType().Name + " expects " + expectedTypeName +
                 " and AddParams gave " + providedTypeName + ".");
         }

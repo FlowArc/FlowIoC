@@ -95,12 +95,13 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         #region Public API for Commands
 
+        [UnityEngine.HideInCallstack]
         public void ReleaseCommand(ICommandBody command, params object[] commandParameters)
         {
             if (!command.IsRetain)
             {
                 FlowLogger.LogError(SystemLogType.CommandOperation,
-                    $"Command must be retained to call manual RELEASE! Command: {command.GetType().Name}");
+                    $"Command must be retained to call manual RELEASE! Command: {command.GetType().Name}", command.GetType());
                 return;
             }
 
@@ -110,7 +111,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 // and Dispose already handed it back. Returning it a second time would put the same
                 // instance in the pool twice and hand it to two dispatches at once.
                 FlowLogger.LogWarning(SystemLogType.CommandOperation,
-                    $"RELEASE arrived after the group ended. Command: {command.GetType().Name}");
+                    $"RELEASE arrived after the group ended. Command: {command.GetType().Name}", command.GetType());
                 return;
             }
 
@@ -120,11 +121,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 HandleStepCompletion(_steps[stepIndex], commandParameters);
         }
 
+        [UnityEngine.HideInCallstack]
         public void StopCommand(ICommandBody command)
         {
             if (!command.IsRetain)
             {
-                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {command.GetType().Name}");
+                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {command.GetType().Name}", command.GetType());
                 return;
             }
 
@@ -133,7 +135,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!_retainedCommands.Remove(command, out int stepIndex))
             {
                 FlowLogger.LogWarning(SystemLogType.CommandOperation,
-                    $"STOP arrived after the group ended. Command: {command.GetType().Name}");
+                    $"STOP arrived after the group ended. Command: {command.GetType().Name}", command.GetType());
                 return;
             }
 

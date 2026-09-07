@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using FlowIoC.ConsoleModule;
 using UnityEditor;
 using UnityEngine;
@@ -58,6 +57,8 @@ namespace FlowIoC.Editor.Console
 
         private static readonly SystemLogType[] SystemLogTypeValues =
             (SystemLogType[]) Enum.GetValues(typeof(SystemLogType));
+
+        private readonly FlowSourceNavigator _navigator = new();
 
         private CD_FlowConsole _settings;
         private GUIStyle _richTextStyle;
@@ -795,154 +796,10 @@ namespace FlowIoC.Editor.Console
             _allLogs.RemoveRange(0, _allLogs.Count - maxLogCount);
         }
 
-        private void OpenSourceFile(string filePath, int lineNumber)
-        {
-            // Try direct file path first (most reliable with relative paths)
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                string normalized = filePath.Replace('\\', '/');
-                var directAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(normalized);
-                if (directAsset != null)
-                {
-                    AssetDatabase.OpenAsset(directAsset, lineNumber);
-                    return;
-                }
-            }
-
-            if (_selectedLog != null && !string.IsNullOrEmpty(_selectedLog.SourceClassName))
-            {
-                string[] classParts = _selectedLog.SourceClassName.Split('.');
-                string className = classParts.LastOrDefault();
-
-                if (!string.IsNullOrEmpty(className))
-                {
-                    string[] guids = AssetDatabase.FindAssets(className + " t:Script");
-
-                    // Namespace disambiguation first when multiple matches exist
-                    if (classParts.Length > 1)
-                    {
-                        string namespaceName = string.Join(".", classParts, 0, classParts.Length - 1);
-
-                        foreach (string guid in guids)
-                        {
-                            string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                            if (Path.GetFileNameWithoutExtension(assetPath) != className) continue;
-
-                            try
-                            {
-                                string fileContent = File.ReadAllText(assetPath);
-                                if ((fileContent.Contains($"class {className}") || fileContent.Contains($"struct {className}")) &&
-                                    fileContent.Contains($"namespace {namespaceName}"))
-                                {
-                                    UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
-                                    if (asset != null)
-                                    {
-                                        AssetDatabase.OpenAsset(asset, lineNumber);
-                                        return;
-                                    }
-                                }
-                            }
-                            catch (Exception)
-                            {
-                            }
-                        }
-                    }
-
-                    // Simple filename match fallback (single match or namespace match failed)
-                    foreach (string guid in guids)
-                    {
-                        string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                        if (Path.GetFileNameWithoutExtension(assetPath) == className)
-                        {
-                            UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
-                            if (asset != null)
-                            {
-                                AssetDatabase.OpenAsset(asset, lineNumber);
-                                return;
-                            }
-                        }
-                    }
-
-                    // Fuzzy match fallback
-                    foreach (string guid in guids)
-                    {
-                        string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                        string fileName = Path.GetFileNameWithoutExtension(assetPath);
-
-                        if (fileName.Contains(className) || className.Contains(fileName))
-                        {
-                            UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
-                            if (asset != null)
-                            {
-                                AssetDatabase.OpenAsset(asset, lineNumber);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                string normalized = filePath.Replace('\\', '/');
-
-                // Try as relative path directly (Assets/... or Packages/...)
-                UnityEngine.Object directAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(normalized);
-                if (directAsset != null)
-                {
-                    AssetDatabase.OpenAsset(directAsset, lineNumber);
-                    return;
-                }
-
-                // Try extracting relative path from absolute path
-                string relativePath = null;
-                int assetsIdx = normalized.IndexOf("/Assets/", StringComparison.Ordinal);
-                if (assetsIdx >= 0)
-                {
-                    relativePath = normalized.Substring(assetsIdx + 1);
-                }
-                else
-                {
-                    int packagesIdx = normalized.IndexOf("/Packages/", StringComparison.Ordinal);
-                    if (packagesIdx >= 0)
-                        relativePath = normalized.Substring(packagesIdx + 1);
-                }
-
-                if (relativePath != null)
-                {
-                    UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(relativePath);
-                    if (asset != null)
-                    {
-                        AssetDatabase.OpenAsset(asset, lineNumber);
-                        return;
-                    }
-                }
-
-                string justFileName = Path.GetFileName(filePath);
-                if (!string.IsNullOrEmpty(justFileName))
-                {
-                    string[] guids = AssetDatabase.FindAssets(Path.GetFileNameWithoutExtension(justFileName) + " t:Script");
-                    foreach (string guid in guids)
-                    {
-                        string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                        if (Path.GetFileName(assetPath) == justFileName)
-                        {
-                            UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
-                            if (asset != null)
-                            {
-                                AssetDatabase.OpenAsset(asset, lineNumber);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         private void TryOpenSourceFile(ConsoleLog log)
         {
             _selectedLog = log;
-            OpenSourceFile(log.SourceFilePath, log.SourceLineNumber);
+            _navigator.Open(log);
         }
 
         private void InvalidateTraceCache()
@@ -1020,7 +877,7 @@ namespace FlowIoC.Editor.Console
             {
                 if (Event.current.type == EventType.MouseUp && Event.current.button == 0)
                 {
-                    OpenFileAtLine(filePath, lineNumber, className);
+                    _navigator.Open(filePath, lineNumber, className);
                     Event.current.Use();
                 }
                 else if (Event.current.type == EventType.MouseDown && Event.current.button == 1)
@@ -1091,98 +948,6 @@ namespace FlowIoC.Editor.Console
                         menu.AddItem(new GUIContent("Copy Path"), false, () => EditorGUIUtility.systemCopyBuffer = log.SourceFilePath);
                     menu.ShowAsContext();
                     Event.current.Use();
-                }
-            }
-        }
-
-        private void OpenFileAtLine(string fullPath, int lineNumber, string className = null)
-        {
-            if (string.IsNullOrEmpty(fullPath)) return;
-
-            string normalized = fullPath.Replace('\\', '/');
-
-            // Try as relative path directly (Assets/... or Packages/...)
-            var directAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(normalized);
-            if (directAsset != null)
-            {
-                AssetDatabase.OpenAsset(directAsset, lineNumber);
-                return;
-            }
-
-            // Try extracting relative path from absolute path
-            string relativePath = null;
-            int assetsIdx = normalized.IndexOf("/Assets/", StringComparison.Ordinal);
-            if (assetsIdx >= 0)
-                relativePath = normalized.Substring(assetsIdx + 1);
-            else
-            {
-                int packagesIdx = normalized.IndexOf("/Packages/", StringComparison.Ordinal);
-                if (packagesIdx >= 0)
-                    relativePath = normalized.Substring(packagesIdx + 1);
-            }
-
-            if (relativePath != null)
-            {
-                var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(relativePath);
-                if (asset != null)
-                {
-                    AssetDatabase.OpenAsset(asset, lineNumber);
-                    return;
-                }
-            }
-
-            // Fallback: search by filename, disambiguate by class name
-            string fileName = Path.GetFileNameWithoutExtension(fullPath);
-            if (string.IsNullOrEmpty(fileName)) return;
-
-            string[] guids = AssetDatabase.FindAssets(fileName + " t:Script");
-
-            // If className available, try namespace match first
-            if (!string.IsNullOrEmpty(className) && guids.Length > 1)
-            {
-                string[] classParts = className.Split('.');
-                string simpleClassName = classParts[^1];
-                string namespaceName = classParts.Length > 1
-                    ? string.Join(".", classParts, 0, classParts.Length - 1)
-                    : null;
-
-                foreach (string guid in guids)
-                {
-                    string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                    if (Path.GetFileNameWithoutExtension(assetPath) != fileName) continue;
-
-                    try
-                    {
-                        string fileContent = File.ReadAllText(assetPath);
-                        if ((fileContent.Contains($"class {simpleClassName}") || fileContent.Contains($"struct {simpleClassName}")) &&
-                            (namespaceName == null || fileContent.Contains($"namespace {namespaceName}")))
-                        {
-                            var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
-                            if (asset != null)
-                            {
-                                AssetDatabase.OpenAsset(asset, lineNumber);
-                                return;
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
-
-            // Simple filename match fallback
-            foreach (string guid in guids)
-            {
-                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                if (Path.GetFileNameWithoutExtension(assetPath) == fileName)
-                {
-                    var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
-                    if (asset != null)
-                    {
-                        AssetDatabase.OpenAsset(asset, lineNumber);
-                        return;
-                    }
                 }
             }
         }

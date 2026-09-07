@@ -32,5 +32,12 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>Time.realtimeSinceStartup when the log was written, for the delta column.</summary>
         public float Realtime;
+
+        /// <summary>
+        /// The full name of the type this diagnostic is about, when it knows. Double-clicking
+        /// the log opens this type's script even when the object was never on the stack - an
+        /// asynchronous release, or a resolver noticing a step later than it happened.
+        /// </summary>
+        public string BlameTypeName;
     }
 }

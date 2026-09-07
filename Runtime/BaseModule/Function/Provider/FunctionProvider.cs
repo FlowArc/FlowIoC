@@ -37,7 +37,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             _executeMethods[functionType] = cached;
 
             if (cached == null)
-                FlowLogger.LogError(SystemLogType.Function, "No public Execute found on " + functionType.Name + ".");
+                FlowLogger.LogError(SystemLogType.Function, "No public Execute found on " + functionType.Name + ".", functionType);
 
             return cached;
         }
@@ -137,7 +137,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             if (function == null)
             {
                 FlowLogger.LogError(SystemLogType.Function,
-                    functionDataContainer.FunctionType?.Name + " is not an AsyncFunction, so it cannot run as one.");
+                    functionDataContainer.FunctionType?.Name + " is not an AsyncFunction, so it cannot run as one.", functionDataContainer.FunctionType);
                 ReturnDataContainerToPool(functionDataContainer);
                 yield break;
             }
@@ -174,7 +174,7 @@ namespace FlowIoC.BaseModule.Function.Provider
         {
             if (!function.IsRetain)
             {
-                FlowLogger.LogError(SystemLogType.Function, $"Function must be retained to call manual RELEASE! Function: {function.GetType().Name}");
+                FlowLogger.LogError(SystemLogType.Function, $"Function must be retained to call manual RELEASE! Function: {function.GetType().Name}", function.GetType());
                 return;
             }
 

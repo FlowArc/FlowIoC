@@ -35,6 +35,7 @@ namespace FlowIoC.BaseModule.Controller
             HasRetain = true;
         }
 
+        [UnityEngine.HideInCallstack]
         public virtual void Release(params object[] commandGroupData)
         {
             if (CommandGroupResolver == null)
@@ -46,6 +47,7 @@ namespace FlowIoC.BaseModule.Controller
             CommandGroupResolver.ReleaseCommand(this, commandGroupData);
         }
 
+        [UnityEngine.HideInCallstack]
         public virtual void Stop()
         {
             if (CommandGroupResolver == null)
@@ -107,6 +109,7 @@ namespace FlowIoC.BaseModule.Controller
                 "<b><color=#FF6666>► Command:</color><color=#FFEFD5> " + GetType().Name + "</color></b>\n" +
                 "<b><color=#FF6666>► Expects:</color><color=#FFEFD5> " + expected + " parameter(s)</color></b>\n" +
                 "<b><color=#FF6666>► Signal carried:</color><color=#FFEFD5> " + provided + "</color></b>",
+                GetType(),
                 "Execute signature mismatch on " + GetType().Name + ": it takes " + expected +
                 " parameter(s) and the signal carried " + provided + ".");
 
@@ -152,6 +155,7 @@ namespace FlowIoC.BaseModule.Controller
                 "<b><color=#FF6666>► Parameter:</color><color=#FFEFD5> " + index + "</color></b>\n" +
                 "<b><color=#FF6666>► Expected:</color><color=#FFEFD5> " + expectedTypeName + "</color></b>\n" +
                 "<b><color=#FF6666>► Provided:</color><color=#FFEFD5> " + providedTypeName + "</color></b>",
+                GetType(),
                 "Execute parameter " + index + " of " + GetType().Name + " expects " + expectedTypeName +
                 " and the signal carried " + providedTypeName + ".");
         }
@@ -163,6 +167,7 @@ namespace FlowIoC.BaseModule.Controller
                 "<b><color=#FF6666>► Command:</color><color=#FFEFD5> " + GetType().Name + "</color></b>\n" +
                 "<b><color=#FF6666>► Reason:</color><color=#FFEFD5> its group already finished, or " +
                 methodName + " was called twice.</color></b>",
+                GetType(),
                 methodName + " was called on " + GetType().Name + " after its group finished.");
         }
     }
