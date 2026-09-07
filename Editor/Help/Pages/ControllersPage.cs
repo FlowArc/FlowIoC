@@ -328,7 +328,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "        if (screen == null)\n"
                 + "        {\n"
                 + "            FlowLogger.LogError(FlowLogType.MainScreenModule,\n"
-                + "                $\"{nameof(OpenMainScreenCommand)} - the screen did not open.\");\n"
+                + "                \"OpenMainScreenCommand - the screen did not open.\");\n"
                 + "            Stop();\n"
                 + "            return;\n"
                 + "        }\n"
@@ -339,7 +339,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    catch (Exception exception)\n"
                 + "    {\n"
                 + "        FlowLogger.LogError(FlowLogType.MainScreenModule,\n"
-                + "            $\"{nameof(OpenMainScreenCommand)} threw: {exception}\");\n"
+                + "            $\"OpenMainScreenCommand threw: {exception}\");\n"
                 + "        Stop();\n"
                 + "    }\n"
                 + "}");

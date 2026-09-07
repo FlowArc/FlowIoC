@@ -65,7 +65,7 @@ without anyone editing a list.
 ```csharp
 using FlowIoC.ConsoleModule;
 
-FlowLogger.Log(FlowLogType.PlayerModule, $"{nameof(Execute)} - {nameof(AddCurrencyCommand)}");
+FlowLogger.Log(FlowLogType.PlayerModule, "Execute - AddCurrencyCommand");
 FlowLogger.LogWarning(FlowLogType.PlayerModule, "Currency clamped to zero.");
 FlowLogger.LogError(FlowLogType.PlayerModule, "Save slot is not writable.");
 FlowLogger.LogLong(FlowLogType.PlayerModule, serializedPayload);
@@ -74,10 +74,16 @@ FlowLogger.LogLong(FlowLogType.PlayerModule, serializedPayload);
 `LogLong` is for output you want kept intact — a JSON body, a serialized save — that
 would otherwise be truncated.
 
+> **Spell the names out. Never `nameof` inside a log message.**
+> `$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand`
+> is a real reference to the type, so Find Usages and a plain search answer *where is this
+> Command used* with the command's own logging lines instead of the Context that binds it.
+> A rename then leaves the literal stale, and that is the cheaper of the two costs.
+
 Every one of these methods carries `[Conditional("ENABLE_LOG")]`. Without that
 scripting define the calls are removed by the compiler, including the string
 interpolation that would have built the message. This is why you can leave
-`$"..."` logs in shipping code without paying for them.
+`"..."` logs in shipping code without paying for them.
 
 `AutoAddEnableLogDefine` in the settings adds the define for you; turn it off for a
 release build and the entire logging layer disappears.

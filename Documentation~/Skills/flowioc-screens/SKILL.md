@@ -96,7 +96,7 @@ public class OpenMatchboardScreenCommand : Command
             if (screen == null)
             {
                 FlowLogger.LogError(FlowLogType.MatchboardScreenModule,
-                    $"{nameof(OpenMatchboardScreenCommand)} - the screen did not open.");
+                    "OpenMatchboardScreenCommand - the screen did not open.");
                 Stop();
                 return;
             }
@@ -108,7 +108,7 @@ public class OpenMatchboardScreenCommand : Command
         catch (Exception exception)
         {
             FlowLogger.LogError(FlowLogType.MatchboardScreenModule,
-                $"{nameof(OpenMatchboardScreenCommand)} threw: {exception}");
+                $"OpenMatchboardScreenCommand threw: {exception}");
             Stop();
         }
     }

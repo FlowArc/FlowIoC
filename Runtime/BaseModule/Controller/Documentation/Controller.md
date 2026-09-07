@@ -474,7 +474,7 @@ public override async void Execute()
         if (screen == null)
         {
             FlowLogger.LogError(FlowLogType.MainScreenModule,
-                $"{nameof(OpenMainScreenCommand)} - the screen did not open.");
+                "OpenMainScreenCommand - the screen did not open.");
             Stop();
             return;
         }
@@ -485,7 +485,7 @@ public override async void Execute()
     catch (Exception exception)
     {
         FlowLogger.LogError(FlowLogType.MainScreenModule,
-            $"{nameof(OpenMainScreenCommand)} threw while opening the screen: {exception}");
+            $"OpenMainScreenCommand threw while opening the screen: {exception}");
         Stop();
     }
 }

@@ -22,7 +22,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         public void All(bool isTest = false, Action completeCallback = null, Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.All]");
-            Run(LoadEntries(_registry.GetAllEntries(), completeCallback, loadingProgressCallback), nameof(All));
+            Run(LoadEntries(_registry.GetAllEntries(), completeCallback, loadingProgressCallback), "All");
         }
 
         public void ScreensAtManager(int managerId = 0, bool isTest = false, Action completeCallback = null,
@@ -30,14 +30,14 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         {
             FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.ScreensAtManager]");
             Run(LoadEntries(_registry.GetManagerEntries(managerId), completeCallback, loadingProgressCallback),
-                nameof(ScreensAtManager));
+                "ScreensAtManager");
         }
 
         public void ByTag(ScreenTag tag, bool isTest = false, Action completeCallback = null,
             Action<int, int> loadingProgressCallback = null)
         {
             FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.ByTag] {tag}");
-            Run(LoadEntries(_registry.GetTagEntries(tag), completeCallback, loadingProgressCallback), nameof(ByTag));
+            Run(LoadEntries(_registry.GetTagEntries(tag), completeCallback, loadingProgressCallback), "ByTag");
         }
 
         /// <summary>

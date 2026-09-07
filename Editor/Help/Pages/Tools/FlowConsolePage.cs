@@ -26,9 +26,15 @@ namespace FlowIoC.Editor.Help.Pages.Tools
             painter.SubHeading("Logging from your own code");
             painter.Code(
                 "FlowLogger.Log(FlowLogType.PlayerModule,\n"
-                + "    $\"{nameof(Execute)} - {nameof(AddCurrencyCommand)}\");\n"
+                + "    \"Execute - AddCurrencyCommand\");\n"
                 + "\n"
                 + "FlowLogger.LogError(FlowLogType.PlayerModule, \"Currency went negative.\");");
+            painter.Note(
+                "Spell the names out. A log message never uses nameof: written inside "
+                + "AddCurrencyCommand, nameof(AddCurrencyCommand) is a real reference to the type, "
+                + "so Find Usages answers \"where is this Command used\" with the command's own "
+                + "logging lines instead of the Context that binds it. A rename then leaves the "
+                + "literal stale, and that is the cheaper of the two costs.");
             painter.Note(
                 "Logging compiles out unless the ENABLE_LOG scripting define is set, so lines you "
                 + "leave in cost a shipped build nothing. The framework's own channels are always "

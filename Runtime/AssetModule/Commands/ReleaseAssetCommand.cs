@@ -15,7 +15,7 @@ namespace FlowIoC.AssetModule.Commands
             Retain();
 
             FlowLogger.Log(SystemLogType.Asset,
-                $"{nameof(Execute)} - {nameof(ReleaseAssetCommand)} | key={_key}");
+                $"Execute - ReleaseAssetCommand | key={_key}");
 
             _assetService.Release(_key);
 
