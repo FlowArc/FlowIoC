@@ -9,6 +9,7 @@ using FlowIoC.BaseModule.Injectable.Binders;
 using FlowIoC.BaseModule.Injectable.CrossContext;
 using FlowIoC.BaseModule.Injectable.Utils;
 using FlowIoC.BaseModule.Signals;
+using FlowIoC.ConsoleModule;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -689,6 +690,150 @@ namespace FlowIoC.Tests
             signal.Dispatch();
 
             Assert.That(SeenNumber, Is.Zero);
+        }
+
+        #endregion
+
+        #region Flow correlation
+
+        /// <summary>
+        /// The command lines written for one dispatch. The signals below are built as
+        /// new Signal() rather than the fixture's usual new Signal(true), because that
+        /// argument is hideCommandLog and these tests read the logs.
+        /// </summary>
+        private static List<ConsoleLog> CommandLogs()
+        {
+            var logs = new List<ConsoleLog>();
+
+            foreach (ConsoleLog log in FlowLogger.Logs)
+            {
+                if (log.SystemLogType == SystemLogType.Command
+                    || log.SystemLogType == SystemLogType.CommandOperation)
+                    logs.Add(log);
+            }
+
+            return logs;
+        }
+
+        private static ConsoleLog FirstLogMentioning(string text)
+        {
+            foreach (ConsoleLog log in FlowLogger.Logs)
+            {
+                if (log.Message != null && log.Message.Contains(text))
+                    return log;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Everything one dispatch writes belongs to one flow, which is what lets the console
+        /// draw the chain as a tree rather than as a run of unrelated lines.
+        /// </summary>
+        [Test]
+        public void Every_log_of_one_dispatch_carries_the_same_flow_id()
+        {
+            FlowLogger.ClearLogs();
+
+            Signal signal = new Signal();
+            _commandBinder.Bind(signal)
+                .ToSequence<FirstCommand>()
+                .ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            List<ConsoleLog> logs = CommandLogs();
+            Assert.IsNotEmpty(logs, "the command channel wrote nothing - is ENABLE_LOG defined?");
+
+            var flowIds = new HashSet<int>();
+            foreach (ConsoleLog log in logs)
+                flowIds.Add(log.FlowId);
+
+            Assert.AreEqual(1, flowIds.Count, "one dispatch, one flow");
+            Assert.IsFalse(flowIds.Contains(0), "a dispatched chain is never flow 0");
+        }
+
+        /// <summary>
+        /// A command that retains and releases on a later frame is ordinary in FlowIoC. Its
+        /// remaining steps have to stay in the same flow, which is why the resolver enters its
+        /// flow on ReleaseCommand and not only on Initialize. A per-step wrap would put the
+        /// second half of this chain outside the tree.
+        /// </summary>
+        [Test]
+        public void A_chain_that_resumes_after_a_release_stays_in_its_flow()
+        {
+            FlowLogger.ClearLogs();
+
+            Signal signal = new Signal();
+            _commandBinder.Bind(signal)
+                .ToSequence<RetainingCommand>()
+                .ToSequence<SecondCommand>();
+
+            signal.Dispatch();
+
+            ConsoleLog beforeRelease = FirstLogMentioning(nameof(RetainingCommand));
+            Assert.IsNotNull(beforeRelease, "the retaining step wrote no command line");
+
+            LastRetained.Release();
+
+            ConsoleLog afterRelease = FirstLogMentioning(nameof(SecondCommand));
+            Assert.IsNotNull(afterRelease, "the sequence did not resume");
+
+            Assert.AreEqual(beforeRelease.FlowId, afterRelease.FlowId);
+        }
+
+        /// <summary>
+        /// A signal dispatched from inside a command is a branch of the flow that dispatched
+        /// it, not a second root.
+        /// </summary>
+        [Test]
+        public void A_signal_dispatched_inside_a_command_hangs_off_its_parent()
+        {
+            FlowLogger.ClearLogs();
+
+            Signal inner = new Signal();
+            _commandBinder.Bind(inner).ToSequence<FirstCommand>();
+
+            Signal outer = new Signal();
+            _commandBinder.Bind(outer).ToSequence<DispatchingCommand>();
+            DispatchingCommand.Target = inner;
+
+            outer.Dispatch();
+
+            ConsoleLog outerLog = FirstLogMentioning(nameof(DispatchingCommand));
+            ConsoleLog innerLog = FirstLogMentioning(nameof(FirstCommand));
+
+            Assert.IsNotNull(outerLog, "the outer command wrote no line");
+            Assert.IsNotNull(innerLog, "the inner command wrote no line");
+
+            Assert.AreNotEqual(outerLog.FlowId, innerLog.FlowId, "the inner dispatch is its own flow");
+            Assert.AreEqual(outerLog.FlowId, innerLog.ParentFlowId, "and it hangs off the outer one");
+        }
+
+        /// <summary>
+        /// Two dispatches that have nothing to do with each other must not be drawn as one
+        /// tree, which is the failure a shared counter would produce.
+        /// </summary>
+        [Test]
+        public void Two_unrelated_dispatches_are_two_flows()
+        {
+            FlowLogger.ClearLogs();
+
+            Signal first = new Signal();
+            _commandBinder.Bind(first).ToSequence<FirstCommand>();
+
+            Signal second = new Signal();
+            _commandBinder.Bind(second).ToSequence<SecondCommand>();
+
+            first.Dispatch();
+            second.Dispatch();
+
+            ConsoleLog firstLog = FirstLogMentioning(nameof(FirstCommand));
+            ConsoleLog secondLog = FirstLogMentioning(nameof(SecondCommand));
+
+            Assert.AreNotEqual(firstLog.FlowId, secondLog.FlowId);
+            Assert.AreEqual(0, firstLog.ParentFlowId, "a dispatch from nowhere is a root");
+            Assert.AreEqual(0, secondLog.ParentFlowId);
         }
 
         #endregion

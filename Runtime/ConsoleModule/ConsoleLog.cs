@@ -39,5 +39,11 @@ namespace FlowIoC.ConsoleModule
         /// asynchronous release, or a resolver noticing a step later than it happened.
         /// </summary>
         public string BlameTypeName;
+
+        /// <summary>The flow this log belongs to. 0 when it was written outside any flow.</summary>
+        public int FlowId;
+
+        /// <summary>The flow this one was started from. 0 at the root of a tree.</summary>
+        public int ParentFlowId;
     }
 }

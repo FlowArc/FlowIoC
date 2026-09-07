@@ -44,6 +44,14 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         // stops if it has moved: the frame belongs to a run that is over.
         private int _runId;
 
+        // The flow this run belongs to, and the flow it was dispatched from. Everything the
+        // console records while this resolver is running is tagged with them, which is what lets
+        // the window draw a dispatch as a tree instead of a run of unrelated lines. Both stay 0
+        // in a player build, because the calls that fill them carry [Conditional("ENABLE_LOG")]
+        // and are removed by the compiler.
+        private int _flowId;
+        private int _parentFlowId;
+
         #endregion
 
         #region Initialization and Cleanup
@@ -62,6 +70,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _isDisposed = false;
             _runId++;
             IsHideLog = commandBinding.Key is ISignalBody signal && signal.HideCommandLog;
+
+            // The flow is started by whoever starts the group - CommandBinder for a dispatch, and
+            // ExecuteGroupStep for a sub group - so that the line announcing the group belongs to
+            // the same flow as the commands under it. This run only remembers which flow that is,
+            // because ReleaseCommand and StopCommand have to re-enter it a frame later.
+            FlowLogger.CaptureCurrentFlow(ref _flowId, ref _parentFlowId);
 
             CheckExecuteNextStep(null);
         }
@@ -86,6 +100,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _signalParameters = null;
             _executionIndex = 0;
             _completionCount = 0;
+            _flowId = 0;
+            _parentFlowId = 0;
 
             // IsHideLog is deliberately left where it is. The binder reads it on the way to the
             // pool, which is after this now, and Initialize sets it for the next run anyway.
@@ -97,6 +113,24 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         [UnityEngine.HideInCallstack]
         public void ReleaseCommand(ICommandBody command, params object[] commandParameters)
+        {
+            // The door a chain comes back through a frame later, so it re-enters the flow the
+            // dispatch started. Wrapping the steps instead would leave everything after a Retain
+            // outside the tree.
+            int previousFlowId = 0, previousParentFlowId = 0;
+            FlowLogger.EnterFlow(_flowId, _parentFlowId, ref previousFlowId, ref previousParentFlowId);
+            try
+            {
+                ReleaseCommandInFlow(command, commandParameters);
+            }
+            finally
+            {
+                FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
+            }
+        }
+
+        [UnityEngine.HideInCallstack]
+        private void ReleaseCommandInFlow(ICommandBody command, object[] commandParameters)
         {
             if (!command.IsRetain)
             {
@@ -124,9 +158,25 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         [UnityEngine.HideInCallstack]
         public void StopCommand(ICommandBody command)
         {
+            int previousFlowId = 0, previousParentFlowId = 0;
+            FlowLogger.EnterFlow(_flowId, _parentFlowId, ref previousFlowId, ref previousParentFlowId);
+            try
+            {
+                StopCommandInFlow(command);
+            }
+            finally
+            {
+                FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
+            }
+        }
+
+        [UnityEngine.HideInCallstack]
+        private void StopCommandInFlow(ICommandBody command)
+        {
             if (!command.IsRetain)
             {
-                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {command.GetType().Name}", command.GetType());
+                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {command.GetType().Name}",
+                    command.GetType());
                 return;
             }
 
@@ -269,11 +319,25 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             };
             subGroup.GroupExecutionFinished += onFinish;
 
-            if (!step.GroupKey.HideCommandLog)
-                FlowLogger.Log(SystemLogType.CommandOperation, "Command SubGroup is executed : '", step.GroupKey.Name, "'.");
+            // A sub group is a branch of this flow rather than part of it, so it takes a flow of
+            // its own with this one as its parent - the same shape a nested dispatch gets.
+            int subFlowId = 0, subParentFlowId = 0;
+            FlowLogger.NextFlowId(ref subFlowId, ref subParentFlowId);
 
-            object[] parametersToUse = step.SignalParameters?.Length > 0 ? step.SignalParameters : _signalParameters;
-            subGroup.Initialize(groupBinding, _commandBinder, parametersToUse);
+            int previousFlowId = 0, previousParentFlowId = 0;
+            FlowLogger.EnterFlow(subFlowId, subParentFlowId, ref previousFlowId, ref previousParentFlowId);
+            try
+            {
+                if (!step.GroupKey.HideCommandLog)
+                    FlowLogger.Log(SystemLogType.CommandOperation, "Command SubGroup is executed : '", step.GroupKey.Name, "'.");
+
+                object[] parametersToUse = step.SignalParameters?.Length > 0 ? step.SignalParameters : _signalParameters;
+                subGroup.Initialize(groupBinding, _commandBinder, parametersToUse);
+            }
+            finally
+            {
+                FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
+            }
         }
 
         private void ExecuteCommandStep(CommandStepVO step, int stepIndex, object[] commandParameters)

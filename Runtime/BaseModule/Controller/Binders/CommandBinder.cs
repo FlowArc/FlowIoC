@@ -167,9 +167,25 @@ namespace FlowIoC.BaseModule.Controller.Binders
             ICommandGroupResolver commandGroupResolver = GetAvailableGroup();
             commandGroupResolver.GroupExecutionFinished += _returnGroupToPool;
 
-            if (!signal.HideCommandLog)
-                FlowLogger.Log(SystemLogType.CommandOperation, "[CommandGroup][InitializeGroupWithSignal] : '", signal.Name, "'.");
-            commandGroupResolver.Initialize(binding, this, commandParameters);
+            // A dispatch is one flow, and it starts here rather than inside the resolver so that
+            // the line announcing the group belongs to the same flow as the commands under it.
+            // A signal dispatched from inside a command takes the running flow as its parent, and
+            // the console builds the tree out of those two ids.
+            int flowId = 0, parentFlowId = 0;
+            FlowLogger.NextFlowId(ref flowId, ref parentFlowId);
+
+            int previousFlowId = 0, previousParentFlowId = 0;
+            FlowLogger.EnterFlow(flowId, parentFlowId, ref previousFlowId, ref previousParentFlowId);
+            try
+            {
+                if (!signal.HideCommandLog)
+                    FlowLogger.Log(SystemLogType.CommandOperation, "[CommandGroup][InitializeGroupWithSignal] : '", signal.Name, "'.");
+                commandGroupResolver.Initialize(binding, this, commandParameters);
+            }
+            finally
+            {
+                FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
+            }
         }
 
         #region CommandGroupPool
