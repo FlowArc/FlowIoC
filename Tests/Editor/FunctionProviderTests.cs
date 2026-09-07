@@ -19,6 +19,8 @@ namespace FlowIoC.Tests
         internal static readonly List<object> Instances = new();
         internal static int Runs;
         internal static bool RetainOnce;
+        internal static bool ReleaseInsideExecuteOnce;
+        internal static bool CallSelfOnce;
         internal static FunctionBody LastRetained;
 
         private FunctionProvider _provider;
@@ -29,6 +31,8 @@ namespace FlowIoC.Tests
             Instances.Clear();
             Runs = 0;
             RetainOnce = false;
+            ReleaseInsideExecuteOnce = false;
+            CallSelfOnce = false;
             LastRetained = null;
 
             StandInContext context = new StandInContext();
@@ -131,12 +135,70 @@ namespace FlowIoC.Tests
                 "once released it is the instance the next call gets");
         }
 
+        /// <summary>
+        /// A function that retains and releases inside its own Execute is back in the pool before
+        /// that Execute returns. The run's own check then used to find nothing retained and pool it
+        /// a second time, so one instance sat in the pool twice and two callers were handed it.
+        /// </summary>
+        [Test]
+        public void A_function_released_inside_its_own_Execute_is_not_pooled_twice()
+        {
+            ReleaseInsideExecuteOnce = true;
+            _provider.Call<CountingFunction>().Execute();
+
+            ReleaseInsideExecuteOnce = false;
+            _provider.Call<CountingFunction>().Execute();
+            _provider.Call<CountingFunction>().Execute();
+
+            Assert.That(Instances, Has.Count.EqualTo(3));
+            Assert.That(Instances[1], Is.SameAs(Instances[0]), "the released instance is the one the pool had");
+            Assert.That(Instances[2], Is.SameAs(Instances[0]),
+                "and it was in the pool once, so the third call gets it back rather than a second copy");
+        }
+
+        /// <summary>
+        /// The same thing in the shape that made it visible: a function that releases itself and
+        /// then calls its own type reaches a pool holding that very instance. The outer run must not
+        /// pool it on the way out - the nested run is the one holding it now.
+        /// </summary>
+        [Test]
+        public void A_function_taken_out_again_mid_Execute_is_not_pooled_by_the_run_that_left_it()
+        {
+            ReleaseInsideExecuteOnce = true;
+            CallSelfOnce = true;
+
+            _provider.Call<CountingFunction>().Execute();
+
+            ReleaseInsideExecuteOnce = false;
+            CallSelfOnce = false;
+            _provider.Call<CountingFunction>().Execute();
+            _provider.Call<CountingFunction>().Execute();
+
+            Assert.That(Instances[3], Is.SameAs(Instances[2]),
+                "the pool held one instance, not the same one twice");
+        }
+
         public class CountingFunction : FunctionVoid
         {
             public override void Execute()
             {
                 Runs++;
                 Instances.Add(this);
+
+                if (ReleaseInsideExecuteOnce)
+                {
+                    ReleaseInsideExecuteOnce = false;
+                    Retain();
+                    Release();
+
+                    if (!CallSelfOnce)
+                        return;
+
+                    CallSelfOnce = false;
+                    _functionProvider.Call<CountingFunction>().Execute();
+
+                    return;
+                }
 
                 if (!RetainOnce)
                     return;

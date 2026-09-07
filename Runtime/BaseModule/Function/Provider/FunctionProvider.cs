@@ -96,12 +96,13 @@ namespace FlowIoC.BaseModule.Function.Provider
         internal void ExecuteFunction(FunctionDataContainer functionDataContainer)
         {
             IFunctionBody function = GetFunction(functionDataContainer);
+            int runToken = RunTokenOf(function);
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out _);
             FlowLogger.Log(SystemLogType.Function, "Function Executed! ", function.GetType().Name);
 
-            if (!function.HasRetain)
+            if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
                 ReturnFunctionToPool(function);
             }
@@ -112,6 +113,7 @@ namespace FlowIoC.BaseModule.Function.Provider
         internal TReturnType ExecuteFunction<TReturnType>(FunctionDataContainer functionDataContainer)
         {
             IFunctionBody function = GetFunction(functionDataContainer);
+            int runToken = RunTokenOf(function);
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out object result);
@@ -119,7 +121,7 @@ namespace FlowIoC.BaseModule.Function.Provider
 
             ReturnDataContainerToPool(functionDataContainer);
 
-            if (!function.HasRetain)
+            if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
                 ReturnFunctionToPool(function);
             }
@@ -140,12 +142,14 @@ namespace FlowIoC.BaseModule.Function.Provider
                 yield break;
             }
 
+            int runToken = RunTokenOf(function);
+
             (functionDataContainer as AsyncFunctionDataContainerBase)?.ApplyCallback(function);
             Context.TryToInjectFunction(function);
             yield return function.Execute();
             FlowLogger.Log(SystemLogType.Function, "Function Executed! ", function.GetType().Name);
 
-            if (!function.HasRetain)
+            if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
                 ReturnFunctionToPool(function);
             }
@@ -188,17 +192,37 @@ namespace FlowIoC.BaseModule.Function.Provider
             FlowLogger.Log(SystemLogType.Function, "Function Returned to Pool! ", functionType.Name);
         }
 
+        /// <summary>
+        /// A function ready for one execution. Both retain flags are cleared here rather than on
+        /// the way back to the pool, so an instance that released itself mid-Execute is still
+        /// carrying the answer its own run needs when that run is judged.
+        /// </summary>
         private IFunctionBody GetFunction(FunctionDataContainer functionDataContainer)
         {
             Type functionType = functionDataContainer.FunctionType;
 
-            if (_functionPool.TryTake(functionType, out IFunctionBody parked))
-                return parked;
+            if (!_functionPool.TryTake(functionType, out IFunctionBody function))
+            {
+                function = (IFunctionBody) Activator.CreateInstance(functionType);
+                FlowLogger.Log(SystemLogType.Function, "Function Created! ", functionType.Name);
+            }
 
-            IFunctionBody function = (IFunctionBody) Activator.CreateInstance(functionType);
-            FlowLogger.Log(SystemLogType.Function, "Function Created! ", functionType.Name);
+            (function as FunctionBody)?.BeginRun();
 
             return function;
         }
+
+        /// <summary>
+        /// Whether the run that took this instance out is still the run that holds it. A function
+        /// that retained and released inside its own Execute is back in the pool while that Execute
+        /// is still on the stack, and a nested call of the same type takes the very same instance
+        /// out again - in which case the flags belong to that run and pooling the instance here
+        /// would hand a running function to a second caller.
+        /// </summary>
+        private static bool IsStillTheSameRun(IFunctionBody function, int runToken) =>
+            function is not FunctionBody body || body.RunToken == runToken;
+
+        private static int RunTokenOf(IFunctionBody function) =>
+            function is FunctionBody body ? body.RunToken : 0;
     }
 }

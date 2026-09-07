@@ -1089,10 +1089,10 @@ _functionProvider
 ```
 
 A function goes back to the pool the moment its `Execute` returns, so one that hands its instance
-to something outliving the call says `Retain()` and keeps it until `Release()`. Unlike a Command, a
-Function must not do both inside one `Execute`: `Release()` pools the instance and clears the flag,
-and the run's own check then finds nothing retained and pools it a second time. An `AsyncFunction`
-needs neither — the provider runs its coroutine to the end before it pools anything.
+to something outliving the call says `Retain()` and keeps it until `Release()`. Both may happen
+inside one `Execute`, the way they may on a Command — the instance is already back in the pool when
+the run is judged, and the run knows not to pool it again. An `AsyncFunction` needs neither: the
+provider runs its coroutine to the end before it pools anything.
 
 ---
 

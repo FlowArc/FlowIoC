@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A function that releases itself inside its own `Execute` is no longer pooled twice.** The
+  provider pools a function whose run left nothing retained, and `Release()` cleared `HasRetain` on
+  the way out - so a function that retained and released mid-`Execute` was pooled by its own
+  `Release` and then again by the check after it, and two callers were handed one instance. Both
+  halves of the command engine's answer are here now: `FunctionBody.Dispose` leaves `HasRetain`
+  alone and a `BeginRun` clears it when the instance is taken out, and a `RunToken` says whether the
+  run that took an instance out is still the run holding it - for the case where a nested call of
+  the same type took it out again mid-`Execute`. A Function may now retain and release inside one
+  `Execute`, the way a Command always could.
+
 ### Changed
 
 - **A function is called with `Call<T>()` and run with `Execute()`, `ExecuteAsync()` or
