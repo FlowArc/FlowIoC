@@ -20,6 +20,15 @@ namespace FlowIoC.BaseModule.Controller
 
         internal int InjectionStamp = -1;
 
+        /// <summary>
+        /// Which execution of this pooled instance is the current one. A command that retains and
+        /// releases inside its own Execute is back in the pool before that Execute returns, and the
+        /// next step of the same type takes the same instance straight out again - so the frame that
+        /// started the first run finds an instance whose flags belong to the second. It reads this
+        /// before it acts on them.
+        /// </summary>
+        internal int RunToken;
+
         public virtual void Retain()
         {
             IsRetain = true;
@@ -71,6 +80,7 @@ namespace FlowIoC.BaseModule.Controller
         {
             IsRetain = false;
             HasRetain = false;
+            RunToken++;
             CommandGroupResolver = commandGroupResolver;
         }
 

@@ -67,23 +67,19 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         }
 
         /// <summary>
-        /// Ends the run and hands back what it still holds. A command retained when the group is
-        /// stopped has no one left to release it, so the pool would never see it again - it is
-        /// returned here instead, and the empty dictionary is what tells a late Release that its
-        /// group is gone.
+        /// Ends the run and lets go of what it still holds. A command retained when the group ends
+        /// is dropped rather than pooled: whatever it was waiting on is still going, still holds the
+        /// instance, and will call Release on it. Handing that instance to the next dispatch would
+        /// make the late Release finish a step of somebody else's run - a bug worth more than the
+        /// one pooled instance that is lost by letting it go. The empty dictionary is what tells the
+        /// late Release its group is gone.
         /// </summary>
         public void Dispose()
         {
             if (_isDisposed) return;
             _isDisposed = true;
 
-            if (_retainedCommands.Count > 0)
-            {
-                foreach (KeyValuePair<ICommandBody, int> retained in _retainedCommands)
-                    _commandBinder.ReturnCommandToPool(retained.Key);
-
-                _retainedCommands.Clear();
-            }
+            _retainedCommands.Clear();
 
             GroupExecutionFinished = null;
             _steps = null;
@@ -283,6 +279,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             // pooled instance, so a command that retained once was treated as retained on every
             // later run and its sequence stopped waiting for a Release nobody would send.
             command.BeginRun(this);
+            int runToken = command.RunToken;
 
             _commandBinding.Context.InjectCommand(command, _signalParameters);
 
@@ -294,6 +291,13 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 FlowLogger.Log(SystemLogType.Command, $"[Command] Execute as {step.ExecutionType.ToString()} : {step.CommandType.Name}");
 
             command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());
+
+            // A command that retained and released inside that Execute is already back in the pool,
+            // and a later step of the same type may have taken it out again - in which case the
+            // flags below belong to that run, not this one, and returning the instance would put a
+            // running command in the pool for a second dispatch to pick up.
+            if (command.RunToken != runToken)
+                return;
 
             if (!command.HasRetain)
             {

@@ -23,7 +23,19 @@ namespace FlowIoC.BaseModule.Controller.Binders
         /// </summary>
         private readonly List<ISignalBody> _ownedSignals = new();
 
+        /// <summary>
+        /// One delegate for the life of the binder. Writing the method group at the subscription
+        /// built a new one on every dispatch, which is the kind of allocation a signal that fires
+        /// each frame notices.
+        /// </summary>
+        private readonly Action<ICommandGroupResolver> _returnGroupToPool;
+
         internal IContext Context;
+
+        public CommandBinder()
+        {
+            _returnGroupToPool = ReturnGroupToPool;
+        }
 
         /// <summary>
         /// A signal carries one command callback, so the first Context to bind it owns it. A second
@@ -34,6 +46,23 @@ namespace FlowIoC.BaseModule.Controller.Binders
         public virtual ICommandBinding Bind<TSignal>(TSignal key)
             where TSignal : ISignalBody
         {
+            // The same signal bound twice in one Context. The base binder answers that with null,
+            // which the chain's first ToSequence then dereferenced - so a mistake in a Context was
+            // reported as a null reference somewhere in the framework. It is named here instead.
+            if (GetBinding(key) != null)
+            {
+                FlowLogger.LogError(SystemLogType.CommandOperation,
+                    "<b><color=#FF6666>► Signal is bound twice in the same context!</color></b>\n" +
+                    "<b><color=#FF6666>► Signal:</color><color=#FFEFD5> " + key.Name + "</color></b>\n" +
+                    "<b><color=#FF6666>► Context:</color><color=#FFEFD5> " +
+                    (Context == null ? "this context" : Context.GetType().Name) + "</color></b>\n" +
+                    "<b><color=#FF6666>► Result:</color><color=#FFEFD5> only the first chain runs. " +
+                    "Put the steps in that one sequence rather than binding the signal again.</color></b>",
+                    "Signal '" + key.Name + "' is bound twice in the same context, so only the first chain runs.");
+
+                return DiscardedBinding(key);
+            }
+
             Action<ISignalBody, object[]> boundElsewhere = key.InternalCallback;
 
             if (boundElsewhere != null && !ReferenceEquals(boundElsewhere.Target, this))
@@ -89,6 +118,19 @@ namespace FlowIoC.BaseModule.Controller.Binders
         /// Only the callback this binder put there is taken off. A signal another binder has since
         /// taken over is left alone, so an unbind never silences somebody else's commands.
         /// </summary>
+        /// <summary>
+        /// Handed back where the bind was refused, so the chain the caller wrote still reads. It is
+        /// not in the binder and nothing can reach it, so the steps hung off it go nowhere - which
+        /// is the point: the first chain is the one that runs.
+        /// </summary>
+        private ICommandBinding DiscardedBinding(ISignalBody key)
+        {
+            CommandBinding discarded = new CommandBinding();
+            discarded.SetKey(key);
+            discarded.SetContext(Context);
+            return discarded;
+        }
+
         private void ReleaseOwnership(ISignalBody signal)
         {
             if (ReferenceEquals(signal.InternalCallback?.Target, this))
@@ -123,7 +165,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             }
 
             ICommandGroupResolver commandGroupResolver = GetAvailableGroup();
-            commandGroupResolver.GroupExecutionFinished += ReturnGroupToPool;
+            commandGroupResolver.GroupExecutionFinished += _returnGroupToPool;
 
             if (!signal.HideCommandLog)
                 FlowLogger.Log(SystemLogType.CommandOperation, $"[CommandGroup][InitializeGroupWithSignal] : '{signal.Name}'.");
