@@ -112,7 +112,7 @@ so follow the rules below deliberately.
 
           if (screen == null)
           {
-              FlowLogger.LogError(FlowLogType.MainScreenModule, $"{nameof(OpenMainScreenCommand)} Screen is null");
+              FlowLogger.LogError(FlowLogType.MainScreenModule, "OpenMainScreenCommand Screen is null");
               Stop();
               return;
           }
@@ -122,7 +122,7 @@ so follow the rules below deliberately.
       }
       catch (Exception exception)
       {
-          FlowLogger.LogError(FlowLogType.MainScreenModule, $"{nameof(OpenMainScreenCommand)} threw: {exception}");
+          FlowLogger.LogError(FlowLogType.MainScreenModule, $"OpenMainScreenCommand threw: {exception}");
           Stop();
       }
   }
@@ -679,9 +679,18 @@ project. Change the modules, not the file.
 ### Logging
 
 ```csharp
-FlowLogger.Log(FlowLogType.PlayerModule, $"{nameof(Execute)} - {nameof(AddCurrencyCommand)}");
+FlowLogger.Log(FlowLogType.PlayerModule, "Execute - AddCurrencyCommand");
 FlowLogger.LogError(FlowLogType.PlayerModule, "Currency went negative.");
 ```
+
+**A log message spells names out. Never `nameof` inside one.**
+`$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand` is a real
+reference to the type, so Find Usages and a plain search both answer the question *where is this
+Command used* with the command's own logging lines. The answer wanted is which Context binds it and
+which signal runs it, and it is buried under hits from the file the reader is already in. The trade
+is that a rename leaves the literal stale, and a stale word in a log line is cheaper than a search
+that cannot be trusted. This is about the message text alone - `nameof` stays correct everywhere
+else.
 
 Logging compiles out unless the `ENABLE_LOG` scripting define is set. The framework already
 logs its own contexts, injections, signals and commands on built-in channels, so watching a

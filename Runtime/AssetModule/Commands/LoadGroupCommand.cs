@@ -25,14 +25,14 @@ namespace FlowIoC.AssetModule.Commands
             Retain();
 
             FlowLogger.Log(SystemLogType.Asset,
-                $"{nameof(Execute)} - {nameof(LoadGroupCommand)} | label={_label}");
+                $"Execute - LoadGroupCommand | label={_label}");
 
             // Asked here rather than left to the service: the service answers an empty label with a
             // finished task and no group, so the caller would carry on believing the group loaded.
             if (string.IsNullOrEmpty(_label))
             {
                 FlowLogger.LogError(SystemLogType.Asset,
-                    $"{nameof(LoadGroupCommand)} - the signal carried no label, so there is no group to load.");
+                    "LoadGroupCommand - the signal carried no label, so there is no group to load.");
                 Stop();
                 return;
             }
@@ -45,7 +45,7 @@ namespace FlowIoC.AssetModule.Commands
             catch (Exception exception)
             {
                 FlowLogger.LogError(SystemLogType.Asset,
-                    $"{nameof(LoadGroupCommand)} threw while loading the group '{_label}': {exception}");
+                    $"LoadGroupCommand threw while loading the group '{_label}': {exception}");
                 Stop();
             }
         }

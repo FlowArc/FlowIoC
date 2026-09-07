@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A log message spells names out; `nameof` is no longer used in one.**
+  `$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand` is a real
+  reference to the type, so Find Usages and a plain search answer *where is this Command used* with
+  the command's own logging lines - and the answer wanted, which Context binds it and which signal
+  runs it, is buried under hits from the file the reader is already in. Every log in the package, in
+  the modules it ships and in its documentation now carries the name as a literal, including the
+  places that fed one in indirectly: `CommandBody`'s detached-call report, `LoadSubService`'s caller
+  label and `LocalSaveService`'s prefix. The trade is that a rename leaves the literal stale, and a
+  stale word in a log line is cheaper than a search that cannot be trusted. `nameof` is untouched
+  everywhere else - `[Inject(nameof(PlayerContext))]`, a `Group` constant, an `ArgumentNullException`
+  parameter name. The rule is in `AgentRules.md`, the README, `FlowConsole.md` and the Help window's
+  Flow Console page.
+
 - **The rule about resolving a retain now covers an `await`.** "Every path out of a retained Command
   ends in `Release()` or `Stop()`" was already written down, and the shipped example of an
   asynchronous command did not obey it: it awaited, and only the success path resolved the retain.

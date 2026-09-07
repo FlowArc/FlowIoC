@@ -24,7 +24,7 @@ namespace Modules.GameplayModule.GameplayScreenModule.Controllers
             Retain();
 
             FlowLogger.Log(FlowLogType.GameplayScreenModule,
-                $"{nameof(Execute)} - {nameof(OpenGameplayScreenCommand)} | difficulty={_difficulty}");
+                $"Execute - OpenGameplayScreenCommand | difficulty={_difficulty}");
 
             try
             {
@@ -35,7 +35,7 @@ namespace Modules.GameplayModule.GameplayScreenModule.Controllers
                 if (screen == null)
                 {
                     FlowLogger.LogError(FlowLogType.GameplayScreenModule,
-                        $"{nameof(OpenGameplayScreenCommand)} - the screen did not open.");
+                        "OpenGameplayScreenCommand - the screen did not open.");
                     Stop();
                     return;
                 }
@@ -45,7 +45,7 @@ namespace Modules.GameplayModule.GameplayScreenModule.Controllers
             catch (Exception exception)
             {
                 FlowLogger.LogError(FlowLogType.GameplayScreenModule,
-                    $"{nameof(OpenGameplayScreenCommand)} threw while opening the screen: {exception}");
+                    $"OpenGameplayScreenCommand threw while opening the screen: {exception}");
                 Stop();
             }
         }

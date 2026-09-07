@@ -692,7 +692,7 @@ public override async void Execute()
         if (screen == null)
         {
             FlowLogger.LogError(FlowLogType.MainScreenModule,
-                $"{nameof(OpenMainScreenCommand)} - the screen did not open.");
+                "OpenMainScreenCommand - the screen did not open.");
             Stop();
             return;
         }
@@ -703,7 +703,7 @@ public override async void Execute()
     catch (Exception exception)
     {
         FlowLogger.LogError(FlowLogType.MainScreenModule,
-            $"{nameof(OpenMainScreenCommand)} threw: {exception}");
+            $"OpenMainScreenCommand threw: {exception}");
         Stop();
     }
 }
@@ -1087,9 +1087,15 @@ regenerates `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` with a constant fo
 ```csharp
 using FlowIoC.ConsoleModule;
 
-FlowLogger.Log(FlowLogType.PlayerModule, $"{nameof(Execute)} - {nameof(AddCurrencyCommand)}");
+FlowLogger.Log(FlowLogType.PlayerModule, "Execute - AddCurrencyCommand");
 FlowLogger.LogError(FlowLogType.PlayerModule, "Currency went negative.");
 ```
+
+**Spell the names out. Never `nameof` inside a log message.**
+`$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand` is a real
+reference to the type, so Find Usages and a plain search answer *where is this Command used* with
+the command's own logging lines rather than the Context that binds it. A rename then leaves the
+literal stale, and that is the cheaper of the two costs.
 
 Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
 

@@ -39,7 +39,7 @@ namespace FlowIoC.BaseModule.Controller
         {
             if (CommandGroupResolver == null)
             {
-                LogDetachedCall(nameof(Release));
+                LogDetachedCall("Release");
                 return;
             }
 
@@ -50,7 +50,7 @@ namespace FlowIoC.BaseModule.Controller
         {
             if (CommandGroupResolver == null)
             {
-                LogDetachedCall(nameof(Stop));
+                LogDetachedCall("Stop");
                 return;
             }
 
