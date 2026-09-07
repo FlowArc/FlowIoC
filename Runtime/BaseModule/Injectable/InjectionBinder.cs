@@ -202,6 +202,36 @@ namespace FlowIoC.BaseModule.Injectable
             }
         }
 
+        /// <summary>
+        /// Takes back everything a context bound here. The context calls this on its way out: the
+        /// shared binder outlives every context, so without it a module's holder and Service
+        /// outlived the module - and when its Root was built again, the old instances came back,
+        /// pointing at models the old context had already torn down. What was handed in with
+        /// BindInstance has no context and is not touched.
+        /// </summary>
+        public virtual void UnBindAllBoundBy(IContext context)
+        {
+            if (context == null)
+                return;
+
+            List<InjectionBinding> owned = new List<InjectionBinding>();
+
+            foreach (KeyValuePair<Type, List<InjectionBinding>> bound in _container)
+            {
+                for (int i = 0; i < bound.Value.Count; i++)
+                {
+                    if (bound.Value[i].BoundContext == context)
+                        owned.Add(bound.Value[i]);
+                }
+            }
+
+            for (int i = 0; i < owned.Count; i++)
+            {
+                Type key = owned[i].Key as Type ?? owned[i].Key.GetType();
+                UnBind(key, owned[i].Name);
+            }
+        }
+
         public virtual void UnBind<TBindingType>(string name = "")
         {
             bool hasBindingExist = HasInstanceExist<TBindingType>(name);

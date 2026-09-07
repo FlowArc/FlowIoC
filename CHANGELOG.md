@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A context takes back what it bound across.** `DestroyContext` emptied the context's own binder
+  and left the shared one alone, so a module's signal holder and Service outlived the module. When
+  its Root was built again - a scene coming back - `Bind` handed the old instances back, and the
+  old Service was still pointing at the sub services and models the old context had already torn
+  down: `InjectAllInstances` tried to resolve it against that dead context and logged an injection
+  failure per member, twenty-four of them for the pool service alone, and the screens and pools of
+  the new scene never reached it. A context now takes out of `InjectionBinderCrossContext`
+  everything it bound there, after its own binder and before it goes, so a module's public surface
+  lives exactly as long as its Root: a scene's module goes with the scene and is bound fresh when
+  the scene comes back, a persistent Root's Service lives for the run, and what was handed in with
+  `BindInstance` - the two providers - stays. The README, the agent rules and the Help window state
+  the rule together with its corollary: a Connector, the one thing that holds another module's
+  signals, gets them in `Setup` and disconnects them in `DestroyContext`.
+
 ## [1.7.2] - 2026-09-07
 
 ### Added

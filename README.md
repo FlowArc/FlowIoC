@@ -315,6 +315,16 @@ bound by then, so a module readies its Models here if they need readying, and a
 Connector wires two modules together. `Launch()` **starts**: it dispatches the module's
 first signal, and the entry point's `Launch()` is what sets the game going.
 
+And each of them has an end. `DestroyContext()` runs when the Root's GameObject is
+destroyed: it empties the context's own binder and takes out of
+`InjectionBinderCrossContext` everything this context bound there - its signal holder,
+its Service - so a module's public surface lives exactly as long as its Root. A scene's
+module goes with the scene and is bound fresh when the scene comes back; a persistent
+Root's Service lives for the run, because that Root is never torn down. What was handed
+in with `BindInstance`, the two providers say, belongs to the run and stays. The one
+thing that holds another module's signals, a Connector, is rebuilt with its scene: it
+gets them in `Setup()` and disconnects them in `DestroyContext()`.
+
 Roots are ordered among themselves by the `initializeOrder` field exposed in the
 inspector. Each phase can also be toggled off per-Root (`AutoInitialize`,
 `AutoBindInjections`, `AutoBindMediations`, `AutoSetup`, `AutoLaunch`) so a context
@@ -941,6 +951,18 @@ SignalConnector.DisconnectGroup(Group);
 Connections registered without a group are removed with `signal.Disconnect()`.
 `SignalConnector.DisconnectAll()` clears everything and runs automatically on
 subsystem registration, so connections never leak between play sessions.
+
+A Connector disconnects in `DestroyContext()` what it connected in `Setup()`. The
+holders it joined may belong to Roots that outlive the scene, and a scene that comes back
+would otherwise wire the same crossing onto them a second time:
+
+```csharp
+public override void DestroyContext()
+{
+    _heroSignals.Outgoing.DecreaseCurrency.Disconnect();
+    base.DestroyContext();
+}
+```
 
 > **In production:** *HitNPoP* keeps a dedicated `ConnectorModule` whose root owns
 > fifteen sub-contexts — one per domain (`HeroConnectorSubContext`,

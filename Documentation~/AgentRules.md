@@ -298,6 +298,17 @@ so follow the rules below deliberately.
 
   The `SetParent` is not decoration: Unity marks only root level objects as do not destroy,
   so a Root authored under something else has to detach itself before it can survive.
+- **A context takes back what it bound across.** `DestroyContext` empties the context's own binder
+  and takes out of `InjectionBinderCrossContext` everything this context put there - its signal
+  holder, its Service interface - so a module's public surface lives exactly as long as its Root. A
+  scene's module goes with the scene and is bound fresh when the scene comes back; a persistent
+  Root's Service lives for the run, because that Root is never torn down. What was handed in with
+  `BindInstance` - the two providers - belongs to the run and stays. Two things follow. A persistent
+  module never keeps hold of a scene module's holder or Service: a Service knows nobody anyway, and
+  the one place that reaches across, a Connector, is rebuilt with its scene - it gets holders in
+  `Setup` and disconnects them in `DestroyContext`, the way `MainConnectorSubContext` does. And a
+  module that has to start clean when its scene comes back has nothing to reset, because its Models
+  and its holder are new.
 - **Initialize Order runs from `-100` to `100`, and nothing needs to sit outside that range.**
   `-100` is the earliest a Root can be and `100` is the latest, so the two ends are taken by the
   module that must finish before anything reads its data - local save - and by `MainRoot`, whose

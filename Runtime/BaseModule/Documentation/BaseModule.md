@@ -485,7 +485,15 @@ _updateProvider.RemoveUpdate(Tick);   // always pair these
 ## Tearing Down
 
 Destroying the Root's GameObject destroys the Context: mediations, commands and
-injections are unbound, and `Deconstruct()` runs on every `IConstructable`.
+injections are unbound, `Deconstruct()` runs on every `IConstructable`, and everything
+the Context bound into `InjectionBinderCrossContext` - its signal holder, its Service - is
+taken out again. A module's public surface therefore lives exactly as long as its Root: a
+scene's module goes with the scene and is bound fresh when the scene comes back, and a
+persistent Root's Service lives for the run because that Root is never torn down. What was
+handed in with `BindInstance`, the two providers say, belongs to the run and stays.
+
+The holder goes last, after the Context's own binder, so a `Deconstruct()` that dispatches
+still has a holder to dispatch through.
 
 `OnApplicationPause` routes to `Context.PauseContext()` and `ResumeContext()`, both
 `virtual` and empty by default. Override them for anything that must stop when the
