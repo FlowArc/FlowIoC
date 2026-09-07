@@ -86,16 +86,46 @@ public class OpenMatchboardScreenCommand : Command
 
     public override async void Execute()
     {
-        var screen = await _screenService.Open<MatchboardScreenView>().Show<MatchboardScreenView>();
+        Retain();
 
-        screen.ShowPlayButton(true);
-        screen.ShowStateLayouts(count, currentIndex);
+        try
+        {
+            var screen = await _screenService.Open<MatchboardScreenView>()
+                .Show<MatchboardScreenView>();
+
+            if (screen == null)
+            {
+                FlowLogger.LogError(FlowLogType.MatchboardScreenModule,
+                    $"{nameof(OpenMatchboardScreenCommand)} - the screen did not open.");
+                Stop();
+                return;
+            }
+
+            screen.ShowPlayButton(true);
+            screen.ShowStateLayouts(count, currentIndex);
+            Release();
+        }
+        catch (Exception exception)
+        {
+            FlowLogger.LogError(FlowLogType.MatchboardScreenModule,
+                $"{nameof(OpenMatchboardScreenCommand)} threw: {exception}");
+            Stop();
+        }
     }
 }
 ```
 
 `Open<T>()` returns a builder and nothing happens until `Show()`. `SetParameters`, `OpenInLayer`,
 `SkipShowAnimation` and the rest are steps on it.
+
+**All three ways out resolve the retain**: the screen opened, the screen came back null, and the
+await threw. A retain nobody resolves hangs the group for ever - no timeout, nothing logged - and
+with `async void` a throw leaves `Execute` at the `await` line and surfaces through Unity's
+unhandled-exception handler with nothing in it to name the command. What the `catch` does is this
+game's decision: `Stop()`, a `Release()` that carries on, or a signal that opens something else.
+
+Use `Show<T>()` rather than `Show()`. A typed view compares against `null` through Unity's own
+operator; the `IScreenBody` that `Show()` returns is an interface and does not.
 
 The Command reaches the view directly here, and that is the only place it does: it is holding the
 instance it awaited, so the screen is filled before anybody can look at it. A signal dispatched

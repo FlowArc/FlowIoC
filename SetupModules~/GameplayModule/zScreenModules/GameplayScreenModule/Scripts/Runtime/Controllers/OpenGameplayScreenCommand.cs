@@ -1,3 +1,4 @@
+using System;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
@@ -13,6 +14,11 @@ namespace Modules.GameplayModule.GameplayScreenModule.Controllers
 
         [SignalParam] private DifficultyType _difficulty { get; set; }
 
+        /// <summary>
+        /// Three ways out, and every one of them resolves the retain: the screen opened, the screen
+        /// came back null, and the await threw. A retain nobody resolves hangs the group for ever,
+        /// with no timeout and nothing logged.
+        /// </summary>
         public override async void Execute()
         {
             Retain();
@@ -20,9 +26,28 @@ namespace Modules.GameplayModule.GameplayScreenModule.Controllers
             FlowLogger.Log(FlowLogType.GameplayScreenModule,
                 $"{nameof(Execute)} - {nameof(OpenGameplayScreenCommand)} | difficulty={_difficulty}");
 
-            await _screenService.Open<GameplayScreenView>().SetParameters(_difficulty).Show();
+            try
+            {
+                GameplayScreenView screen = await _screenService.Open<GameplayScreenView>()
+                    .SetParameters(_difficulty)
+                    .Show<GameplayScreenView>();
 
-            Release();
+                if (screen == null)
+                {
+                    FlowLogger.LogError(FlowLogType.GameplayScreenModule,
+                        $"{nameof(OpenGameplayScreenCommand)} - the screen did not open.");
+                    Stop();
+                    return;
+                }
+
+                Release();
+            }
+            catch (Exception exception)
+            {
+                FlowLogger.LogError(FlowLogType.GameplayScreenModule,
+                    $"{nameof(OpenGameplayScreenCommand)} threw while opening the screen: {exception}");
+                Stop();
+            }
         }
     }
 }

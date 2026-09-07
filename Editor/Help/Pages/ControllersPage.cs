@@ -307,6 +307,53 @@ namespace FlowIoC.Editor.Help.Pages
                 + "}");
 
             painter.Space();
+            painter.Rule("Every way out of a retained command resolves the retain");
+            painter.Paragraph(
+                "A retain nobody resolves hangs the group for ever: there is no timeout and nothing "
+                + "is logged. An await has three ways out and only one of them is the one everybody "
+                + "writes - the work came back with nothing, and the work threw, are the other two. "
+                + "A throw is the worse of the pair: it leaves Execute at the await line, so neither "
+                + "Release nor Stop is reached, and async void surfaces it through Unity's "
+                + "unhandled-exception handler with nothing in it to name the command.");
+            painter.Code(
+                "public override async void Execute()\n"
+                + "{\n"
+                + "    Retain();\n"
+                + "\n"
+                + "    try\n"
+                + "    {\n"
+                + "        var screen = await _screenService.Open<MainScreenView>()\n"
+                + "            .Show<MainScreenView>();\n"
+                + "\n"
+                + "        if (screen == null)\n"
+                + "        {\n"
+                + "            FlowLogger.LogError(FlowLogType.MainScreenModule,\n"
+                + "                $\"{nameof(OpenMainScreenCommand)} - the screen did not open.\");\n"
+                + "            Stop();\n"
+                + "            return;\n"
+                + "        }\n"
+                + "\n"
+                + "        screen.ShowPlayButton(true);\n"
+                + "        Release();\n"
+                + "    }\n"
+                + "    catch (Exception exception)\n"
+                + "    {\n"
+                + "        FlowLogger.LogError(FlowLogType.MainScreenModule,\n"
+                + "            $\"{nameof(OpenMainScreenCommand)} threw: {exception}\");\n"
+                + "        Stop();\n"
+                + "    }\n"
+                + "}");
+            painter.Paragraph(
+                "What the catch does is your decision and not the framework's - Stop(), a Release() "
+                + "that carries on regardless, or a signal that opens something else - which is why "
+                + "no base class writes it for you. What is not a decision is that the retain has to "
+                + "be resolved on all three paths.");
+            painter.Note(
+                "Prefer Show<T>() over Show(). A typed view compares against null through Unity's "
+                + "own operator; an IScreenBody is an interface and does not, so a destroyed screen "
+                + "would not read as null.");
+
+            painter.Space();
             painter.SubHeading("A flow is read from one Context");
             painter.Paragraph(
                 "Somebody should see what an operation does by reading the sequence it is bound to, "
@@ -403,6 +450,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A list of consequences hung off one announcement belongs in the sequence, not in the Connector.");
             painter.Bullet("What needs no decision is not one. A close button that always closes is the Mediator calling _view.Hide().");
             painter.Bullet("A Command does one unit of work, holds no state between runs, and returns no value.");
+            painter.Bullet(
+                "Every way out of a retained Command resolves the retain. An await has three: it worked, it came back with nothing, it threw.");
             painter.Bullet("A Command never touches another module's model. What it needs from elsewhere arrives as a signal.");
             painter.Bullet("A Command is a step in a flow. A Function is called from inside one, and is not a step in the console.");
             painter.Bullet("Reach for a Function when the work happens twice inside one Execute, or when more than one Command needs it.");

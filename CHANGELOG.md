@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The rule about resolving a retain now covers an `await`.** "Every path out of a retained Command
+  ends in `Release()` or `Stop()`" was already written down, and the shipped example of an
+  asynchronous command did not obey it: it awaited, and only the success path resolved the retain.
+  An `await` has three ways out - the work returned, it came back with nothing, and it threw - and
+  the two nobody writes are the ones that hang the group for ever, silently, because a retain has no
+  timeout. A throw is the worse of the pair: it leaves `Execute` at the `await` line and, being
+  `async void`, surfaces through Unity's unhandled-exception handler with nothing in it to name the
+  command. `OpenMainScreenCommand` and `OpenGameplayScreenCommand` wrap their work in `try`/`catch`
+  and answer all three, and use `Show<T>()` rather than `Show()` so the null check runs through
+  Unity's own operator instead of an interface reference comparison. The rule is in `AgentRules.md`,
+  the README, `Controller.md`, the Help window's Controllers page and the `flowioc-screens` skill.
+
+  What the `catch` does stays the game's decision - `Stop()`, a `Release()` that carries on, a signal
+  that opens something else - which is why no base class writes it. An `AsyncCommand` that retained
+  and released around `ExecuteAsync` was built for this and reverted the same day for taking that
+  decision into the package.
+
 ### Added
 
 - **`RemoveAllListeners()` on every signal.** A Mediator's `OnRemove` was the only teardown path a

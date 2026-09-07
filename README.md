@@ -674,6 +674,46 @@ public class SavePlayerCommand : Command<IPlayerModel>
 
 `Stop()` aborts the rest of the sequence.
 
+**Every way out of a retained command resolves the retain**, and an `await` has three
+of them: the work returned, the work came back with nothing, and the work threw. A
+retain nobody resolves hangs the group for ever — there is no timeout and nothing is
+logged, and with `async void` a throw leaves `Execute` at the `await` line and surfaces
+through Unity's unhandled-exception handler with nothing in it to name the command.
+
+```csharp
+public override async void Execute()
+{
+    Retain();
+
+    try
+    {
+        var screen = await _screenService.Open<MainScreenView>().Show<MainScreenView>();
+
+        if (screen == null)
+        {
+            FlowLogger.LogError(FlowLogType.MainScreenModule,
+                $"{nameof(OpenMainScreenCommand)} - the screen did not open.");
+            Stop();
+            return;
+        }
+
+        screen.ShowPlayButton(true);
+        Release();
+    }
+    catch (Exception exception)
+    {
+        FlowLogger.LogError(FlowLogType.MainScreenModule,
+            $"{nameof(OpenMainScreenCommand)} threw: {exception}");
+        Stop();
+    }
+}
+```
+
+What the `catch` does is your decision, not the framework's — `Stop()`, a `Release()`
+that carries on regardless, or a signal that opens something else. Prefer `Show<T>()`
+over `Show()`: a typed view compares against `null` through Unity's own operator, and
+an `IScreenBody` is an interface and does not.
+
 ### Reading signal parameters
 
 Each `[SignalParam]` property is filled from the payload of the signal that

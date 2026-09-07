@@ -95,6 +95,44 @@ so follow the rules below deliberately.
   dispatches the module's first signal.
 - A Command does one unit of work, holds no state between runs, and returns no value. It
   injects models and services, mutates state, and dispatches outgoing signals.
+- **Every path out of a retained Command ends in `Release()` or `Stop()`, and an `await` has three
+  of them.** A `Retain()` that is never resolved hangs the group for ever - there is no timeout and
+  nothing is logged. The success path is the one everybody writes; the other two are the ones that
+  hang. A command that awaits therefore wraps its work in `try`/`catch`, checks what it was handed,
+  and answers all three:
+
+  ```csharp
+  public override async void Execute()
+  {
+      Retain();
+
+      try
+      {
+          var screen = await _screenService.Open<MainScreenView>().Show<MainScreenView>();
+
+          if (screen == null)
+          {
+              FlowLogger.LogError(FlowLogType.MainScreenModule, $"{nameof(OpenMainScreenCommand)} Screen is null");
+              Stop();
+              return;
+          }
+
+          screen.ShowPlayButton(true);
+          Release();
+      }
+      catch (Exception exception)
+      {
+          FlowLogger.LogError(FlowLogType.MainScreenModule, $"{nameof(OpenMainScreenCommand)} threw: {exception}");
+          Stop();
+      }
+  }
+  ```
+
+  What the `catch` does is the game's decision and not the framework's - `Stop()`, a `Release()` that
+  carries on regardless, a signal that opens a different screen - which is why no base class writes
+  it for you. What is not a decision is that the retain must be resolved on every one of the three.
+  `Show<T>()` rather than `Show()`, because a typed view compares against `null` through Unity's own
+  operator while an `IScreenBody` does not.
 - **A Command is a step in a flow; a Function is called from inside one.** A sequence is read in
   order, one Command after another, and that reading is what a Command is for. A Function does its
   work without depending on where it sits, so it is what a Command reaches for mid-`Execute` - to
