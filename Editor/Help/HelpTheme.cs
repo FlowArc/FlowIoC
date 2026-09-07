@@ -38,6 +38,7 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _partSummary;
         private GUIStyle _partSignature;
         private GUIStyle _codeCaption;
+        private GUIStyle _codeCopy;
 
         public Color NodeFill => _pro ? new Color(0.24f, 0.24f, 0.26f) : new Color(0.90f, 0.90f, 0.92f);
         public Color NodeFillActive => _pro ? new Color(0.18f, 0.31f, 0.43f) : new Color(0.76f, 0.87f, 0.98f);
@@ -46,7 +47,47 @@ namespace FlowIoC.Editor.Help
         public Color Arrow => _pro ? new Color(0.55f, 0.55f, 0.58f) : new Color(0.45f, 0.45f, 0.50f);
         public Color ArrowActive => _pro ? new Color(0.40f, 0.66f, 0.94f) : new Color(0.18f, 0.45f, 0.78f);
         public Color ArrowForbidden => _pro ? new Color(0.85f, 0.36f, 0.33f) : new Color(0.75f, 0.22f, 0.20f);
-        public Color CodeFill => _pro ? new Color(0.16f, 0.16f, 0.17f) : new Color(0.94f, 0.94f, 0.95f);
+
+        /// <summary>What a snippet is drawn on: Rider's own editor background, in both skins.</summary>
+        public Color CodeFill => _pro ? Hex(0x262626) : Hex(0xFFFFFF);
+
+        /// <summary>The hairline around a code block, so it reads as a listing and not as page.</summary>
+        public Color CodeBorder => NodeBorder;
+
+        /// <summary>
+        /// What a snippet is coloured with. The values are lifted from Rider's own schemes - Rider
+        /// Dark under the dark skin and Rider Light under the light one, the two the theme pack
+        /// ships and the pair a Rider window is almost always showing - so a snippet in the help
+        /// window and the same lines open in the IDE are the same picture.
+        ///
+        /// Every kind Rider gives a colour of its own is here, type names and fields included.
+        /// Leaving those in the body colour is what Darcula does, and this is not Darcula.
+        /// </summary>
+        public Color CodeText => _pro ? Hex(0xBDBDBD) : Hex(0x383838);
+
+        public Color CodeKeyword => _pro ? Hex(0x6C95EB) : Hex(0x0F54D6);
+
+        public Color CodeString => _pro ? Hex(0xC9A26D) : Hex(0x8C6C41);
+
+        public Color CodeNumber => _pro ? Hex(0xED94C0) : Hex(0xAB2F6B);
+
+        public Color CodeComment => _pro ? Hex(0x85C46C) : Hex(0x248700);
+
+        public Color CodeMethod => _pro ? Hex(0x39CC9B) : Hex(0x00855F);
+
+        /// <summary>A class, an interface, an attribute or a namespace - Rider draws all four alike.</summary>
+        public Color CodeType => _pro ? Hex(0xC191FF) : Hex(0x6B2FBA);
+
+        /// <summary>A field or a property, which is what the name after a dot almost always is.</summary>
+        public Color CodeField => _pro ? Hex(0x66C3CC) : Hex(0x0093A1);
+
+        /// <summary>What a copy button keeps to itself, at the right of a code block's caption row.</summary>
+        public float CodeCopyWidth => 52f;
+
+        private static Color Hex(int value) => new Color(
+            ((value >> 16) & 0xFF) / 255f,
+            ((value >> 8) & 0xFF) / 255f,
+            (value & 0xFF) / 255f);
 
         /// <summary>
         /// What the page itself is drawn on. An arrow's marking carries a strip of it, so a word
@@ -142,13 +183,42 @@ namespace FlowIoC.Editor.Help
             margin = new RectOffset(0, 0, 6, 4)
         };
 
-        public GUIStyle Code => _code ??= new GUIStyle(EditorStyles.textArea)
+        /// <summary>
+        /// A snippet. It is built from label rather than from textArea because the block paints
+        /// its own fill and hairline: a text field's background under that would draw the listing
+        /// twice. Rich text is what carries the colouring, and the style's own colour is what a
+        /// word the highlighter leaves alone - punctuation, a type name - is drawn in.
+        /// </summary>
+        public GUIStyle Code => _code ??= new GUIStyle(EditorStyles.label)
         {
             font = EditorStyles.miniFont,
-            fontSize = 11,
+
+            // The size the page's own paragraphs are, rather than the smaller size a snippet is
+            // usually shrunk to. A snippet is read a character at a time - a leading underscore, a
+            // closing angle bracket - and the help window is the one place in the Editor where the
+            // code is the thing being studied.
+            fontSize = 12,
             wordWrap = false,
+            richText = true,
             padding = new RectOffset(8, 8, 6, 6),
-            margin = new RectOffset(0, 0, 2, 8)
+            margin = new RectOffset(0, 0, 2, 8),
+            normal = {textColor = CodeText},
+            hover = {textColor = CodeText},
+            focused = {textColor = CodeText},
+            active = {textColor = CodeText}
+        };
+
+        /// <summary>
+        /// The button that puts a snippet on the clipboard, at the right of the caption row above
+        /// it. A code block is drawn rather than typed into, so this is what has replaced dragging
+        /// a selection across it - and it copies the snippet as it was written, without the colour
+        /// tags the block is drawn from.
+        /// </summary>
+        public GUIStyle CodeCopy => _codeCopy ??= new GUIStyle(EditorStyles.miniButton)
+        {
+            fontSize = 10,
+            padding = new RectOffset(6, 6, 2, 2),
+            margin = new RectOffset(0, 0, 4, 0)
         };
 
         public GUIStyle NodeTitle => _nodeTitle ??= new GUIStyle(EditorStyles.boldLabel)
