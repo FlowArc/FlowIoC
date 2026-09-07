@@ -50,12 +50,14 @@ namespace FlowIoC.Editor.Help.Pages
             new HelpTreeNode("zSubModules", "sub modules, which may use their parent's types"),
             new HelpTreeNode("zTestModules", "test code, wrapped in #if UNITY_EDITOR, may reference anything"));
 
+        protected override string BodyHeadline => "A module is a folder with an assembly definition of its own.";
+
+        protected override string BodyTagline =>
+            "That assembly is what makes the boundary real: a module cannot accidentally reach into "
+            + "another one, because the reference is simply not there.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "A module is a folder with an assembly definition of its own. That assembly is what "
-                + "makes the boundary real: a module cannot accidentally reach into another one, "
-                + "because the reference is simply not there.");
             painter.Paragraph(
                 "Do not create the folders by hand. Tools > FlowIoC > Create Module writes them, and "
                 + "both the code generators and the namespace tools depend on the exact shape it produces.");
@@ -73,6 +75,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "A screen or a sub module may use its parent's types. The direction is one way: a "
                 + "module never knows what sits in its own zScreenModules or zSubModules.");
 
+            painter.Separator();
             painter.SubHeading("What a module carries with it");
             painter.Paragraph(
                 "Everything a module offers arrives with the module. A test module brings the scene "
@@ -80,6 +83,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "the module is the only step there is. Nothing a module owns belongs on the "
                 + "Tools > FlowIoC menu, which stays the framework's own.");
 
+            painter.Separator();
             painter.SubHeading("Three assemblies, and who may reference each");
             painter.Paragraph(
                 "Scripts/Runtime is Modules.Player - the Models, Commands, Views and the internal "

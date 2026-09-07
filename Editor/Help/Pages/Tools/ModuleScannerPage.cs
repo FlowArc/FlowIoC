@@ -14,15 +14,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Icon => "Settings";
 
+        protected override string BodyHeadline => "Every module in the project, and what each one is missing.";
+
+        protected override string BodyTagline =>
+            "Tools > FlowIoC > Module Scanner finds them by walking the folder tree rather than by "
+            + "trusting the index, so it is right even when the index is not.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Tools > FlowIoC > Module Scanner reads every module in the project and says what "
-                + "each one is missing. A module is a folder whose name ends in \"Module\", under "
-                + "Assets/Modules or inside an embedded package, and the panel finds them by "
-                + "walking the folder tree rather than by trusting the index - so it is right "
-                + "even when the index is not.");
-
             painter.Image(_images.Get("ModuleScannerWindow.png"),
                 "Tools > FlowIoC > Module Scanner. One project finding is fixable, and every "
                 + "module in this project is in order.");

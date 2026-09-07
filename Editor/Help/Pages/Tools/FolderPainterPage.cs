@@ -12,13 +12,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Icon => "FolderOpened Icon";
 
+        protected override string BodyHeadline => "Tinted folders keep a large module tree readable.";
+
+        protected override string BodyTagline =>
+            "Tools > FlowIoC > Folder Painter colours the Project window by rule rather than folder "
+            + "by folder, and an edit repaints the window as you make it.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Tools > FlowIoC > Folder Painter. Tints Project window folders so a large module "
-                + "tree stays readable at a glance. Edits repaint the Project window as you make "
-                + "them.");
-
             painter.SubHeading("Two kinds of rule");
             painter.Bullet(
                 "Path rules match on the folder path - contains, ends with or starts with. They "

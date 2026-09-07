@@ -21,18 +21,27 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Wiring", DrawWiring),
-            new HelpTab("Exceptions", DrawExceptions),
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("Wiring", DrawWiring,
+                "A Connector is a Context that binds nothing.",
+                "It declares no models, no commands and no signals. It asks for two holders that "
+                + "already exist and joins them."),
+            new HelpTab("Exceptions", DrawExceptions,
+                "Three things cross without a Connector.",
+                "This is the whole list. Anything else that names a type from another module is a "
+                + "mistake, whatever the compiler says about it."),
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "What a Connector may do, and the three crossings that need none.")
         };
+
+        protected override string BodyHeadline => "A module never reaches into another module.";
+
+        protected override string BodyTagline =>
+            "No type from Modules.A appears in Modules.B. The only crossing point is a Connector, "
+            + "and neither module learns that the other exists.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Hero(
-                "A module never reaches into another module.",
-                "No type from Modules.A appears in Modules.B. The only crossing point is a "
-                + "Connector, and neither module learns that the other exists.");
-
             painter.Parts(
                 new HelpPart("Setup",
                     "Where a Connector does its work. Every Root has finished binding by then, so "
@@ -64,11 +73,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawWiring(HelpPainter painter)
         {
-            painter.Hero(
-                "A Connector is a Context that binds nothing.",
-                "It declares no models, no commands and no signals. It asks for two holders that "
-                + "already exist and joins them.");
-
             painter.SubHeading("Writing one");
             painter.Code(
                 "public class HeroConnectorSubContext : Context\n"
@@ -97,7 +101,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Modules.Gameplay.Shared even though the Connector never touches the value - "
                 + "without it the compiler reports CS0012.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Where it is listed");
             painter.Paragraph(
                 "On the Connector Root, and nowhere else. Add Sub Context offers connector "
@@ -106,7 +110,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "accident. A context counts as a Connector's when its name says so - "
                 + "HeroConnectorSubContext - or when it carries FlowHeader(FlowRole.Connector).");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Adapting between two payloads");
             painter.Paragraph(
                 "Connect also takes a plain delegate, and can adapt between signals whose parameter "
@@ -118,7 +122,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "_heroSignals.Outgoing.HeroDied\n"
                 + "    .Connect(OnHeroDied);");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("A Connector translates, it does not decide");
             painter.Paragraph(
                 "An Outgoing signal announces what happened; an Incoming signal orders something "
@@ -151,11 +155,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawExceptions(HelpPainter painter)
         {
-            painter.Hero(
-                "Three things cross without a Connector.",
-                "This is the whole list. Anything else that names a type from another module is a "
-                + "mistake, whatever the compiler says about it.");
-
             painter.SubHeading("A Service crosses directly");
             painter.Paragraph(
                 "Reference the Service module's assembly and inject its interface. Being usable "

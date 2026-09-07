@@ -22,19 +22,29 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("The holder", DrawHolder),
-            new HelpTab("Internal", DrawInternal),
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("The holder", DrawHolder,
+                "One class holds them, and it has an assembly to itself.",
+                "PlayerSignals compiles into Modules.Player.Signals, so a Connector can reach the "
+                + "signals without gaining access to a single Model or Command - and a System that "
+                + "references the module's Shared data cannot reach the signals at all."),
+            new HelpTab("Internal", DrawInternal,
+                "A signal that never leaves the module has no Incoming and no Outgoing.",
+                "Those two halves describe a boundary. An internal signal never crosses one, so it "
+                + "sits flat in a holder of its own."),
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "Which holder a signal belongs in, and who is allowed to dispatch it.")
         };
+
+        protected override string BodyHeadline => "A signal is a name and a payload.";
+
+        protected override string BodyTagline =>
+            "Together, Incoming and Outgoing are the module's whole public surface. Because the "
+            + "surface is this narrow, a module can be rewritten from the inside without anything "
+            + "else in the game noticing.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Hero(
-                "A signal is a name and a payload.",
-                "Together, Incoming and Outgoing are the module's whole public surface. Because the "
-                + "surface is this narrow, a module can be rewritten from the inside without "
-                + "anything else in the game noticing.");
-
             painter.Parts(
                 new HelpPart("Incoming",
                     "What the module accepts. Each one is bound to a command in the Context, and "
@@ -70,12 +80,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawHolder(HelpPainter painter)
         {
-            painter.Hero(
-                "One class holds them, and it has an assembly to itself.",
-                "PlayerSignals compiles into Modules.Player.Signals, so a Connector can reach the "
-                + "signals without gaining access to a single Model or Command - and a System that "
-                + "references the module's Shared data cannot reach the signals at all.");
-
             painter.SubHeading("Writing one");
             painter.Code(
                 "public class PlayerSignals : ISignalHolder\n"
@@ -108,7 +112,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "The internal holder is bound the same way, because a sub-context of the module "
                 + "reaches it and a sub-context does not see its parent's local bindings.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Answering one");
             painter.Paragraph(
                 "A signal is answered by a command binding, by a direct listener, or by both. The "
@@ -149,11 +153,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawInternal(HelpPainter painter)
         {
-            painter.Hero(
-                "A signal that never leaves the module has no Incoming and no Outgoing.",
-                "Those two halves describe a boundary. An internal signal never crosses one, so it "
-                + "sits flat in a holder of its own.");
-
             painter.SubHeading("Writing one");
             painter.Code(
                 "internal class PlayerInternalSignals : ISignalHolder\n"
@@ -167,7 +166,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "name it. A signal that fires every frame takes hideCommandLog so it does not bury "
                 + "the Flow Console.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Two holders, two folders");
             painter.Paragraph(
                 "The folder a holder sits in is what decides which assembly it compiles into, and "

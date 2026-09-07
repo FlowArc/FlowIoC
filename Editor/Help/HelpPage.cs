@@ -39,6 +39,15 @@ namespace FlowIoC.Editor.Help
         /// <summary>What the first tab is called. The body of the page is what it shows.</summary>
         protected virtual string BodyTabTitle => "Introduction";
 
+        /// <summary>
+        /// The line the body opens with, drawn in the band under the banner. A page that names
+        /// none falls back to its own title, so every reading has a heading whether or not it has
+        /// a sentence to lead with.
+        /// </summary>
+        protected virtual string BodyHeadline => null;
+
+        protected virtual string BodyTagline => null;
+
         /// <summary>Tabs beside the body. Empty for a page that is one reading only.</summary>
         protected virtual IReadOnlyList<HelpTab> MoreTabs => new HelpTab[0];
 
@@ -49,7 +58,8 @@ namespace FlowIoC.Editor.Help
                 if (_tabs != null)
                     return _tabs;
 
-                var tabs = new List<HelpTab> {new HelpTab(BodyTabTitle, DrawBody)};
+                var tabs = new List<HelpTab>
+                    {new HelpTab(BodyTabTitle, DrawBody, BodyHeadline, BodyTagline)};
                 tabs.AddRange(MoreTabs);
                 _tabs = tabs;
 

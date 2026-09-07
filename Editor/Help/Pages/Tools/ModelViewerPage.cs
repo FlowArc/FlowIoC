@@ -12,13 +12,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Icon => "ScriptableObject Icon";
 
+        protected override string BodyHeadline => "A Model is a plain C# object, so the Inspector cannot show it.";
+
+        protected override string BodyTagline =>
+            "Tools > FlowIoC > Model Viewer shows the live contents of your models while the game "
+            + "runs, which is the window a Model would otherwise never have.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Tools > FlowIoC > Model Viewer. Shows the live contents of your models while the "
-                + "game runs. Models are plain C# objects rather than MonoBehaviours, so the Unity "
-                + "Inspector cannot show them - this window is the replacement.");
-
             painter.SubHeading("Choosing what to show");
             painter.Code(
                 "public class CameraModel : ICameraModel\n"

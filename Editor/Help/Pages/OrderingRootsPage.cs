@@ -41,20 +41,21 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Picking a number", DrawPicking)
+            new HelpTab("Picking a number", DrawPicking,
+                "Pick the band first, the number second.",
+                "Where a new Root goes follows from what it is, and the number inside the band "
+                + "rarely matters - two modules that never touch can both sit at 0.")
         };
+
+        protected override string BodyHeadline => "Initialize Order is the only lever over what is built first.";
+
+        protected override string BodyTagline =>
+            "Every Root carries the number at the top of its inspector, and RootsManager sorts every "
+            + "Root by it and drives them in that order. The number is not free-form: the Roots "
+            + "FlowIoC ships fall into bands, and placing a new Root means picking its band.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "A module joins the game by having its Root in the scene, and every Root carries one "
-                + "number: Initialize Order, at the top of its inspector. RootsManager sorts every "
-                + "Root by it and drives them in that order, so it is the only lever there is over "
-                + "which module is built first.");
-            painter.Paragraph(
-                "The number is not free-form. The Roots FlowIoC ships fall into bands, and placing a "
-                + "new Root means picking the band it belongs to.");
-
             painter.SubHeading("The bands");
             painter.Bullet("The whole range is -100 to 100. Nothing needs to sit outside it.");
             painter.Bullet(
@@ -72,6 +73,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "the asset service, 0 for gameplay and input, 1 for the camera system. Inside a "
                 + "band the exact number rarely matters - two modules that never touch can both sit at 0.");
 
+            painter.Separator();
             painter.SubHeading("The scene reads top to bottom");
             painter.Paragraph(
                 "MainScene is authored in the same order, with a separator between the bands, so the "
@@ -82,6 +84,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Image(_images.Get("MainSceneHierarchy.png"),
                 "MainScene: the two services, then the game's modules, then ConnectorRoot, ScreenRoot and MainRoot.");
 
+            painter.Separator();
             painter.SubHeading("What the order actually buys");
             painter.Paragraph(
                 "StartContexts runs three passes. First, sorted by Initialize Order, every Root runs "
@@ -103,8 +106,6 @@ namespace FlowIoC.Editor.Help.Pages
 
         private void DrawPicking(HelpPainter painter)
         {
-            painter.Rule("Pick the band first, the number second.");
-
             painter.SubHeading("Where a new Root goes");
             painter.Bullet("A Service - self-contained, not specific to this game - takes a negative number, below anything that injects it.");
             painter.Bullet(
@@ -113,6 +114,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "The Connector, the screen host and the entry point are taken: 98, 99, 100. A second Connector on a large project sits beside the first, still below ScreenRoot.");
             painter.Bullet("Then move the GameObject in the Hierarchy to where its number says it belongs.");
 
+            painter.Separator();
             painter.SubHeading("What goes wrong");
             painter.Bullet(
                 "A Root left at 0 that other Roots inject from. It binds in registration order relative to its peers, so the failure is intermittent - fine on one machine, null on another.");

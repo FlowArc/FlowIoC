@@ -55,8 +55,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Usage", DrawUsage),
-            new HelpTab("Wiring", DrawWiring)
+            new HelpTab("Usage", DrawUsage,
+                "Put CameraRoot in the scene, then say which cameras it has.",
+                "A rig with several cameras carries one CameraAdapterView and a single camera "
+                + "carries SingleCameraAdapterView. Both register on their own - there is no call "
+                + "to make."),
+            new HelpTab("Wiring", DrawWiring,
+                "Installing copies the module's folder and nothing else.",
+                "It writes no sub-context into your Connector and does not touch ConnectorRoot. A "
+                + "tool that edited another module's files behind your back would be harder to "
+                + "trust than the two minutes this takes.")
         };
 
         /// <summary>
@@ -118,13 +126,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             EditorUtility.DisplayDialog("Camera", error, "OK");
         }
 
+        protected override string BodyHeadline => "Cinemachine cameras get names, and switching is one signal.";
+
+        protected override string BodyTagline =>
+            "A menu camera and a gameplay camera come with the module; a game that needs more adds "
+            + "them to one enum.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Gives the game's Cinemachine cameras names and switches between them by signal. "
-                + "A menu camera and a gameplay camera come with it; a game that needs more adds "
-                + "them to one enum.");
-
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "A camera is a CameraName, not a scene reference. Switching is one dispatch, and "
@@ -167,11 +176,6 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawUsage(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Put CameraRoot in the scene, then tell the module which cameras it has. A rig "
-                + "with several cameras carries one CameraAdapterView; a single camera carries "
-                + "SingleCameraAdapterView instead. Both register on their own - there is no call "
-                + "to make.");
 
             painter.SubHeading("Naming a camera");
             painter.Paragraph(
@@ -220,11 +224,6 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawWiring(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Installing copies the module's folder and nothing else. It does not add a "
-                + "reference to your Connector's assembly, does not write a sub-context into it, "
-                + "and does not touch ConnectorRoot. A tool that edited another module's files "
-                + "behind your back would be harder to trust than the two minutes this takes.");
 
             painter.SubHeading("One reference");
             painter.Paragraph(

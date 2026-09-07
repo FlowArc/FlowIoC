@@ -41,7 +41,10 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab(WHATS_NEW_TAB, DrawWhatsNew)
+            new HelpTab(WHATS_NEW_TAB, DrawWhatsNew,
+                "What changed, newest first.",
+                "One block a release, read from the package's own CHANGELOG.md - so what the "
+                + "window says the version brought is what the file says.")
         };
 
         /// <summary>
@@ -62,11 +65,19 @@ namespace FlowIoC.Editor.Help.Pages
                 return;
             }
 
-            painter.Rule("What changed, newest first. The full entries are in the package's CHANGELOG.md.");
+            var first = true;
 
             foreach (WhatsNewVersionEVO release in _releases)
             {
-                painter.Space();
+                // One release is one topic, so the bar goes between two of them and not above the
+                // newest: a divider under the line that introduces the list would part nothing.
+                if (first)
+                    painter.Space();
+                else
+                    painter.Separator();
+
+                first = false;
+
                 painter.SubHeading(release.Date.Length > 0
                     ? $"{release.Version}  -  {release.Date}"
                     : release.Version);
@@ -81,13 +92,15 @@ namespace FlowIoC.Editor.Help.Pages
             }
         }
 
+        protected override string BodyHeadline => "A game split into modules that never reference one another.";
+
+        protected override string BodyTagline =>
+            "FlowIoC is a signal-driven inversion of control framework for Unity. Each module owns "
+            + "its state, its logic and its presentation, and Connectors wire them together "
+            + "declaratively.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "FlowIoC is a signal-driven inversion of control framework for Unity. A game is "
-                + "split into modules that own their state, their logic and their presentation. "
-                + "Modules never reference one another; they are wired together declaratively by "
-                + "Connectors.");
             painter.Paragraph(
                 "Nothing in C# enforces that. The compiler is happy to let one module reach into "
                 + "another; what keeps a FlowIoC project honest is the convention these pages "
@@ -101,6 +114,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("Generators instead of boilerplate: Create Module, Create Command, Create Model, Create View.");
             painter.Bullet("Good for one developer, better for a team: two people can own two modules and never collide.");
 
+            painter.Separator();
             painter.SubHeading("What is in the box");
             painter.Bullet("Property injection, per context and across contexts.");
             painter.Bullet("Typed signals in five arities, with command bindings and direct listeners.");
@@ -110,6 +124,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("Connectors, so two modules meet in one readable place.");
             painter.Bullet("Bundled modules for screens, pooling, addressable assets and the Flow Console.");
 
+            painter.Separator();
             painter.SubHeading("How a click becomes a state change");
             painter.Paragraph(
                 "One module, and the round trip a click makes through it before it comes back out "

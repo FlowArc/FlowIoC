@@ -12,14 +12,15 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Icon => "cs Script Icon";
 
+        protected override string BodyHeadline => "The generators write the shape the rest of the tooling expects.";
+
+        protected override string BodyTagline =>
+            "Use them rather than copying a folder: a copied module carries the original's namespace "
+            + "and assembly name, and Unity refuses the duplicate rather than telling you which copy "
+            + "is at fault.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "The generators write the shape the rest of the tooling expects. Use them rather "
-                + "than copying a folder: a copied module carries the original's namespace and its "
-                + "assembly name, and Unity refuses the resulting duplicate assembly name rather "
-                + "than telling you which copy is at fault.");
-
             painter.SubHeading("Create Module");
             painter.Paragraph("Tools > FlowIoC > Create Module. The one you reach for first.");
             painter.Bullet("Main - a normal feature module under Assets/Modules/<Name>Module/.");

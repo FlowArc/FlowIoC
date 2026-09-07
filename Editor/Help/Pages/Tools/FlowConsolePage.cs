@@ -12,16 +12,19 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Icon => "UnityEditor.ConsoleWindow";
 
+        protected override string BodyHeadline => "The framework logs itself into one window.";
+
+        protected override string BodyTagline =>
+            "Tools > FlowIoC > Flow Console. Every signal dispatch, command step, context phase, "
+            + "screen transition and pool operation, on channels you switch on and off "
+            + "independently - which is where most debugging in FlowIoC starts rather than at a "
+            + "breakpoint.";
+
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Paragraph(
-                "Tools > FlowIoC > Flow Console. The framework logs itself into this "
-                + "window: every signal dispatch, command step, context phase, screen transition "
-                + "and pool operation, on channels you can switch on and off independently.");
-            painter.Paragraph(
-                "Most debugging in FlowIoC starts here rather than at a breakpoint. A signal that "
-                + "never arrives, a command that never ran, a context that launched before the one "
-                + "it depends on - each of those is visible as a gap in the flow.");
+                "A signal that never arrives, a command that never ran, a context that launched "
+                + "before the one it depends on - each of those is visible as a gap in the flow.");
 
             painter.SubHeading("Logging from your own code");
             painter.Code(

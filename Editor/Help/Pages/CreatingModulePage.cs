@@ -21,13 +21,14 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Icon => "CreateAddNew";
 
+        protected override string BodyHeadline => "Every module is written by Create Module.";
+
+        protected override string BodyTagline =>
+            "Everything in a FlowIoC project lives in a module, and the panel is not a convenience "
+            + "over making the folders yourself - it is the only supported way to add one.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Everything in a FlowIoC project lives in a module, and every module is written by "
-                + "Tools > FlowIoC > Create Module. The panel is not a convenience over making the "
-                + "folders yourself - it is the only supported way to add one.");
-
             painter.Image(_images.Get("CreateModuleWindow.png"),
                 "Tools > FlowIoC > Create Module, filled in for a Main module named Player.");
 
@@ -50,6 +51,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "the module type. Renaming that config renames the folders the next module gets; "
                 + "renaming a folder by hand only breaks the agreement.");
 
+            painter.Separator();
             painter.SubHeading("The three module types");
             painter.Paragraph(
                 "The Module Type dropdown picks which directory config is used, what the module is "
@@ -81,6 +83,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "what makes it useful and what keeps it out of a build. It attaches to the module "
                 + "it tests, so it cannot be nested inside another test module.");
 
+            painter.Separator();
             painter.SubHeading("What the toggles decide");
             painter.Bullet(
                 "Create Root and Create Context write the pair that gives the module its presence "
@@ -117,6 +120,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "module that already exists. The public signal holder is not in here - it has an "
                 + "assembly of its own under Scripts/Signals, which every module gets.");
 
+            painter.Separator();
             painter.SubHeading("Parent Module");
             painter.Paragraph(
                 "The list at the bottom is where the new module is placed. Modules puts it at the "

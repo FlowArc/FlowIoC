@@ -12,14 +12,17 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Icon => "console.infoicon";
 
+        protected override string BodyHeadline =>
+            "Everything this project tells an AI assistant, in one list.";
+
+        protected override string BodyTagline =>
+            "Tools > FlowIoC > Agent Scanner. The rule block in AGENTS.md and CLAUDE.md, and the "
+            + "skill folders under .claude/skills. Both are files FlowIoC owns, so the question "
+            + "about either one is the same - is it there, and does it describe the version the "
+            + "project is on.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "Tools > FlowIoC > Agent Scanner. Everything this project tells an AI coding "
-                + "assistant, in one list: the rule block in AGENTS.md and CLAUDE.md, and the skill "
-                + "folders under .claude/skills. Both are files FlowIoC owns, so the question about "
-                + "either one is the same - is it there, and does it describe the version the "
-                + "project is on.");
             painter.Paragraph(
                 "A row is green while its file is current, amber while it is missing or out of "
                 + "date, and red when only a person can settle it - a marker somebody has broken, "

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using System.Collections.Generic;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.Inspector;
 using UnityEditor;
@@ -28,8 +29,13 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _treeComment;
         private GUIStyle _edgeLabel;
         private GUIStyle _caption;
-        private GUIStyle _sidebarButton;
+        private GUIStyle _sidebarRow;
         private GUIStyle _sidebarLabel;
+        private GUIStyle _sidebarLabelActive;
+        private GUIStyle _header;
+        private GUIStyle _tabLabel;
+        private GUIStyle _tabLabelActive;
+        private readonly List<Texture2D> _fills = new List<Texture2D>();
         private GUIStyle _bannerTab;
         private GUIStyle _actionButton;
         private GUIStyle _hero;
@@ -90,13 +96,143 @@ namespace FlowIoC.Editor.Help
             (value & 0xFF) / 255f);
 
         /// <summary>
-        /// What the page itself is drawn on. An arrow's marking carries a strip of it, so a word
-        /// wider than the gap between two boxes still reads as one word rather than as two halves
-        /// in two different shades.
+        /// What the page is drawn on. Darker than the Editor's own window grey, which is what puts
+        /// the three surfaces of this window a clear step apart: the menu at the top of the range,
+        /// the band that says what the page is about a shade under it, and the page itself at the
+        /// bottom. An arrow's marking carries a strip of this, so a word wider than the gap between
+        /// two boxes still reads as one word rather than as two halves in two different shades.
         /// </summary>
-        public Color PageFill => _pro ? new Color(0.22f, 0.22f, 0.22f) : new Color(0.76f, 0.76f, 0.76f);
+        public Color PageFill => _pro ? Hex(0x313131) : Hex(0xBBBBBB);
 
         public Color MutedText => _pro ? new Color(0.66f, 0.66f, 0.69f) : new Color(0.40f, 0.40f, 0.44f);
+
+        /// <summary>
+        /// What the sidebar is drawn on. Brighter than the page beside it in both skins, so the
+        /// menu reads as a panel of its own rather than as the left edge of the page - which is
+        /// what a help box, drawn in the page's own grey, left it looking like.
+        ///
+        /// Fourteen levels of grey above the page beside it, which is the distance Odin's own menu
+        /// keeps from the panel next to it: enough to be seen as a second surface and little enough
+        /// that the menu is still the quieter half of the window.
+        /// </summary>
+        public Color SidebarFill => _pro ? Hex(0x3F3F3F) : Hex(0xC9C9C9);
+
+        /// <summary>
+        /// The line that closes the panel off from the page. Darker than anything inside the menu,
+        /// so the sidebar has an edge rather than fading into the page at its right.
+        /// </summary>
+        public Color SidebarBorder => _pro ? Hex(0x232323) : Hex(0xADADAD);
+
+        /// <summary>
+        /// The band under the banner, where the page's headline and the paragraph beneath it sit.
+        /// A shade under the sidebar and a shade over the page, so the window reads as three
+        /// surfaces stepping down: the menu, what the page is about, and the page itself.
+        /// </summary>
+        public Color HeaderFill => _pro ? Hex(0x3C3C3C) : Hex(0xC6C6C6);
+
+        /// <summary>
+        /// The hairline that closes the header off. One pixel and darker than either surface it
+        /// sits between, so the band ends cleanly without a bar's worth of weight - the heavy bar
+        /// belongs to the page below, where it parts one topic from the next.
+        /// </summary>
+        public Color HeaderEdge => _pro ? Hex(0x232323) : Hex(0xA8A8A8);
+
+        /// <summary>
+        /// What the band under the banner keeps clear at its left and its right. The headline is
+        /// the one line on the page set in a large face, so it sits closer to the edge than the
+        /// paragraphs below it and still reads as the leftmost thing in the window.
+        /// </summary>
+        public float PagePadding => 16f;
+
+        /// <summary>
+        /// What the page below the band keeps clear on the same two sides. Wider than the header's,
+        /// which is the proportion Odin's own panel keeps - a column of body text wants more air
+        /// around it than a headline does, and the step in from the band is what says the reading
+        /// has started. A mark that has to reach past the text takes this back off again, so the
+        /// theme rather than the window or the painter owns the number.
+        /// </summary>
+        public float PageBodyPadding => 28f;
+
+        /// <summary>
+        /// The three colours of the bar a page parts its topics with. It is five pixels rather
+        /// than one because it ends a block rather than parting two rows: a dark line, a body of
+        /// the same dark, and a light line under it that reads as the page starting again.
+        /// </summary>
+        public Color PageSeparatorEdge => _pro ? Hex(0x272727) : Hex(0xB1B1B1);
+
+        public Color PageSeparatorFill => _pro ? Hex(0x2B2B2B) : Hex(0xB5B5B5);
+
+        public Color PageSeparatorLight => _pro ? Hex(0x404040) : Hex(0xCACACA);
+
+        /// <summary>
+        /// The darker half of the groove under a row, and the lighter half below it. Two hairlines
+        /// rather than one: a single line reads as a scratch on the panel, while a dark line with a
+        /// light one under it reads as the surface stepping down and back up, which is what tells
+        /// one entry from the next now that the rows carry no frame and no gap between them.
+        /// </summary>
+        public Color SidebarSeparator => _pro ? Hex(0x313131) : Hex(0xBBBBBB);
+
+        public Color SidebarSeparatorLight => _pro ? Hex(0x494949) : Hex(0xD3D3D3);
+
+        /// <summary>
+        /// What a row is filled with at the depth it sits. The panel's own colour at the top level,
+        /// and a shade darker for every category above it, so a fold that opens reads as a step
+        /// down into the panel rather than as more rows of the same surface. It is deliberately
+        /// slight: two levels apart should be a difference you feel rather than one you look at.
+        /// </summary>
+        public Color SidebarRowFill(int depth) =>
+            depth <= 0 ? SidebarFill : Color.Lerp(SidebarFill, Color.black, depth * DepthShade);
+
+        /// <summary>How much of a row's fill one level of depth takes away.</summary>
+        private float DepthShade => 0.12f;
+
+        /// <summary>
+        /// What a row lights up with under the pointer. Every row in the sidebar either goes
+        /// somewhere or folds something open, so the highlight only ever promises what a click
+        /// will actually do.
+        /// </summary>
+        public Color SidebarRowHover => _pro
+            ? new Color(1f, 1f, 1f, 0.06f)
+            : new Color(0f, 0f, 0f, 0.06f);
+
+        /// <summary>
+        /// The row the reader is on, filled edge to edge. FlowIoC's own violet, which is what the
+        /// banner on the page beside it wears, so the two say together where the reader has landed.
+        /// </summary>
+        public Color SidebarRowSelected => _palette.ChromeDeep;
+
+        /// <summary>
+        /// The top and the bottom line of the selected row, a shade either side of its fill. The
+        /// row is lit from above the way every other raised thing in the Editor is, which is what
+        /// keeps a flat block of colour from reading as a hole cut in the panel.
+        /// </summary>
+        public Color SidebarRowSelectedTop => Color.Lerp(SidebarRowSelected, Color.white, 0.10f);
+
+        public Color SidebarRowSelectedBottom => Color.Lerp(SidebarRowSelected, Color.black, 0.28f);
+
+        /// <summary>
+        /// A featured topic that is not the one selected. The same violet thinned to a tint, so
+        /// the introduction is marked out without being read as where the reader already is.
+        /// </summary>
+        public Color SidebarRowFeatured => Tint(_palette.ChromeDeep, 0.12f);
+
+        /// <summary>
+        /// A colour laid over the panel thinly enough to read as a tint of it. The alpha is what
+        /// separates a row that is marked out from the row the reader is actually on: the selected
+        /// row carries the violet whole, and a featured one carries this much of it.
+        /// </summary>
+        private static Color Tint(Color color, float strength) =>
+            new Color(color.r, color.g, color.b, strength);
+
+        /// <summary>
+        /// The triangle that says whether a category is open. Lighter than the name beside it in
+        /// the dark skin and darker in the light one, because it is a control rather than a word:
+        /// it should be found when it is looked for and read past when it is not.
+        /// </summary>
+        public Color SidebarArrow => _pro ? Hex(0xC4C4C4) : Hex(0x3C3C3C);
+
+        /// <summary>The same triangle on the selected row, where everything is drawn white.</summary>
+        public Color SidebarArrowActive => _palette.Title;
 
         /// <summary>
         /// The banner behind a page title. Root's colour from the inspector palette, so the help
@@ -375,15 +511,88 @@ namespace FlowIoC.Editor.Help
             margin = new RectOffset(0, 0, 0, 0)
         };
 
-        public GUIStyle SidebarButton => _sidebarButton ??= new GUIStyle(EditorStyles.miniButton)
+        /// <summary>
+        /// The text on the row the reader is on. White in both skins, because the fill under it is
+        /// the same violet whichever skin the Editor is in.
+        /// </summary>
+        public GUIStyle SidebarLabelActive => _sidebarLabelActive ??= new GUIStyle(SidebarLabel)
+        {
+            normal = {textColor = _palette.Title},
+            hover = {textColor = _palette.Title},
+            focused = {textColor = _palette.Title},
+            active = {textColor = _palette.Title}
+        };
+
+        /// <summary>
+        /// The name on a tab. Centred, because the strip splits the page evenly and a label pushed
+        /// to one end of its share would read as belonging to the tab beside it.
+        /// </summary>
+        public GUIStyle TabLabel => _tabLabel ??= new GUIStyle(EditorStyles.miniLabel)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 11,
+            padding = new RectOffset(0, 0, 0, 0),
+            margin = new RectOffset(0, 0, 0, 0)
+        };
+
+        /// <summary>The name on the tab that is open, set bold so the fill is not the only mark.</summary>
+        public GUIStyle TabLabelActive => _tabLabelActive ??= new GUIStyle(TabLabel)
+        {
+            fontStyle = FontStyle.Bold
+        };
+
+        /// <summary>
+        /// A sidebar row. It carries no background and no border of its own: the window fills the
+        /// row, draws the hairline under it and places the icon and the text by hand, so the style
+        /// is only what makes the rectangle clickable. The margins are zero so two rows touch and
+        /// what separates them is one hairline rather than two edges with a gap between them.
+        /// </summary>
+        /// <summary>
+        /// The header band as a style. A group in IMGUI paints a background only when its style
+        /// carries one, and the fill has to be under the headline rather than over it, so the band
+        /// is a one pixel texture the style stretches over whatever height the text comes to.
+        /// </summary>
+        public GUIStyle Header => _header ??= new GUIStyle
+        {
+            normal = {background = Fill(HeaderFill)},
+            padding = new RectOffset(0, 0, 0, 0),
+            margin = new RectOffset(0, 0, 0, 0)
+        };
+
+        /// <summary>
+        /// The textures the styles above are built from. They are not saved with the window and
+        /// nothing else refers to them, so the window destroys them when it closes rather than
+        /// leaving one behind every time it is opened.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (Texture2D texture in _fills)
+            {
+                if (texture != null)
+                    Object.DestroyImmediate(texture);
+            }
+
+            _fills.Clear();
+        }
+
+        private Texture2D Fill(Color color)
+        {
+            var texture = new Texture2D(1, 1) {hideFlags = HideFlags.HideAndDontSave};
+
+            texture.SetPixel(0, 0, color);
+            texture.Apply();
+
+            _fills.Add(texture);
+
+            return texture;
+        }
+
+        public GUIStyle SidebarRow => _sidebarRow ??= new GUIStyle(GUIStyle.none)
         {
             fixedHeight = 0f,
-            fontSize = 12,
-            wordWrap = true,
-            alignment = TextAnchor.MiddleLeft,
-            imagePosition = ImagePosition.ImageLeft,
-            padding = new RectOffset(8, 8, 6, 6),
-            margin = new RectOffset(2, 2, 2, 2)
+            padding = new RectOffset(0, 0, 0, 0),
+            margin = new RectOffset(0, 0, 0, 0),
+            stretchWidth = true
         };
     }
 }

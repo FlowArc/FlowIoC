@@ -96,14 +96,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 Client.Add(InputSystemPackage);
         }
 
+        protected override string BodyHeadline => "A new project starts on a flow that already runs.";
+
+        protected override string BodyTagline =>
+            "A project with no modules of its own gets these six the first time the Editor opens on "
+            + "it. There is no button to press and no dialog to answer, so the wiring is something "
+            + "to read rather than something to be told.";
+
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "A project with no modules of its own gets these six the first time the Editor "
-                + "opens on it. There is no button to press and no dialog to answer: a game that "
-                + "starts on FlowIoC starts on a flow that already runs, and can read how it is "
-                + "wired rather than be told.");
-
             painter.Space();
             painter.SubHeading("What is here");
             painter.Paragraph(

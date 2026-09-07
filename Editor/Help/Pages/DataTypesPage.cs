@@ -35,21 +35,21 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "Which prefix a type takes, and which of the two folders it belongs in.")
         };
+
+        protected override string BodyHeadline => "A name says which kind of data it is before the file is opened.";
+
+        protected override string BodyTagline =>
+            "Data/UnityObjects holds the ScriptableObject assets and Data/ValueObjects the plain "
+            + "[Serializable] classes they are built out of. The prefix says where the contents "
+            + "come from and the suffix matches it, so a name tells you what is safe to regenerate "
+            + "and what has to survive a restart.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Paragraph(
-                "A module keeps its data in two folders, and the name of a type says which kind of "
-                + "data it is before you open the file. Data/UnityObjects holds the ScriptableObject "
-                + "assets; Data/ValueObjects holds the plain [Serializable] classes those assets are "
-                + "built out of.");
-            painter.Paragraph(
-                "The prefix on an asset says where its contents come from. The value objects it "
-                + "carries take the matching suffix, so a name tells you what is safe to regenerate "
-                + "and what has to survive a restart.");
-
             painter.Space();
             painter.Tree(Root);
 
@@ -65,6 +65,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "A plain VO suffix is the right name when the data belongs to no one asset in "
                 + "particular - a payload passed between commands, the shape a Function returns.");
 
+            painter.Separator();
             painter.SubHeading("A family of your own");
             painter.Paragraph(
                 "The five are what FlowIoC ships, not the whole vocabulary. A project that needs "
@@ -94,6 +95,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    public int    StarTarget;\n"
                 + "}");
 
+            painter.Separator();
             painter.SubHeading("A value object that carries two kinds");
             painter.Paragraph(
                 "Sometimes the authored half and the runtime half are wanted in the same place. The "
@@ -109,11 +111,14 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    public GameHexRVO Runtime;  // what play produced\n"
                 + "}");
 
+            painter.Separator();
             painter.SubHeading("What goes wrong");
             painter.Bullet("MapData, MapConfig, MapSO. A descriptive name says nothing about lifetime; the suffix family is the convention.");
-            painter.Bullet("Writing to a CD_ asset at runtime. Config is constant - if it changes during play it is RD_, and if it must survive a restart it is PD_.");
+            painter.Bullet(
+                "Writing to a CD_ asset at runtime. Config is constant - if it changes during play it is RD_, and if it must survive a restart it is PD_.");
             painter.Bullet("A CVO list inside a PD_ asset. The suffix has to match the asset it lives in.");
-            painter.Bullet("A data class dropped anywhere. It belongs in Data/UnityObjects or Data/ValueObjects; the generators and the namespace tools depend on it.");
+            painter.Bullet(
+                "A data class dropped anywhere. It belongs in Data/UnityObjects or Data/ValueObjects; the generators and the namespace tools depend on it.");
 
             painter.Space();
             painter.Note(

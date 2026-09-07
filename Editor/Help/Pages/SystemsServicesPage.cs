@@ -23,19 +23,30 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
-            new HelpTab("A Service", DrawService),
-            new HelpTab("A System", DrawSystem),
-            new HelpTab("Splitting", DrawSplitting),
-            new HelpTab("Rules", DrawRules)
+            new HelpTab("A Service", DrawService,
+                "An interface and an implementation, bound across contexts.",
+                "A Service that binds its interface to its own Context is a Service nobody can use."),
+            new HelpTab("A System", DrawSystem,
+                "A System needs no System.cs.",
+                "The work is followed through the command flow the Context declares. A module can "
+                + "be a complete System without a single type named ...System."),
+            new HelpTab("Splitting", DrawSplitting,
+                "Two reasons to split, and the second is the common one.",
+                "A Service and a System both divide into Services/Sub/ and Systems/Sub/ - because "
+                + "the unit grew, or because a chained surface reads better than thirty verbs."),
+            new HelpTab("Rules", DrawRules,
+                "The rules, in one list.",
+                "What separates a Service from a System, and what each of them may reference.")
         };
+
+        protected override string BodyHeadline => "A Service travels. A System belongs to this game.";
+
+        protected override string BodyTagline =>
+            "That one sentence decides which folder the code goes in, whether another module may "
+            + "reference it, and what happens to it when the game around it changes.";
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Hero(
-                "A Service travels. A System belongs to this game.",
-                "That one sentence decides which folder the code goes in, whether another module "
-                + "may reference it, and what happens to it when the game around it changes.");
-
             painter.SubHeading("Which of the three a module is, is something you can see");
             painter.Bullet("A Service has files under Scripts/Runtime/Services/.");
             painter.Bullet("A screen module has a context deriving from ScreenSubContext<TView, TMediator>.");
@@ -44,7 +55,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "There is no fourth question to ask. A module written for the game at hand is a "
                 + "System, which is why Role in Create Module starts there.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("What separates them");
             painter.Bullet(
                 "A Service depends on nothing. It does not know another Service, and it does not "
@@ -71,10 +82,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawService(HelpPainter painter)
         {
-            painter.Hero(
-                "An interface and an implementation, bound across contexts.",
-                "A Service that binds its interface to its own Context is a Service nobody can use.");
-
             painter.SubHeading("Binding it so it can be reached");
             painter.Code(
                 "public override void InjectionBindings()\n"
@@ -95,7 +102,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "[Inject] private ICounterService _counterService { get; set; }",
                 "In a Command of another module");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The two ways in");
             painter.Paragraph(
                 "A caller either calls the interface, or dispatches one of the Commands the Service "
@@ -111,7 +118,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "sequence carries on without waiting for it. A Command of the Service's own is "
                 + "what holds the line, and it is what puts the step in the Flow Console.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The two ways out");
             painter.Bullet(
                 "A signal, when what happened may concern the whole game.");
@@ -142,11 +149,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawSystem(HelpPainter painter)
         {
-            painter.Hero(
-                "A System needs no System.cs.",
-                "The work is followed through the command flow the Context declares. A module can "
-                + "be a complete System without a single type named ...System.");
-
             painter.SubHeading("When one arrives");
             painter.Bullet(
                 "To collapse many injections into one. A Command injects IMapSystem once and writes "
@@ -155,7 +157,7 @@ namespace FlowIoC.Editor.Help.Pages
                 "To make what is available discoverable. Press the dot and a short tidy list "
                 + "appears, rather than everything the module can do at once.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("It holds members, never work");
             painter.Code(
                 "internal class MapSystem : IMapSystem, IConstructable\n"
@@ -172,7 +174,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "which is what keeps the step visible in the Flow Console and lets a sequence wait "
                 + "for it. PostConstruct assembling the surface is the whole allowance.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Built out of sub systems");
             painter.Paragraph(
                 "Models appear among a System's members where the module's own state lives, but the "
@@ -181,7 +183,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "directly; a module without a System is the ordinary case, and its Commands inject "
                 + "Models as they always have.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("A Model, a sub system, or a module of its own");
             painter.Paragraph(
                 "A Model owns the module's state and its data. A sub system computes, and may read "
@@ -202,11 +204,6 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawSplitting(HelpPainter painter)
         {
-            painter.Hero(
-                "Two reasons to split, and the second is the common one.",
-                "A Service and a System both divide into Services/Sub/ and Systems/Sub/ - because "
-                + "the unit grew, or because a chained surface reads better than thirty verbs.");
-
             painter.SubHeading("Grouped by noun, and a builder");
             painter.Code(
                 "public interface IScreenService\n"
@@ -246,7 +243,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A finished Service's assembly gets no later additions.");
             painter.Bullet("A Service is bound with InjectionBinderCrossContext, or no other module can use it.");
             painter.Bullet("A Service is driven by a call to its interface, or by a Command it ships for the case where a sequence has to wait.");
-            painter.Bullet("A Service answers with a signal when the game may care, and with a callback the caller handed in when only that caller does.");
+            painter.Bullet(
+                "A Service answers with a signal when the game may care, and with a callback the caller handed in when only that caller does.");
             painter.Bullet("A System is specific to this game and never appears in another module's assembly.");
             painter.Bullet("A System needs no System.cs. One arrives when the module wants a surface.");
             painter.Bullet("A System type holds injected members and no method that does work. PostConstruct may assemble it.");
