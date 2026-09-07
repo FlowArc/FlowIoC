@@ -71,6 +71,33 @@ namespace FlowIoC.ConsoleModule
             return !string.IsNullOrEmpty(filePath);
         }
 
+        /// <summary>
+        /// The file name at the end of a path, without going through System.IO.Path.
+        ///
+        /// These paths are read out of stack traces and compiler messages, so they are whatever
+        /// text happened to be there - a generated frame, a path with a character Windows does
+        /// not allow. Path.GetFileName throws ArgumentException on those, and a throw inside
+        /// OnGUI unbalances GUILayout and takes the whole window's drawing down with it.
+        /// </summary>
+        public string FileNameOf(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return string.Empty;
+
+            int slash = path.LastIndexOfAny(PathSeparators);
+            return slash < 0 ? path : path.Substring(slash + 1);
+        }
+
+        /// <summary>The file name at the end of a path, with its extension taken off.</summary>
+        public string FileNameWithoutExtensionOf(string path)
+        {
+            string name = FileNameOf(path);
+
+            int dot = name.LastIndexOf('.');
+            return dot <= 0 ? name : name.Substring(0, dot);
+        }
+
+        private static readonly char[] PathSeparators = {'/', '\\'};
+
         /// <summary>The class name a Unity stack frame starts with, or null.</summary>
         public string ParseClassName(string traceLine)
         {

@@ -16,6 +16,13 @@ namespace FlowIoC.ConsoleModule
         public static readonly List<ConsoleLog> Logs = new();
         public static Action<ConsoleLog> OnLogAdded;
 
+        /// <summary>
+        /// Raised when the list is emptied. The console window keeps its own copy of the logs, so
+        /// without this a clear that came from anywhere but its own button - Clear on Play, Clear
+        /// on Recompile - would leave the window showing logs that no longer exist.
+        /// </summary>
+        public static Action OnLogsCleared;
+
         private const int MaxMessageLength = 15000;
         private const int LogTrimChunk = 256;
 
@@ -172,6 +179,7 @@ namespace FlowIoC.ConsoleModule
         public static void ClearLogs()
         {
             Logs.Clear();
+            OnLogsCleared?.Invoke();
         }
 
         public static int GetModuleLogType<T>()
@@ -737,8 +745,10 @@ namespace FlowIoC.ConsoleModule
                             }
                         }
 
+                        // StackFrames rather than System.IO.Path: this path came out of a trace
+                        // and can hold characters Path refuses, which it answers with a throw.
                         string shortName = !string.IsNullOrEmpty(log.SourceFilePath)
-                            ? Path.GetFileName(log.SourceFilePath)
+                            ? StackFrames.FileNameOf(log.SourceFilePath)
                             : null;
                         if (!string.IsNullOrEmpty(shortName))
                             log.SourceTrace = line.Substring(0, atIdx) + $"(at {shortName}:{log.SourceLineNumber})";

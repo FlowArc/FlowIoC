@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.IO;
+using FlowIoC.ConsoleModule;
 
 namespace FlowIoC.Editor.Console
 {
@@ -28,6 +28,8 @@ namespace FlowIoC.Editor.Console
     /// </summary>
     public class ScriptAssetSearchPlan
     {
+        private static readonly FlowStackFrameFilter PathText = new();
+
         public List<ScriptSearchAttempt> Build(string blameTypeName, string sourceFilePath, int sourceLineNumber)
         {
             var attempts = new List<ScriptSearchAttempt>();
@@ -62,7 +64,9 @@ namespace FlowIoC.Editor.Console
 
             if (hasPath)
             {
-                string fileName = Path.GetFileNameWithoutExtension(normalized);
+                // Taken apart by hand: a path read out of a stack trace can hold characters
+                // System.IO.Path refuses, and it throws rather than answering.
+                string fileName = PathText.FileNameWithoutExtensionOf(normalized);
                 if (!string.IsNullOrEmpty(fileName))
                 {
                     attempts.Add(new ScriptSearchAttempt

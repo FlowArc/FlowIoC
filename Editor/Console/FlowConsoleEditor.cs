@@ -62,6 +62,13 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleState _state = new();
         private readonly FlowConsoleCollapse _collapse = new();
 
+        /// <summary>
+        /// Paths that came out of a stack trace are whatever text was there, so they are taken
+        /// apart by hand rather than by System.IO.Path, which throws on characters Windows does
+        /// not allow - and a throw inside OnGUI takes the window's drawing down with it.
+        /// </summary>
+        private static readonly FlowStackFrameFilter PathText = new();
+
         private bool _collapseRows;
         private int[] _collapseCounts;
 
@@ -70,12 +77,19 @@ namespace FlowIoC.Editor.Console
         private GUIStyle _detailRichTextStyle;
         private GUIStyle _linkStyle;
         private GUIStyle _secondLineStyle;
+        private GUIStyle _toolbarLabelStyle;
+
+        private Rect _toolbarRect;
+        private bool _mouseWasOverToolbar;
 
         // Unity's own console icons, fetched once. IconContent is a lookup and a row draws many
         // times a second.
         private Texture _infoIcon;
         private Texture _warningIcon;
         private Texture _errorIcon;
+        private Texture _dropdownIcon;
+        private static readonly GUIContent ClearLabel = new("Clear");
+
         private Texture _infoIconSmall;
         private Texture _warningIconSmall;
         private Texture _errorIconSmall;
@@ -99,6 +113,10 @@ namespace FlowIoC.Editor.Console
             _selectedLog = null;
             InvalidateTraceCache();
 
+            // Without this the window is never told the pointer moved, and a toolbar button only
+            // turns hovered on the next repaint something else happens to cause.
+            wantsMouseMove = true;
+
             _rowLineCount = _state.RowLineCount;
             _collapseRows = _state.Collapse;
 
@@ -116,6 +134,7 @@ namespace FlowIoC.Editor.Console
             _logsDirty = true;
 
             FlowLogger.OnLogAdded += OnLogAdded;
+            FlowLogger.OnLogsCleared += OnLogsCleared;
             CD_FlowConsole.OnSettingsValidated += OnSettingsValidated;
 
             _settings = FlowLogger.Settings;
@@ -150,6 +169,14 @@ namespace FlowIoC.Editor.Console
             _infoIcon = EditorGUIUtility.IconContent("console.infoicon").image;
             _warningIcon = EditorGUIUtility.IconContent("console.warnicon").image;
             _errorIcon = EditorGUIUtility.IconContent("console.erroricon").image;
+
+            _dropdownIcon = EditorGUIUtility.IconContent("icon dropdown").image;
+
+            // The toolbar label style is not built here. OnEnable can run before EditorStyles is
+            // ready, and what it hands back then is not the style that was asked for - a probe
+            // showed the label still carrying the toolbar button's own graphics, which is what
+            // painted over the Clear half. It is built on the first repaint instead.
+            _toolbarLabelStyle = null;
 
             _infoIconSmall = EditorGUIUtility.IconContent("console.infoicon.sml").image;
             _warningIconSmall = EditorGUIUtility.IconContent("console.warnicon.sml").image;
@@ -210,7 +237,7 @@ namespace FlowIoC.Editor.Console
         private static string SecondLineFor(ConsoleLog log)
         {
             if (!string.IsNullOrEmpty(log.SourceFilePath))
-                return Path.GetFileName(log.SourceFilePath) + ":" + log.SourceLineNumber;
+                return PathText.FileNameOf(log.SourceFilePath) + ":" + log.SourceLineNumber;
 
             if (!string.IsNullOrEmpty(log.BlameTypeName))
                 return log.BlameTypeName;
@@ -240,11 +267,14 @@ namespace FlowIoC.Editor.Console
         private void OnDisable()
         {
             FlowLogger.OnLogAdded -= OnLogAdded;
+            FlowLogger.OnLogsCleared -= OnLogsCleared;
             CD_FlowConsole.OnSettingsValidated -= OnSettingsValidated;
         }
 
         private void OnGUI()
         {
+            RepaintForToolbarHover();
+
             EditorGUILayout.BeginVertical();
 
             DrawToolbar();
@@ -254,20 +284,49 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// A toolbar button only looks hovered while the window is repainting, and a console that
+        /// is not receiving logs repaints for nothing - which is why hovering used to take about a
+        /// second to show. The window asks for mouse-move events and repaints on them, but only
+        /// while the pointer is over the toolbar, or has just left it. Moving across the log list
+        /// still costs nothing.
+        /// </summary>
+        private void RepaintForToolbarHover()
+        {
+            if (Event.current.type != EventType.MouseMove) return;
+
+            // Nothing has been drawn yet, so there is no toolbar to test against. Repaint once to
+            // get one.
+            if (_toolbarRect.height <= 0f)
+            {
+                Repaint();
+                return;
+            }
+
+            bool overToolbar = _toolbarRect.Contains(Event.current.mousePosition);
+            if (!overToolbar && !_mouseWasOverToolbar) return;
+
+            _mouseWasOverToolbar = overToolbar;
+            Repaint();
+        }
+
         private void DrawToolbar()
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            Rect toolbarRect = EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            if (GUILayout.Button("Clear", EditorStyles.toolbarButton, GUILayout.Width(50)))
-            {
-                FlowLogger.ClearLogs();
-                InitializeLogs();
-                _selectedLog = null;
-                InvalidateTraceCache();
-                _searchText = "";
-                _logsDirty = true;
-                Repaint();
-            }
+            // Kept only from a repaint. BeginHorizontal answers with an empty rect during a
+            // layout pass, and storing that wiped the real one just before the mouse-move event
+            // that needed it - which is why hovering was quick coming from Unity's own controls
+            // and slow everywhere else.
+            if (Event.current.type == EventType.Repaint)
+                _toolbarRect = toolbarRect;
+
+            ClearButtonGUI();
+
+            bool errorPause = GUILayout.Toggle(_state.ErrorPause, "Error Pause", EditorStyles.toolbarButton,
+                GUILayout.Width(80));
+            if (errorPause != _state.ErrorPause)
+                _state.ErrorPause = errorPause;
 
             bool collapse = GUILayout.Toggle(_collapseRows, "Collapse", EditorStyles.toolbarButton, GUILayout.Width(70));
             if (collapse != _collapseRows)
@@ -361,6 +420,131 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// Clear and the arrow beside it, drawn as the one split button Unity's console has.
+        ///
+        /// EditorStyles.toolbarDropDown cannot make this shape: it draws its own border and its
+        /// own arrow, which put the divider hard against the glyph and ran it the full height of
+        /// the bar. Here the two halves share one background, the divider is inset top and bottom
+        /// because it belongs to the button rather than to the toolbar, hovering either half
+        /// lights the whole thing, and hovering the arrow lights the arrow again on top.
+        /// </summary>
+        /// <summary>
+        /// Built on demand, inside OnGUI, where the editor's styles are certain to be ready.
+        /// GUIStyle.none carries no graphics of any kind, so nothing here can paint over what the
+        /// button drew underneath it.
+        /// </summary>
+        private void EnsureToolbarLabelStyle()
+        {
+            if (_toolbarLabelStyle != null) return;
+
+            _toolbarLabelStyle = new GUIStyle(GUIStyle.none)
+            {
+                name = "FlowConsoleToolbarLabel",
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = EditorStyles.toolbarButton.fontSize,
+                font = EditorStyles.toolbarButton.font
+            };
+
+            _toolbarLabelStyle.normal.textColor = EditorStyles.label.normal.textColor;
+        }
+
+        private void ClearButtonGUI()
+        {
+            EnsureToolbarLabelStyle();
+
+            const float clearWidth = 46f;
+            const float arrowWidth = 22f;
+
+            // The height is the toolbar row's, not a number of our own. Asking for
+            // singleLineHeight made this button two pixels shorter than the ones beside it, which
+            // left an unlit strip along the bottom and sat the label higher than Collapse's.
+            Rect whole = GUILayoutUtility.GetRect(clearWidth + arrowWidth, EditorGUIUtility.singleLineHeight,
+                EditorStyles.toolbarButton,
+                GUILayout.Width(clearWidth + arrowWidth), GUILayout.ExpandHeight(true));
+
+            var clearRect = new Rect(whole.x, whole.y, clearWidth, whole.height);
+            var arrowRect = new Rect(whole.x + clearWidth, whole.y, arrowWidth, whole.height);
+
+            Vector2 mouse = Event.current.mousePosition;
+            bool overWhole = whole.Contains(mouse);
+            bool overArrow = arrowRect.Contains(mouse);
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                // Every pixel here is drawn by hand. EditorStyles.toolbarButton was doing two
+                // things that could not be switched off: its background carries borders, and the
+                // one at the arrow's left edge landed exactly on the divider and read as a second
+                // line beside it; and its hover state could not be made to light one half more
+                // than the other without drawing a second button, which brought the border back.
+                bool pro = EditorGUIUtility.isProSkin;
+
+                // The row runs to the bottom of the toolbar, and the toolbar's own dark edge is
+                // the last pixel of it. A wash painted over the full height covered that line, so
+                // the lit area stops one pixel short of it.
+                var wholeFill = new Rect(whole.x, whole.y, whole.width, whole.height - 1f);
+                var arrowFill = new Rect(arrowRect.x, arrowRect.y, arrowRect.width, arrowRect.height - 1f);
+
+                if (overWhole)
+                {
+                    EditorGUI.DrawRect(wholeFill, pro
+                        ? new Color(1f, 1f, 1f, 0.08f)
+                        : new Color(0f, 0f, 0f, 0.06f));
+                }
+
+                // Hovering the arrow lights the arrow further while the Clear half stays lit
+                // underneath, which is the shape Unity's split button has.
+                if (overArrow)
+                {
+                    EditorGUI.DrawRect(arrowFill, pro
+                        ? new Color(1f, 1f, 1f, 0.10f)
+                        : new Color(0f, 0f, 0f, 0.08f));
+                }
+
+                // The label alone, with no background of its own.
+                GUI.Label(clearRect, ClearLabel, _toolbarLabelStyle);
+
+                // Inset so the divider reads as part of the button rather than as a cut through
+                // the toolbar, which is what running it the full height looked like.
+                var divider = new Rect(arrowRect.x, whole.y + 4f, 1f, whole.height - 8f);
+                EditorGUI.DrawRect(divider, new Color(0f, 0f, 0f, 0.35f));
+
+                if (_dropdownIcon != null)
+                {
+                    const float glyphSize = 12f;
+                    var glyph = new Rect(arrowRect.x + (arrowWidth - glyphSize) * 0.5f,
+                        whole.y + (whole.height - glyphSize) * 0.5f, glyphSize, glyphSize);
+                    GUI.DrawTexture(glyph, _dropdownIcon, ScaleMode.ScaleToFit);
+                }
+            }
+
+            if (Event.current.type != EventType.MouseDown || Event.current.button != 0) return;
+
+            if (overArrow)
+            {
+                var menu = new GenericMenu();
+
+                menu.AddItem(new GUIContent("Clear on Play"), _state.ClearOnPlay,
+                    () => _state.ClearOnPlay = !_state.ClearOnPlay);
+                menu.AddItem(new GUIContent("Clear on Recompile"), _state.ClearOnRecompile,
+                    () => _state.ClearOnRecompile = !_state.ClearOnRecompile);
+                menu.AddItem(new GUIContent("Clear on Build"), _state.ClearOnBuild,
+                    () => _state.ClearOnBuild = !_state.ClearOnBuild);
+
+                // Hung under the button's own left edge, the way Unity's does, rather than
+                // wherever the pointer happened to be.
+                menu.DropDown(new Rect(whole.x, whole.yMax, 0f, 0f));
+                Event.current.Use();
+                return;
+            }
+
+            if (!clearRect.Contains(mouse)) return;
+
+            FlowLogger.ClearLogs();
+            _searchText = "";
+            Event.current.Use();
+        }
+
         private void Update()
         {
             if (_needsRepaint)
@@ -372,6 +556,19 @@ namespace FlowIoC.Editor.Console
 
         private void OnSettingsValidated()
         {
+            _logsDirty = true;
+            _needsRepaint = true;
+        }
+
+        /// <summary>
+        /// Somebody emptied the list - Clear on Play, Clear on Recompile, or a call from game
+        /// code. The window holds its own copy, so it has to let go of it too.
+        /// </summary>
+        private void OnLogsCleared()
+        {
+            InitializeLogs();
+            _selectedLog = null;
+            InvalidateTraceCache();
             _logsDirty = true;
             _needsRepaint = true;
         }
