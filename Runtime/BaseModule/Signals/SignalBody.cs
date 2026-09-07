@@ -2,8 +2,12 @@
 
 namespace FlowIoC.BaseModule.Signals
 {
-    public class SignalBody : ISignalBody
+    public abstract class SignalBody : ISignalBody
     {
+        /// <inheritdoc cref="ISignalBody.RemoveAllListeners"/>
+        public abstract void RemoveAllListeners();
+
+
         protected Action<ISignalBody, object[]> _internalCallback;
 
         Action<ISignalBody, object[]> ISignalBody.InternalCallback

@@ -40,6 +40,13 @@ namespace FlowIoC.BaseModule.Signals
             _callbackOnce -= listener;
         }
 
+        /// <inheritdoc cref="ISignalBody.RemoveAllListeners"/>
+        public override void RemoveAllListeners()
+        {
+            _callbackOnce = null;
+            _callback = null;
+        }
+
         public void Dispatch()
         {
             if (!_hideCommandLog)

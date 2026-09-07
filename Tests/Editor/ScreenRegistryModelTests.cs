@@ -158,7 +158,7 @@ namespace FlowIoC.Tests
             ScreenVO data = new ScreenVO
             {
                 ScreenType = typeof(SettingsScreenView), ForceOpenAtFullLayer = true, ForceOpenAtDuplication = true,
-                AddToHistory = true, Parameters = new object[] {1}
+                Parameters = new object[] {1}
             };
 
             _registry.CopyDataFromConfig(data, screen);
@@ -169,7 +169,6 @@ namespace FlowIoC.Tests
             Assert.IsTrue(data.HasHideAnimation);
             Assert.IsFalse(data.ForceOpenAtFullLayer);
             Assert.IsFalse(data.ForceOpenAtDuplication);
-            Assert.IsFalse(data.AddToHistory);
             Assert.IsNull(data.Parameters);
         }
 

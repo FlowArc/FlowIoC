@@ -206,7 +206,6 @@ await _screenService.Open<SettingsScreenView>().Show();
 | `ForceOpenAtDuplication(bool withHideAnim = false)` | If this screen is already open, hide the existing instance first |
 | `SetParameters(params object[] parameters)` | Data for the screen, readable as `Data.Parameters` |
 | `SkipShowAnimation()` / `SkipHideAnimation()` | Open or close instantly this one time |
-| `AddToHistory()` | Record this screen in the navigation history |
 | `Show()` | `Task<IScreenBody>` |
 | `Show<T>()` | `Task<T>` — the typed instance |
 

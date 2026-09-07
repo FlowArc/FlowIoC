@@ -573,9 +573,17 @@ Every signal supports direct listeners as well as command bindings:
 _signals.Incoming.AddCurrency.AddListener(OnCurrencyAdded);
 _signals.Incoming.AddCurrency.AddListenerOnce(OnFirstCurrencyOnly);
 _signals.Incoming.AddCurrency.RemoveListener(OnCurrencyAdded);
+_signals.Incoming.AddCurrency.RemoveAllListeners();
 
 _signals.Incoming.AddCurrency.Dispatch(100d);
 ```
+
+`Dispatch` runs three things, always in this order: the once-listeners, then the commands
+bound to the signal, then the ordinary listeners. So a once-listener sees the dispatch
+before the command that acts on it has run, and an ordinary listener sees it after — which
+is what makes `AddListener` the one a Mediator uses to redraw from a value a command has
+just written. `RemoveAllListeners` drops both listener lists and leaves the bound commands
+alone, because what a signal runs in the middle belongs to the context that bound it.
 
 A module keeps two holders, and where each one lives decides who can reach it.
 

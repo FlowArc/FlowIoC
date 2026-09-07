@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`RemoveAllListeners()` on every signal.** A Mediator's `OnRemove` was the only teardown path a
+  listener had, so a signal that outlived the objects listening to it kept every listener a
+  destroyed one left behind. The call is declared on `ISignalBody`, so it reaches a signal of any
+  arity without the caller knowing which, and it drops the once-listeners with the ordinary ones.
+  What a dispatch runs in the middle - the commands bound to the signal - is left alone, because
+  that belongs to the context that bound it and goes when the context does. `SignalBody` is
+  `abstract` now, which it always was in practice: it is never instantiated, only inherited by the
+  five arities.
+
+### Changed
+
+- **`Signal.Dispatch`'s order is written down.** Once-listeners, then the commands bound to the
+  signal, then the ordinary listeners - so `AddListener` is the one a Mediator uses to redraw from
+  a value a command has just written, and `AddListenerOnce` sees the dispatch before that command
+  ran. It is on the Signals help page, in `BaseModule.md` and in the README, and a test asserts the
+  order rather than leaving it to be rediscovered.
+- **A screen already being loaded is waited for rather than refused.** `ScreenModule`'s
+  `AddressableLoadSubService` answered a second load of an address still in flight with a warning
+  and a null screen. Nobody asked for that: the caller meant the load, and the same address is
+  loaded twice legitimately when one screen is registered at two managers. It now awaits the handle
+  already loading, the way the pool's loader does, and returns the entry's screen if that load
+  filled it rather than instantiating a second copy of it.
+- **A missing command group names the context it was looked for in.** `ExecuteGroupStep` reported
+  that the group "could not be found in any context" while looking in the binding context alone,
+  which sent the reader off to check every other Root in the scene. It says which context, and that
+  a group is looked up in the context that binds it and nowhere else.
+
+### Removed
+
+- **The screen builder's `AddToHistory()` is gone.** It set `ScreenVO.AddToHistory`, which nothing
+  read: `ShowSubService` carried a `//TODO: History` where the history would have been written, so
+  the call promised a navigation history the module never kept. The flag, the method on
+  `IScreenBuilder` and `ScreenBuilder`, the reset in `ScreenRegistryModel.CopyDataFromConfig` and
+  the documentation row went with it. A screen history, if one is wanted later, is a module of its
+  own rather than a flag on the open call.
+
 ## [1.7.3] - 2026-09-07
 
 ### Added

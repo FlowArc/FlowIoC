@@ -23,10 +23,24 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
             {
                 FlowLogger.Log(SystemLogType.Screen, $"[AddressableLoadService] Addressable Key: {address}");
 
-                if (_loadingScreens.TryGetValue(address, out bool isLoading) && isLoading)
+                // A second load of an address already in flight used to be refused with a warning and
+                // a null screen. Nobody asked for that: the caller meant the load, and the same
+                // address is legitimately loaded twice when one screen is registered at two
+                // managers. It waits for the handle already loading instead, the way the pool's
+                // loader does.
+                if (_loadingScreens.TryGetValue(address, out bool isLoading) && isLoading
+                                                                             && _loadedScreenHandles.TryGetValue(address,
+                                                                                 out AsyncOperationHandle<GameObject> inFlight))
                 {
-                    FlowLogger.LogWarning(SystemLogType.Screen, $"[AddressableLoadService] Screen {address} is already being loaded");
-                    return default;
+                    FlowLogger.Log(SystemLogType.Screen,
+                        $"[AddressableLoadService] {address} is already loading - waiting for that load to finish");
+
+                    await inFlight.Task;
+
+                    // Two loads of one entry are one screen, and a second instance of it is a leak
+                    // nothing holds. Two entries sharing an address each still get their own.
+                    if (entry.Loaded != null)
+                        return entry.Loaded;
                 }
 
                 _loadingScreens[address] = true;

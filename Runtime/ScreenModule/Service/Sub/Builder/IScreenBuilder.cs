@@ -37,7 +37,6 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
         IScreenBuilder SetParameters(params object[] parameters);
         IScreenBuilder SkipShowAnimation();
         IScreenBuilder SkipHideAnimation();
-        IScreenBuilder AddToHistory();
 
         Task<IScreenBody> Show();
         Task<T> Show<T>() where T : IScreenBody;

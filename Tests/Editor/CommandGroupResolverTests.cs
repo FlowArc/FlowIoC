@@ -285,7 +285,7 @@ namespace FlowIoC.Tests
                 .ToGroupAsSequence(neverBound)
                 .ToSequence<SecondCommand>();
 
-            LogAssert.Expect(LogType.Error, new Regex("could not be found in any context"));
+            LogAssert.Expect(LogType.Error, new Regex("is not bound in"));
 
             outer.Dispatch();
 

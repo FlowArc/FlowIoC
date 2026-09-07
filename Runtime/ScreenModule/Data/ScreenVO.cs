@@ -21,6 +21,5 @@ namespace FlowIoC.ScreenModule.Data
         public object[] Parameters { get; set; }
         public bool HasShowAnimation { get; set; }
         public bool HasHideAnimation { get; set; }
-        public bool AddToHistory { get; set; }
     }
 }
