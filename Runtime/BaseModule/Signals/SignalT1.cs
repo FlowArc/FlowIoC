@@ -45,8 +45,12 @@ namespace FlowIoC.BaseModule.Signals
             if (!_hideCommandLog)
                 FlowLogger.Log(SystemLogType.Signal, $"Signal is dispatched: '{((ISignalBody) this).Name}' with 1 parameter!");
 
-            _callbackOnce?.Invoke(param);
+            // Taken off the signal before it runs, not after. A once-listener that adds another one
+            // - or adds itself back - was writing into a field the next line then cleared, so the
+            // listener it added was never heard from.
+            Action<T1> once = _callbackOnce;
             _callbackOnce = null;
+            once?.Invoke(param);
 
             _internalCallback?.Invoke(this, new[]
             {

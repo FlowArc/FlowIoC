@@ -44,8 +44,12 @@ namespace FlowIoC.BaseModule.Signals
         {
             if (!_hideCommandLog)
                 FlowLogger.Log(SystemLogType.Signal, $"Signal is dispatched: '{((ISignalBody) this).Name}' with 4 parameters!");
-            _callbackOnce?.Invoke(param1, param2, param3, param4);
+            // Taken off the signal before it runs, not after. A once-listener that adds another one
+            // - or adds itself back - was writing into a field the next line then cleared, so the
+            // listener it added was never heard from.
+            Action<T1, T2, T3, T4> once = _callbackOnce;
             _callbackOnce = null;
+            once?.Invoke(param1, param2, param3, param4);
 
             _internalCallback?.Invoke(this, new[]
             {

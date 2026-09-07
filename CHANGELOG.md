@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The binder builds one delegate for the pool return instead of one per dispatch.** Writing the
+  method group at the subscription made a new `Action` every time a signal was dispatched, which a
+  signal that fires each frame notices.
+
+### Fixed
+
+- **A once-listener added while a once-listener was running was dropped unheard.** `Dispatch` invoked
+  the once-list and then cleared the field, so anything the running listener added - including
+  itself, added back - was wiped by that line before it was ever called. The list is taken into a
+  local and the field cleared first, then invoked. All five arities.
+
+- **A command could be put in the pool twice.** A command that retains and releases inside its own
+  `Execute` is back in the pool before that `Execute` returns, so a later step of the same type takes
+  the very same instance out again - and the first step's frame, still on the stack, then read the
+  second run's flags as its own and returned a running command to the pool. Each execution of a
+  pooled instance carries a token now, and the frame checks it before it acts.
+
+- **A command still retained when its group ended was handed to the next dispatch.** It was returned
+  to the pool so the pool would see it again, but whatever it was waiting on is still going and still
+  holds it: its late `Release` then finished a step of somebody else's run. It is dropped instead,
+  which costs one pooled instance and no correctness.
+
+- **The same signal bound twice in one Context threw a null reference.** The base binder answers a
+  duplicate key with null, and the second chain's first `ToSequence` dereferenced it - so a mistake
+  in a Context was reported as a null reference somewhere inside the framework. It is named now, and
+  a binding nothing can reach is handed back so the line the caller wrote still reads and only the
+  first chain runs.
+
 ## [1.7.1] - 2026-09-07
 
 ### Fixed
