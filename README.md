@@ -1045,22 +1045,27 @@ public class CalculateDamageFunction : FunctionReturn<double, string>
 var damage = _functionProvider
     .Execute<CalculateDamageFunction>()
     .AddParams(weaponId)
-    .SetReturn<double>();
+    .RunAndGetResult<double>();
 
-_functionProvider.Execute<RefreshHudFunction>().SetVoid();
+_functionProvider.Execute<RefreshHudFunction>().Run();
 ```
 
 | Base type | Terminator | Shape |
 |---|---|---|
-| `FunctionReturn<TReturn>`, `FunctionReturn<TReturn, T1..T4>` | `.SetReturn<TReturn>()` | returns a value |
-| `FunctionVoid`, `FunctionVoid<T1..T4>` | `.SetVoid()` | returns nothing |
-| `AsyncFunction`, `AsyncFunction<T1>` | `.SetAsync()` | runs on a coroutine, reports back through `AddFunctionCompletedCallback` |
+| `FunctionReturn<TReturn>`, `FunctionReturn<TReturn, T1..T4>` | `.RunAndGetResult<TReturn>()` | returns a value |
+| `FunctionVoid`, `FunctionVoid<T1..T4>` | `.Run()` | returns nothing |
+| `AsyncFunction`, `AsyncFunction<T1>` | `.RunAsync()` | runs on a coroutine, reports back through `AddFunctionCompletedCallback` |
+
+The three share the `Run` prefix on purpose: nothing happens until one of them is called, and typing
+`R` after the dot offers all three at once rather than making you know which one this function needs.
+`RunAndGetResult<double>` is longer than it has to be for the same reason its type parameter is
+spelled out — `double` is what comes back, not something being passed in.
 
 ```csharp
 _functionProvider
     .ExecuteAsync<LoadProfileFunction>()
     .AddFunctionCompletedCallback(OnProfileLoaded)
-    .SetAsync();
+    .RunAsync();
 ```
 
 ---

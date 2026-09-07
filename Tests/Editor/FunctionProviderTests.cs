@@ -42,7 +42,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_void_function_runs_where_it_is_called()
         {
-            _provider.Execute<CountingFunction>().SetVoid();
+            _provider.Execute<CountingFunction>().Run();
 
             Assert.That(Runs, Is.EqualTo(1));
         }
@@ -50,7 +50,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_returning_function_answers()
         {
-            int answer = _provider.Execute<DoubleFunction>().AddParams(21).SetReturn<int>();
+            int answer = _provider.Execute<DoubleFunction>().AddParams(21).RunAndGetResult<int>();
 
             Assert.That(answer, Is.EqualTo(42));
         }
@@ -58,7 +58,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_function_takes_the_parameters_it_was_given()
         {
-            string answer = _provider.Execute<JoinFunction>().AddParams("a", "b").SetReturn<string>();
+            string answer = _provider.Execute<JoinFunction>().AddParams("a", "b").RunAndGetResult<string>();
 
             Assert.That(answer, Is.EqualTo("ab"));
         }
@@ -72,7 +72,7 @@ namespace FlowIoC.Tests
         {
             LogAssert.Expect(LogType.Error, new Regex("Execute parameter"));
 
-            int answer = _provider.Execute<DoubleFunction>().AddParams("not a number").SetReturn<int>();
+            int answer = _provider.Execute<DoubleFunction>().AddParams("not a number").RunAndGetResult<int>();
 
             Assert.That(answer, Is.Zero);
         }
@@ -82,7 +82,7 @@ namespace FlowIoC.Tests
         {
             LogAssert.Expect(LogType.Error, new Regex("Execute signature mismatch"));
 
-            int answer = _provider.Execute<DoubleFunction>().SetReturn<int>();
+            int answer = _provider.Execute<DoubleFunction>().RunAndGetResult<int>();
 
             Assert.That(answer, Is.Zero);
         }
@@ -90,8 +90,8 @@ namespace FlowIoC.Tests
         [Test]
         public void A_function_is_pooled_and_handed_out_again()
         {
-            _provider.Execute<CountingFunction>().SetVoid();
-            _provider.Execute<CountingFunction>().SetVoid();
+            _provider.Execute<CountingFunction>().Run();
+            _provider.Execute<CountingFunction>().Run();
 
             Assert.That(Instances, Has.Count.EqualTo(2));
             Assert.That(Instances[0], Is.SameAs(Instances[1]),
@@ -106,10 +106,10 @@ namespace FlowIoC.Tests
         public void A_retained_function_is_not_handed_to_the_next_caller()
         {
             RetainOnce = true;
-            _provider.Execute<CountingFunction>().SetVoid();
+            _provider.Execute<CountingFunction>().Run();
 
             RetainOnce = false;
-            _provider.Execute<CountingFunction>().SetVoid();
+            _provider.Execute<CountingFunction>().Run();
 
             Assert.That(Instances, Has.Count.EqualTo(2));
             Assert.That(Instances[0], Is.Not.SameAs(Instances[1]),
@@ -120,12 +120,12 @@ namespace FlowIoC.Tests
         public void A_released_function_goes_back_to_the_pool()
         {
             RetainOnce = true;
-            _provider.Execute<CountingFunction>().SetVoid();
+            _provider.Execute<CountingFunction>().Run();
 
             _provider.ReleaseFunctionManually(LastRetained);
 
             RetainOnce = false;
-            _provider.Execute<CountingFunction>().SetVoid();
+            _provider.Execute<CountingFunction>().Run();
 
             Assert.That(Instances[0], Is.SameAs(Instances[1]),
                 "once released it is the instance the next call gets");
