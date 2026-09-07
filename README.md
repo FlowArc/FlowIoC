@@ -1043,29 +1043,31 @@ public class CalculateDamageFunction : FunctionReturn<double, string>
 [Inject] private IFunctionProvider _functionProvider { get; set; }
 
 var damage = _functionProvider
-    .Execute<CalculateDamageFunction>()
+    .Call<CalculateDamageFunction>()
     .AddParams(weaponId)
-    .RunAndGetResult<double>();
+    .ExecuteAndGetResult<double>();
 
-_functionProvider.Execute<RefreshHudFunction>().Run();
+_functionProvider.Call<RefreshHudFunction>().Execute();
 ```
 
 | Base type | Terminator | Shape |
 |---|---|---|
-| `FunctionReturn<TReturn>`, `FunctionReturn<TReturn, T1..T4>` | `.RunAndGetResult<TReturn>()` | returns a value |
-| `FunctionVoid`, `FunctionVoid<T1..T4>` | `.Run()` | returns nothing |
-| `AsyncFunction`, `AsyncFunction<T1>` | `.RunAsync()` | runs on a coroutine, reports back through `AddFunctionCompletedCallback` |
+| `FunctionReturn<TReturn>`, `FunctionReturn<TReturn, T1..T4>` | `.ExecuteAndGetResult<TReturn>()` | returns a value |
+| `FunctionVoid`, `FunctionVoid<T1..T4>` | `.Execute()` | returns nothing |
+| `AsyncFunction`, `AsyncFunction<T1>` | `.ExecuteAsync()` | runs on a coroutine, reports back through `AddFunctionCompletedCallback` |
 
-The three share the `Run` prefix on purpose: nothing happens until one of them is called, and typing
-`R` after the dot offers all three at once rather than making you know which one this function needs.
-`RunAndGetResult<double>` is longer than it has to be for the same reason its type parameter is
-spelled out — `double` is what comes back, not something being passed in.
+`Call<T>()` names the function and hands back a chain; nothing happens until one of the three
+terminators is called, which is why the provider says `Call` and the terminator says `Execute` — the
+same word the function's own method carries. They share the `Execute` prefix on purpose: typing `E`
+after the dot offers all three at once, rather than making you know in advance which one this
+function needs. `ExecuteAndGetResult<double>` is longer than a bare verb so its type parameter reads
+as what it is — `double` is what comes back, not something being passed in.
 
 ```csharp
 _functionProvider
-    .ExecuteAsync<LoadProfileFunction>()
+    .CallAsync<LoadProfileFunction>()
     .AddFunctionCompletedCallback(OnProfileLoaded)
-    .RunAsync();
+    .ExecuteAsync();
 ```
 
 ---

@@ -24,13 +24,13 @@ namespace FlowIoC.BaseModule.Function.Provider
             return this;
         }
 
-        public TReturnType RunAndGetResult<TReturnType>()
+        public TReturnType ExecuteAndGetResult<TReturnType>()
         {
             var result = FunctionProvider.ExecuteFunction<TReturnType>(this);
             return result;
         }
 
-        public void Run()
+        public void Execute()
         {
             FunctionProvider.ExecuteFunction(this);
         }

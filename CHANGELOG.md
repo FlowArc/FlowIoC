@@ -9,14 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The function provider's three terminators are `Run()`, `RunAsync()` and
-  `RunAndGetResult<T>()`.** They were `SetVoid()`, `SetAsync()` and `SetReturn<T>()`, and `Set` said
-  assignment about the line that actually runs the function - `Execute<T>()` builds a chain and
-  nothing happens until one of these is called. They share the `Run` prefix on purpose: typing `R`
-  after the dot offers all three at once, rather than making a caller know in advance which one this
-  function needs. `RunAndGetResult<T>` is longer than a bare verb for the reason `SetReturn` was
-  named that way in the first place - the type parameter is what comes back, and a shorter
-  `Run<double>()` would read as a parameter being passed in.
+- **A function is called with `Call<T>()` and run with `Execute()`, `ExecuteAsync()` or
+  `ExecuteAndGetResult<T>()`.** Both halves of the chain said the wrong thing.
+  `IFunctionProvider.Execute<T>()` did not execute - it names the function and hands back a chain,
+  and nothing happens until the chain is ended - while the terminators `SetVoid()`, `SetAsync()` and
+  `SetReturn<T>()` said assignment about the lines that actually run it. The provider says `Call<T>()`
+  and `CallAsync<T>()` now, and the terminator says `Execute`, which is the same word the function's
+  own method carries and the same word a Command runs under. The three terminators share the
+  `Execute` prefix on purpose: typing `E` after the dot offers all three, rather than making a caller
+  know in advance which one this function needs. `ExecuteAndGetResult<T>` is longer than a bare verb
+  for the reason `SetReturn` was named that way in the first place - the type parameter is what comes
+  back, and a shorter `Execute<double>()` would read as a parameter going in.
 
 ### Fixed
 
