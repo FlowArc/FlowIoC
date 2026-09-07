@@ -13,12 +13,12 @@ namespace FlowIoC.PoolModule.RootsContexts
     public class PoolServiceContext : Context
     {
         private IPoolService _service;
-        private PoolServiceSignals _poolServiceSignals;
+        private PoolServiceInternalSignals _poolServiceSignals;
 
         public override void SignalBindings()
         {
             base.SignalBindings();
-            _poolServiceSignals = InjectionBinderCrossContext.Bind<PoolServiceSignals>();
+            _poolServiceSignals = InjectionBinderCrossContext.Bind<PoolServiceInternalSignals>();
         }
 
         public override void InjectionBindings()

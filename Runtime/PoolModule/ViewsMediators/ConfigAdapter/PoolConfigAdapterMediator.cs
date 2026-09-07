@@ -8,7 +8,7 @@ namespace FlowIoC.PoolModule.ViewsMediators.ConfigAdapter
     internal class PoolConfigAdapterMediator : IMediator
     {
         [Inject] private PoolConfigAdapterView _view { get; set; }
-        [InjectSignal] private PoolServiceSignals _poolServiceSignals { get; set; }
+        [InjectSignal] private PoolServiceInternalSignals _poolServiceSignals { get; set; }
 
         public void OnRegister()
         {

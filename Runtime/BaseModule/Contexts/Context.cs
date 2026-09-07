@@ -55,19 +55,26 @@ namespace FlowIoC.BaseModule.Contexts
             Inject(InjectionBinderCrossContext.GetAllInjectionBindings());
         }
 
+        /// <summary>
+        /// Fills what this binder made, and only that. A binding with no context is an instance
+        /// handed in with <c>BindInstance</c>: nobody created it here, so nobody here fills it.
+        ///
+        /// It used to be filled against whichever context happened to be running - and the shared
+        /// binder is walked by every context in turn, so the last Root in Initialize Order decided
+        /// what a handed-in object's [Inject] members resolved to. Nothing bound that way has any
+        /// today, which is the only reason it was never seen. Whoever hands an object in fills it,
+        /// with <c>context.TryToInjectObject</c>, the same way it belongs to them at teardown.
+        /// </summary>
         private void Inject(List<InjectionBinding> bindings)
         {
             for (int i = 0; i < bindings.Count; i++)
             {
                 InjectionBinding binding = bindings[i];
 
-                if (binding == null)
+                if (binding?.BoundContext == null)
                     continue;
 
-                if (binding.BoundContext == null)
-                    this.TryToInjectObject(binding.Value);
-                else
-                    binding.TryToInjectObject();
+                binding.TryToInjectObject();
             }
         }
 

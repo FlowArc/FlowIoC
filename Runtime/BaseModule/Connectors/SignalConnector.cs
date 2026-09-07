@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Signals;
 
 namespace FlowIoC.BaseModule.Connectors
@@ -10,7 +9,6 @@ namespace FlowIoC.BaseModule.Connectors
     /// </summary>
     public static class SignalConnector
     {
-        [ShowInModelViewer]
         private static readonly Dictionary<string, List<Action>> _disconnectActionsById = new ();
         private static readonly Dictionary<ISignalBody, List<Action>> _disconnectActionsBySignal = new ();
 
@@ -22,7 +20,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects two parameterless signals
         /// </summary>
-        public static void Connect(this ISignal source, ISignal target, string groupId = "signalName")
+        public static void Connect(this ISignal source, ISignal target, string groupId = null)
         {
             Action callback = () => target.Dispatch();
             source.Connect(callback, groupId);
@@ -31,7 +29,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects a parameterless signal to an action
         /// </summary>
-        public static void Connect(this ISignal source, Action callback, string groupId = "signalName")
+        public static void Connect(this ISignal source, Action callback, string groupId = null)
         {
             source.AddListener(callback);
             RegisterDisconnector(source, groupId, () => source.RemoveListener(callback));
@@ -44,7 +42,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects two signals with the same parameter type
         /// </summary>
-        public static void Connect<T>(this ISignal<T> source, ISignal<T> target, string groupId = "signalName")
+        public static void Connect<T>(this ISignal<T> source, ISignal<T> target, string groupId = null)
         {
             Action<T> callback = param => target.Dispatch(param);
             source.Connect(callback, groupId);
@@ -53,7 +51,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects a signal to an action with one parameter
         /// </summary>
-        public static void Connect<T>(this ISignal<T> source, Action<T> callback, string groupId = "signalName")
+        public static void Connect<T>(this ISignal<T> source, Action<T> callback, string groupId = null)
         {
             source.AddListener(callback);
             RegisterDisconnector(source, groupId, () => source.RemoveListener(callback));
@@ -62,7 +60,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects two signals with different parameter types using a converter
         /// </summary>
-        public static void Connect<T1, TResult>(this ISignal<T1> source, ISignal<TResult> target, Func<T1, TResult> converter, string groupId = "signalName")
+        public static void Connect<T1, TResult>(this ISignal<T1> source, ISignal<TResult> target, Func<T1, TResult> converter, string groupId = null)
         {
             Action<T1> callback = sourceParam => target.Dispatch(converter(sourceParam));
             source.Connect(callback, groupId);
@@ -75,7 +73,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects two signals with two parameters
         /// </summary>
-        public static void Connect<T1, T2>(this ISignal<T1, T2> source, ISignal<T1, T2> target, string groupId = "signalName")
+        public static void Connect<T1, T2>(this ISignal<T1, T2> source, ISignal<T1, T2> target, string groupId = null)
         {
             Action<T1, T2> callback = (param1, param2) => target.Dispatch(param1, param2);
             source.Connect(callback, groupId);
@@ -84,7 +82,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects a signal with two parameters to an action
         /// </summary>
-        public static void Connect<T1, T2>(this ISignal<T1, T2> source, Action<T1, T2> callback, string groupId = "signalName")
+        public static void Connect<T1, T2>(this ISignal<T1, T2> source, Action<T1, T2> callback, string groupId = null)
         {
             source.AddListener(callback);
             RegisterDisconnector(source, groupId, () => source.RemoveListener(callback));
@@ -93,7 +91,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Converts a two-parameter signal to a single-parameter signal
         /// </summary>
-        public static void Connect<T1, T2, TResult>(this ISignal<T1, T2> source, ISignal<TResult> target, Func<T1, T2, TResult> converter, string groupId = "signalName")
+        public static void Connect<T1, T2, TResult>(this ISignal<T1, T2> source, ISignal<TResult> target, Func<T1, T2, TResult> converter, string groupId = null)
         {
             Action<T1, T2> callback = (param1, param2) => target.Dispatch(converter(param1, param2));
             source.Connect(callback, groupId);
@@ -106,7 +104,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects two signals with three parameters
         /// </summary>
-        public static void Connect<T1, T2, T3>(this ISignal<T1, T2, T3> source, ISignal<T1, T2, T3> target, string groupId = "signalName")
+        public static void Connect<T1, T2, T3>(this ISignal<T1, T2, T3> source, ISignal<T1, T2, T3> target, string groupId = null)
         {
             Action<T1, T2, T3> callback = (param1, param2, param3) => target.Dispatch(param1, param2, param3);
             source.Connect(callback, groupId);
@@ -115,7 +113,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects a signal with three parameters to an action
         /// </summary>
-        public static void Connect<T1, T2, T3>(this ISignal<T1, T2, T3> source, Action<T1, T2, T3> callback, string groupId = "signalName")
+        public static void Connect<T1, T2, T3>(this ISignal<T1, T2, T3> source, Action<T1, T2, T3> callback, string groupId = null)
         {
             source.AddListener(callback);
             RegisterDisconnector(source, groupId, () => source.RemoveListener(callback));
@@ -124,7 +122,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Converts a three-parameter signal to a single-parameter signal
         /// </summary>
-        public static void Connect<T1, T2, T3, TResult>(this ISignal<T1, T2, T3> source, ISignal<TResult> target, Func<T1, T2, T3, TResult> converter, string groupId = "signalName")
+        public static void Connect<T1, T2, T3, TResult>(this ISignal<T1, T2, T3> source, ISignal<TResult> target, Func<T1, T2, T3, TResult> converter, string groupId = null)
         {
             Action<T1, T2, T3> callback = (param1, param2, param3) => target.Dispatch(converter(param1, param2, param3));
             source.Connect(callback, groupId);
@@ -137,7 +135,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects two signals with four parameters
         /// </summary>
-        public static void Connect<T1, T2, T3, T4>(this ISignal<T1, T2, T3, T4> source, ISignal<T1, T2, T3, T4> target, string groupId = "signalName")
+        public static void Connect<T1, T2, T3, T4>(this ISignal<T1, T2, T3, T4> source, ISignal<T1, T2, T3, T4> target, string groupId = null)
         {
             Action<T1, T2, T3, T4> callback = (param1, param2, param3, param4) => target.Dispatch(param1, param2, param3, param4);
             source.Connect(callback, groupId);
@@ -146,7 +144,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Connects a signal with four parameters to an action
         /// </summary>
-        public static void Connect<T1, T2, T3, T4>(this ISignal<T1, T2, T3, T4> source, Action<T1, T2, T3, T4> callback, string groupId = "signalName")
+        public static void Connect<T1, T2, T3, T4>(this ISignal<T1, T2, T3, T4> source, Action<T1, T2, T3, T4> callback, string groupId = null)
         {
             source.AddListener(callback);
             RegisterDisconnector(source, groupId, () => source.RemoveListener(callback));
@@ -155,7 +153,7 @@ namespace FlowIoC.BaseModule.Connectors
         /// <summary>
         /// Converts a four-parameter signal to a single-parameter signal
         /// </summary>
-        public static void Connect<T1, T2, T3, T4, TResult>(this ISignal<T1, T2, T3, T4> source, ISignal<TResult> target, Func<T1, T2, T3, T4, TResult> converter, string groupId = "signalName")
+        public static void Connect<T1, T2, T3, T4, TResult>(this ISignal<T1, T2, T3, T4> source, ISignal<TResult> target, Func<T1, T2, T3, T4, TResult> converter, string groupId = null)
         {
             Action<T1, T2, T3, T4> callback = (param1, param2, param3, param4) => target.Dispatch(converter(param1, param2, param3, param4));
             source.Connect(callback, groupId);
@@ -165,11 +163,10 @@ namespace FlowIoC.BaseModule.Connectors
 
         #region Disconnect Methods
 
-        public static void Disconnect(this SignalBody source, string groupId = "signalName")
+        public static void Disconnect(this ISignalBody source, string groupId = null)
         {
-            if (groupId == "signalName")
+            if (groupId == null)
             {
-                //     groupId = ((ISignalBody) source).Name;
                 
                 if (!_disconnectActionsBySignal.ContainsKey(source))
                     return;
@@ -231,7 +228,7 @@ namespace FlowIoC.BaseModule.Connectors
         private static void RegisterDisconnector(ISignalBody signal, string groupId, Action disconnectAction)
         {
 
-            if (groupId == "signalName")
+            if (groupId == null)
             {
                 if (!_disconnectActionsBySignal.ContainsKey(signal))
                 {

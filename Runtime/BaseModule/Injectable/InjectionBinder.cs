@@ -94,18 +94,33 @@ namespace FlowIoC.BaseModule.Injectable
             return GetOrCreateInstance<TAbstract, TConcrete>(name);
         }
 
+        /// <summary>
+        /// Hands in an object the binder did not make, under its own type.
+        /// </summary>
         public void BindInstance(object instance, string name = "")
+            => BindInstanceAs(instance.GetType(), instance, name);
+
+        /// <summary>
+        /// The same, under the type the caller wants it found by rather than the type it is.
+        /// </summary>
+        public void BindInstance<TAbstract>(object instance, string name = "")
+            => BindInstanceAs(typeof(TAbstract), instance, name);
+
+        /// <summary>
+        /// What both BindInstance overloads do, written once: they differed only in which type the
+        /// instance is filed under. Nothing is constructed here, so no <see cref="IConstructable"/>
+        /// is collected and no context is recorded - an object handed in belongs to whoever made it
+        /// and outlives the context that bound it.
+        /// </summary>
+        private void BindInstanceAs(Type injectionType, object instance, string name)
         {
-            object hasInstanceExist = GetInstance(instance.GetType(), name);
-            if (hasInstanceExist != null)
+            if (GetInstance(injectionType, name) != null)
             {
                 FlowLogger.LogWarning(SystemLogType.Injection,
-                    _boundContext.GetType().Name + " | There is a same injection! Type: " + instance.GetType().Name +
+                    _boundContext.GetType().Name + " | There is a same injection! Type: " + injectionType.Name +
                     (name != "" ? (" Name: " + name) : ""));
                 return;
             }
-
-            Type injectionType = instance.GetType();
 
             if (!_container.ContainsKey(injectionType))
                 _container.Add(injectionType, new List<InjectionBinding>());
@@ -117,32 +132,6 @@ namespace FlowIoC.BaseModule.Injectable
 
             FlowLogger.Log(SystemLogType.Injection,
                 _boundContext.GetType().Name + " | Binding: " + injectionType.Name + (name != "" ? (" Name: " + name) : ""));
-            _container[injectionType].Add(injectionBinding);
-            NoteContainerChanged();
-        }
-
-        public void BindInstance<TAbstract>(object instance, string name = "")
-        {
-            Type injectionType = typeof(TAbstract);
-            object hasInstanceExist = GetInstance(injectionType, name);
-            if (hasInstanceExist != null)
-            {
-                FlowLogger.LogWarning(SystemLogType.Injection,
-                    _boundContext.GetType().Name + " | There is a same injection! Type: " + typeof(TAbstract).Name +
-                    (name != "" ? (" Name: " + name) : ""));
-                return;
-            }
-
-            if (!_container.ContainsKey(injectionType))
-                _container.Add(injectionType, new List<InjectionBinding>());
-
-            InjectionBinding injectionBinding = _bindingPoolController.GetAvailableBinding<InjectionBinding>();
-            injectionBinding.Name = name;
-            injectionBinding.SetValue(instance);
-            injectionBinding.SetKey(injectionType);
-
-            FlowLogger.Log(SystemLogType.Injection,
-                _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
         }
@@ -423,20 +412,7 @@ namespace FlowIoC.BaseModule.Injectable
             where TBindingType : new()
         {
             TBindingType instance = new TBindingType();
-            Type injectionType = typeof(TBindingType);
-
-            if (!_container.ContainsKey(injectionType))
-                _container.Add(injectionType, new List<InjectionBinding>());
-
-            InjectionBinding injectionBinding = _bindingPoolController.GetAvailableBinding<InjectionBinding>();
-            injectionBinding.Name = name;
-            injectionBinding.SetValue(instance);
-            injectionBinding.SetKey(injectionType);
-            injectionBinding.BoundContext = _boundContext;
-
-            _container[injectionType].Add(injectionBinding);
-            NoteContainerChanged();
-            AddConstructable(instance);
+            RegisterCreated(typeof(TBindingType), instance, name);
 
             return instance;
         }
@@ -445,8 +421,19 @@ namespace FlowIoC.BaseModule.Injectable
             where TConcrete : TAbstract, new()
         {
             TConcrete instance = new TConcrete();
-            Type injectionType = typeof(TAbstract);
+            RegisterCreated(typeof(TAbstract), instance, name);
 
+            return instance;
+        }
+
+        /// <summary>
+        /// What both CreateInstance overloads do, written once: they differed only in which type the
+        /// instance is filed under. The context is recorded and the instance collected as a possible
+        /// <see cref="IConstructable"/>, which is what separates this from an instance handed in -
+        /// the binder made this one, so it runs its PostConstruct and takes it back on teardown.
+        /// </summary>
+        private void RegisterCreated(Type injectionType, object instance, string name)
+        {
             if (!_container.ContainsKey(injectionType))
                 _container.Add(injectionType, new List<InjectionBinding>());
 
@@ -459,8 +446,6 @@ namespace FlowIoC.BaseModule.Injectable
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
             AddConstructable(instance);
-
-            return instance;
         }
 
         public void AddConstructable(object injectionBinding)
@@ -475,10 +460,10 @@ namespace FlowIoC.BaseModule.Injectable
         {
             if (injectionBinding is not IConstructable constructable) return;
             if (!constructable.IsPostConstructed) return;
-            if (constructable.IsDeConstructed) return;
+            if (constructable.IsDeconstructed) return;
 
             constructable.Deconstruct();
-            constructable.IsDeConstructed = true;
+            constructable.IsDeconstructed = true;
             constructable.IsPostConstructed = false;
             _constructables.Remove(constructable);
         }
@@ -495,7 +480,7 @@ namespace FlowIoC.BaseModule.Injectable
                 IConstructable constructable = _constructables[i];
 
                 if (constructable.IsPostConstructed) continue;
-                if (constructable.IsDeConstructed) continue;
+                if (constructable.IsDeconstructed) continue;
 
                 constructable.PostConstruct();
                 constructable.IsPostConstructed = true;

@@ -76,25 +76,11 @@ namespace FlowIoC.PoolModule.Services.Sub.Getter
 
             if (itemConfig.LazyLoad)
             {
-                int createCount = Math.Max(1, itemConfig.InitialCreateCount);
-                T first = null;
+                T created = await FillLazilyAsync(itemKey, groupConfigKey, itemConfig,
+                    async () => await _load.CreateItem(itemConfig) as T);
 
-                for (int i = 0; i < createCount; i++)
-                {
-                    T created = await _load.CreateItem(itemConfig) as T;
-                    if (created == null) continue;
-
-                    created.ItemKey = itemKey;
-                    created.ReturnToPoolAction = _return.Item;
-
-                    if (first == null)
-                        first = created;
-                    else
-                        _runtimeModel.AddToPassivePool(created, itemKey, groupConfigKey);
-                }
-
-                if (first != null)
-                    return CheckOut(first, itemKey, groupConfigKey, parent, callback);
+                if (created != null)
+                    return CheckOut(created, itemKey, groupConfigKey, parent, callback);
             }
 
             if (itemConfig.IsExtendable)
@@ -161,19 +147,46 @@ namespace FlowIoC.PoolModule.Services.Sub.Getter
             T first = null;
 
             for (int i = 0; i < createCount; i++)
-            {
-                T created = create();
-                if (created == null) continue;
+                first = Adopt(create(), itemKey, groupConfigKey, first);
 
-                created.ItemKey = itemKey;
-                created.ReturnToPoolAction = _return.Item;
+            return first;
+        }
 
-                if (first == null)
-                    first = created;
-                else
-                    _runtimeModel.AddToPassivePool(created, itemKey, groupConfigKey);
-            }
+        /// <summary>
+        /// The same batch, awaited. The asynchronous Get used to write this loop out again inline,
+        /// which is how the two drifted apart: only the create call was ever different.
+        /// </summary>
+        private async Task<T> FillLazilyAsync<T>(string itemKey, string groupConfigKey, PoolItemBaseCVO itemConfig,
+            Func<Task<T>> create)
+            where T : class, IPoolableItem
+        {
+            int createCount = Math.Max(1, itemConfig.InitialCreateCount);
+            T first = null;
 
+            for (int i = 0; i < createCount; i++)
+                first = Adopt(await create(), itemKey, groupConfigKey, first);
+
+            return first;
+        }
+
+        /// <summary>
+        /// One item out of the batch: named, wired to return itself, and then either kept back as
+        /// the one the caller gets or parked in the passive pool. This is the whole of what the two
+        /// fills have in common.
+        /// </summary>
+        private T Adopt<T>(T created, string itemKey, string groupConfigKey, T first)
+            where T : class, IPoolableItem
+        {
+            if (created == null)
+                return first;
+
+            created.ItemKey = itemKey;
+            created.ReturnToPoolAction = _return.Item;
+
+            if (first == null)
+                return created;
+
+            _runtimeModel.AddToPassivePool(created, itemKey, groupConfigKey);
             return first;
         }
 

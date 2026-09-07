@@ -10,16 +10,16 @@ namespace FlowIoC.BaseModule.Contexts
 {
     public interface IContext
     {
-        List<IContext> SubContexts { get; set; }
-        List<IContext> AllContexts { get; set; }
+        List<IContext> SubContexts { get; }
+        List<IContext> AllContexts { get; }
 
-        bool IsTest { get; set; }
-        int InitializeOrder { get; set; }
+        bool IsTest { get; }
+        int InitializeOrder { get; }
         bool IsStarted { get; set; }
-        MediationBinder MediationBinder { get; set; }
-        InjectionBinder InjectionBinder { get; set; }
-        InjectionBinderCrossContext InjectionBinderCrossContext { get; set; }
-        ICommandBinder CommandBinder { get; set; }
+        MediationBinder MediationBinder { get; }
+        InjectionBinder InjectionBinder { get; }
+        InjectionBinderCrossContext InjectionBinderCrossContext { get; }
+        ICommandBinder CommandBinder { get; }
         void Initialize(GameObject contextGameObject, int initializeOrder, InjectionBinderCrossContext injectionBinderCrossContext, List<IContext> subContexts, bool isTest = false);
         void Start();
 

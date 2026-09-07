@@ -55,8 +55,8 @@ namespace FlowIoC.BaseModule.Function
 
     public interface IFunctionBody
     {
-        bool IsRetain { get; set; }
-        bool HasRetain { get; set; }
+        bool IsRetain { get; }
+        bool HasRetain { get; }
 
         void Retain();
         void Release();

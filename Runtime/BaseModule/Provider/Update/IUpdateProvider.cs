@@ -1,16 +1,16 @@
-using UnityEngine.Events;
+using System;
 
 namespace FlowIoC.BaseModule.Provider.Update
 {
     public interface IUpdateProvider
     {
-        void AddUpdate(UnityAction callback);
-        void RemoveUpdate(UnityAction callback);
+        void AddUpdate(Action callback);
+        void RemoveUpdate(Action callback);
         
-        void AddLateUpdate(UnityAction callback);
-        void RemoveLateUpdate(UnityAction callback);
+        void AddLateUpdate(Action callback);
+        void RemoveLateUpdate(Action callback);
         
-        void AddFixedUpdate(UnityAction callback);
-        void RemoveFixedUpdate(UnityAction callback);
+        void AddFixedUpdate(Action callback);
+        void RemoveFixedUpdate(Action callback);
     }
 }

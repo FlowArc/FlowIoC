@@ -4,9 +4,9 @@ namespace FlowIoC.BaseModule.Controller
 {
     public interface ICommandBody
     {
-        ICommandGroupResolver CommandGroupResolver { get; set; }
-        bool IsRetain { get; set; }
-        bool HasRetain { get; set; }
+        ICommandGroupResolver CommandGroupResolver { get; }
+        bool IsRetain { get; }
+        bool HasRetain { get; }
 
         void Retain();
         void Release(params object[] commandGroupData);
