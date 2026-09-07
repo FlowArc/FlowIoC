@@ -1,15 +1,15 @@
+using System;
 using FlowIoC.BaseModule.Attributes;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FlowIoC.BaseModule.Provider.Update
 {
     [HideInModelViewer]
     public class UpdateProvider : MonoBehaviour, IUpdateProvider
     {
-        private event UnityAction OnUpdate;
-        private event UnityAction OnLateUpdate;
-        private event UnityAction OnFixedUpdate;
+        private event Action OnUpdate;
+        private event Action OnLateUpdate;
+        private event Action OnFixedUpdate;
 
         private void Awake()
         {
@@ -18,12 +18,12 @@ namespace FlowIoC.BaseModule.Provider.Update
 
         #region Update
 
-        public void AddUpdate(UnityAction callback)
+        public void AddUpdate(Action callback)
         {
             OnUpdate += callback;
         }
 
-        public void RemoveUpdate(UnityAction callback)
+        public void RemoveUpdate(Action callback)
         {
             OnUpdate -= callback;
         }
@@ -32,12 +32,12 @@ namespace FlowIoC.BaseModule.Provider.Update
 
         #region LateUpdate
 
-        public void AddLateUpdate(UnityAction callback)
+        public void AddLateUpdate(Action callback)
         {
             OnLateUpdate += callback;
         }
 
-        public void RemoveLateUpdate(UnityAction callback)
+        public void RemoveLateUpdate(Action callback)
         {
             OnLateUpdate -= callback;
         }
@@ -46,12 +46,12 @@ namespace FlowIoC.BaseModule.Provider.Update
 
         #region FixedUpdate
 
-        public void AddFixedUpdate(UnityAction callback)
+        public void AddFixedUpdate(Action callback)
         {
             OnFixedUpdate += callback;
         }
 
-        public void RemoveFixedUpdate(UnityAction callback)
+        public void RemoveFixedUpdate(Action callback)
         {
             OnFixedUpdate -= callback;
         }

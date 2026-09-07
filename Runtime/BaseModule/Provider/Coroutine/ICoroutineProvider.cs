@@ -1,18 +1,17 @@
 using System;
 using System.Collections;
-using UnityEngine.Events;
 
 namespace FlowIoC.BaseModule.Provider.Coroutine
 {
     public interface ICoroutineProvider
     {
-        UnityEngine.Coroutine WaitForSeconds(float seconds, UnityAction callback);
-        UnityEngine.Coroutine WaitForSecondsRealTime(float seconds, UnityAction callback);
+        UnityEngine.Coroutine WaitForSeconds(float seconds, Action callback);
+        UnityEngine.Coroutine WaitForSecondsRealTime(float seconds, Action callback);
 
-        UnityEngine.Coroutine WaitForEndOfFrame(UnityAction callback);
-        UnityEngine.Coroutine WaitForEndOfFrames(int frameCount, UnityAction callback);
+        UnityEngine.Coroutine WaitForEndOfFrame(Action callback);
+        UnityEngine.Coroutine WaitForEndOfFrames(int frameCount, Action callback);
 
-        UnityEngine.Coroutine WaitUntil(Func<bool> condition, UnityAction callback);
+        UnityEngine.Coroutine WaitUntil(Func<bool> condition, Action callback);
         
         UnityEngine.Coroutine StartCoroutine(IEnumerator enumerator);
         

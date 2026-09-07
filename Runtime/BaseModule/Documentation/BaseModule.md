@@ -257,7 +257,7 @@ public class CameraModel : ICameraModel, IConstructable
     [Inject] private ICameraConfigProvider _configProvider { get; set; }
 
     public bool IsPostConstructed { get; set; }
-    public bool IsDeConstructed   { get; set; }
+    public bool IsDeconstructed   { get; set; }
 
     public void PostConstruct()
     {
@@ -614,7 +614,7 @@ public class MatchModel : IMatchModel, IConstructable
     [Inject] private IRulesProvider _rules { get; set; }
 
     public bool IsPostConstructed { get; set; }
-    public bool IsDeConstructed   { get; set; }
+    public bool IsDeconstructed   { get; set; }
 
     public void PostConstruct() => _turnLimit = _rules.TurnLimit;
 }

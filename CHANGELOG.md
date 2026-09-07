@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The naming and API nits a review had left alone, now that there is nothing to break.** Each one
+  touches a public surface, which is why they waited; they are cheap today and dearer later.
+  `IConstructable.IsDeConstructed` is `IsDeconstructed`. `ICoroutineProvider` and `IUpdateProvider`
+  take `Action` rather than `UnityAction`, which was never a Unity event to begin with. `IContext`,
+  `ICommandBody`, `IFunctionBody` and `IScreenService` declare a setter only where something outside
+  the implementation actually writes one - `ICommandBody.IsRetain` and `HasRetain` were writable from
+  outside the engine, which is the flag the resolver decides a step by. `SignalConnector`'s
+  `"signalName"` sentinel is a plain `null`, its `Disconnect` takes the `ISignalBody` its `Connect`
+  takes rather than the concrete `SignalBody`, and the `[ShowInModelViewer]` on its static field is
+  gone - the Model Viewer reflects instance members only, so it never did anything.
+  `PoolServiceSignals` is `PoolServiceInternalSignals` and `internal`, next to
+  `ScreenServiceInternalSignals`: it has no `Incoming` and no `Outgoing` because its two signals are
+  traffic between the config adapter and the service, and an internal holder is what that is.
+  `InjectionBinder`'s two `BindInstance` bodies and two `CreateInstance` bodies are one each, since
+  they differed only in which type the instance is filed under.
+
+- **A context fills what its binder made, and nothing else.** `InjectAllInstances` walked the shared
+  binder too, and an instance handed in with `BindInstance` records no context - so it was injected
+  once per context and the last Root in Initialize Order decided what its `[Inject]` members
+  resolved to. Nothing bound that way has any today, which is the only reason it was never seen.
+  Whoever hands an object in fills it, the same way it belongs to them at teardown.
+
 - **A log message spells names out; `nameof` is no longer used in one.**
   `$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand` is a real
   reference to the type, so Find Usages and a plain search answer *where is this Command used* with

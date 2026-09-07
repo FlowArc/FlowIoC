@@ -7,7 +7,7 @@ namespace FlowIoC.ScreenModule.Service
 {
     public interface IScreenService
     {
-        LoadSubService Load { get; set; }
+        LoadSubService Load { get; }
 
         /// <summary><i><b>&gt;FlowIoC&lt;</b></i>
         /// <br></br>You have to use the "Show" method at the end of the line
@@ -19,9 +19,9 @@ namespace FlowIoC.ScreenModule.Service
         /// <returns></returns>
         IScreenBuilder Open<T>(int managerId = 0) where T : IScreenBody;
 
-        CheckSubService Check { get; set; }
-        TryGetSubService TryGet { get; set; }
-        HideSubService Hide { get; set; }
-        UnloadSubService Unload { get; set; }
+        CheckSubService Check { get; }
+        TryGetSubService TryGet { get; }
+        HideSubService Hide { get; }
+        UnloadSubService Unload { get; }
     }
 }

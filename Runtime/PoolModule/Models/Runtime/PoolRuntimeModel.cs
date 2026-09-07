@@ -21,7 +21,7 @@ namespace FlowIoC.PoolModule.Models.Runtime
         private Transform _parent;
 
         public bool IsPostConstructed { get; set; }
-        public bool IsDeConstructed { get; set; }
+        public bool IsDeconstructed { get; set; }
 
         public void PostConstruct()
         {

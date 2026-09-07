@@ -33,7 +33,7 @@ namespace FlowIoC.Tests
         private class Constructable : IConstructable
         {
             public bool IsPostConstructed { get; set; }
-            public bool IsDeConstructed { get; set; }
+            public bool IsDeconstructed { get; set; }
             public bool Deconstructed;
 
             public void PostConstruct()

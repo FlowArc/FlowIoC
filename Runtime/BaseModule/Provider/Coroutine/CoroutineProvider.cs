@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using FlowIoC.BaseModule.Attributes;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FlowIoC.BaseModule.Provider.Coroutine
 {
@@ -16,9 +15,9 @@ namespace FlowIoC.BaseModule.Provider.Coroutine
 
         #region WaitForSeconds
 
-        public UnityEngine.Coroutine WaitForSeconds(float seconds, UnityAction callback)
+        public UnityEngine.Coroutine WaitForSeconds(float seconds, Action callback)
         {
-            IEnumerator _(float secs, UnityAction call)
+            IEnumerator _(float secs, Action call)
             {
                 yield return new WaitForSeconds(secs);
 
@@ -28,9 +27,9 @@ namespace FlowIoC.BaseModule.Provider.Coroutine
             return StartCoroutine(_(seconds, callback));
         }
 
-        public UnityEngine.Coroutine WaitForSecondsRealTime(float seconds, UnityAction callback)
+        public UnityEngine.Coroutine WaitForSecondsRealTime(float seconds, Action callback)
         {
-            IEnumerator _(float secs, UnityAction call)
+            IEnumerator _(float secs, Action call)
             {
                 yield return new WaitForSecondsRealtime(secs);
 
@@ -44,9 +43,9 @@ namespace FlowIoC.BaseModule.Provider.Coroutine
 
         #region WaitEndOfFrame
 
-        public UnityEngine.Coroutine WaitForEndOfFrame(UnityAction callback)
+        public UnityEngine.Coroutine WaitForEndOfFrame(Action callback)
         {
-            IEnumerator _(UnityAction call)
+            IEnumerator _(Action call)
             {
                 yield return new WaitForEndOfFrame();
                 call?.Invoke();
@@ -55,9 +54,9 @@ namespace FlowIoC.BaseModule.Provider.Coroutine
             return StartCoroutine(_(callback));
         }
 
-        public UnityEngine.Coroutine WaitForEndOfFrames(int frameCount, UnityAction callback)
+        public UnityEngine.Coroutine WaitForEndOfFrames(int frameCount, Action callback)
         {
-            IEnumerator _(int fC, UnityAction call)
+            IEnumerator _(int fC, Action call)
             {
                 for (int ii = 0; ii < fC; ii++)
                     yield return new WaitForEndOfFrame();
@@ -71,9 +70,9 @@ namespace FlowIoC.BaseModule.Provider.Coroutine
 
         #endregion
 
-        public UnityEngine.Coroutine WaitUntil(Func<bool> condition, UnityAction callback)
+        public UnityEngine.Coroutine WaitUntil(Func<bool> condition, Action callback)
         {
-            IEnumerator _(Func<bool> condition, UnityAction call)
+            IEnumerator _(Func<bool> condition, Action call)
             {
                 yield return new WaitUntil(condition);
 

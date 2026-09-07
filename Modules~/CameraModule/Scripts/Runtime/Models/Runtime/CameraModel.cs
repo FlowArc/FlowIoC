@@ -23,7 +23,7 @@ namespace Modules.CameraModule.Models.Runtime
         private const int INACTIVE_PRIORITY = 0;
 
         public bool IsPostConstructed { get; set; }
-        public bool IsDeConstructed { get; set; }
+        public bool IsDeconstructed { get; set; }
 
         [ShowInModelViewer] private Dictionary<CameraName, Vector3> _cameraLastPosition = new();
 

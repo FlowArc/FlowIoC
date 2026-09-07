@@ -82,7 +82,7 @@ namespace FlowIoC.PoolModule.Models.Config
         public void RegisterPoolConfig(KeyValuePair<string, PoolGroupCVO> config) => AddGroupConfig(config.Key, config.Value);
         public void UnregisterPoolConfig(KeyValuePair<string, PoolGroupCVO> config) => RemoveGroupConfig(config.Key);
         public bool IsPostConstructed { get; set; }
-        public bool IsDeConstructed { get; set; }
+        public bool IsDeconstructed { get; set; }
 
     }
 }

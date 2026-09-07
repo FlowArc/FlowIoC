@@ -8,7 +8,7 @@ namespace FlowIoC.Editor.CodeGenerator.TempModels
         //@Injectables
 
         public bool IsPostConstructed { get; set; }
-        public bool IsDeConstructed { get; set; }
+        public bool IsDeconstructed { get; set; }
         public void PostConstruct()
         {
         }
