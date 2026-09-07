@@ -30,6 +30,68 @@ namespace FlowIoC.ConsoleModule
         private static readonly CollapseKeyBuilder CollapseKeys = new();
         private static readonly FlowStackFrameFilter StackFrames = new();
 
+        private static int _flowCounter;
+        private static int _currentFlowId;
+        private static int _currentParentFlowId;
+
+        /// <summary>
+        /// The flow being executed right now, which every log written meanwhile belongs to.
+        /// A plain static on a main-thread assumption - FlowLogger.Logs already makes that
+        /// assumption, since Logs.Add is unguarded. A log written from a background thread
+        /// carries 0 and reads as a root.
+        /// </summary>
+        public static int CurrentFlowId => _currentFlowId;
+
+        /// <summary>The flow the current one was started from. 0 at a root.</summary>
+        public static int CurrentParentFlowId => _currentParentFlowId;
+
+        /// <summary>
+        /// Takes the next flow id and records the flow it was started from. Returns nothing so
+        /// that it can carry [Conditional]: with ENABLE_LOG undefined the call and its
+        /// arguments are removed, and a shipping build pays nothing for the console's tree.
+        /// A caller must initialise the variables it passes, because nothing assigns them then.
+        /// </summary>
+        [Conditional("ENABLE_LOG")]
+        public static void NextFlowId(ref int flowId, ref int parentFlowId)
+        {
+            flowId = ++_flowCounter;
+            parentFlowId = _currentFlowId;
+        }
+
+        /// <summary>
+        /// Makes a flow current, handing back the flow and parent it displaced. The parent is
+        /// carried rather than derived, so a log written three steps into a chain names the
+        /// same parent as the one written at its start.
+        /// </summary>
+        [Conditional("ENABLE_LOG")]
+        public static void EnterFlow(int flowId, int parentFlowId, ref int previousFlowId,
+            ref int previousParentFlowId)
+        {
+            previousFlowId = _currentFlowId;
+            previousParentFlowId = _currentParentFlowId;
+            _currentFlowId = flowId;
+            _currentParentFlowId = parentFlowId;
+        }
+
+        /// <summary>
+        /// Copies the flow that is current into a caller's own fields, for something that runs
+        /// inside a flow somebody else started and has to re-enter it later.
+        /// </summary>
+        [Conditional("ENABLE_LOG")]
+        public static void CaptureCurrentFlow(ref int flowId, ref int parentFlowId)
+        {
+            flowId = _currentFlowId;
+            parentFlowId = _currentParentFlowId;
+        }
+
+        /// <summary>Puts back what EnterFlow displaced.</summary>
+        [Conditional("ENABLE_LOG")]
+        public static void ExitFlow(int previousFlowId, int previousParentFlowId)
+        {
+            _currentFlowId = previousFlowId;
+            _currentParentFlowId = previousParentFlowId;
+        }
+
         /// <summary>
         /// True while a log of ours is being handed to Unity's console. The editor bridge reads
         /// it to drop the message Unity hands straight back, so a log that made that round trip
@@ -43,6 +105,9 @@ namespace FlowIoC.ConsoleModule
             Logs.Clear();
             _settings = null;
             IsWritingToUnityConsole = false;
+            _flowCounter = 0;
+            _currentFlowId = 0;
+            _currentParentFlowId = 0;
             // OnLogAdded intentionally NOT cleared: the FlowConsole editor window
             // subscribes once in OnEnable and would otherwise silently lose its
             // subscription on every Play entry when domain reload is disabled.
@@ -469,6 +534,8 @@ namespace FlowIoC.ConsoleModule
             log.Frame = Time.frameCount;
             log.Realtime = Time.realtimeSinceStartup;
             log.BlameTypeName = blame?.FullName;
+            log.FlowId = _currentFlowId;
+            log.ParentFlowId = _currentParentFlowId;
 
             return log;
         }
