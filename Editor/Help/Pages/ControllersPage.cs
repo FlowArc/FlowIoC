@@ -546,11 +546,10 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    private void OnFinished() => Release();\n"
                 + "}");
             painter.Note(
-                "Release belongs on the way back in, not before Execute returns. A Command may "
-                + "retain and release inside one Execute; a Function may not - Release pools the "
-                + "instance and clears the flag, and the run's own check then finds nothing retained "
-                + "and pools it a second time. Release on a function that never retained is "
-                + "reported and does nothing.");
+                "A Function may retain and release inside one Execute, the way a Command may: the "
+                + "instance is already back in the pool when the run is judged, and the run knows "
+                + "not to pool it again. Release on a function that never retained is reported and "
+                + "does nothing.");
 
             painter.Space();
             painter.Note(
