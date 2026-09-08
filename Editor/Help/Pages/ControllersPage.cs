@@ -389,6 +389,33 @@ namespace FlowIoC.Editor.Help.Pages
                 + "here, in the sequence, and not in the Connector. A Connector translates one "
                 + "announcement into one order; it does not decide what a thing having happened "
                 + "should cause.");
+
+            painter.Separator();
+            painter.SubHeading("Silencing a command that runs every frame");
+            painter.Paragraph(
+                "The Flow Console logs every command as it executes and again as it returns to "
+                + "the pool, which is what makes a flow readable - until one command runs sixty "
+                + "times a second and buries the rest. [HideCommandLog] drops those two lines for "
+                + "that command alone.");
+            painter.Code(
+                "[HideCommandLog]\n"
+                + "internal class AdvanceTimersCommand : Command\n"
+                + "{\n"
+                + "    [Inject] private ITimerModel _timers { get; set; }\n"
+                + "\n"
+                + "    public override void Execute() => _timers.Advance();\n"
+                + "}",
+                "AdvanceTimersCommand.cs - Scripts/Runtime/Controllers");
+            painter.Paragraph(
+                "It silences the framework's lines only. What the command logs itself still "
+                + "appears, which is what makes the attribute worth reaching for instead of "
+                + "switching the whole channel off - the loop stops narrating itself and still "
+                + "says the one thing you asked it to.");
+            painter.Note(
+                "The signal half of the same loop is silenced separately, with "
+                + "new Signal(hideCommandLog: true) where the signal is declared. The attribute "
+                + "does not cover the dispatch and the flag does not cover the command lines, so "
+                + "a fully silent loop carries both.");
         }
 
         /// <summary>

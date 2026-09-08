@@ -9,6 +9,7 @@ adding logs.
 Open it at **Tools ▸ FlowIoC ▸ Console ▸ Flow Console**.
 
 - [The Two Kinds of Channel](#the-two-kinds-of-channel)
+- [The Window](#the-window)
 - [Logging From Your Code](#logging-from-your-code)
 - [Formatting With Profiles](#formatting-with-profiles)
 - [Settings](#settings)
@@ -39,6 +40,14 @@ Open it at **Tools ▸ FlowIoC ▸ Console ▸ Flow Console**.
 You never write to these — they are the framework narrating itself. You toggle them
 in the console window.
 
+Two of them are not the framework narrating itself. `Unity` carries anything Unity
+wrote — a `Debug.Log`, an exception, a native warning — and `Compiler` carries compile
+errors and warnings, taken from `CompilationPipeline`. They are read through Unity's
+public API and nothing else, so a Unity upgrade cannot quietly break them. Both are
+recorded whether or not `ENABLE_LOG` is defined: turning the define off is a statement
+about *your* logging, and a console that then showed no compile errors would be useless
+at the moment it is most needed.
+
 **Project channels** are yours: one per module, auto-registered, and regenerated into
 `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` as `const int` fields.
 
@@ -57,6 +66,88 @@ namespace FlowIoC.ConsoleModule
 
 Because they are generated, a renamed or newly created module gets its channel
 without anyone editing a list.
+
+---
+
+## The Window
+
+Everything Unity's console does, Flow Console does the same way, so it can be the only
+console you keep open.
+
+| Toolbar | What it does |
+|---|---|
+| `Clear ▾` | Empties the list. The arrow holds **Clear on Play**, **Clear on Recompile** and **Clear on Build**. |
+| `Collapse` | Folds rows that say the same thing from the same place onto one line with a count. The row keeps the place of its first occurrence, so the list does not reorder itself while you read it. |
+| `Error Pause` | Pauses play mode on the next error, exception or assert. |
+| `Flow` | Groups the rows into the flows they belong to. See below. |
+| `Pinned` | Shows only the rows you pinned. |
+| `Timing` | Leads each row with the frame it was written in and the gap since the row above, instead of the clock. |
+| search box | See [Searching](#searching). |
+| `Locate` | Scrolls the selected row back into view. |
+| `1/2/3 lines` | How many lines a row shows. Two is Unity's shape: the message, and underneath it where it came from. |
+| `Source:` | `StackTraceCapture`, raised and lowered where the flow is being read rather than three windows away. |
+| `Presets` | Channel filters saved under a name. Two ship with the console; the rest are yours. |
+| `Export` | Saves or copies the rows that are showing, as plain text. |
+
+The list follows new logs down while it is resting at the bottom and leaves you alone
+once you scroll up. Arrows walk it, PageUp/PageDown move by a screen, Home and End take
+the two ends, **Enter** opens the selected row's source and **Ctrl+C** copies it with its
+trace. **P** pins the selected row.
+
+Double-clicking a row opens the code that wrote it. Where a diagnostic is the framework
+complaining about your code — a command that released without retaining, a view with no
+context above it — the row opens **your** file, not the framework's guard clause.
+
+A line is drawn across the list wherever a play session begins or ends, so a list that
+spans one does not run the editing and the run together.
+
+The list survives a recompile. `FlowLogger.Logs` is a static and a domain reload would
+otherwise empty it at the moment a compile error most wants reading, so the newest five
+thousand rows are written down before the reload and read back after it.
+
+### Channels
+
+Clicking a channel hides or shows it. **Alt+clicking** one narrows the console to it,
+and alt+clicking the one that is already alone brings the rest back — twenty-nine clicks
+are not an answer when one channel of thirty is interesting.
+
+### Searching
+
+Terms are ANDed, a term starting with `-` excludes, and a term wrapped in slashes is a
+regular expression. What matched is painted behind the text, because a narrowed list says
+which rows survived but not why.
+
+```
+screen open        both words
+-tick              everything except the tick loop
+probe -retry       both at once
+/probe (1|2)\d/    a regular expression
+```
+
+A half-typed expression says `bad pattern` beside the box rather than quietly emptying
+the list. Beside the severity counters is how many rows are shown against how many the
+console is holding.
+
+### Pinning
+
+Pinning a row is you saying this one is not noise, so it outranks everything that hides
+rows: the channel switches, the severity toggles, the trim that bounds the list, and the
+automatic clears on play, recompile and build. A search still narrows past it — that is
+looking for something rather than hiding a kind of log — and the `Clear` button still
+empties everything, because pressing it is asking for exactly that.
+
+### Flow
+
+Every log the framework writes while a signal runs its commands carries the id of that
+flow, and a flow started from inside another carries its parent's. `Flow` reads those
+back: each flow opens with a line that folds it away, and a nested one sits indented
+under it. Read straight down, a busy frame is four operations interleaved; grouped, each
+one is a block you can follow.
+
+A silenced command contributes no node — `[HideCommandLog]` suppresses the framework's
+lines and there is nothing left to make one from — so a log you wrote inside it sits
+directly under the flow's root. Inventing a node for a command somebody asked to hide
+would undo the request.
 
 ---
 
@@ -141,7 +232,9 @@ The `CD_FlowConsole` asset controls the whole layer.
 | `LogTypes` | The channel list: name, value, colour, visibility, and whether the channel is mandatory or auto-registered. |
 
 Per-channel, `IsVisible` is what the window's toggles write. `IsMandatory` marks a
-channel that cannot be hidden. `ProfileName` attaches a default profile to every log
+channel that cannot be **removed** — it is what the framework's own channels carry, so
+that module detection never deletes one — and says nothing about hiding: every channel
+can be switched off in the window. `ProfileName` attaches a default profile to every log
 on that channel, so a module can have a consistent look without passing a profile at
 each call site.
 
@@ -198,9 +291,13 @@ Both are needed for a fully silent loop — the signal flag does not cover the c
 lines and vice versa. Neither affects your own `FlowLogger` calls inside the command
 body.
 
-To hide a whole project channel, clear its `IsVisible` in the settings. That is a
-global switch, not a per-loop one, so prefer the two flags above when only one loop
-is noisy.
+To hide a whole project channel, clear its `IsVisible` in the settings, or switch it off
+in the window. That is a global switch, not a per-loop one, so prefer the two flags above
+when only one loop is noisy.
+
+For a loop you did not write — somebody else's module, or the framework's own lines — the
+search box does the same job without touching any code: `-tick` hides every row whose
+message carries the word and leaves the channel alone.
 
 See [Commands — Silencing High-Frequency Chains](../../BaseModule/Controller/Documentation/Controller.md#silencing-high-frequency-chains)
 for the full table.
@@ -322,7 +419,15 @@ you need into the message itself.
 ### The console is slow with a long session
 
 Every log is retained in `FlowLogger.Logs`. Call `FlowLogger.ClearLogs()` between
-test runs, or at a natural boundary such as returning to the menu.
+test runs, or at a natural boundary such as returning to the menu — or turn on **Clear
+on Play** and let entering play mode do it.
+
+### A pinned row disappeared
+
+The `Clear` button empties everything, pins included. Everything else leaves them: the
+automatic clears, the trim at `MaxLogCount`, a recompile, and turning a channel or a
+severity off. A search is the other exception, and it is not a fault — a search is
+looking for something, and answering it with rows pinned for another reason is noise.
 
 ---
 

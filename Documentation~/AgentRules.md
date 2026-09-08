@@ -66,6 +66,12 @@ so follow the rules below deliberately.
   is opened and written, and a scene that is **open** is changed and left dirty, because whatever
   else is unsaved in it belongs to whoever opened it. That last line is the one a tool never
   crosses - saving somebody's open scene destroys the only escape they had.
+- **A diagnostic points at the code that caused it, never at the guard that noticed.** A warning or
+  an error is read by double-clicking it, and what has to open is the Command that released without
+  retaining or the View with no Context above it - not the framework's `if`. So a diagnostic is
+  written with the type it is about in hand, and the console skips the framework's own stack frames
+  when it works out where a log came from. Opening `CommandGroupResolver` tells the reader nothing
+  they did not already know.
 - **A decision belongs in a Command, wherever it would otherwise be taken.** That is the rule the
   next several are instances of: a Context declares bindings and nothing else, a View holds no `if`
   about game rules, a Mediator holds none either, and a System type holds no method that does work.
