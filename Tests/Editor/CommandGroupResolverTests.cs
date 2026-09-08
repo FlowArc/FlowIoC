@@ -475,6 +475,62 @@ namespace FlowIoC.Tests
 
         #region Command groups
 
+        /// <summary>
+        /// A group step inside a group step. A sub group reports to the resolver that started it
+        /// rather than through a subscription it was handed, so two levels are what prove the chain
+        /// composes: the innermost finishing has to walk back up through both parents.
+        /// </summary>
+        [Test]
+        public void A_group_step_inside_a_group_step_reports_all_the_way_up()
+        {
+            Signal outer = new Signal(true);
+            Signal middle = new Signal(true);
+            Signal inner = new Signal(true);
+
+            _commandBinder.Bind(inner).ToSequence<SecondCommand>();
+            _commandBinder.Bind(middle)
+                .ToGroupAsSequence(inner)
+                .ToSequence<ThirdCommand>();
+            _commandBinder.Bind(outer)
+                .ToSequence<FirstCommand>()
+                .ToGroupAsSequence(middle)
+                .ToSequence<SecondCommand>();
+
+            outer.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"first", "second", "third", "second"}));
+        }
+
+        /// <summary>
+        /// The same two levels, resolved a frame later. Nothing is on the stack when the innermost
+        /// command releases, so the finish is walked up entirely by the parents each sub group was
+        /// told about.
+        /// </summary>
+        [Test]
+        public void A_retained_step_in_a_nested_group_carries_on_when_it_releases()
+        {
+            Signal outer = new Signal(true);
+            Signal middle = new Signal(true);
+            Signal inner = new Signal(true);
+
+            _commandBinder.Bind(inner).ToSequence<RetainingCommand>();
+            _commandBinder.Bind(middle)
+                .ToGroupAsSequence(inner)
+                .ToSequence<ThirdCommand>();
+            _commandBinder.Bind(outer)
+                .ToGroupAsSequence(middle)
+                .ToSequence<SecondCommand>();
+
+            outer.Dispatch();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"retaining"}), "everything behind the retained command waits");
+
+            LastRetained.Release();
+
+            Assert.That(Steps, Is.EqualTo(new[] {"retaining", "third", "second"}),
+                "the release walked the finish back up through both groups");
+        }
+
         [Test]
         public void A_group_step_runs_the_other_signal_s_chain_in_place()
         {
@@ -892,6 +948,7 @@ namespace FlowIoC.Tests
         {
             public override void Execute() => Depths.Add(new System.Diagnostics.StackTrace(false).FrameCount);
         }
+
 
         /// <summary>Dispatches another signal from inside its own Execute, the way a step that
         /// hands work to another module does.</summary>

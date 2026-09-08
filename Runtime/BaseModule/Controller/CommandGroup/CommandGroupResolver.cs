@@ -62,6 +62,17 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         // feed only the first of two parallel steps sitting behind a sequence step that released.
         private object[] _pendingParameters;
 
+        // The resolver this one is a sub group of, and the run that parent was on when it started
+        // this step. A sub group used to report through a closure hung on GroupExecutionFinished,
+        // which cost two allocations per group step - the delegate, and the display class the
+        // captured run id forced. The resolver is pooled, so holding the two here costs nothing,
+        // and the parent is told directly. Both are null and 0 for a dispatch's own group.
+        //
+        // Set by SetParent before Initialize runs, and therefore not cleared by Initialize - which
+        // is safe because Dispose clears them and nothing reaches the pool without being disposed.
+        private CommandGroupResolver _parent;
+        private int _parentRunId;
+
         // Which run the resolver is on. The resolver is pooled, so a frame of a finished run can
         // still be on the stack when a nested dispatch takes the same instance back out of the pool
         // and starts a new run on it. Every place that carries on after calling out reads this and
@@ -86,6 +97,17 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         #endregion
 
         #region Initialization and Cleanup
+
+        /// <summary>
+        /// Names the resolver this one is a sub group of, and the run that parent was on. It must be
+        /// called before <see cref="Initialize"/>, because a sub group of synchronous steps runs to
+        /// the end inside that call and reports before it returns.
+        /// </summary>
+        internal void SetParent(CommandGroupResolver parent, int parentRunId)
+        {
+            _parent = parent;
+            _parentRunId = parentRunId;
+        }
 
         public void Initialize(ICommandBinding commandBinding, CommandBinder commandBinder, params object[] signalParameters)
         {
@@ -132,6 +154,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _retainedCommands.Clear();
 
             GroupExecutionFinished = null;
+            _parent = null;
+            _parentRunId = 0;
             _steps = null;
             _signalParameters = null;
             _executionIndex = 0;
@@ -361,18 +385,37 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         }
 
         /// <summary>
-        /// Ends the run before it says so. The listener is the binder putting the resolver back in
-        /// its pool, and a step of whatever runs next can take it straight out again - so anything
-        /// this method did after the callback would be done to somebody else's run. Disposing first
-        /// means there is nothing left to do after it.
+        /// Ends the run before it says so. Whoever is told puts the resolver back in its pool, and a
+        /// step of whatever runs next can take it straight out again - so anything this method did
+        /// after that would be done to somebody else's run. Everything it needs is read into locals
+        /// first and the run is disposed, which leaves nothing to read afterwards.
+        ///
+        /// Who is told depends on what started the group, and the two are exclusive: a dispatch's
+        /// own group has the listener the binder subscribed and no parent, and a sub group has a
+        /// parent and no listener.
         /// </summary>
         private void CompleteGroupExecution()
         {
             if (_isDisposed) return;
 
             Action<ICommandGroupResolver> finished = GroupExecutionFinished;
+            CommandGroupResolver parent = _parent;
+            int parentRunId = _parentRunId;
+            CommandBinder binder = _commandBinder;
+
             Dispose();
-            finished?.Invoke(this);
+
+            if (parent == null)
+            {
+                finished?.Invoke(this);
+                return;
+            }
+
+            // Pooled before the parent is told, so the instance is there for whatever the parent
+            // starts next - and through the binder this run belonged to rather than through the one
+            // the parent may since have been re-initialised with.
+            binder.ReturnGroupToPool(this);
+            parent.OnSubGroupFinished(parentRunId);
         }
 
         #endregion
@@ -398,24 +441,14 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
-            ICommandGroupResolver subGroup = _commandBinder.GetAvailableGroup();
+            CommandGroupResolver subGroup = _commandBinder.GetAvailableGroup();
             _completionCount++;
 
-            // The run this step belongs to. The sub group reports back through a closure, and by
-            // then this resolver may itself have finished, gone to the pool and been taken out for
-            // something else - in which case the step it is reporting no longer exists.
-            int runId = _runId;
-
-            Action<ICommandGroupResolver> onFinish = null;
-            onFinish = g =>
-            {
-                g.GroupExecutionFinished -= onFinish;
-                _commandBinder.ReturnGroupToPool(g);
-
-                if (runId == _runId)
-                    OnSubGroupFinished();
-            };
-            subGroup.GroupExecutionFinished += onFinish;
+            // The sub group is told who to report to and which run of this resolver it belongs to,
+            // rather than being subscribed to with a closure that captured the same two things. It
+            // has to be told before Initialize, which runs a group of synchronous steps to the end
+            // and reports before it returns.
+            subGroup.SetParent(this, _runId);
 
             // A sub group is a branch of this flow rather than part of it, so it takes a flow of
             // its own with this one as its parent - the same shape a nested dispatch gets.
@@ -500,9 +533,15 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         #region Callbacks
 
-        private void OnSubGroupFinished()
+        /// <summary>
+        /// A sub group of this resolver has finished and already put itself back in the pool. The
+        /// run id it carries is the one this resolver was on when the step started: by now this
+        /// resolver may itself have finished, gone to the pool and been taken out for something
+        /// else, in which case the step being reported no longer exists.
+        /// </summary>
+        internal void OnSubGroupFinished(int runId)
         {
-            if (_isDisposed) return;
+            if (_isDisposed || runId != _runId) return;
 
             HandleStepCompletion(null);
         }

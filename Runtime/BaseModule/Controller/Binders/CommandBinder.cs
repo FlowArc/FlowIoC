@@ -16,7 +16,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
     {
         private readonly Dictionary<Type, bool> _hideCommandLogCache = new();
         private readonly TypePool<CommandBody> _commandPool = new();
-        private readonly Stack<ICommandGroupResolver> _commandGroupPool = new();
+        private readonly Stack<CommandGroup.CommandGroupResolver> _commandGroupPool = new();
 
         /// <summary>
         /// The signals whose command callback this binder put there. It is what UnBind gives back,
@@ -204,9 +204,9 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
         #region CommandGroupPool
 
-        internal ICommandGroupResolver GetAvailableGroup()
+        internal CommandGroup.CommandGroupResolver GetAvailableGroup()
         {
-            if (_commandGroupPool.TryPop(out ICommandGroupResolver group))
+            if (_commandGroupPool.TryPop(out CommandGroup.CommandGroupResolver group))
             {
                 return group;
             }
@@ -214,12 +214,22 @@ namespace FlowIoC.BaseModule.Controller.Binders
             return new CommandGroup.CommandGroupResolver();
         }
 
+        /// <summary>
+        /// Takes the interface rather than the concrete resolver because this is what is subscribed
+        /// to <see cref="ICommandGroupResolver.GroupExecutionFinished"/>, whose delegate type is the
+        /// interface. Nothing else implements it and only this binder creates them, so the pattern
+        /// below always matches; it is here so that the pool cannot be handed something it would
+        /// later give back as a resolver.
+        /// </summary>
         internal void ReturnGroupToPool(ICommandGroupResolver groupResolver)
         {
-            bool hideLog = groupResolver is CommandGroup.CommandGroupResolver concrete && concrete.IsHideLog;
+            if (groupResolver is not CommandGroup.CommandGroupResolver concrete)
+                return;
 
-            groupResolver.Dispose();
-            _commandGroupPool.Push(groupResolver);
+            bool hideLog = concrete.IsHideLog;
+
+            concrete.Dispose();
+            _commandGroupPool.Push(concrete);
 
             if (!hideLog)
                 FlowLogger.LogPlumbing(SystemLogType.CommandOperation, "Command group returned to pool");
