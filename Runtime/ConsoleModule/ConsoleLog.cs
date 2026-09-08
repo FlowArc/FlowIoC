@@ -41,6 +41,13 @@ namespace FlowIoC.ConsoleModule
         public float Realtime;
 
         /// <summary>
+        /// Whether the game was running when this was written. The console draws a line wherever
+        /// this changes, so a list that spans a play session says where the session began and
+        /// ended rather than running the two together.
+        /// </summary>
+        public bool InPlayMode;
+
+        /// <summary>
         /// The full name of the type this diagnostic is about, when it knows. Double-clicking
         /// the log opens this type's script even when the object was never on the stack - an
         /// asynchronous release, or a resolver noticing a step later than it happened.

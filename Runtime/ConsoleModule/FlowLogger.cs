@@ -471,7 +471,8 @@ namespace FlowIoC.ConsoleModule
                 SourceFilePath = filePath,
                 SourceLineNumber = lineNumber,
                 Frame = Time.frameCount,
-                Realtime = Time.realtimeSinceStartup
+                Realtime = Time.realtimeSinceStartup,
+                InPlayMode = Application.isPlaying
             };
 
             if (Settings.TryGetLogType(channel, out var typeInfo))
@@ -568,6 +569,7 @@ namespace FlowIoC.ConsoleModule
 
             log.Frame = Time.frameCount;
             log.Realtime = Time.realtimeSinceStartup;
+            log.InPlayMode = Application.isPlaying;
             log.BlameTypeName = blame?.FullName;
             log.FlowId = _currentFlowId;
             log.ParentFlowId = _currentParentFlowId;

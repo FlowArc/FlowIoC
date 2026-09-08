@@ -58,6 +58,11 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
         private bool _showTiming;
 
+        private readonly FlowConsoleSessionRule _sessionRule = new FlowConsoleSessionRule();
+        private GUIStyle _sessionSeparatorStyle;
+        private const float SessionSeparatorHeight = 18f;
+        private static readonly Color SessionSeparatorColor = new Color(0.55f, 0.55f, 0.55f, 0.8f);
+
         /// <summary>Translucent, so the text keeps reading through it.</summary>
         private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
 
@@ -1023,6 +1028,45 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>
+        /// The line between one session and the next: a rule across the list with the side it is
+        /// opening written on it, so a play session can be told from the editing around it.
+        /// </summary>
+        private void DrawSessionSeparator(Rect rect, ConsoleLog opening)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+
+            EnsureSessionSeparatorStyle();
+
+            string label = _sessionRule.Label(opening);
+            var content = new GUIContent(label);
+            float labelWidth = _sessionSeparatorStyle.CalcSize(content).x + 10f;
+
+            float middle = rect.y + rect.height * 0.5f;
+            float left = rect.x + 8f;
+            float right = rect.xMax - 8f;
+            float labelLeft = left + 12f;
+
+            EditorGUI.DrawRect(new Rect(left, middle, 12f, 1f), SessionSeparatorColor);
+            EditorGUI.DrawRect(new Rect(labelLeft + labelWidth, middle, Mathf.Max(0f, right - labelLeft - labelWidth),
+                1f), SessionSeparatorColor);
+
+            GUI.Label(new Rect(labelLeft + 5f, rect.y, labelWidth, rect.height), content, _sessionSeparatorStyle);
+        }
+
+        private void EnsureSessionSeparatorStyle()
+        {
+            if (_sessionSeparatorStyle != null) return;
+
+            _sessionSeparatorStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                name = "FlowConsoleSessionSeparator",
+                alignment = TextAnchor.MiddleLeft
+            };
+
+            _sessionSeparatorStyle.normal.textColor = SessionSeparatorColor;
+        }
+
+        /// <summary>
         /// Paints the part of a line that matched the search behind the text. A narrowed list says
         /// which rows survived but not why, and on a long message the word that matched can be
         /// anywhere.
@@ -1073,14 +1117,31 @@ namespace FlowIoC.Editor.Console
 
             for (int i = 0; i < count; i++)
             {
-                _cachedLogHeights[i] = rowHeight;
-                _cumulativeHeights[i + 1] = _cumulativeHeights[i] + rowHeight;
+                // A row that opens a play or edit session is taller by the line drawn above it.
+                ConsoleLog previous = i > 0 ? _cachedVisibleLogs[i - 1] : null;
+                float height = _sessionRule.StartsSession(previous, _cachedVisibleLogs[i])
+                    ? rowHeight + SessionSeparatorHeight
+                    : rowHeight;
+
+                _cachedLogHeights[i] = height;
+                _cumulativeHeights[i + 1] = _cumulativeHeights[i] + height;
             }
         }
 
         private void LogGUI(ConsoleLog consoleLog, float entryHeight, int rowIndex)
         {
             Rect rect = GUILayoutUtility.GetRect(0, entryHeight, GUILayout.ExpandWidth(true));
+
+            ConsoleLog above = rowIndex > 0 && rowIndex - 1 < _cachedVisibleLogs.Count
+                ? _cachedVisibleLogs[rowIndex - 1]
+                : null;
+
+            if (_sessionRule.StartsSession(above, consoleLog))
+            {
+                DrawSessionSeparator(new Rect(rect.x, rect.y, rect.width, SessionSeparatorHeight), consoleLog);
+                rect = new Rect(rect.x, rect.y + SessionSeparatorHeight, rect.width,
+                    rect.height - SessionSeparatorHeight);
+            }
 
             // Unity's console reads severity from an icon and uses the row background only to
             // separate one row from the next. Tinting a whole row yellow or red made a page of
