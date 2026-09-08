@@ -45,10 +45,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         /// <summary>
         /// How tall the two panels are. They stand beside one another, so one height keeps their
-        /// bottoms level, whatever the module type is - a screen module keeps the same panels and
-        /// puts its own settings under them.
+        /// bottoms level, whatever the module type is.
         /// </summary>
         private const float PANEL_HEIGHT = 320f;
+
+        /// <summary>
+        /// The same two panels on a screen module, which draws its settings above them and its
+        /// action list below. At the full height the list sat past the window's floor: the form
+        /// scrolls, but a section nobody sees is a section nobody fills in, so the panels give the
+        /// room up instead. Both of them scroll their own contents already.
+        /// </summary>
+        private const float SCREEN_PANEL_HEIGHT = 220f;
+
+        /// <summary>
+        /// The shortest the action list is drawn. Below this a screen with one action would be a
+        /// row and a scrollbar, so the list keeps this much whatever the window does and takes
+        /// whatever is left over above it.
+        /// </summary>
+        private const float ACTION_LIST_MIN_HEIGHT = 60f;
+
+        /// <summary>What the action list leaves under itself when it takes the room that is left.</summary>
+        private const float ACTION_LIST_BOTTOM_PADDING = 4f;
 
 
         /// <summary>
@@ -68,6 +85,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const float COLUMNS_SPACING = 8f;
         private const float COLUMNS_MARGIN = 30f;
         private const float COLUMN_MIN_WIDTH = 260f;
+
+        /// <summary>
+        /// Width kept back for the form's own scrollbar. It is reserved whether or not the bar is
+        /// showing, because a width that changed with it would make the two columns jump sideways
+        /// the moment the content grew past the window.
+        /// </summary>
+        private const float SCROLLBAR_RESERVE = 15f;
 
         private const string CONFIG_BUTTON_TOOLTIP =
             "Select the folder layout this module type is generated from.";
@@ -99,6 +123,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         // role changes - not every frame, or unticking Systems by hand would last one repaint.
         private bool _roleFoldersApplied;
         private ModuleType _selectedModuleType;
+
+        /// <summary>
+        /// The height the parent panel and the folder preview are both drawn at. It follows the
+        /// module type, so the two stay level with one another whichever type is picked.
+        /// </summary>
+        private float _panelHeight =>
+            _selectedModuleType == ModuleType.Screen ? SCREEN_PANEL_HEIGHT : PANEL_HEIGHT;
+
         private static GenerationState _generationState;
 
         /// <summary>
@@ -127,6 +159,25 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private string _selectedModuleName = string.Empty;
         private List<string> _actionNames = new();
         private Vector2 _actionScrollPosition;
+
+        /// <summary>
+        /// The height the action list is drawn at, and the height of the form's scroll viewport it
+        /// is worked out from. Both are measured on a repaint and read on the layout pass after it,
+        /// because GUILayout has already fixed the list's height by the time a repaint could
+        /// measure anything.
+        /// </summary>
+        private float _actionListHeight = ACTION_LIST_MIN_HEIGHT;
+
+        private float _formViewportHeight;
+
+        /// <summary>
+        /// The form scrolls, and the Create Module button sits under it rather than in it. A screen
+        /// module draws the most: its settings panel and its action list stand between the two
+        /// panels and the card, and every action added pushes the rest further down. Without this
+        /// the button ended up below the window's bottom edge, out of reach and with nothing on
+        /// screen to say it was there.
+        /// </summary>
+        private Vector2 _windowScrollPosition;
 
         private ScreenModuleSettings _screenSettings = new ScreenModuleSettings();
 
@@ -160,11 +211,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             EditorGUILayout.BeginVertical("box");
 
+            // Everything the form asks for scrolls; the button that writes the module does not, so
+            // it stays on screen whatever the module type adds above it. The horizontal bar is
+            // left out, because the two columns are already fitted to the width.
+            _windowScrollPosition = EditorGUILayout.BeginScrollView(
+                _windowScrollPosition, GUIStyle.none, GUI.skin.verticalScrollbar);
+
             // Both columns are given the same width outright. Left to expand on their own the
             // preview would take everything, because the rows inside it end in a FlexibleSpace.
             // Every row above the panels stands in the same two columns, so the window reads as
             // two lanes rather than as rows that each stretch differently.
-            float available = Mathf.Max(position.width - COLUMNS_MARGIN, COLUMN_MIN_WIDTH * 2f);
+            float available = Mathf.Max(
+                position.width - COLUMNS_MARGIN - SCROLLBAR_RESERVE, COLUMN_MIN_WIDTH * 2f);
             float leftWidth = Mathf.Max(available * LEFT_COLUMN_SHARE, COLUMN_MIN_WIDTH);
             float rightWidth = Mathf.Max(available - leftWidth, COLUMN_MIN_WIDTH);
 
@@ -277,9 +335,19 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 DisplayActionsSection();
             }
 
+            EditorGUILayout.EndScrollView();
+
+            // How much room the form was given, which is what the action list inside it stretches
+            // to fill. It is the scroll view's own rect, so it is read out here rather than guessed
+            // at from the window's height and everything drawn around it.
+            if (Event.current.type == EventType.Repaint)
+                _formViewportHeight = GUILayoutUtility.GetLastRect().height;
+
+            // The card and the button are the last two things the author touches, so they sit
+            // together at the window's floor rather than at the end of the form. Widening the
+            // window lengthens the scrolling part above them and they stay where they were.
             DrawModuleCardFields();
 
-            GUILayout.FlexibleSpace();
             DisplayCreateModuleButton();
 
             EditorGUILayout.EndVertical();

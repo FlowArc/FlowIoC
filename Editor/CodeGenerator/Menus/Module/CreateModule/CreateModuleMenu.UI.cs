@@ -620,7 +620,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             GUI.backgroundColor = Color.white;
 
-            float height = PANEL_HEIGHT;
+            float height = _panelHeight;
 
             _scrollPosition = EditorGUILayout.BeginScrollView(
                 _scrollPosition, GUILayout.MinHeight(height), GUILayout.MaxHeight(height));

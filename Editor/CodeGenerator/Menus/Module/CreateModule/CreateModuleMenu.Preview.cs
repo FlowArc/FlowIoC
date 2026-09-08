@@ -37,7 +37,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             EditorGUILayout.EndHorizontal();
 
-            float height = PANEL_HEIGHT;
+            float height = _panelHeight;
 
             _folderPreviewScrollPosition = EditorGUILayout.BeginScrollView(_folderPreviewScrollPosition,
                 GUILayout.MinHeight(height), GUILayout.MaxHeight(height));
