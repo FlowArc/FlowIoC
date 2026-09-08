@@ -70,7 +70,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             new FolderEVO
                             {
                                 FolderName = "Models",
-                                Type = FolderEVO.FolderType.Folder,
+                                Type = FolderEVO.FolderType.Models,
                                 IsMandatory = true,
                                 IsNamespaceProvider = true
                             },
@@ -107,7 +107,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             new FolderEVO
                             {
                                 FolderName = "Services",
-                                Type = FolderEVO.FolderType.Folder,
+                                Type = FolderEVO.FolderType.Services,
                                 IsMandatory = false,
                                 IsOptional = true,
                                 IsNamespaceProvider = true
@@ -149,7 +149,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     },
                     new FolderEVO
                     {
-                        FolderName = "Editor", Type = FolderEVO.FolderType.Folder, IsMandatory = true
+                        FolderName = "Editor", Type = FolderEVO.FolderType.Editor, IsMandatory = true
                     },
                     new FolderEVO
                     {
