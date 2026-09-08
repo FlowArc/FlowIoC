@@ -52,7 +52,7 @@ namespace FlowIoC.Editor.Console
             _filtersPanelScroll = EditorGUILayout.BeginScrollView(_filtersPanelScroll,
                 GUILayout.Width(FiltersPanelWidth));
 
-            if (_isolatedChannel >= 0)
+            if (!string.IsNullOrEmpty(_isolatedChannel))
             {
                 IsolatedChannelGUI();
 
@@ -194,17 +194,17 @@ namespace FlowIoC.Editor.Console
                                        + "every channel back the way you had it.", EditorStyles.wordWrappedMiniLabel);
         }
 
-        private void EnterIsolation(int channelValue)
+        private void EnterIsolation(string channel)
         {
-            _isolatedChannel = channelValue;
-            _state.IsolatedChannel = channelValue;
+            _isolatedChannel = channel;
+            _state.IsolatedChannel = channel;
             OnLogTypeSelectionChanged();
         }
 
         private void LeaveIsolation()
         {
-            _isolatedChannel = -1;
-            _state.IsolatedChannel = -1;
+            _isolatedChannel = null;
+            _state.IsolatedChannel = null;
             OnLogTypeSelectionChanged();
         }
 
@@ -465,13 +465,13 @@ namespace FlowIoC.Editor.Console
 
             // Alt+click isolates rather than switching everything else off. Nothing is written,
             // so leaving isolation needs no snapshot to put back.
-            if (_isolatedChannel >= 0)
+            if (!string.IsNullOrEmpty(_isolatedChannel))
             {
                 LeaveIsolation();
             }
             else if (Event.current.alt)
             {
-                EnterIsolation(logType.Value);
+                EnterIsolation(logType.Name);
             }
             else
             {

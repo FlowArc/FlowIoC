@@ -17,7 +17,7 @@ namespace FlowIoC.Tests
                 Message = message,
                 LogType = LogType.Warning,
                 SystemLogType = SystemLogType.Unity,
-                LogTypeValue = (int) SystemLogType.Unity,
+                Channel = "Unity",
                 Source = LogSource.Unity,
                 LogColor = new Color(0.25f, 0.5f, 0.75f, 1f),
                 Hour = 9,

@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.Console
         private int _soloedGroup = -1;
 
         // The one channel the panel is isolated to, or -1. Like muting, it changes no setting.
-        private int _isolatedChannel = -1;
+        private string _isolatedChannel;
 
         private bool _unityChannelsExpanded = true;
         private bool _systemChannelsExpanded = true;
@@ -694,7 +694,7 @@ namespace FlowIoC.Editor.Console
                 var logType = _settings.LogTypes[i];
                 if (logType.Value == (int) SystemLogType.All) continue;
 
-                logType.IsVisible = preset.VisibleChannels.Contains(logType.Value);
+                logType.IsVisible = preset.VisibleChannels.Contains(logType.Name);
             }
 
             EditorUtility.SetDirty(_settings);
@@ -703,13 +703,13 @@ namespace FlowIoC.Editor.Console
 
         private void SaveCurrentPreset()
         {
-            var visible = new List<int>();
+            var visible = new List<string>();
 
             for (int i = 0; i < _settings.LogTypes.Count; i++)
             {
                 var logType = _settings.LogTypes[i];
                 if (logType.Value == (int) SystemLogType.All) continue;
-                if (logType.IsVisible) visible.Add(logType.Value);
+                if (logType.IsVisible) visible.Add(logType.Name);
             }
 
             FlowConsolePresetNameWindow.Show(name => _presets.Save(name, visible));
@@ -942,7 +942,7 @@ namespace FlowIoC.Editor.Console
             // the list is narrowed without the panel having to be open. Isolation is one channel
             // showing however many switches are on underneath it.
             CountChannels(logType => true, out int channelsShown, out int channelsTotal);
-            if (_isolatedChannel >= 0) channelsShown = 1;
+            if (!string.IsNullOrEmpty(_isolatedChannel)) channelsShown = 1;
 
             var filtersLabel = new GUIContent("Filters",
                 "Open the panel that holds every channel this console can show.\n"
@@ -1096,7 +1096,7 @@ namespace FlowIoC.Editor.Console
 
             // Isolation and muting hide rows without switching a channel off, so the shortcut for
             // "everything is visible, hand the list straight over" has to know about them too.
-            if (_isolatedChannel >= 0 || !_groupUnmuted[0] || !_groupUnmuted[1] || !_groupUnmuted[2])
+            if (!string.IsNullOrEmpty(_isolatedChannel) || !_groupUnmuted[0] || !_groupUnmuted[1] || !_groupUnmuted[2])
                 allTypesVisible = false;
 
             if (allTypesVisible)
@@ -1125,31 +1125,16 @@ namespace FlowIoC.Editor.Console
 
                     // Isolation answers before anything else: one channel is showing and the rest
                     // are not, whatever their switches and their groups say.
-                    if (_isolatedChannel >= 0)
+                    if (!string.IsNullOrEmpty(_isolatedChannel))
                     {
-                        if (log.LogTypeValue == _isolatedChannel)
+                        if (string.Equals(log.Channel, _isolatedChannel, StringComparison.OrdinalIgnoreCase))
                             _multiTypeFilterBuffer.Add(log);
 
                         continue;
                     }
 
-                    bool isSystemLog = log.SystemLogType != SystemLogType.All;
-
-                    if (isSystemLog)
-                    {
-                        if (_settings.TryGetLogType((int) log.SystemLogType, out var sysType) && sysType.IsVisible
-                                                                                              && !IsGroupMuted(sysType))
-                        {
-                            _multiTypeFilterBuffer.Add(log);
-                            continue;
-                        }
-                    }
-
-                    if (_settings.TryGetLogType(log.LogTypeValue, out var projType) && !projType.IsMandatory
-                                                                                    && projType.IsVisible && !IsGroupMuted(projType))
-                    {
+                    if (_settings.TryGetLogType(log.Channel, out var type) && type.IsVisible && !IsGroupMuted(type))
                         _multiTypeFilterBuffer.Add(log);
-                    }
                 }
 
                 _cachedFilteredLogs = _multiTypeFilterBuffer;

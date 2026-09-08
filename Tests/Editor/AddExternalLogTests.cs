@@ -8,7 +8,7 @@ namespace FlowIoC.Tests
     public class AddExternalLogTests
     {
         /// <summary>The Default project channel, which CD_FlowConsole always creates.</summary>
-        private const int DEFAULT_CHANNEL = 100;
+        private const string DEFAULT_CHANNEL = "Default";
 
         private bool _wasLoggingEnabled;
         private bool _wasForwarding;
@@ -88,7 +88,7 @@ namespace FlowIoC.Tests
 
             Assert.AreEqual(1, FlowLogger.Logs.Count);
             Assert.AreEqual(LogSource.Unity, FlowLogger.Logs[0].Source);
-            Assert.AreEqual((int) SystemLogType.Unity, FlowLogger.Logs[0].LogTypeValue);
+            Assert.AreEqual("Unity", FlowLogger.Logs[0].Channel);
 
             // The channel's profile puts its tag on the front, so the message is what it ends with
             // rather than the whole of it.
@@ -100,7 +100,7 @@ namespace FlowIoC.Tests
         {
             FlowLogger.AddExternalLog(LogSource.Compiler, LogType.Error, "CS0103", null, "Assets/A.cs", 12);
 
-            Assert.AreEqual((int) SystemLogType.Compiler, FlowLogger.Logs[0].LogTypeValue);
+            Assert.AreEqual("Compiler", FlowLogger.Logs[0].Channel);
             Assert.AreEqual("Assets/A.cs", FlowLogger.Logs[0].SourceFilePath);
             Assert.AreEqual(12, FlowLogger.Logs[0].SourceLineNumber);
         }

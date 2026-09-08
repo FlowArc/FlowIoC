@@ -48,24 +48,35 @@ recorded whether or not `ENABLE_LOG` is defined: turning the define off is a sta
 about *your* logging, and a console that then showed no compile errors would be useless
 at the moment it is most needed.
 
-**Project channels** are yours: one per module, auto-registered, and regenerated into
-`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` as `const int` fields.
+**Project channels** are yours: one per module, auto-registered, and generated as a `const string`
+on `FlowLogType`. A module's channel is declared **in the module**, in a part of its own:
 
 ```csharp
+// Modules/AnalyticsModule/Scripts/Generated/FlowLogType.AnalyticsModule.cs
 namespace FlowIoC.ConsoleModule
 {
-    public static class FlowLogType
+    public static partial class FlowLogType
     {
-        public const int Default          = 100;
-        public const int AnalyticsModule  = 1000;
-        public const int AudioModule      = 1020;
-        // ...
+        public const string AnalyticsModule = "AnalyticsModule";
     }
 }
 ```
 
-Because they are generated, a renamed or newly created module gets its channel
-without anyone editing a list.
+Beside it sits a `FlowIoC.Generated.asmref`, which is what puts the part into FlowIoC's own
+assembly rather than into the module's. Parts of a partial class have to share an assembly, and
+every module has an assembly of its own - without the asmref this could not be a partial class at
+all. `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` keeps what belongs to no module: the project's
+`Default` channel, and any channel added by hand.
+
+**A channel is a name, not a number.** It used to be an `int`, handed out in order and reassigned
+whenever the list was sorted - so a module whose name sorted early moved every channel after it onto
+a different number, and with it every saved filter and every row already recorded. There was also
+nobody to hand out the next number: two people adding a module on two branches were each handed the
+same one. A name has neither problem, and a part per module means the two of them do not even touch
+the same file.
+
+Because both are generated, a renamed or newly created module gets its channel without anyone
+editing a list, and a deleted module takes its channel with it.
 
 ---
 
