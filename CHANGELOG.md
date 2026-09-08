@@ -22,8 +22,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   re-initialised, and `RunToken` stays because that one belongs to the command pool. No public type
   or signature changed.
 
+- **A log line names the class and the method it came from.** `1.9.0` moved the framework's own
+  messages to prose that read subject-first, and what went with it was the one thing the old lines
+  were good at: saying where in the code they were written. The shape is now three parts - the
+  channel's tag from its profile, then `[Class.Method]`, then one bracket per variable:
+  `[Screen] [ScreenService.Hide.ScreensAtManager][manager(2)][force(True)]`. A sub service a caller
+  reaches through its parent is written as that call path, because the path is what the reader
+  typed; one that is private inside its owner is written as its class name. A message with no
+  variables ends at the bracket, with no verb after it. Forty-eight lines across Asset, Command,
+  Pool, Screen and Injection took the new shape.
+
+  The engine's own lines are the exception and stay subject-first, because the bracket would name a
+  framework class the reader has no use for: a signal dispatching, a command executing, the function
+  provider, and the Context, Root and RootsManager lines. Warnings and errors keep the bracketed
+  name of the guard that is speaking, which they already had.
+
 ### Fixed
 
+- **The console colours a new project is given are the ones the console was tuned to.** A channel's
+  colour is read from `CD_FlowConsole`, and that asset belongs to the project rather than to the
+  package - so the colours picked while `1.9.0` was being finished lived only in the workspace they
+  were picked in, and a project installing the package got the older palette. `Signal` and `Asset`
+  had no entry at all and came out white. The defaults in code now carry what was chosen, and a
+  channel's profile takes its tag colour from the channel, so the tag follows.
+- **`Models`, `Services` and `Editor` are typed as themselves in a main module's layout.** The
+  folder list is declared twice - as the field initializer and again in
+  `InitializeDefaultFolderStructure`, which is the one a new project's asset is written from - and
+  the two had drifted: the initializer typed those three as a plain `Folder`. Nothing in a project
+  read it, because the method is what runs, but anything that creates a layout without initializing
+  it saw folders that `FindFullFolderPathByID` cannot find, since that lookup matches on
+  `FolderType` and nothing else. The screen layout's `Constants` had drifted the other way, mandatory
+  in the method and optional in the initializer, and is optional in all three layouts now. The test
+  that compares the two declarations missed both: it keyed folders by bare name, so the `Constants`
+  under `Shared` overwrote the one under `Runtime`, and it never compared the type at all. It keys
+  by path and compares the type now.
 - **A retained command is remembered against its step rather than against an index into a list.**
   `StopCommand` read the step back out of `_steps` by index and returned when that index was out of
   range - having already handed the command to the pool, and without reporting - which left the
