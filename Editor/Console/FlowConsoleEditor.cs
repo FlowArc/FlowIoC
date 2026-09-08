@@ -51,6 +51,14 @@ namespace FlowIoC.Editor.Console
 
         private readonly FlowConsoleStickyTail _stickyTail = new FlowConsoleStickyTail();
         private readonly FlowConsoleKeyboard _keyboard = new FlowConsoleKeyboard();
+        private readonly FlowConsoleSearch _search = new FlowConsoleSearch();
+        private readonly FlowConsoleSolo _solo = new FlowConsoleSolo();
+        private readonly FlowConsoleHighlight _highlight = new FlowConsoleHighlight();
+
+        /// <summary>Translucent, so the text keeps reading through it.</summary>
+        private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
+
+        private FlowConsoleSearchQuery _searchQuery;
         private float _logsViewportHeight;
 
         private List<ConsoleLog> _allLogs;
@@ -123,6 +131,7 @@ namespace FlowIoC.Editor.Console
 
             _rowLineCount = _state.RowLineCount;
             _collapseRows = _state.Collapse;
+            _searchQuery = _search.Parse(_searchText);
 
             _logFilter = new Dictionary<LogType, bool>
             {
@@ -364,8 +373,16 @@ namespace FlowIoC.Editor.Console
                 }
 
                 _searchText = newSearch;
+                _searchQuery = _search.Parse(_searchText);
                 _logsDirty = true;
                 _needsRepaint = true;
+            }
+
+            // A half-typed expression matches nothing, and a list that empties for no visible
+            // reason reads as a broken window. Say which it is.
+            if (_searchQuery != null && _searchQuery.IsBrokenPattern)
+            {
+                GUILayout.Label("bad pattern", EditorStyles.miniLabel);
             }
 
             EditorGUI.BeginDisabledGroup(_selectedLog == null);
@@ -620,11 +637,21 @@ namespace FlowIoC.Editor.Console
 
                     GUI.backgroundColor = typeInfo.IsVisible ? Color.green : Color.white;
 
-                    if (GUILayout.Button(consoleLogType.ToString(), GUILayout.MinWidth(80)))
+                    var channelLabel = new GUIContent(consoleLogType.ToString(),
+                        "Click to hide or show this channel.\nAlt+click to show only this one, and again to bring the rest back.");
+
+                    if (GUILayout.Button(channelLabel, GUILayout.MinWidth(80)))
                     {
-                        typeInfo.IsVisible = !typeInfo.IsVisible;
-                        EditorUtility.SetDirty(_settings);
-                        OnLogTypeSelectionChanged();
+                        if (Event.current.alt)
+                        {
+                            SoloSystemType(consoleLogType);
+                        }
+                        else
+                        {
+                            typeInfo.IsVisible = !typeInfo.IsVisible;
+                            EditorUtility.SetDirty(_settings);
+                            OnLogTypeSelectionChanged();
+                        }
                     }
 
                     GUI.backgroundColor = Color.white;
@@ -639,6 +666,40 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        }
+
+        /// <summary>
+        /// Alt+clicking a channel narrows the console to it, and alt+clicking the one that is
+        /// already alone brings the rest back. The All row is not a channel and takes no part.
+        /// </summary>
+        private void SoloSystemType(SystemLogType channel)
+        {
+            var channels = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>();
+
+            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            {
+                if (_settings.LogTypes[i].Value == (int) SystemLogType.All) continue;
+                channels.Add(_settings.LogTypes[i]);
+            }
+
+            var visible = new List<bool>(channels.Count);
+            int index = -1;
+
+            for (int i = 0; i < channels.Count; i++)
+            {
+                visible.Add(channels[i].IsVisible);
+                if (channels[i].Value == (int) channel) index = i;
+            }
+
+            if (index < 0) return;
+
+            _solo.Apply(visible, index);
+
+            for (int i = 0; i < channels.Count; i++)
+                channels[i].IsVisible = visible[i];
+
+            EditorUtility.SetDirty(_settings);
+            OnLogTypeSelectionChanged();
         }
 
         private void LogsPanelGUI()
@@ -904,7 +965,7 @@ namespace FlowIoC.Editor.Console
             {
                 var log = _cachedFilteredLogs[i];
                 if (!_logFilter[log.LogType]) continue;
-                if (hasSearch && log.Message.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (hasSearch && !_searchQuery.Matches(log.Message)) continue;
                 _cachedVisibleLogs.Add(log);
             }
 
@@ -936,6 +997,39 @@ namespace FlowIoC.Editor.Console
             {
                 _cachedVisibleLogs.Add(rows[i].Log);
                 _collapseCounts[i] = rows[i].Count;
+            }
+        }
+
+        /// <summary>
+        /// Paints the part of a line that matched the search behind the text. A narrowed list says
+        /// which rows survived but not why, and on a long message the word that matched can be
+        /// anywhere.
+        /// </summary>
+        private void DrawSearchHighlight(Rect lineRect, string drawn)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            if (string.IsNullOrEmpty(_searchText) || _searchQuery == null) return;
+
+            List<HighlightRange> ranges = _highlight.Ranges(drawn, _searchQuery);
+            if (ranges.Count == 0) return;
+
+            var content = new GUIContent(drawn);
+
+            for (int i = 0; i < ranges.Count; i++)
+            {
+                Vector2 from = _richTextStyle.GetCursorPixelPosition(lineRect, content, ranges[i].Start);
+                Vector2 to = _richTextStyle.GetCursorPixelPosition(
+                    lineRect, content, ranges[i].Start + ranges[i].Length);
+
+                // A match the row is too narrow to show, or one the label wrapped onto a line that
+                // is not drawn. There is nothing to paint on this row.
+                if (to.x <= from.x) continue;
+
+                float width = Mathf.Min(to.x, lineRect.xMax) - from.x;
+                if (width <= 0f) continue;
+
+                EditorGUI.DrawRect(new Rect(from.x, lineRect.y + 1f, width, lineRect.height - 2f),
+                    SearchHighlightColor);
             }
         }
 
@@ -1039,7 +1133,11 @@ namespace FlowIoC.Editor.Console
                 string text = LineOf(consoleLog.Message, line) ?? string.Empty;
 
                 Rect lineRect = new Rect(textLeft, textTop + line * LogEntryLineHeight, textWidth, LogEntryLineHeight);
-                GUI.Label(lineRect, line == 0 ? date + " | " + text : text, _richTextStyle);
+                string drawn = line == 0 ? date + " | " + text : text;
+
+                DrawSearchHighlight(lineRect, drawn);
+
+                GUI.Label(lineRect, drawn, _richTextStyle);
             }
 
             if (!small)

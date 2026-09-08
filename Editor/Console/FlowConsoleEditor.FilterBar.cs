@@ -37,6 +37,16 @@ namespace FlowIoC.Editor.Console
                 _needsRepaint = true;
             }
 
+            // A search or a muted channel takes rows off the list and says so nowhere else. The
+            // reader can see the scrollbar got shorter; this says by how much.
+            int shown = _cachedVisibleLogs?.Count ?? 0;
+            int held = _allLogs?.Count ?? 0;
+
+            GUILayout.Label(
+                new GUIContent(shown + " / " + held, "Rows on the list, and logs the console is holding."),
+                shown == held ? EditorStyles.miniLabel : EditorStyles.whiteMiniLabel,
+                GUILayout.Width(90));
+
             GUILayout.FlexibleSpace();
 
             int selectedProjectCount = 0;
@@ -147,7 +157,6 @@ namespace FlowIoC.Editor.Console
 
             EditorUtility.SetDirty(_settings);
         }
-
     }
 }
 #endif
