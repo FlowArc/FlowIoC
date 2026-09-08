@@ -14,6 +14,8 @@ namespace FlowIoC.ConsoleModule
     public static class FlowLogger
     {
         public static readonly List<ConsoleLog> Logs = new();
+
+        private static readonly ConsoleLogTrimmer Trimmer = new();
         public static Action<ConsoleLog> OnLogAdded;
 
         /// <summary>
@@ -109,7 +111,9 @@ namespace FlowIoC.ConsoleModule
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
-            Logs.Clear();
+            // Logs intentionally NOT cleared. What the console holds when a run starts is Clear on
+            // Play's decision and nobody else's - wiping the list here threw away the rows the
+            // reader had pinned, and did it after they had been carried across the domain reload.
             _settings = null;
             IsWritingToUnityConsole = false;
             _flowCounter = 0;
@@ -179,6 +183,23 @@ namespace FlowIoC.ConsoleModule
         public static void ClearLogs()
         {
             Logs.Clear();
+            OnLogsCleared?.Invoke();
+        }
+
+        /// <summary>
+        /// Empties the console but leaves what the reader pinned. This is what the automatic
+        /// clears use - entering play mode, recompiling, starting a build - because those clear to
+        /// get the noise of the last run out of the way, and a pinned log is the reader saying
+        /// this one is not noise. The Clear button still empties everything, because pressing it
+        /// is somebody asking for exactly that.
+        /// </summary>
+        public static void ClearLogsKeepingPinned()
+        {
+            for (int i = Logs.Count - 1; i >= 0; i--)
+            {
+                if (!Logs[i].Pinned) Logs.RemoveAt(i);
+            }
+
             OnLogsCleared?.Invoke();
         }
 
@@ -608,7 +629,7 @@ namespace FlowIoC.ConsoleModule
             if (maxLogCount <= 0 || Logs.Count <= maxLogCount + LogTrimChunk)
                 return;
 
-            Logs.RemoveRange(0, Logs.Count - maxLogCount);
+            Trimmer.Trim(Logs, maxLogCount);
         }
 #endif
 

@@ -38,7 +38,7 @@ namespace FlowIoC.Editor.Console
             if (!Policy.ShouldClear(trigger, State.ClearOnPlay, State.ClearOnRecompile, State.ClearOnBuild))
                 return;
 
-            FlowLogger.ClearLogs();
+            FlowLogger.ClearLogsKeepingPinned();
         }
 
         private static void OnPlayModeChanged(PlayModeStateChange change)

@@ -11,16 +11,15 @@ namespace FlowIoC.Editor.Console
     /// without this the console empties itself at the exact moment a reader most wants to see what
     /// it was holding, whatever Clear on Recompile says.
     ///
-    /// Clear on Recompile, when it is on, is the one case where the list is meant to go. The park
-    /// is erased rather than written then, so the reload finds nothing to bring back.
+    /// Clear on Recompile takes what it takes before this runs, when compilation starts, so the
+    /// list is parked as it stands and whatever that clear left - the pinned rows - comes back.
     /// </summary>
     [InitializeOnLoad]
     internal static class FlowConsoleReloadSurvival
     {
-        private const string ParkKey = "FlowIoC.Console.ParkedLogs";
+        private const string PARK_KEY = "FlowIoC.Console.ParkedLogs";
 
         private static readonly FlowConsoleLogPark Park = new();
-        private static readonly FlowConsoleState State = new();
 
         static FlowConsoleReloadSurvival()
         {
@@ -32,21 +31,18 @@ namespace FlowIoC.Editor.Console
 
         private static void OnBeforeAssemblyReload()
         {
-            if (State.ClearOnRecompile)
-            {
-                SessionState.EraseString(ParkKey);
-                return;
-            }
-
-            SessionState.SetString(ParkKey, Park.Write(FlowLogger.Logs));
+            // Whatever Clear on Recompile was going to take has already been taken by the time
+            // this runs - the automatic clear happens when compilation starts, and what it leaves
+            // behind is the pinned rows. So the list is parked as it stands, always.
+            SessionState.SetString(PARK_KEY, Park.Write(FlowLogger.Logs));
         }
 
         private static void Restore()
         {
-            string parked = SessionState.GetString(ParkKey, string.Empty);
+            string parked = SessionState.GetString(PARK_KEY, string.Empty);
             if (string.IsNullOrEmpty(parked)) return;
 
-            SessionState.EraseString(ParkKey);
+            SessionState.EraseString(PARK_KEY);
 
             List<ConsoleLog> logs = Park.Read(parked);
             if (logs.Count == 0) return;
