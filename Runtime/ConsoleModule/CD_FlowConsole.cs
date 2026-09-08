@@ -366,31 +366,35 @@ namespace FlowIoC.ConsoleModule
 
                 TryGetLogType((int) channel, out var channelType);
 
-                // Written once, when the profile is missing, and never written over afterwards.
-                // What it starts on is the channel's own colour; after that the look is somebody's
-                // to choose, and a pass that rewrote it on every validate would undo the choosing.
                 if (profile == null)
                 {
-                    profile = new FlowLogProfileData
-                    {
-                        Name = name,
-                        Prefix = "[" + name + "]",
-                        PrefixStyle = FlowTextStyle.Bold,
-                        PrefixColor = channelType != null
-                            ? channelType.LogColor
-                            : GetDefaultColorForLogType(channel)
-                    };
-
+                    profile = new FlowLogProfileData {Name = name};
                     _logProfiles.Add(profile);
                     changed = true;
                 }
 
-                // Mandatory so it cannot be deleted - a channel whose profile is gone prints no tag
-                // - but editable while the colours are still being settled.
-                if (!profile.IsMandatory || !profile.IsEditable)
+                // The tag follows the channel: same name, same colour. Kept in step here rather
+                // than authored, so recolouring a channel recolours its tag and the two never say
+                // different things about the same thing.
+                Color channelColor = channelType != null
+                    ? channelType.LogColor
+                    : GetDefaultColorForLogType(channel);
+
+                string prefix = "[" + name + "]";
+
+                if (profile.Prefix != prefix || profile.PrefixColor != channelColor
+                                             || profile.PrefixStyle != FlowTextStyle.None
+                                             || !profile.IsMandatory || profile.IsEditable)
                 {
+                    profile.Prefix = prefix;
+                    profile.PrefixColor = channelColor;
+                    profile.PrefixStyle = FlowTextStyle.None;
+
+                    // Mandatory so it cannot be deleted - a channel whose profile is gone prints no
+                    // tag - and not editable, because a tag somebody renamed no longer matches what
+                    // the documentation says the console prints.
                     profile.IsMandatory = true;
-                    profile.IsEditable = true;
+                    profile.IsEditable = false;
                     changed = true;
                 }
 
@@ -533,7 +537,7 @@ namespace FlowIoC.ConsoleModule
                 case SystemLogType.All: return Color.white;
                 case SystemLogType.Context: return new Color(0.2f, 0.6f, 1f);
                 case SystemLogType.Injection: return new Color(0.2f, 1f, 0.2f);
-                case SystemLogType.Command: return new Color(1f, 0.7f, 0.2f);
+                case SystemLogType.Command: return Color.cyan;
                 case SystemLogType.CommandOperation: return new Color(1f, 0.7f, 0.2f);
                 case SystemLogType.Function: return new Color(0.8f, 0.4f, 1f);
                 case SystemLogType.Screen: return new Color(0.3f, 0.8f, 0.8f);
