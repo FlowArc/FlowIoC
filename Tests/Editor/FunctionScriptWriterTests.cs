@@ -30,7 +30,7 @@ namespace FlowIoC.Tests
             };
 
             for (int i = 0; i < parameterTypes.Length; i++)
-                request.Parameters.Add(new FunctionParameter { Type = parameterTypes[i], Name = "param" + i });
+                request.Parameters.Add(new FunctionParameter {Type = parameterTypes[i], Name = "param" + i});
 
             return request;
         }
@@ -114,7 +114,7 @@ namespace FlowIoC.Tests
         public void An_injectable_is_written_as_a_property_named_off_its_interface()
         {
             FunctionScriptRequest request = Request(FunctionKind.Void);
-            request.Injectables.Add(new FunctionInjectable { Type = "IPlayerModel", Namespace = "Modules.Player.Models" });
+            request.Injectables.Add(new FunctionInjectable {Type = "IPlayerModel", Namespace = "Modules.Player.Models"});
 
             string file = _writer.Write(request);
 
@@ -147,11 +147,82 @@ namespace FlowIoC.Tests
         public void A_half_filled_parameter_row_is_not_written()
         {
             FunctionScriptRequest request = Request(FunctionKind.Void);
-            request.Parameters.Add(new FunctionParameter { Type = "int", Name = string.Empty });
-            request.Parameters.Add(new FunctionParameter { Type = string.Empty, Name = "count" });
+            request.Parameters.Add(new FunctionParameter {Type = "int", Name = string.Empty});
+            request.Parameters.Add(new FunctionParameter {Type = string.Empty, Name = "count"});
 
             Assert.That(_writer.ValidParameters(request), Is.Empty);
             Assert.That(_writer.BaseTypeFor(request), Is.EqualTo("FunctionVoid"));
+        }
+
+        /// <summary>
+        /// The snippet the window shows is the half a generator cannot write: where the function is
+        /// called from. It has to agree with the class in the same window, so the terminator, the
+        /// arguments and the type parameter are all read off the same request.
+        /// </summary>
+        [Test]
+        public void A_returning_function_is_called_with_its_arguments_and_its_terminator()
+        {
+            string usage = _writer.UsageFor(Request(FunctionKind.Return, "double", "string"));
+
+            Assert.That(usage, Does.Contain("[Inject] private IFunctionProvider _functionProvider { get; set; }"));
+            Assert.That(usage, Does.Contain("var calculateDamage = _functionProvider"));
+            Assert.That(usage, Does.Contain(".Call<CalculateDamageFunction>()"));
+            Assert.That(usage, Does.Contain(".AddParams(param0)"));
+            Assert.That(usage, Does.Contain(".ExecuteAndGetResult<double>();"));
+        }
+
+        [Test]
+        public void A_void_function_with_no_parameters_is_called_on_one_line()
+        {
+            string usage = _writer.UsageFor(Request(FunctionKind.Void));
+
+            Assert.That(usage, Does.Contain("_functionProvider.Call<CalculateDamageFunction>().Execute();"));
+            Assert.That(usage, Does.Not.Contain("AddParams"));
+        }
+
+        [Test]
+        public void A_void_function_that_takes_parameters_passes_them()
+        {
+            string usage = _writer.UsageFor(Request(FunctionKind.Void, string.Empty, "string", "int"));
+
+            Assert.That(usage, Does.Contain(".AddParams(param0, param1)"));
+            Assert.That(usage, Does.Contain(".Execute();"));
+        }
+
+        /// <summary>
+        /// An async function is reached with CallAsync, and the arity that carries a value is the
+        /// one with a callback to hand in.
+        /// </summary>
+        [Test]
+        public void An_async_function_that_answers_is_called_with_a_callback()
+        {
+            string usage = _writer.UsageFor(Request(FunctionKind.Async, "Profile"));
+
+            Assert.That(usage, Does.Contain(".CallAsync<CalculateDamageFunction, Profile>()"));
+            Assert.That(usage, Does.Contain(".AddFunctionCompletedCallback(OnCalculateDamageCompleted)"));
+            Assert.That(usage, Does.Contain(".ExecuteAsync();"));
+        }
+
+        [Test]
+        public void An_async_function_that_answers_nothing_is_called_on_one_line()
+        {
+            string usage = _writer.UsageFor(Request(FunctionKind.Async));
+
+            Assert.That(usage, Does.Contain("_functionProvider.CallAsync<CalculateDamageFunction>().ExecuteAsync();"));
+            Assert.That(usage, Does.Not.Contain("AddFunctionCompletedCallback"));
+        }
+
+        /// <summary>
+        /// The names typed into the window are the ones the snippet passes, so it reads as the call
+        /// the author has in mind rather than as a template to fill in afterwards.
+        /// </summary>
+        [Test]
+        public void The_snippet_passes_the_parameter_names_that_were_typed()
+        {
+            FunctionScriptRequest request = Request(FunctionKind.Return, "double");
+            request.Parameters.Add(new FunctionParameter {Type = "string", Name = "weaponId"});
+
+            Assert.That(_writer.UsageFor(request), Does.Contain(".AddParams(weaponId)"));
         }
 
         [Test]
@@ -168,9 +239,9 @@ namespace FlowIoC.Tests
         public void A_namespace_is_imported_once_and_the_functions_own_is_not_imported()
         {
             FunctionScriptRequest request = Request(FunctionKind.Void);
-            request.Injectables.Add(new FunctionInjectable { Type = "IPlayerModel", Namespace = "Modules.Player.Models" });
-            request.Injectables.Add(new FunctionInjectable { Type = "IWeaponsModel", Namespace = "Modules.Player.Models" });
-            request.Injectables.Add(new FunctionInjectable { Type = "IHudModel", Namespace = "Modules.Player.Controllers" });
+            request.Injectables.Add(new FunctionInjectable {Type = "IPlayerModel", Namespace = "Modules.Player.Models"});
+            request.Injectables.Add(new FunctionInjectable {Type = "IWeaponsModel", Namespace = "Modules.Player.Models"});
+            request.Injectables.Add(new FunctionInjectable {Type = "IHudModel", Namespace = "Modules.Player.Controllers"});
 
             var imports = new List<string>(_writer.Write(request).Split('\n'));
 

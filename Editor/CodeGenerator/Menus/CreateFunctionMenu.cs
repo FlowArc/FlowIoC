@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Help;
 using FlowIoC.Editor.Inspector;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
@@ -35,6 +36,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string PARAMETERS_LABEL = "Execute Parameters:";
         private const string INJECTABLES_LABEL = "Injectables:";
         private const string PARENT_MODULE_LABEL = "Parent Module:";
+        private const string USAGE_LABEL = "How it is called:";
+        private const string USAGE_CAPTION = "From a Command, or from another Function";
         private const string INVALID_FUNCTION_NAME_TITLE = "Invalid Function Name";
         private const string INVALID_FUNCTION_NAME_MESSAGE = "Please enter a valid Function name.";
 
@@ -52,6 +55,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private readonly FunctionScriptWriter _writer = new FunctionScriptWriter();
         private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
 
+        private HelpPainter _painter;
         private Dictionary<string, bool> _moduleExpandedState;
         private ModuleRegistry _registry;
         private ED_CodeGenerator _codeGenSettings;
@@ -96,6 +100,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.Space(10);
 
             DisplayKindSection();
+            DisplayUsagePreview();
             DisplayParametersSection();
             DisplayInjectablesSection();
             DisplayParentModuleSelection();
@@ -215,10 +220,32 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         }
 
         /// <summary>
-        /// The module the function lands in, drawn the way Create Command asks the same question.
-        /// Any kind of module may hold one, because any kind of module may hold a Command.
+        /// How a Command calls the function, drawn as the Help window draws a snippet - the same
+        /// colouring, and the same Copy button beside it.
+        ///
+        /// It is here because the generated file is only half of what an author needs. A function
+        /// says nothing about where it is called from, which is the whole difference between one
+        /// and a Command, so the call is the part nobody can read off the class - and it changes
+        /// with every field above it: the kind decides the terminator, the parameters become the
+        /// arguments, the callback type decides whether there is a callback at all.
         /// </summary>
-        private void DisplayParentModuleSelection()
+        private void DisplayUsagePreview()
+        {
+            if (string.IsNullOrEmpty(_functionName)) return;
+
+            _painter ??= new HelpPainter(new HelpTheme());
+
+            PanelHeader(USAGE_LABEL);
+
+            _painter.Code(_writer.UsageFor(BuildRequest(_functionName + "Function")), USAGE_CAPTION);
+        }
+
+        /// <summary>
+        /// The bar a panel in this window wears: the Root's purple, an icon, and the panel's name.
+        /// The two panels here - the call and the module list - carry the same one, so the window
+        /// reads as two things asked rather than as a run of fields.
+        /// </summary>
+        private void PanelHeader(string label)
         {
             EditorGUILayout.Space(10);
 
@@ -233,9 +260,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(PANEL_HEADER_HEIGHT));
             GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"),
                 GUILayout.Width(35), GUILayout.Height(PANEL_HEADER_HEIGHT));
-            EditorGUILayout.LabelField(PARENT_MODULE_LABEL, labelStyle, GUILayout.Height(PANEL_HEADER_HEIGHT));
+            EditorGUILayout.LabelField(label, labelStyle, GUILayout.Height(PANEL_HEADER_HEIGHT));
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
+        }
+
+        /// <summary>
+        /// The module the function lands in, drawn the way Create Command asks the same question.
+        /// Any kind of module may hold one, because any kind of module may hold a Command.
+        /// </summary>
+        private void DisplayParentModuleSelection()
+        {
+            PanelHeader(PARENT_MODULE_LABEL);
 
             EditorGUILayout.BeginVertical();
 

@@ -54,6 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   argument is the value its callback carries rather than a parameter, so the parameter rows are not
   offered for one at all.
 
+  It also shows **how the function is called**, in the Help window's own code block with the same
+  colouring and the same Copy button. That is the half a generator cannot write: a function says
+  nothing about where it is called from, which is the whole difference between one and a Command.
+  The snippet follows the fields as they are filled in - the kind picks the terminator, the
+  parameters become the arguments under the names that were typed, and a callback type turns the
+  call into the `CallAsync<T, TValue>` form with a callback to hand in.
+
 ### Changed
 
 - **A Function lives in `Controllers/` with the Commands, and the `Functions/` folder is gone.** A
