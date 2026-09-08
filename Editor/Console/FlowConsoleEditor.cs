@@ -58,6 +58,22 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
         private bool _showTiming;
 
+        private readonly FlowConsoleExport _export = new FlowConsoleExport();
+
+        private readonly FlowConsoleFlowTreeBuilder _flowTree = new FlowConsoleFlowTreeBuilder();
+        private bool _flowMode;
+        private readonly HashSet<int> _collapsedFlowIds = new();
+        private readonly List<ConsoleLog> _flowRowBuffer = new();
+        private readonly List<int> _flowDepthBuffer = new();
+        private readonly List<int> _flowHeaderBuffer = new();
+        private readonly List<int> _flowHiddenBuffer = new();
+        private int[] _rowDepths;
+        private int[] _rowFlowHeaders;
+        private const float FlowHeaderHeight = 18f;
+        private const float FlowIndent = 14f;
+        private GUIStyle _flowHeaderStyle;
+        private static readonly Color FlowHeaderColor = new Color(0.45f, 0.65f, 0.85f, 1f);
+
         private readonly FlowConsolePins _pins = new FlowConsolePins();
         private bool _pinnedOnly;
         private static readonly Color PinnedMarkColor = new Color(1f, 0.78f, 0.25f, 1f);
@@ -148,6 +164,7 @@ namespace FlowIoC.Editor.Console
             _rowLineCount = _state.RowLineCount;
             _collapseRows = _state.Collapse;
             _showTiming = _state.Timing;
+            _flowMode = _state.FlowMode;
             _searchQuery = _search.Parse(_searchText);
 
             _logFilter = new Dictionary<LogType, bool>
@@ -368,6 +385,18 @@ namespace FlowIoC.Editor.Console
             if (errorPause != _state.ErrorPause)
                 _state.ErrorPause = errorPause;
 
+            var flowLabel = new GUIContent("Flow",
+                "Group the rows into the flows they belong to. A flow started from inside another sits under it.");
+
+            bool flowMode = GUILayout.Toggle(_flowMode, flowLabel, EditorStyles.toolbarButton, GUILayout.Width(50));
+            if (flowMode != _flowMode)
+            {
+                _flowMode = flowMode;
+                _state.FlowMode = flowMode;
+                _logsDirty = true;
+                _needsRepaint = true;
+            }
+
             var pinnedLabel = new GUIContent("Pinned",
                 "Show only the rows you pinned. Pin one with the row's right-click menu, or with P.");
 
@@ -481,7 +510,42 @@ namespace FlowIoC.Editor.Console
                 menu.ShowAsContext();
             }
 
+            ExportMenuGUI();
+
             EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// Handing the list to somebody who was not at the machine. What it writes is what the
+        /// console is showing - filters, search and Collapse included - because the rows the
+        /// reader narrowed down to are the ones worth sending.
+        /// </summary>
+        private void ExportMenuGUI()
+        {
+            var content = new GUIContent("Export", "Save or copy the rows the console is showing.");
+            Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.toolbarDropDown, GUILayout.Width(60));
+
+            if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
+
+            var menu = new GenericMenu();
+
+            menu.AddItem(new GUIContent("Save shown rows..."), false, () => SaveShownLogs(false));
+            menu.AddItem(new GUIContent("Save shown rows with stack traces..."), false, () => SaveShownLogs(true));
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Copy shown rows"), false,
+                () => EditorGUIUtility.systemCopyBuffer = _export.ToText(_cachedVisibleLogs, false));
+
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
+
+        private void SaveShownLogs(bool includeStackTrace)
+        {
+            string suggested = "flow-console-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".txt";
+            string path = EditorUtility.SaveFilePanel("Export Flow Console", "", suggested, "txt");
+
+            if (string.IsNullOrEmpty(path)) return;
+
+            File.WriteAllText(path, _export.ToText(_cachedVisibleLogs, includeStackTrace));
         }
 
         /// <summary>
@@ -1038,8 +1102,100 @@ namespace FlowIoC.Editor.Console
                 _cachedVisibleLogs.Add(log);
             }
 
-            FoldVisibleLogs();
+            if (_flowMode)
+                BuildFlowRows();
+            else
+                FoldVisibleLogs();
+
             RebuildLogHeights();
+        }
+
+        /// <summary>
+        /// Regroups the rows into the flows they belong to. Read straight down, a busy frame is
+        /// four operations interleaved; grouped, each one is a block a reader can follow, and a
+        /// flow started from inside another sits indented under it.
+        ///
+        /// Collapse is not applied here. Folding equal rows and grouping them by the flow they
+        /// came from answer different questions, and doing both leaves a count on a row whose
+        /// neighbours came from somewhere else.
+        /// </summary>
+        private void BuildFlowRows()
+        {
+            List<FlowNode> roots = _flowTree.Build(_cachedVisibleLogs);
+
+            _flowRowBuffer.Clear();
+            _flowDepthBuffer.Clear();
+            _flowHeaderBuffer.Clear();
+            _flowHiddenBuffer.Clear();
+
+            for (int i = 0; i < roots.Count; i++)
+                FlattenFlow(roots[i], 0);
+
+            _cachedVisibleLogs.Clear();
+            _cachedVisibleLogs.AddRange(_flowRowBuffer);
+
+            int count = _flowRowBuffer.Count;
+
+            if (_rowDepths == null || _rowDepths.Length < count)
+                _rowDepths = new int[Mathf.Max(count, 64)];
+            if (_rowFlowHeaders == null || _rowFlowHeaders.Length < count)
+                _rowFlowHeaders = new int[Mathf.Max(count, 64)];
+            if (_collapseCounts == null || _collapseCounts.Length < count)
+                _collapseCounts = new int[Mathf.Max(count, 64)];
+
+            for (int i = 0; i < count; i++)
+            {
+                _rowDepths[i] = _flowDepthBuffer[i];
+                _rowFlowHeaders[i] = _flowHeaderBuffer[i];
+
+                // A collapsed flow keeps one row and says how many it stands for, which is what
+                // the fold badge already means.
+                _collapseCounts[i] = _flowHiddenBuffer[i];
+            }
+        }
+
+        private void FlattenFlow(FlowNode node, int depth)
+        {
+            // A log outside any flow is a row of its own with nothing to head it.
+            if (node.FlowId == 0)
+            {
+                for (int i = 0; i < node.Logs.Count; i++)
+                {
+                    _flowRowBuffer.Add(node.Logs[i]);
+                    _flowDepthBuffer.Add(depth);
+                    _flowHeaderBuffer.Add(0);
+                    _flowHiddenBuffer.Add(1);
+                }
+
+                return;
+            }
+
+            bool collapsed = _collapsedFlowIds.Contains(node.FlowId);
+            int shown = collapsed ? Mathf.Min(1, node.Logs.Count) : node.Logs.Count;
+
+            for (int i = 0; i < shown; i++)
+            {
+                _flowRowBuffer.Add(node.Logs[i]);
+                _flowDepthBuffer.Add(depth);
+                _flowHeaderBuffer.Add(i == 0 ? node.FlowId : 0);
+                _flowHiddenBuffer.Add(collapsed && i == 0 ? CountUnder(node) : 1);
+            }
+
+            if (collapsed) return;
+
+            for (int i = 0; i < node.Children.Count; i++)
+                FlattenFlow(node.Children[i], depth + 1);
+        }
+
+        /// <summary>How many rows a collapsed flow is standing in for, its children included.</summary>
+        private int CountUnder(FlowNode node)
+        {
+            int count = node.Logs.Count;
+
+            for (int i = 0; i < node.Children.Count; i++)
+                count += CountUnder(node.Children[i]);
+
+            return count;
         }
 
         /// <summary>
@@ -1067,6 +1223,69 @@ namespace FlowIoC.Editor.Console
                 _cachedVisibleLogs.Add(rows[i].Log);
                 _collapseCounts[i] = rows[i].Count;
             }
+        }
+
+        private int FlowHeaderAt(int rowIndex)
+        {
+            if (!_flowMode || _rowFlowHeaders == null) return 0;
+            if (rowIndex < 0 || rowIndex >= _rowFlowHeaders.Length) return 0;
+
+            return _rowFlowHeaders[rowIndex];
+        }
+
+        private int DepthAt(int rowIndex)
+        {
+            if (!_flowMode || _rowDepths == null) return 0;
+            if (rowIndex < 0 || rowIndex >= _rowDepths.Length) return 0;
+
+            return _rowDepths[rowIndex];
+        }
+
+        /// <summary>
+        /// The line that opens a flow, with the arrow that folds it away. A flow is a signal and
+        /// everything its commands wrote, so folding one is how a reader puts an operation they
+        /// have already read out of the way without losing the rest of the list.
+        /// </summary>
+        private void FlowHeaderGUI(Rect rect, int flowId, int rowIndex)
+        {
+            bool collapsed = _collapsedFlowIds.Contains(flowId);
+            float indent = DepthAt(rowIndex) * FlowIndent;
+            var labelRect = new Rect(rect.x + indent + 6f, rect.y, rect.width - indent - 12f, rect.height);
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                EnsureFlowHeaderStyle();
+
+                EditorGUI.DrawRect(new Rect(rect.x + indent, rect.y + rect.height - 1f,
+                    rect.width - indent, 1f), new Color(0.4f, 0.4f, 0.4f, 0.6f));
+
+                GUI.Label(labelRect, (collapsed ? "▸ " : "▾ ") + "Flow " + flowId, _flowHeaderStyle);
+            }
+
+            Event currentEvent = Event.current;
+            if (currentEvent.type != EventType.MouseDown || !rect.Contains(currentEvent.mousePosition)) return;
+            if (currentEvent.button != 0) return;
+
+            if (!_collapsedFlowIds.Add(flowId))
+                _collapsedFlowIds.Remove(flowId);
+
+            _logsDirty = true;
+            Repaint();
+            currentEvent.Use();
+        }
+
+        private void EnsureFlowHeaderStyle()
+        {
+            if (_flowHeaderStyle != null) return;
+
+            _flowHeaderStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                name = "FlowConsoleFlowHeader",
+                alignment = TextAnchor.MiddleLeft,
+                fontStyle = FontStyle.Bold
+            };
+
+            _flowHeaderStyle.normal.textColor = FlowHeaderColor;
         }
 
         /// <summary>
@@ -1159,11 +1378,16 @@ namespace FlowIoC.Editor.Console
 
             for (int i = 0; i < count; i++)
             {
-                // A row that opens a play or edit session is taller by the line drawn above it.
+                // A row that opens a play or edit session, or heads a flow, is taller by the line
+                // drawn above it.
                 ConsoleLog previous = i > 0 ? _cachedVisibleLogs[i - 1] : null;
-                float height = _sessionRule.StartsSession(previous, _cachedVisibleLogs[i])
-                    ? rowHeight + SessionSeparatorHeight
-                    : rowHeight;
+                float height = rowHeight;
+
+                if (_sessionRule.StartsSession(previous, _cachedVisibleLogs[i]))
+                    height += SessionSeparatorHeight;
+
+                if (FlowHeaderAt(i) != 0)
+                    height += FlowHeaderHeight;
 
                 _cachedLogHeights[i] = height;
                 _cumulativeHeights[i + 1] = _cumulativeHeights[i] + height;
@@ -1184,6 +1408,18 @@ namespace FlowIoC.Editor.Console
                 rect = new Rect(rect.x, rect.y + SessionSeparatorHeight, rect.width,
                     rect.height - SessionSeparatorHeight);
             }
+
+            int headerFlowId = FlowHeaderAt(rowIndex);
+
+            if (headerFlowId != 0)
+            {
+                FlowHeaderGUI(new Rect(rect.x, rect.y, rect.width, FlowHeaderHeight), headerFlowId, rowIndex);
+                rect = new Rect(rect.x, rect.y + FlowHeaderHeight, rect.width, rect.height - FlowHeaderHeight);
+            }
+
+            float indent = DepthAt(rowIndex) * FlowIndent;
+            if (indent > 0f)
+                rect = new Rect(rect.x + indent, rect.y, rect.width - indent, rect.height);
 
             // Unity's console reads severity from an icon and uses the row background only to
             // separate one row from the next. Tinting a whole row yellow or red made a page of
@@ -1236,7 +1472,9 @@ namespace FlowIoC.Editor.Console
 
             // The count of a folded row, right-aligned so the messages stay lined up under each
             // other. Drawn before the text so the text knows how much room it has left.
-            int foldedCount = _collapseRows && _collapseCounts != null && rowIndex < _collapseCounts.Length
+            // The same badge counts two things, one at a time: how many equal rows Collapse folded
+            // into this one, or how many rows the folded flow it heads stands for.
+            int foldedCount = (_collapseRows || _flowMode) && _collapseCounts != null && rowIndex < _collapseCounts.Length
                 ? _collapseCounts[rowIndex]
                 : 1;
 
