@@ -50,7 +50,7 @@ namespace FlowIoC.Tests
             foreach (string required in new[]
                      {
                          "Controllers", "Models", "Signals", "RootsContexts",
-                         "ViewsMediators", "Services", "Systems", "Functions"
+                         "ViewsMediators", "Services", "Systems"
                      })
             {
                 Assert.Contains(required, shown);

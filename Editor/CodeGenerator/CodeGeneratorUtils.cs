@@ -757,6 +757,33 @@ namespace FlowIoC.Editor.CodeGenerator
             AssetDatabase.Refresh();
         }
 
+        /// <summary>
+        /// Writes a function's file into the module's Controllers folder, where the Commands are.
+        /// Unlike the Command generator there is no template behind it and nothing to bind: a
+        /// function is called from inside a Command rather than dispatched, so no Context is
+        /// touched and the whole job is the one file.
+        ///
+        /// The injected types arrive as names and their namespaces are looked up here, so the
+        /// writer itself stays a string builder that a test can drive without an AssetDatabase.
+        /// </summary>
+        internal static void CreateFunction(FunctionScriptRequest request, IEnumerable<string> injectableTypeNames, string functionPath)
+        {
+            foreach (string typeName in injectableTypeNames)
+            {
+                if (string.IsNullOrWhiteSpace(typeName)) continue;
+
+                string injectableNamespace = FindNamespaceForType(typeName.Trim());
+                if (string.IsNullOrEmpty(injectableNamespace)) continue;
+
+                request.Injectables.Add(new FunctionInjectable {Type = typeName.Trim(), Namespace = injectableNamespace});
+            }
+
+            if (!Directory.Exists(functionPath)) Directory.CreateDirectory(functionPath);
+
+            File.WriteAllText(Path.Combine(functionPath, request.ClassName + ".cs"), new FunctionScriptWriter().Write(request));
+            AssetDatabase.Refresh();
+        }
+
         private static string FindNamespaceForType(string typeName)
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();

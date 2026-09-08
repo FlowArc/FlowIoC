@@ -1,7 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Function.AsyncFunctions;
@@ -22,25 +20,7 @@ namespace FlowIoC.BaseModule.Function.Provider
         private readonly TypePool<FunctionDataContainer> _functionDataContainerPool = new();
         private readonly TypePool<IFunctionBody> _functionPool = new();
 
-        // Only a function written straight on FunctionBody - one with no typed Execute for the
-        // provider to reach - is still called by name. Its Execute is found once per type.
-        private readonly Dictionary<Type, MethodInfo> _executeMethods = new();
-
         internal IContext Context;
-
-        private MethodInfo GetExecuteMethod(Type functionType)
-        {
-            if (_executeMethods.TryGetValue(functionType, out MethodInfo cached))
-                return cached;
-
-            cached = functionType.GetMethod("Execute");
-            _executeMethods[functionType] = cached;
-
-            if (cached == null)
-                FlowLogger.LogError(SystemLogType.Function, "No public Execute found on " + functionType.Name + ".", functionType);
-
-            return cached;
-        }
 
         private void ReturnDataContainerToPool(FunctionDataContainer functionDataContainer)
         {
@@ -137,7 +117,8 @@ namespace FlowIoC.BaseModule.Function.Provider
             if (function == null)
             {
                 FlowLogger.LogError(SystemLogType.Function,
-                    functionDataContainer.FunctionType?.Name + " is not an AsyncFunction, so it cannot run as one.", functionDataContainer.FunctionType);
+                    functionDataContainer.FunctionType?.Name + " is not an AsyncFunction, so it cannot run as one.",
+                    functionDataContainer.FunctionType);
                 ReturnDataContainerToPool(functionDataContainer);
                 yield break;
             }
@@ -158,23 +139,25 @@ namespace FlowIoC.BaseModule.Function.Provider
         }
 
         /// <summary>
-        /// Runs the function's Execute. A function of one of the shipped arities calls its own
-        /// typed Execute; anything else is called by name, the way every function used to be.
+        /// Runs the function's Execute, always through the function's own typed entry. Every
+        /// function is one of the shipped arities - FunctionBody's constructor is internal, so
+        /// there is no other kind to fall back for - and the reflection the provider used to keep
+        /// for that case went with it.
         /// </summary>
         private void Invoke(IFunctionBody function, object[] parameters, out object result)
         {
-            if (function is FunctionBody body && body.TryInvokeExecute(parameters ?? Array.Empty<object>(), out result))
-                return;
+            result = null;
 
-            MethodInfo executeMethodInfo = GetExecuteMethod(function.GetType());
-            result = executeMethodInfo?.Invoke(function, parameters);
+            if (function is FunctionBody body)
+                body.TryInvokeExecute(parameters ?? Array.Empty<object>(), out result);
         }
 
         public void ReleaseFunctionManually(IFunctionBody function)
         {
             if (!function.IsRetain)
             {
-                FlowLogger.LogError(SystemLogType.Function, $"Function must be retained to call manual RELEASE! Function: {function.GetType().Name}", function.GetType());
+                FlowLogger.LogError(SystemLogType.Function, $"Function must be retained to call manual RELEASE! Function: {function.GetType().Name}",
+                    function.GetType());
                 return;
             }
 

@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Create Function**, beside Create Command in `Tools/FlowIoC`. It writes one file into the
+  module's `Controllers` folder and touches no Context, because a function is called from inside a
+  Command rather than dispatched. What the window is for is the base type: the kind, the parameters
+  and the return type decide which of the shipped arities the class derives from, and the three have
+  to agree - `FunctionReturn<double, string>` with a `public override double Execute(string)` and
+  the right `using` - which is where a hand-written function goes wrong. An async function's type
+  argument is the value its callback carries rather than a parameter, so the parameter rows are not
+  offered for one at all.
+
+### Changed
+
+- **A Function lives in `Controllers/` with the Commands, and the `Functions/` folder is gone.** A
+  Command and a Function are the same kind of thing - neither holds state, and both do the module's
+  work - so a module has one folder for its controllers rather than two. Create Module no longer
+  writes `Functions/`, and a config asset written while it did has the entry healed out the next
+  time the Editor opens; the folder itself is left where it is, along with anything in it, because a
+  heal that runs on every open is no place to move a developer's code.
+- **A function derives from one of the shipped arities, and the compiler is what says so.**
+  `FunctionBody`'s constructor is internal and its `TryInvokeExecute` is abstract, so a class can no
+  longer be written straight on it. That class used to compile and run: the provider found its
+  `Execute` by name and called it through `MethodInfo.Invoke`, at a boxed call per run, and nothing
+  reported that the function had been given the wrong base. The fallback and its `MethodInfo` cache
+  are gone with it, and every function is now called through its own typed entry. An `AsyncFunction`
+  reached with `Call` instead of `CallAsync` is reported by name rather than doing nothing.
+
 ### Fixed
 
 - **Leaving play mode no longer throws a `MissingReferenceException` for every open screen.** The

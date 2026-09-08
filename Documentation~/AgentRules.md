@@ -139,6 +139,14 @@ so follow the rules below deliberately.
   go somewhere, do something and come back - or what several Commands share. It returns a value
   when it has one to return and derives from `FunctionVoid` when it does not; the return type is
   not what makes it a Function.
+- **Both live in `Controllers/`.** A Command and a Function are the same kind of thing - neither
+  holds state, and both do the module's work - so a module has one folder for its controllers
+  rather than two. A `Functions/` folder is the older layout and is not where new work goes.
+- **A Function derives from one of the shipped arities**, never from `FunctionBody` itself:
+  `FunctionVoid` and `FunctionVoid<T1..T4>`, `FunctionReturn<TReturn>` and
+  `FunctionReturn<TReturn, T1..T4>`, or `AsyncFunction` and `AsyncFunction<T1>`. `FunctionBody`'s
+  constructor is internal, so the compiler is what says this rather than a convention - the arity
+  is what carries the typed `Execute` the provider calls.
 - Reach for a Function when the work happens more than once inside one `Execute`, or when more than
   one Command needs it. The same work is often a Command instead, and that is the right answer when
   it is a step somebody should be able to read in the sequence.
@@ -390,13 +398,12 @@ Modules/
         ├── Editor/
         ├── Runtime/
         │   ├── Constants/
-        │   ├── Controllers/        # commands
+        │   ├── Controllers/        # commands and functions
         │   ├── Data/
         │   │   ├── UnityObjects/   # ScriptableObjects: CD_, RD_, PD_, ED_, DD_
         │   │   └── ValueObjects/   # plain data: VO, CVO, RVO, PVO, EVO, DVO
         │   ├── Entities/
         │   ├── Enums/
-        │   ├── Functions/
         │   ├── Models/
         │   ├── RootsContexts/
         │   ├── Services/            # optional - self-contained, reusable; Sub/ when it splits
@@ -413,7 +420,7 @@ Modules/
             PlayerSignals            # the module's public surface
 ```
 
-`Create Command`, `Create Model` and `Create View` place their files correctly on their
+`Create Command`, `Create Function`, `Create Model` and `Create View` place their files correctly on their
 own. Prefer them over writing files by hand.
 
 ### A module's three assemblies

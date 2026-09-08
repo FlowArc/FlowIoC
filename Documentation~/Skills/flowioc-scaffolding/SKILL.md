@@ -27,6 +27,7 @@ code generators and namespace tools depend on the exact shape they produce.
 | `Tools/FlowIoC/Create Module` | A whole module: folders, asmdef, Root, Context, Signals, DotSettings, index entry, log channel |
 | `Tools/FlowIoC/Add Shared or Signals` | Adds the `Scripts/Shared/` assembly to a module that already exists and points its screen, sub and test modules at it, or writes the public signal holder a module was created without |
 | `Tools/FlowIoC/Create Command` | One Command, in `Controllers/`, in the module's namespace |
+| `Tools/FlowIoC/Create Function` | One Function, in `Controllers/` beside the Commands, on the arity its parameters and return type imply |
 | `Tools/FlowIoC/Create Model` | An interface and an implementation, in `Models/` |
 | `Tools/FlowIoC/Create View` | A View and its Mediator, in `ViewsMediators/` |
 | `Tools/FlowIoC/Module Scanner` | Reports every module's folders, assemblies, references and namespace settings, and repairs what is safe to repair |
@@ -172,7 +173,7 @@ blocks the Editor and the connection with it until somebody clicks.
 
 ## After the module exists
 
-`Create Command`, `Create Model` and `Create View` place their files in the right folder and
+`Create Command`, `Create Function`, `Create Model` and `Create View` place their files in the right folder and
 namespace on their own. Prefer them over writing the files by hand, for the same reason as the
 module itself.
 

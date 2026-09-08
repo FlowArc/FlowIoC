@@ -50,6 +50,13 @@ namespace FlowIoC.Editor.CodeGenerator
             var window = EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
             window.minSize = GENERATOR_WINDOW_SIZE;
         }
+
+        [MenuItem("Tools/FlowIoC/Create Function", false, -1295)]
+        private static void CreateFunction()
+        {
+            var window = EditorWindow.GetWindow<CreateFunctionMenu>("Create Function");
+            window.minSize = GENERATOR_WINDOW_SIZE;
+        }
     }
 }
 #endif

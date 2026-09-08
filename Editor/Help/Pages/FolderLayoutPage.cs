@@ -26,13 +26,12 @@ namespace FlowIoC.Editor.Help.Pages
                 new HelpTreeNode("Editor", "editor-only tooling for this module"),
                 new HelpTreeNode("Runtime", "",
                     new HelpTreeNode("Constants", "values that never change"),
-                    new HelpTreeNode("Controllers", "commands - one unit of work each"),
+                    new HelpTreeNode("Controllers", "commands and functions - the module's work"),
                     new HelpTreeNode("Data", "",
                         new HelpTreeNode("UnityObjects", "ScriptableObject assets - CD_, RD_, PD_, ED_, DD_"),
                         new HelpTreeNode("ValueObjects", "plain data - VO, CVO, RVO, PVO, EVO, DVO")),
                     new HelpTreeNode("Entities", "runtime objects the module owns"),
                     new HelpTreeNode("Enums", "enumerations this module defines"),
-                    new HelpTreeNode("Functions", "return a value, orchestrate nothing"),
                     new HelpTreeNode("Models", "state and the rules that keep it valid"),
                     new HelpTreeNode("RootsContexts", "the Root in the scene and the Context that binds"),
                     new HelpTreeNode("Services", "self-contained work, reusable in any game"),
@@ -67,8 +66,8 @@ namespace FlowIoC.Editor.Help.Pages
 
             painter.Space();
             painter.Note(
-                "Create Command, Create Model and Create View place their files in the right folder "
-                + "on their own. Prefer them over writing files by hand.");
+                "Create Command, Create Function, Create Model and Create View place their files in the right "
+                + "folder on their own. Prefer them over writing files by hand.");
 
             painter.SubHeading("The direction of a sub module");
             painter.Paragraph(

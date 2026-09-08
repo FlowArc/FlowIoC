@@ -1025,6 +1025,15 @@ public override void DestroyContext()
 Functions are injectable methods. Unlike commands they return values and are called
 directly instead of being dispatched.
 
+A Function's file lives in the module's `Controllers` folder, beside the Commands: a Command is a
+step somebody reads in a sequence and a Function is what a Command calls from inside one, but
+neither holds state and both do the module's work, so they are one kind of thing in one folder.
+*Tools ▸ FlowIoC ▸ Create Function* writes it there for you.
+
+Every Function derives from one of the arities below, never from `FunctionBody` itself —
+`FunctionBody`'s constructor is internal, so this is the compiler's rule rather than a convention.
+The arity is what carries the typed `Execute` the provider calls.
+
 ```csharp
 public class CalculateDamageFunction : FunctionReturn<double, string>
 {
@@ -1288,13 +1297,12 @@ Modules/
     │   ├── Editor/
     │   ├── Runtime/
     │   │   ├── Constants/         # constant strings and keys
-    │   │   ├── Controllers/       # commands
+    │   │   ├── Controllers/       # commands and functions
     │   │   ├── Data/
     │   │   │   ├── UnityObjects/  # ScriptableObjects (CD_, RD_, PD_, ED_, DD_)
     │   │   │   └── ValueObjects/  # plain data (…VO, …CVO, …RVO, …PVO)
     │   │   ├── Entities/          # MonoBehaviours owned by the module
     │   │   ├── Enums/
-    │   │   ├── Functions/
     │   │   ├── Models/
     │   │   ├── RootsContexts/     # PlayerRoot, PlayerContext, sub-contexts
     │   │   ├── Services/          # self-contained, reusable in any project
@@ -1405,9 +1413,9 @@ folders (`Controllers`, `Models`, `RootsContexts`, `Services`, `Systems`,
 `Editor`, `Resources`, `Prefabs`, `Scenes`, and the three `z` folders) and —
 optionally — the `Root` / `Context` pair. Their names are not hard-coded; they come
 from the module config and can be renamed under
-the code generator settings asset. `Constants`, `Data`, `Entities`, `Enums`,
-`Functions` and `Signals` are team convention rather than generator output — add
-them as the module needs them.
+the code generator settings asset. `Constants`, `Data`, `Entities`, `Enums` and
+`Signals` are team convention rather than generator output — add them as the module
+needs them.
 
 Every module the generator creates is recorded in one project asset —
 `Assets/Plugins/FlowIoC/Editor/CodeGenerator/ED_ModuleIndex.asset` — keyed on the
