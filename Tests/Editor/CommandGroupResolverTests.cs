@@ -31,6 +31,7 @@ namespace FlowIoC.Tests
         internal static CommandBody LastRetained;
         internal static readonly List<CommandBody> Retained = new();
         internal static object SeenModel;
+        internal static readonly List<int> Depths = new();
 
         private CommandBinder _commandBinder;
 
@@ -45,6 +46,7 @@ namespace FlowIoC.Tests
             LastRetained = null;
             Retained.Clear();
             SeenModel = null;
+            Depths.Clear();
             DispatchingCommand.Target = null;
 
             _commandBinder = new CommandBinder {Context = new StandInContext()};
@@ -136,6 +138,31 @@ namespace FlowIoC.Tests
             signal.Dispatch();
 
             Assert.That(Steps, Is.EqualTo(new[] {"first", "first"}));
+        }
+
+        /// <summary>
+        /// The steps of one sequence are started from one frame, not from inside the step before
+        /// them. Driving them by recursion left every step's frames on the stack until the whole
+        /// sequence had run, which is what let a run that had already finished and gone back to the
+        /// pool be resumed by a frame of its own. The depth is measured rather than provoked: a
+        /// StackOverflowException cannot be caught in .NET and would take the Editor with it.
+        /// </summary>
+        [Test]
+        public void A_long_sequence_does_not_deepen_the_stack()
+        {
+            const int stepCount = 200;
+
+            Signal signal = new Signal(true);
+            ICommandBinding binding = _commandBinder.Bind(signal);
+
+            for (int i = 0; i < stepCount; i++)
+                binding.ToSequence<DepthCommand>();
+
+            signal.Dispatch();
+
+            Assert.That(Depths, Has.Count.EqualTo(stepCount), "every step ran");
+            Assert.That(Depths[stepCount - 1] - Depths[0], Is.LessThan(20),
+                "the last step runs at the same depth as the first, give or take the driver's own frames");
         }
 
         #endregion
@@ -857,6 +884,13 @@ namespace FlowIoC.Tests
         public class ThirdCommand : Command
         {
             public override void Execute() => Steps.Add("third");
+        }
+
+        /// <summary>Records how deep the stack was when it ran, which is what tells one step's
+        /// frames from the whole sequence's.</summary>
+        public class DepthCommand : Command
+        {
+            public override void Execute() => Depths.Add(new System.Diagnostics.StackTrace(false).FrameCount);
         }
 
         /// <summary>Dispatches another signal from inside its own Execute, the way a step that
