@@ -5,7 +5,7 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.10.0] - 2026-09-08
 
 ### Added
 
@@ -51,6 +51,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The Filters panel lists the project's modules first**, then the framework, then Unity - the
   order of how much a reader cares. The group ids behind the panel are unchanged, because they key
   the mute snapshot and the saved panel state.
+
+### Fixed
+
+- **A context renamed inside its file reaches the Roots that list it.** A sub-context entry holds two
+  things about one context: the script it is declared in, and its full name, which is the only half
+  runtime reads. Renaming the class carried the script reference along with the file and left the
+  name behind - so the entry still read as linked, nothing was drawn under it, and the Root quietly
+  built nothing for a name that resolved to nothing. `SubContextNameSync` could already say whether
+  an entry had drifted and was called from nothing but its own tests; the Root inspector now runs
+  that pass before it draws the list. An entry that has not moved is not written, so a repaint
+  neither records an Undo step nor dirties the Root.
+
+- **A deleted module takes its sub-modules' assemblies with it.** Delete Module worked out which
+  assemblies belonged to a module from the module's name - the module's own, plus `.Shared` and
+  `.Signals` - and a module that holds sub-modules declares more than three. Deleting a screen module
+  left `Modules.<Name>.Screen.Test` named in every asmdef that referenced it, and its `.csproj` and
+  `.csproj.DotSettings` at the solution root pointing at an assembly that had gone; a main module
+  holding several screen modules left all of theirs. `ModuleAssemblies` reads the names out of the
+  asmdefs inside the folder instead, and both the reference unwiring and the project-file removal ask
+  it. The three the name implies are kept alongside what was found, so a module whose folder has
+  already been half removed still has its own assemblies unwired.
+
+- **An entry's warning wraps instead of running off the Inspector's edge.** What those lines name is
+  a namespaced type, and at a docked Inspector's width `Nothing compiles to <full name>. Its module
+  is gone or renamed.` ended mid-name - the half that says what happened was the half that went. The
+  line wraps now, and the unresolved one, having no button beside it, is drawn on its own and takes
+  the entry's whole width.
+
+- **Create Module keeps its button and its action list in view.** The form now scrolls, and the
+  module card and the Create Module button sit below it rather than inside it, so a screen module's
+  settings and its action list can no longer push the button past the window's floor. The parent and
+  folder-preview panels are drawn shorter on a screen module, and the action list takes whatever
+  height is left above the card, so widening the window lengthens the list instead of leaving it at a
+  fixed 60 pixels.
 
 ## [1.9.1] - 2026-09-08
 
