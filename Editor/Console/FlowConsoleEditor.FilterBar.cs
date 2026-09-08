@@ -68,14 +68,17 @@ namespace FlowIoC.Editor.Console
                 return;
             }
 
-            // Unity's own output first, because it is what the reader came from: this window
-            // replaces Unity's console, and the two channels that carry what Unity wrote are not
-            // the framework narrating itself.
-            CountChannels(logType => IsUnityChannel(logType.Value), out int unityShown, out int unityTotal);
-            _unityChannelsExpanded = FiltersGroupHeader("Unity", _unityChannelsExpanded, unityShown, unityTotal, 0);
+            // The project's own modules first, then the framework, then Unity. That is the order of
+            // how much a reader cares: their game's lines are what they came to read, the
+            // framework's are the machinery underneath them, and Unity's are the floor. The group
+            // ids stay 0 Unity, 1 Framework, 2 Modules - they key the mute snapshot and the saved
+            // state, and renumbering them would read somebody's saved panel back wrongly.
+            CountChannels(logType => !logType.IsMandatory, out int moduleShown, out int moduleTotal);
+            _moduleChannelsExpanded = FiltersGroupHeader("Modules", _moduleChannelsExpanded,
+                moduleShown, moduleTotal, 2);
 
-            if (_unityChannelsExpanded)
-                UnityChannelRowsGUI();
+            if (_moduleChannelsExpanded)
+                ModuleChannelRowsGUI();
 
             EditorGUILayout.Space(4f);
 
@@ -89,12 +92,11 @@ namespace FlowIoC.Editor.Console
 
             EditorGUILayout.Space(4f);
 
-            CountChannels(logType => !logType.IsMandatory, out int moduleShown, out int moduleTotal);
-            _moduleChannelsExpanded = FiltersGroupHeader("Modules", _moduleChannelsExpanded,
-                moduleShown, moduleTotal, 2);
+            CountChannels(logType => IsUnityChannel(logType.Value), out int unityShown, out int unityTotal);
+            _unityChannelsExpanded = FiltersGroupHeader("Unity", _unityChannelsExpanded, unityShown, unityTotal, 0);
 
-            if (_moduleChannelsExpanded)
-                ModuleChannelRowsGUI();
+            if (_unityChannelsExpanded)
+                UnityChannelRowsGUI();
 
             EditorGUILayout.EndScrollView();
 

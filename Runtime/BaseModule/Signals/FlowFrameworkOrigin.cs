@@ -27,15 +27,23 @@ namespace FlowIoC.BaseModule.Signals
         /// <summary>
         /// Walks a holder once and marks every signal in it, its Incoming and Outgoing halves
         /// included. Done when the holder is bound, so a dispatch reads a bool.
+        ///
+        /// The same walk names each signal for where it sits: <c>PlayerSignals.Incoming.AddCurrency</c>
+        /// rather than <c>AddCurrency</c>. A signal is constructed with nothing but its own field
+        /// name, which the compiler supplies through <c>[CallerMemberName]</c>, and a name like
+        /// <c>Launch</c> answers none of the questions a reader has when they see it dispatched -
+        /// whose Launch, out of which holder, and which half of it. The walk already has the owner
+        /// chain in hand, so the qualified name costs one string per signal at bind time and
+        /// nothing at all per dispatch.
         /// </summary>
         public void StampSignalHolder(object holder)
         {
             if (holder == null) return;
 
-            Stamp(holder, IsFrameworkType(holder.GetType()), 0);
+            Stamp(holder, IsFrameworkType(holder.GetType()), holder.GetType().Name, 0);
         }
 
-        private void Stamp(object owner, bool isFramework, int depth)
+        private void Stamp(object owner, bool isFramework, string path, int depth)
         {
             // Incoming and Outgoing are one level down, and nothing a holder holds goes deeper.
             // A bound depth is what keeps a holder that happens to reference itself from hanging.
@@ -51,11 +59,15 @@ namespace FlowIoC.BaseModule.Signals
                 if (value is ISignalBody signal)
                 {
                     signal.IsFrameworkOwned = isFramework;
+
+                    // Composed from the field rather than appended to what the signal already
+                    // carries, so a holder stamped twice is named the same both times.
+                    signal.Name = path + "." + fields[i].Name;
                     continue;
                 }
 
                 if (value.GetType().IsClass && value.GetType() != typeof(string))
-                    Stamp(value, isFramework, depth + 1);
+                    Stamp(value, isFramework, path + "." + fields[i].Name, depth + 1);
             }
         }
     }
