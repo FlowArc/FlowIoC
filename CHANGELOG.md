@@ -5,6 +5,23 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **A command group drives its steps from a loop rather than by recursion.** `CheckExecuteNextStep`,
+  `ExecuteCommandStep` and `HandleStepCompletion` formed a closed cycle, so a step did not return
+  before the next one started and a whole sequence's frames stayed on the stack until it had
+  finished. The group could therefore end and the resolver go back to the pool while frames of that
+  same run were still waiting to resume: a command that dispatched a signal took the instance out
+  again, `Initialize` reset the run, and those frames woke up on somebody else's steps. A single
+  `Pump()` now starts every step from one frame - a completion that lands while it is running says
+  so and returns - and the group is ended by the driver's exit, when nothing of the run is on the
+  stack. The two run-id guards that caught this after the fact are gone; the one in the sub-group
+  callback stays, because a retained sub group can still report after its parent was pooled and
+  re-initialised, and `RunToken` stays because that one belongs to the command pool. No public type
+  or signature changed.
+
 ## [1.9.0] - 2026-09-08
 
 ### Added

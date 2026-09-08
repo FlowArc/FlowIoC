@@ -38,6 +38,24 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private int _completionCount;
         private bool _isDisposed;
 
+        // Whether a driver is already running, and whether something asked it to carry on while it
+        // was. A completion that lands mid-step sets the request and returns rather than starting
+        // the next step from inside the one before it, which is what kept a whole sequence's frames
+        // on the stack until it had finished.
+        private bool _isPumping;
+        private bool _advanceRequested;
+
+        // A sequence step that stopped takes the steps behind it with it. The driver reads this and
+        // starts nothing more; the group is ended by the driver's exit rather than from inside the
+        // Stop, so no frame of this run is left on the stack once the resolver is back in the pool.
+        private bool _isStopped;
+
+        // What the last completion released, waiting for the steps the driver starts because of it.
+        // It is read once per turn of the loop rather than once per step: the recursion handed the
+        // same array to every parallel step it started in one go, and consuming it per step would
+        // feed only the first of two parallel steps sitting behind a sequence step that released.
+        private object[] _pendingParameters;
+
         // Which run the resolver is on. The resolver is pooled, so a frame of a finished run can
         // still be on the stack when a nested dispatch takes the same instance back out of the pool
         // and starts a new run on it. Every place that carries on after calling out reads this and
@@ -75,6 +93,10 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _executionIndex = 0;
             _completionCount = 0;
             _isDisposed = false;
+            _isStopped = false;
+            _isPumping = false;
+            _advanceRequested = false;
+            _pendingParameters = null;
             _runId++;
             IsHideLog = commandBinding.Key is ISignalBody signal && signal.HideCommandLog;
 
@@ -85,7 +107,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             FlowLogger.CaptureCurrentFlow(ref _flowId, ref _parentFlowId);
             FlowLogger.CaptureCurrentDeclaration(ref _declarationFile, ref _declarationLine);
 
-            CheckExecuteNextStep(null);
+            Pump();
         }
 
         /// <summary>
@@ -108,6 +130,9 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _signalParameters = null;
             _executionIndex = 0;
             _completionCount = 0;
+            _isStopped = false;
+            _advanceRequested = false;
+            _pendingParameters = null;
             _flowId = 0;
             _parentFlowId = 0;
             _declarationFile = null;
@@ -115,6 +140,11 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
             // IsHideLog is deliberately left where it is. The binder reads it on the way to the
             // pool, which is after this now, and Initialize sets it for the next run anyway.
+
+            // _isPumping is not cleared here either, and for a sharper reason: the driver's own
+            // finally owns it. Clearing it from a Dispose that landed mid-run would let the next
+            // re-entrant call start a second driver on the same instance, which is the one thing
+            // the flag exists to prevent. Initialize sets it false for the next run.
         }
 
         #endregion
@@ -155,7 +185,9 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
-            if (!_retainedCommands.Remove(command, out int stepIndex))
+            // The step index the dictionary carries is not read here: a hit means this run is still
+            // waiting on the command, and the driver knows which step that is.
+            if (!_retainedCommands.Remove(command, out _))
             {
                 // Nothing is waiting on this command any more - its group finished or was stopped,
                 // and Dispose already handed it back. Returning it a second time would put the same
@@ -167,8 +199,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
             _commandBinder.ReturnCommandToPool(command);
 
-            if (!_isDisposed && stepIndex >= 0 && stepIndex < _steps.Count)
-                HandleStepCompletion(_steps[stepIndex], commandParameters);
+            HandleStepCompletion(commandParameters);
         }
 
         [UnityEngine.HideInCallstack]
@@ -219,69 +250,113 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             CommandStepVO step = _steps[stepIndex];
 
             if (step.ExecutionType == CommandExecutionType.Parallel)
-            {
                 _completionCount--;
-
-                if (_completionCount == 0 && _executionIndex >= _steps.Count)
-                    CompleteGroupExecution();
-            }
             else
-            {
-                CompleteGroupExecution();
-            }
+                // A sequence step that stops takes the steps behind it with it.
+                _isStopped = true;
+
+            // The group is ended by the driver's exit rather than from here, so a Stop called from
+            // inside a command's own Execute does not hand the resolver back to the pool while that
+            // Execute is still on the stack.
+            Pump();
         }
 
         #endregion
 
         #region Execution Flow
 
-        private void CheckExecuteNextStep(object[] commandParameters)
+        /// <summary>
+        /// The one place a step is started from. Re-entered - by a command that finished inside its
+        /// own Execute, by a sub group that ran to the end on this stack - it records that there is
+        /// more to do and returns, and the driver already running takes it on its next turn.
+        ///
+        /// That is the whole point of the loop. Driving the steps by recursion left every step's
+        /// frames on the stack until the sequence had finished, so the group could end and the
+        /// resolver go back to the pool while frames of that same run were still waiting to resume:
+        /// a command that dispatched a signal took the instance out again, Initialize reset the run,
+        /// and those frames woke up on somebody else's steps. Here nothing of a run is left on the
+        /// stack once work of another run can begin, so the case cannot arise rather than being
+        /// caught after it has.
+        /// </summary>
+        private void Pump()
         {
-            if (_isDisposed) return;
-
-            if (_executionIndex >= _steps.Count)
+            if (_isPumping)
             {
-                if (_completionCount == 0)
-                    CompleteGroupExecution();
+                _advanceRequested = true;
                 return;
             }
 
-            int runId = _runId;
+            _isPumping = true;
 
-            int stepIndex = _executionIndex++;
+            try
+            {
+                do
+                {
+                    _advanceRequested = false;
+
+                    // Read once per turn rather than once per step, because the recursion handed the
+                    // same array to every parallel step it started in one go. Consuming it per step
+                    // would feed only the first of two parallel steps behind a sequence step that
+                    // released a value.
+                    object[] commandParameters = _pendingParameters;
+                    _pendingParameters = null;
+
+                    while (!_isDisposed && !_isStopped && _executionIndex < _steps.Count && CanStartNextStep())
+                        StartStep(_executionIndex++, commandParameters);
+                } while (_advanceRequested && !_isDisposed);
+            }
+            finally
+            {
+                _isPumping = false;
+            }
+
+            if (_isDisposed) return;
+
+            if (_isStopped || (_completionCount == 0 && _executionIndex >= _steps.Count))
+                CompleteGroupExecution();
+        }
+
+        /// <summary>
+        /// Whether the step waiting at <see cref="_executionIndex"/> may start now. A sequence step
+        /// holds the ones behind it until it finishes; a parallel step holds nothing, so whatever
+        /// follows one starts beside it - which is how a parallel step in front of a sequence step
+        /// gets both of them running.
+        /// </summary>
+        private bool CanStartNextStep()
+        {
+            if (_executionIndex == 0 || _completionCount == 0)
+                return true;
+
+            return _steps[_executionIndex - 1].ExecutionType == CommandExecutionType.Parallel;
+        }
+
+        private void StartStep(int stepIndex, object[] commandParameters)
+        {
             CommandStepVO step = _steps[stepIndex];
 
             if (step.GroupKey != null)
                 ExecuteGroupStep(step);
             else if (step.CommandType != null)
                 ExecuteCommandStep(step, stepIndex, commandParameters);
-
-            // The step may have finished the group and sent the resolver back to the pool, and a
-            // command it ran may have dispatched a signal that took it out again. Starting the next
-            // parallel step then would start it on somebody else's run.
-            if (step.ExecutionType == CommandExecutionType.Parallel && runId == _runId)
-                CheckExecuteNextStep(commandParameters);
         }
 
         /// <summary>
-        /// Marks one step done and decides whether the group is. Both halves matter: nothing is
-        /// still running, and there is nothing left to start. A parallel step that finishes inside
-        /// its own Execute used to satisfy the first on its own, so a group of parallel steps that
-        /// were all synchronous ended after the first one and the rest were never reached.
+        /// Marks one step done and asks the driver to carry on. It does not decide whether the group
+        /// is finished, and that is deliberate: only the driver's exit does, once nothing is running
+        /// and there is nothing left to start. Deciding here is what used to end a group of parallel
+        /// steps after the first one, because a step that finished inside its own Execute satisfied
+        /// "nothing is running" on its own while the rest had not been reached yet.
         /// </summary>
-        private void HandleStepCompletion(CommandStepVO step, object[] commandParameters)
+        private void HandleStepCompletion(object[] commandParameters)
         {
-            int runId = _runId;
-
-            if (step.ExecutionType == CommandExecutionType.Sequence)
-                CheckExecuteNextStep(commandParameters);
-
-            if (runId != _runId || _isDisposed) return;
+            if (_isDisposed) return;
 
             _completionCount--;
 
-            if (_completionCount == 0 && _executionIndex >= _steps.Count)
-                CompleteGroupExecution();
+            if (commandParameters != null)
+                _pendingParameters = commandParameters;
+
+            Pump();
         }
 
         /// <summary>
@@ -318,7 +393,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 // the step neither started nor finished: the sequence waited for a sub-group that
                 // was never going to report, and the resolver never went back to the pool.
                 _completionCount++;
-                HandleStepCompletion(step, null);
+                HandleStepCompletion(null);
                 return;
             }
 
@@ -337,7 +412,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 _commandBinder.ReturnGroupToPool(g);
 
                 if (runId == _runId)
-                    OnSubGroupFinished(step);
+                    OnSubGroupFinished();
             };
             subGroup.GroupExecutionFinished += onFinish;
 
@@ -416,7 +491,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             {
                 _retainedCommands.Remove(command);
                 _commandBinder.ReturnCommandToPool(command);
-                HandleStepCompletion(step, null);
+                HandleStepCompletion(null);
             }
         }
 
@@ -424,11 +499,11 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         #region Callbacks
 
-        private void OnSubGroupFinished(CommandStepVO step)
+        private void OnSubGroupFinished()
         {
             if (_isDisposed) return;
 
-            HandleStepCompletion(step, null);
+            HandleStepCompletion(null);
         }
 
         #endregion
