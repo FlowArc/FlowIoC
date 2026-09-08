@@ -22,7 +22,7 @@ namespace FlowIoC.PoolModule.Controllers
                 return;
             }
 
-            FlowLogger.Log(SystemLogType.Pool, $"[PoolService][RegisterPoolConfigCommand] Registering pool configs: {_configs.Count}");
+            FlowLogger.Log(SystemLogType.Pool, $"registering pool configs: {_configs.Count}");
             foreach (var config in _configs)
             {
                 if (config.Value == null)

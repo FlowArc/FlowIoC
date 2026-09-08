@@ -38,7 +38,7 @@ namespace FlowIoC.ScreenModule.Model.Registry
             }
 
             _managers[manager.ManagerID] = manager;
-            FlowLogger.Log(SystemLogType.Screen, $"[ScreenRegistryModel] Registered screen manager with ID: {manager.ManagerID}");
+            FlowLogger.Log(SystemLogType.Screen, $"screen manager registered: {manager.ManagerID}");
         }
 
         public ScreenManagerVO GetScreenManager(int managerId)
@@ -74,7 +74,7 @@ namespace FlowIoC.ScreenModule.Model.Registry
 
             _screens[key] = entry;
             FlowLogger.Log(SystemLogType.Screen,
-                $"[ScreenRegistryModel] Registered screen {entry.ViewType.Name} at manager {entry.Screen.ManagerId}");
+                $"{entry.ViewType.Name} registered on manager {entry.Screen.ManagerId}");
             return true;
         }
 
@@ -115,7 +115,7 @@ namespace FlowIoC.ScreenModule.Model.Registry
 
             if (_screens.Remove((entry.Screen.ManagerId, entry.ViewType)))
                 FlowLogger.Log(SystemLogType.Screen,
-                    $"[ScreenRegistryModel] Removed screen {entry.ViewType.Name} at manager {entry.Screen.ManagerId}");
+                    $"{entry.ViewType.Name} unregistered from manager {entry.Screen.ManagerId}");
         }
 
         public List<ScreenEntry> GetAllEntries() => _screens.Values.ToList();

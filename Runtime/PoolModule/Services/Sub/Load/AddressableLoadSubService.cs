@@ -48,7 +48,7 @@ namespace FlowIoC.PoolModule.Services.Sub.Load
 
             if (_loadedHandles.TryGetValue(key, out handle))
             {
-                FlowLogger.Log(SystemLogType.Pool, $"[AddressableLoadService] Using cached handle for key: {key}");
+                FlowLogger.Log(SystemLogType.Pool, $"cached handle used for {key}");
             }
             else
             {
@@ -118,7 +118,7 @@ namespace FlowIoC.PoolModule.Services.Sub.Load
 
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
-                FlowLogger.Log(SystemLogType.Pool, $"[AddressableLoadService] Preloaded asset with key: {key}");
+                FlowLogger.Log(SystemLogType.Pool, $"preloaded {key}");
             }
             else
             {

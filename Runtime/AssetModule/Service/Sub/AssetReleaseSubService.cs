@@ -47,7 +47,7 @@ namespace FlowIoC.AssetModule.Service.Sub
 
             _registry.Groups.Remove(groupId);
             _signals.Outgoing.GroupReleased.Dispatch(groupId);
-            FlowLogger.Log(SystemLogType.Asset, $"[AssetService] Group released: {groupId}");
+            FlowLogger.Log(SystemLogType.Asset, $"group {groupId} released");
         }
 
         public void HardRelease(string regKey)
