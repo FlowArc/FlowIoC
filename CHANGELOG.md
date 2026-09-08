@@ -5,7 +5,7 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.9.0] - 2026-09-08
 
 ### Added
 
@@ -128,10 +128,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   package's own frames to find the game's, and a log the framework writes about itself has none - so
   the row got no location at all. Failing to find a game frame now falls back to the first frame that
   has a file and a line.
-- **Pinned rows survived the automatic clears and were then thrown away.** Entering play ran
-  `ResetStatics` after the parked logs were read back, and it emptied the list. It leaves the list
-  alone now, and the trim at `MaxLogCount` counts pinned rows as kept rather than dropping the oldest
-  of them - both the runtime trim and the window's now go through one trimmer.
 - **An injectable a generator could not place is written anyway rather than dropped.** Create
   Command, Create Function and Create Model looked each injected type up by name and, finding
   nothing, left the member out of the file - silently. A name with a typo in it, or a type in an
@@ -175,7 +171,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The log list is no longer wiped at the start of every run.** `ResetStatics` cleared it as play
   mode began, after the reload had just carried it across, so Clear on Play being off changed
   nothing and a pinned row went with the rest. What the console holds when a run starts is Clear on
-  Play's decision alone.
+  Play's decision alone. The trim at `MaxLogCount` counts pinned rows as kept rather than dropping
+  the oldest of them, and the runtime trim and the window's now go through one trimmer.
 
 ## [1.8.0] - 2026-09-07
 
