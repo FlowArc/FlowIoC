@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   re-initialised, and `RunToken` stays because that one belongs to the command pool. No public type
   or signature changed.
 
+### Fixed
+
+- **A retained command is remembered against its step rather than against an index into a list.**
+  `StopCommand` read the step back out of `_steps` by index and returned when that index was out of
+  range - having already handed the command to the pool, and without reporting - which left the
+  group waiting on a step nobody would ever finish. The dictionary now carries the step itself, so
+  the lookup that could be answered wrongly is gone rather than guarded.
+
 ## [1.9.0] - 2026-09-08
 
 ### Added

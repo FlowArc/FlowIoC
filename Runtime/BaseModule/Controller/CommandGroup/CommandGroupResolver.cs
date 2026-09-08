@@ -29,10 +29,16 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private object[] _signalParameters;
         private List<CommandStepVO> _steps;
 
-        // Retained commands, each against the index of the step that is waiting on it. The
-        // dictionary belongs to the resolver rather than to a run, because the resolver is pooled
-        // and allocating a fresh one per dispatch gave back half of what pooling saved.
-        private readonly Dictionary<ICommandBody, int> _retainedCommands = new();
+        // Retained commands, each against the step that is waiting on it. The step itself rather
+        // than its index: an index has to be read back against a list, which is a question that can
+        // be answered wrongly, and a Stop that could not answer it used to return having already
+        // pooled the command and without ever reporting - a group left waiting on a step nobody
+        // would finish. A step reached through the dictionary is the one the command was started
+        // for, and there is nothing left to get wrong.
+        //
+        // The dictionary belongs to the resolver rather than to a run, because the resolver is
+        // pooled and allocating a fresh one per dispatch gave back half of what pooling saved.
+        private readonly Dictionary<ICommandBody, CommandStepVO> _retainedCommands = new();
 
         private int _executionIndex;
         private int _completionCount;
@@ -235,7 +241,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
             if (_isDisposed) return;
 
-            if (!_retainedCommands.Remove(command, out int stepIndex))
+            if (!_retainedCommands.Remove(command, out CommandStepVO step))
             {
                 FlowLogger.LogWarning(SystemLogType.CommandOperation,
                     $"STOP arrived after the group ended. Command: {command.GetType().Name}", command.GetType());
@@ -243,11 +249,6 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             }
 
             _commandBinder.ReturnCommandToPool(command);
-
-            if (stepIndex < 0 || stepIndex >= _steps.Count)
-                return;
-
-            CommandStepVO step = _steps[stepIndex];
 
             if (step.ExecutionType == CommandExecutionType.Parallel)
                 _completionCount--;
@@ -337,7 +338,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (step.GroupKey != null)
                 ExecuteGroupStep(step);
             else if (step.CommandType != null)
-                ExecuteCommandStep(step, stepIndex, commandParameters);
+                ExecuteCommandStep(step, commandParameters);
         }
 
         /// <summary>
@@ -437,7 +438,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             }
         }
 
-        private void ExecuteCommandStep(CommandStepVO step, int stepIndex, object[] commandParameters)
+        private void ExecuteCommandStep(CommandStepVO step, object[] commandParameters)
         {
             CommandBody command = _commandBinder.GetCommand(step.CommandType);
 
@@ -449,7 +450,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
             _commandBinding.Context.InjectCommand(command, _signalParameters);
 
-            _retainedCommands[command] = stepIndex;
+            _retainedCommands[command] = step;
 
             _completionCount++;
 
