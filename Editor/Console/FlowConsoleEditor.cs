@@ -58,6 +58,10 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
         private bool _showTiming;
 
+        private readonly FlowConsolePins _pins = new FlowConsolePins();
+        private bool _pinnedOnly;
+        private static readonly Color PinnedMarkColor = new Color(1f, 0.78f, 0.25f, 1f);
+
         private readonly FlowConsoleSessionRule _sessionRule = new FlowConsoleSessionRule();
         private GUIStyle _sessionSeparatorStyle;
         private const float SessionSeparatorHeight = 18f;
@@ -363,6 +367,18 @@ namespace FlowIoC.Editor.Console
                 GUILayout.Width(80));
             if (errorPause != _state.ErrorPause)
                 _state.ErrorPause = errorPause;
+
+            var pinnedLabel = new GUIContent("Pinned",
+                "Show only the rows you pinned. Pin one with the row's right-click menu, or with P.");
+
+            bool pinnedOnly = GUILayout.Toggle(_pinnedOnly, pinnedLabel, EditorStyles.toolbarButton,
+                GUILayout.Width(60));
+            if (pinnedOnly != _pinnedOnly)
+            {
+                _pinnedOnly = pinnedOnly;
+                _logsDirty = true;
+                _needsRepaint = true;
+            }
 
             var timingLabel = new GUIContent("Timing",
                 "Lead each row with the frame it was written in and the gap since the row above, instead of the clock.");
@@ -861,6 +877,14 @@ namespace FlowIoC.Editor.Console
                 {
                     var log = allLogs[i];
 
+                    // A pin outranks a filter. Turning a channel off means hide that kind of log,
+                    // and the reader already said this particular one is not the kind they meant.
+                    if (log.Pinned)
+                    {
+                        _multiTypeFilterBuffer.Add(log);
+                        continue;
+                    }
+
                     bool isSystemLog = log.SystemLogType != SystemLogType.All;
 
                     if (isSystemLog)
@@ -930,6 +954,19 @@ namespace FlowIoC.Editor.Console
                 return;
             }
 
+            if (currentEvent.keyCode == KeyCode.P && !currentEvent.control && !currentEvent.command)
+            {
+                if (_selectedLog != null)
+                {
+                    _pins.Toggle(_selectedLog);
+                    _logsDirty = true;
+                }
+
+                Repaint();
+                currentEvent.Use();
+                return;
+            }
+
             if ((currentEvent.control || currentEvent.command) && currentEvent.keyCode == KeyCode.C)
             {
                 if (_selectedLog != null)
@@ -991,7 +1028,12 @@ namespace FlowIoC.Editor.Console
             for (int i = 0; i < _cachedFilteredLogs.Count; i++)
             {
                 var log = _cachedFilteredLogs[i];
-                if (!_logFilter[log.LogType]) continue;
+                if (_pinnedOnly && !log.Pinned) continue;
+
+                // The severity toggles are a filter like the channels, so a pin outranks them too.
+                // A search is not - that is the reader looking for something rather than hiding a
+                // kind of log, and answering it with rows they pinned for another reason is noise.
+                if (!log.Pinned && !_logFilter[log.LogType]) continue;
                 if (hasSearch && !_searchQuery.Matches(log.Message)) continue;
                 _cachedVisibleLogs.Add(log);
             }
@@ -1157,6 +1199,11 @@ namespace FlowIoC.Editor.Console
             // wrote this. It keeps the colour the settings give the channel.
             EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), consoleLog.LogColor);
 
+            // A pinned row gets a bright bar beside that strip rather than over it - which channel
+            // wrote the log is not something pinning it should cost the reader.
+            if (consoleLog.Pinned)
+                EditorGUI.DrawRect(new Rect(rect.x + 3f, rect.y, 2f, rect.height), PinnedMarkColor);
+
             bool small = _rowLineCount < 2;
             Texture icon = IconFor(consoleLog.LogType, small);
 
@@ -1285,6 +1332,14 @@ namespace FlowIoC.Editor.Console
 
                     menu.AddItem(new GUIContent("Copy"), false, () => { EditorGUIUtility.systemCopyBuffer = consoleLog.Message; });
 
+                    menu.AddSeparator("");
+                    menu.AddItem(new GUIContent(consoleLog.Pinned ? "Unpin" : "Pin"), consoleLog.Pinned, () =>
+                    {
+                        _pins.Toggle(consoleLog);
+                        _logsDirty = true;
+                        _needsRepaint = true;
+                    });
+
                     menu.ShowAsContext();
                     currentEvent.Use();
                 }
@@ -1340,7 +1395,7 @@ namespace FlowIoC.Editor.Console
             if (maxLogCount <= 0 || _allLogs.Count <= maxLogCount + LogTrimChunk)
                 return;
 
-            _allLogs.RemoveRange(0, _allLogs.Count - maxLogCount);
+            _pins.Trim(_allLogs, maxLogCount);
         }
     }
 }

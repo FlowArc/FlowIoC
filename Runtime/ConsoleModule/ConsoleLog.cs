@@ -34,6 +34,13 @@ namespace FlowIoC.ConsoleModule
         /// <summary>What the console's Collapse mode folds equal rows on.</summary>
         public int CollapseKey;
 
+        /// <summary>
+        /// Whether the reader asked to keep this one. A pinned log is passed over by the trim that
+        /// bounds the list, and can be shown on its own. The mark lives here rather than in the
+        /// window so that it survives a domain reload with the log it belongs to.
+        /// </summary>
+        public bool Pinned;
+
         /// <summary>Time.frameCount when the log was written.</summary>
         public int Frame;
 
