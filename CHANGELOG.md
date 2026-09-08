@@ -9,6 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Flow Console is a console you can keep open instead of Unity's.** Unity's own output arrives on
+  two new channels, `Unity` and `Compiler`, read through `Application.logMessageReceived` and
+  `CompilationPipeline` and nothing else, so a Unity upgrade cannot quietly break them. Both are
+  recorded whether or not `ENABLE_LOG` is defined - turning the define off is a statement about your
+  logging, and a console that then showed no compile errors would be useless at the moment it is
+  most needed. With them come the switches Unity's console has: a `Clear` split button carrying
+  Clear on Play, Clear on Recompile and Clear on Build; `Collapse`, which folds equal rows onto one
+  line with a count and keeps the place of the first occurrence; `Error Pause`; severity icons; rows
+  of one, two or three lines; a list that follows new logs down while it is resting at the bottom
+  and leaves you alone once you scroll up; and arrows, PageUp/PageDown, Home/End, Enter and Ctrl+C
+  on the list.
+- **The log list survives a recompile.** `FlowLogger.Logs` is a static, so a domain reload used to
+  empty the console at the moment a compile error most wants reading, whatever Clear on Recompile
+  said. The newest five thousand rows are now written to `SessionState` before the reload and read
+  back after it.
+- **The search box parses what was typed.** Terms are ANDed, a `-term` excludes, and a term wrapped
+  in slashes is a regular expression; a half-typed expression says so rather than quietly emptying
+  the list. What matched is painted behind the text, because a narrowed list says which rows
+  survived but not why, and beside the severity counters is how many rows are shown against how many
+  the console holds.
+- **Alt+clicking a channel narrows the console to it**, and alt+clicking the one that is already
+  alone brings the rest back. `Presets` keeps a set of channels under a name - two ship with the
+  console, the rest are saved from what is shown - in EditorPrefs, because `CD_FlowConsole` is
+  committed and one developer's filter has no business in everybody's diff.
+- **`Flow` groups the rows into the flows they belong to.** Every log written while a signal runs
+  its commands now carries the id of that flow, and one started from inside another carries its
+  parent's, so each flow opens with a line that folds it away and a nested flow sits indented under
+  it. Read straight down, a busy frame is four operations interleaved. The ids cost a shipping build
+  nothing: the calls that keep them carry `[Conditional("ENABLE_LOG")]`.
+- **Pinning, timing and session lines.** Pinning a row - `P`, or its right-click menu - is you
+  saying this one is not noise, so it outranks the channel switches, the severity toggles, the trim
+  at `MaxLogCount` and the automatic clears; only the `Clear` button and a search go past it.
+  `Timing` swaps a row's clock for the frame it was written in and the gap since the row above. A
+  line is drawn across the list wherever a play session begins or ends.
+- **`Export`** saves or copies the rows that are showing as plain text, filters and search included,
+  because the rows you narrowed down to are the ones worth sending.
 - **Create Function**, beside Create Command in `Tools/FlowIoC`. It writes one file into the
   module's `Controllers` folder and touches no Context, because a function is called from inside a
   Command rather than dispatched. What the window is for is the base type: the kind, the parameters
@@ -43,6 +79,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transform. `IView.IsAlive()` is what those guards ask now: an unregister that finds its screen
   destroyed drops it from the pools and releases the loader's handle without hiding it, and the
   two loaders skip the `Destroy` they can no longer do.
+- **A diagnostic opens the code that caused it, not the guard that noticed.** Double-clicking a
+  warning about a command that released without retaining used to open `CommandGroupResolver` - the
+  framework checking a condition - which tells the reader nothing they did not already know. The
+  console now skips the framework's own stack frames when it works out where a log came from, and
+  the diagnostics that know which type they are about say so, so an asynchronous release still
+  opens the Command.
+- **A log's source can no longer take the console window down.** A path read out of a stack trace
+  is whatever text was there, and a generated frame carries angle brackets that `System.IO.Path`
+  refuses with an `ArgumentException`. Thrown inside `OnGUI` it unbalanced GUILayout and broke the
+  window's drawing once per repaint.
+- **The log list is no longer wiped at the start of every run.** `ResetStatics` cleared it as play
+  mode began, after the reload had just carried it across, so Clear on Play being off changed
+  nothing and a pinned row went with the rest. What the console holds when a run starts is Clear on
+  Play's decision alone.
 
 ## [1.8.0] - 2026-09-07
 

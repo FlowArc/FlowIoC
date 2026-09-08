@@ -1119,7 +1119,14 @@ The framework logs its own activity on the built-in channels `Context`,
 `Injection`, `Signal`, `Command`, `CommandOperation`, `Function`, `Screen`, `Pool`,
 `Model` and `Asset`, each of which can be toggled in the Flow Console window — so
 you can watch every signal dispatch and command step without adding a single log
-line.
+line. Unity's own output arrives on two more, `Unity` and `Compiler`, which is what
+lets one window be the only console you keep open: Clear, Collapse, Error Pause and
+Clear on Play all behave the way they do in Unity's.
+
+Double-clicking a row opens the code that wrote it. Where the row is FlowIoC
+complaining about your code — a command that released without retaining, a view with
+no Context above it — it opens **your** file rather than the framework's guard clause,
+which is the only answer that tells the reader something they did not already know.
 
 For your own logs, Flow Console auto-registers one channel per module and
 regenerates `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` with a constant for each:
