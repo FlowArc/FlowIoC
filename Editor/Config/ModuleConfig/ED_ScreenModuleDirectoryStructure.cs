@@ -104,13 +104,6 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             },
                             new FolderEVO
                             {
-                                FolderName = "Functions",
-                                Type = FolderEVO.FolderType.Folder,
-                                IsMandatory = true,
-                                IsNamespaceProvider = true
-                            },
-                            new FolderEVO
-                            {
                                 FolderName = "Services",
                                 Type = FolderEVO.FolderType.Services,
                                 IsMandatory = false,
@@ -274,6 +267,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             bool healed = config.EnsureSharedBranch(settings);
             healed |= config.EnsurePublicSignalsFolder(settings);
             healed |= config.RemoveRetiredFolderTypes();
+            healed |= config.RemoveRetiredFolderNames();
             healed |= config.MakeFolderOptional("Scriptables");
 
             if (healed)
@@ -327,7 +321,6 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             FolderEVO.FolderType.Signals, null, true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators],
                             FolderEVO.FolderType.ViewsAndMediators, null, true, isNamespaceProvider: true),
-                        CreateFolder("Functions", FolderEVO.FolderType.Folder, null, true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Services], FolderEVO.FolderType.Services,
                             null, false, true),
                         CreateFolder("Constants", FolderEVO.FolderType.Folder, null, true),

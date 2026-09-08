@@ -12,6 +12,7 @@ refuses the resulting duplicate assembly name — see Pitfalls, below.
 - [Create Module](#create-module)
 - [Create View](#create-view)
 - [Create Command](#create-command)
+- [Create Function](#create-function)
 - [Create Model](#create-model)
 - [Namespaces and the Module Index](#namespaces-and-the-module-index)
 - [Delete Module](#delete-module)
@@ -110,6 +111,35 @@ CommandBinder.Bind(_signals.Incoming.Purchase)
 Name commands after what they do to the world — `GrantItemCommand`,
 `PersistMatchResultCommand` — not after the signal that triggers them. A command named
 `OnPurchaseCommand` cannot be reused in a second chain without lying about itself.
+
+---
+
+## Create Function
+
+**Tools ▸ FlowIoC ▸ Create Function**
+
+Writes a function into the same `Controllers` folder the Commands are in. A Command and a
+Function are both controllers — neither holds state, and both do the module's work — so the
+module has one folder for them rather than two.
+
+There is nothing to bind. A function is called from inside a Command's `Execute` rather than
+dispatched, so the generator writes the one file and touches no Context.
+
+What the window is actually for is the base type. A function derives from one of the shipped
+arities and never from `FunctionBody` — its constructor is internal, so the compiler says so —
+and the parameters, the return type and the base's generic arguments all have to agree:
+
+| Kind | Base written | `Execute` |
+|---|---|---|
+| Void | `FunctionVoid`, `FunctionVoid<T1..T4>` | `public override void Execute(...)` |
+| Return | `FunctionReturn<TReturn>`, `FunctionReturn<TReturn, T1..T4>` | `public override TReturn Execute(...)` |
+| Async | `AsyncFunction`, `AsyncFunction<TValue>` | `public override IEnumerator Execute()` |
+
+An async function's type argument is the value its callback carries, not a parameter — so the
+parameter rows are not offered for one, and it answers through `FunctionCompletedCallback`.
+
+Four parameters is where the shipped arities stop. A function that wants a fifth takes a value
+object instead, which is what the fifth parameter was going to be anyway.
 
 ---
 

@@ -146,6 +146,37 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         }
 
         /// <summary>
+        /// Takes out every folder that retired under a name rather than a type. `Functions` is what
+        /// this exists for: it was a plain FolderType.Folder, so there is no number to retire it by
+        /// - and a Function belongs in Controllers with the Commands, both being controllers.
+        ///
+        /// It edits the layout, not the disk. A module that already has the folder keeps it and
+        /// whatever is in it; what stops is Module Scanner making a new one in every module because
+        /// the serialized config still calls it mandatory.
+        /// </summary>
+        internal bool RemoveRetiredFolderNames()
+        {
+            bool removed = false;
+
+            foreach (string retired in FolderEVO.RetiredFolderNames)
+                removed |= RemoveFolderByName(RootFolders, retired);
+
+            return removed;
+        }
+
+        private static bool RemoveFolderByName(List<FolderEVO> folders, string folderName)
+        {
+            if (folders == null) return false;
+
+            bool removed = folders.RemoveAll(folder => folder.FolderName == folderName) > 0;
+
+            foreach (FolderEVO folder in folders)
+                removed |= RemoveFolderByName(folder.SubFolders, folderName);
+
+            return removed;
+        }
+
+        /// <summary>
         /// Marks a folder optional in a config asset that has it as mandatory. The screen layout
         /// shipped with `Scriptables` mandatory in the half of its declaration that gets
         /// serialized and optional in the half that does not, and correcting the code cannot reach

@@ -111,7 +111,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("Modules that do not know each other. A module's signals are its whole public surface.");
             painter.Bullet("Wiring you can read: bindings in one Context, crossings in one Connector.");
             painter.Bullet("The flow is visible. Contexts, injections, signals and commands are logged to the Flow Console.");
-            painter.Bullet("Generators instead of boilerplate: Create Module, Create Command, Create Model, Create View.");
+            painter.Bullet("Generators instead of boilerplate: Create Module, Create Command, Create Function, Create Model, Create View.");
             painter.Bullet("Good for one developer, better for a team: two people can own two modules and never collide.");
 
             painter.Separator();

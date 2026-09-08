@@ -97,6 +97,20 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             (FolderType) 9, // ScreenConfigs
             (FolderType) 24 // SharedSignals
         };
+
+        /// <summary>
+        /// The folders that retired under a name rather than a type, for the same heal. A folder
+        /// carrying <see cref="FolderType.Folder"/> has no number of its own to be retired by, so
+        /// the name is all there is to go on.
+        ///
+        /// Functions retired because a Function is a controller, the way a Command is: one is a
+        /// step read in a sequence and the other is what a Command calls from inside one, but
+        /// neither holds state and both do the module's work, so both live in Controllers.
+        /// </summary>
+        internal static readonly string[] RetiredFolderNames =
+        {
+            "Functions"
+        };
     }
 }
 #endif

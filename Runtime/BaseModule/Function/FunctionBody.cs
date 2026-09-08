@@ -4,8 +4,23 @@ using FlowIoC.BaseModule.Injectable.Attributes;
 
 namespace FlowIoC.BaseModule.Function
 {
-    public class FunctionBody : IFunctionBody
+    /// <summary>
+    /// What every function is built on, and what nothing outside FlowIoC derives from directly.
+    /// The constructor is internal, so a game's function has to pick one of the shipped arities -
+    /// a FunctionVoid, a FunctionReturn or an AsyncFunction - and the compiler is what says so.
+    ///
+    /// That is the whole reason for the internal constructor. A class written straight on this one
+    /// has no typed Execute for the provider to call, so the provider used to find its method by
+    /// name and invoke it through reflection: it worked, it cost a boxed call per run, and nothing
+    /// reported that the function had been given the wrong base. Closing the door here let that
+    /// fallback go.
+    /// </summary>
+    public abstract class FunctionBody : IFunctionBody
     {
+        internal FunctionBody()
+        {
+        }
+
         [Inject] protected IFunctionProvider _functionProvider { get; set; }
 
         public bool IsRetain { get; set; }
@@ -70,15 +85,14 @@ namespace FlowIoC.BaseModule.Function
 
         /// <summary>
         /// Calls this function's own Execute with the parameters the caller lined up, without
-        /// reflection. Each arity overrides it; a function written straight on FunctionBody has
-        /// no typed Execute for the provider to reach, so it answers false and the provider finds
-        /// the method by name the way it always did.
+        /// reflection. Every arity implements it, which is what makes the call typed - and it is
+        /// abstract rather than virtual so that a new arity cannot be added without answering it
+        /// and quietly run nothing.
+        ///
+        /// It answers true once it has dealt with the call, a reported bad argument included; false
+        /// says this function is not run this way at all, which is what an AsyncFunction says.
         /// </summary>
-        internal virtual bool TryInvokeExecute(object[] parameters, out object result)
-        {
-            result = null;
-            return false;
-        }
+        internal abstract bool TryInvokeExecute(object[] parameters, out object result);
     }
 
     public interface IFunctionBody

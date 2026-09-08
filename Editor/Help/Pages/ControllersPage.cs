@@ -443,7 +443,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "    public override double Execute(string weaponId) =>\n"
                 + "        _weaponsModel.GetConfigVO(weaponId).baseDamage;\n"
                 + "}",
-                "CalculateDamageFunction.cs - Scripts/Runtime/Functions");
+                "CalculateDamageFunction.cs - Scripts/Runtime/Controllers");
             painter.Code(
                 "public class RefreshHudFunction : FunctionVoid\n"
                 + "{\n"
@@ -570,8 +570,9 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Command is a step in a flow. A Function is called from inside one, and is not a step in the console.");
             painter.Bullet("Reach for a Function when the work happens twice inside one Execute, or when more than one Command needs it.");
             painter.Bullet("Injection targets properties. A plain field is skipped silently - no error, no warning, null at runtime.");
-            painter.Bullet("A Command lives in Scripts/Runtime/Controllers, a Function in Scripts/Runtime/Functions.");
-            painter.Bullet("Create Command writes the file and its binding. Prefer it over writing either by hand.");
+            painter.Bullet("A Command and a Function both live in Scripts/Runtime/Controllers. Both are controllers.");
+            painter.Bullet("A Function derives from a shipped arity - FunctionVoid, FunctionReturn or AsyncFunction - never from FunctionBody.");
+            painter.Bullet("Create Command and Create Function write the file for you. Prefer them over writing either by hand.");
         }
 
         /// <summary>

@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using FlowIoC.BaseModule.Function;
+using FlowIoC.BaseModule.Function.AsyncFunctions;
 using FlowIoC.BaseModule.Function.Provider;
 using FlowIoC.BaseModule.Function.ReturnableFunctions;
 using FlowIoC.BaseModule.Function.VoidFunctions;
@@ -176,6 +178,32 @@ namespace FlowIoC.Tests
 
             Assert.That(Instances[3], Is.SameAs(Instances[2]),
                 "the pool held one instance, not the same one twice");
+        }
+
+        /// <summary>
+        /// An async function is driven as a coroutine and never through the synchronous path, so
+        /// calling one with Call would otherwise run nothing and report nothing. The provider has
+        /// no reflection fallback to reach its Execute with - FunctionBody's constructor is
+        /// internal, so the shipped arities are the only kinds there are - and this is what a
+        /// caller gets instead of silence.
+        /// </summary>
+        [Test]
+        public void An_async_function_called_with_Call_is_reported_and_does_not_run()
+        {
+            LogAssert.Expect(LogType.Error, new Regex("CallAsync"));
+
+            _provider.Call<WaitingFunction>().Execute();
+
+            Assert.That(Runs, Is.Zero);
+        }
+
+        public class WaitingFunction : AsyncFunction
+        {
+            public override IEnumerator Execute()
+            {
+                Runs++;
+                yield break;
+            }
         }
 
         public class CountingFunction : FunctionVoid

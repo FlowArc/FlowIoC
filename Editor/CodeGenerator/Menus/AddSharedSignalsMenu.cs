@@ -37,7 +37,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         /// <summary>How far a row is sunk when the panel has nothing to offer it.</summary>
         private const float GREY_ALPHA = 0.14f;
 
-        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1295)]
+        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1294)]
         internal static void Open()
         {
             var window = GetWindow<AddSharedSignalsMenu>(TITLE);

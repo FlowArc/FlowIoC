@@ -32,10 +32,16 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "module index the moment its folder exists. For a Screen module you can list the "
                 + "screen's actions up front, and they are put on both the View and the Mediator.");
 
-            painter.SubHeading("Create Command, Create Model, Create View");
+            painter.SubHeading("Create Command, Create Function, Create Model, Create View");
             painter.Paragraph(
                 "The same idea at a smaller scale. Each asks which module and which sub-module the "
                 + "class belongs to, then writes it into the right folder with the right namespace.");
+            painter.Note(
+                "Create Function picks the base type for you. A function derives from one of the "
+                + "shipped arities and never from FunctionBody, and the parameters, the return "
+                + "type and the base's generic arguments all have to agree - which is where a "
+                + "hand-written function goes wrong. It lands in Controllers with the Commands, "
+                + "both being controllers.");
             painter.Note(
                 "Create View also builds the prefab and adds the ViewInjector component. That "
                 + "component is easy to forget by hand, and a View without it silently never "
