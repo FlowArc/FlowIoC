@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Module Scanner reports a module whose log type part is missing.** `LogTypeCheck` answers
+  whether the channel is registered in `CD_FlowConsole`; nothing was watching the other half, the
+  generated part in the module and the asmref beside it. Either can go without the settings
+  changing at all - deleted by hand, lost in a merge, never written because the generator was
+  interrupted - and the first anyone hears of it is the module failing to compile against a
+  constant no longer declared anywhere. The missing asmref is reported on its own, because without
+  it the part still compiles: into the module's own assembly, where it is a second `FlowLogType`
+  sharing a name with the real one and nothing else. Both repair by running the generator, so there
+  is one writer and one shape.
+
 ### Changed
 
 - **A log channel is a name, not a number, and a module declares its own.** `FlowLogType` used to be

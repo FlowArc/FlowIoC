@@ -12,9 +12,11 @@ namespace FlowIoC.Tests
         /// before their asmdefs can be written, the Signals assembly references Shared so Shared
         /// comes first, the module asmdef references both so both come before it, the references
         /// are added to an asmdef that must already exist, and the settings file name derives from
-        /// the final assembly name, and the card is written last because its block names the
-        /// assemblies every check above it settles. Changing this order changes what Fix All
-        /// produces, so it is asserted rather than left to whoever edits the list.
+        /// the final assembly name, the log type part is checked once the module's assemblies are
+        /// settled because its asmref is about which assembly the part lands in, and the card is
+        /// written last because its block names the assemblies every check above it settles.
+        /// Changing this order changes what Fix All produces, so it is asserted rather than left
+        /// to whoever edits the list.
         /// </summary>
         [Test]
         public void Module_checks_run_in_the_order_the_repairs_depend_on()
@@ -25,7 +27,7 @@ namespace FlowIoC.Tests
                 new[]
                 {
                     "folders", "shared-assembly", "signals-assembly", "assembly", "references", "signal-references",
-                    "dotsettings", "module-card"
+                    "dotsettings", "log-type-part", "module-card"
                 },
                 ids);
         }
