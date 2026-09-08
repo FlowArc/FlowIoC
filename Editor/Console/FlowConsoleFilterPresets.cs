@@ -8,7 +8,7 @@ namespace FlowIoC.Editor.Console
     public class FilterPreset
     {
         public string Name;
-        public List<int> VisibleChannels = new();
+        public List<string> VisibleChannels = new();
     }
 
     /// <summary>
@@ -32,32 +32,20 @@ namespace FlowIoC.Editor.Console
             new FilterPreset
             {
                 Name = "Signal chase",
-                VisibleChannels = new List<int>
-                {
-                    (int) SystemLogType.Signal,
-                    (int) SystemLogType.Command
-                }
+                VisibleChannels = new List<string> {"Signal", "Command"}
             },
             new FilterPreset
             {
                 Name = "Screen debug",
-                VisibleChannels = new List<int>
-                {
-                    (int) SystemLogType.Signal,
-                    (int) SystemLogType.Screen
-                }
+                VisibleChannels = new List<string> {"Signal", "Screen"}
             }
         };
 
-        public void Save(string name, IReadOnlyCollection<int> visibleChannels)
+        public void Save(string name, IReadOnlyCollection<string> visibleChannels)
         {
             if (string.IsNullOrEmpty(name)) return;
 
-            var values = new List<string>();
-            foreach (int channel in visibleChannels)
-                values.Add(channel.ToString());
-
-            EditorPrefs.SetString(PREFIX + name, string.Join(";", values));
+            EditorPrefs.SetString(PREFIX + name, string.Join(";", visibleChannels));
 
             List<string> names = LoadNames();
             if (!names.Contains(name))
@@ -77,8 +65,8 @@ namespace FlowIoC.Editor.Console
 
                 foreach (string part in EditorPrefs.GetString(PREFIX + name, "").Split(';'))
                 {
-                    if (int.TryParse(part, out int channel))
-                        preset.VisibleChannels.Add(channel);
+                    if (!string.IsNullOrEmpty(part))
+                        preset.VisibleChannels.Add(part);
                 }
 
                 presets.Add(preset);

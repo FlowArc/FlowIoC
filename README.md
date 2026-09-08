@@ -1128,8 +1128,8 @@ complaining about your code — a command that released without retaining, a vie
 no Context above it — it opens **your** file rather than the framework's guard clause,
 which is the only answer that tells the reader something they did not already know.
 
-For your own logs, Flow Console auto-registers one channel per module and
-regenerates `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` with a constant for each:
+For your own logs, Flow Console auto-registers one channel per module and generates a
+`const string` for each — in the module itself, as a part of `FlowLogType`:
 
 ```csharp
 using FlowIoC.ConsoleModule;

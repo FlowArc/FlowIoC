@@ -240,28 +240,60 @@ namespace FlowIoC.ConsoleModule
             OnLogsCleared?.Invoke();
         }
 
-        public static int GetModuleLogType<T>()
+        /// <summary>
+        /// The channel a type's own module logs on, worked out from its namespace:
+        /// <c>Modules.Player.Models</c> answers <c>PlayerModule</c>. Null when the project has no
+        /// such channel, which is what a caller checks rather than a magic number.
+        /// </summary>
+        public static string GetModuleLogType<T>()
         {
             var ns = typeof(T).Namespace;
-            if (ns != null)
-            {
-                var parts = ns.Split('.');
-                if (parts.Length >= 2)
-                    return GetLogTypeValue(parts[1]);
-            }
+            if (ns == null) return null;
 
-            return -1;
+            var parts = ns.Split('.');
+            if (parts.Length < 2) return null;
+
+            return FindChannel(parts[1]) ?? FindChannel(parts[1] + "Module");
         }
 
-        public static int GetLogTypeValue(string typeName)
+        /// <summary>
+        /// The channel's own name back, if the project has one by that name, and null if it does
+        /// not. What it is for is answering with the string the settings hold rather than the one
+        /// the caller typed, so a channel found case-insensitively is still logged on under the
+        /// spelling everything else uses.
+        /// </summary>
+        public static string FindChannel(string channel)
         {
-            foreach (var type in Settings.LogTypes)
-            {
-                if (string.Equals(type.Name, typeName, StringComparison.OrdinalIgnoreCase))
-                    return type.Value;
-            }
+            if (string.IsNullOrEmpty(channel)) return null;
 
-            return -1;
+            return Settings.TryGetLogType(channel, out var type) ? type.Name : null;
+        }
+
+        /// <summary>
+        /// A framework channel's name, as a literal per case rather than <c>ToString()</c>, which
+        /// allocates a string on every log. The names are the enum's own, because that is what the
+        /// settings asset stores for the mandatory channels.
+        /// </summary>
+        private static string SystemChannelName(SystemLogType systemLogType)
+        {
+            switch (systemLogType)
+            {
+                case SystemLogType.All: return "All";
+                case SystemLogType.Context: return "Context";
+                case SystemLogType.Injection: return "Injection";
+                case SystemLogType.Signal: return "Signal";
+                case SystemLogType.SignalOperation: return "SignalOperation";
+                case SystemLogType.Command: return "Command";
+                case SystemLogType.CommandOperation: return "CommandOperation";
+                case SystemLogType.Function: return "Function";
+                case SystemLogType.Screen: return "Screen";
+                case SystemLogType.Pool: return "Pool";
+                case SystemLogType.Model: return "Model";
+                case SystemLogType.Asset: return "Asset";
+                case SystemLogType.Unity: return "Unity";
+                case SystemLogType.Compiler: return "Compiler";
+                default: return systemLogType.ToString();
+            }
         }
 
         /// <summary>
@@ -397,17 +429,17 @@ namespace FlowIoC.ConsoleModule
 
         [HideInCallstack]
         [Conditional("ENABLE_LOG")]
-        public static void Log(int logTypeValue, string message)
+        public static void Log(string channel, string message)
         {
-            AddCustomLog(logTypeValue, ResolveMessage(logTypeValue, message), LogType.Log);
+            AddCustomLog(channel, ResolveMessage(channel, message), LogType.Log);
         }
 
         [HideInCallstack]
         [Conditional("ENABLE_LOG")]
-        public static void Log(int logTypeValue, string message, FlowLogProfile profile)
+        public static void Log(string channel, string message, FlowLogProfile profile)
         {
             string formatted = profile != null ? FormatWithProfile(message, profile) : message;
-            AddCustomLog(logTypeValue, formatted, LogType.Log);
+            AddCustomLog(channel, formatted, LogType.Log);
         }
 
         // ======================== LogWarning ========================
@@ -433,17 +465,17 @@ namespace FlowIoC.ConsoleModule
 
         [HideInCallstack]
         [Conditional("ENABLE_LOG")]
-        public static void LogWarning(int logTypeValue, string message)
+        public static void LogWarning(string channel, string message)
         {
-            AddCustomLog(logTypeValue, ResolveMessage(logTypeValue, message), LogType.Warning);
+            AddCustomLog(channel, ResolveMessage(channel, message), LogType.Warning);
         }
 
         [HideInCallstack]
         [Conditional("ENABLE_LOG")]
-        public static void LogWarning(int logTypeValue, string message, FlowLogProfile profile)
+        public static void LogWarning(string channel, string message, FlowLogProfile profile)
         {
             string formatted = profile != null ? FormatWithProfile(message, profile) : message;
-            AddCustomLog(logTypeValue, formatted, LogType.Warning);
+            AddCustomLog(channel, formatted, LogType.Warning);
         }
 
         // ======================== LogError ========================
@@ -452,7 +484,7 @@ namespace FlowIoC.ConsoleModule
         internal static void LogError(SystemLogType systemLogType, string message, string unityMessage = "",
             UnityEngine.Object context = null)
         {
-            WriteError((int) systemLogType, systemLogType, message, unityMessage, context);
+            WriteError(SystemChannelName(systemLogType), systemLogType, message, unityMessage, context);
         }
 
         /// <summary>
@@ -463,21 +495,21 @@ namespace FlowIoC.ConsoleModule
         internal static void LogError(SystemLogType systemLogType, string message, Type blame,
             string unityMessage = "", UnityEngine.Object context = null)
         {
-            WriteError((int) systemLogType, systemLogType, message, unityMessage, context, blame);
+            WriteError(SystemChannelName(systemLogType), systemLogType, message, unityMessage, context, blame);
         }
 
         [HideInCallstack]
-        public static void LogError(int logTypeValue, string message, UnityEngine.Object context = null)
+        public static void LogError(string channel, string message, UnityEngine.Object context = null)
         {
-            WriteError(logTypeValue, null, ResolveMessage(logTypeValue, message), null, context);
+            WriteError(channel, null, ResolveMessage(channel, message), null, context);
         }
 
         [HideInCallstack]
-        public static void LogError(int logTypeValue, string message, FlowLogProfile profile,
+        public static void LogError(string channel, string message, FlowLogProfile profile,
             UnityEngine.Object context = null)
         {
             string formatted = profile != null ? FormatWithProfile(message, profile) : message;
-            WriteError(logTypeValue, null, formatted, null, context);
+            WriteError(channel, null, formatted, null, context);
         }
 
         /// <summary>
@@ -486,17 +518,17 @@ namespace FlowIoC.ConsoleModule
         /// that has to be told something is broken. Every error is written here, and written once.
         /// </summary>
         [HideInCallstack]
-        private static void WriteError(int logTypeValue, SystemLogType? systemLogType, string message,
+        private static void WriteError(string channel, SystemLogType? systemLogType, string message,
             string unityMessage, UnityEngine.Object context, Type blame = null)
         {
 #if UNITY_EDITOR
             var log = CreateLogEntry(message, LogType.Error, blame);
-            log.LogTypeValue = logTypeValue;
+            log.Channel = channel;
 
             if (systemLogType.HasValue)
                 log.SystemLogType = systemLogType.Value;
 
-            if (Settings.TryGetLogType(logTypeValue, out var typeInfo))
+            if (Settings.TryGetLogType(channel, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
             AppendLog(log);
@@ -521,14 +553,14 @@ namespace FlowIoC.ConsoleModule
 
         [HideInCallstack]
         [Conditional("ENABLE_LOG")]
-        public static void LogLong(int logTypeValue, string message, FlowLogProfile profile = null)
+        public static void LogLong(string channel, string message, FlowLogProfile profile = null)
         {
-            profile ??= Settings.GetResolvedProfile(logTypeValue);
-            LogLongInternal(logTypeValue, message, profile);
+            profile ??= Settings.GetResolvedProfile(channel);
+            LogLongInternal(channel, message, profile);
         }
 
         [HideInCallstack]
-        private static void LogLongInternal(int logTypeValue, string message, FlowLogProfile profile)
+        private static void LogLongInternal(string channel, string message, FlowLogProfile profile)
         {
             if (!Settings.IsLoggingEnabled) return;
 
@@ -536,7 +568,7 @@ namespace FlowIoC.ConsoleModule
             if (messageLength <= MaxMessageLength)
             {
                 string formatted = profile != null ? FormatWithProfile(message, profile) : message;
-                AddCustomLog(logTypeValue, formatted, LogType.Log);
+                AddCustomLog(channel, formatted, LogType.Log);
                 return;
             }
 
@@ -571,11 +603,11 @@ namespace FlowIoC.ConsoleModule
 
                     string styledChunk = FormatPart(decorated, profile.MessageStyle, profile.MessageColor);
 
-                    AddCustomLog(logTypeValue, prefix + styledChunk + postfix, LogType.Log);
+                    AddCustomLog(channel, prefix + styledChunk + postfix, LogType.Log);
                 }
                 else
                 {
-                    AddCustomLog(logTypeValue, decorated, LogType.Log);
+                    AddCustomLog(channel, decorated, LogType.Log);
                 }
             }
         }
@@ -593,9 +625,11 @@ namespace FlowIoC.ConsoleModule
             string stackTrace, string filePath, int lineNumber)
         {
 #if UNITY_EDITOR
-            int channel = source == LogSource.Compiler
-                ? (int) SystemLogType.Compiler
-                : (int) SystemLogType.Unity;
+            SystemLogType systemLogType = source == LogSource.Compiler
+                ? SystemLogType.Compiler
+                : SystemLogType.Unity;
+
+            string channel = SystemChannelName(systemLogType);
 
             // The channel's tag, the same way the framework's own lines get theirs. This path
             // builds its own entry rather than going through AddLog, so it has to ask as well.
@@ -611,8 +645,8 @@ namespace FlowIoC.ConsoleModule
                 Message = message,
                 LogType = logType,
                 Source = source,
-                LogTypeValue = channel,
-                SystemLogType = (SystemLogType) channel,
+                Channel = channel,
+                SystemLogType = systemLogType,
                 StackTrace = stackTrace,
                 SourceTrace = stackTrace,
                 SourceFilePath = filePath,
@@ -677,7 +711,7 @@ namespace FlowIoC.ConsoleModule
             // so a message says only what happened. Resolved from a cache the settings rebuild
             // whenever a profile changes, and applied here so every one of the framework's own
             // lines gets it rather than only the ones a caller passed a profile to.
-            message = ResolveMessage((int) systemLogType, message);
+            message = ResolveMessage(SystemChannelName(systemLogType), message);
 
 #if UNITY_EDITOR
             var log = CreateLogEntry(message, logType, blame, captureSource, forceCapture);
@@ -689,33 +723,33 @@ namespace FlowIoC.ConsoleModule
                 log.SourceLineNumber = lineNumber;
             }
 
-            log.LogTypeValue = (int) systemLogType;
+            log.Channel = SystemChannelName(systemLogType);
 
-            if (Settings.TryGetLogType((int) systemLogType, out var typeInfo))
+            if (Settings.TryGetLogType(log.Channel, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
             AppendLog(log);
 #endif
 
-            ForwardToUnityConsole((int) systemLogType, message, logType);
+            ForwardToUnityConsole(SystemChannelName(systemLogType), message, logType);
         }
 
         [HideInCallstack]
-        private static void AddCustomLog(int logTypeValue, string message, LogType logType, Type blame = null)
+        private static void AddCustomLog(string channel, string message, LogType logType, Type blame = null)
         {
             if (!Settings.IsLoggingEnabled) return;
 
 #if UNITY_EDITOR
             var log = CreateLogEntry(message, logType, blame);
-            log.LogTypeValue = logTypeValue;
+            log.Channel = channel;
 
-            if (Settings.TryGetLogType(logTypeValue, out var typeInfo))
+            if (Settings.TryGetLogType(channel, out var typeInfo))
                 log.LogColor = typeInfo.LogColor;
 
             AppendLog(log);
 #endif
 
-            ForwardToUnityConsole(logTypeValue, message, logType);
+            ForwardToUnityConsole(channel, message, logType);
         }
 
 #if UNITY_EDITOR
@@ -774,7 +808,7 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         private static void AppendLog(ConsoleLog log)
         {
-            log.CollapseKey = CollapseKeys.Build(log.Message, log.StackTrace, log.LogTypeValue);
+            log.CollapseKey = CollapseKeys.Build(log.Message, log.StackTrace, log.Channel);
 
             Logs.Add(log);
             OnLogAdded?.Invoke(log);
@@ -787,9 +821,9 @@ namespace FlowIoC.ConsoleModule
         }
 #endif
 
-        private static void ForwardToUnityConsole(int logTypeValue, string message, LogType logType)
+        private static void ForwardToUnityConsole(string channel, string message, LogType logType)
         {
-            if (!Settings.SendLogsToUnityConsole || !Settings.IsLogTypeVisible(logTypeValue)) return;
+            if (!Settings.SendLogsToUnityConsole || !Settings.IsLogTypeVisible(channel)) return;
 
             // Raised so the editor bridge can tell this log apart from somebody else's when
             // Unity hands it straight back through Application.logMessageReceived.
@@ -815,9 +849,9 @@ namespace FlowIoC.ConsoleModule
         // ======================== Formatting ========================
 
         [HideInCallstack]
-        private static string ResolveMessage(int logTypeValue, string message)
+        private static string ResolveMessage(string channel, string message)
         {
-            var profile = Settings.GetResolvedProfile(logTypeValue);
+            var profile = Settings.GetResolvedProfile(channel);
             return profile != null ? FormatWithProfile(message, profile) : message;
         }
 

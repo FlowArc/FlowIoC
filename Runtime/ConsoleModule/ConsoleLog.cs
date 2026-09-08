@@ -17,7 +17,16 @@ namespace FlowIoC.ConsoleModule
         public int Millisecond;
 
         public SystemLogType SystemLogType;
-        public int LogTypeValue;
+
+        /// <summary>
+        /// The channel this log is on, by name. A name rather than a number because a project's
+        /// channels are one per module and there is nobody to hand out numbers: two developers
+        /// adding a module on two branches are handed the same one, and a number reassigned when
+        /// the list is sorted moves every row already recorded onto somebody else's channel. The
+        /// framework's own channels are named for their SystemLogType.
+        /// </summary>
+        public string Channel;
+
         public LogType LogType;
         public string Message;
 

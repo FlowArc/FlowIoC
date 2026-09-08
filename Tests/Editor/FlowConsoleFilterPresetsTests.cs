@@ -16,7 +16,7 @@ namespace FlowIoC.Tests
 
             Assert.IsNotNull(preset);
             CollectionAssert.AreEquivalent(
-                new[] {(int) SystemLogType.Signal, (int) SystemLogType.Command},
+                new[] {"Signal", "Command"},
                 preset.VisibleChannels);
         }
 
@@ -31,7 +31,7 @@ namespace FlowIoC.Tests
 
             Assert.IsNotNull(preset);
             CollectionAssert.AreEquivalent(
-                new[] {(int) SystemLogType.Signal, (int) SystemLogType.Screen},
+                new[] {"Signal", "Screen"},
                 preset.VisibleChannels);
         }
 
@@ -39,13 +39,13 @@ namespace FlowIoC.Tests
         public void A_saved_preset_reads_back_with_its_channels()
         {
             _presets.Delete("probe");
-            _presets.Save("probe", new List<int> {5, 14});
+            _presets.Save("probe", new List<string> {"Context", "Command"});
 
             List<FilterPreset> saved = _presets.LoadSaved();
             FilterPreset probe = saved.Find(p => p.Name == "probe");
 
             Assert.IsNotNull(probe);
-            CollectionAssert.AreEquivalent(new[] {5, 14}, probe.VisibleChannels);
+            CollectionAssert.AreEquivalent(new[] {"Context", "Command"}, probe.VisibleChannels);
 
             _presets.Delete("probe");
             Assert.IsNull(_presets.LoadSaved().Find(p => p.Name == "probe"));
@@ -61,7 +61,7 @@ namespace FlowIoC.Tests
             _presets.Delete("probe");
             FlowLogger.Settings.LogTypes[0].IsVisible = true;
 
-            _presets.Save("probe", new List<int> {5});
+            _presets.Save("probe", new List<string> {"Context"});
 
             Assert.IsTrue(FlowLogger.Settings.LogTypes[0].IsVisible);
             _presets.Delete("probe");

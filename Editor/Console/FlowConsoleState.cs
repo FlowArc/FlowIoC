@@ -80,10 +80,10 @@ namespace FlowIoC.Editor.Console
         /// a display decision like muting: no channel is switched off to arrange it, so leaving it
         /// puts the reader back exactly where they were.
         /// </summary>
-        public int IsolatedChannel
+        public string IsolatedChannel
         {
-            get => EditorPrefs.GetInt(PREFIX + nameof(IsolatedChannel), -1);
-            set => EditorPrefs.SetInt(PREFIX + nameof(IsolatedChannel), value);
+            get => EditorPrefs.GetString(PREFIX + nameof(IsolatedChannel), null);
+            set => EditorPrefs.SetString(PREFIX + nameof(IsolatedChannel), value ?? "");
         }
 
         /// <summary>

@@ -94,19 +94,22 @@ namespace FlowIoC.ConsoleModule
             [Tooltip("Name of the linked log profile")]
             public string ProfileName;
 
+            /// <summary>
+            /// The name alone, because the name is what identifies a channel. Two channels used to
+            /// count as equal when their numbers matched, which was true of every channel the
+            /// project added while the numbers were being handed out in order - and would be true
+            /// again of two modules added on two branches and then merged, since each branch was
+            /// handed the same next number.
+            /// </summary>
             public override bool Equals(object obj)
             {
-                if (obj is FlowConsoleLogTypeCVO other)
-                {
-                    return Value == other.Value || string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
-                }
-
-                return false;
+                return obj is FlowConsoleLogTypeCVO other
+                       && string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
             }
 
             public override int GetHashCode()
             {
-                return Value.GetHashCode() ^ (Name?.GetHashCode() ?? 0);
+                return Name == null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(Name);
             }
         }
 
@@ -468,10 +471,12 @@ namespace FlowIoC.ConsoleModule
             if (defaultType != null)
                 defaultType.Value = 100;
 
-            const int baseValue = 1000;
-            const int step = 10;
-            for (int i = 0; i < projectTypes.Count; i++)
-                projectTypes[i].Value = baseValue + i * step;
+            // Only the order of the list is decided here. A project channel's number used to be
+            // handed out along it - 1000, 1010, 1020 by alphabet - which meant a module whose name
+            // sorted early moved every channel after it onto a different number, and with it every
+            // saved filter, every row already recorded, and every constant a script had compiled
+            // against. A project channel is identified by its name now and carries no number at
+            // all; the framework's own channels keep theirs, because those are a fixed enum.
 
             _logTypes.Clear();
             _logTypes.AddRange(systemTypes);
@@ -578,6 +583,24 @@ namespace FlowIoC.ConsoleModule
         {
             if (_logTypeByValue == null) RebuildCache();
             return _logTypeByValue.TryGetValue(logTypeValue, out result);
+        }
+
+        /// <summary>
+        /// The lookup a log goes through. A channel is addressed by name, so this answers for the
+        /// framework's channels and the project's alike - the framework's are named for their
+        /// <see cref="SystemLogType"/>.
+        /// </summary>
+        public bool TryGetLogType(string channel, out FlowConsoleLogTypeCVO result)
+        {
+            if (_logTypeByName == null) RebuildCache();
+
+            if (channel == null)
+            {
+                result = null;
+                return false;
+            }
+
+            return _logTypeByName.TryGetValue(channel, out result);
         }
 
         public bool IsLogTypeVisible(int logTypeValue)
@@ -717,12 +740,15 @@ namespace FlowIoC.ConsoleModule
         }
 
         private Dictionary<string, FlowLogProfileData> _profileByName;
-        private Dictionary<int, FlowLogProfile> _resolvedProfileByLogType;
+        private Dictionary<string, FlowLogProfile> _resolvedProfileByLogType;
 
-        public FlowLogProfile GetResolvedProfile(int logTypeValue)
+        public FlowLogProfile GetResolvedProfile(string channel)
         {
             if (_resolvedProfileByLogType == null) BuildProfileCache();
-            _resolvedProfileByLogType.TryGetValue(logTypeValue, out var profile);
+
+            if (channel == null) return null;
+
+            _resolvedProfileByLogType.TryGetValue(channel, out var profile);
             return profile;
         }
 
@@ -734,7 +760,8 @@ namespace FlowIoC.ConsoleModule
 
         private void BuildProfileCache()
         {
-            _resolvedProfileByLogType = new Dictionary<int, FlowLogProfile>();
+            _resolvedProfileByLogType =
+                new Dictionary<string, FlowLogProfile>(StringComparer.OrdinalIgnoreCase);
             _profileByName = new Dictionary<string, FlowLogProfileData>(StringComparer.OrdinalIgnoreCase);
 
             if (_logProfiles != null)
@@ -754,7 +781,7 @@ namespace FlowIoC.ConsoleModule
 
                     if (_profileByName.TryGetValue(logType.ProfileName, out var profileData) && profileData.IsEffective())
                     {
-                        _resolvedProfileByLogType[logType.Value] = profileData.ToProfile();
+                        _resolvedProfileByLogType[logType.Name] = profileData.ToProfile();
                     }
                 }
             }

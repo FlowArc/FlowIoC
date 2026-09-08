@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A log channel is a name, not a number, and a module declares its own.** `FlowLogType` used to be
+  one generated file listing every channel in the project as a `const int`, and the numbers were
+  handed out in order and reassigned whenever the list was sorted - so a module whose name sorted
+  early moved every channel after it onto a different number, taking every saved filter and every row
+  already recorded with it. There was also nobody to hand out the next number: two people adding a
+  module on two branches were each handed the same one, and they conflicted over the same lines of
+  the same file. Both problems are gone. A channel is identified by its name, and each module's
+  channel is a `const string` in a part of its own at
+  `<Module>/Scripts/Generated/FlowLogType.<Module>.cs`, with a `FlowIoC.Generated.asmref` beside it -
+  parts of a partial class must share an assembly, and each module has one of its own, so the asmref
+  is what makes the part possible. The shared file keeps only what belongs to no module: `Default`,
+  and any channel added by hand.
+
+  What this changes for a caller: `FlowLogger.Log`, `LogWarning`, `LogError` and `LogLong` take a
+  `string` channel where they took an `int`. Every call written as `FlowLogType.PlayerModule` goes on
+  compiling. `ConsoleLog.LogTypeValue` became `ConsoleLog.Channel`, saved filter presets store names,
+  and `GetModuleLogType<T>()` answers with a name or null rather than `-1`.
+
 - **A signal says which holder and which half it came from.** A signal is constructed knowing only
   its own field name, which the compiler hands it through `[CallerMemberName]`, so the console said
   `'Launch' dispatched` and left the reader to guess whose Launch that was, out of which holder.

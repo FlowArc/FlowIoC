@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.Migration;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,6 +21,13 @@ namespace FlowIoC.Editor.Console
         private static readonly string GeneratedFolder = Paths.GeneratedRoot;
         private static readonly string GeneratedFilePath = Paths.FlowLogType;
         private static readonly string AsmRefPath = Paths.GeneratedAsmRef;
+
+        /// <summary>
+        /// What puts a generated file into FlowIoC's own assembly rather than into whatever asmdef
+        /// sits above it. The parts of FlowLogType have to share an assembly to be one class, and
+        /// they are written into modules that each have an assembly of their own.
+        /// </summary>
+        private const string ASM_REF_CONTENT = "{\n    \"reference\": \"FlowIoC\"\n}";
 
         private static bool _generatePending;
 
@@ -93,69 +101,168 @@ namespace FlowIoC.Editor.Console
             EnsureDirectoryExists();
             EnsureAsmRefExists();
 
-            string content = GenerateClassContent(defaultType, moduleTypes, customTypes);
+            bool wroteSomething = WriteModuleParts(moduleTypes);
+
+            string content = GenerateClassContent(defaultType, customTypes);
             string fullPath = GetFullPath(GeneratedFilePath);
 
-            if (File.Exists(fullPath))
+            bool centralChanged = !File.Exists(fullPath) || File.ReadAllText(fullPath) != content;
+
+            if (centralChanged)
             {
-                string existing = File.ReadAllText(fullPath);
-                if (existing == content)
-                {
-                    Debug.Log($"<color=cyan>FlowConsole:</color> FlowLogType is already up to date " +
-                              $"({moduleTypes.Count} module type(s), {customTypes.Count} custom type(s)).");
-                    return;
-                }
+                File.WriteAllText(fullPath, content);
+                AssetDatabase.ImportAsset(GeneratedFilePath, ImportAssetOptions.ForceUpdate);
             }
 
-            File.WriteAllText(fullPath, content);
-            AssetDatabase.ImportAsset(GeneratedFilePath, ImportAssetOptions.ForceUpdate);
+            if (!centralChanged && !wroteSomething)
+            {
+                Debug.Log($"<color=cyan>FlowConsole:</color> FlowLogType is already up to date " +
+                          $"({moduleTypes.Count} module type(s), {customTypes.Count} custom type(s)).");
+                return;
+            }
 
             Debug.Log($"<color=cyan>FlowConsole:</color> FlowLogType generated with " +
                       $"{moduleTypes.Count} module type(s) and {customTypes.Count} custom type(s).");
         }
 
+        /// <summary>
+        /// A module's channel is declared in the module, in a part of its own. FlowLogType used to
+        /// be one file listing every channel in the project, which made two people adding a module
+        /// on two branches conflict over the same lines, and left a deleted module's channel behind
+        /// for somebody to notice. A part per module has neither problem: the file is written into
+        /// the module, it goes when the module goes, and nobody else's module touches it.
+        ///
+        /// The part carries an asmref beside it so that it compiles into FlowIoC rather than into
+        /// the module's own assembly. Partial parts must share an assembly, and every module has an
+        /// assembly of its own - so without the asmref this could not be a partial class at all.
+        /// </summary>
+        private static bool WriteModuleParts(List<CD_FlowConsole.FlowConsoleLogTypeCVO> moduleTypes)
+        {
+            ED_ModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
+            if (index == null) return false;
+
+            bool wrote = false;
+            var written = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var type in moduleTypes.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                if (!index.TryGetByName(type.Name, out ModuleDescriptorEVO module)) continue;
+
+                string moduleFolder = AssetDatabase.GUIDToAssetPath(module.FolderGuid);
+                if (string.IsNullOrEmpty(moduleFolder)) continue;
+
+                string folder = moduleFolder + "/Scripts/Generated";
+                string filePath = folder + "/FlowLogType." + type.Name + ".cs";
+
+                written.Add(filePath);
+
+                string content = GeneratePartContent(type);
+                string fullPath = GetFullPath(filePath);
+
+                if (File.Exists(fullPath) && File.ReadAllText(fullPath) == content)
+                {
+                    EnsureModuleAsmRef(folder);
+                    continue;
+                }
+
+                Directory.CreateDirectory(GetFullPath(folder));
+                File.WriteAllText(fullPath, content);
+                AssetDatabase.ImportAsset(folder, ImportAssetOptions.ForceUpdate);
+                EnsureModuleAsmRef(folder);
+                AssetDatabase.ImportAsset(filePath, ImportAssetOptions.ForceUpdate);
+                wrote = true;
+            }
+
+            wrote |= RemoveOrphanParts(index, written);
+
+            return wrote;
+        }
+
+        /// <summary>
+        /// A part whose channel is gone. Delete Module takes the whole module folder, so this is
+        /// for the other way round: a channel unregistered while the module stayed.
+        /// </summary>
+        private static bool RemoveOrphanParts(ED_ModuleIndex index, HashSet<string> written)
+        {
+            bool removed = false;
+
+            foreach (ModuleDescriptorEVO module in index.Modules)
+            {
+                string moduleFolder = AssetDatabase.GUIDToAssetPath(module.FolderGuid);
+                if (string.IsNullOrEmpty(moduleFolder)) continue;
+
+                string folder = moduleFolder + "/Scripts/Generated";
+                string folderFullPath = GetFullPath(folder);
+                if (!Directory.Exists(folderFullPath)) continue;
+
+                foreach (string file in Directory.GetFiles(folderFullPath, "FlowLogType.*.cs"))
+                {
+                    string assetPath = folder + "/" + Path.GetFileName(file);
+                    if (written.Contains(assetPath)) continue;
+
+                    AssetDatabase.DeleteAsset(assetPath);
+                    removed = true;
+                }
+
+                if (Directory.GetFiles(folderFullPath, "*.cs").Length == 0)
+                {
+                    AssetDatabase.DeleteAsset(folder);
+                    removed = true;
+                }
+            }
+
+            return removed;
+        }
+
+        private static void EnsureModuleAsmRef(string folder)
+        {
+            string assetPath = folder + "/FlowIoC.Generated.asmref";
+            string fullPath = GetFullPath(assetPath);
+            if (File.Exists(fullPath)) return;
+
+            File.WriteAllText(fullPath, ASM_REF_CONTENT);
+            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+        }
+
+        private static string GeneratePartContent(CD_FlowConsole.FlowConsoleLogTypeCVO type)
+        {
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string identifier = SanitizeIdentifier(type.Name, used);
+
+            var sb = new StringBuilder();
+
+            AppendHeader(sb);
+            sb.AppendLine("    public static partial class FlowLogType");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        /// <summary>The {EscapeXml(type.Name)} channel.</summary>");
+            sb.AppendLine($"        public const string {identifier} = \"{type.Name}\";");
+            sb.AppendLine("    }");
+            sb.Append("}");
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// What is left in the shared file once every module's channel is declared in the module:
+        /// the project's Default channel, and any channel somebody added by hand. Those belong to
+        /// no module, so there is nowhere else to put them.
+        /// </summary>
         private static string GenerateClassContent(
             CD_FlowConsole.FlowConsoleLogTypeCVO defaultType,
-            List<CD_FlowConsole.FlowConsoleLogTypeCVO> moduleTypes,
             List<CD_FlowConsole.FlowConsoleLogTypeCVO> customTypes)
         {
             var sb = new StringBuilder();
             var usedIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            sb.AppendLine("//------------------------------------------------------------------------------");
-            sb.AppendLine("// <auto-generated>");
-            sb.AppendLine("//     This code was generated by FlowConsole.");
-            sb.AppendLine("//     Do not modify. Changes will be overwritten.");
-            sb.AppendLine("// </auto-generated>");
-            sb.AppendLine("//------------------------------------------------------------------------------");
-            sb.AppendLine();
-            sb.AppendLine("namespace FlowIoC.ConsoleModule");
-            sb.AppendLine("{");
-            sb.AppendLine("    public static class FlowLogType");
+            AppendHeader(sb);
+            sb.AppendLine("    public static partial class FlowLogType");
             sb.AppendLine("    {");
 
             if (defaultType != null)
             {
                 string identifier = SanitizeIdentifier(defaultType.Name, usedIdentifiers);
-                sb.AppendLine($"        /// <summary>{EscapeXml(defaultType.Name)} (value: {defaultType.Value})</summary>");
-                sb.AppendLine($"        public const int {identifier} = {defaultType.Value};");
-            }
-
-            if (moduleTypes.Count > 0)
-            {
-                sb.AppendLine();
-                sb.AppendLine("        #region Module Log Types (Auto-Registered)");
-                sb.AppendLine();
-
-                foreach (var type in moduleTypes.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
-                {
-                    string identifier = SanitizeIdentifier(type.Name, usedIdentifiers);
-                    sb.AppendLine($"        /// <summary>{EscapeXml(type.Name)} (value: {type.Value})</summary>");
-                    sb.AppendLine($"        public const int {identifier} = {type.Value};");
-                    sb.AppendLine();
-                }
-
-                sb.AppendLine("        #endregion");
+                sb.AppendLine($"        /// <summary>The {EscapeXml(defaultType.Name)} channel.</summary>");
+                sb.AppendLine($"        public const string {identifier} = \"{defaultType.Name}\";");
             }
 
             if (customTypes.Count > 0)
@@ -167,8 +274,8 @@ namespace FlowIoC.Editor.Console
                 foreach (var type in customTypes.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     string identifier = SanitizeIdentifier(type.Name, usedIdentifiers);
-                    sb.AppendLine($"        /// <summary>{EscapeXml(type.Name)} (value: {type.Value})</summary>");
-                    sb.AppendLine($"        public const int {identifier} = {type.Value};");
+                    sb.AppendLine($"        /// <summary>The {EscapeXml(type.Name)} channel.</summary>");
+                    sb.AppendLine($"        public const string {identifier} = \"{type.Name}\";");
                     sb.AppendLine();
                 }
 
@@ -179,6 +286,19 @@ namespace FlowIoC.Editor.Console
             sb.Append("}");
 
             return sb.ToString();
+        }
+
+        private static void AppendHeader(StringBuilder sb)
+        {
+            sb.AppendLine("//------------------------------------------------------------------------------");
+            sb.AppendLine("// <auto-generated>");
+            sb.AppendLine("//     This code was generated by FlowConsole.");
+            sb.AppendLine("//     Do not modify. Changes will be overwritten.");
+            sb.AppendLine("// </auto-generated>");
+            sb.AppendLine("//------------------------------------------------------------------------------");
+            sb.AppendLine();
+            sb.AppendLine("namespace FlowIoC.ConsoleModule");
+            sb.AppendLine("{");
         }
 
         internal static string SanitizeIdentifier(string name, HashSet<string> usedIdentifiers)

@@ -8,14 +8,14 @@ namespace FlowIoC.ConsoleModule
     /// </summary>
     public class CollapseKeyBuilder
     {
-        public int Build(string message, string stackTrace, int logTypeValue)
+        public int Build(string message, string stackTrace, string channel)
         {
             unchecked
             {
                 int hash = 17;
                 hash = hash * 31 + (message == null ? 0 : message.GetHashCode());
                 hash = hash * 31 + (stackTrace == null ? 0 : stackTrace.GetHashCode());
-                hash = hash * 31 + logTypeValue;
+                hash = hash * 31 + (channel == null ? 0 : channel.GetHashCode());
                 return hash;
             }
         }

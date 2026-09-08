@@ -683,8 +683,11 @@ are gone so a heal can take their folders out of a config written while they exi
 
 ### Never hand-edit
 
-`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` is generated from the modules present in the
-project. Change the modules, not the file.
+`FlowLogType` is generated from the modules present in the project. Change the modules, not the
+file. A module's channel is a `const string` in a part of its own, at
+`<Module>/Scripts/Generated/FlowLogType.<Module>.cs`, with a `FlowIoC.Generated.asmref` beside it
+that compiles the part into FlowIoC's assembly rather than the module's;
+`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` holds only what belongs to no module.
 
 `<Solution>.sln.DotSettings` and the `*.csproj.DotSettings` files beside it are written by
 `Tools/FlowIoC/Module Scanner`. Run the menu item rather than editing them.
