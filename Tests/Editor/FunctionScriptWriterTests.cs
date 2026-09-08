@@ -123,6 +123,24 @@ namespace FlowIoC.Tests
             Assert.That(file, Does.Contain("using Modules.Player.Models;"));
         }
 
+        /// <summary>
+        /// An injectable whose type the project does not have is written all the same, without a
+        /// using. Dropping it was the old behaviour and it dropped it silently: the member the
+        /// author had just asked for was simply not in the file, and nothing said why. A member
+        /// that does not compile is a report naming the line; nothing at all is not.
+        /// </summary>
+        [Test]
+        public void An_injectable_with_no_namespace_is_still_written()
+        {
+            FunctionScriptRequest request = Request(FunctionKind.Void);
+            request.Injectables.Add(new FunctionInjectable {Type = "ITypoModel", Namespace = string.Empty});
+
+            string file = _writer.Write(request);
+
+            Assert.That(file, Does.Contain("[Inject] private ITypoModel _typoModel { get; set; }"));
+            Assert.That(file, Does.Contain("using FlowIoC.BaseModule.Injectable.Attributes;"));
+        }
+
         [Test]
         public void A_file_with_no_injectables_does_not_import_the_inject_attribute()
         {

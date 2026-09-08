@@ -56,6 +56,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
 
         private HelpPainter _painter;
+        private InjectableTypeIndex _typeIndex;
         private Dictionary<string, bool> _moduleExpandedState;
         private ModuleRegistry _registry;
         private ED_CodeGenerator _codeGenSettings;
@@ -205,6 +206,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 _injectableNames[i] = EditorGUILayout.TextField(_injectableNames[i]);
 
+                DisplayInjectableStatus(_injectableNames[i]);
+
                 GUI.backgroundColor = Color.red;
 
                 if (GUILayout.Button("-", GUILayout.Width(30)))
@@ -217,6 +220,36 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             if (removeAt >= 0)
                 _injectableNames.RemoveAt(removeAt);
+        }
+
+        /// <summary>
+        /// Whether the project has a type of that name, said beside the row rather than after the
+        /// file is written. A row it cannot place is still written into the function - a member
+        /// that is there and does not compile is a report, and the silence it replaced was not -
+        /// but the author would rather fix the name here than read the file to find out.
+        ///
+        /// The lookup is an index built once rather than a search, because this runs per row on
+        /// every repaint.
+        /// </summary>
+        private void DisplayInjectableStatus(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) return;
+
+            _typeIndex ??= new InjectableTypeIndex();
+
+            if (_typeIndex.Knows(typeName))
+            {
+                GUILayout.Label(GUIContent.none, GUILayout.Width(20));
+                return;
+            }
+
+            var warning = new GUIContent(EditorGUIUtility.IconContent("console.warnicon.sml"))
+            {
+                tooltip = $"No type named {typeName.Trim()} is in the project. The member is written either way, "
+                          + "so the compiler will name the line - but check the spelling first."
+            };
+
+            GUILayout.Label(warning, GUILayout.Width(20));
         }
 
         /// <summary>
