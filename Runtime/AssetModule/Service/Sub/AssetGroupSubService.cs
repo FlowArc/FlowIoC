@@ -45,7 +45,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             _registry.GetOrCreateGroup(groupId).IsLoaded = true;
             _signals.Outgoing.GroupLoaded.Dispatch(groupId);
             FlowLogger.Log(SystemLogType.Asset,
-                $"[AssetService] Group loaded by label '{label}' -> '{groupId}' ({tasks.Count} assets)");
+                $"[AssetGroupSubService.LoadGroupByLabelAsync][label({label})][groupId({groupId})][assets({tasks.Count})]");
         }
 
         public async Task LoadAssetsAsync<T>(string groupId, IEnumerable<object> keys)

@@ -16,7 +16,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void AllScreens(bool isForce = false)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"every screen hidden (force: {isForce})");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Hide.AllScreens][force({isForce})]");
 
             foreach (var screenBody in _runtimeModel.GetAllActiveScreens())
             {
@@ -26,7 +26,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void ScreensAtManager(int managerId, bool isForce = false)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"every screen on manager {managerId} hidden (force: {isForce})");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Hide.ScreensAtManager][manager({managerId})][force({isForce})]");
 
             if (!_runtimeModel.GetActiveManagerScreens(managerId, out List<IScreenBody> list)) return;
             foreach (IScreenBody screenBody in list)
@@ -40,7 +40,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
             if (_runtimeModel.IsLayerFull(layerIndex, managerId, out IScreenBody screenBody))
             {
                 FlowLogger.Log(SystemLogType.Screen,
-                    $"[ScreenService.Hide][isForce({isForce})] Layer({layerIndex}) at manager({managerId})!");
+                    $"[ScreenService.Hide.ScreenInLayer][layer({layerIndex})][manager({managerId})][force({isForce})]");
 
                 Screen(screenBody, isForce);
             }
@@ -53,7 +53,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void ScreensByTag(ScreenTag tag, int managerId = 0, bool isForce = false)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"screens tagged {tag} hidden (force: {isForce})");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Hide.ScreensByTag][tag({tag})][force({isForce})]");
 
             if (!_runtimeModel.GetActiveTagScreens(tag, managerId, out var tagScreens))
                 return;
@@ -88,7 +88,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
             if (screenBody.Data.HasState(ScreenState.InUse))
             {
-                FlowLogger.Log(SystemLogType.Screen, $"{screenBody.Data.ScreenType.Name} hidden");
+                FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Hide.Screen][screen({screenBody.Data.ScreenType.Name})]");
                 if (isForce)
                 {
                     HideAnimationCompleted(screenBody);

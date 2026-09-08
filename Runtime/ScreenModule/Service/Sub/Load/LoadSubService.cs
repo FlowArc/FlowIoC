@@ -21,14 +21,14 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
 
         public void All(bool isTest = false, Action completeCallback = null, Action<int, int> loadingProgressCallback = null)
         {
-            FlowLogger.Log(SystemLogType.Screen, "loading every screen");
+            FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Load.All]");
             Run(LoadEntries(_registry.GetAllEntries(), completeCallback, loadingProgressCallback), "All");
         }
 
         public void ScreensAtManager(int managerId = 0, bool isTest = false, Action completeCallback = null,
             Action<int, int> loadingProgressCallback = null)
         {
-            FlowLogger.Log(SystemLogType.Screen, "loading the screens on a manager");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.ScreensAtManager][manager({managerId})]");
             Run(LoadEntries(_registry.GetManagerEntries(managerId), completeCallback, loadingProgressCallback),
                 "ScreensAtManager");
         }
@@ -36,7 +36,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         public void ByTag(ScreenTag tag, bool isTest = false, Action completeCallback = null,
             Action<int, int> loadingProgressCallback = null)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"loading screens tagged {tag}");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.ByTag][tag({tag})]");
             Run(LoadEntries(_registry.GetTagEntries(tag), completeCallback, loadingProgressCallback), "ByTag");
         }
 
@@ -66,7 +66,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
 
                 if (entry.Loaded != null)
                 {
-                    FlowLogger.Log(SystemLogType.Screen, $"already loaded: {entry.ViewType.Name}");
+                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.LoadEntries][screen({entry.ViewType.Name})][state(alreadyLoaded)]");
                     loadingProgressCallback?.Invoke(index, entries.Count);
                     continue;
                 }
@@ -103,12 +103,12 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
             switch (entry.Screen.Load.Kind)
             {
                 case ScreenLoadType.Addressable:
-                    FlowLogger.Log(SystemLogType.Screen, $"addressable load for {entry.Screen.Load.Key}");
+                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.LoadScreen][key({entry.Screen.Load.Key})][via(addressable)]");
                     screen = await _addressableLoadService.LoadScreen(entry);
                     break;
 
                 case ScreenLoadType.Resource:
-                    FlowLogger.Log(SystemLogType.Screen, $"resource load for {entry.Screen.Load.Key}");
+                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.LoadScreen][key({entry.Screen.Load.Key})][via(resource)]");
                     screen = await _resourceLoadSubService.LoadScreen(entry);
                     break;
 

@@ -15,7 +15,7 @@ namespace FlowIoC.ScreenModule.ViewsMediators.Manager
         {
             ScreenManagerVO manager = _view.ManagerData;
 
-            FlowLogger.Log(SystemLogType.Screen, $"Registering screen manager with ID: {manager.ManagerID}");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenManagerMediator.OnRegister][manager({manager.ManagerID})]");
             _screenServiceInternalSignals.RegisterManager.Dispatch(manager);
         }
 

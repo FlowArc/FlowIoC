@@ -22,7 +22,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
 
             try
             {
-                FlowLogger.Log(SystemLogType.Screen, $"{address} requested from Addressables");
+                FlowLogger.Log(SystemLogType.Screen, $"[AddressableLoadSubService.LoadScreen][address({address})]");
 
                 // A second load of an address already in flight used to be refused with a warning and
                 // a null screen. Nobody asked for that: the caller meant the load, and the same
@@ -34,7 +34,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
                                                                                  out AsyncOperationHandle<GameObject> inFlight))
                 {
                     FlowLogger.Log(SystemLogType.Screen,
-                        $"[AddressableLoadService] {address} is already loading - waiting for that load to finish");
+                        $"[AddressableLoadSubService.LoadScreen][address({address})][state(alreadyLoading)]");
 
                     await inFlight.Task;
 

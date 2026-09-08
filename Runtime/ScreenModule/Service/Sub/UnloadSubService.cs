@@ -18,7 +18,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void AllScreens(bool isForce = false)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"every screen closed (force: {isForce})");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Unload.AllScreens][force({isForce})]");
 
             foreach (var screenBody in _registry.GetAllLoadedScreens())
             {
@@ -28,7 +28,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void ScreensByManager(int managerId, bool isForce = false)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"every screen on manager {managerId} closed (force: {isForce})");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Unload.ScreensByManager][manager({managerId})][force({isForce})]");
 
             foreach (var screenBody in _registry.GetAllScreensAtManager(managerId))
             {
@@ -38,7 +38,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void ScreensByTag(ScreenTag tag, bool isForce = false)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"screens tagged {tag} unloaded (force: {isForce})");
+            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Unload.ScreensByTag][tag({tag})][force({isForce})]");
 
             foreach (ScreenEntry entry in _registry.GetTagEntries(tag))
             {

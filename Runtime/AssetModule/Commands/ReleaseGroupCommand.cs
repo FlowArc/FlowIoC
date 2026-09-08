@@ -15,7 +15,7 @@ namespace FlowIoC.AssetModule.Commands
             Retain();
 
             FlowLogger.Log(SystemLogType.Asset,
-                $"Execute - ReleaseGroupCommand | groupId={_groupId}");
+                $"[ReleaseGroupCommand.Execute][groupId({_groupId})]");
 
             _assetService.ReleaseGroup(_groupId);
 

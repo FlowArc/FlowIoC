@@ -27,7 +27,7 @@ namespace FlowIoC.PoolModule.ViewsMediators.ConfigAdapter
                 FlowLogger.LogWarning(SystemLogType.Pool, $"[PoolConfigAdapterMediator.RegisterPoolConfig] No pool configs!");
             else
             {
-                FlowLogger.Log(SystemLogType.Pool, $"registering {configs.Count} pool configs");
+                FlowLogger.Log(SystemLogType.Pool, $"[PoolConfigAdapterMediator.RegisterPoolConfig][configs({configs.Count})]");
                 _poolServiceSignals.RegisterPoolConfigs.Dispatch(configs);
             }
         }
@@ -41,7 +41,7 @@ namespace FlowIoC.PoolModule.ViewsMediators.ConfigAdapter
                 FlowLogger.LogWarning(SystemLogType.Pool, "[PoolConfigAdapterMediator.UnregisterPoolConfig] No pool configs!");
             else
             {
-                FlowLogger.Log(SystemLogType.Pool, $"unregistering {configs.Count} pool configs");
+                FlowLogger.Log(SystemLogType.Pool, $"[PoolConfigAdapterMediator.UnregisterPoolConfig][configs({configs.Count})]");
                 _poolServiceSignals.UnRegisterConfigs.Dispatch(configs);
             }
         }
