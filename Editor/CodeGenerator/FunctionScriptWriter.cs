@@ -176,6 +176,7 @@ namespace FlowIoC.Editor.CodeGenerator
 
             foreach (FunctionInjectable injectable in injectables)
             {
+                if (string.IsNullOrWhiteSpace(injectable.Namespace)) continue;
                 if (usings.Contains(injectable.Namespace) || injectable.Namespace == request.Namespace) continue;
 
                 usings.Add(injectable.Namespace);
@@ -184,13 +185,19 @@ namespace FlowIoC.Editor.CodeGenerator
             return usings;
         }
 
+        /// <summary>
+        /// A name is all an injectable needs to be written. Where its type lives is what decides
+        /// whether a using goes with it, and a type the project does not have is written anyway -
+        /// dropping it is what used to leave an author staring at a file missing the member they
+        /// had just asked for, with nothing said about the typo that caused it.
+        /// </summary>
         private List<FunctionInjectable> ValidInjectables(FunctionScriptRequest request)
         {
             var injectables = new List<FunctionInjectable>();
 
             foreach (FunctionInjectable injectable in request.Injectables)
             {
-                if (string.IsNullOrWhiteSpace(injectable.Type) || string.IsNullOrWhiteSpace(injectable.Namespace)) continue;
+                if (string.IsNullOrWhiteSpace(injectable.Type)) continue;
 
                 injectables.Add(injectable);
             }

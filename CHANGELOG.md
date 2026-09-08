@@ -79,6 +79,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **An injectable a generator could not place is written anyway, and said out loud.** Create
+  Command, Create Function and Create Model looked each injected type up by name and, finding
+  nothing, left the member out of the file - silently. A name with a typo in it, or a type in an
+  assembly the module does not reference, simply was not there, and the author was left to work out
+  which of the fields they had filled in was the reason. Every name given is written now: one whose
+  type the project has brings its using with it, and one it does not have is reported by name and
+  written regardless, because a member that does not compile is a report naming the line and
+  nothing at all is not. Create Function says so while you type, too - a row it cannot place wears
+  a warning beside it. The lookup became an index built once rather than a walk over every loaded
+  assembly per question, which is what makes asking on every repaint affordable.
+- **A generator selects and pings the file it just wrote.** Create Command, Create Function, Create
+  Model and Create View write into a folder the author may not have open, and a file that cannot be
+  found reads as a generator that did nothing.
 - **The four single-file generators can no longer be filled in and then not used.** Create Command,
   Create Function, Create Model and Create View each hold a list that grows a row at a time -
   injectables, a view's actions, a function's parameters - and laid their sections out one under the
