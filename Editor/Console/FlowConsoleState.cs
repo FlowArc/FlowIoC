@@ -48,6 +48,16 @@ namespace FlowIoC.Editor.Console
             set => EditorPrefs.SetInt(PREFIX + nameof(RowLineCount), Mathf.Clamp(value, 1, 3));
         }
 
+        /// <summary>
+        /// Whether a row leads with the frame it was written in and the gap since the row above,
+        /// instead of the wall clock.
+        /// </summary>
+        public bool Timing
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(Timing), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(Timing), value);
+        }
+
         public bool ErrorPause
         {
             get => EditorPrefs.GetBool(PREFIX + nameof(ErrorPause), false);

@@ -55,6 +55,8 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleSearch _search = new FlowConsoleSearch();
         private readonly FlowConsoleSolo _solo = new FlowConsoleSolo();
         private readonly FlowConsoleHighlight _highlight = new FlowConsoleHighlight();
+        private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
+        private bool _showTiming;
 
         /// <summary>Translucent, so the text keeps reading through it.</summary>
         private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
@@ -136,6 +138,7 @@ namespace FlowIoC.Editor.Console
 
             _rowLineCount = _state.RowLineCount;
             _collapseRows = _state.Collapse;
+            _showTiming = _state.Timing;
             _searchQuery = _search.Parse(_searchText);
 
             _logFilter = new Dictionary<LogType, bool>
@@ -355,6 +358,17 @@ namespace FlowIoC.Editor.Console
                 GUILayout.Width(80));
             if (errorPause != _state.ErrorPause)
                 _state.ErrorPause = errorPause;
+
+            var timingLabel = new GUIContent("Timing",
+                "Lead each row with the frame it was written in and the gap since the row above, instead of the clock.");
+
+            bool timing = GUILayout.Toggle(_showTiming, timingLabel, EditorStyles.toolbarButton, GUILayout.Width(60));
+            if (timing != _showTiming)
+            {
+                _showTiming = timing;
+                _state.Timing = timing;
+                _needsRepaint = true;
+            }
 
             GUILayout.FlexibleSpace();
 
@@ -1095,8 +1109,20 @@ namespace FlowIoC.Editor.Console
             }
 
             float textLeft = rect.x + (small ? 26f : 42f);
-            var date = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" + consoleLog.Second.ToString("00") + ":" +
-                       consoleLog.Millisecond.ToString("000");
+            string date;
+
+            if (_showTiming)
+            {
+                bool hasPrevious = rowIndex > 0 && rowIndex - 1 < _cachedVisibleLogs.Count;
+                float previousRealtime = hasPrevious ? _cachedVisibleLogs[rowIndex - 1].Realtime : 0f;
+
+                date = _timing.Prefix(consoleLog.Frame, consoleLog.Realtime, previousRealtime, hasPrevious);
+            }
+            else
+            {
+                date = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" +
+                       consoleLog.Second.ToString("00") + ":" + consoleLog.Millisecond.ToString("000");
+            }
 
             float textWidth = rect.width - (textLeft - rect.x) - 4f;
 
