@@ -40,6 +40,7 @@ namespace FlowIoC.Editor.Console
         private int _cachedErrorCount;
         private const float LogEntryLineHeight = 16f;
         private const float LogEntryPadding = 6f;
+        private const float PinIconSize = 16f;
         private const int LogTrimChunk = 256;
 
         private float[] _cachedLogHeights;
@@ -61,6 +62,30 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleExport _export = new FlowConsoleExport();
         private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
 
+        private bool _showFilters;
+        private bool _showSettings;
+        private GUIStyle _channelOnStyle;
+        private GUIStyle _channelOffStyle;
+        private GUIStyle _channelAllOnStyle;
+        private GUIStyle _channelAllOffStyle;
+        private GUIStyle _groupCountStyle;
+        private GUIStyle _groupCountHighlightStyle;
+        private const float ChannelRowHeight = 20f;
+        private const float ChannelRowIndent = 14f;
+        private const float ChannelSwatchSize = 9f;
+        private static readonly Color ChannelRowBandColor = new Color(0f, 0f, 0f, 0.08f);
+        private static readonly Color ChannelRowHoverColor = new Color(1f, 1f, 1f, 0.06f);
+        private static readonly Color ChannelOnTextColor = new Color(0.92f, 0.92f, 0.92f, 1f);
+        private static readonly Color ChannelOffTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+        private static readonly Color ChannelTickColor = new Color(0.35f, 0.8f, 0.4f, 1f);
+
+        private bool _unityChannelsExpanded = true;
+        private bool _systemChannelsExpanded = true;
+        private bool _moduleChannelsExpanded = true;
+        private Vector2 _filtersPanelScroll;
+        private const float FiltersPanelWidth = 220f;
+        private static readonly Color FiltersPanelEdgeColor = new Color(0f, 0f, 0f, 0.45f);
+
         private readonly FlowConsoleFlowTreeBuilder _flowTree = new FlowConsoleFlowTreeBuilder();
         private bool _flowMode;
         private readonly HashSet<int> _collapsedFlowIds = new();
@@ -77,15 +102,48 @@ namespace FlowIoC.Editor.Console
 
         private readonly FlowConsolePins _pins = new FlowConsolePins();
         private bool _pinnedOnly;
-        private static readonly Color PinnedMarkColor = new Color(1f, 0.78f, 0.25f, 1f);
+
 
         private readonly FlowConsoleSessionRule _sessionRule = new FlowConsoleSessionRule();
         private GUIStyle _sessionSeparatorStyle;
         private const float SessionSeparatorHeight = 18f;
-        private static readonly Color SessionSeparatorColor = new Color(0.55f, 0.55f, 0.55f, 0.8f);
+        private static readonly Color SessionSeparatorColor = new Color(0.78f, 0.78f, 0.78f, 0.9f);
+        private static readonly Color SessionSeparatorBandColor = new Color(1f, 1f, 1f, 0.09f);
 
         /// <summary>Translucent, so the text keeps reading through it.</summary>
         private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
+
+        private const string DimHex = "#A0A0A0";
+
+        /// <summary>
+        /// A dark cyan. The pin glyph is light, so the disc behind it has to be dark enough to
+        /// leave the shape readable - yellow washed it out.
+        /// </summary>
+        private static readonly Color PinBadgeColor = new Color(0.05f, 0.42f, 0.48f, 1f);
+
+        /// <summary>The same colour as a multiplier, for a control that paints its own background.</summary>
+        private static readonly Color PinBadgeTintColor = new Color(0.35f, 1.1f, 1.25f, 1f);
+
+        /// <summary>2 is a square with the corners taken off; half the width would be a disc.</summary>
+        private const float PinBadgeCornerRadius = 2f;
+
+        private const float PinBadgeSize = 15f;
+
+        /// <summary>
+        /// The plate behind the pin. Square with the corners just taken off, drawn through
+        /// GUI.DrawTexture's border-radius overload because EditorGUI.DrawRect has square corners
+        /// and nothing else.
+        /// </summary>
+        private static void DrawDisc(Rect rect, Color color)
+        {
+            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0f, color,
+                Vector4.zero, Vector4.one * PinBadgeCornerRadius);
+        }
+
+        private static string Dim(string text)
+        {
+            return "<color=" + DimHex + ">" + text + "</color>";
+        }
 
         private FlowConsoleSearchQuery _searchQuery;
 
@@ -158,6 +216,11 @@ namespace FlowIoC.Editor.Console
             _selectedLog = null;
             InvalidateTraceCache();
 
+            // Set on every enable rather than kept, because the texture behind an editor icon
+            // belongs to the editor and is freed on a domain reload.
+            titleContent = new GUIContent("Flow Console",
+                EditorGUIUtility.IconContent("UnityEditor.ConsoleWindow")?.image);
+
             // Without this the window is never told the pointer moved, and a toolbar button only
             // turns hovered on the next repaint something else happens to cause.
             wantsMouseMove = true;
@@ -166,6 +229,11 @@ namespace FlowIoC.Editor.Console
             _collapseRows = _state.Collapse;
             _showTiming = _state.Timing;
             _flowMode = _state.FlowMode;
+            _showFilters = _state.ShowFilters;
+            _showSettings = _state.ShowSettings;
+            _unityChannelsExpanded = _state.UnityChannelsExpanded;
+            _systemChannelsExpanded = _state.FrameworkChannelsExpanded;
+            _moduleChannelsExpanded = _state.ModuleChannelsExpanded;
             _searchQuery = _search.Parse(_searchText);
 
             _logFilter = new Dictionary<LogType, bool>
@@ -328,7 +396,21 @@ namespace FlowIoC.Editor.Console
             DrawToolbar();
 
             TopPanelGUI();
+
+            // The list and the filters panel side by side. The panel's width is fixed, so what a
+            // wider window buys is more room for the messages rather than a wider column of
+            // channel names.
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.BeginVertical();
             LogsPanelGUI();
+            EditorGUILayout.EndVertical();
+
+            if (_showFilters)
+                FiltersPanelGUI();
+
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.EndVertical();
         }
 
@@ -360,6 +442,10 @@ namespace FlowIoC.Editor.Console
 
         private void DrawToolbar()
         {
+            // The severity counts are drawn up here now, so the list they count has to be rebuilt
+            // before the toolbar rather than after it. The call does nothing unless it is due.
+            RebuildCachedLogs();
+
             Rect toolbarRect = EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
             // Kept only from a repaint. BeginHorizontal answers with an empty rect during a
@@ -398,11 +484,21 @@ namespace FlowIoC.Editor.Console
                 _needsRepaint = true;
             }
 
-            var pinnedLabel = new GUIContent("Pinned",
+            // Fetched every draw, never kept: the texture behind an editor icon is freed on a
+            // domain reload and a GUIContent holding one draws nothing.
+            var pinnedLabel = new GUIContent(" Pinned", EditorGUIUtility.IconContent("pin")?.image,
                 "Show only the rows you pinned. Pin one with the row's right-click menu, or with P.");
 
+            // Tinted rather than drawn behind: a toolbar button paints its own pressed background
+            // and covered anything under it. GUI.backgroundColor multiplies that background, so
+            // the switch takes the same colour the pinned rows carry.
+            Color backgroundWas = GUI.backgroundColor;
+            if (_pinnedOnly) GUI.backgroundColor = PinBadgeTintColor;
+
             bool pinnedOnly = GUILayout.Toggle(_pinnedOnly, pinnedLabel, EditorStyles.toolbarButton,
-                GUILayout.Width(60));
+                GUILayout.Width(76), GUILayout.ExpandHeight(true));
+
+            GUI.backgroundColor = backgroundWas;
             if (pinnedOnly != _pinnedOnly)
             {
                 _pinnedOnly = pinnedOnly;
@@ -458,63 +554,34 @@ namespace FlowIoC.Editor.Console
                 GUILayout.Label("bad pattern", EditorStyles.miniLabel);
             }
 
-            EditorGUI.BeginDisabledGroup(_selectedLog == null);
-            if (GUILayout.Button("Locate", EditorStyles.toolbarButton, GUILayout.Width(50)))
-            {
-                _scrollToSelectedLog = true;
-                _needsRepaint = true;
-            }
-
-            EditorGUI.EndDisabledGroup();
-
-            if (GUILayout.Button(_rowLineCount + " line" + (_rowLineCount == 1 ? "" : "s"),
-                    EditorStyles.toolbarDropDown, GUILayout.Width(60)))
-            {
-                var menu = new GenericMenu();
-
-                for (int lines = 1; lines <= 3; lines++)
-                {
-                    int chosen = lines;
-                    menu.AddItem(new GUIContent(lines + " line" + (lines == 1 ? "" : "s")),
-                        _rowLineCount == lines,
-                        () =>
-                        {
-                            _rowLineCount = chosen;
-                            _state.RowLineCount = chosen;
-                            _logsDirty = true;
-                            _needsRepaint = true;
-                        });
-                }
-
-                menu.ShowAsContext();
-            }
-
-            // The setting that decides whether double-clicking a row can go anywhere. It lives in
-            // the settings asset, but it is raised and lowered while following one flow, so it
-            // belongs where the flow is being read rather than three windows away.
-            FlowStackTraceCapture capture = _settings.StackTraceCapture;
-            if (GUILayout.Button("Source: " + capture, EditorStyles.toolbarDropDown, GUILayout.Width(150)))
-            {
-                var menu = new GenericMenu();
-
-                foreach (FlowStackTraceCapture value in Enum.GetValues(typeof(FlowStackTraceCapture)))
-                {
-                    FlowStackTraceCapture chosen = value;
-                    menu.AddItem(new GUIContent(CaptureLabel(value)), capture == value, () =>
-                    {
-                        _settings.StackTraceCapture = chosen;
-                        EditorUtility.SetDirty(_settings);
-                        _needsRepaint = true;
-                    });
-                }
-
-                menu.ShowAsContext();
-            }
-
-            PresetMenuGUI();
-            ExportMenuGUI();
+            SeverityTogglesGUI();
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// The three severity switches, drawn where Unity's console draws them: at the right end of
+        /// the toolbar, as an icon and a count rather than a word and a number in brackets.
+        /// </summary>
+        private void SeverityTogglesGUI()
+        {
+            SeverityToggleGUI(LogType.Log, _cachedLogCount);
+            SeverityToggleGUI(LogType.Warning, _cachedWarningCount);
+            SeverityToggleGUI(LogType.Error, _cachedErrorCount);
+        }
+
+        private void SeverityToggleGUI(LogType logType, int count)
+        {
+            var content = new GUIContent(" " + count, IconFor(logType, true), logType + " messages");
+
+            bool shown = GUILayout.Toggle(_logFilter[logType], content, EditorStyles.toolbarButton,
+                GUILayout.MinWidth(38f), GUILayout.ExpandHeight(true));
+
+            if (shown == _logFilter[logType]) return;
+
+            _logFilter[logType] = shown;
+            _logsDirty = true;
+            _needsRepaint = true;
         }
 
         /// <summary>
@@ -782,73 +849,80 @@ namespace FlowIoC.Editor.Console
             _allLogs = new List<ConsoleLog>(FlowLogger.Logs);
         }
 
+        /// <summary>
+        /// The bar under the toolbar. It carries the switch that opens the filters panel and the
+        /// two things that say what the list is holding; the channels themselves live in the panel
+        /// rather than in a horizontal strip, because thirty channels do not fit across a window
+        /// and reading them meant scrolling sideways for a list that is read downwards.
+        /// </summary>
         private void TopPanelGUI()
         {
             EditorGUILayout.BeginVertical();
 
-            _topPanelScroll = EditorGUILayout.BeginScrollView(
-                _topPanelScroll,
-                true,
-                false,
-                GUI.skin.horizontalScrollbar,
-                GUIStyle.none,
-                GUI.skin.box,
-                GUILayout.Height(45),
-                GUILayout.ExpandWidth(true));
+            RebuildCachedLogs();
 
-            EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            for (var ii = 0; ii < SystemLogTypeValues.Length; ii++)
+            // Only while something is selected, because that is the only time it can do anything.
+            // A button that is there but greyed out asks the reader to work out why.
+            if (_selectedLog != null)
             {
-                var consoleLogType = SystemLogTypeValues[ii];
-                if (consoleLogType == SystemLogType.All)
+                var focusLabel = new GUIContent("Focus Log", "Scroll the selected row back into view.");
+
+                if (GUILayout.Button(focusLabel, EditorStyles.toolbarButton, GUILayout.Width(70f),
+                        GUILayout.ExpandHeight(true)))
                 {
-                    bool allVisible = IsAllSystemTypesVisible();
-                    GUI.backgroundColor = allVisible ? Color.green : Color.white;
-
-                    if (GUILayout.Button("All", GUILayout.MinWidth(80)))
-                    {
-                        SetAllSystemTypesVisible(!allVisible);
-                        OnLogTypeSelectionChanged();
-                    }
-
-                    GUI.backgroundColor = Color.white;
-                }
-                else
-                {
-                    if (!_settings.TryGetLogType((int) consoleLogType, out var typeInfo)) continue;
-
-                    GUI.backgroundColor = typeInfo.IsVisible ? Color.green : Color.white;
-
-                    var channelLabel = new GUIContent(consoleLogType.ToString(),
-                        "Click to hide or show this channel.\nAlt+click to show only this one, and again to bring the rest back.");
-
-                    if (GUILayout.Button(channelLabel, GUILayout.MinWidth(80)))
-                    {
-                        if (Event.current.alt)
-                        {
-                            SoloSystemType(consoleLogType);
-                        }
-                        else
-                        {
-                            typeInfo.IsVisible = !typeInfo.IsVisible;
-                            EditorUtility.SetDirty(_settings);
-                            OnLogTypeSelectionChanged();
-                        }
-                    }
-
-                    GUI.backgroundColor = Color.white;
+                    _scrollToSelectedLog = true;
+                    _needsRepaint = true;
                 }
             }
 
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.EndScrollView();
+            // A search or a muted channel takes rows off the list and says so nowhere else. The
+            // reader can see the scrollbar got shorter; this says by how much.
+            int shown = _cachedVisibleLogs?.Count ?? 0;
+            int held = _allLogs?.Count ?? 0;
 
-            TopPanelConsoleFilterGUI();
+            GUILayout.Label(
+                new GUIContent(shown + " / " + held, "Rows on the list, and logs the console is holding."),
+                shown == held ? EditorStyles.miniLabel : EditorStyles.whiteMiniLabel,
+                GUILayout.Width(90f));
+
+            GUILayout.FlexibleSpace();
+
+            // Laid along this bar rather than in a panel of their own, because there are two of
+            // them and they are read where the rows they shape are read.
+            SettingsControlsGUI();
+
+            var settingsLabel = SettingsButtonContent();
+
+            bool showSettings = GUILayout.Toggle(_showSettings, settingsLabel, EditorStyles.toolbarButton,
+                GUILayout.Width(30f), GUILayout.ExpandHeight(true));
+
+            if (showSettings != _showSettings)
+            {
+                _showSettings = showSettings;
+                _state.ShowSettings = showSettings;
+                _needsRepaint = true;
+            }
+
+            var filtersLabel = new GUIContent("Filters",
+                "Open the panel that holds every channel this console can show.");
+
+            // As wide as the panel it opens and hard against the right edge, so it reads as that
+            // panel's own header rather than as another toolbar button.
+            bool showFilters = GUILayout.Toggle(_showFilters, filtersLabel, EditorStyles.toolbarButton,
+                GUILayout.Width(FiltersPanelWidth), GUILayout.ExpandHeight(true));
+
+            if (showFilters != _showFilters)
+            {
+                _showFilters = showFilters;
+                _state.ShowFilters = showFilters;
+                _needsRepaint = true;
+            }
+
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
-
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         }
 
         /// <summary>
@@ -1378,6 +1452,10 @@ namespace FlowIoC.Editor.Console
             var content = new GUIContent(label);
             float labelWidth = _sessionSeparatorStyle.CalcSize(content).x + 10f;
 
+            // A band behind it. Drawn on nothing the strip read as a black gap in the list, which
+            // is the one thing a boundary between two sessions should not look like.
+            EditorGUI.DrawRect(rect, SessionSeparatorBandColor);
+
             float middle = rect.y + rect.height * 0.5f;
             float left = rect.x + 8f;
             float right = rect.xMax - 8f;
@@ -1390,14 +1468,19 @@ namespace FlowIoC.Editor.Console
             GUI.Label(new Rect(labelLeft + 5f, rect.y, labelWidth, rect.height), content, _sessionSeparatorStyle);
         }
 
+        /// <summary>
+        /// Built on every draw rather than kept. A style built during the first repaint after a
+        /// domain reload can be a copy of a placeholder, and cached it stays a placeholder for the
+        /// life of the window - which is how this label kept coming out black however it was
+        /// written. There are only ever a handful of separators on screen.
+        /// </summary>
         private void EnsureSessionSeparatorStyle()
         {
-            if (_sessionSeparatorStyle != null) return;
-
-            _sessionSeparatorStyle = new GUIStyle(EditorStyles.miniLabel)
+            _sessionSeparatorStyle = new GUIStyle(EditorStyles.label)
             {
                 name = "FlowConsoleSessionSeparator",
-                alignment = TextAnchor.MiddleLeft
+                alignment = TextAnchor.MiddleLeft,
+                fontSize = 10
             };
 
             _sessionSeparatorStyle.normal.textColor = SessionSeparatorColor;
@@ -1511,25 +1594,23 @@ namespace FlowIoC.Editor.Console
             // wrote this. It keeps the colour the settings give the channel.
             EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), consoleLog.LogColor);
 
-            // A pinned row gets a bright bar beside that strip rather than over it - which channel
-            // wrote the log is not something pinning it should cost the reader.
-            if (consoleLog.Pinned)
-                EditorGUI.DrawRect(new Rect(rect.x + 3f, rect.y, 2f, rect.height), PinnedMarkColor);
-
             bool small = _rowLineCount < 2;
             Texture icon = IconFor(consoleLog.LogType, small);
 
             // Drawn at the size the texture was authored for - 16 for the .sml variant, 32 for the
             // large one - because scaling either of them is what made the shapes come out ragged.
+            float iconSize = small ? 16f : 32f;
+            float iconTop = rect.y + (rect.height - iconSize) * 0.5f;
+
             if (icon != null)
-            {
-                float size = small ? 16f : 32f;
-                float y = rect.y + (rect.height - size) * 0.5f;
-                GUI.DrawTexture(new Rect(rect.x + 6f, y, size, size), icon, ScaleMode.StretchToFill);
-            }
+                GUI.DrawTexture(new Rect(rect.x + 6f, iconTop, iconSize, iconSize), icon, ScaleMode.StretchToFill);
 
             float textLeft = rect.x + (small ? 26f : 42f);
+            // Two forms of the same prefix: the plain one is what the row is measured with, and the
+            // rich one is what is drawn. The second half of it - the milliseconds, or the gap since
+            // the row above - is dimmed, because it is read only when the seconds are not enough.
             string date;
+            string dateRich;
 
             if (_showTiming)
             {
@@ -1537,11 +1618,18 @@ namespace FlowIoC.Editor.Console
                 float previousRealtime = hasPrevious ? _cachedVisibleLogs[rowIndex - 1].Realtime : 0f;
 
                 date = _timing.Prefix(consoleLog.Frame, consoleLog.Realtime, previousRealtime, hasPrevious);
+
+                int gap = date.IndexOf("  ", StringComparison.Ordinal);
+                dateRich = gap < 0 ? date : date.Substring(0, gap) + Dim(date.Substring(gap));
             }
             else
             {
-                date = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" +
-                       consoleLog.Second.ToString("00") + ":" + consoleLog.Millisecond.ToString("000");
+                string clock = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" +
+                               consoleLog.Second.ToString("00");
+                string milliseconds = ":" + consoleLog.Millisecond.ToString("000");
+
+                date = clock + milliseconds;
+                dateRich = clock + Dim(milliseconds);
             }
 
             float textWidth = rect.width - (textLeft - rect.x) - 4f;
@@ -1589,11 +1677,53 @@ namespace FlowIoC.Editor.Console
                 string text = LineOf(consoleLog.Message, line) ?? string.Empty;
 
                 Rect lineRect = new Rect(textLeft, textTop + line * LogEntryLineHeight, textWidth, LogEntryLineHeight);
-                string drawn = line == 0 ? date + " | " + text : text;
 
-                DrawSearchHighlight(lineRect, drawn);
+                if (line != 0)
+                {
+                    DrawSearchHighlight(lineRect, text);
+                    GUI.Label(lineRect, text, _richTextStyle);
+                    continue;
+                }
 
-                GUI.Label(lineRect, drawn, _richTextStyle);
+                // The prefix is its own label so the message can keep being measured as plain
+                // text. A colour tag inside the drawn string would move every character along and
+                // the search highlight is placed by character index.
+                float prefixWidth = _richTextStyle.CalcSize(new GUIContent(date + " | ")).x;
+                var prefixRect = new Rect(lineRect.x, lineRect.y, prefixWidth, lineRect.height);
+
+                GUI.Label(prefixRect, dateRich + " | ", _richTextStyle);
+
+                // The pin sits between the time and the message, which is where the eye already
+                // travels along the row. Drawn at the size the texture was authored for - scaling
+                // a 16 pixel icon is what made it come out ragged.
+                float pinWidth = 0f;
+
+                if (consoleLog.Pinned)
+                {
+                    Texture pin = EditorGUIUtility.IconContent("pin")?.image;
+
+                    if (pin != null)
+                    {
+                        var pinRect = new Rect(lineRect.x + prefixWidth,
+                            lineRect.y + (lineRect.height - PinIconSize) * 0.5f, PinIconSize, PinIconSize);
+
+                        // A coloured plate behind it, so a pinned row is picked out of a moving
+                        // list by colour rather than by recognising a small grey glyph. Inset,
+                        // because the pin's own texture carries empty space around the glyph.
+                        DrawDisc(new Rect(pinRect.x + 0.5f, pinRect.y - 0.5f, PinBadgeSize, PinBadgeSize),
+                            PinBadgeColor);
+
+                        GUI.DrawTexture(pinRect, pin, ScaleMode.StretchToFill);
+                    }
+
+                    pinWidth = PinIconSize + 3f;
+                }
+
+                var messageRect = new Rect(lineRect.x + prefixWidth + pinWidth, lineRect.y,
+                    Mathf.Max(0f, lineRect.width - prefixWidth - pinWidth), lineRect.height);
+
+                DrawSearchHighlight(messageRect, text);
+                GUI.Label(messageRect, text, _richTextStyle);
             }
 
             if (!small)
