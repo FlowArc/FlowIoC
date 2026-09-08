@@ -49,6 +49,9 @@ namespace FlowIoC.Editor.Console
         private int _layoutFirstVisible;
         private int _layoutLastVisible;
 
+        private readonly FlowConsoleStickyTail _stickyTail = new FlowConsoleStickyTail();
+        private float _logsViewportHeight;
+
         private List<ConsoleLog> _allLogs;
         private string _searchText = "";
         private bool _scrollToSelectedLog;
@@ -698,6 +701,30 @@ namespace FlowIoC.Editor.Console
 
             EditorGUILayout.EndScrollView();
 
+            // How tall the list actually is decides where its bottom sits, and only a repaint
+            // knows - during Layout the rect is still a placeholder. Resizing the window or
+            // dragging the detail panel moves that bottom, so a view resting on it follows.
+            if (Event.current.type == EventType.Repaint)
+            {
+                float height = GUILayoutUtility.GetLastRect().height;
+
+                if (height > 0f && !Mathf.Approximately(height, _logsViewportHeight))
+                {
+                    bool wasAtBottom = _stickyTail.IsAtBottom(
+                        _logsPanelScroll.y, _logsViewportHeight, ContentHeight());
+
+                    _logsViewportHeight = height;
+
+                    float follow = _stickyTail.Follow(
+                        wasAtBottom, _logsPanelScroll.y, height, ContentHeight());
+
+                    if (!Mathf.Approximately(follow, _logsPanelScroll.y))
+                    {
+                        _logsPanelScroll.y = follow;
+                        Repaint();
+                    }
+                }
+            }
 
             DetailPanelGUI();
         }
@@ -707,6 +734,10 @@ namespace FlowIoC.Editor.Console
             if (!_logsDirty) return;
             if (Event.current != null && Event.current.type != EventType.Layout) return;
             _logsDirty = false;
+
+            // Asked before the list is rebuilt, because where the view was resting is only
+            // answerable against the content it was resting in.
+            bool wasAtBottom = _stickyTail.IsAtBottom(_logsPanelScroll.y, _logsViewportHeight, ContentHeight());
 
             bool allTypesVisible = true;
             if (_settings != null && _settings.LogTypes != null)
@@ -780,16 +811,17 @@ namespace FlowIoC.Editor.Console
                 InvalidateTraceCache();
             }
 
-            if (_cumulativeHeights != null && _cachedVisibleLogs.Count > 0)
-            {
-                float totalContentHeight = _cumulativeHeights[_cachedVisibleLogs.Count];
-                if (_logsPanelScroll.y > totalContentHeight)
-                    _logsPanelScroll.y = 0;
-            }
-            else
-            {
-                _logsPanelScroll.y = 0;
-            }
+            _logsPanelScroll.y = _stickyTail.Follow(
+                wasAtBottom, _logsPanelScroll.y, _logsViewportHeight, ContentHeight());
+        }
+
+        /// <summary>How tall the whole list is, folded and filtered as it currently stands.</summary>
+        private float ContentHeight()
+        {
+            if (_cumulativeHeights == null || _cachedVisibleLogs == null) return 0f;
+            if (_cachedVisibleLogs.Count == 0) return 0f;
+
+            return _cumulativeHeights[_cachedVisibleLogs.Count];
         }
 
         private void RebuildVisibleLogs()
