@@ -59,7 +59,7 @@ namespace FlowIoC.ScreenModule.ViewsMediators.Screen
                 return;
             }
 
-            FlowLogger.Log(SystemLogType.Screen, "Screen HidingAnimation started! id: ", GetType().Name);
+            FlowLogger.Log(SystemLogType.Screen, "[ScreenBody.Hide][screen(", GetType().Name, ")][state(hideAnimation)]");
             Data.AddState(ScreenState.InHideAnimation);
             PlayHideAnimation();
         }

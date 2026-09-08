@@ -26,7 +26,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public async Task<T> ShowNewScreen<T>(ScreenVO screenData) where T : IScreenBody
         {
-            FlowLogger.Log(SystemLogType.Screen, $"showing a new {screenData.ScreenType.Name}");
+            FlowLogger.Log(SystemLogType.Screen, $"[ShowSubService.ShowNewScreen][screen({screenData.ScreenType.Name})]");
 
             T screenBody = (T) await _load.Screen(screenData);
             if (screenBody == null) return default;
@@ -50,7 +50,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
             }
 
             FlowLogger.Log(SystemLogType.Screen,
-                $"[ScreenService.Show.ShowPooledScreen] Showing screen from Pool {screenBody.Data.ScreenType.Name}");
+                $"[ShowSubService.ShowPooledScreen][screen({screenBody.Data.ScreenType.Name})]");
 
             AfterShowScreen(screenBody);
             return (T) screenBody;

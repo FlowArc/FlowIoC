@@ -36,7 +36,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
             screenBody.AfterScreenActivation();
 
             FlowLogger.Log(SystemLogType.Screen,
-                $"[ScreenService] Screen {screenBody.Data.ScreenType.Name} setup completed - Layer: {screenBody.Data.LayerIndex}, Manager: {screenBody.Data.ManagerId}, Parent: {layer.transform.name}");
+                $"[SetupSubService.SetupScreen][screen({screenBody.Data.ScreenType.Name})][layer({screenBody.Data.LayerIndex})][manager({screenBody.Data.ManagerId})][parent({layer.transform.name})]");
         }
 
         private void SetupRectTransform(IScreenBody screenBody, ScreenLayer layer)

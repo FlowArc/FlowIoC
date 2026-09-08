@@ -25,7 +25,7 @@ namespace FlowIoC.AssetModule.Commands
             Retain();
 
             FlowLogger.Log(SystemLogType.Asset,
-                $"Execute - LoadGroupCommand | label={_label}");
+                $"[LoadGroupCommand.Execute][label({_label})]");
 
             // Asked here rather than left to the service: the service answers an empty label with a
             // finished task and no group, so the caller would carry on believing the group loaded.
