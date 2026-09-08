@@ -31,5 +31,13 @@ namespace FlowIoC.BaseModule.Signals
             get => _hideCommandLog;
             set => _hideCommandLog = value;
         }
+
+        protected bool _isFrameworkOwned;
+
+        bool ISignalBody.IsFrameworkOwned
+        {
+            get => _isFrameworkOwned;
+            set => _isFrameworkOwned = value;
+        }
     }
 }

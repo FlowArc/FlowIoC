@@ -6,6 +6,7 @@ using FlowIoC.BaseModule.Bind.Bindings.Pool;
 using FlowIoC.BaseModule.Constructables;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Root;
+using FlowIoC.BaseModule.Signals;
 using FlowIoC.ConsoleModule;
 using UnityEngine;
 
@@ -27,6 +28,7 @@ namespace FlowIoC.BaseModule.Injectable
         // What an assignable-type scan settled on last time, misses kept as null. Cleared whenever
         // the container changes, which is the only thing that can make an answer wrong.
         private readonly Dictionary<Type, Type> _assignableTypes = new();
+        private static readonly SignalHolderOrigin SignalOrigin = new();
 
         public InjectionBinder()
         {
@@ -62,7 +64,14 @@ namespace FlowIoC.BaseModule.Injectable
         {
             FlowLogger.Log(SystemLogType.Injection,
                 _boundContext.GetType().Name + " | Binding: " + typeof(TBindingType).Name + (name != "" ? (" Name: " + name) : ""));
-            return GetOrCreateInstance<TBindingType>(name);
+
+            TBindingType instance = GetOrCreateInstance<TBindingType>(name);
+
+            // A signal holder is walked once here so a dispatch does not have to work out whose
+            // signal it is. Framework signals and the game's go on different channels.
+            if (instance is ISignalHolder) SignalOrigin.Stamp(instance);
+
+            return instance;
         }
 
         public TAbstract Bind<TAbstract, TConcrete>(string name = "")

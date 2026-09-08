@@ -245,6 +245,47 @@ namespace FlowIoC.ConsoleModule
         }
 
         /// <summary>
+        /// A signal being dispatched. The game's own signals go on the Signal channel and work out
+        /// where they were dispatched from, whatever Stack Trace Capture says, because the line
+        /// that dispatched one is the line the reader wants to open. The framework's own go on
+        /// SignalOperation and work out nothing - a screen registering itself is not a place
+        /// anybody wants to be taken to, and this is the console's most frequent log.
+        /// </summary>
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void LogDispatch(bool isFrameworkOwned, string part1, string part2, string part3)
+        {
+            if (!Settings.IsLoggingEnabled) return;
+
+            if (isFrameworkOwned)
+            {
+                AddLog(SystemLogType.SignalOperation, part1 + part2 + part3, LogType.Log, null, false);
+                return;
+            }
+
+            AddLog(SystemLogType.Signal, part1 + part2 + part3, LogType.Log, null, true, true);
+        }
+
+        /// <summary>
+        /// A line about a type: a command executing, a screen opening, a function running. Double
+        /// clicking it opens that type's script.
+        ///
+        /// No stack is captured for one of these. The stack at that moment answers a different
+        /// question - a command's execute line is written while the Context that dispatched the
+        /// signal is still below it, so the frame found is the binding rather than the Command the
+        /// line is about - and the type is the better answer anyway, for nothing.
+        /// </summary>
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void LogAbout(SystemLogType systemLogType, Type about, string part1, string part2,
+            string part3 = null, string part4 = null)
+        {
+            if (!Settings.IsLoggingEnabled) return;
+
+            AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log, about, false);
+        }
+
+        /// <summary>
         /// The parts of a message, joined only when logging is on. The hot paths - a dispatch, a
         /// command, a function - log through these so that logging switched off costs them nothing
         /// but the call.
@@ -515,6 +556,15 @@ namespace FlowIoC.ConsoleModule
             string[] lines = stackTrace.Split('\n');
 
             int index = StackFrames.FindFirstGameFrame(lines);
+
+            // The game's frame is the one worth opening, but only if it says where it is. A trace
+            // whose first game frame is a Unity callback - or which holds nothing of the game's at
+            // all, as a log the package's own editor tooling wrote does - falls back to the first
+            // frame that carries a location. Reporting no source for a line Unity's own console
+            // opens happily is worse than opening the framework's file.
+            if (index < 0 || !StackFrames.TryParseFrame(lines[index], out _, out _))
+                index = StackFrames.FindFirstFrameWithLocation(lines);
+
             if (index < 0) return;
 
             string frame = lines[index];
@@ -533,12 +583,13 @@ namespace FlowIoC.ConsoleModule
         // ======================== Internal ========================
 
         [HideInCallstack]
-        private static void AddLog(SystemLogType systemLogType, string message, LogType logType, Type blame = null)
+        private static void AddLog(SystemLogType systemLogType, string message, LogType logType, Type blame = null,
+            bool captureSource = true, bool forceCapture = false)
         {
             if (!Settings.IsLoggingEnabled) return;
 
 #if UNITY_EDITOR
-            var log = CreateLogEntry(message, logType, blame);
+            var log = CreateLogEntry(message, logType, blame, captureSource, forceCapture);
             log.SystemLogType = systemLogType;
             log.LogTypeValue = (int) systemLogType;
 
@@ -570,7 +621,8 @@ namespace FlowIoC.ConsoleModule
         }
 
 #if UNITY_EDITOR
-        private static ConsoleLog CreateLogEntry(string message, LogType logType, Type blame = null)
+        private static ConsoleLog CreateLogEntry(string message, LogType logType, Type blame = null,
+            bool captureSource = true, bool forceCapture = false)
         {
             var now = DateTime.Now;
             var log = new ConsoleLog
@@ -583,7 +635,11 @@ namespace FlowIoC.ConsoleModule
                 LogType = logType
             };
 
-            if (CapturesSourceFor(logType))
+            // A log that names the type it is about does not look for a frame. The stack at that
+            // moment answers a different question - a command's execute line is written while the
+            // Context that dispatched the signal is still on the stack, so the frame found is the
+            // binding rather than the Command the line is about.
+            if (captureSource && (forceCapture || CapturesSourceFor(logType)))
                 GetSourceInfo(log);
             else
                 log.SourceTrace = log.StackTrace = NotCaptured;
