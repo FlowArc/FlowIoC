@@ -530,22 +530,31 @@ namespace FlowIoC.ConsoleModule
 #endif
         }
 
+        /// <summary>
+        /// The colour a channel is drawn in, and - through its profile - the colour of the tag on
+        /// the front of its lines. These are the values the console was tuned to by eye, so a
+        /// project that has just installed the package reads the same console the framework was
+        /// developed against. Changing one here changes it for new projects only: an asset that
+        /// already holds the channel keeps whatever colour it was given.
+        /// </summary>
         private Color GetDefaultColorForLogType(SystemLogType logType)
         {
             switch (logType)
             {
                 case SystemLogType.All: return Color.white;
-                case SystemLogType.Context: return new Color(0.2f, 0.6f, 1f);
-                case SystemLogType.Injection: return new Color(0.2f, 1f, 0.2f);
+                case SystemLogType.Context: return new Color(0.11f, 1f, 0.535f);
+                case SystemLogType.Injection: return new Color(0.104f, 0.809f, 0.528f);
+                case SystemLogType.Signal: return new Color(1f, 0.78f, 0.224f);
+                case SystemLogType.SignalOperation: return new Color(0.787f, 0.614f, 0.176f);
                 case SystemLogType.Command: return Color.cyan;
-                case SystemLogType.CommandOperation: return new Color(1f, 0.7f, 0.2f);
-                case SystemLogType.Function: return new Color(0.8f, 0.4f, 1f);
-                case SystemLogType.Screen: return new Color(0.3f, 0.8f, 0.8f);
-                case SystemLogType.Pool: return new Color(1f, 0.4f, 0.7f);
-                case SystemLogType.Model: return new Color(0.6f, 1f, 0.6f);
-                case SystemLogType.Unity: return new Color(0.75f, 0.75f, 0.75f);
-                case SystemLogType.Compiler: return new Color(1f, 0.55f, 0.4f);
-                case SystemLogType.SignalOperation: return new Color(0.45f, 0.55f, 0.75f);
+                case SystemLogType.CommandOperation: return new Color(0f, 0.667f, 0.667f);
+                case SystemLogType.Function: return new Color(0.231f, 0.765f, 1f);
+                case SystemLogType.Screen: return new Color(0.953f, 0.912f, 0.211f);
+                case SystemLogType.Pool: return new Color(0.629f, 0.533f, 1f);
+                case SystemLogType.Model: return new Color(0.729f, 0.486f, 1f);
+                case SystemLogType.Asset: return new Color(0.922f, 0.902f, 0.808f);
+                case SystemLogType.Unity: return new Color(0.962f, 0.937f, 0.84f);
+                case SystemLogType.Compiler: return new Color(0.887f, 0.762f, 0.757f);
                 default: return Color.white;
             }
         }
