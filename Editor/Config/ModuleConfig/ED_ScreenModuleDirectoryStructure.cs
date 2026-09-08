@@ -323,7 +323,7 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                             FolderEVO.FolderType.ViewsAndMediators, null, true, isNamespaceProvider: true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Services], FolderEVO.FolderType.Services,
                             null, false, true),
-                        CreateFolder("Constants", FolderEVO.FolderType.Folder, null, true),
+                        CreateFolder("Constants", FolderEVO.FolderType.Folder, null, false, true, isNamespaceProvider: true),
                         CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers],
                             FolderEVO.FolderType.Controllers, null, true, isNamespaceProvider: true),
                         CreateFolder("Entities", FolderEVO.FolderType.Folder, null, true)

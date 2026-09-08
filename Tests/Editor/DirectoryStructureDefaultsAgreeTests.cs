@@ -52,24 +52,37 @@ namespace FlowIoC.Tests
             return layout;
         }
 
+        /// <summary>
+        /// Keyed by the path down to the folder rather than by its name alone. A layout has two
+        /// folders called Constants - one under Runtime and one under Shared - and a bare name let
+        /// the second overwrite the first, so a difference in the Runtime one was compared against
+        /// the Shared one and passed.
+        ///
+        /// The type is part of what is compared, because it is what a folder is looked up by:
+        /// FindFullFolderPathByID matches on FolderType and nothing else, so a folder typed as a
+        /// plain Folder in one declaration and as Models in the other is a folder Create Model
+        /// cannot find.
+        /// </summary>
         private static Dictionary<string, string> FlagsByName(List<FolderEVO> folders)
         {
             var flags = new Dictionary<string, string>();
 
-            Walk(folders, flags);
+            Walk(folders, string.Empty, flags);
 
             return flags;
         }
 
-        private static void Walk(List<FolderEVO> folders, Dictionary<string, string> flags)
+        private static void Walk(List<FolderEVO> folders, string prefix, Dictionary<string, string> flags)
         {
             if (folders == null) return;
 
             foreach (FolderEVO folder in folders)
             {
-                flags[folder.FolderName] = $"mandatory={folder.IsMandatory} optional={folder.IsOptional}";
+                string path = prefix + "/" + folder.FolderName;
 
-                Walk(folder.SubFolders, flags);
+                flags[path] = $"type={folder.Type} mandatory={folder.IsMandatory} optional={folder.IsOptional}";
+
+                Walk(folder.SubFolders, path, flags);
             }
         }
 
@@ -138,9 +151,9 @@ namespace FlowIoC.Tests
             screen.Initialize();
             test.Initialize();
 
-            Assert.AreEqual("mandatory=False optional=True", FlagsByName(main.RootFolders)["Scriptables"]);
-            Assert.AreEqual("mandatory=False optional=True", FlagsByName(screen.RootFolders)["Scriptables"]);
-            Assert.AreEqual("mandatory=False optional=True", FlagsByName(test.RootFolders)["Scriptables"]);
+            Assert.AreEqual("type=Folder mandatory=False optional=True", FlagsByName(main.RootFolders)["/Scriptables"]);
+            Assert.AreEqual("type=Folder mandatory=False optional=True", FlagsByName(screen.RootFolders)["/Scriptables"]);
+            Assert.AreEqual("type=Folder mandatory=False optional=True", FlagsByName(test.RootFolders)["/Scriptables"]);
         }
 
         /// <summary>
