@@ -66,7 +66,7 @@ namespace FlowIoC.ScreenModule.Model.Runtime
 
         public void AddToPassivePool(IScreenBody screenBody)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"[ScreenRuntimeModel][AddToPassivePool] {screenBody.Data.ScreenType.Name}");
+            FlowLogger.Log(SystemLogType.Screen, $"{screenBody.Data.ScreenType.Name}");
 
             (int, Type) key = (screenBody.Data.ManagerId, screenBody.Data.ScreenType);
 
@@ -121,7 +121,7 @@ namespace FlowIoC.ScreenModule.Model.Runtime
 
         public void RemoveFromPassivePool(IScreenBody screenBody)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"[ScreenRuntimeModel][RemoveFromPassivePool] {screenBody.Data.ScreenType.Name}");
+            FlowLogger.Log(SystemLogType.Screen, $"{screenBody.Data.ScreenType.Name}");
 
             screenBody.Data.RemoveState(ScreenState.InUse);
             screenBody.Data.RemoveState(ScreenState.InPool);
@@ -168,7 +168,7 @@ namespace FlowIoC.ScreenModule.Model.Runtime
         /// </summary>
         public void RemoveFromActivePools(IScreenBody screenBody)
         {
-            FlowLogger.Log(SystemLogType.Screen, $"[ScreenRuntimeModel][RemoveFromActivePools] {screenBody.Data.ScreenType.Name}");
+            FlowLogger.Log(SystemLogType.Screen, $"{screenBody.Data.ScreenType.Name}");
 
             screenBody.Data.RemoveState(ScreenState.InUse);
 

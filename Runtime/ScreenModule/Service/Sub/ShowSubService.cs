@@ -26,7 +26,7 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public async Task<T> ShowNewScreen<T>(ScreenVO screenData) where T : IScreenBody
         {
-            FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Show.NewScreen] Showing screen new! {screenData.ScreenType.Name}");
+            FlowLogger.Log(SystemLogType.Screen, $"showing a new {screenData.ScreenType.Name}");
 
             T screenBody = (T) await _load.Screen(screenData);
             if (screenBody == null) return default;

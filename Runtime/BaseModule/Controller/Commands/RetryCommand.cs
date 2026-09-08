@@ -30,7 +30,7 @@ namespace FlowIoC.BaseModule.Controller.Commands
 
         protected void TryFailed()
         {
-            FlowLogger.Log(SystemLogType.Command, "[RetryCommand.TryFailed] failed");
+            FlowLogger.Log(SystemLogType.Command, "RetryCommand try failed");
 
             if (_retryCount == _retryLimit)
                 RetryFailLimitReached();
@@ -43,13 +43,13 @@ namespace FlowIoC.BaseModule.Controller.Commands
         protected virtual void Retry()
         {
             _retryCount++;
-            FlowLogger.Log(SystemLogType.Command, "[RetryCommand.Retry] Count:", _retryCount.ToString());
+            FlowLogger.Log(SystemLogType.Command, "RetryCommand retrying, attempt ", _retryCount.ToString());
             Try();
         }
 
         protected virtual void RetryFailLimitReached()
         {
-            FlowLogger.Log(SystemLogType.Command, "[RetryCommand.Stop] Retry Fail LimitReached");
+            FlowLogger.Log(SystemLogType.Command, "RetryCommand gave up, retry limit reached");
             Stop();
         }
     }

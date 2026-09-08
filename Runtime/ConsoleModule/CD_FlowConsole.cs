@@ -364,29 +364,33 @@ namespace FlowIoC.ConsoleModule
                 string name = channel.ToString();
                 FlowLogProfileData profile = _logProfiles.Find(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
 
+                TryGetLogType((int) channel, out var channelType);
+
+                // Written once, when the profile is missing, and never written over afterwards.
+                // What it starts on is the channel's own colour; after that the look is somebody's
+                // to choose, and a pass that rewrote it on every validate would undo the choosing.
                 if (profile == null)
                 {
-                    profile = new FlowLogProfileData {Name = name};
+                    profile = new FlowLogProfileData
+                    {
+                        Name = name,
+                        Prefix = "[" + name + "]",
+                        PrefixStyle = FlowTextStyle.Bold,
+                        PrefixColor = channelType != null
+                            ? channelType.LogColor
+                            : GetDefaultColorForLogType(channel)
+                    };
+
                     _logProfiles.Add(profile);
                     changed = true;
                 }
 
-                // The channel's own colour rather than the default one, so a colour changed in the
-                // settings changes the tag with it. The default is only what a channel starts on.
-                Color channelColor = TryGetLogType((int) channel, out var channelType)
-                    ? channelType.LogColor
-                    : GetDefaultColorForLogType(channel);
-
-                string prefix = "[" + name + "]";
-
-                if (profile.Prefix != prefix || profile.PrefixColor != channelColor
-                                             || !profile.IsMandatory || profile.IsEditable)
+                // Mandatory so it cannot be deleted - a channel whose profile is gone prints no tag
+                // - but editable while the colours are still being settled.
+                if (!profile.IsMandatory || !profile.IsEditable)
                 {
-                    profile.Prefix = prefix;
-                    profile.PrefixColor = channelColor;
-                    profile.PrefixStyle = FlowTextStyle.Bold;
                     profile.IsMandatory = true;
-                    profile.IsEditable = false;
+                    profile.IsEditable = true;
                     changed = true;
                 }
 
