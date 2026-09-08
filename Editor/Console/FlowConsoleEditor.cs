@@ -50,6 +50,7 @@ namespace FlowIoC.Editor.Console
         private int _layoutLastVisible;
 
         private readonly FlowConsoleStickyTail _stickyTail = new FlowConsoleStickyTail();
+        private readonly FlowConsoleKeyboard _keyboard = new FlowConsoleKeyboard();
         private float _logsViewportHeight;
 
         private List<ConsoleLog> _allLogs;
@@ -644,6 +645,8 @@ namespace FlowIoC.Editor.Console
         {
             RebuildCachedLogs();
 
+            HandleListKeys();
+
             if (_scrollToSelectedLog && _selectedLog != null && Event.current.type == EventType.Layout)
                 ScrollToSelectedLog();
 
@@ -813,6 +816,68 @@ namespace FlowIoC.Editor.Console
 
             _logsPanelScroll.y = _stickyTail.Follow(
                 wasAtBottom, _logsPanelScroll.y, _logsViewportHeight, ContentHeight());
+        }
+
+        /// <summary>
+        /// Walking the list with the keyboard. Handled before the scroll view is opened, so a key
+        /// this window answers never also reaches the scroll view underneath it. While a text
+        /// field is being edited the keyboard belongs to that field - the search box takes its own
+        /// arrow keys.
+        /// </summary>
+        private void HandleListKeys()
+        {
+            Event currentEvent = Event.current;
+            if (currentEvent.type != EventType.KeyDown) return;
+            if (EditorGUIUtility.editingTextField) return;
+
+            int count = _cachedVisibleLogs?.Count ?? 0;
+            if (count == 0) return;
+
+            if (currentEvent.keyCode == KeyCode.Return || currentEvent.keyCode == KeyCode.KeypadEnter)
+            {
+                if (_selectedLog != null && !_navigator.Open(_selectedLog))
+                    ShowNotification(new GUIContent(NoSourceHint()), 3d);
+
+                currentEvent.Use();
+                return;
+            }
+
+            if ((currentEvent.control || currentEvent.command) && currentEvent.keyCode == KeyCode.C)
+            {
+                if (_selectedLog != null)
+                    EditorGUIUtility.systemCopyBuffer = CopyTextOf(_selectedLog);
+
+                currentEvent.Use();
+                return;
+            }
+
+            int index = _selectedLog == null ? -1 : _cachedVisibleLogs.IndexOf(_selectedLog);
+            float rowHeight = _rowLineCount * LogEntryLineHeight + LogEntryPadding;
+            int rowsPerPage = Mathf.FloorToInt(_logsViewportHeight / rowHeight);
+
+            if (!_keyboard.TryMove(currentEvent.keyCode, index, count, rowsPerPage, out int moved)) return;
+
+            _selectedLog = _cachedVisibleLogs[moved];
+            _detailPanelScroll = Vector2.zero;
+            InvalidateTraceCache();
+
+            if (_cumulativeHeights != null && _cumulativeHeights.Length > moved)
+            {
+                _logsPanelScroll.y = _keyboard.Reveal(
+                    _logsPanelScroll.y, _logsViewportHeight, _cumulativeHeights[moved], rowHeight);
+            }
+
+            Repaint();
+            currentEvent.Use();
+        }
+
+        /// <summary>What Ctrl+C puts on the clipboard: the message, and the trace under it when
+        /// there is one, which is what a reader pastes into a bug report.</summary>
+        private string CopyTextOf(ConsoleLog log)
+        {
+            if (string.IsNullOrEmpty(log.StackTrace)) return log.Message;
+
+            return log.Message + "\n" + log.StackTrace;
         }
 
         /// <summary>How tall the whole list is, folded and filtered as it currently stands.</summary>
