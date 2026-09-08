@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A row in Flow Console opens the code it is about.** A line that names a type carries the type
+  and captures no stack: a command executing opens the Command, a function running opens the
+  Function, a screen opening opens its View. The stack at that moment answers a different question -
+  a command's execute line is written while the Context that dispatched the signal is still below
+  it - and the type is the better answer for nothing. A signal the game dispatched from inside a
+  sequence points at the `Bind` line that declared the sequence, taken from the compiler at the call
+  and so free; one dispatched from a Mediator or a `Launch` still looks at the stack.
+- **A Connector says so.** A crossing had no line of its own - the target simply dispatched, and
+  nothing named the Connector or where to read the wiring. It now writes `[Connector] 'A' to 'B'`
+  and both that row and the dispatch it causes open the `Connect` call, whose file and line the
+  compiler wrote into it.
+- **The framework's own signals moved off the Signal channel**, onto `SignalOperation`, the way
+  `Command` and `CommandOperation` are already split - so `Signal` is the game's traffic and every
+  row on it is one the reader wrote and can open. Which a signal is comes from its holder's
+  assembly, read once when the holder is bound. Commands bound by the framework's own Contexts
+  moved to `CommandOperation` for the same reason, and the plumbing channels work out no source at
+  all: there is nowhere to take a reader that would tell them anything.
+- **A profile per channel, written from code**, so a project that has just installed the package has
+  them. The profile is where a channel's tag lives - `[Signal]`, `[Command]` - and it takes the
+  channel's own colour, so recolouring a channel recolours its tag. They are mandatory and not
+  editable: a tag somebody renamed no longer matches what the documentation says the console prints.
+- **The console's own layout.** The channels moved out of a strip across the top into a panel down
+  the right behind a `Filters` switch, grouped into Unity's output, the framework's channels and the
+  project's modules - each foldable, each saying how many of it are showing, each with a `Mute` that
+  silences the group without switching anything off. A row is the switch rather than carrying one,
+  and alt+clicking one isolates that channel until you leave isolation. `Settings` puts the two
+  dials a reader turns while following a flow - how many lines a row shows, and how much a log works
+  out about where it came from - along the bar beside `Export`. The severity counters became icons
+  in the toolbar the way Unity draws them, and `Focus Log` appears only while the selected row is
+  off screen.
+
 - **Flow Console is a console you can keep open instead of Unity's.** Unity's own output arrives on
   two new channels, `Unity` and `Compiler`, read through `Application.logMessageReceived` and
   `CompilationPipeline` and nothing else, so a Unity upgrade cannot quietly break them. Both are
@@ -63,6 +94,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The framework's own log lines have one shape: the subject, then what happened.** `'OpenMainScreen'
+  dispatched (0 parameters)`, `OpenMainScreenCommand executed as Sequence`, `MainScreenView opened`,
+  `MainContext | setup`. The channel's name is not repeated in the text - the channel is the column
+  the row is in, and the profile puts the tag on the front - and the subject leads because that is
+  what a reader scans the column for. The bracketed names stay in warnings and errors, where they
+  are not a channel tag but the guard that noticed speaking.
+- **`ICommandBinder.Bind` takes the caller's file and line**, as optional arguments the compiler
+  fills in. Source-compatible with every call already written; a binder implemented outside the
+  package needs the two parameters added to its signature.
 - **A Function lives in `Controllers/` with the Commands, and the `Functions/` folder is gone.** A
   Command and a Function are the same kind of thing - neither holds state, and both do the module's
   work - so a module has one folder for its controllers rather than two. Create Module no longer
@@ -79,6 +119,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A compile error was two rows.** Unity echoes every compiler message through
+  `Application.logMessageReceived` as well, so the console held the `Compiler` row that knows the
+  file and line and, beside it, Unity's copy that knows neither. The bridge recognises the echo by
+  its shape - `(line,column): error CSxxxx:` - and drops it, so the row that stays is the one that
+  opens the code.
+- **A row whose whole stack is the framework is clickable again.** The frame filter skips the
+  package's own frames to find the game's, and a log the framework writes about itself has none - so
+  the row got no location at all. Failing to find a game frame now falls back to the first frame that
+  has a file and a line.
+- **Pinned rows survived the automatic clears and were then thrown away.** Entering play ran
+  `ResetStatics` after the parked logs were read back, and it emptied the list. It leaves the list
+  alone now, and the trim at `MaxLogCount` counts pinned rows as kept rather than dropping the oldest
+  of them - both the runtime trim and the window's now go through one trimmer.
 - **An injectable a generator could not place is written anyway rather than dropped.** Create
   Command, Create Function and Create Model looked each injected type up by name and, finding
   nothing, left the member out of the file - silently. A name with a typo in it, or a type in an
