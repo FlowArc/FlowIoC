@@ -79,7 +79,7 @@ namespace FlowIoC.BaseModule.Bind.Binders
 
             // Unbinding is what a context does on the way out, not something to warn about. As a
             // warning it painted the console yellow every time a scene was left.
-            FlowLogger.Log(SystemLogType.Injection, "UnBind: " + binding.Key);
+            FlowLogger.Log(SystemLogType.Injection, "[Binder.UnBind][key(" + binding.Key + ")]");
         }
 
         #endregion

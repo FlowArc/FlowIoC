@@ -63,7 +63,7 @@ namespace FlowIoC.BaseModule.Injectable
             where TBindingType : new()
         {
             FlowLogger.Log(SystemLogType.Injection,
-                _boundContext.GetType().Name + " | Binding: " + typeof(TBindingType).Name + (name != "" ? (" Name: " + name) : ""));
+                "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TBindingType).Name + ")]" + (name != "" ? "[name(" + name + ")]" : ""));
 
             TBindingType instance = GetOrCreateInstance<TBindingType>(name);
 
@@ -78,7 +78,7 @@ namespace FlowIoC.BaseModule.Injectable
             where TConcrete : TAbstract, new()
         {
             FlowLogger.Log(SystemLogType.Injection,
-                _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name + (name != "" ? (" Name: " + name) : ""));
+                "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TAbstract).Name + ")]" + (name != "" ? "[name(" + name + ")]" : ""));
             return GetOrCreateInstance<TAbstract, TConcrete>(name);
         }
 
@@ -92,14 +92,14 @@ namespace FlowIoC.BaseModule.Injectable
             if (_boundContext.IsTest)
             {
                 FlowLogger.Log(SystemLogType.Injection,
-                    _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name +
-                    (name != "" ? " Name: " + name : "") + " To: " + typeof(TDummy).Name);
+                    "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TAbstract).Name + ")]" +
+                    (name != "" ? "[name(" + name + ")]" : "") + "[to(" + typeof(TDummy).Name + ")]");
                 return GetOrCreateInstance<TAbstract, TDummy>(name);
             }
 #endif
             FlowLogger.Log(SystemLogType.Injection,
-                _boundContext.GetType().Name + " | Binding: " + typeof(TAbstract).Name +
-                (name != "" ? " Name: " + name : "") + " To: " + typeof(TConcrete).Name);
+                "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TAbstract).Name + ")]" +
+                (name != "" ? "[name(" + name + ")]" : "") + "[to(" + typeof(TConcrete).Name + ")]");
             return GetOrCreateInstance<TAbstract, TConcrete>(name);
         }
 
@@ -140,7 +140,7 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.SetKey(injectionType);
 
             FlowLogger.Log(SystemLogType.Injection,
-                _boundContext.GetType().Name + " | Binding: " + injectionType.Name + (name != "" ? (" Name: " + name) : ""));
+                "[InjectionBinder.BindInstanceAs][context(" + _boundContext.GetType().Name + ")][type(" + injectionType.Name + ")]" + (name != "" ? "[name(" + name + ")]" : ""));
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
         }
@@ -273,7 +273,7 @@ namespace FlowIoC.BaseModule.Injectable
 
             _bindingPoolController.ReturnBindingToPool(injectionBinding);
 
-            FlowLogger.Log(SystemLogType.Injection, "Unbinding: " + key.Name + (name != "" ? (" Name: " + name) : ""));
+            FlowLogger.Log(SystemLogType.Injection, "[InjectionBinder.UnBind][type(" + key.Name + ")]" + (name != "" ? "[name(" + name + ")]" : ""));
         }
 
         #endregion
