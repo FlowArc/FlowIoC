@@ -5,7 +5,6 @@ using System.IO;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.Addressables;
-using FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
 using UnityEngine;
@@ -34,7 +33,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             RemoveReferencesToModule(moduleName, modulePath, deletedItems);
 
             RemoveLogType(moduleName, deletedItems);
-            RemoveProjectFiles(moduleName, deletedItems);
+            RemoveProjectFiles(moduleName, modulePath, deletedItems);
             DeleteModuleFolder(modulePath, deletedItems);
             CleanupEmptyParentFolder(modulePath, deletedItems);
             RemoveFromIndex(folderGuid, deletedItems);
@@ -172,23 +171,20 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>
-        /// The module's three assemblies, taken out of every asmdef that named them. Done before
-        /// the deletion so the project is never in the state where a reference points at an
-        /// assembly that has already gone.
+        /// The module's assemblies, taken out of every asmdef that named them. Done before the
+        /// deletion so the project is never in the state where a reference points at an assembly
+        /// that has already gone.
+        ///
+        /// "The module's" means every asmdef under its folder rather than the three its name implies:
+        /// a screen module holds a test module, a main module may hold several screen modules, and
+        /// the assemblies those declare go with the folder like the rest of it.
         /// </summary>
         private static void RemoveReferencesToModule(
             string moduleName, string modulePath, List<string> deletedItems)
         {
-            string assemblyName = new ModuleAssemblyName().From(moduleName);
+            IReadOnlyList<string> assemblies = new ModuleAssemblies().Of(modulePath, moduleName);
 
-            if (string.IsNullOrEmpty(assemblyName)) return;
-
-            var assemblies = new List<string>
-            {
-                assemblyName,
-                assemblyName + SharedAssemblyDefinition.ASSEMBLY_SUFFIX,
-                assemblyName + SignalsAssemblyDefinition.ASSEMBLY_SUFFIX
-            };
+            if (assemblies.Count == 0) return;
 
             foreach (string line in new ModuleReferenceCleaner().Clean(modulePath, assemblies))
                 Log(line, deletedItems);
@@ -206,30 +202,20 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>
-        /// The project files the module left at the project root. A module carves two more
-        /// assemblies out of itself - Shared for the data it publishes and Signals for its public
-        /// holder - and each is a project of its own, so its `.csproj` and `.csproj.DotSettings`
-        /// sit beside the module's and would otherwise outlive the module they belong to.
+        /// The project files the module left at the project root. Every assembly the module folder
+        /// declares is a project of its own, so its `.csproj` and `.csproj.DotSettings` sit beside
+        /// the module's and would otherwise outlive the module they belong to.
+        ///
+        /// Which assemblies those are is ModuleAssemblies' answer, read from the asmdefs inside the
+        /// folder. This used to be the three the module's name implies, and a module that holds
+        /// sub-modules declares more: deleting a screen module left its test module's two files at
+        /// the root, which is what Module Scanner then reported as orphaned.
         /// </summary>
-        private static void RemoveProjectFiles(string moduleName, List<string> deletedItems)
+        private static void RemoveProjectFiles(string moduleName, string modulePath, List<string> deletedItems)
         {
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
 
-            // Asked of ModuleAssemblyName rather than worked out here. This method used to carry
-            // its own copy of the rules, and the copy read the suffix off the end without asking
-            // what was left in front of it: "GameplayScreenTestModule" came out as
-            // Modules.GameplayScreen.Test instead of Modules.Gameplay.Screen.Test, and a module
-            // called exactly "ScreenModule" came out as "Modules..Screen". Neither name matched a
-            // file, so nothing was deleted and the module's settings files outlived it - which is
-            // what Module Scanner then reported as orphaned.
-            string assemblyName = new ModuleAssemblyName().From(moduleName);
-
-            foreach (string assembly in new[]
-                     {
-                         assemblyName,
-                         assemblyName + SharedAssemblyDefinition.ASSEMBLY_SUFFIX,
-                         assemblyName + SignalsAssemblyDefinition.ASSEMBLY_SUFFIX
-                     })
+            foreach (string assembly in new ModuleAssemblies().Of(modulePath, moduleName))
             {
                 RemoveProjectFile(projectRoot, assembly, ".csproj.DotSettings", "DotSettings", deletedItems);
                 RemoveProjectFile(projectRoot, assembly, ".csproj", "Csproj", deletedItems);
