@@ -27,6 +27,7 @@ namespace FlowIoC.Editor.Inspector
         private GUIStyle _cardFlush;
         private GUIStyle _cardEntry;
         private GUIStyle _entryAction;
+        private GUIStyle _entryNote;
         private GUIStyle _action;
 
         public FlowInspectorGUI(FlowPalette palette, FlowRoleResolver roles, FlowHelpSource help, FlowHelpState state)
@@ -86,6 +87,18 @@ namespace FlowIoC.Editor.Inspector
             fixedHeight = 16f,
             margin = new RectOffset(0, 0, 1, 3),
             padding = new RectOffset(0, 0, 0, 0)
+        };
+
+        /// <summary>
+        /// What an entry says about itself when something is wrong with it. It wraps, because the
+        /// thing these lines name is usually a namespaced type: at a docked Inspector's width
+        /// "Nothing compiles to Modules.Main.MainScreenModule.RootsContexts.MainScreenContext. Its
+        /// module is gone or renamed." ran off the edge mid-name, and the half that says what
+        /// happened was the half that went.
+        /// </summary>
+        public GUIStyle EntryNote => _entryNote ??= new GUIStyle(EditorStyles.miniLabel)
+        {
+            wordWrap = true
         };
 
         public void BeginCard(string title, bool flushSides = false)
