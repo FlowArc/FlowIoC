@@ -1,7 +1,14 @@
+using System;
 using UnityEngine;
 
 namespace FlowIoC.ConsoleModule
 {
+    /// <summary>
+    /// Serializable because the console has to survive a domain reload. Recompiling resets every
+    /// static in the project, this list among them, and a console that empties itself whenever a
+    /// script is saved is a console nobody can read a compile error in.
+    /// </summary>
+    [Serializable]
     public class ConsoleLog
     {
         public int Hour;
