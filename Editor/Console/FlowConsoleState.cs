@@ -58,6 +58,16 @@ namespace FlowIoC.Editor.Console
             set => EditorPrefs.SetBool(PREFIX + nameof(Timing), value);
         }
 
+        /// <summary>
+        /// Whether the list is grouped into the flows the logs belong to, rather than read
+        /// straight down in the order they arrived.
+        /// </summary>
+        public bool FlowMode
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(FlowMode), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(FlowMode), value);
+        }
+
         public bool ErrorPause
         {
             get => EditorPrefs.GetBool(PREFIX + nameof(ErrorPause), false);
