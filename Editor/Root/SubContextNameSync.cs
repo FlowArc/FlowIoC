@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System;
+using System.Collections.Generic;
 using FlowIoC.BaseModule.Root;
 using Object = UnityEngine.Object;
 
@@ -45,6 +46,28 @@ namespace FlowIoC.Editor.Root
             entry.ContextName = type.Name;
 
             return entry;
+        }
+
+        /// <summary>
+        /// The positions in a Root's list whose names have drifted from the scripts they point at.
+        ///
+        /// This is the pass the Root inspector runs before it draws, and it answers positions rather
+        /// than rewriting them so the caller keeps the Undo record and the dirty mark it already has
+        /// for a written entry. Nothing drifting means nothing written, which is what lets this run
+        /// on every repaint.
+        /// </summary>
+        internal IReadOnlyList<int> DriftedIn(IReadOnlyList<SubContextData> entries)
+        {
+            var drifted = new List<int>();
+
+            if (entries == null) return drifted;
+
+            for (var index = 0; index < entries.Count; index++)
+            {
+                if (Drifted(entries[index])) drifted.Add(index);
+            }
+
+            return drifted;
         }
 
         /// <summary>Whether Applied would change this entry.</summary>

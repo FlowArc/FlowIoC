@@ -201,6 +201,8 @@ namespace FlowIoC.Editor.Root
             if (_root.SubContextTypes == null)
                 _root.SubContextTypes = new List<SubContextData>();
 
+            SyncDriftedNames();
+
             if (_root.SubContextTypes.Count != 0)
             {
                 _gui.BeginCard("SUB CONTEXTS", true);
@@ -269,6 +271,27 @@ namespace FlowIoC.Editor.Root
 
             if (_gui.AccentButton(RoleOf(), "Add Sub Context"))
                 AddSubContextWindow.ShowWindow(_root, RoleOf());
+        }
+
+        /// <summary>
+        /// Brings the entries' names back in step with the scripts they point at, before the list is
+        /// drawn from them.
+        ///
+        /// A class renamed inside its file is the case this is here for, and it is the one the
+        /// entry's other half cannot report: the script reference follows the file, so the entry
+        /// stays Linked and nothing is drawn under it, while ContextFullName - the only half runtime
+        /// reads - still says the old name and resolves to nothing. Left to Resolve alone this never
+        /// happened, because Resolve is offered on an Unlinked entry and a rename does not produce
+        /// one.
+        ///
+        /// Running it before the loop rather than inside it is what lets the fold state and the kind
+        /// badge be looked up under the name the entry has now. Nothing drifting writes nothing, so
+        /// a repaint neither records an Undo step nor dirties the Root.
+        /// </summary>
+        private void SyncDriftedNames()
+        {
+            foreach (int index in _nameSync.DriftedIn(_root.SubContextTypes))
+                WriteSubContext(index, _nameSync.Applied(_root.SubContextTypes[index]));
         }
 
         /// <summary>

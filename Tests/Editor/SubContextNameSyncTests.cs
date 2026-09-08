@@ -19,7 +19,9 @@ namespace FlowIoC.Tests
     /// </summary>
     public class SubContextNameSyncTests
     {
-        private class PlayerScreenContext { }
+        private class PlayerScreenContext
+        {
+        }
 
         private static Object Script() => ScriptableObject.CreateInstance<ScriptableObject>();
 
@@ -29,8 +31,7 @@ namespace FlowIoC.Tests
 
             if (script != null && behind != null) classes.Add(script, behind);
 
-            return new SubContextNameSync(
-                candidate => candidate != null && classes.TryGetValue(candidate, out Type type) ? type : null);
+            return new SubContextNameSync(candidate => candidate != null && classes.TryGetValue(candidate, out Type type) ? type : null);
         }
 
         [Test]
@@ -161,6 +162,90 @@ namespace FlowIoC.Tests
             };
 
             Assert.IsFalse(Sync(null, null).Drifted(entry));
+        }
+
+        /// <summary>
+        /// The pass the Root inspector runs before it draws. It answers positions rather than
+        /// rewriting them, so the caller keeps the Undo record it already has for a written entry -
+        /// and so a list where nothing has moved costs no write at all, which is what lets this run
+        /// on every repaint.
+        /// </summary>
+        [Test]
+        public void A_list_where_nothing_moved_reports_no_positions()
+        {
+            Object script = Script();
+
+            var entries = new List<SubContextData>
+            {
+                new()
+                {
+                    ContextScript = script,
+                    ContextFullName = typeof(PlayerScreenContext).FullName,
+                    ContextName = nameof(PlayerScreenContext)
+                }
+            };
+
+            Assert.IsEmpty(Sync(script, typeof(PlayerScreenContext)).DriftedIn(entries));
+        }
+
+        [Test]
+        public void The_position_of_a_renamed_context_is_reported()
+        {
+            Object renamed = Script();
+
+            var entries = new List<SubContextData>
+            {
+                new()
+                {
+                    ContextScript = null,
+                    ContextFullName = "Modules.Player.RootsContexts.SomethingElse",
+                    ContextName = "SomethingElse"
+                },
+                new()
+                {
+                    ContextScript = renamed,
+                    ContextFullName = "Modules.Player.RootsContexts.WhateverItUsedToBeCalled",
+                    ContextName = "WhateverItUsedToBeCalled"
+                }
+            };
+
+            CollectionAssert.AreEqual(
+                new[] {1}, Sync(renamed, typeof(PlayerScreenContext)).DriftedIn(entries));
+        }
+
+        /// <summary>
+        /// A rename leaves the entry Linked - the script reference follows the file - so nothing is
+        /// drawn under it and this pass is the only thing that notices. Applied at the reported
+        /// position is what the inspector then writes back.
+        /// </summary>
+        [Test]
+        public void Applying_at_the_reported_position_brings_the_name_back()
+        {
+            Object renamed = Script();
+            SubContextNameSync sync = Sync(renamed, typeof(PlayerScreenContext));
+
+            var entries = new List<SubContextData>
+            {
+                new()
+                {
+                    ContextScript = renamed,
+                    ContextFullName = "Modules.Player.RootsContexts.WhateverItUsedToBeCalled",
+                    ContextName = "WhateverItUsedToBeCalled"
+                }
+            };
+
+            foreach (int index in sync.DriftedIn(entries))
+                entries[index] = sync.Applied(entries[index]);
+
+            Assert.AreEqual(typeof(PlayerScreenContext).FullName, entries[0].ContextFullName);
+            Assert.AreEqual(nameof(PlayerScreenContext), entries[0].ContextName);
+            Assert.IsEmpty(sync.DriftedIn(entries));
+        }
+
+        [Test]
+        public void A_list_that_is_null_reports_no_positions()
+        {
+            Assert.IsEmpty(Sync(null, null).DriftedIn(null));
         }
     }
 }
