@@ -72,6 +72,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The four single-file generators can no longer be filled in and then not used.** Create Command,
+  Create Function, Create Model and Create View each hold a list that grows a row at a time -
+  injectables, a view's actions, a function's parameters - and laid their sections out one under the
+  other with no scroll of their own. Enough rows pushed the module list and the window's own button
+  past the bottom with nothing to scroll them back. The body scrolls now and the button does not: it
+  is drawn below the scroll view and stays where it is however long the list gets. The three inner
+  scroll views went with the fix, so a window has one scrollbar rather than one per list - a list
+  with its own scroll inside a scrolling page traps the wheel over whichever one the pointer is on.
 - **Leaving play mode no longer throws a `MissingReferenceException` for every open screen.** The
   Root's `OnDestroy` dispatches `UnRegisterScreen`, and by then Unity has already destroyed the
   screen - but an `IScreenBody` is an interface, so the `== null` guards on that path compared the
