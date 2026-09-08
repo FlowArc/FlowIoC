@@ -270,6 +270,122 @@ namespace FlowIoC.Editor.CodeGenerator
         /// instead, which is what the fifth parameter was going to be anyway.
         /// </summary>
         internal const int MAX_PARAMETERS = 4;
+
+        /// <summary>
+        /// How a Command calls the function being written, in the shape the Help window's own
+        /// example uses. This is the half of a function a generator cannot write for you - the
+        /// file it produces says nothing about where it is called from, which is the whole
+        /// difference between a Function and a Command - so the window shows it instead, ready to
+        /// be copied into the Command that needs it.
+        ///
+        /// The parameter names are the ones typed into the window rather than invented, so the
+        /// snippet reads as the call the author has in mind.
+        /// </summary>
+        internal string UsageFor(FunctionScriptRequest request)
+        {
+            var usage = new StringBuilder();
+            usage.AppendLine("[Inject] private IFunctionProvider _functionProvider { get; set; }");
+            usage.AppendLine();
+
+            switch (request.Kind)
+            {
+                case FunctionKind.Async:
+                    AppendAsyncUsage(usage, request);
+                    break;
+
+                case FunctionKind.Return:
+                    AppendReturnUsage(usage, request);
+                    break;
+
+                default:
+                    AppendVoidUsage(usage, request);
+                    break;
+            }
+
+            return usage.ToString().TrimEnd();
+        }
+
+        private void AppendReturnUsage(StringBuilder usage, FunctionScriptRequest request)
+        {
+            usage.AppendLine($"var {ResultNameFor(request)} = _functionProvider");
+            usage.AppendLine($"    .Call<{request.ClassName}>()");
+            AppendParams(usage, request);
+            usage.AppendLine($"    .ExecuteAndGetResult<{ReturnTypeOf(request)}>();");
+        }
+
+        /// <summary>
+        /// A call with nothing to pass is one line, the way the Help window writes it; one that
+        /// passes parameters breaks into the chain, because the arguments are what the reader is
+        /// there to see.
+        /// </summary>
+        private void AppendVoidUsage(StringBuilder usage, FunctionScriptRequest request)
+        {
+            if (ValidParameters(request).Count == 0)
+            {
+                usage.AppendLine($"_functionProvider.Call<{request.ClassName}>().Execute();");
+                return;
+            }
+
+            usage.AppendLine("_functionProvider");
+            usage.AppendLine($"    .Call<{request.ClassName}>()");
+            AppendParams(usage, request);
+            usage.AppendLine("    .Execute();");
+        }
+
+        private void AppendAsyncUsage(StringBuilder usage, FunctionScriptRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.ReturnType))
+            {
+                usage.AppendLine($"_functionProvider.CallAsync<{request.ClassName}>().ExecuteAsync();");
+                return;
+            }
+
+            usage.AppendLine("_functionProvider");
+            usage.AppendLine($"    .CallAsync<{request.ClassName}, {request.ReturnType.Trim()}>()");
+            usage.AppendLine($"    .AddFunctionCompletedCallback({CallbackNameFor(request)})");
+            usage.AppendLine("    .ExecuteAsync();");
+        }
+
+        private void AppendParams(StringBuilder usage, FunctionScriptRequest request)
+        {
+            List<FunctionParameter> parameters = ValidParameters(request);
+            if (parameters.Count == 0) return;
+
+            var names = new List<string>();
+
+            foreach (FunctionParameter parameter in parameters)
+                names.Add(parameter.Name.Trim());
+
+            usage.AppendLine($"    .AddParams({string.Join(", ", names)})");
+        }
+
+        /// <summary>
+        /// What the answer is called at the call site, and what the callback that receives it is
+        /// called: both are the function's own name with the suffix off - CalculateDamageFunction
+        /// answers into calculateDamage and reports to OnCalculateDamageCompleted.
+        /// </summary>
+        private string ResultNameFor(FunctionScriptRequest request)
+        {
+            string name = BareNameOf(request);
+
+            return name.Length == 0 ? "result" : char.ToLowerInvariant(name[0]) + name.Substring(1);
+        }
+
+        private string CallbackNameFor(FunctionScriptRequest request)
+        {
+            string name = BareNameOf(request);
+
+            return name.Length == 0 ? "OnCompleted" : "On" + name + "Completed";
+        }
+
+        private string BareNameOf(FunctionScriptRequest request)
+        {
+            string name = request.ClassName ?? string.Empty;
+
+            return name.EndsWith(FUNCTION_SUFFIX) ? name.Substring(0, name.Length - FUNCTION_SUFFIX.Length) : name;
+        }
+
+        private const string FUNCTION_SUFFIX = "Function";
     }
 }
 #endif
