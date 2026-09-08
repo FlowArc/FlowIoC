@@ -359,7 +359,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             // Asked before the message is built rather than inside the call: an enum's name is a
             // lookup and an allocation, and this line runs for every command of every dispatch.
             if (FlowLogger.IsEnabled && !_commandBinder.HasHideCommandLog(step.CommandType))
-                FlowLogger.Log(SystemLogType.Command, "[Command] Execute as ", step.ExecutionType.ToString(), " : ", step.CommandType.Name);
+                FlowLogger.LogAbout(SystemLogType.Command, step.CommandType,
+                    "[Command] Execute as ", step.ExecutionType.ToString(), " : ", step.CommandType.Name);
 
             command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());
 

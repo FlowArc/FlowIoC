@@ -43,5 +43,34 @@ namespace FlowIoC.Tests
             Assert.AreEqual(LogType.Warning, _intake.ToLogType(LogType.Warning));
             Assert.AreEqual(LogType.Error, _intake.ToLogType(LogType.Error));
         }
+
+        /// <summary>
+        /// The failure this exists for. A compile error arrives twice - once through
+        /// CompilationPipeline carrying the file and the line, and once as text through
+        /// Application.logMessageReceived carrying neither - so one error read as two rows and the
+        /// second had nowhere to go when it was double-clicked.
+        /// </summary>
+        [Test]
+        public void A_compile_error_Unity_is_printing_is_recognised()
+        {
+            Assert.IsTrue(_intake.IsCompilerMessage(
+                "Assets/Modules/MainModule/Scripts/Runtime/Controllers/AaaFunction.cs(8,26): "
+                + "error CS0246: The type or namespace name 'NewInjectable' could not be found"));
+        }
+
+        [Test]
+        public void A_compile_warning_is_recognised_too()
+        {
+            Assert.IsTrue(_intake.IsCompilerMessage(
+                "Assets/A.cs(12,5): warning CS0168: The variable 'x' is declared but never used"));
+        }
+
+        [Test]
+        public void An_ordinary_message_is_not_a_compiler_one()
+        {
+            Assert.IsFalse(_intake.IsCompilerMessage("Opened MainScreen"));
+            Assert.IsFalse(_intake.IsCompilerMessage("Damage (12,5): applied"));
+            Assert.IsFalse(_intake.IsCompilerMessage(null));
+        }
     }
 }

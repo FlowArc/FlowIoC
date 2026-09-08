@@ -52,6 +52,10 @@ namespace FlowIoC.Editor.Console
         {
             if (!Intake.ShouldRecord(type, FlowLogger.IsWritingToUnityConsole)) return;
 
+            // The compile error Unity is printing is the one CompilationPipeline already handed
+            // over, with the file and the line this copy does not carry.
+            if (Intake.IsCompilerMessage(condition)) return;
+
             FlowLogger.AddExternalLog(LogSource.Unity, Intake.ToLogType(type), condition,
                 stackTrace, null, 0);
         }

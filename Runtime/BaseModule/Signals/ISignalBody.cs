@@ -8,6 +8,12 @@ namespace FlowIoC.BaseModule.Signals
 
         internal bool HideCommandLog { get; set; }
 
+        /// <summary>
+        /// Whether this signal belongs to the framework rather than to the game. Set once when the
+        /// holder is bound, and read on every dispatch to choose the channel the line goes on.
+        /// </summary>
+        internal bool IsFrameworkOwned { get; set; }
+
         internal Action<ISignalBody, object[]> InternalCallback { get; set; }
 
         /// <summary>

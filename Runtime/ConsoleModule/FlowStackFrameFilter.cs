@@ -25,6 +25,7 @@ namespace FlowIoC.ConsoleModule
             "UnityEngine.DebugLogHandler:",
             "UnityEngine.StackTraceUtility:",
             "UnityEngine.Events.",
+            "UnityEditor.",
             "System.Reflection.",
             "System.Runtime.CompilerServices.",
             "System.Threading."
@@ -119,6 +120,24 @@ namespace FlowIoC.ConsoleModule
             for (int i = 0; i < traceLines.Length; i++)
             {
                 if (!IsFrameworkFrame(traceLines[i]))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// The first frame that says where it is, whoever wrote it. Used when a trace holds nothing
+        /// of the game's - a log the package's own editor tooling wrote, say - because saying no
+        /// source was found for a line Unity opens happily is worse than opening the framework.
+        /// </summary>
+        public int FindFirstFrameWithLocation(string[] traceLines)
+        {
+            if (traceLines == null) return -1;
+
+            for (int i = 0; i < traceLines.Length; i++)
+            {
+                if (TryParseFrame(traceLines[i], out _, out _))
                     return i;
             }
 

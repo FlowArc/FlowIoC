@@ -50,7 +50,7 @@ namespace FlowIoC.BaseModule.Signals
         public void Dispatch()
         {
             if (!_hideCommandLog)
-                FlowLogger.Log(SystemLogType.Signal, "Signal is dispatched: '", _name, "' with 0 parameter!");
+                FlowLogger.LogDispatch(_isFrameworkOwned, "Signal is dispatched: '", _name, "' with 0 parameter!");
             // Taken off the signal before it runs, not after. A once-listener that adds another one
             // - or adds itself back - was writing into a field the next line then cleared, so the
             // listener it added was never heard from.

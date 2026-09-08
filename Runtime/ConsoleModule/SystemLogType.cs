@@ -19,5 +19,12 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>A compiler error or warning, taken from CompilationPipeline.</summary>
         Compiler = 50,
+
+        /// <summary>
+        /// The framework's own signals - registering a screen, a pool asking for something. Split
+        /// off Signal for the reason Command and CommandOperation are split: a reader watching
+        /// signals is watching the game's traffic, and every row there should be one they wrote.
+        /// </summary>
+        SignalOperation = 55
     }
 }

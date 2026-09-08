@@ -141,6 +141,45 @@ namespace FlowIoC.Tests
             Assert.IsNull(_filter.ParseClassName("no colon here"));
         }
 
+        /// <summary>
+        /// The failure this exists for. A log the package's own editor tooling wrote has nothing of
+        /// the game on its stack, so the console reported no source for a line Unity's own console
+        /// opens happily. The first frame that says where it is answers instead.
+        /// </summary>
+        [Test]
+        public void A_trace_that_is_all_framework_still_gives_up_a_location()
+        {
+            string[] trace =
+            {
+                "UnityEngine.Debug:Log (object)",
+                "FlowIoC.Editor.Console.FlowLogTypeGenerator:Generate () (at ./Packages/FlowIoC/Editor/Console/FlowLogTypeGenerator.cs:104)",
+                "FlowIoC.Editor.Console.FlowLogTypeGenerator:OnScriptsReloaded ()"
+            };
+
+            Assert.AreEqual(-1, _filter.FindFirstGameFrame(trace));
+            Assert.AreEqual(1, _filter.FindFirstFrameWithLocation(trace));
+        }
+
+        /// <summary>
+        /// A Unity callback is Unity's plumbing, not the game's. Left in, it was the first frame
+        /// that did not look like the framework's, so the search stopped on a line that says where
+        /// nothing is.
+        /// </summary>
+        [Test]
+        public void A_Unity_editor_callback_is_plumbing_too()
+        {
+            Assert.IsTrue(_filter.IsFrameworkFrame("UnityEditor.EditorApplication:Internal_CallDelayFunctions ()"));
+        }
+
+        [Test]
+        public void A_trace_with_no_location_anywhere_gives_up_none()
+        {
+            string[] trace = {"UnityEngine.Debug:Log (object)", "FlowIoC.A.B:C ()"};
+
+            Assert.AreEqual(-1, _filter.FindFirstFrameWithLocation(trace));
+            Assert.AreEqual(-1, _filter.FindFirstFrameWithLocation(null));
+        }
+
         [Test]
         public void No_trace_at_all_reports_no_game_frame()
         {

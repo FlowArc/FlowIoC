@@ -80,7 +80,7 @@ namespace FlowIoC.BaseModule.Function.Provider
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out _);
-            FlowLogger.Log(SystemLogType.Function, "Function Executed! ", function.GetType().Name);
+            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), "Function Executed! ", function.GetType().Name);
 
             if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
@@ -97,7 +97,7 @@ namespace FlowIoC.BaseModule.Function.Provider
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out object result);
-            FlowLogger.Log(SystemLogType.Function, "Function Executed! ", function.GetType().Name);
+            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), "Function Executed! ", function.GetType().Name);
 
             ReturnDataContainerToPool(functionDataContainer);
 
@@ -128,7 +128,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             (functionDataContainer as AsyncFunctionDataContainerBase)?.ApplyCallback(function);
             Context.TryToInjectFunction(function);
             yield return function.Execute();
-            FlowLogger.Log(SystemLogType.Function, "Function Executed! ", function.GetType().Name);
+            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), "Function Executed! ", function.GetType().Name);
 
             if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {

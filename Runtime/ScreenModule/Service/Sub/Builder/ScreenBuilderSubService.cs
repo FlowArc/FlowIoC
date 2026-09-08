@@ -40,7 +40,7 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
             ScreenVO screenData = new ScreenVO {ScreenType = typeof(T), ManagerId = managerId};
             _registry.CopyDataFromConfig(screenData, entry.Screen);
 
-            FlowLogger.Log(SystemLogType.Screen, "[ScreenService.Open] ", screenData.ScreenType.Name);
+            FlowLogger.LogAbout(SystemLogType.Screen, screenData.ScreenType, "[ScreenService.Open] ", screenData.ScreenType.Name);
             return new ScreenBuilder(screenData, _screenRuntimeModel, _show, _hide);
         }
     }
