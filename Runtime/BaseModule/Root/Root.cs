@@ -73,7 +73,7 @@ namespace FlowIoC.BaseModule.Root
             hasInitialized = true;
             AfterCreateBeforeStartContext();
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Started!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | started");
             _context.Start();
             BindSignals();
             BindInjections();
@@ -85,22 +85,22 @@ namespace FlowIoC.BaseModule.Root
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | Started!");
                 subContext.Key.Start();
 
-                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | Bind Signals");
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | signals bound");
                 subContext.Key.SignalBindings();
 
-                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | Bind Injections");
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | injections bound");
                 subContext.Key.InjectionBindings();
 
-                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | Bind Mediations");
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | mediations bound");
                 subContext.Key.MediationBindings();
 
-                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | Bind Commands!");
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Key.GetType().Name + " | commands bound");
                 subContext.Key.CommandBindings();
             }
 
             AfterBindingsBeforeInjections();
 
-            FlowLogger.Log(SystemLogType.Context, _context.GetType().Name + " | InjectAllInstances!");
+            FlowLogger.Log(SystemLogType.Context, _context.GetType().Name + " | injections resolved");
             _context.InjectAllInstances();
 
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
@@ -109,7 +109,7 @@ namespace FlowIoC.BaseModule.Root
                 subContextData.Key.InjectAllInstances();
             }
 
-            FlowLogger.Log(SystemLogType.Context, _context.GetType().Name + " | Executed Post Construct Methods!");
+            FlowLogger.Log(SystemLogType.Context, _context.GetType().Name + " | post construct Methods!");
             _context.ExecutePostConstructMethods();
 
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
@@ -127,7 +127,7 @@ namespace FlowIoC.BaseModule.Root
         {
             _rootsManager.UnRegister(this);
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | DestroyContext!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | destroyed");
             _context.DestroyContext();
 
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
@@ -150,7 +150,7 @@ namespace FlowIoC.BaseModule.Root
 
         protected virtual void PauseContext()
         {
-            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | PauseContext!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | paused");
             _context.PauseContext();
 
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)
@@ -162,7 +162,7 @@ namespace FlowIoC.BaseModule.Root
 
         protected virtual void ResumeContext()
         {
-            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | ResumeContext!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | resumed");
             _context.ResumeContext();
 
             foreach (KeyValuePair<IContext, SubContextData> subContextData in _subContexts)

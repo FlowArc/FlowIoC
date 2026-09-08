@@ -80,7 +80,7 @@ namespace FlowIoC.BaseModule.Function.Provider
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out _);
-            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), "Function Executed! ", function.GetType().Name);
+            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
 
             if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
@@ -97,7 +97,7 @@ namespace FlowIoC.BaseModule.Function.Provider
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out object result);
-            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), "Function Executed! ", function.GetType().Name);
+            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
 
             ReturnDataContainerToPool(functionDataContainer);
 
@@ -128,7 +128,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             (functionDataContainer as AsyncFunctionDataContainerBase)?.ApplyCallback(function);
             Context.TryToInjectFunction(function);
             yield return function.Execute();
-            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), "Function Executed! ", function.GetType().Name);
+            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
 
             if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
@@ -162,7 +162,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             }
 
             ReturnFunctionToPool(function);
-            FlowLogger.Log(SystemLogType.Function, "Function manually released! ", function.GetType().Name);
+            FlowLogger.Log(SystemLogType.Function, function.GetType().Name, " released");
         }
 
         private void ReturnFunctionToPool(IFunctionBody functionBody)
@@ -172,7 +172,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             functionBody.Dispose();
             _functionPool.Return(functionType, functionBody);
 
-            FlowLogger.Log(SystemLogType.Function, "Function Returned to Pool! ", functionType.Name);
+            FlowLogger.Log(SystemLogType.Function, functionType.Name, " returned to pool");
         }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             if (!_functionPool.TryTake(functionType, out IFunctionBody function))
             {
                 function = (IFunctionBody) Activator.CreateInstance(functionType);
-                FlowLogger.Log(SystemLogType.Function, "Function Created! ", functionType.Name);
+                FlowLogger.Log(SystemLogType.Function, functionType.Name, " created");
             }
 
             (function as FunctionBody)?.BeginRun();

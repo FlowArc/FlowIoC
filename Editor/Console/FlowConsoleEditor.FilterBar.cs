@@ -26,22 +26,53 @@ namespace FlowIoC.Editor.Console
             Rect panelRect = GUILayoutUtility.GetRect(FiltersPanelWidth, 0f, GUILayout.Width(FiltersPanelWidth),
                 GUILayout.Height(0f));
 
+            // A ground of its own, darker than the list. Sharing the list's tone made the two read
+            // as one surface, and the panel is a different thing on a different side.
             if (Event.current.type == EventType.Repaint)
-                EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, 1f, position.height), FiltersPanelEdgeColor);
+            {
+                EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, FiltersPanelWidth, position.height),
+                    FiltersPanelBackgroundColor);
+            }
 
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.FlexibleSpace();
-            PresetMenuGUI();
-            EditorGUILayout.EndHorizontal();
+            // The bar is drawn rather than taken from EditorStyles.toolbar: the toolbar's own
+            // background is lighter than the panel under it, and it painted over the edge line
+            // down the panel's left side.
+            Rect barRect = GUILayoutUtility.GetRect(FiltersPanelWidth, FiltersPanelBarHeight,
+                GUILayout.Width(FiltersPanelWidth), GUILayout.Height(FiltersPanelBarHeight));
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                EditorGUI.DrawRect(barRect, FiltersPanelBarColor);
+                EditorGUI.DrawRect(new Rect(barRect.x, barRect.yMax - 1f, barRect.width, 1f),
+                    FiltersPanelEdgeColor);
+            }
+
+            PresetMenuGUI(new Rect(barRect.xMax - 70f, barRect.y + 1f, 66f, barRect.height - 2f));
 
             _filtersPanelScroll = EditorGUILayout.BeginScrollView(_filtersPanelScroll,
                 GUILayout.Width(FiltersPanelWidth));
+
+            if (_isolatedChannel >= 0)
+            {
+                IsolatedChannelGUI();
+
+                EditorGUILayout.EndScrollView();
+                EditorGUILayout.EndVertical();
+
+                if (Event.current.type == EventType.Repaint)
+                {
+                    EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, 1f, position.height),
+                        FiltersPanelEdgeColor);
+                }
+
+                return;
+            }
 
             // Unity's own output first, because it is what the reader came from: this window
             // replaces Unity's console, and the two channels that carry what Unity wrote are not
             // the framework narrating itself.
             CountChannels(logType => IsUnityChannel(logType.Value), out int unityShown, out int unityTotal);
-            _unityChannelsExpanded = FiltersGroupHeader("Unity", _unityChannelsExpanded, unityShown, unityTotal);
+            _unityChannelsExpanded = FiltersGroupHeader("Unity", _unityChannelsExpanded, unityShown, unityTotal, 0);
 
             if (_unityChannelsExpanded)
                 UnityChannelRowsGUI();
@@ -51,7 +82,7 @@ namespace FlowIoC.Editor.Console
             CountChannels(logType => logType.IsMandatory && !IsUnityChannel(logType.Value),
                 out int frameworkShown, out int frameworkTotal);
             _systemChannelsExpanded = FiltersGroupHeader("Framework", _systemChannelsExpanded,
-                frameworkShown, frameworkTotal);
+                frameworkShown, frameworkTotal, 1);
 
             if (_systemChannelsExpanded)
                 SystemChannelRowsGUI();
@@ -60,7 +91,7 @@ namespace FlowIoC.Editor.Console
 
             CountChannels(logType => !logType.IsMandatory, out int moduleShown, out int moduleTotal);
             _moduleChannelsExpanded = FiltersGroupHeader("Modules", _moduleChannelsExpanded,
-                moduleShown, moduleTotal);
+                moduleShown, moduleTotal, 2);
 
             if (_moduleChannelsExpanded)
                 ModuleChannelRowsGUI();
@@ -68,6 +99,10 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.EndVertical();
+
+            // Last, so nothing the panel drew can paint over it.
+            if (Event.current.type == EventType.Repaint)
+                EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, 1f, position.height), FiltersPanelEdgeColor);
         }
 
         /// <summary>
@@ -75,14 +110,32 @@ namespace FlowIoC.Editor.Console
         /// wants from a folded group - whether anything in there is hidden - so the group can stay
         /// folded and still answer it.
         /// </summary>
-        private bool FiltersGroupHeader(string title, bool expanded, int shown, int total)
+        private bool FiltersGroupHeader(string title, bool expanded, int shown, int total, int groupIndex)
         {
             // The whole row folds the group, not the arrow alone: a header that is a click target
             // for eight pixels of triangle is a header nobody hits first time.
             Rect rect = GUILayoutUtility.GetRect(0f, EditorGUIUtility.singleLineHeight + 2f,
                 GUILayout.ExpandWidth(true));
 
-            bool open = EditorGUI.Foldout(rect, expanded, title, true, EditorStyles.foldoutHeader);
+            bool hovered = rect.Contains(Event.current.mousePosition);
+
+            // The header's ground is drawn rather than left to the foldout style, which paints only
+            // as far as its own text: the count on the right sat on the panel's darker ground and
+            // the row read as two colours. Drawn here, one band runs the width and lights whole.
+            if (Event.current.type == EventType.Repaint)
+            {
+                EditorGUI.DrawRect(rect, hovered ? FiltersGroupHeaderHoverColor : FiltersGroupHeaderColor);
+            }
+
+            // The foldout is given everything but the mute button's corner. Handed the whole row it
+            // took the click first - toggleOnLabelClick makes the rect the target - and pressing
+            // Mute folded the group instead.
+            var foldoutRect = new Rect(rect.x, rect.y, rect.width - GroupMuteWidth - 8f, rect.height);
+
+            bool open = EditorGUI.Foldout(foldoutRect, expanded, title, true, EditorStyles.foldout);
+
+            if (hovered && Event.current.type == EventType.MouseMove)
+                Repaint();
 
             // Only on a repaint, because that is the pass EditorStyles is real in. Built during a
             // layout pass the style came back blank - no name, no font, black text, aligned to the
@@ -91,11 +144,14 @@ namespace FlowIoC.Editor.Console
             {
                 EnsureChannelRowStyles();
 
-                var countRect = new Rect(rect.xMax - 54f, rect.y, 46f, rect.height);
+                var countRect = new Rect(rect.xMax - GroupMuteWidth - 54f, rect.y, 46f, rect.height);
 
                 GUI.Label(countRect, shown + " / " + total,
                     shown == total ? _groupCountStyle : _groupCountHighlightStyle);
             }
+
+            GroupMuteGUI(new Rect(rect.xMax - GroupMuteWidth - 4f, rect.y + 2f, GroupMuteWidth,
+                rect.height - 4f), groupIndex);
 
 
             if (open != expanded)
@@ -106,6 +162,128 @@ namespace FlowIoC.Editor.Console
             }
 
             return open;
+        }
+
+        /// <summary>
+        /// What the panel shows while one channel is isolated: that channel, and the way out. The
+        /// groups are put away because none of their switches mean anything while this is on, and
+        /// a list of switches that do nothing is a list that lies.
+        /// </summary>
+        private void IsolatedChannelGUI()
+        {
+            if (!_settings.TryGetLogType(_isolatedChannel, out var typeInfo))
+            {
+                LeaveIsolation();
+                return;
+            }
+
+            EditorGUILayout.Space(2f);
+            EditorGUILayout.LabelField("Isolated", EditorStyles.miniLabel);
+
+            ChannelRowGUI(typeInfo.Name, typeInfo, 0);
+
+            EditorGUILayout.Space(4f);
+
+            if (GUILayout.Button("Exit isolation", EditorStyles.miniButton))
+                LeaveIsolation();
+
+            EditorGUILayout.Space(6f);
+            EditorGUILayout.LabelField("Nothing was switched off to arrange this, so leaving it puts "
+                                       + "every channel back the way you had it.", EditorStyles.wordWrappedMiniLabel);
+        }
+
+        private void EnterIsolation(int channelValue)
+        {
+            _isolatedChannel = channelValue;
+            _state.IsolatedChannel = channelValue;
+            OnLogTypeSelectionChanged();
+        }
+
+        private void LeaveIsolation()
+        {
+            _isolatedChannel = -1;
+            _state.IsolatedChannel = -1;
+            OnLogTypeSelectionChanged();
+        }
+
+        /// <summary>Which of the three groups a channel belongs to: 0 Unity, 1 Framework, 2 Modules.</summary>
+        private static int GroupIndexOf(CD_FlowConsole.FlowConsoleLogTypeCVO logType)
+        {
+            if (IsUnityChannel(logType.Value)) return 0;
+
+            return logType.IsMandatory ? 1 : 2;
+        }
+
+        /// <summary>
+        /// Whether the group a channel belongs to is silenced. Asked while the list is filtered, so
+        /// a muted group takes its channels off the list without any of them being switched off -
+        /// which is what lets unmuting bring the reader's selection back exactly as it was.
+        /// </summary>
+        private bool IsGroupMuted(CD_FlowConsole.FlowConsoleLogTypeCVO logType)
+        {
+            return !_groupUnmuted[GroupIndexOf(logType)];
+        }
+
+        /// <summary>
+        /// The switch at the end of a group's header. Clicking it silences the group; clicking it
+        /// again brings back what was showing before, because nothing was switched off to begin
+        /// with. Alt+clicking silences the other groups instead, and again brings them back - the
+        /// same gesture a channel row has, one level up.
+        /// </summary>
+        private void GroupMuteGUI(Rect rect, int groupIndex)
+        {
+            bool muted = !_groupUnmuted[groupIndex];
+
+            var content = new GUIContent(muted ? "Muted" : "Mute",
+                "Silence this group without switching any of its channels off.\n"
+                + "Alt+click to silence the others instead, and again to bring them back.");
+
+            Color backgroundWas = GUI.backgroundColor;
+            if (muted) GUI.backgroundColor = GroupMutedTintColor;
+
+            bool pressed = GUI.Button(rect, content, EditorStyles.miniButton);
+
+            GUI.backgroundColor = backgroundWas;
+
+            if (!pressed) return;
+
+            if (Event.current.alt)
+            {
+                // Coming out of a solo puts back what the reader had, not everything. They may have
+                // arrived at the solo with a group already muted, and handing that back to them
+                // switched on is losing a setting rather than restoring one.
+                if (_soloedGroup == groupIndex)
+                {
+                    for (int i = 0; i < _groupUnmuted.Count; i++)
+                        _groupUnmuted[i] = _groupUnmutedBeforeSolo[i];
+
+                    _soloedGroup = -1;
+                }
+                else
+                {
+                    if (_soloedGroup < 0)
+                    {
+                        for (int i = 0; i < _groupUnmuted.Count; i++)
+                            _groupUnmutedBeforeSolo[i] = _groupUnmuted[i];
+                    }
+
+                    for (int i = 0; i < _groupUnmuted.Count; i++)
+                        _groupUnmuted[i] = i == groupIndex;
+
+                    _soloedGroup = groupIndex;
+                }
+            }
+            else
+            {
+                _groupUnmuted[groupIndex] = muted;
+                _soloedGroup = -1;
+            }
+
+            _state.UnityMuted = !_groupUnmuted[0];
+            _state.FrameworkMuted = !_groupUnmuted[1];
+            _state.ModulesMuted = !_groupUnmuted[2];
+
+            OnLogTypeSelectionChanged();
         }
 
         /// <summary>How many channels in a group are showing, and how many there are.</summary>
@@ -140,7 +318,7 @@ namespace FlowIoC.Editor.Console
                 SystemLogType channel = UnityChannels[i];
                 if (!_settings.TryGetLogType((int) channel, out var typeInfo)) continue;
 
-                ChannelRowGUI(channel.ToString(), typeInfo, () => SoloSystemType(channel), row++);
+                ChannelRowGUI(channel.ToString(), typeInfo, row++);
             }
         }
 
@@ -159,24 +337,56 @@ namespace FlowIoC.Editor.Console
             {
                 SetAllSystemTypesVisible(visible);
                 OnLogTypeSelectionChanged();
-            }, row++);
+            }, row++, !_groupUnmuted[1]);
 
+            for (int i = 0; i < FrameworkChannelOrder.Length; i++)
+            {
+                SystemLogType channel = FrameworkChannelOrder[i];
+                if (!_settings.TryGetLogType((int) channel, out var typeInfo)) continue;
+
+                ChannelRowGUI(channel.ToString(), typeInfo, row++);
+            }
+
+            // Anything the list above has not heard of - a channel added to the enum and not to
+            // the order - still appears, at the end, rather than quietly not being offered.
             for (int i = 0; i < SystemLogTypeValues.Length; i++)
             {
                 SystemLogType channel = SystemLogTypeValues[i];
                 if (channel == SystemLogType.All) continue;
                 if (IsUnityChannel((int) channel)) continue;
+                if (Array.IndexOf(FrameworkChannelOrder, channel) >= 0) continue;
                 if (!_settings.TryGetLogType((int) channel, out var typeInfo)) continue;
 
-                ChannelRowGUI(channel.ToString(), typeInfo, () => SoloSystemType(channel), row++);
+                ChannelRowGUI(channel.ToString(), typeInfo, row++);
             }
         }
+
+        /// <summary>
+        /// The order the framework's channels are listed in, which is not the order their numbers
+        /// happen to run in: SignalOperation is numbered last because it was added last, and it
+        /// belongs beside Signal. A number is never changed to move a row - it is serialized into
+        /// every settings asset already written.
+        /// </summary>
+        private static readonly SystemLogType[] FrameworkChannelOrder =
+        {
+            SystemLogType.Context,
+            SystemLogType.Injection,
+            SystemLogType.Signal,
+            SystemLogType.SignalOperation,
+            SystemLogType.Command,
+            SystemLogType.CommandOperation,
+            SystemLogType.Function,
+            SystemLogType.Screen,
+            SystemLogType.Pool,
+            SystemLogType.Model,
+            SystemLogType.Asset
+        };
 
         private void ModuleChannelRowsGUI()
         {
             int row = 0;
 
-            AllRowGUI("All", IsAllProjectTypesVisible(), SetAllProjectTypes, row++);
+            AllRowGUI("All", IsAllProjectTypesVisible(), SetAllProjectTypes, row++, !_groupUnmuted[2]);
 
             bool any = false;
 
@@ -187,7 +397,7 @@ namespace FlowIoC.Editor.Console
 
                 any = true;
                 int value = logType.Value;
-                ChannelRowGUI(logType.Name, logType, () => SoloProjectType(value), row++);
+                ChannelRowGUI(logType.Name, logType, row++);
             }
 
             if (any) return;
@@ -202,12 +412,15 @@ namespace FlowIoC.Editor.Console
         /// narrows the console to that channel and alt+clicking the one that is already alone
         /// brings the rest back.
         /// </summary>
-        private void ChannelRowGUI(string name, CD_FlowConsole.FlowConsoleLogTypeCVO logType, Action solo,
-            int rowIndex)
+        private void ChannelRowGUI(string name, CD_FlowConsole.FlowConsoleLogTypeCVO logType, int rowIndex)
         {
             Rect rect = GUILayoutUtility.GetRect(0f, ChannelRowHeight, GUILayout.ExpandWidth(true));
 
-            bool hovered = rect.Contains(Event.current.mousePosition);
+            // A muted group is not a group whose switches are off - the settings are still there,
+            // only silenced - so its rows are drawn dim and answer to nothing. Letting them be
+            // clicked would change a setting the reader cannot see the effect of.
+            bool muted = IsGroupMuted(logType);
+            bool hovered = !muted && rect.Contains(Event.current.mousePosition);
 
             if (Event.current.type == EventType.Repaint)
             {
@@ -229,9 +442,10 @@ namespace FlowIoC.Editor.Console
                 var labelRect = new Rect(ChannelLabelLeft(rect), rect.y,
                     rect.width - (ChannelLabelLeft(rect) - rect.x) - 22f, rect.height);
 
-                GUI.Label(labelRect, name, logType.IsVisible ? _channelOnStyle : _channelOffStyle);
+                GUI.Label(labelRect, name,
+                    logType.IsVisible && !muted ? _channelOnStyle : _channelOffStyle);
 
-                if (logType.IsVisible)
+                if (logType.IsVisible && !muted)
                 {
                     Texture tick = EditorGUIUtility.IconContent("Valid")?.image;
                     var tickRect = new Rect(rect.xMax - 18f, rect.y + (rect.height - 14f) * 0.5f, 14f, 14f);
@@ -247,9 +461,15 @@ namespace FlowIoC.Editor.Console
 
             if (Event.current.type != EventType.MouseDown || !hovered || Event.current.button != 0) return;
 
-            if (Event.current.alt)
+            // Alt+click isolates rather than switching everything else off. Nothing is written,
+            // so leaving isolation needs no snapshot to put back.
+            if (_isolatedChannel >= 0)
             {
-                solo();
+                LeaveIsolation();
+            }
+            else if (Event.current.alt)
+            {
+                EnterIsolation(logType.Value);
             }
             else
             {
@@ -266,11 +486,13 @@ namespace FlowIoC.Editor.Console
         /// The row that turns a whole group on or off. Drawn like the channels under it so the
         /// group reads as one list, and in bold so it is not mistaken for one of them.
         /// </summary>
-        private void AllRowGUI(string label, bool allVisible, Action<bool> set, int rowIndex)
+        private void AllRowGUI(string label, bool allVisible, Action<bool> set, int rowIndex, bool muted)
         {
             Rect rect = GUILayoutUtility.GetRect(0f, ChannelRowHeight, GUILayout.ExpandWidth(true));
 
-            bool hovered = rect.Contains(Event.current.mousePosition);
+            bool hovered = !muted && rect.Contains(Event.current.mousePosition);
+
+            if (muted) allVisible = false;
 
             if (Event.current.type == EventType.Repaint)
             {
@@ -380,41 +602,6 @@ namespace FlowIoC.Editor.Console
 
             _groupCountHighlightStyle = new GUIStyle(_groupCountStyle) {name = "FlowConsoleGroupCountHighlight"};
             _groupCountHighlightStyle.normal.textColor = ChannelOnTextColor;
-        }
-
-        /// <summary>
-        /// The module channels' half of solo. It is a separate method from the framework's because
-        /// the two groups are told apart by IsMandatory, and soloing a module means darkening the
-        /// other modules rather than the whole list.
-        /// </summary>
-        private void SoloProjectType(int typeValue)
-        {
-            var channels = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>();
-
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
-            {
-                if (_settings.LogTypes[i].IsMandatory) continue;
-                channels.Add(_settings.LogTypes[i]);
-            }
-
-            var visible = new List<bool>(channels.Count);
-            int index = -1;
-
-            for (int i = 0; i < channels.Count; i++)
-            {
-                visible.Add(channels[i].IsVisible);
-                if (channels[i].Value == typeValue) index = i;
-            }
-
-            if (index < 0) return;
-
-            _solo.Apply(visible, index);
-
-            for (int i = 0; i < channels.Count; i++)
-                channels[i].IsVisible = visible[i];
-
-            EditorUtility.SetDirty(_settings);
-            OnLogTypeSelectionChanged();
         }
 
         private bool IsAllProjectTypesVisible()

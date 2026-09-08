@@ -11,6 +11,21 @@ namespace FlowIoC.BaseModule.Controller.Binders
         public IContext Context { get; protected set; }
         private List<CommandStepVO> _steps = new ();
 
+        /// <summary>
+        /// Where this binding was declared - the Bind line in the Context. Carried so a signal
+        /// dispatched from inside the sequence can point at the sequence rather than at whatever
+        /// started the chain. What the compiler wrote into the call, so it costs nothing.
+        /// </summary>
+        internal string DeclarationFile { get; private set; }
+
+        internal int DeclarationLine { get; private set; }
+
+        internal void SetDeclaration(string file, int line)
+        {
+            DeclarationFile = file;
+            DeclarationLine = line;
+        }
+
         internal void SetContext(IContext context)
         {
             if (context == null)

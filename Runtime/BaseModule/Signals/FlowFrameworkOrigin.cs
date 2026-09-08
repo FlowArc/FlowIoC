@@ -4,35 +4,35 @@ using System.Reflection;
 namespace FlowIoC.BaseModule.Signals
 {
     /// <summary>
-    /// Tells the framework's own signals from the game's, and marks them so a dispatch does not
-    /// have to work it out again.
+    /// Tells the framework's own code from the game's, by the assembly a type is declared in.
     ///
-    /// Which one a signal is decides the channel its dispatch is logged on, and whether that log
-    /// works out where it was dispatched from. A game's signal is a line the reader wrote and can
-    /// open; the framework registering a screen is not.
+    /// It decides which channel a line goes on and whether that line works out where it came from.
+    /// A signal the game dispatched and a Command the game wrote are lines the reader can open;
+    /// the framework registering a screen is not, and putting the two together made a reader wade
+    /// through the framework's own traffic to find their own.
     ///
-    /// Read from the holder's assembly rather than from a flag on each signal, because the holder
+    /// Signals are read from their holder rather than from a flag on each one, because the holder
     /// is where the answer already is and a flag on thirty fields is thirty chances to forget one.
     /// </summary>
-    public class SignalHolderOrigin
+    public class FlowFrameworkOrigin
     {
         private const BindingFlags Fields =
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-        public bool IsFrameworkHolder(Type holderType)
+        public bool IsFrameworkType(Type type)
         {
-            return holderType != null && holderType.Assembly == typeof(SignalHolderOrigin).Assembly;
+            return type != null && type.Assembly == typeof(FlowFrameworkOrigin).Assembly;
         }
 
         /// <summary>
         /// Walks a holder once and marks every signal in it, its Incoming and Outgoing halves
         /// included. Done when the holder is bound, so a dispatch reads a bool.
         /// </summary>
-        public void Stamp(object holder)
+        public void StampSignalHolder(object holder)
         {
             if (holder == null) return;
 
-            Stamp(holder, IsFrameworkHolder(holder.GetType()), 0);
+            Stamp(holder, IsFrameworkType(holder.GetType()), 0);
         }
 
         private void Stamp(object owner, bool isFramework, int depth)

@@ -4,9 +4,9 @@ using NUnit.Framework;
 
 namespace FlowIoC.Tests
 {
-    public class SignalHolderOriginTests
+    public class FlowFrameworkOriginTests
     {
-        private readonly SignalHolderOrigin _origin = new SignalHolderOrigin();
+        private readonly FlowFrameworkOrigin _origin = new FlowFrameworkOrigin();
 
         private class GameSignals : ISignalHolder
         {
@@ -23,14 +23,14 @@ namespace FlowIoC.Tests
         [Test]
         public void A_holder_the_framework_declares_is_the_frameworks()
         {
-            Assert.IsTrue(_origin.IsFrameworkHolder(typeof(AssetSignals)));
+            Assert.IsTrue(_origin.IsFrameworkType(typeof(AssetSignals)));
         }
 
         [Test]
         public void A_holder_a_game_declares_is_not()
         {
-            Assert.IsFalse(_origin.IsFrameworkHolder(typeof(GameSignals)));
-            Assert.IsFalse(_origin.IsFrameworkHolder(null));
+            Assert.IsFalse(_origin.IsFrameworkType(typeof(GameSignals)));
+            Assert.IsFalse(_origin.IsFrameworkType(null));
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace FlowIoC.Tests
             ((ISignalBody) holder.Incoming.AddScore).IsFrameworkOwned = true;
             ((ISignalBody) holder.Loose).IsFrameworkOwned = true;
 
-            _origin.Stamp(holder);
+            _origin.StampSignalHolder(holder);
 
             Assert.IsFalse(((ISignalBody) holder.Incoming.Start).IsFrameworkOwned);
             Assert.IsFalse(((ISignalBody) holder.Incoming.AddScore).IsFrameworkOwned);
@@ -56,7 +56,7 @@ namespace FlowIoC.Tests
         [Test]
         public void Nothing_to_stamp_is_not_a_failure()
         {
-            _origin.Stamp(null);
+            _origin.StampSignalHolder(null);
         }
     }
 }

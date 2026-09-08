@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Bind.Binders;
 using FlowIoC.BaseModule.Contexts;
@@ -43,7 +44,8 @@ namespace FlowIoC.BaseModule.Controller.Binders
         /// first Context's commands then never ran. The binding is still handed back so the chain
         /// that follows reads normally, but the signal keeps the owner it already had.
         /// </summary>
-        public virtual ICommandBinding Bind<TSignal>(TSignal key)
+        public virtual ICommandBinding Bind<TSignal>(TSignal key,
+            [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
             where TSignal : ISignalBody
         {
             // The same signal bound twice in one Context. The base binder answers that with null,
@@ -79,6 +81,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
             CommandBinding binding = base.Bind(key);
             binding?.SetContext(Context);
+            binding?.SetDeclaration(file, line);
             return binding;
         }
 
@@ -176,14 +179,25 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
             int previousFlowId = 0, previousParentFlowId = 0;
             FlowLogger.EnterFlow(flowId, parentFlowId, ref previousFlowId, ref previousParentFlowId);
+
+            // Where this sequence is declared, made current for as long as it runs. A signal one of
+            // its commands dispatches then points at the Bind line rather than at whatever started
+            // the chain, which is further away and says less.
+            string previousFile = null;
+            int previousLine = 0;
+            var declared = binding as CommandBinding;
+            FlowLogger.EnterDeclaration(declared?.DeclarationFile, declared?.DeclarationLine ?? 0,
+                ref previousFile, ref previousLine);
+
             try
             {
                 if (!signal.HideCommandLog)
-                    FlowLogger.Log(SystemLogType.CommandOperation, "[CommandGroup][InitializeGroupWithSignal] : '", signal.Name, "'.");
+                    FlowLogger.LogPlumbing(SystemLogType.CommandOperation, "'", signal.Name, "' opened a command group");
                 commandGroupResolver.Initialize(binding, this, commandParameters);
             }
             finally
             {
+                FlowLogger.ExitDeclaration(previousFile, previousLine);
                 FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
             }
         }
@@ -208,7 +222,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             _commandGroupPool.Push(groupResolver);
 
             if (!hideLog)
-                FlowLogger.Log(SystemLogType.CommandOperation, "CommandGroup is returned to pool!");
+                FlowLogger.LogPlumbing(SystemLogType.CommandOperation, "Command group returned to pool");
         }
 
         #endregion
@@ -231,7 +245,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             // ever sees back what GetCommand handed out.
             _commandPool.Return(commandType, (CommandBody) commandBody);
             if (!HasHideCommandLog(commandType))
-                FlowLogger.Log(SystemLogType.CommandOperation, "Command is returned to pool! - ", commandType.Name);
+                FlowLogger.LogPlumbing(SystemLogType.CommandOperation, commandType.Name, " returned to pool");
         }
 
         public bool HasHideCommandLog(Type type)

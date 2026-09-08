@@ -44,14 +44,14 @@ namespace FlowIoC.BaseModule.Root
 
         public void Initialize()
         {
-            FlowLogger.Log(SystemLogType.Context, "RootsManager | Initialize Started!");
+            FlowLogger.Log(SystemLogType.Context, "RootsManager | initialize started");
 
             BindingPoolController = new BindingPoolController();
             InjectionBinderCrossContext = new InjectionBinderCrossContext();
             MediatorCreatorController = new MediatorCreatorController();
             ContextTypes = new ContextTypeIndex();
 
-            FlowLogger.Log(SystemLogType.Context, "RootsManager | Initialize Completed!");
+            FlowLogger.Log(SystemLogType.Context, "RootsManager | initialize completed");
         }
 
         public void Register(IRoot root)
@@ -70,7 +70,7 @@ namespace FlowIoC.BaseModule.Root
 
             _contextRootList.Add(root);
             _contextRootMap[root.Name] = root;
-            FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " is Registered!");
+            FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " registered");
         }
 
         public void UnRegister(IRoot root)
@@ -81,7 +81,7 @@ namespace FlowIoC.BaseModule.Root
                 _contextRootMap.Remove(root.Name);
 
             if (_contextRootList.Remove(root))
-                FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " is Unregistered!");
+                FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " unregistered");
         }
 
         public void StartContexts()

@@ -142,6 +142,7 @@ namespace FlowIoC.ConsoleModule
                 settings.EnsureSystemLogTypesExist();
                 settings.EnsureDefaultProjectLogTypeExists();
                 settings.EnsureDefaultProfileExists();
+                settings.EnsureSystemProfilesExist();
             }
         }
 
@@ -152,6 +153,7 @@ namespace FlowIoC.ConsoleModule
             EnsureSystemLogTypesExist();
             EnsureDefaultProjectLogTypeExists();
             EnsureDefaultProfileExists();
+            EnsureSystemProfilesExist();
         }
 
         private void OnValidate()
@@ -159,6 +161,7 @@ namespace FlowIoC.ConsoleModule
             EnsureSystemLogTypesExist();
             EnsureDefaultProjectLogTypeExists();
             EnsureDefaultProfileExists();
+            EnsureSystemProfilesExist();
             EnsureLogTypesHaveProfile();
             ValidateLogTypes();
             SortProjectLogTypes();
@@ -199,6 +202,7 @@ namespace FlowIoC.ConsoleModule
             EnsureDefaultProjectLogTypeExists();
             _logProfiles ??= new List<FlowLogProfileData>();
             EnsureDefaultProfileExists();
+            EnsureSystemProfilesExist();
         }
 
         private void EnsureSystemLogTypesExist()
@@ -334,6 +338,70 @@ namespace FlowIoC.ConsoleModule
                 UnityEditor.EditorUtility.SetDirty(this);
 #endif
             }
+        }
+
+        /// <summary>
+        /// One profile per framework channel, written from code so a project that has just
+        /// installed the package has them without anybody authoring a list.
+        ///
+        /// The profile is where the channel's tag lives - "[Command]", "[Signal]" - rather than in
+        /// the message text. A message says what happened to what; which channel it is on is the
+        /// column it is in, and repeating that in the text spends the width the message needs.
+        ///
+        /// They are mandatory and not editable: a channel whose tag somebody renamed no longer
+        /// matches what the documentation says the console prints.
+        /// </summary>
+        private void EnsureSystemProfilesExist()
+        {
+            _logProfiles ??= new List<FlowLogProfileData>();
+
+            bool changed = false;
+
+            foreach (SystemLogType channel in Enum.GetValues(typeof(SystemLogType)))
+            {
+                if (channel == SystemLogType.All) continue;
+
+                string name = channel.ToString();
+                FlowLogProfileData profile = _logProfiles.Find(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+
+                if (profile == null)
+                {
+                    profile = new FlowLogProfileData {Name = name};
+                    _logProfiles.Add(profile);
+                    changed = true;
+                }
+
+                // The channel's own colour rather than the default one, so a colour changed in the
+                // settings changes the tag with it. The default is only what a channel starts on.
+                Color channelColor = TryGetLogType((int) channel, out var channelType)
+                    ? channelType.LogColor
+                    : GetDefaultColorForLogType(channel);
+
+                string prefix = "[" + name + "]";
+
+                if (profile.Prefix != prefix || profile.PrefixColor != channelColor
+                                             || !profile.IsMandatory || profile.IsEditable)
+                {
+                    profile.Prefix = prefix;
+                    profile.PrefixColor = channelColor;
+                    profile.PrefixStyle = FlowTextStyle.Bold;
+                    profile.IsMandatory = true;
+                    profile.IsEditable = false;
+                    changed = true;
+                }
+
+                if (channelType != null && channelType.ProfileName != name)
+                {
+                    channelType.ProfileName = name;
+                    changed = true;
+                }
+            }
+
+            if (!changed) return;
+
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
         }
 
         private void ValidateLogTypes()

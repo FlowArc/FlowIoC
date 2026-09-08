@@ -52,6 +52,13 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private int _flowId;
         private int _parentFlowId;
 
+        // Where the sequence this run belongs to was declared. Carried for the same reason the
+        // flow is: a chain that came back a frame later has to re-enter both.
+        private string _declarationFile;
+        private int _declarationLine;
+
+        private static readonly FlowFrameworkOrigin Origin = new();
+
         #endregion
 
         #region Initialization and Cleanup
@@ -76,6 +83,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             // the same flow as the commands under it. This run only remembers which flow that is,
             // because ReleaseCommand and StopCommand have to re-enter it a frame later.
             FlowLogger.CaptureCurrentFlow(ref _flowId, ref _parentFlowId);
+            FlowLogger.CaptureCurrentDeclaration(ref _declarationFile, ref _declarationLine);
 
             CheckExecuteNextStep(null);
         }
@@ -102,6 +110,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _completionCount = 0;
             _flowId = 0;
             _parentFlowId = 0;
+            _declarationFile = null;
+            _declarationLine = 0;
 
             // IsHideLog is deliberately left where it is. The binder reads it on the way to the
             // pool, which is after this now, and Initialize sets it for the next run anyway.
@@ -119,12 +129,18 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             // outside the tree.
             int previousFlowId = 0, previousParentFlowId = 0;
             FlowLogger.EnterFlow(_flowId, _parentFlowId, ref previousFlowId, ref previousParentFlowId);
+
+            string previousFile = null;
+            int previousLine = 0;
+            FlowLogger.EnterDeclaration(_declarationFile, _declarationLine, ref previousFile, ref previousLine);
+
             try
             {
                 ReleaseCommandInFlow(command, commandParameters);
             }
             finally
             {
+                FlowLogger.ExitDeclaration(previousFile, previousLine);
                 FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
             }
         }
@@ -160,12 +176,18 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         {
             int previousFlowId = 0, previousParentFlowId = 0;
             FlowLogger.EnterFlow(_flowId, _parentFlowId, ref previousFlowId, ref previousParentFlowId);
+
+            string previousFile = null;
+            int previousLine = 0;
+            FlowLogger.EnterDeclaration(_declarationFile, _declarationLine, ref previousFile, ref previousLine);
+
             try
             {
                 StopCommandInFlow(command);
             }
             finally
             {
+                FlowLogger.ExitDeclaration(previousFile, previousLine);
                 FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
             }
         }
@@ -329,7 +351,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             try
             {
                 if (!step.GroupKey.HideCommandLog)
-                    FlowLogger.Log(SystemLogType.CommandOperation, "Command SubGroup is executed : '", step.GroupKey.Name, "'.");
+                    FlowLogger.LogPlumbing(SystemLogType.CommandOperation, "'", step.GroupKey.Name, "' opened a sub group");
 
                 object[] parametersToUse = step.SignalParameters?.Length > 0 ? step.SignalParameters : _signalParameters;
                 subGroup.Initialize(groupBinding, _commandBinder, parametersToUse);
@@ -359,8 +381,27 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             // Asked before the message is built rather than inside the call: an enum's name is a
             // lookup and an allocation, and this line runs for every command of every dispatch.
             if (FlowLogger.IsEnabled && !_commandBinder.HasHideCommandLog(step.CommandType))
-                FlowLogger.LogAbout(SystemLogType.Command, step.CommandType,
-                    "[Command] Execute as ", step.ExecutionType.ToString(), " : ", step.CommandType.Name);
+                // Two different questions, and they have two different answers.
+                //
+                // Which channel: whose sequence this step is in. A step bound by one of the
+                // framework's own Contexts - registering a screen, releasing a group of assets -
+                // is the framework running itself and goes on the plumbing channel. The Command
+                // channel is the game's own flow, read top to bottom.
+                //
+                // Whether it opens anything: whose class is running. A game binds
+                // DispatchSignalCommand as a step of its own, and that step belongs in its flow -
+                // but the class is the framework's, and taking a reader there tells them nothing.
+                if (Origin.IsFrameworkType(_commandBinder?.Context?.GetType()))
+                {
+                    FlowLogger.LogPlumbing(SystemLogType.CommandOperation,
+                        step.CommandType.Name, " executed as ", step.ExecutionType.ToString());
+                }
+                else
+                {
+                    FlowLogger.LogAbout(SystemLogType.Command,
+                        Origin.IsFrameworkType(step.CommandType) ? null : step.CommandType,
+                        step.CommandType.Name, " executed as ", step.ExecutionType.ToString());
+                }
 
             command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());
 
