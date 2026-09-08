@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.BaseModule.ViewsMediators.Utils;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.Extensions;
@@ -76,9 +77,12 @@ namespace FlowIoC.ScreenModule.Service.Sub
 
         public void Screen(IScreenBody screenBody, bool isForce = false)
         {
-            if (screenBody == null)
+            // Not == null: an IScreenBody is an interface, so that compares the managed reference
+            // and lets a screen Unity has already destroyed through, to be parked in the pool by
+            // the transform read at the end of this path.
+            if (!screenBody.IsAlive())
             {
-                FlowLogger.LogError(SystemLogType.Screen, "[ScreenService.Hide.Screen] Screenbody is null");
+                FlowLogger.LogError(SystemLogType.Screen, "[ScreenService.Hide.Screen] Screenbody is null or already destroyed");
                 return;
             }
 

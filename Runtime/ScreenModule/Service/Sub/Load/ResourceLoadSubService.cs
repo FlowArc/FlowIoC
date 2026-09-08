@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using FlowIoC.BaseModule.ViewsMediators.Utils;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
@@ -49,7 +50,9 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         {
             entry.Loaded = null;
 
-            if (screenBody == null) return;
+            // Not == null: an IScreenBody is an interface, so that compares the managed reference
+            // and says a screen Unity destroyed on play mode exit is still there.
+            if (!screenBody.IsAlive()) return;
 
             // Resources.UnloadUnusedAssets is not called here. It sweeps the whole heap and is a
             // hitch every time, and a single screen going away is not the moment for it; the game

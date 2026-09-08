@@ -19,6 +19,14 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
 {
     public static class ViewExtensions
     {
+        /// <summary>
+        /// Whether the view's Unity object is still there. An <c>IView</c> is an interface, so
+        /// <c>== null</c> on one compares the managed reference and answers false for a
+        /// MonoBehaviour Unity has already destroyed - which is what play mode exit and a scene
+        /// unload leave behind. Teardown asks this before it touches a transform or a GameObject.
+        /// </summary>
+        public static bool IsAlive(this IView view) => view is Object unityObject ? unityObject != null : view != null;
+
         public static bool Register(this IView view)
         {
             ViewInjector injector = view.transform.GetComponent<ViewInjector>();

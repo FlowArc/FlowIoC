@@ -1,4 +1,5 @@
 using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.BaseModule.ViewsMediators.Utils;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.Extensions;
@@ -66,10 +67,15 @@ namespace FlowIoC.ScreenModule.Service.Sub
         /// The screen's context is going away. An active screen goes through the hide path with
         /// the animation skipped; a pooled one is disposed directly, because Hide refuses a screen
         /// that is not in use. Both end in the loader releasing the instance.
+        ///
+        /// A screen Unity has already destroyed takes neither path. Play mode exit and a scene
+        /// unload destroy the instance before the Root's OnDestroy gets here, and hiding it would
+        /// park a dead object in the passive pool - which is what reads its transform. The
+        /// bookkeeping still runs: the pools drop it and the loader releases its handle.
         /// </summary>
         internal void Unregistered(IScreenBody screenBody)
         {
-            if (screenBody.Data.HasState(ScreenState.InUse))
+            if (screenBody.IsAlive() && screenBody.Data.HasState(ScreenState.InUse))
             {
                 Screen(screenBody, isForce: true);
                 return;
