@@ -444,22 +444,34 @@ namespace FlowIoC.Editor.Root
                 return;
 
             bool unlinked = status == SubContextEntryStatus.Unlinked;
-            Color accent = unlinked ? _painter.Warn : _painter.Error;
+            bool mendable = _entryStates.CanResolve(status);
+
+            Color previous = GUI.color;
+            GUI.color = unlinked ? _painter.Warn : _painter.Error;
+
+            // Nothing to press means nothing to leave room for, so the line is drawn on its own and
+            // takes the entry's whole width. It has to: what it names is a namespaced type, and at a
+            // docked Inspector's width the sentence used to run off the edge mid-name - taking the
+            // half that says what happened with it.
+            if (!mendable)
+            {
+                EditorGUILayout.LabelField(
+                    "Nothing compiles to " + contextData.ContextFullName + ". Its module is gone or renamed.",
+                    _gui.EntryNote);
+
+                GUI.color = previous;
+
+                return;
+            }
 
             EditorGUILayout.BeginHorizontal();
 
-            Color previous = GUI.color;
-            GUI.color = accent;
-
             EditorGUILayout.LabelField(
-                unlinked
-                    ? "No script reference. Resolve links it to " + contextData.ContextName + "."
-                    : "Nothing compiles to " + contextData.ContextFullName + ". Its module is gone or renamed.",
-                EditorStyles.miniLabel);
+                "No script reference. Resolve links it to " + contextData.ContextName + ".", _gui.EntryNote);
 
             GUI.color = previous;
 
-            if (_entryStates.CanResolve(status) && GUILayout.Button("Resolve", _gui.EntryAction, GUILayout.Width(60)))
+            if (GUILayout.Button("Resolve", _gui.EntryAction, GUILayout.Width(60)))
             {
                 contextData.ContextScript = _entryStates.ScriptFor(contextData);
                 WriteSubContext(index, _nameSync.Applied(contextData));
