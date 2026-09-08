@@ -5,6 +5,23 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **A signal says which holder and which half it came from.** A signal is constructed knowing only
+  its own field name, which the compiler hands it through `[CallerMemberName]`, so the console said
+  `'Launch' dispatched` and left the reader to guess whose Launch that was, out of which holder.
+  The name is now qualified - `CameraSignals.Incoming.SwitchCamera`,
+  `CounterServiceInternalSignals.Tick` - and it costs nothing to dispatch: the walk that marks each
+  signal as the framework's or the game's already has the owner chain in hand, so the name is
+  composed there, once, when the holder is bound. A signal that is not a field of a stamped holder
+  keeps the short name it was constructed with. The `CommandBinder` lines and the "bound twice"
+  error read the same name and say more for it.
+- **The Filters panel lists the project's modules first**, then the framework, then Unity - the
+  order of how much a reader cares. The group ids behind the panel are unchanged, because they key
+  the mute snapshot and the saved panel state.
+
 ## [1.9.1] - 2026-09-08
 
 ### Changed
