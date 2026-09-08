@@ -59,6 +59,7 @@ namespace FlowIoC.Editor.Console
         private bool _showTiming;
 
         private readonly FlowConsoleExport _export = new FlowConsoleExport();
+        private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
 
         private readonly FlowConsoleFlowTreeBuilder _flowTree = new FlowConsoleFlowTreeBuilder();
         private bool _flowMode;
@@ -510,9 +511,84 @@ namespace FlowIoC.Editor.Console
                 menu.ShowAsContext();
             }
 
+            PresetMenuGUI();
             ExportMenuGUI();
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// The sets of channels a reader keeps coming back to. Two ship with the console, named
+        /// for the job rather than the channels, and the rest are whatever they save.
+        /// </summary>
+        private void PresetMenuGUI()
+        {
+            var content = new GUIContent("Presets", "Channel filters saved under a name.");
+            Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.toolbarDropDown, GUILayout.Width(66));
+
+            if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
+
+            var menu = new GenericMenu();
+
+            for (int i = 0; i < _presets.BuiltIn.Count; i++)
+            {
+                FilterPreset preset = _presets.BuiltIn[i];
+                menu.AddItem(new GUIContent(preset.Name), false, () => ApplyPreset(preset));
+            }
+
+            List<FilterPreset> saved = _presets.LoadSaved();
+
+            if (saved.Count > 0)
+            {
+                menu.AddSeparator("");
+
+                for (int i = 0; i < saved.Count; i++)
+                {
+                    FilterPreset preset = saved[i];
+                    menu.AddItem(new GUIContent(preset.Name), false, () => ApplyPreset(preset));
+                }
+
+                menu.AddSeparator("");
+
+                for (int i = 0; i < saved.Count; i++)
+                {
+                    string name = saved[i].Name;
+                    menu.AddItem(new GUIContent("Delete/" + name), false, () => _presets.Delete(name));
+                }
+            }
+
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Save shown channels..."), false, SaveCurrentPreset);
+
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
+
+        private void ApplyPreset(FilterPreset preset)
+        {
+            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            {
+                var logType = _settings.LogTypes[i];
+                if (logType.Value == (int) SystemLogType.All) continue;
+
+                logType.IsVisible = preset.VisibleChannels.Contains(logType.Value);
+            }
+
+            EditorUtility.SetDirty(_settings);
+            OnLogTypeSelectionChanged();
+        }
+
+        private void SaveCurrentPreset()
+        {
+            var visible = new List<int>();
+
+            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            {
+                var logType = _settings.LogTypes[i];
+                if (logType.Value == (int) SystemLogType.All) continue;
+                if (logType.IsVisible) visible.Add(logType.Value);
+            }
+
+            FlowConsolePresetNameWindow.Show(name => _presets.Save(name, visible));
         }
 
         /// <summary>

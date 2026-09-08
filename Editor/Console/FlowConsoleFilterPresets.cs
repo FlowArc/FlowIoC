@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using FlowIoC.ConsoleModule;
 using UnityEditor;
@@ -13,8 +12,8 @@ namespace FlowIoC.Editor.Console
     }
 
     /// <summary>
-    /// The channel filter's shortcuts: solo one channel, mute one, or bring back a set somebody
-    /// uses often.
+    /// A set of channels somebody reaches for often, under a name. Two ship with the console and
+    /// the rest are whatever a reader saves.
     ///
     /// Saved presets live in EditorPrefs rather than in CD_FlowConsole. That asset is committed,
     /// and one developer's filter has no business turning up in everybody else's diff.
@@ -51,18 +50,6 @@ namespace FlowIoC.Editor.Console
                 }
             }
         };
-
-        public HashSet<int> Solo(int channel, IReadOnlyList<int> allChannels)
-        {
-            return new HashSet<int> {channel};
-        }
-
-        public HashSet<int> Mute(int channel, IReadOnlyCollection<int> currentlyVisible)
-        {
-            var visible = new HashSet<int>(currentlyVisible);
-            visible.Remove(channel);
-            return visible;
-        }
 
         public void Save(string name, IReadOnlyCollection<int> visibleChannels)
         {
