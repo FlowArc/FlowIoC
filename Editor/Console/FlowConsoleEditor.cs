@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.ConsoleModule;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace FlowIoC.Editor.Console
@@ -59,6 +60,10 @@ namespace FlowIoC.Editor.Console
         private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
 
         private FlowConsoleSearchQuery _searchQuery;
+
+        /// <summary>Unity's own toolbar search field, which is where the cancel cross comes from.</summary>
+        private SearchField _searchField;
+
         private float _logsViewportHeight;
 
         private List<ConsoleLog> _allLogs;
@@ -336,11 +341,7 @@ namespace FlowIoC.Editor.Console
 
             ClearButtonGUI();
 
-            bool errorPause = GUILayout.Toggle(_state.ErrorPause, "Error Pause", EditorStyles.toolbarButton,
-                GUILayout.Width(80));
-            if (errorPause != _state.ErrorPause)
-                _state.ErrorPause = errorPause;
-
+            // Collapse before Error Pause, which is the order Unity's own console puts them in.
             bool collapse = GUILayout.Toggle(_collapseRows, "Collapse", EditorStyles.toolbarButton, GUILayout.Width(70));
             if (collapse != _collapseRows)
             {
@@ -350,9 +351,16 @@ namespace FlowIoC.Editor.Console
                 _needsRepaint = true;
             }
 
+            bool errorPause = GUILayout.Toggle(_state.ErrorPause, "Error Pause", EditorStyles.toolbarButton,
+                GUILayout.Width(80));
+            if (errorPause != _state.ErrorPause)
+                _state.ErrorPause = errorPause;
+
             GUILayout.FlexibleSpace();
 
-            string newSearch = EditorGUILayout.TextField(_searchText, EditorStyles.toolbarSearchField, GUILayout.MinWidth(200));
+            _searchField ??= new SearchField();
+
+            string newSearch = _searchField.OnToolbarGUI(_searchText, GUILayout.MinWidth(200));
             if (newSearch != _searchText)
             {
                 bool startingSearch = string.IsNullOrEmpty(_searchText) && !string.IsNullOrEmpty(newSearch);
