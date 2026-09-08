@@ -263,7 +263,6 @@ namespace FlowIoC.Editor.CodeGenerator
             var tempModelContent = File.ReadAllLines(tempClassPath);
             var newModelContent = new List<string>();
             var usingsToAdd = new HashSet<string>();
-            var unplaced = new List<string>();
 
             if (isDummy)
                 newModelContent.Add("#if UNITY_EDITOR");
@@ -292,7 +291,7 @@ namespace FlowIoC.Editor.CodeGenerator
                 }
                 else if (content.Contains("//@Injectables"))
                 {
-                    unplaced = WriteInjectables(injectables, newModelContent, usingsToAdd);
+                    WriteInjectables(injectables, newModelContent, usingsToAdd);
 
                     continue;
                 }
@@ -310,7 +309,6 @@ namespace FlowIoC.Editor.CodeGenerator
 
             File.WriteAllLines(newViewPath, finalContent.ToArray());
             AssetDatabase.Refresh();
-            ReportUnplacedInjectables(unplaced, modelName);
             Highlight(newViewPath);
         }
 
@@ -352,7 +350,6 @@ namespace FlowIoC.Editor.CodeGenerator
             var tempViewContent = File.ReadAllLines(tempClassPath);
             var newViewContent = new List<string>();
             var usingsToAdd = new HashSet<string>();
-            var unplaced = new List<string>();
 
             for (var ii = 0; ii < tempViewContent.Length; ii++)
             {
@@ -368,7 +365,7 @@ namespace FlowIoC.Editor.CodeGenerator
                 }
                 else if (content.Contains("//@Injectables"))
                 {
-                    unplaced = WriteInjectables(injectables, newViewContent, usingsToAdd);
+                    WriteInjectables(injectables, newViewContent, usingsToAdd);
 
                     continue;
                 }
@@ -383,7 +380,6 @@ namespace FlowIoC.Editor.CodeGenerator
 
             File.WriteAllLines(newViewPath, finalContent.ToArray());
             AssetDatabase.Refresh();
-            ReportUnplacedInjectables(unplaced, commandName);
             Highlight(newViewPath);
         }
 
@@ -759,22 +755,21 @@ namespace FlowIoC.Editor.CodeGenerator
         internal static void CreateFunction(FunctionScriptRequest request, IEnumerable<string> injectableTypeNames, string functionPath)
         {
             var index = new InjectableTypeIndex();
-            var unplaced = new List<string>();
 
             foreach (string typeName in injectableTypeNames)
             {
                 if (string.IsNullOrWhiteSpace(typeName)) continue;
 
                 string name = typeName.Trim();
-                string injectableNamespace = index.NamespaceFor(name);
 
                 // Written whether or not the project has the type. Dropping it was the old
                 // behaviour and it dropped it silently, so a name with a typo in it simply was not
-                // in the file and nothing said why.
-                if (injectableNamespace == null)
-                    unplaced.Add(name);
-
-                request.Injectables.Add(new FunctionInjectable {Type = name, Namespace = injectableNamespace ?? string.Empty});
+                // in the file and nothing said why. Written, the compiler says why.
+                request.Injectables.Add(new FunctionInjectable
+                {
+                    Type = name,
+                    Namespace = index.NamespaceFor(name) ?? string.Empty
+                });
             }
 
             if (!Directory.Exists(functionPath)) Directory.CreateDirectory(functionPath);
@@ -784,26 +779,24 @@ namespace FlowIoC.Editor.CodeGenerator
             File.WriteAllText(writtenPath, new FunctionScriptWriter().Write(request));
             AssetDatabase.Refresh();
 
-            ReportUnplacedInjectables(unplaced, request.ClassName);
             Highlight(writtenPath);
         }
 
         private static string FindNamespaceForType(string typeName) => new InjectableTypeIndex().NamespaceFor(typeName);
 
         /// <summary>
-        /// Writes the injected members a window asked for, and returns the names it could not place
-        /// so the caller can say so.
+        /// Writes the injected members a window asked for.
         ///
         /// Every name given is written. A name whose type the project has brings its using with it;
         /// one it does not have is written anyway, because the alternative is what this replaced -
         /// the member silently missing from the file, with the author left to work out that a typo
-        /// three fields up was the reason. A missing using is a compiler error naming the line,
-        /// which is a report; nothing at all is not.
+        /// three fields up was the reason. Nothing is logged about it either way: an unresolved
+        /// type is a compiler error naming the file, the line and the column, and a warning
+        /// alongside it would say the same thing less precisely.
         /// </summary>
-        private static List<string> WriteInjectables(IEnumerable<string> injectables, List<string> lines, HashSet<string> usingsToAdd)
+        private static void WriteInjectables(IEnumerable<string> injectables, List<string> lines, HashSet<string> usingsToAdd)
         {
             var index = new InjectableTypeIndex();
-            var unplaced = new List<string>();
 
             foreach (string injectableName in injectables)
             {
@@ -812,20 +805,11 @@ namespace FlowIoC.Editor.CodeGenerator
                 string typeName = injectableName.Trim();
                 string injectableNamespace = index.NamespaceFor(typeName);
 
-                if (string.IsNullOrEmpty(injectableNamespace))
-                {
-                    if (injectableNamespace == null)
-                        unplaced.Add(typeName);
-                }
-                else
-                {
+                if (!string.IsNullOrEmpty(injectableNamespace))
                     usingsToAdd.Add($"using {injectableNamespace};");
-                }
 
                 lines.Add($"\t\t[Inject] private {typeName} _{MemberNameFor(typeName)} {{ get; set; }}");
             }
-
-            return unplaced;
         }
 
         /// <summary>
@@ -866,21 +850,6 @@ namespace FlowIoC.Editor.CodeGenerator
 
             Selection.activeObject = asset;
             EditorGUIUtility.PingObject(asset);
-        }
-
-        /// <summary>
-        /// Says which injected types the project does not have, once per generated file. The file
-        /// declares them regardless, so this is the sentence that turns a compiler error the author
-        /// did not expect into one they did.
-        /// </summary>
-        internal static void ReportUnplacedInjectables(List<string> unplaced, string className)
-        {
-            if (unplaced == null || unplaced.Count == 0) return;
-
-            Debug.LogWarning($"<color=cyan>FlowIoC:</color> {className} was written with " +
-                             $"{string.Join(", ", unplaced)} injected, and no type of that name is in the project. " +
-                             "The member is in the file so nothing is lost, but it will not compile until the type " +
-                             "exists and its using is added.");
         }
     }
 }
