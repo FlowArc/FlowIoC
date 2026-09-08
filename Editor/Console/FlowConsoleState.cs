@@ -68,6 +68,38 @@ namespace FlowIoC.Editor.Console
             set => EditorPrefs.SetBool(PREFIX + nameof(FlowMode), value);
         }
 
+        /// <summary>Whether the panel that holds how a row is drawn is open down the left-hand side.</summary>
+        public bool ShowSettings
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ShowSettings), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ShowSettings), value);
+        }
+
+        /// <summary>Whether the panel that holds every channel is open down the right-hand side.</summary>
+        public bool ShowFilters
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ShowFilters), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ShowFilters), value);
+        }
+
+        public bool UnityChannelsExpanded
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(UnityChannelsExpanded), true);
+            set => EditorPrefs.SetBool(PREFIX + nameof(UnityChannelsExpanded), value);
+        }
+
+        public bool FrameworkChannelsExpanded
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(FrameworkChannelsExpanded), true);
+            set => EditorPrefs.SetBool(PREFIX + nameof(FrameworkChannelsExpanded), value);
+        }
+
+        public bool ModuleChannelsExpanded
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ModuleChannelsExpanded), true);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ModuleChannelsExpanded), value);
+        }
+
         public bool ErrorPause
         {
             get => EditorPrefs.GetBool(PREFIX + nameof(ErrorPause), false);
