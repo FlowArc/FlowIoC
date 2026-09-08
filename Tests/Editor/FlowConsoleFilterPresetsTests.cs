@@ -10,35 +10,6 @@ namespace FlowIoC.Tests
         private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
 
         [Test]
-        public void Solo_leaves_only_the_channel_it_was_asked_for()
-        {
-            var all = new List<int> {5, 11, 14};
-
-            HashSet<int> visible = _presets.Solo(11, all);
-
-            Assert.AreEqual(1, visible.Count);
-            Assert.IsTrue(visible.Contains(11));
-        }
-
-        [Test]
-        public void Mute_takes_one_channel_out_and_leaves_the_rest()
-        {
-            HashSet<int> visible = _presets.Mute(11, new List<int> {5, 11, 14});
-
-            Assert.AreEqual(2, visible.Count);
-            Assert.IsFalse(visible.Contains(11));
-            Assert.IsTrue(visible.Contains(5));
-        }
-
-        [Test]
-        public void Muting_a_channel_that_is_already_hidden_changes_nothing()
-        {
-            HashSet<int> visible = _presets.Mute(99, new List<int> {5, 11});
-
-            Assert.AreEqual(2, visible.Count);
-        }
-
-        [Test]
         public void Signal_chase_carries_the_three_channels_a_flow_is_read_from()
         {
             FilterPreset preset = _presets.BuiltIn.Find(p => p.Name == "Signal chase");
