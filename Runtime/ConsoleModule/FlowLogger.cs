@@ -43,6 +43,9 @@ namespace FlowIoC.ConsoleModule
         private static int _currentFlowId;
         private static int _currentParentFlowId;
 
+        private static string _currentDeclarationFile;
+        private static int _currentDeclarationLine;
+
         /// <summary>
         /// The flow being executed right now, which every log written meanwhile belongs to.
         /// A plain static on a main-thread assumption - FlowLogger.Logs already makes that
@@ -102,6 +105,38 @@ namespace FlowIoC.ConsoleModule
         }
 
         /// <summary>
+        /// Where the sequence that is running now was declared - the Bind line in the Context. A
+        /// signal dispatched from inside a command is dispatched by that sequence, so this is the
+        /// line worth opening: the stack at that moment names whatever started the chain, which is
+        /// further away and says less.
+        ///
+        /// It also costs nothing to have. The location is what the compiler wrote into the Bind
+        /// call, and using it means a dispatch inside a group builds no stack at all.
+        /// </summary>
+        [Conditional("ENABLE_LOG")]
+        public static void EnterDeclaration(string file, int line, ref string previousFile, ref int previousLine)
+        {
+            previousFile = _currentDeclarationFile;
+            previousLine = _currentDeclarationLine;
+            _currentDeclarationFile = file;
+            _currentDeclarationLine = line;
+        }
+
+        [Conditional("ENABLE_LOG")]
+        public static void ExitDeclaration(string previousFile, int previousLine)
+        {
+            _currentDeclarationFile = previousFile;
+            _currentDeclarationLine = previousLine;
+        }
+
+        [Conditional("ENABLE_LOG")]
+        public static void CaptureCurrentDeclaration(ref string file, ref int line)
+        {
+            file = _currentDeclarationFile;
+            line = _currentDeclarationLine;
+        }
+
+        /// <summary>
         /// True while a log of ours is being handed to Unity's console. The editor bridge reads
         /// it to drop the message Unity hands straight back, so a log that made that round trip
         /// is recorded once rather than twice.
@@ -119,6 +154,8 @@ namespace FlowIoC.ConsoleModule
             _flowCounter = 0;
             _currentFlowId = 0;
             _currentParentFlowId = 0;
+            _currentDeclarationFile = null;
+            _currentDeclarationLine = 0;
             // OnLogAdded intentionally NOT cleared: the FlowConsole editor window
             // subscribes once in OnEnable and would otherwise silently lose its
             // subscription on every Play entry when domain reload is disabled.
@@ -245,6 +282,40 @@ namespace FlowIoC.ConsoleModule
         }
 
         /// <summary>
+        /// A line that already knows where it came from: a Connector carrying one module's signal
+        /// to another's, which happens inside a callback the wiring left behind. Nothing on the
+        /// stack at that moment names the Connector, so the file and line are taken where the
+        /// connection is declared and travel with it - and cost nothing, being what the compiler
+        /// wrote into the call.
+        /// </summary>
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void LogAt(SystemLogType systemLogType, string filePath, int lineNumber, string part1,
+            string part2, string part3, string part4 = null)
+        {
+            if (!Settings.IsLoggingEnabled) return;
+
+            AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log, null, false, false,
+                filePath, lineNumber);
+        }
+
+        /// <summary>
+        /// The framework's own bookkeeping: a group initialising, something going back to a pool.
+        /// It never works out where it came from, whatever Stack Trace Capture says - these lines
+        /// are here to be read in order, and there is nowhere to take a reader that would tell them
+        /// anything. The frame it would find is whichever of their own lines happened to be below.
+        /// </summary>
+        [HideInCallstack]
+        [Conditional("ENABLE_LOG")]
+        internal static void LogPlumbing(SystemLogType systemLogType, string part1, string part2 = null,
+            string part3 = null, string part4 = null)
+        {
+            if (!Settings.IsLoggingEnabled) return;
+
+            AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log, null, false);
+        }
+
+        /// <summary>
         /// A signal being dispatched. The game's own signals go on the Signal channel and work out
         /// where they were dispatched from, whatever Stack Trace Capture says, because the line
         /// that dispatched one is the line the reader wants to open. The framework's own go on
@@ -260,6 +331,16 @@ namespace FlowIoC.ConsoleModule
             if (isFrameworkOwned)
             {
                 AddLog(SystemLogType.SignalOperation, part1 + part2 + part3, LogType.Log, null, false);
+                return;
+            }
+
+            // Dispatched from inside a sequence: the Bind line that declared it is nearer than
+            // anything on the stack, and free. Only a dispatch outside one - from a Mediator, or a
+            // Context's Launch - has to go looking.
+            if (!string.IsNullOrEmpty(_currentDeclarationFile))
+            {
+                AddLog(SystemLogType.Signal, part1 + part2 + part3, LogType.Log, null, false, false,
+                    _currentDeclarationFile, _currentDeclarationLine);
                 return;
             }
 
@@ -516,6 +597,10 @@ namespace FlowIoC.ConsoleModule
                 ? (int) SystemLogType.Compiler
                 : (int) SystemLogType.Unity;
 
+            // The channel's tag, the same way the framework's own lines get theirs. This path
+            // builds its own entry rather than going through AddLog, so it has to ask as well.
+            message = ResolveMessage(channel, message);
+
             var now = DateTime.Now;
             var log = new ConsoleLog
             {
@@ -584,13 +669,26 @@ namespace FlowIoC.ConsoleModule
 
         [HideInCallstack]
         private static void AddLog(SystemLogType systemLogType, string message, LogType logType, Type blame = null,
-            bool captureSource = true, bool forceCapture = false)
+            bool captureSource = true, bool forceCapture = false, string filePath = null, int lineNumber = 0)
         {
             if (!Settings.IsLoggingEnabled) return;
+
+            // The channel's profile is what puts the tag on the front - "[Signal]", "[Command]" -
+            // so a message says only what happened. Resolved from a cache the settings rebuild
+            // whenever a profile changes, and applied here so every one of the framework's own
+            // lines gets it rather than only the ones a caller passed a profile to.
+            message = ResolveMessage((int) systemLogType, message);
 
 #if UNITY_EDITOR
             var log = CreateLogEntry(message, logType, blame, captureSource, forceCapture);
             log.SystemLogType = systemLogType;
+
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                log.SourceFilePath = filePath;
+                log.SourceLineNumber = lineNumber;
+            }
+
             log.LogTypeValue = (int) systemLogType;
 
             if (Settings.TryGetLogType((int) systemLogType, out var typeInfo))

@@ -54,7 +54,6 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleStickyTail _stickyTail = new FlowConsoleStickyTail();
         private readonly FlowConsoleKeyboard _keyboard = new FlowConsoleKeyboard();
         private readonly FlowConsoleSearch _search = new FlowConsoleSearch();
-        private readonly FlowConsoleSolo _solo = new FlowConsoleSolo();
         private readonly FlowConsoleHighlight _highlight = new FlowConsoleHighlight();
         private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
         private bool _showTiming;
@@ -72,6 +71,8 @@ namespace FlowIoC.Editor.Console
         private GUIStyle _groupCountHighlightStyle;
         private const float ChannelRowHeight = 20f;
         private const float ChannelRowIndent = 14f;
+        private const float GroupMuteWidth = 48f;
+        private static readonly Color GroupMutedTintColor = new Color(1.4f, 0.85f, 0.55f, 1f);
         private const float ChannelSwatchSize = 9f;
         private static readonly Color ChannelRowBandColor = new Color(0f, 0f, 0f, 0.08f);
         private static readonly Color ChannelRowHoverColor = new Color(1f, 1f, 1f, 0.06f);
@@ -79,12 +80,30 @@ namespace FlowIoC.Editor.Console
         private static readonly Color ChannelOffTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
         private static readonly Color ChannelTickColor = new Color(0.35f, 0.8f, 0.4f, 1f);
 
+        // Muting is a display decision, not a stored one: it never writes IsVisible, so unmuting
+        // brings back the exact selection the reader had. Index 0 Unity, 1 Framework, 2 Modules.
+        private readonly List<bool> _groupUnmuted = new() {true, true, true};
+
+        // What the three were before a solo, and which group is soloed. Coming out of a solo puts
+        // these back rather than switching everything on: a group the reader had already muted is
+        // theirs to keep.
+        private readonly List<bool> _groupUnmutedBeforeSolo = new() {true, true, true};
+        private int _soloedGroup = -1;
+
+        // The one channel the panel is isolated to, or -1. Like muting, it changes no setting.
+        private int _isolatedChannel = -1;
+
         private bool _unityChannelsExpanded = true;
         private bool _systemChannelsExpanded = true;
         private bool _moduleChannelsExpanded = true;
         private Vector2 _filtersPanelScroll;
         private const float FiltersPanelWidth = 220f;
         private static readonly Color FiltersPanelEdgeColor = new Color(0f, 0f, 0f, 0.45f);
+        private static readonly Color FiltersPanelBackgroundColor = new Color(0f, 0f, 0f, 0.16f);
+        private static readonly Color FiltersPanelBarColor = new Color(0f, 0f, 0f, 0.30f);
+        private static readonly Color FiltersGroupHeaderColor = new Color(1f, 1f, 1f, 0.07f);
+        private static readonly Color FiltersGroupHeaderHoverColor = new Color(1f, 1f, 1f, 0.13f);
+        private const float FiltersPanelBarHeight = 20f;
 
         private readonly FlowConsoleFlowTreeBuilder _flowTree = new FlowConsoleFlowTreeBuilder();
         private bool _flowMode;
@@ -231,6 +250,11 @@ namespace FlowIoC.Editor.Console
             _flowMode = _state.FlowMode;
             _showFilters = _state.ShowFilters;
             _showSettings = _state.ShowSettings;
+            _isolatedChannel = _state.IsolatedChannel;
+            _groupUnmuted[0] = !_state.UnityMuted;
+            _groupUnmuted[1] = !_state.FrameworkMuted;
+            _groupUnmuted[2] = !_state.ModulesMuted;
+
             _unityChannelsExpanded = _state.UnityChannelsExpanded;
             _systemChannelsExpanded = _state.FrameworkChannelsExpanded;
             _moduleChannelsExpanded = _state.ModuleChannelsExpanded;
@@ -517,7 +541,41 @@ namespace FlowIoC.Editor.Console
                 _needsRepaint = true;
             }
 
+            // Only while the selected row is somewhere the reader cannot see. A button that is
+            // there when it would do nothing asks them to work out why nothing happened.
+            if (IsSelectedLogOffScreen())
+            {
+                var focusLabel = new GUIContent("Focus Log", "Scroll the selected row back into view.");
+
+                if (GUILayout.Button(focusLabel, EditorStyles.toolbarButton, GUILayout.Width(70f),
+                        GUILayout.ExpandHeight(true)))
+                {
+                    _scrollToSelectedLog = true;
+                    _needsRepaint = true;
+                }
+            }
+
             GUILayout.FlexibleSpace();
+
+            // Only while a search is on. A search is typed and its effect is invisible - the reader
+            // cannot tell a term that matched nothing from one that matched everything - where the
+            // channels they switched off are shown by the panel and counted on its button.
+            if (!string.IsNullOrEmpty(_searchText))
+            {
+                int shownRows = _cachedVisibleLogs?.Count ?? 0;
+                int heldRows = _allLogs?.Count ?? 0;
+
+                Rect countRect = GUILayoutUtility.GetRect(new GUIContent("0 / 0"), EditorStyles.miniLabel,
+                    GUILayout.Width(90f), GUILayout.ExpandHeight(true));
+
+                if (Event.current.type == EventType.Repaint)
+                {
+                    EnsureChannelRowStyles();
+
+                    GUI.Label(countRect, shownRows + " / " + heldRows,
+                        shownRows == heldRows ? _groupCountStyle : _groupCountHighlightStyle);
+                }
+            }
 
             _searchField ??= new SearchField();
 
@@ -588,10 +646,9 @@ namespace FlowIoC.Editor.Console
         /// The sets of channels a reader keeps coming back to. Two ship with the console, named
         /// for the job rather than the channels, and the rest are whatever they save.
         /// </summary>
-        private void PresetMenuGUI()
+        private void PresetMenuGUI(Rect rect)
         {
             var content = new GUIContent("Presets", "Channel filters saved under a name.");
-            Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.toolbarDropDown, GUILayout.Width(66));
 
             if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
 
@@ -863,30 +920,6 @@ namespace FlowIoC.Editor.Console
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            // Only while something is selected, because that is the only time it can do anything.
-            // A button that is there but greyed out asks the reader to work out why.
-            if (_selectedLog != null)
-            {
-                var focusLabel = new GUIContent("Focus Log", "Scroll the selected row back into view.");
-
-                if (GUILayout.Button(focusLabel, EditorStyles.toolbarButton, GUILayout.Width(70f),
-                        GUILayout.ExpandHeight(true)))
-                {
-                    _scrollToSelectedLog = true;
-                    _needsRepaint = true;
-                }
-            }
-
-            // A search or a muted channel takes rows off the list and says so nowhere else. The
-            // reader can see the scrollbar got shorter; this says by how much.
-            int shown = _cachedVisibleLogs?.Count ?? 0;
-            int held = _allLogs?.Count ?? 0;
-
-            GUILayout.Label(
-                new GUIContent(shown + " / " + held, "Rows on the list, and logs the console is holding."),
-                shown == held ? EditorStyles.miniLabel : EditorStyles.whiteMiniLabel,
-                GUILayout.Width(90f));
-
             GUILayout.FlexibleSpace();
 
             // Laid along this bar rather than in a panel of their own, because there are two of
@@ -905,13 +938,33 @@ namespace FlowIoC.Editor.Console
                 _needsRepaint = true;
             }
 
+            // Every channel the panel holds, all three groups together, so the button says whether
+            // the list is narrowed without the panel having to be open. Isolation is one channel
+            // showing however many switches are on underneath it.
+            CountChannels(logType => true, out int channelsShown, out int channelsTotal);
+            if (_isolatedChannel >= 0) channelsShown = 1;
+
             var filtersLabel = new GUIContent("Filters",
-                "Open the panel that holds every channel this console can show.");
+                "Open the panel that holds every channel this console can show.\n"
+                + "The count is how many of them are showing.");
 
             // As wide as the panel it opens and hard against the right edge, so it reads as that
             // panel's own header rather than as another toolbar button.
-            bool showFilters = GUILayout.Toggle(_showFilters, filtersLabel, EditorStyles.toolbarButton,
+            Rect filtersRect = GUILayoutUtility.GetRect(filtersLabel, EditorStyles.toolbarButton,
                 GUILayout.Width(FiltersPanelWidth), GUILayout.ExpandHeight(true));
+
+            bool showFilters = GUI.Toggle(filtersRect, _showFilters, filtersLabel, EditorStyles.toolbarButton);
+
+            // The count is drawn beside the word rather than inside it, in the same small type the
+            // panel's own group headers use, so the two read as one thing.
+            if (Event.current.type == EventType.Repaint)
+            {
+                EnsureChannelRowStyles();
+
+                GUI.Label(new Rect(filtersRect.xMax - 54f, filtersRect.y, 46f, filtersRect.height),
+                    channelsShown + " / " + channelsTotal,
+                    channelsShown == channelsTotal ? _groupCountStyle : _groupCountHighlightStyle);
+            }
 
             if (showFilters != _showFilters)
             {
@@ -923,40 +976,6 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
-        }
-
-        /// <summary>
-        /// Alt+clicking a channel narrows the console to it, and alt+clicking the one that is
-        /// already alone brings the rest back. The All row is not a channel and takes no part.
-        /// </summary>
-        private void SoloSystemType(SystemLogType channel)
-        {
-            var channels = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>();
-
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
-            {
-                if (_settings.LogTypes[i].Value == (int) SystemLogType.All) continue;
-                channels.Add(_settings.LogTypes[i]);
-            }
-
-            var visible = new List<bool>(channels.Count);
-            int index = -1;
-
-            for (int i = 0; i < channels.Count; i++)
-            {
-                visible.Add(channels[i].IsVisible);
-                if (channels[i].Value == (int) channel) index = i;
-            }
-
-            if (index < 0) return;
-
-            _solo.Apply(visible, index);
-
-            for (int i = 0; i < channels.Count; i++)
-                channels[i].IsVisible = visible[i];
-
-            EditorUtility.SetDirty(_settings);
-            OnLogTypeSelectionChanged();
         }
 
         private void LogsPanelGUI()
@@ -1075,6 +1094,11 @@ namespace FlowIoC.Editor.Console
                 }
             }
 
+            // Isolation and muting hide rows without switching a channel off, so the shortcut for
+            // "everything is visible, hand the list straight over" has to know about them too.
+            if (_isolatedChannel >= 0 || !_groupUnmuted[0] || !_groupUnmuted[1] || !_groupUnmuted[2])
+                allTypesVisible = false;
+
             if (allTypesVisible)
             {
                 _cachedFilteredLogs = _allLogs;
@@ -1099,18 +1123,30 @@ namespace FlowIoC.Editor.Console
                         continue;
                     }
 
+                    // Isolation answers before anything else: one channel is showing and the rest
+                    // are not, whatever their switches and their groups say.
+                    if (_isolatedChannel >= 0)
+                    {
+                        if (log.LogTypeValue == _isolatedChannel)
+                            _multiTypeFilterBuffer.Add(log);
+
+                        continue;
+                    }
+
                     bool isSystemLog = log.SystemLogType != SystemLogType.All;
 
                     if (isSystemLog)
                     {
-                        if (_settings.TryGetLogType((int) log.SystemLogType, out var sysType) && sysType.IsVisible)
+                        if (_settings.TryGetLogType((int) log.SystemLogType, out var sysType) && sysType.IsVisible
+                                                                                              && !IsGroupMuted(sysType))
                         {
                             _multiTypeFilterBuffer.Add(log);
                             continue;
                         }
                     }
 
-                    if (_settings.TryGetLogType(log.LogTypeValue, out var projType) && !projType.IsMandatory && projType.IsVisible)
+                    if (_settings.TryGetLogType(log.LogTypeValue, out var projType) && !projType.IsMandatory
+                                                                                    && projType.IsVisible && !IsGroupMuted(projType))
                     {
                         _multiTypeFilterBuffer.Add(log);
                     }
@@ -1217,6 +1253,24 @@ namespace FlowIoC.Editor.Console
             if (string.IsNullOrEmpty(log.StackTrace)) return log.Message;
 
             return log.Message + "\n" + log.StackTrace;
+        }
+
+        /// <summary>
+        /// Whether the selected row is somewhere the view is not. The same question the keyboard's
+        /// reveal answers: if bringing the row into view would move the list, it is not in view.
+        /// </summary>
+        private bool IsSelectedLogOffScreen()
+        {
+            if (_selectedLog == null) return false;
+            if (_cachedVisibleLogs == null || _cumulativeHeights == null) return false;
+
+            int index = _cachedVisibleLogs.IndexOf(_selectedLog);
+            if (index < 0 || index >= _cachedLogHeights.Length) return false;
+
+            float revealed = _keyboard.Reveal(_logsPanelScroll.y, _logsViewportHeight,
+                _cumulativeHeights[index], _cachedLogHeights[index]);
+
+            return !Mathf.Approximately(revealed, _logsPanelScroll.y);
         }
 
         /// <summary>How tall the whole list is, folded and filtered as it currently stands.</summary>

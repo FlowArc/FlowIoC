@@ -111,7 +111,7 @@ namespace FlowIoC.BaseModule.Root
                 if (context is ISubContextOverridable overridable)
                     overridable.ApplyOverride(subContextData);
 
-                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.ContextName + " | Initialized");
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.ContextName + " | initialized");
                 context.Initialize(gameObject, initializeOrder, _rootsManager.InjectionBinderCrossContext, new List<IContext>(),
                     subContextData.IsTest);
                 _subContexts.Add(context, subContextData);
@@ -193,7 +193,7 @@ namespace FlowIoC.BaseModule.Root
             if (commandsBound)
                 return;
 
-            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Bind Commands!");
+            FlowLogger.Log(SystemLogType.Context, GetType().Name + " | commands bound");
             Context.CommandBindings();
             commandsBound = true;
         }
@@ -233,7 +233,7 @@ namespace FlowIoC.BaseModule.Root
             foreach (KeyValuePair<IContext, SubContextData> subContext in _subContexts)
             {
                 if (!subContext.Value.AutoSetup) continue;
-                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Value.ContextName + " | Setup!");
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Value.ContextName + " | setup");
                 subContext.Key.Setup();
             }
         }

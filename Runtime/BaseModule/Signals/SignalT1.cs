@@ -50,7 +50,7 @@ namespace FlowIoC.BaseModule.Signals
         public void Dispatch(T1 param)
         {
             if (!_hideCommandLog)
-                FlowLogger.LogDispatch(_isFrameworkOwned, "Signal is dispatched: '", _name, "' with 1 parameter!");
+                FlowLogger.LogDispatch(_isFrameworkOwned, "'", _name, "' dispatched (1 parameter)");
 
             // Taken off the signal before it runs, not after. A once-listener that adds another one
             // - or adds itself back - was writing into a field the next line then cleared, so the

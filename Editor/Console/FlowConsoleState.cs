@@ -75,6 +75,40 @@ namespace FlowIoC.Editor.Console
             set => EditorPrefs.SetBool(PREFIX + nameof(ShowSettings), value);
         }
 
+        /// <summary>
+        /// The one channel the console is showing, or -1 when it is showing them all. Isolation is
+        /// a display decision like muting: no channel is switched off to arrange it, so leaving it
+        /// puts the reader back exactly where they were.
+        /// </summary>
+        public int IsolatedChannel
+        {
+            get => EditorPrefs.GetInt(PREFIX + nameof(IsolatedChannel), -1);
+            set => EditorPrefs.SetInt(PREFIX + nameof(IsolatedChannel), value);
+        }
+
+        /// <summary>
+        /// Whether a whole group of channels is silenced. A group is muted at the console rather
+        /// than by switching its channels off, so unmuting brings back exactly the selection the
+        /// reader had - and CD_FlowConsole, which is committed, is never written to say it.
+        /// </summary>
+        public bool UnityMuted
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(UnityMuted), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(UnityMuted), value);
+        }
+
+        public bool FrameworkMuted
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(FrameworkMuted), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(FrameworkMuted), value);
+        }
+
+        public bool ModulesMuted
+        {
+            get => EditorPrefs.GetBool(PREFIX + nameof(ModulesMuted), false);
+            set => EditorPrefs.SetBool(PREFIX + nameof(ModulesMuted), value);
+        }
+
         /// <summary>Whether the panel that holds every channel is open down the right-hand side.</summary>
         public bool ShowFilters
         {

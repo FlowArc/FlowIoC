@@ -89,7 +89,10 @@ namespace FlowIoC.Tests
             Assert.AreEqual(1, FlowLogger.Logs.Count);
             Assert.AreEqual(LogSource.Unity, FlowLogger.Logs[0].Source);
             Assert.AreEqual((int) SystemLogType.Unity, FlowLogger.Logs[0].LogTypeValue);
-            Assert.AreEqual("hello", FlowLogger.Logs[0].Message);
+
+            // The channel's profile puts its tag on the front, so the message is what it ends with
+            // rather than the whole of it.
+            StringAssert.EndsWith("hello", FlowLogger.Logs[0].Message);
         }
 
         [Test]

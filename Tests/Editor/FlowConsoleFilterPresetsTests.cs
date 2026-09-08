@@ -10,14 +10,29 @@ namespace FlowIoC.Tests
         private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
 
         [Test]
-        public void Signal_chase_carries_the_three_channels_a_flow_is_read_from()
+        public void Signal_chase_carries_the_two_channels_a_flow_is_read_from()
         {
             FilterPreset preset = _presets.BuiltIn.Find(p => p.Name == "Signal chase");
 
             Assert.IsNotNull(preset);
-            CollectionAssert.Contains(preset.VisibleChannels, (int) SystemLogType.Signal);
-            CollectionAssert.Contains(preset.VisibleChannels, (int) SystemLogType.Command);
-            CollectionAssert.Contains(preset.VisibleChannels, (int) SystemLogType.CommandOperation);
+            CollectionAssert.AreEquivalent(
+                new[] {(int) SystemLogType.Signal, (int) SystemLogType.Command},
+                preset.VisibleChannels);
+        }
+
+        /// <summary>
+        /// The signal channel is in both, because a screen is opened by a signal and the two rows
+        /// beside each other are what says whether the open ever left the module that asked.
+        /// </summary>
+        [Test]
+        public void Screen_debug_carries_the_signal_that_opened_the_screen()
+        {
+            FilterPreset preset = _presets.BuiltIn.Find(p => p.Name == "Screen debug");
+
+            Assert.IsNotNull(preset);
+            CollectionAssert.AreEquivalent(
+                new[] {(int) SystemLogType.Signal, (int) SystemLogType.Screen},
+                preset.VisibleChannels);
         }
 
         [Test]

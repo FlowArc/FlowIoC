@@ -35,8 +35,7 @@ namespace FlowIoC.Editor.Console
                 VisibleChannels = new List<int>
                 {
                     (int) SystemLogType.Signal,
-                    (int) SystemLogType.Command,
-                    (int) SystemLogType.CommandOperation
+                    (int) SystemLogType.Command
                 }
             },
             new FilterPreset
@@ -44,9 +43,8 @@ namespace FlowIoC.Editor.Console
                 Name = "Screen debug",
                 VisibleChannels = new List<int>
                 {
-                    (int) SystemLogType.Screen,
-                    (int) SystemLogType.Context,
-                    (int) SystemLogType.Asset
+                    (int) SystemLogType.Signal,
+                    (int) SystemLogType.Screen
                 }
             }
         };
