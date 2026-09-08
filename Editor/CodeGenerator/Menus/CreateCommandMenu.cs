@@ -18,7 +18,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string MODULES_PATH = "Modules";
 
         private const float PANEL_HEADER_HEIGHT = 33f;
-        private const float MODULE_LIST_HEIGHT = 300f;
 
         private const string COMMAND_NAME_LABEL = "Command Name: ";
         private const string SIGNAL_LABEL = "Signal";
@@ -32,7 +31,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string INVALID_COMMAND_NAME_MESSAGE = "Please enter a valid Command name.";
         private const string PARENT_MODULE_REQUIRED_TITLE = "Parent Module Required";
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
-        private const float COMMAND_BUTTON_HEIGHT = 40;
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
 
         private static string _commandName;
@@ -43,9 +41,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private string _parentModulePath;
         private Dictionary<string, bool> _moduleExpandedState;
         private ModuleRegistry _registry;
-        private Vector2 _scrollPosition;
         private readonly DirectoryStructureConfigProvider _configProvider = new DirectoryStructureConfigProvider();
-        private Vector2 _injectablesScrollPosition;
         private List<string> _injectableNames = new List<string>();
         private ModuleKind _selectedModuleKind;
         private static GenerationState _generationState;
@@ -53,6 +49,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private ED_CodeGenerator _codeGenSettings;
 
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
+
+        private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
 
         private enum GenerationState
         {
@@ -88,7 +86,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _bar.DrawWindow("Create Command", "FlowIoC", "One unit of work, bound to a signal",
                 null, null, "Creating a Module");
 
-            EditorGUILayout.BeginVertical("box");
+            _body.Begin(this);
             EditorGUILayout.LabelField(COMMAND_NAME_LABEL, GUILayout.Width(100));
             _commandName = EditorGUILayout.TextField(_commandName);
             if (!string.IsNullOrEmpty(_commandName))
@@ -108,9 +106,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             DisplayInjectablesSection();
             DisplayParentModuleSelection();
-            GUILayout.FlexibleSpace();
+            _body.End();
+
             DisplayCreateCommandButton();
-            EditorGUILayout.EndVertical();
         }
 
         private void DisplayBindToggleSection()
@@ -145,7 +143,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
 
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(MODULE_LIST_HEIGHT));
             EditorGUILayout.BeginVertical();
 
             // CreateCommandMenu never restricted which module kind could host a command.
@@ -153,7 +150,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 ref _selectedModuleName, _ => true);
 
             EditorGUILayout.EndVertical();
-            EditorGUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(_parentModulePath))
                 EditorGUILayout.LabelField($"Selected: {Path.GetFileName(_parentModulePath)}", EditorStyles.boldLabel);
@@ -172,8 +168,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             GUI.backgroundColor = Color.white;
 
-            float scrollViewHeight = Mathf.Min(150, 30 * _injectableNames.Count);
-            _injectablesScrollPosition = EditorGUILayout.BeginScrollView(_injectablesScrollPosition, GUILayout.Height(scrollViewHeight));
             // Noted here, dropped once the list has been drawn: leaving the loop from inside a row
             // ends the frame with that row's horizontal group still open, and IMGUI reports an
             // invalid layout state for every repaint after it.
@@ -195,7 +189,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 EditorGUILayout.EndHorizontal();
             }
 
-            EditorGUILayout.EndScrollView();
 
             if (removeAt >= 0)
                 _injectableNames.RemoveAt(removeAt);
@@ -203,23 +196,20 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayCreateCommandButton()
         {
-            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
-            EditorGUI.BeginDisabledGroup(_generationState == GenerationState.InProgress || string.IsNullOrEmpty(_parentModulePath));
+            bool inProgress = _generationState == GenerationState.InProgress;
+            Color background = inProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
 
-            if (GUILayout.Button(CREATE_COMMAND_BUTTON, GUILayout.Height(COMMAND_BUTTON_HEIGHT)))
+            if (!_body.FooterButton(this, CREATE_COMMAND_BUTTON, inProgress || string.IsNullOrEmpty(_parentModulePath), background))
+                return;
+
+            if (string.IsNullOrEmpty(_commandName))
             {
-                if (string.IsNullOrEmpty(_commandName))
-                {
-                    EditorUtility.DisplayDialog(INVALID_COMMAND_NAME_TITLE, INVALID_COMMAND_NAME_MESSAGE, "OK");
-                    return;
-                }
-
-                _generationState = GenerationState.InProgress;
-                CreateModuleStructureForCommandGeneration();
+                EditorUtility.DisplayDialog(INVALID_COMMAND_NAME_TITLE, INVALID_COMMAND_NAME_MESSAGE, "OK");
+                return;
             }
 
-            EditorGUI.EndDisabledGroup();
-            GUI.backgroundColor = Color.white;
+            _generationState = GenerationState.InProgress;
+            CreateModuleStructureForCommandGeneration();
         }
 
         private void DisplayTogglesSection()

@@ -18,7 +18,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string MODULES_PATH = "Modules";
 
         private const float PANEL_HEADER_HEIGHT = 33f;
-        private const float MODULE_LIST_HEIGHT = 300f;
         private const string VIEW_NAME_LABEL = "View Name: ";
         private const string CREATE_VIEW_BUTTON = "Create View";
         private const string ADD_ACTION_BUTTON = "Add Action";
@@ -29,16 +28,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string PARENT_MODULE_REQUIRED_TITLE = "Parent Module Required";
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
         private const string ISTEST_LABEL = "IsTest: ";
-        private const float VIEW_BUTTON_HEIGHT = 40;
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
 
         private static string _viewName;
         private string _parentModulePath;
         private Dictionary<string, bool> _moduleExpandedState;
         private ModuleRegistry _registry;
-        private Vector2 _scrollPosition;
         private readonly DirectoryStructureConfigProvider _configProvider = new DirectoryStructureConfigProvider();
-        private Vector2 _actionScrollPosition;
         private List<string> _actionNames = new List<string>();
         private bool _isTest;
         private ModuleKind _selectedModuleKind;
@@ -47,6 +43,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private ED_CodeGenerator _codeGenSettings;
 
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
+
+        private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
 
         private enum GenerationState
         {
@@ -83,7 +81,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _bar.DrawWindow("Create View", "FlowIoC", "A View and the Mediator that drives it",
                 null, null, "Creating a Module");
 
-            EditorGUILayout.BeginVertical("box");
+            _body.Begin(this);
             EditorGUILayout.LabelField(VIEW_NAME_LABEL, GUILayout.Width(100));
             _viewName = EditorGUILayout.TextField(_viewName);
             if (!string.IsNullOrEmpty(_viewName))
@@ -97,9 +95,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             DisplayActionsSection();
             DisplayParentModuleSelection();
-            GUILayout.FlexibleSpace();
+            _body.End();
+
             DisplayCreateViewButton();
-            EditorGUILayout.EndVertical();
         }
 
         /// <summary>
@@ -126,7 +124,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
 
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(MODULE_LIST_HEIGHT));
             EditorGUILayout.BeginVertical();
 
             // Exact-kind filter: a regular view's parent may be anything but Test; a test
@@ -135,7 +132,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 ref _selectedModuleName, parent => _isTest ? parent == ModuleKind.Test : parent != ModuleKind.Test);
 
             EditorGUILayout.EndVertical();
-            EditorGUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(_parentModulePath))
                 EditorGUILayout.LabelField($"Selected: {Path.GetFileName(_parentModulePath)}", EditorStyles.boldLabel);
@@ -154,8 +150,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             GUI.backgroundColor = Color.white;
 
-            float scrollViewHeight = Mathf.Min(150, 30 * _actionNames.Count);
-            _actionScrollPosition = EditorGUILayout.BeginScrollView(_actionScrollPosition, GUILayout.Height(scrollViewHeight));
             // Noted here, dropped once the list has been drawn: leaving the loop from inside a row
             // ends the frame with that row's horizontal group still open, and IMGUI reports an
             // invalid layout state for every repaint after it.
@@ -177,7 +171,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 EditorGUILayout.EndHorizontal();
             }
 
-            EditorGUILayout.EndScrollView();
 
             if (removeAt >= 0)
                 _actionNames.RemoveAt(removeAt);
@@ -185,23 +178,20 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayCreateViewButton()
         {
-            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
-            EditorGUI.BeginDisabledGroup(_generationState == GenerationState.InProgress || string.IsNullOrEmpty(_parentModulePath));
+            bool inProgress = _generationState == GenerationState.InProgress;
+            Color background = inProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
 
-            if (GUILayout.Button(CREATE_VIEW_BUTTON, GUILayout.Height(VIEW_BUTTON_HEIGHT)))
+            if (!_body.FooterButton(this, CREATE_VIEW_BUTTON, inProgress || string.IsNullOrEmpty(_parentModulePath), background))
+                return;
+
+            if (string.IsNullOrEmpty(_viewName))
             {
-                if (string.IsNullOrEmpty(_viewName))
-                {
-                    EditorUtility.DisplayDialog(INVALID_VIEW_NAME_TITLE, INVALID_VIEW_NAME_MESSAGE, "OK");
-                    return;
-                }
-
-                _generationState = GenerationState.InProgress;
-                CreateModuleStructureForViewGeneration();
+                EditorUtility.DisplayDialog(INVALID_VIEW_NAME_TITLE, INVALID_VIEW_NAME_MESSAGE, "OK");
+                return;
             }
 
-            EditorGUI.EndDisabledGroup();
-            GUI.backgroundColor = Color.white;
+            _generationState = GenerationState.InProgress;
+            CreateModuleStructureForViewGeneration();
         }
 
         private void CreateModuleStructureForViewGeneration()

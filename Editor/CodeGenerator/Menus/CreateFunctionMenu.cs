@@ -27,8 +27,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string MODULES_PATH = "Modules";
 
         private const float PANEL_HEADER_HEIGHT = 33f;
-        private const float MODULE_LIST_HEIGHT = 240f;
-        private const float FUNCTION_BUTTON_HEIGHT = 40f;
 
         private const string FUNCTION_NAME_LABEL = "Function Name: ";
         private const string CREATE_FUNCTION_BUTTON = "Create Function";
@@ -52,6 +50,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private readonly DirectoryStructureConfigProvider _configProvider = new DirectoryStructureConfigProvider();
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
         private readonly FunctionScriptWriter _writer = new FunctionScriptWriter();
+        private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
 
         private Dictionary<string, bool> _moduleExpandedState;
         private ModuleRegistry _registry;
@@ -59,8 +58,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private ModuleKind _selectedModuleKind;
         private string _parentModulePath;
         private string _selectedModuleName = string.Empty;
-        private Vector2 _scrollPosition;
-        private Vector2 _rowsScrollPosition;
 
         private enum GenerationState
         {
@@ -88,7 +85,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _bar.DrawWindow("Create Function", "FlowIoC", "Work a Command calls from inside a step",
                 null, null, "Creating a Module");
 
-            EditorGUILayout.BeginVertical("box");
+            _body.Begin(this);
 
             EditorGUILayout.LabelField(FUNCTION_NAME_LABEL, GUILayout.Width(100));
             _functionName = EditorGUILayout.TextField(_functionName);
@@ -103,10 +100,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             DisplayInjectablesSection();
             DisplayParentModuleSelection();
 
-            GUILayout.FlexibleSpace();
-            DisplayCreateFunctionButton();
+            _body.End();
 
-            EditorGUILayout.EndVertical();
+            DisplayCreateFunctionButton();
         }
 
         /// <summary>
@@ -153,7 +149,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             GUI.backgroundColor = Color.green;
 
             if (GUILayout.Button(ADD_PARAMETER_BUTTON))
-                _parameters.Add(new FunctionParameter { Type = "int", Name = "value" });
+                _parameters.Add(new FunctionParameter {Type = "int", Name = "value"});
 
             GUI.backgroundColor = Color.white;
             EditorGUI.EndDisabledGroup();
@@ -196,9 +192,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             GUI.backgroundColor = Color.white;
 
-            float scrollViewHeight = Mathf.Min(120, 30 * _injectableNames.Count);
-            _rowsScrollPosition = EditorGUILayout.BeginScrollView(_rowsScrollPosition, GUILayout.Height(scrollViewHeight));
-
             int removeAt = -1;
 
             for (int i = 0; i < _injectableNames.Count; i++)
@@ -216,8 +209,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 EditorGUILayout.EndHorizontal();
             }
-
-            EditorGUILayout.EndScrollView();
 
             if (removeAt >= 0)
                 _injectableNames.RemoveAt(removeAt);
@@ -246,14 +237,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
 
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.MinHeight(MODULE_LIST_HEIGHT));
             EditorGUILayout.BeginVertical();
 
             ModuleHierarchyDrawer.DrawModuleHierarchy(_registry, MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath,
                 ref _selectedModuleName, _ => true);
 
             EditorGUILayout.EndVertical();
-            EditorGUILayout.EndScrollView();
 
             if (!string.IsNullOrEmpty(_parentModulePath))
                 EditorGUILayout.LabelField($"Selected: {Path.GetFileName(_parentModulePath)}", EditorStyles.boldLabel);
@@ -261,23 +250,20 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayCreateFunctionButton()
         {
-            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
-            EditorGUI.BeginDisabledGroup(_generationState == GenerationState.InProgress || string.IsNullOrEmpty(_parentModulePath));
+            bool inProgress = _generationState == GenerationState.InProgress;
+            Color background = inProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
 
-            if (GUILayout.Button(CREATE_FUNCTION_BUTTON, GUILayout.Height(FUNCTION_BUTTON_HEIGHT)))
+            if (!_body.FooterButton(this, CREATE_FUNCTION_BUTTON, inProgress || string.IsNullOrEmpty(_parentModulePath), background))
+                return;
+
+            if (string.IsNullOrEmpty(_functionName))
             {
-                if (string.IsNullOrEmpty(_functionName))
-                {
-                    EditorUtility.DisplayDialog(INVALID_FUNCTION_NAME_TITLE, INVALID_FUNCTION_NAME_MESSAGE, "OK");
-                    return;
-                }
-
-                _generationState = GenerationState.InProgress;
-                WriteFunction();
+                EditorUtility.DisplayDialog(INVALID_FUNCTION_NAME_TITLE, INVALID_FUNCTION_NAME_MESSAGE, "OK");
+                return;
             }
 
-            EditorGUI.EndDisabledGroup();
-            GUI.backgroundColor = Color.white;
+            _generationState = GenerationState.InProgress;
+            WriteFunction();
         }
 
         private void WriteFunction()
