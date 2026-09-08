@@ -22,6 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   re-initialised, and `RunToken` stays because that one belongs to the command pool. No public type
   or signature changed.
 
+- **A sub group is told who to report to instead of being subscribed to.** Starting a group step
+  built a closure and hung it on the sub resolver's `GroupExecutionFinished`, which cost two
+  allocations every time - the delegate, and the display class that capturing the parent's run id
+  forced - and the shipped `CounterModule` runs one such step every second for as long as its
+  service is alive, because its tick re-enters itself through `ToGroupAsParallel`. The sub resolver
+  is pooled, so it carries the parent and that run id in two fields of its own now and reports
+  directly. The binder's own path was already allocation free with a cached delegate; this was the
+  one place that had not been given the same treatment. The run-id check did not go anywhere - it is
+  passed rather than captured - and a dispatch's own group is still finished through the listener
+  the binder subscribes, the two being exclusive. No public type or signature changed.
+
 - **A log line names the class and the method it came from.** `1.9.0` moved the framework's own
   messages to prose that read subject-first, and what went with it was the one thing the old lines
   were good at: saying where in the code they were written. The shape is now three parts - the
