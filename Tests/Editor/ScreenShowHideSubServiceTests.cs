@@ -138,6 +138,7 @@ namespace FlowIoC.Tests
         private FakeScreenRuntimeModel _runtime;
         private ShowSubService _show;
         private HideSubService _hide;
+        private UnloadSubService _unload;
         private readonly List<GameObject> _hosts = new();
 
         [SetUp]
@@ -149,19 +150,25 @@ namespace FlowIoC.Tests
             _show = new ShowSubService();
             _hide = new HideSubService();
             SetupSubService setup = new SetupSubService();
-            UnloadSubService unload = new UnloadSubService();
+            _unload = new UnloadSubService();
+            DisposeSubService dispose = new DisposeSubService();
 
             _context.InjectionBinder.BindInstance<IScreenRuntimeModel>(_runtime);
             _context.InjectionBinder.BindInstance<IScreenRegistryModel>(new FakeScreenRegistryModel());
             _context.InjectionBinder.BindInstance<SetupSubService>(setup);
             _context.InjectionBinder.BindInstance<LoadSubService>(new LoadSubService());
-            _context.InjectionBinder.BindInstance<UnloadSubService>(unload);
+            _context.InjectionBinder.BindInstance<UnloadSubService>(_unload);
+            _context.InjectionBinder.BindInstance<DisposeSubService>(dispose);
+            _context.InjectionBinder.BindInstance<AddressableLoadSubService>(new AddressableLoadSubService());
+            _context.InjectionBinder.BindInstance<ResourceLoadSubService>(new ResourceLoadSubService());
             _context.InjectionBinder.BindInstance<HideSubService>(_hide);
             _context.InjectionBinder.BindInstance<ShowSubService>(_show);
 
             _context.TryToInjectObject(_show);
             _context.TryToInjectObject(_hide);
             _context.TryToInjectObject(setup);
+            _context.TryToInjectObject(_unload);
+            _context.TryToInjectObject(dispose);
         }
 
         [TearDown]
@@ -276,9 +283,30 @@ namespace FlowIoC.Tests
         [Test]
         public void Hiding_a_screen_that_is_null_is_reported()
         {
-            LogAssert.Expect(LogType.Error, "[ScreenService.Hide.Screen] Screenbody is null");
+            LogAssert.Expect(LogType.Error, "[ScreenService.Hide.Screen] Screenbody is null or already destroyed");
 
             _hide.Screen((IScreenBody) null);
+
+            Assert.That(_runtime.AddedToPassive, Is.Empty);
+        }
+
+        /// <summary>
+        /// Play mode exit destroys the screen before the Root's OnDestroy drives the unregister
+        /// path down to here, and an IScreenBody is an interface - so == null compares the managed
+        /// reference and answers that the destroyed instance is still there. It used to reach
+        /// AddToPassivePool, which reads the screen's transform, and threw a
+        /// MissingReferenceException on every exit from play.
+        /// </summary>
+        [Test]
+        public void Hiding_a_screen_Unity_has_destroyed_is_reported_rather_than_parked()
+        {
+            TestScreen screen = NewScreen(inUse: true);
+            _hide.Setup(screen);
+            Object.DestroyImmediate(screen.gameObject);
+
+            LogAssert.Expect(LogType.Error, "[ScreenService.Hide.Screen] Screenbody is null or already destroyed");
+
+            _hide.Screen(screen);
 
             Assert.That(_runtime.AddedToPassive, Is.Empty);
         }
@@ -392,6 +420,45 @@ namespace FlowIoC.Tests
             _hide.Screen<TestScreen>();
 
             Assert.That(_runtime.AddedToPassive, Is.EqualTo(new[] {screen}));
+        }
+
+        #endregion
+
+        #region Unload
+
+        /// <summary>
+        /// A screen still in use when its context goes away is hidden with the animation skipped,
+        /// which parks it before the loader releases it.
+        /// </summary>
+        [Test]
+        public void Unregistering_a_screen_that_is_in_use_hides_it_first()
+        {
+            TestScreen screen = NewScreen(inUse: true);
+            _hide.Setup(screen);
+
+            _unload.Unregistered(screen);
+
+            Assert.That(_runtime.AddedToPassive, Is.EqualTo(new[] {screen}));
+            Assert.That(screen.ScreenHiddenCalls, Is.EqualTo(1));
+        }
+
+        /// <summary>
+        /// This is the play mode exit path. The Root's OnDestroy dispatches UnRegisterScreen, and
+        /// by then Unity has destroyed the screen - so hiding it would park a dead object, and
+        /// parking reads its transform. The bookkeeping still runs; the hide does not.
+        /// </summary>
+        [Test]
+        public void Unregistering_a_screen_Unity_has_destroyed_skips_the_hide()
+        {
+            TestScreen screen = NewScreen(inUse: true);
+            _hide.Setup(screen);
+            Object.DestroyImmediate(screen.gameObject);
+
+            _unload.Unregistered(screen);
+
+            Assert.That(_runtime.AddedToPassive, Is.Empty);
+            Assert.That(_runtime.RemovedFromActive, Is.EqualTo(new[] {screen}));
+            Assert.That(screen.ScreenHiddenCalls, Is.Zero);
         }
 
         #endregion

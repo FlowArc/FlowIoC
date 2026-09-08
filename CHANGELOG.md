@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Leaving play mode no longer throws a `MissingReferenceException` for every open screen.** The
+  Root's `OnDestroy` dispatches `UnRegisterScreen`, and by then Unity has already destroyed the
+  screen - but an `IScreenBody` is an interface, so the `== null` guards on that path compared the
+  managed reference and let the dead instance through to the passive pool, which reads its
+  transform. `IView.IsAlive()` is what those guards ask now: an unregister that finds its screen
+  destroyed drops it from the pools and releases the loader's handle without hiding it, and the
+  two loaders skip the `Destroy` they can no longer do.
+
 ## [1.8.0] - 2026-09-07
 
 ### Fixed
