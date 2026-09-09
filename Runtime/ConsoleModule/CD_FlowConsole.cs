@@ -208,10 +208,57 @@ namespace FlowIoC.ConsoleModule
             EnsureSystemProfilesExist();
         }
 
+        /// <summary>
+        /// The set of names SystemLogType currently declares, which is what a mandatory row in a
+        /// settings asset is checked against. A channel retired from the enum leaves a row behind
+        /// otherwise, and a mandatory row cannot be deleted from the Filters panel - so the asset
+        /// would carry a column nothing can fill and nobody can remove.
+        /// </summary>
+        private static HashSet<string> SystemChannelNames()
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (SystemLogType channel in Enum.GetValues(typeof(SystemLogType)))
+                names.Add(channel.ToString());
+
+            return names;
+        }
+
+        /// <summary>
+        /// Drops the mandatory rows whose channel the enum no longer declares. Only mandatory rows
+        /// are considered: a project channel is the game's own and is never touched here, and the
+        /// Default row is written as project-owned rather than mandatory.
+        /// </summary>
+        internal bool PruneRetiredSystemLogTypes()
+        {
+            var names = SystemChannelNames();
+            bool removed = false;
+
+            for (int i = _logTypes.Count - 1; i >= 0; i--)
+            {
+                var logType = _logTypes[i];
+
+                if (!logType.IsMandatory || names.Contains(logType.Name)) continue;
+
+                _logTypes.RemoveAt(i);
+                removed = true;
+            }
+
+            // Every other place that touches _logTypes drops both caches, and this one has to as
+            // well: a row still in the name cache answers TryGetLogType after it has left the list.
+            if (removed)
+            {
+                _logTypeByValue = null;
+                _logTypeByName = null;
+            }
+
+            return removed;
+        }
+
         private void EnsureSystemLogTypesExist()
         {
             _logTypes ??= new List<FlowConsoleLogTypeCVO>();
-            bool needsUpdate = false;
+            bool needsUpdate = PruneRetiredSystemLogTypes();
             var existingValues = new HashSet<int>();
             var existingNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var existingLogTypes = new Dictionary<string, FlowConsoleLogTypeCVO>(StringComparer.OrdinalIgnoreCase);
@@ -354,11 +401,38 @@ namespace FlowIoC.ConsoleModule
         /// They are mandatory and not editable: a channel whose tag somebody renamed no longer
         /// matches what the documentation says the console prints.
         /// </summary>
+        /// <summary>
+        /// The profile half of <see cref="PruneRetiredSystemLogTypes"/>. Default is mandatory and
+        /// is not a channel, so it is named here rather than left to the enum to vouch for.
+        /// </summary>
+        internal bool PruneRetiredSystemProfiles()
+        {
+            var names = SystemChannelNames();
+            bool removed = false;
+
+            for (int i = _logProfiles.Count - 1; i >= 0; i--)
+            {
+                var profile = _logProfiles[i];
+
+                if (!profile.IsMandatory) continue;
+                if (names.Contains(profile.Name)) continue;
+                if (string.Equals(profile.Name, "Default", StringComparison.OrdinalIgnoreCase)) continue;
+
+                _logProfiles.RemoveAt(i);
+                removed = true;
+            }
+
+            if (removed)
+                InvalidateProfileCache();
+
+            return removed;
+        }
+
         private void EnsureSystemProfilesExist()
         {
             _logProfiles ??= new List<FlowLogProfileData>();
 
-            bool changed = false;
+            bool changed = PruneRetiredSystemProfiles();
 
             foreach (SystemLogType channel in Enum.GetValues(typeof(SystemLogType)))
             {
@@ -556,7 +630,6 @@ namespace FlowIoC.ConsoleModule
                 case SystemLogType.Function: return new Color(0.231f, 0.765f, 1f);
                 case SystemLogType.Screen: return new Color(0.953f, 0.912f, 0.211f);
                 case SystemLogType.Pool: return new Color(0.629f, 0.533f, 1f);
-                case SystemLogType.Model: return new Color(0.729f, 0.486f, 1f);
                 case SystemLogType.Asset: return new Color(0.922f, 0.902f, 0.808f);
                 case SystemLogType.Unity: return new Color(0.962f, 0.937f, 0.84f);
                 case SystemLogType.Compiler: return new Color(0.887f, 0.762f, 0.757f);

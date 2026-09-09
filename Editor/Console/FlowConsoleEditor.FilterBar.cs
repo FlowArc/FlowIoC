@@ -380,7 +380,6 @@ namespace FlowIoC.Editor.Console
             SystemLogType.Function,
             SystemLogType.Screen,
             SystemLogType.Pool,
-            SystemLogType.Model,
             SystemLogType.Asset
         };
 

@@ -288,7 +288,6 @@ namespace FlowIoC.ConsoleModule
                 case SystemLogType.Function: return "Function";
                 case SystemLogType.Screen: return "Screen";
                 case SystemLogType.Pool: return "Pool";
-                case SystemLogType.Model: return "Model";
                 case SystemLogType.Asset: return "Asset";
                 case SystemLogType.Unity: return "Unity";
                 case SystemLogType.Compiler: return "Compiler";
