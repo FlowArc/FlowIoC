@@ -45,6 +45,7 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _partSignature;
         private GUIStyle _codeCaption;
         private GUIStyle _codeCopy;
+        private GUIStyle _pageLink;
 
         public Color NodeFill => _pro ? new Color(0.24f, 0.24f, 0.26f) : new Color(0.90f, 0.90f, 0.92f);
         public Color NodeFillActive => _pro ? new Color(0.18f, 0.31f, 0.43f) : new Color(0.76f, 0.87f, 0.98f);
@@ -355,6 +356,19 @@ namespace FlowIoC.Editor.Help
             fontSize = 10,
             padding = new RectOffset(6, 6, 2, 2),
             margin = new RectOffset(0, 0, 4, 0)
+        };
+
+        /// <summary>
+        /// The button a page uses to send the reader to another page. It is sized to its own words
+        /// and left where the paragraph that mentioned it ends, so it reads as the sentence's
+        /// destination rather than as the thing the page is for - the page's own action is the one
+        /// on the banner, and there is at most one of those.
+        /// </summary>
+        public GUIStyle PageLink => _pageLink ??= new GUIStyle(EditorStyles.miniButton)
+        {
+            fontSize = 11,
+            padding = new RectOffset(10, 10, 3, 3),
+            margin = new RectOffset(0, 0, 2, 8)
         };
 
         public GUIStyle NodeTitle => _nodeTitle ??= new GUIStyle(EditorStyles.boldLabel)

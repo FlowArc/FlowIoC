@@ -41,16 +41,18 @@ namespace FlowIoC.Tests
 
         /// <summary>
         /// The introduction says what Controllers is made of; the two parts it names carry a
-        /// reading each, and the rules stay on the end where a reader who knows both can find
-        /// them without scrolling past either.
+        /// reading each, the commands the package already wrote come after them, and the rules
+        /// stay on the end where a reader who knows the rest can find them without scrolling past
+        /// any of it.
         /// </summary>
         [Test]
-        public void Controllers_reads_as_an_introduction_its_two_parts_and_the_rules()
+        public void Controllers_reads_as_an_introduction_its_two_parts_what_is_ready_made_and_the_rules()
         {
             ControllersPage page = new ControllersPage();
             List<string> titles = page.Tabs.Select(tab => tab.Title).ToList();
 
-            CollectionAssert.AreEqual(new[] {"Introduction", "Command", "Function", "Rules"}, titles);
+            CollectionAssert.AreEqual(
+                new[] {"Introduction", "Command", "Function", "Ready-made", "Rules"}, titles);
         }
 
         /// <summary>

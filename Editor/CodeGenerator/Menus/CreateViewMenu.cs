@@ -79,7 +79,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void OnGUI()
         {
             _bar.DrawWindow("Create View", "FlowIoC", "A View and the Mediator that drives it",
-                null, null, "Creating a Module");
+                null, null, "Create View");
 
             _body.Begin(this);
             EditorGUILayout.LabelField(VIEW_NAME_LABEL, GUILayout.Width(100));

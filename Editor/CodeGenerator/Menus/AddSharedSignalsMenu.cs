@@ -96,7 +96,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             // stay green, because green is what a settled row is everywhere in FlowIoC.
             _bar.DrawWindow(
                 TITLE, "FlowIoC", "What a module publishes, and what it announces",
-                "Refresh", Refresh, "Creating a Module");
+                "Refresh", Refresh, TITLE);
 
             EditorGUILayout.HelpBox(
                 "Shared is the data a module publishes: Scripts/Shared, an assembly of its own, and "

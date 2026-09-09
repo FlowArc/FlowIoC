@@ -79,7 +79,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void OnGUI()
         {
             _bar.DrawWindow("Create Model", "FlowIoC", "An interface and the class behind it",
-                null, null, "Creating a Module");
+                null, null, "Create Model");
 
             _body.Begin(this);
             EditorGUILayout.LabelField(MODEL_NAME_LABEL, GUILayout.Width(100));

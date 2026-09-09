@@ -63,6 +63,7 @@ namespace FlowIoC.Tests
                 "Creating a Module",
                 "Folder Layout",
                 "Data Types",
+                "Code Style",
                 "Ordering Roots",
                 "Structure",
                 "Editor Tools"
@@ -97,6 +98,25 @@ namespace FlowIoC.Tests
                 "Model Viewer",
                 "Folder Painter"
             }, ChildTitles("Editor Tools"));
+        }
+
+        /// <summary>
+        /// The seven generator panels sit in a category of their own inside Editor Tools. They are
+        /// one tool at seven scales, and listed flat they would bury the six scanners beside them.
+        /// </summary>
+        [Test]
+        public void The_code_generators_category_covers_every_generator_panel()
+        {
+            CollectionAssert.AreEqual(new[]
+            {
+                "Create Module",
+                "Create Command",
+                "Create Function",
+                "Create Model",
+                "Create View",
+                "Add Shared or Signals",
+                "Delete Module"
+            }, ChildTitles("Code Generators"));
         }
 
         /// <summary>

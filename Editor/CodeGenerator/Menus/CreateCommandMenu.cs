@@ -84,7 +84,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void OnGUI()
         {
             _bar.DrawWindow("Create Command", "FlowIoC", "One unit of work, bound to a signal",
-                null, null, "Creating a Module");
+                null, null, "Create Command");
 
             _body.Begin(this);
             EditorGUILayout.LabelField(COMMAND_NAME_LABEL, GUILayout.Width(100));

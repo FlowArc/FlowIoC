@@ -27,16 +27,28 @@ namespace FlowIoC.Editor.Help
         private readonly HelpCodeHighlighter _highlighter;
 
         /// <summary>
+        /// What a page link is checked against, and null for a painter that is not the help
+        /// window's. The generator windows build one of these to draw a code block with, and a
+        /// button that opened a page would have nowhere to open it.
+        /// </summary>
+        private readonly HelpPageCatalog _catalog;
+
+        /// <summary>
         /// The position a diagram drawn as a map is at: nowhere, because it has no steps. One
         /// instance answers for every such diagram, since none of them can be walked.
         /// </summary>
         private readonly HelpGraphStepper _mapStepper = new HelpGraphStepper(0);
 
-        internal HelpPainter(HelpTheme theme)
+        internal HelpPainter(HelpTheme theme) : this(theme, null)
+        {
+        }
+
+        internal HelpPainter(HelpTheme theme, HelpPageCatalog catalog)
         {
             _theme = theme;
             _graphPainter = new HelpGraphPainter(theme);
             _highlighter = new HelpCodeHighlighter(theme);
+            _catalog = catalog;
         }
 
         /// <summary>
@@ -112,6 +124,31 @@ namespace FlowIoC.Editor.Help
         public void Note(string text) => EditorGUILayout.HelpBox(text, MessageType.Info);
 
         public void Space() => EditorGUILayout.Space();
+
+        /// <summary>
+        /// A button that opens another page of this window. A topic explained in full elsewhere is
+        /// pointed at rather than repeated, and the reader arrives on the page rather than being
+        /// told which entry of the sidebar to go and find.
+        ///
+        /// A title the catalogue does not carry draws nothing. A page is free to link to something
+        /// only a private package installs, and a project without that package sees the paragraph
+        /// without the button rather than a button that goes nowhere.
+        /// </summary>
+        public void PageLink(string pageTitle, string label = null)
+        {
+            if (_catalog == null || _catalog.FindPage(pageTitle) == null)
+                return;
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Space(6f);
+
+                if (GUILayout.Button(label ?? pageTitle, _theme.PageLink, GUILayout.ExpandWidth(false)))
+                    HelpWindow.OpenPage(pageTitle);
+
+                GUILayout.FlexibleSpace();
+            }
+        }
 
         /// <summary>
         /// The bar a page parts two topics with. Five pixels rather than one, because it ends a

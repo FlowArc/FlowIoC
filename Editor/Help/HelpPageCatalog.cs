@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FlowIoC.Editor.Help.Pages;
 using FlowIoC.Editor.Help.Pages.Modules;
 using FlowIoC.Editor.Help.Pages.Tools;
+using FlowIoC.Editor.Help.Pages.Tools.Generators;
 
 namespace FlowIoC.Editor.Help
 {
@@ -26,6 +27,7 @@ namespace FlowIoC.Editor.Help
                     new HelpSection(new CreatingModulePage()),
                     new HelpSection(new FolderLayoutPage()),
                     new HelpSection(new DataTypesPage()),
+                    new HelpSection(new CodeStylePage()),
                     new HelpSection(new OrderingRootsPage()),
                     new HelpSection("Structure", "UnityEditor.SceneHierarchyWindow",
                         new RootContextPage(),
@@ -36,13 +38,20 @@ namespace FlowIoC.Editor.Help
                         new ViewMediatorPage(),
                         new ConnectorsPage()),
                     new HelpSection("Editor Tools", "Settings",
-                        new CodeGeneratorsPage(),
-                        new ScreenScannerPage(),
-                        new ModuleScannerPage(),
-                        new AgentScannerPage(),
-                        new FlowConsolePage(),
-                        new ModelViewerPage(),
-                        new FolderPainterPage())),
+                        new HelpSection("Code Generators", "cs Script Icon",
+                            new CreateModulePage(),
+                            new CreateCommandPage(),
+                            new CreateFunctionPage(),
+                            new CreateModelPage(),
+                            new CreateViewPage(),
+                            new AddSharedOrSignalsPage(),
+                            new DeleteModulePage()),
+                        new HelpSection(new ScreenScannerPage()),
+                        new HelpSection(new ModuleScannerPage()),
+                        new HelpSection(new AgentScannerPage()),
+                        new HelpSection(new FlowConsolePage()),
+                        new HelpSection(new ModelViewerPage()),
+                        new HelpSection(new FolderPainterPage()))),
                 new HelpSection("Modules", "Prefab Icon", ModuleSections())
             };
 

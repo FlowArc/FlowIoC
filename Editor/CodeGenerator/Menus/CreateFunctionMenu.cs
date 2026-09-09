@@ -88,7 +88,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void OnGUI()
         {
             _bar.DrawWindow("Create Function", "FlowIoC", "Work a Command calls from inside a step",
-                null, null, "Creating a Module");
+                null, null, "Create Function");
 
             _body.Begin(this);
 

@@ -5,12 +5,11 @@ namespace FlowIoC.Editor.Help.Pages
     /// <summary>
     /// The first thing a reader does in a FlowIoC project, and the one step that has no
     /// by-hand equivalent: a module is what Create Module writes, not a folder that happens
-    /// to look like one.
+    /// to look like one. What each field of the panel decides is the tool page under Editor
+    /// Tools; this is why the panel exists and what the three module types are for.
     /// </summary>
     internal class CreatingModulePage : HelpPage
     {
-        private readonly HelpImages _images = new HelpImages();
-
         public CreatingModulePage() : base(null)
         {
         }
@@ -29,9 +28,6 @@ namespace FlowIoC.Editor.Help.Pages
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Image(_images.Get("CreateModuleWindow.png"),
-                "Tools > FlowIoC > Create Module, filled in for a Main module named Player.");
-
             painter.SubHeading("Why the panel and not a folder");
             painter.Paragraph(
                 "A module is a folder tree, an assembly definition, a namespace and an entry in the "
@@ -51,6 +47,9 @@ namespace FlowIoC.Editor.Help.Pages
                 + "the module type. Renaming that config renames the folders the next module gets; "
                 + "renaming a folder by hand only breaks the agreement.");
 
+            painter.Space();
+            painter.PageLink("Create Module", "The panel, field by field");
+
             painter.Separator();
             painter.SubHeading("The three module types");
             painter.Paragraph(
@@ -68,12 +67,9 @@ namespace FlowIoC.Editor.Help.Pages
                 "Named <Name>ScreenModule and written into its parent's zScreenModules folder. It "
                 + "comes with a View, a Mediator, its signal holder, and a context deriving from "
                 + "ScreenSubContext that declares where the prefab lives - added to the parent "
-                + "module's Root for you - and optionally its own scene. List the screen's actions in "
-                + "the panel and they are put on both the View and the Mediator, so the button you "
-                + "name here arrives already wired. A screen belongs to the module whose feature it "
-                + "shows, so its parent is a main or a sub module - a screen module and a test "
-                + "module are not offered as one, and the Parent Module list says so by leaving "
-                + "them without a Select button.");
+                + "module's Root for you - and optionally its own scene. A screen belongs to the "
+                + "module whose feature it shows, so its parent is a main or a sub module: another "
+                + "screen module and a test module are not offered as one.");
 
             painter.Rule("Test - editor-only code that may reach anywhere.");
             painter.Paragraph(
@@ -83,58 +79,11 @@ namespace FlowIoC.Editor.Help.Pages
                 + "what makes it useful and what keeps it out of a build. It attaches to the module "
                 + "it tests, so it cannot be nested inside another test module.");
 
-            painter.Separator();
-            painter.SubHeading("What the toggles decide");
-            painter.Bullet(
-                "Create Root and Create Context write the pair that gives the module its presence "
-                + "in the scene and its bindings. Leave both on unless you are adding a module that "
-                + "another one launches.");
-            painter.Bullet(
-                "Role names the Root and the Context for what the Root roots, which is what the "
-                + "inspector reads to colour it: System writes PlayerSystemRoot and "
-                + "PlayerSystemContext, Service writes CounterServiceRoot and CounterServiceContext, "
-                + "and Core writes the plain PlayerRoot and PlayerContext with FlowHeader(FlowRole.Core) "
-                + "above the Root, because a Core module carries no suffix for the colour to be read "
-                + "from. It starts on System, "
-                + "because a module written for the game at hand is one. The module folder, its "
-                + "assembly and its namespaces are the same whichever you pick, and the dropdown is "
-                + "offered on a main module that gets a Root.");
-            painter.Bullet(
-                "Allow As Sub Context writes AllowAsSubContext on the context. A context that has a "
-                + "Root of its own is kept out of a Root's Add Sub Context list, because adding it "
-                + "elsewhere would build it a second time; this puts it back, for a module meant to be "
-                + "hosted on another module's Root. Offered on a main module that gets a Root, and off "
-                + "by default.");
-            painter.Bullet(
-                "Create Signals writes the signal holder - the module's public surface. A module "
-                + "with no signals can only be reached by referencing it directly, which is the "
-                + "thing the architecture is there to prevent.");
-            painter.Bullet(
-                "Create Scene adds a scene of the module's own. Useful for a Screen module, "
-                + "unnecessary for a module that only holds state.");
-            painter.Bullet(
-                "Create Shared adds the assembly a module publishes its data through, so a "
-                + "neighbour can read a config asset it authored without gaining access to its "
-                + "Models, its Commands or its signals. Off by default: a module that hands no data "
-                + "to anyone has no use for it. Tools > FlowIoC > Add Shared or Signals does the same to a "
-                + "module that already exists. The public signal holder is not in here - it has an "
-                + "assembly of its own under Scripts/Signals, which every module gets.");
-
-            painter.Separator();
-            painter.SubHeading("Parent Module");
-            painter.Paragraph(
-                "The list at the bottom is where the new module is placed. Modules puts it at the "
-                + "top level; picking an existing module nests it inside, under zSubModules, "
-                + "zScreenModules or zTestModules depending on the type. A parent that cannot host "
-                + "the type you chose is not offered. The Folder Structure Preview above shows "
-                + "exactly what will be written before you commit to it, and the optional folders "
-                + "are the ones you can tick off.");
-
             painter.Note(
-                "Delete a module through Tools > FlowIoC > Delete Module for the same reason. "
-                + "Deleting the folder by hand leaves its asmdef reference behind in every module "
-                + "that named it, and the compile error that follows never mentions the module you "
-                + "removed.");
+                "Delete a module through its own panel for the same reason. Deleting the folder by "
+                + "hand leaves its asmdef reference behind in every module that named it, and the "
+                + "compile error that follows never mentions the module you removed.");
+            painter.PageLink("Delete Module", "Read: Delete Module");
         }
     }
 }
