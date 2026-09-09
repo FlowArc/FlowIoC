@@ -13,6 +13,13 @@ namespace FlowIoC.ConsoleModule
         Unity = 1,
 
         /// <summary>Taken from CompilationPipeline - a compiler error or warning.</summary>
-        Compiler = 2
+        Compiler = 2,
+
+        /// <summary>
+        /// Read off the asset with ShaderUtil after an import. Shader errors reach neither of the
+        /// other two doors: they are written from native and do not come through
+        /// Application.logMessageReceived, which is why this one exists.
+        /// </summary>
+        Shader = 3
     }
 }

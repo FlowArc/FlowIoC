@@ -34,6 +34,15 @@ namespace FlowIoC.ConsoleModule
         /// off Signal for the reason Command and CommandOperation are split: a reader watching
         /// signals is watching the game's traffic, and every row there should be one they wrote.
         /// </summary>
-        SignalOperation = 55
+        SignalOperation = 55,
+
+        /// <summary>
+        /// A shader that would not compile, read off the asset after an import. Kept apart from
+        /// Compiler rather than folded into it: a C# error stops the domain reloading and nothing
+        /// runs at all, while a broken shader renders one material magenta and everything else
+        /// carries on. A reader who filters to Compiler is asking whether they can press play, and
+        /// shader rows in that column would answer the wrong question.
+        /// </summary>
+        Shader = 60
     }
 }

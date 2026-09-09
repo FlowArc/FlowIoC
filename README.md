@@ -1138,11 +1138,11 @@ provider runs its coroutine to the end before it pools anything.
 | **ExtensionModule** | `transform.position.WithY(0f)` | Extension methods that carry no framework of their own: vector and float maths, enum flags, list conversion and UTC time formatting. |
 
 The framework logs its own activity on the built-in channels `Context`,
-`Injection`, `Signal`, `Command`, `CommandOperation`, `Function`, `Screen`, `Pool`,
-`Model` and `Asset`, each of which can be toggled in the Flow Console window — so
+`Injection`, `Signal`, `SignalOperation`, `Command`, `CommandOperation`, `Function`,
+`Screen`, `Pool` and `Asset`, each of which can be toggled in the Flow Console window — so
 you can watch every signal dispatch and command step without adding a single log
-line. Unity's own output arrives on two more, `Unity` and `Compiler`, which is what
-lets one window be the only console you keep open: Clear, Collapse, Error Pause and
+line. Unity's own output arrives on three more — `Unity`, `Compiler` and `Shader` — which
+is what lets one window be the only console you keep open: Clear, Collapse, Error Pause and
 Clear on Play all behave the way they do in Unity's.
 
 Double-clicking a row opens the code that wrote it. Where the row is FlowIoC

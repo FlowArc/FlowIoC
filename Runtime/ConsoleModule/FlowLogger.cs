@@ -291,6 +291,7 @@ namespace FlowIoC.ConsoleModule
                 case SystemLogType.Asset: return "Asset";
                 case SystemLogType.Unity: return "Unity";
                 case SystemLogType.Compiler: return "Compiler";
+                case SystemLogType.Shader: return "Shader";
                 default: return systemLogType.ToString();
             }
         }
@@ -620,13 +621,26 @@ namespace FlowIoC.ConsoleModule
         /// whole promise of Flow Console being the console rather than a second one.
         /// Only the editor bridge calls it.
         /// </summary>
+        /// <summary>
+        /// The channel each door writes to. Flow does not come through here at all - it is the
+        /// door the framework and the game use - so it answers with the Unity channel the way any
+        /// unrecognised source does, rather than being given a channel of its own to sit in.
+        /// </summary>
+        internal static SystemLogType ChannelForSource(LogSource source)
+        {
+            switch (source)
+            {
+                case LogSource.Compiler: return SystemLogType.Compiler;
+                case LogSource.Shader: return SystemLogType.Shader;
+                default: return SystemLogType.Unity;
+            }
+        }
+
         public static void AddExternalLog(LogSource source, LogType logType, string message,
             string stackTrace, string filePath, int lineNumber)
         {
 #if UNITY_EDITOR
-            SystemLogType systemLogType = source == LogSource.Compiler
-                ? SystemLogType.Compiler
-                : SystemLogType.Unity;
+            SystemLogType systemLogType = ChannelForSource(source);
 
             string channel = SystemChannelName(systemLogType);
 
