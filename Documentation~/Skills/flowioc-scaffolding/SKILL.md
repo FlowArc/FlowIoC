@@ -78,7 +78,8 @@ Decide the rest before pressing Create:
 | `Systems` | ticked for you by **Role = System**. The module wants a surface - one injection instead of eight, or a chained list of what is available. A System needs no `System.cs`, so untick it for a module whose work is followed through its Context's command flow |
 | `Constants`, `Enums` | the module has either |
 | `Scenes`, `Resources`, `Art`, `Scriptables` | the module owns assets of that kind |
-| `Shared` | the module publishes data other modules read. Starts unticked. The public signal holder is **not** in here - that lives in `Scripts/Signals/`, which every module gets |
+| `Shared` | the module publishes data other modules read. Starts unticked. The public signal holder is **not** in here - that lives in `Scripts/Signals/`, which is a tick of its own |
+| `Signals` | the module has a public surface. Starts **ticked**, forced on for a screen module, not offered to a test module. Untick it for a Service that answers its caller rather than announcing, and for a Connector, which owns no signals at all |
 | `zSubModules`, `zTestModules`, `zScreenModules` | other modules will hang under this one |
 
 ### Adding a folder afterwards
@@ -96,16 +97,23 @@ signal holder for a module created without one.
 
 A module has two, and they are not the same kind of thing.
 
-**The public holder** goes in `Scripts/Signals/`, which every module gets and which is an assembly
-of its own - `Modules.Player.Signals`, beside `Modules.Player` and `Modules.Player.Shared`. It is
-the module's public surface: `PlayerSignals`, with nested `PlayerSignalsIncoming` and
-`PlayerSignalsOutgoing`, because those two halves are what a boundary is made of. Only a Connector
-references it - and the module's own test module, which may reference anything.
+**The public holder** goes in `Scripts/Signals/`, an assembly of its own - `Modules.Player.Signals`,
+beside `Modules.Player` and `Modules.Player.Shared`. It is the module's public surface:
+`PlayerSignals`, with nested `PlayerSignalsIncoming` and `PlayerSignalsOutgoing`, because those two
+halves are what a boundary is made of. Only a Connector references it - and the module's own test
+module, which may reference anything.
 
-The folder is mandatory and the assembly is not. A module with no public signals leaves
-`Scripts/Signals/` empty and writes no asmdef in it, and `Module Scanner` reads that as Ok rather
-than a finding: a DLL with nothing in it is worth nobody's build time. `ConnectorModule` is the case
-this exists for.
+**The folder is a choice, ticked by default.** Most modules have a public surface, and the ones that
+do not are worth naming: a Service that answers the caller it was given rather than announcing
+anything, and a Connector, which wires other modules' signals and owns none. Untick it and the
+module never has a `Scripts/Signals/` at all - no folder, no assembly, and no tool asking about
+either. A screen module is the exception and cannot untick it: it generates no Context of its own,
+so the holder is the only way anything reaches it.
+
+Where the folder is there, everything downstream of it is checked: the assembly inside it, its
+`.csproj.DotSettings`, and the reference from it to the module's own `Shared` assembly, which a
+public signal generic over a published type needs. Where it is not, none of that is asked and
+nothing puts the folder back.
 
 **The internal holder** goes in `Scripts/Runtime/Signals/`, inside the module's own assembly, and is
 named `PlayerInternalSignals` - the `XInternalSignals` form, not `XSignalsInternal`:

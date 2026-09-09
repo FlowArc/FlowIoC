@@ -24,6 +24,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string SCREEN_SETTINGS_LABEL = "Screen Settings:";
 
         private const string CREATE_SHARED_LABEL = "Create Shared";
+        private const string CREATE_SIGNALS_LABEL = "Create Signals";
 
         private const string NEW_ACTION = "NewAction";
         private const string ADD_ACTION = "Add Action";
@@ -289,6 +290,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             GUILayout.Space(COLUMNS_SPACING);
 
             EditorGUILayout.BeginHorizontal(GUILayout.Width(rightWidth));
+            CreateSignalsToggle();
             CreateSharedToggle();
             AllowAsSubContextToggle();
             GUILayout.FlexibleSpace();

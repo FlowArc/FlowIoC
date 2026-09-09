@@ -204,7 +204,7 @@ Modules/
         │   │   ├── UnityObjects/
         │   │   └── ValueObjects/
         │   └── Enums/
-        └── Signals/                 # Modules.Player.Signals.asmdef - always
+        └── Signals/                 # Modules.Player.Signals.asmdef - optional, ticked
             PlayerSignals            # the module's public surface
 ```
 
@@ -227,10 +227,17 @@ ScriptableObjects it publishes, and the enums and constants those need. No Model
 View - and not the signal holder. Whoever reads that data references `Modules.Player.Shared` and
 never `Modules.Player`.
 
-`Scripts/Signals/` is always there; `Scripts/Shared/` is a tick in `Create Module`, unticked,
-because a module pays for that assembly on the day it actually publishes something. The folder is
-mandatory but the assembly is not: a module with no public signals leaves `Scripts/Signals/` empty
-and writes no asmdef in it, which Module Scanner reads as Ok rather than as a finding.
+Both are ticks in `Create Module`. **`Scripts/Signals/` is ticked**, because most modules have a
+public surface; **`Scripts/Shared/` is unticked**, because a module pays for that assembly on the
+day it actually publishes something. A screen module is the one exception: its Signals tick is on
+and cannot be turned off, because a screen generates no Context of its own and the holder is the
+only way anything reaches it. A test module is offered neither.
+
+**A module without the folder is finished, not unfinished.** A Service that answers the caller it
+was given rather than announcing, and a Connector that wires other modules and owns no signals at
+all, both leave the tick off and never have a `Scripts/Signals/`. No tool asks about a folder that
+is not there and nothing puts it back. Where the folder is there, the assembly, the namespace
+settings and the references that follow from it are checked like everything else.
 
 For a module that already exists, use `Tools/FlowIoC/Add Shared or Signals` rather than making the
 folders by hand.

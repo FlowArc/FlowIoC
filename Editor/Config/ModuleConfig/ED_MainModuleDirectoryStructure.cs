@@ -197,15 +197,21 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                         IsNamespaceProvider = true
                     },
                     // The module's public signal holder, in an assembly of its own beside Runtime
-                    // and Shared. It is mandatory where Shared is optional: a module publishes
-                    // data only if it has any, but every module has a public surface, and keeping
-                    // the holder out of Shared is what stops a module that reads a neighbour's
-                    // published enum from being handed that neighbour's signals as well.
+                    // and Shared. Keeping it out of Shared is what stops a module that reads a
+                    // neighbour's published enum from being handed that neighbour's signals with
+                    // it.
+                    //
+                    // A choice, ticked by default. Most modules have a public surface, but not all:
+                    // a Service that answers the caller it was given rather than announcing, and a
+                    // Connector that wires other modules and owns no signals of its own, are both
+                    // finished without one - and a folder they cannot decline is a folder every
+                    // tool then has to explain away as empty.
                     new FolderEVO
                     {
                         FolderName = "Signals",
                         Type = FolderEVO.FolderType.PublicSignals,
-                        IsMandatory = true,
+                        IsMandatory = false,
+                        IsOptional = true,
                         IsNamespaceProvider = true
                     }
                 },
@@ -277,6 +283,11 @@ namespace FlowIoC.Editor.Config.ModuleConfig
             healed |= config.RemoveRetiredFolderTypes();
             healed |= config.RemoveRetiredFolderNames();
             healed |= config.MakeFolderOptional("Scriptables");
+
+            // Signals was mandatory in this layout until a module turned up that owes no public
+            // surface - a Service that answers its caller, a Connector that owns no signals at all.
+            // Only this layout: a screen module still cannot decline it.
+            healed |= config.MakeFolderOptional(FolderEVO.FolderType.PublicSignals);
 
             if (healed)
             {
@@ -350,8 +361,10 @@ namespace FlowIoC.Editor.Config.ModuleConfig
                     BuildSharedBranch(codeGenSettings),
                     // Signals is the third assembly, and the reason Shared holds data alone: a
                     // module that references a neighbour's Shared to read a published enum must
-                    // not get that neighbour's signal holder in scope with it.
-                    BuildPublicSignalsFolder(codeGenSettings)
+                    // not get that neighbour's signal holder in scope with it. Optional here and
+                    // mandatory in the screen layout - a screen has no Context of its own, so its
+                    // holder is the only way in.
+                    BuildPublicSignalsFolder(codeGenSettings, isMandatory: false)
                 }, true, false, false),
 
                 CreateFolder(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules], FolderEVO.FolderType.SubModules,

@@ -189,6 +189,35 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// </summary>
         internal bool MakeFolderOptional(string folderName) => MakeFolderOptional(RootFolders, folderName);
 
+        /// <summary>
+        /// The same by folder type, for a folder whose name a project is free to change. Signals
+        /// needs this one: a config asset written while the folder was mandatory keeps saying so,
+        /// and Create Module would go on offering no choice about it.
+        /// </summary>
+        internal bool MakeFolderOptional(FolderEVO.FolderType folderType) =>
+            MakeFolderOptional(RootFolders, folderType);
+
+        private static bool MakeFolderOptional(List<FolderEVO> folders, FolderEVO.FolderType folderType)
+        {
+            if (folders == null) return false;
+
+            bool changed = false;
+
+            foreach (FolderEVO folder in folders)
+            {
+                if (folder.Type == folderType && folder.IsMandatory)
+                {
+                    folder.IsMandatory = false;
+                    folder.IsOptional = true;
+                    changed = true;
+                }
+
+                changed |= MakeFolderOptional(folder.SubFolders, folderType);
+            }
+
+            return changed;
+        }
+
         private static bool MakeFolderOptional(List<FolderEVO> folders, string folderName)
         {
             if (folders == null) return false;
@@ -226,14 +255,16 @@ namespace FlowIoC.Editor.Config.ModuleConfig
         /// The Signals folder as every layout that has one lays it out: one folder holding the
         /// module's public signal holder and nothing else, which becomes Modules.X.Signals.
         ///
-        /// It is mandatory rather than optional, because every module has a public surface - a
-        /// module with no signal holder cannot be reached by a Connector at all. Shared is the
-        /// optional one now: a module pays for that assembly on the day it publishes data.
+        /// <paramref name="isMandatory"/> is the difference between the two layouts that have it.
+        /// A screen module cannot decline it: it generates no Context of its own, so the holder is
+        /// the only way anything reaches the screen. Everywhere else it is a choice, ticked by
+        /// default - a Service that answers the caller instead of announcing, and a Connector that
+        /// wires other modules and owns no signals at all, are both finished without one.
         /// </summary>
-        protected FolderEVO BuildPublicSignalsFolder(ED_CodeGenerator codeGenSettings)
+        protected FolderEVO BuildPublicSignalsFolder(ED_CodeGenerator codeGenSettings, bool isMandatory = true)
         {
             return CreateFolder(codeGenSettings.FolderNameFor(FolderEVO.FolderType.PublicSignals, "Signals"),
-                FolderEVO.FolderType.PublicSignals, null, true);
+                FolderEVO.FolderType.PublicSignals, null, isMandatory, !isMandatory);
         }
 
         /// <summary>

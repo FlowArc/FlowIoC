@@ -42,6 +42,15 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
                 + "because that subtree is what deleting it would take; a module that matches "
                 + "nothing itself is still drawn while something inside it matches.");
 
+            painter.Note(
+                "Important: MainModule, ConnectorModule and ScreenModule have no Delete. The project "
+                + "is built on them - the scene the game starts in, the one place modules are wired "
+                + "to each other, and the service every screen is opened through - and each row says "
+                + "which. Deleting one would not leave a smaller project, it would leave one that "
+                + "does not run, and this panel is thorough enough that there is no half-way state "
+                + "to recover from. GameplayModule arrives with them and is deletable: it is the "
+                + "worked example a game replaces with its own.");
+
             painter.Separator();
             painter.SubHeading("What goes with the folder");
             painter.Bullet("The module folder and everything under it, sub-modules included.");

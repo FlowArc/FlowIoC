@@ -17,6 +17,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         private string _searchText = "";
 
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
+        private readonly CoreModules _coreModules = new CoreModules();
 
         /// <summary>
         /// How far the indent is stepped per level of nesting. The rows are always expanded: what
@@ -62,7 +63,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                 + "its entry in the module index.\n\n"
                 + "A module is drawn under the module it lives in. Deleting one deletes its folder, "
                 + "so everything indented under it goes with it - delete those first if you meant "
-                + "to keep the module they are in.",
+                + "to keep the module they are in.\n\n"
+                + "MainModule, ConnectorModule and ScreenModule have no Delete: the project is "
+                + "built on them, and each row says which part.",
                 MessageType.Warning);
 
             EditorGUILayout.Space();
@@ -143,13 +146,38 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             DrawKindLabel(module.Type);
             GUILayout.FlexibleSpace();
 
+            string kept = _coreModules.WhyKept(module.Name);
+
+            if (kept != null) DrawKeptReason(kept);
+            else DrawDeleteButton(module);
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawDeleteButton(ModuleEntry module)
+        {
             GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
 
             if (GUILayout.Button("Delete", GUILayout.Width(60))) Delete(module);
 
             GUI.backgroundColor = Color.white;
+        }
 
-            EditorGUILayout.EndHorizontal();
+        /// <summary>
+        /// What the row says where the button would be, for one of the three modules the project is
+        /// built on. The reason goes in rather than a disabled button, because a button that cannot
+        /// be pressed says only that something is wrong and leaves the reader to guess what.
+        /// </summary>
+        private void DrawKeptReason(string reason)
+        {
+            var style = new GUIStyle(EditorStyles.miniLabel) {alignment = TextAnchor.MiddleRight};
+
+            Color previous = GUI.color;
+            GUI.color = new Color(previous.r, previous.g, previous.b, 0.6f);
+
+            GUILayout.Label(reason, style);
+
+            GUI.color = previous;
         }
 
         /// <summary>
