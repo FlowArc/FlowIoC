@@ -3,8 +3,9 @@
 namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 {
     /// <summary>
-    /// The Model generator. The file it writes is the easy half; which binder the pair is bound
-    /// through is the decision, and the window deliberately leaves it to the reader.
+    /// The Model generator. It writes the pair and binds it, and the toggle beside the name is the
+    /// part worth explaining: a dummy is an Editor affordance a test context swaps in, and a build
+    /// never sees it.
     /// </summary>
     internal class CreateModelPage : HelpPage
     {
@@ -22,7 +23,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         protected override string BodyTagline =>
             "The IPlayerModel interface and the PlayerModel behind it, in the module's Models "
-            + "folder with the right namespace.";
+            + "folder, bound in the module's Context.";
 
         protected override void DrawBody(HelpPainter painter)
         {
@@ -32,21 +33,26 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
             painter.SubHeading("Two files, one name");
             painter.Paragraph(
                 "Type Player and the window writes IPlayerModel and PlayerModel. The interface is "
-                + "what everything else injects, which is what lets a test module bind a fake in "
-                + "its place without the Commands knowing.");
+                + "what everything else injects, which is what lets a test module bind something "
+                + "else in its place without the Commands knowing.");
 
             painter.Separator();
-            painter.SubHeading("The binding is yours");
+            painter.SubHeading("The binding it writes");
             painter.Paragraph(
-                "The generator writes no binding, because which binder the pair goes through is a "
-                + "decision about the game rather than about the file.");
+                "The line goes into the Context's InjectionBindings, through the module's own "
+                + "binder. That is the right default: a model is the module's state, and a "
+                + "neighbour that reads it is a coupling somebody has to maintain.");
             painter.Code(
-                "InjectionBinder.Bind<IPlayerModel, PlayerModel>();              // module-private\n"
-                + "InjectionBinderCrossContext.Bind<IPlayerModel, PlayerModel>();  // shared",
-                "PlayerContext.cs - InjectionBindings");
+                "public override void InjectionBindings()\n"
+                + "{\n"
+                + "    base.InjectionBindings();\n"
+                + "    InjectionBinder.Bind<IPlayerModel,PlayerModel>();\n"
+                + "}",
+                "PlayerContext.cs - written for you");
             painter.Paragraph(
-                "Default to the module-private binder. Cross-context is for a model other modules "
-                + "genuinely read, and every one of those is a coupling somebody has to maintain.");
+                "A model other modules genuinely read is the exception, and it is your edit: change "
+                + "InjectionBinder to InjectionBinderCrossContext and the model is reachable from "
+                + "any context in the scene.");
 
             painter.Note(
                 "Important: a Model never subscribes to a signal. Nothing reaches in and changes "
@@ -55,12 +61,27 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
             painter.PageLink("Model", "Read: Model");
 
             painter.Separator();
-            painter.SubHeading("Parent Module");
+            painter.SubHeading("Create Dummy Model");
             painter.Paragraph(
-                "Any module may hold a model, so every module is offered, and the pair lands in "
-                + "that module's Models folder. A model that two modules need is not a model two "
-                + "modules bind - it is data one module publishes through its Shared assembly, or a "
-                + "Service.");
+                "Ticked, the window writes a PlayerDummyModel beside the pair and binds all three. "
+                + "The three-argument overload hands a test context the dummy and everything else "
+                + "the real one, so a test module runs against a stand-in without a second binding "
+                + "of its own.");
+            painter.Code(
+                "InjectionBinder.Bind<IPlayerModel, PlayerModel,PlayerDummyModel >();");
+            painter.Note(
+                "The dummy is an Editor affordance only. The swap sits behind UNITY_EDITOR and is "
+                + "made on Context.IsTest, so a build always gets the real implementation however a "
+                + "Root was left ticked in a scene.");
+
+            painter.Separator();
+            painter.SubHeading("Injectables and Parent Module");
+            painter.Paragraph(
+                "Each injectable row is written onto the model as a property, because injection "
+                + "targets properties and a plain field is skipped silently. Any module may hold a "
+                + "model, so every module is offered, and the pair lands in that module's Models "
+                + "folder. Data two modules need is not a model two modules bind - it is data one "
+                + "module publishes through its Shared assembly, or a Service.");
             painter.PageLink("Systems and Services", "Read: Systems and Services");
         }
     }

@@ -150,16 +150,21 @@ object instead, which is what the fifth parameter was going to be anyway.
 
 **Tools ▸ FlowIoC ▸ Create Model**
 
-Writes the `IXModel` / `XModel` pair into the module's `Models` folder. Bind it
-yourself:
+Writes the `IXModel` / `XModel` pair into the module's `Models` folder and binds it in
+the module's Context, through the module's own binder:
 
 ```csharp
-InjectionBinder.Bind<IEconomyModel, EconomyModel>();                 // module-private
-InjectionBinderCrossContext.Bind<IEconomyModel, EconomyModel>();     // shared
+InjectionBinder.Bind<IEconomyModel,EconomyModel>();                  // written for you
+InjectionBinderCrossContext.Bind<IEconomyModel, EconomyModel>();     // your edit, when shared
 ```
 
-Default to the module-private binder. Cross-context is for models other modules
-genuinely read, and every one of those is a coupling you will have to maintain.
+That default is the right one. Cross-context is for models other modules genuinely read,
+and every one of those is a coupling you will have to maintain.
+
+`Create Dummy Model` writes an `XDummyModel` beside the pair and binds all three. The
+three-argument overload hands a test context the dummy and everything else the real
+implementation; the swap sits behind `UNITY_EDITOR` and is made on `Context.IsTest`, so a
+build always gets the real one.
 
 ---
 
