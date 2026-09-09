@@ -24,7 +24,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string SCREEN_SETTINGS_LABEL = "Screen Settings:";
 
         private const string CREATE_SHARED_LABEL = "Create Shared";
-        private const string CREATE_SIGNALS_LABEL = "Create Signals";
+
+        // "Public" is the word doing the work. A module has two signal holders and only this one
+        // crosses a boundary; the other is written whether or not anybody ticks anything. Naming
+        // the halves instead - Incoming/Outgoing - would describe the holder's shape rather than
+        // what the tick decides, and would be twice as long for it.
+        private const string CREATE_SIGNALS_LABEL = "Create Public Signals";
+
+        /// <summary>
+        /// How wide an optional-folder toggle is drawn. Wide enough for the longest of them, so the
+        /// three in a row line up: a per-label width would leave the second column ragged.
+        /// </summary>
+        private const float TOGGLE_WIDTH = 150f;
 
         private const string NEW_ACTION = "NewAction";
         private const string ADD_ACTION = "Add Action";
@@ -144,6 +155,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private readonly ModuleRoleNaming _roleNaming = new();
 
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
+        private readonly FolderPreviewHints _previewHints = new FolderPreviewHints();
 
         private bool _createRoot;
         private bool _createContext;

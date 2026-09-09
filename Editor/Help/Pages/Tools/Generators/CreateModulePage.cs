@@ -61,9 +61,18 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
                 + "of its own is kept out of a Root's Add Sub Context list, since adding it elsewhere "
                 + "would build it a second time; this puts it back. Off by default.");
             painter.Bullet(
-                "Create Signals writes the public holder into Scripts/Signals and binds it in the "
-                + "Context. On by default, forced on for a Screen module, and not offered for a Test "
-                + "module, which wires other modules' signals rather than owning any.");
+                "Create Public Signals writes the public holder into Scripts/Signals and binds it "
+                + "in the Context. On by default, forced on for a Screen module - which generates no "
+                + "Context of its own, so the holder is the only way in - and not offered for a Test "
+                + "module, whose holder stays inside its own assembly. Untick it for a module that "
+                + "announces nothing: a Service that answers the caller it was given, or a Connector, "
+                + "which wires other modules' signals and owns none.");
+            painter.Bullet(
+                "\"Public\" is in the label because a module has two signal holders and only this "
+                + "one crosses a boundary. The other is written whether or not anything is ticked, "
+                + "and the two folders are both called Signals on purpose: the namespace segment is "
+                + "the folder name, so sharing it is what lets one using reach both holders. The "
+                + "Folder Structure Preview says which row is which.");
             painter.Bullet(
                 "Create Shared adds the assembly a module publishes its data through. Off by "
                 + "default: a module that hands no data to anyone has no use for it.");
@@ -75,7 +84,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
                 + "Structure Preview beside them shows exactly what will be written.");
 
             painter.Note(
-                "Important: Create Signals and Create Shared are offered on the day the module is "
+                "Important: Create Public Signals and Create Shared are offered on the day the module is "
                 + "created and never again. A module that turns out to need either later is not "
                 + "stuck - Add Shared or Signals writes the same thing into a module that already "
                 + "exists.");
