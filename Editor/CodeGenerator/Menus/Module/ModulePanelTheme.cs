@@ -34,6 +34,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         public Color Action => Header;
 
         /// <summary>
+        /// The minus beside a row the reader can remove, and Delete Module's Delete. It comes from
+        /// the palette rather than from this class, because the same button appears in windows that
+        /// have nothing to do with a module panel.
+        /// </summary>
+        public Color Danger => _palette.Danger;
+
+        /// <summary>
         /// A row's tint: the role's colour, lifted and then washed most of the way back to white.
         /// The rows are a list under a header, so they carry the colour rather than wear it.
         /// </summary>

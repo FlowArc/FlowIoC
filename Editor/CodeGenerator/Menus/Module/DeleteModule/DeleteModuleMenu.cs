@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                 DrawKindLabel(module.Type);
                 GUILayout.FlexibleSpace();
 
-                GUI.backgroundColor = Color.red;
+                GUI.backgroundColor = new ModulePanelTheme().Danger;
                 if (GUILayout.Button("Delete", GUILayout.Width(60)))
                 {
                     if (EditorUtility.DisplayDialog(
