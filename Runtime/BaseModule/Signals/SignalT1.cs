@@ -59,6 +59,14 @@ namespace FlowIoC.BaseModule.Signals
             _callbackOnce = null;
             once?.Invoke(param);
 
+            // One array per dispatch, and it stays that way. Pooling it was looked at and turned
+            // down: the array does not die when this method returns. CommandBinder hands it to a
+            // CommandGroupResolver, which holds it as _signalParameters until the run is disposed -
+            // and a run with a retained step lasts as long as whatever that step is waiting on. A
+            // sub group takes the same array again. Returning it to a pool therefore needs an owner
+            // count across every resolver that took it, and getting that wrong hands a live payload
+            // to somebody else's dispatch. That is a worse bug than one small array is a cost, and
+            // nothing has measured the array as one.
             _internalCallback?.Invoke(this, new[]
             {
                 param as object
