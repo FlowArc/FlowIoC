@@ -34,7 +34,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         private void OnGUI()
         {
             _bar.DrawWindow("Delete Module", "FlowIoC",
-                "Folder, assembly, settings, index entry and log channel", null, null, "Creating a Module");
+                "Folder, assembly, settings, index entry and log channel", null, null, "Delete Module");
 
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox(

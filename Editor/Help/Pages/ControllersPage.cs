@@ -6,10 +6,11 @@ using FlowIoC.Editor.Help.Graph;
 namespace FlowIoC.Editor.Help.Pages
 {
     /// <summary>
-    /// Controllers, read in four passes: what the folder is made of, then the Command in full,
-    /// then the Function beside it, then the rules on their own. The introduction carries no code
-    /// at all - a reader meets the two parts as a picture and walks the flow once, and the code
-    /// waits on the tab for whichever of the two they came for.
+    /// Controllers, read in five passes: what the folder is made of, then the Command in full,
+    /// then the Function beside it, then the commands the package already wrote, then the rules
+    /// on their own. The introduction carries no code at all - a reader meets the two parts as a
+    /// picture and walks the flow once, and the code waits on the tab for whichever of the two
+    /// they came for.
     /// </summary>
     internal class ControllersPage : HelpPage
     {
@@ -32,6 +33,11 @@ namespace FlowIoC.Editor.Help.Pages
                 "A sequence is read in order, and that reading is what a Command is for. A Function "
                 + "does its work without depending on where it sits, so it is what a Command "
                 + "reaches for mid-Execute, and what several Commands share."),
+            new HelpTab("Ready-made", DrawReadyMade,
+                "Some commands are already written. Bind them rather than writing them again.",
+                "The package ships two of them, and a module binds either straight from its "
+                + "Context. A module that ships commands for its own signals documents them on its "
+                + "own page; what is here is what any module may bind."),
             new HelpTab("Rules", DrawRules,
                 "The rules, in one list.",
                 "What a Command may hold, where a Function belongs, and what the Context is left saying.")
@@ -416,6 +422,13 @@ namespace FlowIoC.Editor.Help.Pages
                 + "new Signal(hideCommandLog: true) where the signal is declared. The attribute "
                 + "does not cover the dispatch and the flag does not cover the command lines, so "
                 + "a fully silent loop carries both.");
+
+            painter.Separator();
+            painter.SubHeading("Writing one");
+            painter.Paragraph(
+                "Create Command writes the file into the module's Controllers folder with the right "
+                + "namespace, and will write the binding into the Context for you.");
+            painter.PageLink("Create Command", "Open: Create Command");
         }
 
         /// <summary>
@@ -582,6 +595,102 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Note(
                 "A Function is deliberately invisible in the Flow Console. If you want the step "
                 + "logged with the rest of the flow, the work belongs in a Command instead.");
+
+            painter.Separator();
+            painter.SubHeading("Writing one");
+            painter.Paragraph(
+                "Create Function picks the base type for you. The parameters, the return type and "
+                + "the base's generic arguments all have to agree, which is where a hand-written "
+                + "function goes wrong.");
+            painter.PageLink("Create Function", "Open: Create Function");
+        }
+
+        /// <summary>
+        /// The commands the package already wrote. Both are here because a game reaches for them
+        /// from its own Context, unlike the ones a module ships for its own signals, which are
+        /// read on that module's page.
+        /// </summary>
+        private void DrawReadyMade(HelpPainter painter)
+        {
+            painter.SubHeading("DispatchSignalCommand - a step that only dispatches");
+            painter.Paragraph(
+                "A Command whose only job is to dispatch is not written. Bind this one and hand it "
+                + "the signal, and the flow is read from the Context rather than from four "
+                + "one-line files. It comes in four arities, one per signal payload.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.SubmitScore)\n"
+                + "    .ToSequence<SubmitScoreCommand>()\n"
+                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.ScoreSubmitted)\n"
+                + "    .ToSequence<DispatchSignalCommand<int>>(_signals.Outgoing.ScoreChanged, _score)\n"
+                + "    .ToSequence<DispatchSignalCommand<string, int>>(_signals.Outgoing.RankChanged, \"solo\", 3);");
+
+            painter.Space();
+            painter.Paragraph(
+                "It retains and releases inside the one Execute, so the step is complete by the "
+                + "time the dispatch has returned and the sequence carries straight on. What it "
+                + "dispatches is fixed at bind time - a value the Context cannot know yet is a "
+                + "Command of your own.");
+
+            painter.Separator();
+            painter.SubHeading("RetryCommand - a step that tries again");
+            painter.Paragraph(
+                "An abstract Command<int, float> for work that can fail and is worth attempting "
+                + "again: a request, a store connection, a save. It holds the step open the whole "
+                + "time, so the sequence behind it waits through every attempt and every pause.");
+
+            painter.Rule("What you write");
+            painter.Paragraph(
+                "Two methods. Execute starts the first attempt, and Try is what an attempt is. "
+                + "Whatever the work answers with calls one of two things back: your own Release "
+                + "when it worked, TryFailed when it did not.");
+            painter.Code(
+                "public class ConnectStoreCommand : RetryCommand\n"
+                + "{\n"
+                + "    [Inject] private IStoreService _store { get; set; }\n"
+                + "\n"
+                + "    public override void Execute(int retryLimit, float delay)\n"
+                + "    {\n"
+                + "        base.Execute(retryLimit, delay);\n"
+                + "        Try();\n"
+                + "    }\n"
+                + "\n"
+                + "    protected override void Try() => _store.Connect(OnConnected, TryFailed);\n"
+                + "\n"
+                + "    private void OnConnected() => Release();\n"
+                + "}",
+                "ConnectStoreCommand.cs");
+
+            painter.Space();
+            painter.Note(
+                "Important: base.Execute retains the step and counts the attempts, but it attempts "
+                + "nothing. The first Try is yours to call. An Execute that forgets it retains a "
+                + "step that never resolves, and the group waits for ever - there is no timeout and "
+                + "nothing is logged.");
+
+            painter.Space();
+            painter.Rule("What it does with a failure");
+            painter.Paragraph(
+                "TryFailed counts, waits and tries again until the limit is reached. The pause runs "
+                + "on the framework's coroutine provider in real time, so it survives a paused "
+                + "timescale and stops with the scene; a delay of zero retries on the spot.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.OpenShop)\n"
+                + "    .ToSequence<ConnectStoreCommand>(3, 1.5f)\n"
+                + "    .ToSequence<OpenShopScreenCommand>();");
+
+            painter.Space();
+            painter.Note(
+                "Important: the last failure calls Stop, not Release. The step is ended and the "
+                + "sequence behind it does not run, so the step after a RetryCommand is what "
+                + "happens on success only. Override RetryFailLimitReached to announce the failure "
+                + "before it stops.");
+
+            painter.Separator();
+            painter.SubHeading("What is not on this list");
+            painter.Paragraph(
+                "A module that ships commands for its own signals documents them on its own page. "
+                + "This list is what any module may bind, whichever modules a project happens to "
+                + "have installed.");
         }
 
         private void DrawRules(HelpPainter painter)
@@ -600,6 +709,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Command and a Function both live in Scripts/Runtime/Controllers. Both are controllers.");
             painter.Bullet("A Function derives from a shipped arity - FunctionVoid, FunctionReturn or AsyncFunction - never from FunctionBody.");
             painter.Bullet("Create Command and Create Function write the file for you. Prefer them over writing either by hand.");
+            painter.Bullet("The package ships RetryCommand and DispatchSignalCommand already written. The Ready-made tab is what a Context may bind without a file of its own.");
         }
 
         /// <summary>

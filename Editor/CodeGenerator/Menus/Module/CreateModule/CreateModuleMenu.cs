@@ -41,7 +41,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private const string WINDOW_TITLE = "Create Module";
         private const string WINDOW_SUBTITLE = "Folders, assembly, Root and Context";
-        private const string HELP_PAGE = "Creating a Module";
+        private const string HELP_PAGE = "Create Module";
 
         /// <summary>
         /// How tall the two panels are. They stand beside one another, so one height keeps their

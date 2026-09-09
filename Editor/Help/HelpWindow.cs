@@ -196,7 +196,7 @@ namespace FlowIoC.Editor.Help
         {
             _catalog = new HelpPageCatalog();
             _theme = new HelpTheme();
-            _painter = new HelpPainter(_theme);
+            _painter = new HelpPainter(_theme, _catalog);
             _selected = _catalog.OpeningPage;
             _openCategories.Clear();
 
