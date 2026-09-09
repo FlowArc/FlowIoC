@@ -260,7 +260,7 @@ namespace FlowIoC.Editor.ModelViewer.PropertyDrawer.Properties
 
             if(CanDeleteItem)
             {
-                GUI.backgroundColor = new FlowPalette().Danger;
+                GUI.backgroundColor = new FlowPalette().ActionRemove;
                 var removeButton = GUILayout.Button("-", GUILayout.Width(15));
                 GUI.backgroundColor = Color.white;
 

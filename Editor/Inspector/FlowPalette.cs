@@ -78,6 +78,16 @@ namespace FlowIoC.Editor.Inspector
         public Color Strip(Color deep) => new Color(deep.r, deep.g, deep.b, 0.22f);
 
         /// <summary>
+        /// What a button that adds a row to a list is tinted with - Add Injectable, Add Parameter,
+        /// Add Action. It is lifted the same way <see cref="ActionRemove"/> is and for the same
+        /// reason, but by less: green reads far brighter than red at the same value, and the add
+        /// button is a band across the window while the minus beside it is thirty pixels wide, so
+        /// matching the numbers would not match what the eye is given. What is matched is that
+        /// neither button is the near-black <c>Color.green</c> and <c>Color.red</c> came back as.
+        /// </summary>
+        public Color ActionAdd => new Color(0.58f, 1.42f, 0.6f);
+
+        /// <summary>
         /// What a button that takes something away is tinted with - a list row's minus, Delete
         /// Module's Delete.
         ///
@@ -88,7 +98,7 @@ namespace FlowIoC.Editor.Inspector
         /// up instead, which is the same trick <c>ModulePanelTheme.Lifted</c> plays on a panel bar,
         /// and green and blue stay far enough down to keep it red rather than pink.
         /// </summary>
-        public Color Danger => new Color(1.7f, 0.42f, 0.38f);
+        public Color ActionRemove => new Color(1.7f, 0.42f, 0.38f);
 
         public Color Title => Color.white;
 
