@@ -142,7 +142,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField(ACTIONS_LABEL, EditorStyles.boldLabel);
 
-            GUI.backgroundColor = Color.green;
+            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
             if (GUILayout.Button(ADD_ACTION_BUTTON))
             {
                 _actionNames.Add("NewAction");
@@ -161,7 +161,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 _actionNames[i] = EditorGUILayout.TextField(_actionNames[i]);
 
-                GUI.backgroundColor = new ModulePanelTheme().Danger;
+                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
 
                 if (GUILayout.Button("-", GUILayout.Width(30)))
                     removeAt = i;

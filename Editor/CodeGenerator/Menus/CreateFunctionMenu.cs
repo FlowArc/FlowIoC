@@ -152,7 +152,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.LabelField(PARAMETERS_LABEL, EditorStyles.boldLabel);
 
             EditorGUI.BeginDisabledGroup(_parameters.Count >= FunctionScriptWriter.MAX_PARAMETERS);
-            GUI.backgroundColor = Color.green;
+            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
 
             if (GUILayout.Button(ADD_PARAMETER_BUTTON))
                 _parameters.Add(new FunctionParameter {Type = "int", Name = "value"});
@@ -172,7 +172,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 _parameters[i].Type = EditorGUILayout.TextField(_parameters[i].Type);
                 _parameters[i].Name = EditorGUILayout.TextField(_parameters[i].Name);
 
-                GUI.backgroundColor = new ModulePanelTheme().Danger;
+                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
 
                 if (GUILayout.Button("-", GUILayout.Width(30)))
                     removeAt = i;
@@ -191,7 +191,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField(INJECTABLES_LABEL, EditorStyles.boldLabel);
 
-            GUI.backgroundColor = Color.green;
+            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
 
             if (GUILayout.Button(ADD_INJECTABLE_BUTTON))
                 _injectableNames.Add("NewInjectable");
@@ -208,7 +208,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 DisplayInjectableStatus(_injectableNames[i]);
 
-                GUI.backgroundColor = new ModulePanelTheme().Danger;
+                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
 
                 if (GUILayout.Button("-", GUILayout.Width(30)))
                     removeAt = i;
