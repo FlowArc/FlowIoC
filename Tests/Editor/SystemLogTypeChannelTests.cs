@@ -45,6 +45,100 @@ namespace FlowIoC.Tests
             }
         }
 
+        /// <summary>
+        /// 35 was Model, retired because nothing could write to it. A retired number is never
+        /// reused, so this is what says so - the next channel added takes the next free number
+        /// rather than the hole this one left.
+        /// </summary>
+        [Test]
+        public void The_number_a_retired_channel_used_is_not_handed_out_again()
+        {
+            foreach (SystemLogType value in Enum.GetValues(typeof(SystemLogType)))
+                Assert.AreNotEqual(35, (int) value, $"{value} took the number the Model channel retired.");
+        }
+
+        /// <summary>
+        /// A settings asset written before a channel was retired still carries its row, and a
+        /// mandatory row cannot be deleted from the Filters panel. Without the prune the project
+        /// keeps a column nothing can fill and nobody can remove.
+        /// </summary>
+        [Test]
+        public void A_row_for_a_channel_the_enum_no_longer_declares_is_dropped()
+        {
+            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
+
+            try
+            {
+                settings.LogTypes.Add(new CD_FlowConsole.FlowConsoleLogTypeCVO
+                {
+                    Name = "Model", Value = 35, IsVisible = true, IsMandatory = true
+                });
+
+                // Looked up once so the name cache holds the stale row. A prune that drops it from
+                // the list and leaves the cache alone still answers this call with it.
+                settings.RebuildCache();
+                Assert.IsTrue(settings.TryGetLogType("Model", out _), "The row under test was never there.");
+
+                Assert.IsTrue(settings.PruneRetiredSystemLogTypes(), "The stale row was not seen.");
+                Assert.IsFalse(settings.TryGetLogType("Model", out _), "The stale row is still there.");
+            }
+            finally
+            {
+                ScriptableObject.DestroyImmediate(settings);
+            }
+        }
+
+        /// <summary>
+        /// The prune reads a row's mandatory flag, not its name, so a game's own channel - which
+        /// is never in the enum - has to survive it.
+        /// </summary>
+        [Test]
+        public void A_projects_own_channel_survives_the_prune()
+        {
+            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
+
+            try
+            {
+                settings.LogTypes.Add(new CD_FlowConsole.FlowConsoleLogTypeCVO
+                {
+                    Name = "PlayerModule", Value = 1000, IsVisible = true, IsMandatory = false
+                });
+
+                settings.RebuildCache();
+                settings.PruneRetiredSystemLogTypes();
+
+                Assert.IsTrue(settings.TryGetLogType("PlayerModule", out _), "A project channel was pruned.");
+            }
+            finally
+            {
+                ScriptableObject.DestroyImmediate(settings);
+            }
+        }
+
+        /// <summary>
+        /// Default is a mandatory profile and is not a channel, so the enum cannot vouch for it.
+        /// Pruning it would leave every log written without a profile printing no tag at all.
+        /// </summary>
+        [Test]
+        public void The_Default_profile_survives_the_prune()
+        {
+            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
+
+            try
+            {
+                settings.LogProfiles.Add(new FlowLogProfileData {Name = "Model", IsMandatory = true});
+
+                settings.PruneRetiredSystemProfiles();
+
+                Assert.IsNull(settings.LogProfiles.Find(p => p.Name == "Model"), "The stale profile is still there.");
+                Assert.IsNotNull(settings.LogProfiles.Find(p => p.Name == "Default"), "Default was pruned.");
+            }
+            finally
+            {
+                ScriptableObject.DestroyImmediate(settings);
+            }
+        }
+
         [Test]
         public void The_new_channels_are_not_left_white()
         {

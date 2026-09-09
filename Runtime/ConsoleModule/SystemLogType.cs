@@ -1,5 +1,15 @@
 namespace FlowIoC.ConsoleModule
 {
+    /// <summary>
+    /// The framework's own channels. Every one of them has something that writes to it: a value
+    /// here with no producer is a column in the Filters panel that never fills, and a reader who
+    /// unticks it learns nothing.
+    ///
+    /// 35 was Model, retired because nothing could ever write to it. The overloads that take a
+    /// SystemLogType are internal, so a game reaches only the string-channel ones - which is the
+    /// right shape, since a Model is game code and logs on the module's own channel. A retired
+    /// number is never reused.
+    /// </summary>
     public enum SystemLogType
     {
         All = 0,
@@ -11,7 +21,6 @@ namespace FlowIoC.ConsoleModule
         Function = 20,
         Screen = 25,
         Pool = 30,
-        Model = 35,
         Asset = 40,
 
         /// <summary>Anything Unity itself wrote - Debug.Log, an exception, a native warning.</summary>
