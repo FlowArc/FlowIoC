@@ -77,6 +77,13 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "Logging compiles out unless the ENABLE_LOG scripting define is set, so lines you "
                 + "leave in cost a shipped build nothing. The framework's own channels are always "
                 + "there, so watching a flow does not need any log lines of your own.");
+            painter.Note(
+                "Important: an error is the exception, and it is logged exactly once. "
+                + "FlowLogger.LogError carries no [Conditional], so an error reaches the console "
+                + "with or without ENABLE_LOG - a project with logging switched off is the one that "
+                + "most needs to be told something is broken. So never put a Debug.LogError beside "
+                + "a FlowLogger.LogError for the same fault: FlowLogger forwards to Debug itself, "
+                + "and the pair prints the error twice whenever logging is on.");
             painter.Paragraph(
                 "The channel list in FlowLogType is generated from the modules present in the "
                 + "project. Change the modules, not the generated file.");

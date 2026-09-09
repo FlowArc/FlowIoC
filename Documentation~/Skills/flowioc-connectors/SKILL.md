@@ -54,14 +54,14 @@ public class HeroConnectorSubContext : Context
         _playerProfileSignals = InjectionBinderCrossContext.GetInstance<PlayerProfileSignals>();
 
         IncomingSignals();
-        OutGoingSignals();
+        OutgoingSignals();
     }
 
     private void IncomingSignals() =>
         _heroSignals.Outgoing.DecreaseCurrency
             .Connect(_playerProfileSignals.Incoming.DecreaseCurrency);
 
-    private void OutGoingSignals() =>
+    private void OutgoingSignals() =>
         _playerProfileSignals.Outgoing.CurrencyChanged
             .Connect(_heroSignals.Incoming.CurrencyChanged);
 }
@@ -88,9 +88,10 @@ initialise after the modules it wires, and breaks silently the day the scene is 
 
 ## Naming and shape
 
-- One sub-context per counterpart module, named after it: `HeroConnectorSubContext`,
-  `MainConnectorSubContext`.
-- Split the wiring into `IncomingSignals()` and `OutGoingSignals()` so a reader sees at a
+- One sub-context per counterpart module, named after it — never after the pair:
+  `CameraConnectorSubContext`, not `MainCameraConnectorSubContext`. The Connector already sits in
+  the application's main flow, so naming the pair repeats it.
+- Split the wiring into `IncomingSignals()` and `OutgoingSignals()` so a reader sees at a
   glance what arrives and what leaves.
 - Hold each holder in a private field named after the module: `_heroSignals`.
 

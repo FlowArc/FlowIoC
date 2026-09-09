@@ -100,6 +100,18 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Connect<T> has to infer T, so connecting two Signal<DifficultyType> needs "
                 + "Modules.Gameplay.Shared even though the Connector never touches the value - "
                 + "without it the compiler reports CS0012.");
+            painter.Paragraph(
+                "A sub-context is named after the one counterpart module, never after the pair. The "
+                + "Connector already sits in the application's main flow, so "
+                + "CameraConnectorSubContext says everything MainCameraConnectorSubContext says and "
+                + "reads as one of a set.");
+            painter.Paragraph(
+                "Once there is more than one connection, split the wiring by direction rather than "
+                + "by module. Setup calls IncomingSignals, which connects the counterpart's Outgoing "
+                + "into this side, and OutgoingSignals, which connects this side's Outgoing into the "
+                + "counterpart; DestroyContext calls the matching UnbindIncomingSignals and "
+                + "UnbindOutgoingSignals. Named for the direction, a method says which way the "
+                + "traffic goes - BindMainToCamera has to be re-read every time.");
 
             painter.Separator();
             painter.SubHeading("Where it is listed");
