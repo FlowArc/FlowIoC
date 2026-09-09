@@ -5,6 +5,79 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1] - 2026-09-09
+
+### Added
+
+- **A shader that will not compile reaches Flow Console.** A window promising to be *the* console
+  rather than a second one showed nothing at all for a broken shader. There is no callback for it,
+  so `ShaderLogBridge` reads the messages off the asset with `ShaderUtil` after an import - a third
+  bridge beside the two `UnityLogBridge` holds open, and one that needs no parking in `SessionState`
+  because importing a shader does not reload the domain. `Shader` is a channel of its own rather
+  than part of `Compiler`: a C# error stops the domain reloading and nothing runs at all, while a
+  broken shader renders one material magenta and everything else carries on, so somebody filtering
+  to `Compiler` to ask whether they can press play would get the wrong answer.
+- **The same shader error is no longer shown twice.** It arrives once off the asset at import,
+  carrying the file and the line, and once as text when the variant actually compiles, carrying
+  neither - so the second row was one nobody could double-click. It is dropped, but only when the
+  first copy was really recorded: a variant that fails at play time was never imported, and Unity's
+  text is then the only copy there is.
+- **Delete Module draws the project's module tree**, a module under the module it lives in, each row
+  with its own Delete, and the confirmation naming what goes with the module being deleted.
+- **The Folder Structure Preview says which `Signals` folder is which.** A module has one under
+  `Scripts` and another under `Scripts/Runtime`, and read as names they are indistinguishable. They
+  share the name on purpose - the namespace segment is the folder name, so both holders land in
+  `Modules.Player.Signals` and one `using` reaches both. The public row now carries *the module's
+  public surface* and the Runtime row *what the module says to itself*, dimmed, beside the name. No
+  other folder gets a hint: a preview where every line carries prose is a preview nobody reads.
+
+### Changed
+
+- **`Scripts/Signals` is a tick in Create Module rather than a mandatory folder**, ticked by default
+  and beside Create Shared. The public holder was mandatory on every layout, so a module that owes
+  no public surface still got the folder and every tool afterwards had to explain it away as empty -
+  and a Service that answers the caller it was given, or a Connector that wires other modules and
+  owns no signals at all, is finished without one. A screen module still cannot decline it: it
+  generates no Context of its own, so the holder is the only way in. A test module is offered
+  neither. Where the folder is absent nothing asks about it and nothing puts it back, and a config
+  asset written while it was mandatory is healed to optional on load.
+- **The tick is named Create Public Signals.** *Public* is the word doing the work: a module has two
+  holders and only this one crosses a boundary.
+- **`MainModule`, `ConnectorModule` and `ScreenModule` have no Delete button**, each row saying which
+  part of the project is built on it. `GameplayModule` ships beside them and stays deletable - it is
+  the worked example a game replaces.
+
+### Removed
+
+- **The `Model` channel.** Nothing could ever write to it: every `FlowLogger` overload taking a
+  `SystemLogType` is `internal`, so a game reaches only the string-channel ones - which is the right
+  shape, since a Model is game code and logs on its module's channel. It was an empty column in the
+  Filters panel. `35` is retired and never reused, the way the enum rule says.
+
+### Fixed
+
+- **A retired channel's row leaves the settings asset.** `EnsureSystemLogTypesExist` and
+  `EnsureSystemProfilesExist` only ever added, so an asset written before a channel was retired kept
+  a mandatory row for it - and a mandatory row cannot be deleted from the Filters panel, leaving a
+  column nothing could fill and nobody could remove. Both healers now drop a mandatory entry whose
+  channel the enum no longer declares, and both clear their caches when they do. `Default` is named
+  explicitly in the profile prune: it is mandatory and is not a channel, so the enum cannot vouch
+  for it.
+- **Delete Module reaches a module nested inside another.** It worked out which modules it was
+  deleting two different ways: `RemoveReferencesToModule` and `RemoveProjectFiles` read every asmdef
+  under the folder, while `RemoveScreenAddressables` and `RemoveLogType` worked from the deleted
+  module's name alone - so a main module holding a screen module left the screen's Addressables
+  group behind, empty, and its `FlowLogType` channel in the settings. `ModuleNames` now answers the
+  module and every module nested inside it, read from the folder rather than the module index,
+  because the deleter runs before the index is rebuilt.
+- **Add Shared gives the new Shared assembly to the module's Signals assembly.** It reached the
+  module's asmdef and its direct children but not the Signals assembly, so a module that gained
+  Shared after Signals failed with CS0012 on the first public signal generic over a published type.
+  `SignalsSharedReferenceCheck` reports and repairs the modules the gap already reached.
+- **`WriteSignalHolders` no longer falls back to `Scripts/Runtime/Signals`** when the public folder
+  is absent. The fallback was invisible while the folder was mandatory and would now quietly write a
+  public holder into the module's own assembly, where nothing outside it can reach it.
+
 ## [1.11.0] - 2026-09-09
 
 ### Added
