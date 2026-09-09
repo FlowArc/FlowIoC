@@ -59,6 +59,8 @@ namespace FlowIoC.BaseModule.Signals
             _callbackOnce = null;
             once?.Invoke(param1, param2, param3);
 
+            // The array is allocated per dispatch on purpose - see the note in SignalT1.Dispatch,
+            // which is where the reason for not pooling it is written out.
             _internalCallback?.Invoke(this, new[]
             {
                 param1 as object,

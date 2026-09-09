@@ -49,6 +49,17 @@ namespace FlowIoC.BaseModule.Contexts
             CoreBindings();
         }
 
+        /// <summary>
+        /// Every cross-context object is walked here, once per context - N Roots by M objects at
+        /// startup - and that repetition is deliberate rather than waiting to be optimised away.
+        ///
+        /// It is what resolves a forward reference between modules that bind in any order. A module
+        /// whose dependency is bound by a Root later in Initialize Order is filled when that later
+        /// Root reaches this method, and the only way to know which pass will be the one that
+        /// completes an object is to make every pass. Per-type entries and the setter delegates
+        /// already made a pass cheap; what is left is the count of passes, and the count is the
+        /// feature.
+        /// </summary>
         void IContext.InjectAllInstances()
         {
             Inject(InjectionBinder.GetAllInjectionBindings());
