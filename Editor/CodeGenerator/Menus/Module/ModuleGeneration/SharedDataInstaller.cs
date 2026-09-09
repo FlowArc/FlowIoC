@@ -22,15 +22,26 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     internal class SharedDataInstaller
     {
         private readonly SharedAssemblyDefinition _sharedAssembly;
+        private readonly SignalsAssemblyDefinition _signalsAssembly;
         private readonly AssemblyDefinitionReferences _references;
 
-        public SharedDataInstaller() : this(new SharedAssemblyDefinition(), new AssemblyDefinitionReferences())
+        public SharedDataInstaller() : this(
+            new SharedAssemblyDefinition(), new SignalsAssemblyDefinition(), new AssemblyDefinitionReferences())
         {
         }
 
         internal SharedDataInstaller(SharedAssemblyDefinition sharedAssembly, AssemblyDefinitionReferences references)
+            : this(sharedAssembly, new SignalsAssemblyDefinition(), references)
+        {
+        }
+
+        internal SharedDataInstaller(
+            SharedAssemblyDefinition sharedAssembly,
+            SignalsAssemblyDefinition signalsAssembly,
+            AssemblyDefinitionReferences references)
         {
             _sharedAssembly = sharedAssembly;
+            _signalsAssembly = signalsAssembly;
             _references = references;
         }
 
@@ -70,6 +81,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             // the data it just published.
             AddReference(moduleAsmdefPath, sharedAssemblyName, moduleAssemblyName, report);
 
+            AddReferenceToSignals(modulePath, config, sharedAssemblyName, report);
+
             AddReferenceToChildren(registry, module, sharedAssemblyName, report);
 
             ModuleGenerator.AddSubAssemblyNamespaceExceptions(config, modulePath, sharedAssemblyName);
@@ -105,6 +118,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (!string.IsNullOrEmpty(created)) report.CreatedAssembly(created);
 
             return created;
+        }
+
+        /// <summary>
+        /// The module's own Signals assembly, which is not a child of it but needs the reference
+        /// for a reason of its own: a public signal is often generic over a type the module
+        /// publishes, so the holder's assembly has to see the Shared assembly that type lives in.
+        ///
+        /// Create Module writes that reference when both assemblies are made together, and
+        /// SignalsInstaller writes it when Signals arrives after Shared. This is the third order -
+        /// Signals first, then Shared - and without it the first such signal fails to compile with
+        /// CS0012 while everything about the module looks finished.
+        /// </summary>
+        private void AddReferenceToSignals(
+            string modulePath, DirectoryStructureConfig config, string sharedAssemblyName, ModuleInstallReport report)
+        {
+            string signalsAsmdefPath = _signalsAssembly.FindPathIn(modulePath, config);
+
+            if (string.IsNullOrEmpty(signalsAsmdefPath)) return;
+
+            AddReference(
+                signalsAsmdefPath, sharedAssemblyName, Path.GetFileNameWithoutExtension(signalsAsmdefPath), report);
         }
 
         /// <summary>

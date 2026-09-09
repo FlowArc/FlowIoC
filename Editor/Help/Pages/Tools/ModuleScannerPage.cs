@@ -45,6 +45,11 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "module it lives in, and for a test module that module's Signals and its own "
                 + "assembly.");
             painter.Bullet(
+                "Signals-to-Shared reference - a module's Signals assembly names the module's own "
+                + "Shared assembly, because a public signal is often generic over a type the "
+                + "module publishes and the two are separate assemblies. Without it the holder "
+                + "does not compile and the compiler reports CS0012.");
+            painter.Bullet(
                 "Signal references - no module but a Connector names another module's .Signals "
                 + "assembly. Reading a neighbour's Shared data is ordinary; reaching its signals "
                 + "is the crossing a Connector exists for. The row reports and does not repair: "

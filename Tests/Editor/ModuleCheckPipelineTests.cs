@@ -26,7 +26,8 @@ namespace FlowIoC.Tests
             CollectionAssert.AreEqual(
                 new[]
                 {
-                    "folders", "shared-assembly", "signals-assembly", "assembly", "references", "signal-references",
+                    "folders", "shared-assembly", "signals-assembly", "assembly", "references",
+                    "signals-shared-reference", "signal-references",
                     "dotsettings", "log-type-part", "module-card"
                 },
                 ids);

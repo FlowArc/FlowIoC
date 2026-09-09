@@ -10,9 +10,11 @@ namespace FlowIoC.Editor.ModuleScanner
     /// order: Scripts/Shared and Scripts/Signals have to exist before their asmdefs can be
     /// written, the module asmdef references both so both come first, the Signals assembly
     /// references Shared so Shared comes before it, references are added to an asmdef that must
-    /// already exist, and the DotSettings file name derives from the final assembly name. The
-    /// signal-reference check reads a finished reference list, so it comes after the one that
-    /// adds to it, the log type part is checked once the module's own assemblies are settled
+    /// already exist, and the DotSettings file name derives from the final assembly name. The two
+    /// reference checks come next and in that order - the module's own asmdef, then the Signals
+    /// asmdef that has to name the Shared assembly written above. The signal-reference check reads
+    /// a finished reference list, so it comes after the ones that
+    /// add to it, the log type part is checked once the module's own assemblies are settled
     /// because its asmref is about which assembly the part lands in, and the card is written last
     /// because its block names the assemblies every check above it settles. On the project side the index is refreshed first, and the orphan
     /// sweep runs after the assemblies are known so that a newly written one is not mistaken for
@@ -34,6 +36,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 new SignalsAssemblyCheck(),
                 new AssemblyDefinitionCheck(),
                 new AssemblyReferencesCheck(),
+                new SignalsSharedReferenceCheck(),
                 new SignalReferenceCheck(),
                 new DotSettingsCheck(),
                 new LogTypePartCheck(),

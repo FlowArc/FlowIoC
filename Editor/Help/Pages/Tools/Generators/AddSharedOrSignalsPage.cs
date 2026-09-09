@@ -35,9 +35,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
             painter.Paragraph(
                 "Add Shared gives a module what Create Module would have: the Scripts/Shared "
                 + "folders, an assembly of its own, its namespace settings file, and the references "
-                + "from the module and from every screen, sub and test module already under it. A "
-                + "neighbour then reads a config asset the module authored without gaining access "
-                + "to its Models, its Commands or its signals.");
+                + "from the module, from its own Signals assembly, and from every screen, sub and "
+                + "test module already under it. A neighbour then reads a config asset the module "
+                + "authored without gaining access to its Models, its Commands or its signals.");
+            painter.Paragraph(
+                "The Signals assembly gets the reference for a reason of its own: a public signal "
+                + "is often generic over a type the module publishes, so the holder's assembly has "
+                + "to see the Shared assembly that type lives in. Module Scanner reports it as a "
+                + "row of its own for a module that gained the two in some other order.");
 
             painter.Separator();
             painter.SubHeading("Signals - the module's public surface");
