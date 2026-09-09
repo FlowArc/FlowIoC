@@ -1308,8 +1308,13 @@ while FlowIoC is installed, and names the check and the folder to delete if it i
 
 | Skill | Covers |
 |---|---|
-| `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, and which folder each kind belongs in. |
 | `flowioc-scaffolding` | Which menu item lays a module out and what to fill in, why the optional folders are the step that is easiest to get wrong, where the `.csproj.DotSettings` files land, and how to drive the generators from a terminal against an open Editor. |
+| `flowioc-controllers` | Writing a Command and a Function, which of the two a piece of work is, the shapes a binding takes, and resolving a `Retain` on every path out - including the two an `await` adds. |
+| `flowioc-screens` | A screen module's context and its `ScreenCVO`, opening a screen and filling it, the state guard on a Mediator, and the animation callbacks a pooled screen depends on. |
+| `flowioc-connectors` | The one place two modules meet: getting the holders rather than binding them, wiring by direction, and what a Connector may not decide. |
+| `flowioc-systems-services` | Which of the three kinds a module is, when work earns a Service of its own, giving a System a surface, and where a piece of data belongs. |
+| `flowioc-root-order` | Where a Root sits in the scene, what its Initialize Order decides and what it does not, and reading a null holder or a Connector that wired nothing. |
+| `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, and which folder each kind belongs in. |
 
 The skills ship in `Documentation~/Skills/`.
 
