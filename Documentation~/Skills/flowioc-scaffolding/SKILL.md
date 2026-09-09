@@ -1,6 +1,6 @@
 ---
 name: flowioc-scaffolding
-description: Use when creating, extending or deleting a module in a FlowIoC Unity project - a new main, screen or test module, a Shared data assembly on a module that already exists, a Command, Model or View, or when namespaces and .csproj.DotSettings need rebuilding after any of that.
+description: Use when creating, extending or deleting a module in a FlowIoC Unity project - a new main, screen or test module, a Shared or Signals assembly on a module that already exists, generating the files for a Model or a View, or when namespaces and .csproj.DotSettings need rebuilding after any of that.
 ---
 
 # FlowIoC Scaffolding
