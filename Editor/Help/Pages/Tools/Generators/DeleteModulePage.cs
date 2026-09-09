@@ -30,6 +30,19 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
             painter.Image(_images.Get("DeleteModuleWindow.png"),
                 "Every module in the project, searchable, with a Delete beside each.");
 
+            painter.SubHeading("The list is the project's module tree");
+            painter.Paragraph(
+                "A module is drawn under the module it lives in - a screen module under the module "
+                + "whose feature it shows, a test module under what it exercises - because deleting "
+                + "one deletes its folder, and everything indented under it goes with it. Each row "
+                + "has its own Delete, so a sub-module can be removed on its own first, and the "
+                + "confirmation on a module that holds others names them before you answer it.");
+            painter.Paragraph(
+                "Searching keeps the shape. A module that matches brings its whole subtree with it, "
+                + "because that subtree is what deleting it would take; a module that matches "
+                + "nothing itself is still drawn while something inside it matches.");
+
+            painter.Separator();
             painter.SubHeading("What goes with the folder");
             painter.Bullet("The module folder and everything under it, sub-modules included.");
             painter.Bullet(
@@ -37,14 +50,17 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
                 + "asmdefs inside the folder rather than derived from the module's name, so a "
                 + "module that holds sub-modules takes their assemblies with it.");
             painter.Bullet("The project files and namespace settings named after those assemblies.");
-            painter.Bullet("Its entry in the module index, and its Flow Console log channel.");
+            painter.Bullet(
+                "Its entry in the module index, and the Flow Console log channel of the module and "
+                + "of every module inside it.");
             painter.Bullet(
                 "Its assemblies stripped out of every asmdef in the project that named them. Deleting "
                 + "a module by hand leaves those references behind, and the compile error that "
                 + "follows names the module that referenced it rather than the one you removed.");
             painter.Bullet(
                 "A screen module's Addressables entry, and the group it was in when that leaves the "
-                + "group empty.");
+                + "group empty - for the module being deleted and for every screen module inside "
+                + "it, so deleting a module that holds screens does not leave their groups behind.");
 
             painter.Separator();
             painter.SubHeading("The question it asks first");

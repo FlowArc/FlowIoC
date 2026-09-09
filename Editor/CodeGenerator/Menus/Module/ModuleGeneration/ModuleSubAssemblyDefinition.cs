@@ -65,12 +65,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// </summary>
         public string FindIn(string modulePath, DirectoryStructureConfig config)
         {
+            string asmdefPath = FindPathIn(modulePath, config);
+
+            return string.IsNullOrEmpty(asmdefPath) ? null : Path.GetFileNameWithoutExtension(asmdefPath);
+        }
+
+        /// <summary>
+        /// The same assembly as <see cref="FindIn"/>, as the file rather than the name - for a
+        /// caller that has to edit the asmdef rather than name it.
+        /// </summary>
+        public string FindPathIn(string modulePath, DirectoryStructureConfig config)
+        {
             string folderPath = ResolveFolder(modulePath, config);
             if (string.IsNullOrEmpty(folderPath)) return null;
 
             string[] asmdefFiles = Directory.GetFiles(folderPath, "*.asmdef", SearchOption.TopDirectoryOnly);
 
-            return asmdefFiles.Length == 0 ? null : Path.GetFileNameWithoutExtension(asmdefFiles[0]);
+            return asmdefFiles.Length == 0 ? null : asmdefFiles[0];
         }
 
         /// <summary>
