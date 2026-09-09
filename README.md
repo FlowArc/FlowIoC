@@ -2,7 +2,8 @@
 
 [![openupm](https://img.shields.io/npm/v/com.flowarc.flowioc.core?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.flowarc.flowioc.core/)
 
-**A signal-driven IoC container and modular MVC framework for the Unity Engine.**
+**A signal-driven IoC container and modular MVC framework for the Unity Engine — for the
+people writing the game and the coding agents working beside them.**
 
 FlowIoC splits a game into self-contained **modules**. Each module owns its data
 (Models), its logic (Commands and Functions), its presentation (Views and
@@ -10,6 +11,29 @@ Mediators), and a public **Signal** surface. Modules never reference each other'
 internals — they are wired together declaratively by **Connectors**. The result is
 a codebase where a feature can be added, tested in isolation, or deleted without
 touching the rest of the game.
+
+An architecture is a set of rules the compiler cannot enforce. FlowIoC ships those rules
+next to the container, twice over — once for the people on the team, once for the
+assistants they work with.
+
+**For the team.** Editor tooling that makes the structure the path of least resistance
+rather than a document nobody reopens. `Create Module` scaffolds the whole shape —
+folders, assemblies, Root and Context. The **Module Scanner** reports what every module
+actually looks like and repairs what is safe to repair, the **Model Viewer** shows live
+model state, and the **Flow Console** traces a signal from dispatch to the command that
+handled it.
+
+**For the coding agents.** The same rules, written where an assistant already looks.
+FlowIoC keeps a versioned rule block in the project's `AGENTS.md` and `CLAUDE.md` — the
+convention Claude Code, Codex, Cursor, Zed and Gemini CLI all read — and installs
+task-specific **skills** under `.claude/skills`, one per kind of work: scaffolding a
+module, writing a Command, wiring a Connector, laying out a screen. An assistant that has
+been handed the shape of a Command does not read half the repository to infer it, so a
+task costs fewer tokens and comes back with the conventions already followed rather than
+corrected in review.
+
+Both are kept current from one window — **Tools ▸ FlowIoC ▸ Agent Scanner** — and either
+can be switched off per project.
 
 ---
 
