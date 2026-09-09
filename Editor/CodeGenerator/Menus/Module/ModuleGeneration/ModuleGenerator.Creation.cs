@@ -134,9 +134,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// The public holder goes into Scripts/Signals so it compiles into the module's Signals
         /// assembly: a Connector reaches a module's signals through Modules.X.Signals, and neither
         /// the assembly holding its Models and Commands nor the Shared assembly holding its
-        /// published data will do. A module created without that folder falls back to
-        /// Scripts/Runtime/Signals so the module still works - it just cannot be wired to from
-        /// outside without a direct reference.
+        /// published data will do. A module created without that folder gets no public holder at
+        /// all - that is what leaving the folder out means. It used to fall back to
+        /// Scripts/Runtime/Signals, which was invisible while the folder was mandatory and would
+        /// now quietly hand a module a public holder nothing outside it can reach.
         ///
         /// The internal holder always goes into Scripts/Runtime/Signals, because it is the module
         /// talking to its own commands and nothing outside the module may dispatch it. The two
@@ -161,10 +162,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (!string.IsNullOrEmpty(publicSignalsPath) && !Directory.Exists(publicSignalsPath))
                 publicSignalsPath = null;
 
-            if (string.IsNullOrEmpty(publicSignalsPath))
-                publicSignalsPath = signalsPath;
-
-            if (string.IsNullOrEmpty(publicSignalsPath))
+            if (string.IsNullOrEmpty(publicSignalsPath) && string.IsNullOrEmpty(signalsPath))
             {
                 Debug.LogWarning(SIGNALS_WARNING);
                 return;
@@ -174,11 +172,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string contextPath = rootsAndContextsPath + "/" + contextName + ".cs";
             bool bindInContext = createContext && !string.IsNullOrEmpty(rootsAndContextsPath);
 
-            string signalsName = CreateSignals(publicSignalsPath, moduleName + "Signals", "TempSignals",
-                CodeGeneratorStrings.TempSignalsPath, isTest, true, out string signalsNamespace);
+            if (!string.IsNullOrEmpty(publicSignalsPath))
+            {
+                string signalsName = CreateSignals(publicSignalsPath, moduleName + "Signals", "TempSignals",
+                    CodeGeneratorStrings.TempSignalsPath, isTest, true, out string signalsNamespace);
 
-            if (bindInContext)
-                CodeGeneratorUtils.BindSignalsInContext(contextPath, signalsName, signalsNamespace);
+                if (bindInContext)
+                    CodeGeneratorUtils.BindSignalsInContext(contextPath, signalsName, signalsNamespace);
+            }
 
             if (string.IsNullOrEmpty(signalsPath)) return;
 

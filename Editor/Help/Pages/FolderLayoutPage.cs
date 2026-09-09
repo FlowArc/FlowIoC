@@ -113,11 +113,16 @@ namespace FlowIoC.Editor.Help.Pages
                 + "so one using reaches both. The generator writes a .csproj.DotSettings per "
                 + "assembly for that, beside the module's own.");
             painter.Note(
-                "Signals is on every module. Shared is offered on main, sub and screen modules and "
-                + "starts unticked - a module pays for that assembly on the day it publishes "
-                + "something. A test module is the one kind without it. If two modules need the "
-                + "same data and neither owns it, that data belongs in a module of its own - the "
-                + "same answer as for a Service more than one module needs.");
+                "Both are ticks in Create Module. Signals starts ticked, because most modules have "
+                + "a public surface; Shared starts unticked, because a module pays for that "
+                + "assembly on the day it publishes something. A test module is offered neither, "
+                + "and a screen module cannot decline Signals - it generates no Context of its own, "
+                + "so the holder is the only way in. Everywhere else the Signals tick comes off "
+                + "freely: a Service that answers its caller rather than announcing, and a "
+                + "Connector that owns no signals at all, are finished without the folder, and "
+                + "nothing puts it back. If two modules need the same data and neither owns it, "
+                + "that data belongs in a module of its own - the same answer as for a Service more "
+                + "than one module needs.");
         }
     }
 }

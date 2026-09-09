@@ -447,6 +447,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             OptionalFolderToggle(FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL, withheldFrom: null);
 
         /// <summary>
+        /// The module's public signal holder. Ticked by default, because most modules have a public
+        /// surface, and left tickable because not all of them do: a Service that answers the caller
+        /// it was given rather than announcing, and a Connector that wires other modules and owns no
+        /// signals, are both finished without one - and the folder they cannot decline is a folder
+        /// every tool afterwards has to explain away as empty.
+        ///
+        /// A test module is never offered it: its holder lives in Scripts/Runtime/Signals, nothing
+        /// outside dispatches into it, and the test layout has no Signals folder to name. A screen
+        /// module is shown the toggle ticked and disabled, because its layout marks the folder
+        /// mandatory - a screen generates no Context of its own, so the holder is the only way in.
+        /// </summary>
+        private void CreateSignalsToggle() =>
+            OptionalFolderToggle(
+                FolderEVO.FolderType.PublicSignals, CREATE_SIGNALS_LABEL,
+                withheldFrom: new[] {ModuleType.Test});
+
+        /// <summary>
         /// Whether the module gets signal holders written. There is no toggle for it any more:
         /// the public holder lives in Scripts/Signals and the internal one in the Runtime Signals
         /// folder, so the answer is simply whether either folder is going to exist - which the
@@ -532,15 +549,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             return isSelected;
         }
 
+        /// <summary>
+        /// Both signal folders start ticked: the internal holder in Scripts/Runtime/Signals, which
+        /// has no toggle of its own, and the public holder in Scripts/Signals, which does. Most
+        /// modules want both, so the reader unticks rather than hunts.
+        /// </summary>
         private void SelectSignalsFolderByDefault()
         {
-            FolderEVO signalsFolder = FindSignalsFolder();
+            SelectByDefault(FindSignalsFolder());
+            SelectByDefault(FindFolderInConfig(FolderEVO.FolderType.PublicSignals));
+        }
 
-            if (signalsFolder == null || !signalsFolder.IsOptional) return;
+        private void SelectByDefault(FolderEVO folder)
+        {
+            if (folder == null || !folder.IsOptional) return;
             if (_selectedModuleType == ModuleType.Test) return;
-            if (_selectedOptionalFolders.Contains(signalsFolder)) return;
+            if (_selectedOptionalFolders.Contains(folder)) return;
 
-            _selectedOptionalFolders.Add(signalsFolder);
+            _selectedOptionalFolders.Add(folder);
         }
 
         /// <summary>

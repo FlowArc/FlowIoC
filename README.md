@@ -1374,8 +1374,15 @@ Both extra assemblies are carved out by an asmdef sitting in the folder — Unit
 every file to the nearest asmdef above it — so the module references both to reach its
 own published data and its own holder.
 
-`Scripts/Signals/` is on every module. `Scripts/Shared/` is a tick in **Create Module**,
-unticked, because a module pays for that assembly on the day it publishes something.
+Both folders are ticks in **Create Module**. `Scripts/Signals/` is ticked, because most
+modules have a public surface. `Scripts/Shared/` is unticked, because a module pays for
+that assembly on the day it publishes something.
+
+A screen module cannot decline Signals: it generates no Context of its own, so the holder
+is the only way anything reaches it. Everywhere else the tick comes off freely — a Service
+that answers the caller it was given rather than announcing, and a Connector that wires
+other modules and owns no signals at all, are both finished without the folder. Nothing
+puts it back, and nothing asks about a folder that is not there.
 
 ### Module cards
 

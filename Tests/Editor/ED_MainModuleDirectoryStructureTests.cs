@@ -251,7 +251,7 @@ namespace FlowIoC.Tests
         /// its signal holder as well.
         /// </summary>
         [Test]
-        public void The_generated_default_carries_a_mandatory_Signals_folder_next_to_Runtime()
+        public void The_generated_default_carries_an_optional_Signals_folder_next_to_Runtime()
         {
             InitializeDefaults();
 
@@ -260,8 +260,34 @@ namespace FlowIoC.Tests
 
             Assert.IsNotNull(signals, "Scripts should carry a public Signals folder beside Runtime and Shared.");
             Assert.AreEqual("Signals", signals.FolderName);
-            Assert.IsTrue(signals.IsMandatory, "Every module has a public surface, so the folder is not a tick.");
+            Assert.IsFalse(signals.IsMandatory,
+                "A Service that answers its caller and a Connector that owns no signals both do without it.");
+            Assert.IsTrue(signals.IsOptional, "It is a tick in Create Module, and one that starts ticked.");
             Assert.IsTrue(signals.IsNamespaceProvider);
+        }
+
+        /// <summary>
+        /// A config asset written while the folder was mandatory keeps saying so, and Create Module
+        /// would go on offering no choice about it. The heal on GetOrCreateConfig is what catches
+        /// up a project that already exists.
+        /// </summary>
+        [Test]
+        public void An_asset_that_still_marks_Signals_mandatory_is_healed_to_optional()
+        {
+            InitializeDefaults();
+
+            FolderEVO signals = Find(_config.RootFolders, "Scripts")
+                .SubFolders.Single(f => f.Type == FolderEVO.FolderType.PublicSignals);
+
+            signals.IsMandatory = true;
+            signals.IsOptional = false;
+
+            Assert.IsTrue(_config.MakeFolderOptional(FolderEVO.FolderType.PublicSignals));
+            Assert.IsFalse(signals.IsMandatory);
+            Assert.IsTrue(signals.IsOptional);
+
+            Assert.IsFalse(_config.MakeFolderOptional(FolderEVO.FolderType.PublicSignals),
+                "A second pass has nothing left to change and must not report one.");
         }
 
         [Test]
