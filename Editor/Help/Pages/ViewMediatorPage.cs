@@ -107,6 +107,17 @@ namespace FlowIoC.Editor.Help.Pages
                 + "inside a prefab looks like it worked and is empty again when the asset is saved, "
                 + "so a prefab that has to reach a Root outside its own hierarchy names it with Root "
                 + "Name.");
+            painter.Note(
+                "Important: a View sits on a child of its Root, never on the Root's own GameObject. "
+                + "Bubble Up starts the walk at the View's parent, so a View authored on the Root "
+                + "itself is invisible to it - the View registers against nothing, its Mediator "
+                + "never runs, and nothing is logged. Put the Canvas that carries the ViewInjector "
+                + "and the View script under the Root.");
+            painter.Paragraph(
+                "That also decides what to do when a View finds no Context: fix the hierarchy rather "
+                + "than switch Context Source. Selected Root and Root Name are the escape hatch for "
+                + "a View that genuinely cannot be authored under its Root, not the answer to one "
+                + "that could have been.");
 
             painter.Separator();
             painter.SubHeading("A screen view is pooled");

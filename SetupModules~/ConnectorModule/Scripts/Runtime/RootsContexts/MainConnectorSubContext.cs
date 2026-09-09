@@ -21,7 +21,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _gameplayScreenSignals = InjectionBinderCrossContext.GetInstance<GameplayScreenSignals>();
 
             IncomingSignals();
-            OutGoingSignals();
+            OutgoingSignals();
         }
 
         private void IncomingSignals()
@@ -29,7 +29,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _mainSignals.Outgoing.Started.Connect(_mainScreenSignals.Incoming.OpenMainScreen);
         }
 
-        private void OutGoingSignals()
+        private void OutgoingSignals()
         {
             _mainScreenSignals.Outgoing.DifficultySelected.Connect(_gameplayScreenSignals.Incoming.OpenGameplayScreen);
         }
@@ -37,7 +37,7 @@ namespace Modules.ConnectorModule.RootsContexts
         public override void DestroyContext()
         {
             UnbindIncomingSignals();
-            UnbindOutGoingSignals();
+            UnbindOutgoingSignals();
 
             base.DestroyContext();
         }
@@ -45,7 +45,7 @@ namespace Modules.ConnectorModule.RootsContexts
         private void UnbindIncomingSignals() =>
             _mainSignals.Outgoing.Started.Disconnect();
 
-        private void UnbindOutGoingSignals() =>
+        private void UnbindOutgoingSignals() =>
             _mainScreenSignals.Outgoing.DifficultySelected.Disconnect();
     }
 }

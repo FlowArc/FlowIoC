@@ -32,6 +32,7 @@ touching the rest of the game.
 - [Agent Scanner](#agent-scanner)
 - [Module Layout Convention](#module-layout-convention)
 - [Data Types](#data-types)
+- [Code Style](#code-style)
 - [Documentation Index](#documentation-index)
 - [License](#license)
 
@@ -912,6 +913,17 @@ reach a Root outside its own hierarchy uses `Root Name`. A screen answers none o
 the three: the screen service names the owning Context on the injector itself,
 which outranks whatever the entry says.
 
+**A View sits on a child of its Root, never on the Root's own GameObject.** `Bubble Up`
+starts the walk at `view.transform.parent`, so a view authored on the Root itself is
+invisible to it — the view registers against nothing, its Mediator never runs, and
+nothing is logged. Put the `Canvas` that carries the `ViewInjector` and the view script
+under the Root, the way a module's test scene does.
+
+That also decides what to do when a view finds no Context: fix the hierarchy rather than
+switch **Context Source**. `Selected Root` and `Root Name` are the escape hatch for a view
+that genuinely cannot be authored under its Root, not the answer to one that could have
+been.
+
 Clear **Auto Register** for a view in the ViewInjector list to take over yourself:
 
 ```csharp
@@ -928,6 +940,16 @@ _view.UnRegister();
 Connectors are what keep modules independent. A module dispatches its `Outgoing`
 signals without knowing who listens; a Connector context joins those to other
 modules' `Incoming` signals.
+
+A sub-context is named after the one counterpart module, never after the pair. The
+Connector already sits in the application's main flow, so `CameraConnectorSubContext`
+says everything `MainCameraConnectorSubContext` says and reads as one of a set.
+
+Its wiring is split by direction rather than by module. `IncomingSignals()` connects
+the counterpart's `Outgoing` into this side and `OutgoingSignals()` connects this side's
+`Outgoing` into the counterpart, and `DestroyContext()` calls the matching
+`UnbindIncomingSignals()` and `UnbindOutgoingSignals()`. Named for the direction, a
+method says which way the traffic goes; `BindMainToCamera` has to be re-read every time.
 
 A Connector **gets** the signal holders, it never binds them. Each module binds its own
 holder during its binding phase, and by the time any `Setup()` runs every one of them
@@ -949,7 +971,7 @@ public class HeroConnectorSubContext : Context
     {
         Signals();
         IncomingSignals();
-        OutGoingSignals();
+        OutgoingSignals();
     }
 
     private void Signals()
@@ -965,7 +987,7 @@ public class HeroConnectorSubContext : Context
         _heroSelectionScreenSignals.Outgoing.SelectHero.Connect(_heroSignals.Incoming.SelectHero);
     }
 
-    private void OutGoingSignals()
+    private void OutgoingSignals()
     {
         _heroSignals.Outgoing.DecreaseCurrency.Connect(_playerProfileSignals.Incoming.DecreaseCurrency);
     }
@@ -1145,6 +1167,12 @@ the command's own logging lines rather than the Context that binds it. A rename 
 literal stale, and that is the cheaper of the two costs.
 
 Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
+
+**An error is the exception, and it is logged exactly once.** `FlowLogger.LogError` carries no
+`[Conditional]`, so an error reaches the console with or without `ENABLE_LOG` — a project with
+logging switched off is the one that most needs to be told something is broken. So never put a
+`Debug.LogError` beside a `FlowLogger.LogError` for the same fault: `FlowLogger` forwards to
+`Debug` itself, and the pair prints the error twice whenever logging is on.
 
 ---
 
@@ -1557,6 +1585,35 @@ Which prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings
 *Tools ▸ FlowIoC ▸ Module Scanner*. What each one means is the
 table above, and the agent rules carry a short version of it so an AI assistant names data the
 same way.
+
+---
+
+## Code Style
+
+The naming rules, prefixes, suffixes and spacing are declared in `<Solution>.sln.DotSettings` at
+the project root and written by *Tools ▸ FlowIoC ▸ Module Scanner*. Two rules are worth stating in
+prose, because a settings file cannot express either.
+
+**Methods that are alternatives to each other share a verb prefix.** Pressing `.` and typing the
+verb then offers the whole set, and a reader who knows one of them finds the others without opening
+the documentation. The function provider's three terminators are the worked example — `Execute()`,
+`ExecuteAsync()` and `ExecuteAndGetResult<T>()` rather than `Run()`, `RunAsync()` and
+`GetResult<T>()`, which reads better one name at a time and breaks the family in half. Weigh
+discoverability above the prettiest individual name whenever a caller has to choose between the
+members of a set. It is the rule that groups a Service's verbs under nouns, applied one level down:
+there it keeps the list short, here it keeps siblings adjacent in it.
+
+**Keep `static` to what the engine forces.** Static state cannot be reset between domain reloads,
+cannot be substituted in a test, and hides the lifetime of whatever it caches. Write an ordinary
+class with instance members and give it an owner that holds the instance. Unity forces a few entry
+points — `[InitializeOnLoad]`, `[InitializeOnLoadMethod]`, `[MenuItem]`, and the
+`ScriptableObject` / `EditorWindow` factory calls — and those stay as thin as they can be, ideally
+a small bootstrap type whose only job is to hold the one instance the callback needs.
+
+**Every enum value carries its number.** Unity serializes an enum as an int, so a value inserted in
+the middle silently renumbers everything below it and every asset already on disk then reads back
+as the wrong thing. Numbered, a value can be deleted outright and the next one takes the next free
+number. A number a deleted value used is never reused.
 
 ---
 

@@ -337,6 +337,16 @@ so follow the rules below deliberately.
 - A GameObject a module needs in the scene goes under that module's Root. The Root is the
   module's one presence in the scene, so an EventSystem, an adapter, or anything else the
   module owns hangs off it rather than sitting loose beside it.
+- **A View sits on a child of its Root, never on the Root's own GameObject.** A view finds its
+  Context by bubbling up the hierarchy, and the walk starts at `view.transform.parent` - so a view
+  authored on the Root itself is invisible to it. Nothing is logged: the view registers against
+  nothing and its Mediator never runs. The `Canvas` that carries the `ViewInjector` and the view
+  script is a child of the Root, which is what a module's test scene looks like.
+- **A view that found no Context is a hierarchy to fix, not a `ContextSource` to change.** The
+  injector also offers a selected Root and a Root named by string, and those are the escape hatch
+  for a view that genuinely cannot be authored under its Root - a screen the screen service
+  instantiates under a layer. Reaching for one because bubbling up came back empty hides the
+  authoring mistake instead of mending it.
 - A module whose work outlives a scene makes its Root persistent in `BeforeCreateContext`,
   which runs just before the context is built:
 
@@ -668,10 +678,37 @@ public class HeroConnectorSubContext : Context
 `Connect` also accepts a plain delegate, and can adapt between signals whose parameter
 types differ by taking a converter as its second argument.
 
+**A sub-context is named after the one counterpart module, never after the pair.** The Connector
+already sits in the application's main flow, so `CameraConnectorSubContext` says everything
+`MainCameraConnectorSubContext` says and reads as one of a set.
+
+**Its wiring is split by direction.** Once `Setup` has the two holders it calls `IncomingSignals()`
+and `OutgoingSignals()` - the first connects the counterpart's `Outgoing` into this side, the second
+connects this side's `Outgoing` into the counterpart. `DestroyContext` calls the matching
+`UnbindIncomingSignals()` and `UnbindOutgoingSignals()` before `base.DestroyContext()`. The methods
+are named for the direction and not for the modules, because `BindMainToCamera` has to be re-read
+every time to work out which way the traffic goes.
+
 ### Code style
 
 The code style is declared in `<Solution>.sln.DotSettings` at the project root - naming rules,
 prefixes and suffixes, spacing. Read it before writing C# and follow what it says.
+
+**Methods that are alternatives to each other share a verb prefix.** Pressing `.` and typing the
+verb then offers the whole set, and a reader who knows one of them finds the others without opening
+the documentation. The function provider's three terminators are the worked example: `Execute()`,
+`ExecuteAsync()` and `ExecuteAndGetResult<T>()` rather than `Run()`, `RunAsync()` and
+`GetResult<T>()`, which reads better one name at a time and breaks the family in half. Weigh
+discoverability above the prettiest individual name whenever a caller has to choose between the
+members of a set. This is the rule that groups a Service's verbs under nouns, applied one level
+down: there it keeps the list short, here it keeps siblings adjacent in it.
+
+**Keep `static` to what the engine forces.** Static state cannot be reset between domain reloads,
+cannot be substituted in a test, and hides the lifetime of whatever it caches. Write an ordinary
+class with instance members and give it an owner that holds the instance. Unity forces a few entry
+points - `[InitializeOnLoad]`, `[InitializeOnLoadMethod]`, `[MenuItem]`, and the
+`ScriptableObject`/`EditorWindow` factory calls - and those stay as thin as they can be, ideally a
+small bootstrap type whose only job is to hold the one instance the callback needs.
 
 **Every enum value carries its number.** Write `Folder = 0, ViewsAndMediators = 1` rather than
 letting the compiler count, because Unity serializes an enum as an int: a value inserted in the
@@ -711,6 +748,13 @@ else.
 Logging compiles out unless the `ENABLE_LOG` scripting define is set. The framework already
 logs its own contexts, injections, signals and commands on built-in channels, so watching a
 flow does not require adding log lines.
+
+**An error is the exception, and it is logged exactly once.** `FlowLogger.LogError` carries no
+`[Conditional]`, so an error reaches the console whether or not `ENABLE_LOG` is defined - a project
+with logging switched off is exactly the one that most needs to be told something is broken. What
+follows from that is the second half: never put a `Debug.LogError` beside a `FlowLogger.LogError`
+for the same fault. `FlowLogger` forwards to `Debug` itself, so the pair prints the error twice
+whenever logging is on. One call site per error.
 
 ### Deeper documentation
 
