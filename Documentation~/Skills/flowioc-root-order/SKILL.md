@@ -1,6 +1,6 @@
 ---
 name: flowioc-root-order
-description: Use when placing a Root in a FlowIoC scene or choosing its Initialize Order - adding a new module Root, a Service Root, a Connector or a screen Root, deciding which context binds before which, or debugging a null signal holder, a missing binding or a Connector that wired nothing.
+description: Use when placing a Root in a FlowIoC scene or choosing its Initialize Order - adding a new module Root, a Service Root, a Connector or a screen Root, deciding which context binds before which, making a Root persistent across a scene load and knowing what its context takes back when it is destroyed, or debugging a null signal holder, a missing binding or a Connector that wired nothing.
 ---
 
 # Ordering Roots in FlowIoC
@@ -92,6 +92,38 @@ would work just as well.
   module's `Outgoing` to another's `Incoming`. It is the only phase that may reach across modules.
 - **`Launch()` starts the game.** It runs after every `Setup()`, and it dispatches the module's
   first signal - the entry point's `Launch` being the one that starts the flow.
+
+## A Root that outlives its scene, and what a context takes back
+
+A module whose work has to survive a scene load makes its Root persistent in
+`BeforeCreateContext`, which runs just before the context is built:
+
+```csharp
+protected override void BeforeCreateContext()
+{
+    transform.SetParent(null);
+    DontDestroyOnLoad(gameObject);
+}
+```
+
+The `SetParent` is not decoration. Unity marks only root-level objects as do-not-destroy, so a
+Root authored under something else has to detach itself first.
+
+**A context takes back what it bound across.** `DestroyContext` empties the context's own binder
+and removes from `InjectionBinderCrossContext` everything this context put there - its signal
+holder, its Service interface - so a module's public surface lives exactly as long as its Root. A
+scene's module goes with the scene and is bound fresh when the scene comes back; a persistent
+Root's Service lives for the whole run, because that Root is never torn down. What was handed in
+with `BindInstance` - the two providers - belongs to the run and stays.
+
+Two things follow, and both are easy to get wrong:
+
+- **A persistent module never keeps hold of a scene module's holder or Service.** A Service knows
+  nobody anyway, and the one place that reaches across is a Connector, which is rebuilt with its
+  scene: it gets holders in `Setup` and disconnects them in `DestroyContext`.
+- **A module that has to start clean when its scene comes back has nothing to reset.** Its Models
+  and its signal holder are new instances. Writing a reset pass for them is work the teardown
+  already did.
 
 ## Choosing a number for a new Root
 
