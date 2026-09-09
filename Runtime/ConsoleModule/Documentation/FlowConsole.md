@@ -34,19 +34,32 @@ Open it at **Tools ▸ FlowIoC ▸ Console ▸ Flow Console**.
 | `Function` | Function execution |
 | `Screen` | Screen open, show, hide, unload, layer decisions |
 | `Pool` | Pool creation, checkout, return |
-| `Model` | Model activity |
 | `Asset` | Asset load and release |
 
 You never write to these — they are the framework narrating itself. You toggle them
 in the console window.
 
-Two of them are not the framework narrating itself. `Unity` carries anything Unity
-wrote — a `Debug.Log`, an exception, a native warning — and `Compiler` carries compile
-errors and warnings, taken from `CompilationPipeline`. They are read through Unity's
-public API and nothing else, so a Unity upgrade cannot quietly break them. Both are
-recorded whether or not `ENABLE_LOG` is defined: turning the define off is a statement
-about *your* logging, and a console that then showed no compile errors would be useless
-at the moment it is most needed.
+Three of them are not the framework narrating itself. `Unity` carries anything Unity
+wrote — a `Debug.Log`, an exception, a native warning. `Compiler` carries compile errors
+and warnings, taken from `CompilationPipeline`. `Shader` carries a shader that would not
+compile, read off the asset with `ShaderUtil` after it is imported. They are read through
+Unity's public API and nothing else, so a Unity upgrade cannot quietly break them. All
+three are recorded whether or not `ENABLE_LOG` is defined: turning the define off is a
+statement about *your* logging, and a console that then showed no compile errors would be
+useless at the moment it is most needed.
+
+`Shader` is a channel of its own rather than part of `Compiler`, because the two answer
+different questions. A C# error stops the domain reloading and nothing runs at all; a
+broken shader renders one material magenta and everything else carries on. Somebody who
+filters to `Compiler` is asking whether they can press play, and shader rows in that column
+would answer the wrong question.
+
+A shader error reaches Unity's own console twice over: once off the asset when it is
+imported, carrying the file and the line, and once as text when the variant actually
+compiles, carrying neither. Flow Console keeps the first and drops the second, so the row
+you see is the one you can double-click open. The second copy is dropped only when the
+first was really recorded — a variant that fails at play time was never imported, so
+Unity's text is then the only copy there is and it is kept.
 
 **Project channels** are yours: one per module, auto-registered, and generated as a `const string`
 on `FlowLogType`. A module's channel is declared **in the module**, in a part of its own:

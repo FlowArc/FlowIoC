@@ -307,9 +307,10 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>
-        /// The two channels that are not the framework narrating itself: what Unity wrote, and what
-        /// the compiler said. They carry the output this window exists to take over from Unity's
-        /// console, so they sit at the top of the panel rather than among the framework's own.
+        /// The channels that are not the framework narrating itself: what Unity wrote, what the
+        /// compiler said, and what a shader would not compile into. They carry the output this
+        /// window exists to take over from Unity's console, so they sit at the top of the panel
+        /// rather than among the framework's own.
         /// </summary>
         private void UnityChannelRowsGUI()
         {
@@ -324,11 +325,20 @@ namespace FlowIoC.Editor.Console
             }
         }
 
-        private static readonly SystemLogType[] UnityChannels = {SystemLogType.Unity, SystemLogType.Compiler};
+        private static readonly SystemLogType[] UnityChannels =
+            {SystemLogType.Unity, SystemLogType.Compiler, SystemLogType.Shader};
 
+        /// <summary>
+        /// Read off the list above rather than repeating it, so a channel added to the group is
+        /// drawn there and skipped below without the two saying different things.
+        /// </summary>
         private static bool IsUnityChannel(int value)
         {
-            return value == (int) SystemLogType.Unity || value == (int) SystemLogType.Compiler;
+            for (int i = 0; i < UnityChannels.Length; i++)
+                if ((int) UnityChannels[i] == value)
+                    return true;
+
+            return false;
         }
 
         private void SystemChannelRowsGUI()

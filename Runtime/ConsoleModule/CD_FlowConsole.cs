@@ -633,6 +633,7 @@ namespace FlowIoC.ConsoleModule
                 case SystemLogType.Asset: return new Color(0.922f, 0.902f, 0.808f);
                 case SystemLogType.Unity: return new Color(0.962f, 0.937f, 0.84f);
                 case SystemLogType.Compiler: return new Color(0.887f, 0.762f, 0.757f);
+                case SystemLogType.Shader: return new Color(0.949f, 0.741f, 0.518f);
                 default: return Color.white;
             }
         }

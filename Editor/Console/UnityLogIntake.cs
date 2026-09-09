@@ -39,6 +39,27 @@ namespace FlowIoC.Editor.Console
             new(@"\(\d+,\d+\):\s*(error|warning)\s+\w+\d+:", RegexOptions.Compiled);
 
         /// <summary>
+        /// Whether the message is a shader diagnostic Unity is printing to its own console.
+        ///
+        /// The same error arrives twice here as well: once off the asset at import, carrying the
+        /// file and the line, and once as this text when the variant actually compiles, carrying
+        /// neither. Saying yes is only half the answer - the caller drops it only if the shader
+        /// bridge really did record that error, because a variant that fails at play time was
+        /// never imported and this text is then the only copy there is.
+        /// </summary>
+        public bool IsShaderMessage(string message)
+        {
+            return message != null && ShaderMessage.IsMatch(message);
+        }
+
+        /// <summary>
+        /// What Unity prints for a shader diagnostic: the word Shader, error or warning, then the
+        /// shader's name in quotes.
+        /// </summary>
+        private static readonly Regex ShaderMessage =
+            new(@"^Shader\s+(error|warning)\s+in\s+'", RegexOptions.Compiled);
+
+        /// <summary>
         /// Folds Exception and Assert onto Error. The console offers three filters, so a kind
         /// outside them would answer to none and could neither be hidden nor found.
         /// </summary>

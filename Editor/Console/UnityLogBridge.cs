@@ -56,6 +56,12 @@ namespace FlowIoC.Editor.Console
             // over, with the file and the line this copy does not carry.
             if (Intake.IsCompilerMessage(condition)) return;
 
+            // Same again for a shader, with one difference: the shader bridge is asked whether it
+            // really recorded this error. It reads them off the asset at import, so an error a
+            // variant only hits at play time never reached it - and dropping this copy on the
+            // strength of the wording alone would lose that error altogether.
+            if (Intake.IsShaderMessage(condition) && ShaderLogBridge.Intake.WasReported(condition)) return;
+
             FlowLogger.AddExternalLog(LogSource.Unity, Intake.ToLogType(type), condition,
                 stackTrace, null, 0);
         }
