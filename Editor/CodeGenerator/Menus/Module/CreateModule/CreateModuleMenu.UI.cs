@@ -522,7 +522,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             {
                 using (new EditorGUI.DisabledScope(true))
                 {
-                    EditorGUILayout.ToggleLeft(label, true, GUILayout.Width(125));
+                    EditorGUILayout.ToggleLeft(label, true, GUILayout.Width(TOGGLE_WIDTH));
                 }
 
                 isSelected = true;
@@ -530,7 +530,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             else
             {
                 bool wasSelected = _selectedOptionalFolders.Contains(folder);
-                bool nowSelected = EditorGUILayout.ToggleLeft(label, wasSelected, GUILayout.Width(125));
+                bool nowSelected = EditorGUILayout.ToggleLeft(label, wasSelected, GUILayout.Width(TOGGLE_WIDTH));
 
                 if (nowSelected && !wasSelected)
                 {

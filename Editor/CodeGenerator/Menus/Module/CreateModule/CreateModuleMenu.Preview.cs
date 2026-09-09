@@ -131,8 +131,28 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 GUILayout.Space(-15);
 
             EditorGUILayout.LabelField(text, GUILayout.Width(200));
+
+            DrawHint(_previewHints.For(folder));
+
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// What a folder is for, beside its name, for the two rows whose name alone does not say.
+        /// Dimmed, because it is an aside: the reader is here to pick folders, and the hint is only
+        /// there for the moment they wonder which Signals is which.
+        /// </summary>
+        private void DrawHint(string hint)
+        {
+            if (string.IsNullOrEmpty(hint)) return;
+
+            Color previous = GUI.color;
+            GUI.color = new Color(previous.r, previous.g, previous.b, 0.5f);
+
+            GUILayout.Label(hint, EditorStyles.miniLabel);
+
+            GUI.color = previous;
         }
 
         /// <summary>
