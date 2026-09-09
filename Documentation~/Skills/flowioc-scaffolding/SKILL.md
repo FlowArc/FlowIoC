@@ -1,6 +1,6 @@
 ---
 name: flowioc-scaffolding
-description: Use when creating, extending or deleting a module in a FlowIoC Unity project - a new main, screen or test module, a Shared or Signals assembly on a module that already exists, generating the files for a Model or a View, or when namespaces and .csproj.DotSettings need rebuilding after any of that.
+description: Use when creating, extending or deleting a module in a FlowIoC Unity project - a new main, screen or test module, a Shared or Signals assembly on a module that already exists, which folder a module's public and internal signal holder each lives in and which of the two carries Incoming and Outgoing, generating the files for a Model or a View, or when namespaces and .csproj.DotSettings need rebuilding after any of that.
 ---
 
 # FlowIoC Scaffolding
@@ -91,6 +91,41 @@ refreshed so the other generators can find them.
 For `Shared` specifically, prefer `Tools/FlowIoC/Add Shared or Signals` - it also adds the reference
 to every screen, sub and test module already under the module, and the same window writes a public
 signal holder for a module created without one.
+
+## The two signal holders, and which folder each lives in
+
+A module has two, and they are not the same kind of thing.
+
+**The public holder** goes in `Scripts/Signals/`, which every module gets and which is an assembly
+of its own - `Modules.Player.Signals`, beside `Modules.Player` and `Modules.Player.Shared`. It is
+the module's public surface: `PlayerSignals`, with nested `PlayerSignalsIncoming` and
+`PlayerSignalsOutgoing`, because those two halves are what a boundary is made of. Only a Connector
+references it - and the module's own test module, which may reference anything.
+
+The folder is mandatory and the assembly is not. A module with no public signals leaves
+`Scripts/Signals/` empty and writes no asmdef in it, and `Module Scanner` reads that as Ok rather
+than a finding: a DLL with nothing in it is worth nobody's build time. `ConnectorModule` is the case
+this exists for.
+
+**The internal holder** goes in `Scripts/Runtime/Signals/`, inside the module's own assembly, and is
+named `PlayerInternalSignals` - the `XInternalSignals` form, not `XSignalsInternal`:
+
+```csharp
+internal class PlayerInternalSignals : ISignalHolder
+{
+    public Signal Tick = new(hideCommandLog: true);
+    public Signal<double> RecalculateInterest = new();
+}
+```
+
+It has **no `Incoming` and no `Outgoing`**. Those halves say what a module accepts and what it
+announces across a boundary, and an internal signal never crosses one - it is the module talking to
+its own commands. So it is a flat list. It is `internal` as well, so nothing outside the module's
+assembly can dispatch it, which is what the two folders are really buying: the compiler decides
+which signals are public rather than the reader's memory.
+
+*Tools ▸ FlowIoC ▸ Add Shared or Signals* writes the public holder for a module created without one.
+The internal holder is an ordinary file you add when the module first needs to talk to itself.
 
 ## Where the DotSettings go
 
