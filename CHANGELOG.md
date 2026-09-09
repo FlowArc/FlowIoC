@@ -5,6 +5,66 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-09-09
+
+### Added
+
+- **A Help page per generator panel.** Six of the seven windows under `Tools > FlowIoC` shared one
+  seventy-line page with a sub-heading and a few lines each, while every other panel in the package
+  had a page of its own. Each now has one, in a *Code Generators* category inside Editor Tools, and
+  each window's Help button opens its own page rather than *Creating a Module*. Delete Module is
+  what forced it: its three-answer dialog about the Roots that list the module's sub-contexts, what
+  each answer does to a prefab, a closed scene and an open one, and the fact that cancelling leaves
+  the module whole, does not fit under a sub-heading. *Creating a Module* keeps why a module is
+  generated at all and hands the panel itself to *Create Module*.
+- **A *Ready-made* tab on the Controllers page.** The package ships commands a game binds without
+  writing them and nothing said so. `DispatchSignalCommand` and its four arities are there, and
+  `RetryCommand`, which needed the explaining: `base.Execute` retains the step and counts the
+  attempts but attempts nothing, so a subclass calls the first `Try` itself, and the last failure
+  calls `Stop` rather than `Release` - the step after a `RetryCommand` is what happens on success
+  only.
+- **A Code Style page**, under Wiki. Naming, prefixes, suffixes and spacing are declared in the
+  solution's DotSettings and written by Module Scanner, so the page carries the four rules a
+  settings file cannot express: alternatives share a verb prefix, `static` is kept to what the
+  engine forces, every enum value carries its number, and a log message spells names out rather
+  than using `nameof`.
+- **`HelpPainter.PageLink`**, a button that opens another page of the Help window. It draws for a
+  title the catalogue carries and draws nothing for one it does not, so a page may link to
+  something only a private package installs and a project without that package sees the paragraph
+  without the button.
+- **A `flowioc-controllers` skill**, so the Command and Function rules have somewhere to live. It
+  carries which of the two a piece of work is, binding a sequence, and resolving a `Retain`.
+
+### Changed
+
+- **`AgentRules.md` is 477 lines rather than 768.** The block is read in full in every session, and
+  it had reached 72 bullets in one list; a rule competing with 71 siblings is followed less
+  reliably than one among fifteen. What stays is what an agent needs before it knows which task it
+  is on, and a *Where the detail lives* table points at the seven skills that carry the rest.
+- **Three architecture rules were written down.** An error carries no `[Conditional]` and is logged
+  exactly once, so it reaches the console whether or not `ENABLE_LOG` is defined. A View sits on a
+  child of its Root and never on the Root's own GameObject, because a view finds its Context by
+  bubbling up from `view.transform.parent`. And a Connector sub-context is named for the one
+  counterpart module rather than for the pair, splitting its wiring into `IncomingSignals` and
+  `OutgoingSignals`.
+- **The code generator reference says what the windows actually do.** Create Command writes the
+  binding into the Context when `Bind` is ticked. Create View writes no prefab - the View class
+  carries `RequireComponent(typeof(ViewInjector))` instead, and only Create Module's screen path
+  builds one. Create Model writes its own `InjectionBinder.Bind` line rather than leaving it to the
+  reader, and its `Create Dummy Model` toggle - which nothing described anywhere - writes a dummy
+  beside the pair and binds all three through the overload that hands a test context the dummy.
+
+### Fixed
+
+- **A list's add and remove buttons are green and red rather than nearly black.**
+  `GUI.backgroundColor` multiplies the skin's button texture, so every component under 1 darkens
+  the button as it colours it: `Color.red` is (1, 0, 0) and came back as `#7F3E3E` filled and
+  `#580000` at the edge, and `Color.green` measured `#005800`. `FlowPalette.ActionAdd` and
+  `ActionRemove` carry the dominant channel past 1 instead, the way `ModulePanelTheme.Lifted`
+  already does for a panel bar. It covers the minus beside a row in Create Command, Create
+  Function, Create Model, Create View, Create Module's action list and the Model Viewer's list
+  drawer, Delete Module's Delete, and every Add button beside them.
+
 ## [1.10.0] - 2026-09-08
 
 ### Added
