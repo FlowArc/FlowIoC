@@ -77,6 +77,19 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public Color Strip(Color deep) => new Color(deep.r, deep.g, deep.b, 0.22f);
 
+        /// <summary>
+        /// What a button that takes something away is tinted with - a list row's minus, Delete
+        /// Module's Delete.
+        ///
+        /// The red channel is past 1 on purpose. <c>GUI.backgroundColor</c> multiplies the skin's
+        /// button texture, so every component under 1 darkens the button as it colours it: plain
+        /// <c>Color.red</c> is (1, 0, 0) and comes back as a near-black hole with a red cast, and
+        /// a gentler (0.95, 0.45, 0.42) only turns the grey muddy. Scaled past 1 the button lights
+        /// up instead, which is the same trick <c>ModulePanelTheme.Lifted</c> plays on a panel bar,
+        /// and green and blue stay far enough down to keep it red rather than pink.
+        /// </summary>
+        public Color Danger => new Color(1.7f, 0.42f, 0.38f);
+
         public Color Title => Color.white;
 
         private void Add(FlowRole role, string deep, string vivid)

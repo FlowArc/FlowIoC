@@ -172,7 +172,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 _parameters[i].Type = EditorGUILayout.TextField(_parameters[i].Type);
                 _parameters[i].Name = EditorGUILayout.TextField(_parameters[i].Name);
 
-                GUI.backgroundColor = Color.red;
+                GUI.backgroundColor = new ModulePanelTheme().Danger;
 
                 if (GUILayout.Button("-", GUILayout.Width(30)))
                     removeAt = i;
@@ -208,7 +208,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 DisplayInjectableStatus(_injectableNames[i]);
 
-                GUI.backgroundColor = Color.red;
+                GUI.backgroundColor = new ModulePanelTheme().Danger;
 
                 if (GUILayout.Button("-", GUILayout.Width(30)))
                     removeAt = i;

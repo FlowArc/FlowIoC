@@ -39,7 +39,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
                 _actionNames[ii] = EditorGUILayout.TextField(_actionNames[ii]);
 
-                GUI.backgroundColor = Color.red;
+                GUI.backgroundColor = new ModulePanelTheme().Danger;
 
                 if (GUILayout.Button("-", GUILayout.Width(30)))
                     removeAt = ii;
