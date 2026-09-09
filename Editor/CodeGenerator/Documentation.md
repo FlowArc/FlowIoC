@@ -71,13 +71,14 @@ Naming a Screen module: give it the screen's name (`Settings`, `DailyReward`), n
 
 **Tools ▸ FlowIoC ▸ Create View**
 
-Pick the module and sub-module, name the view, and the generator writes three things:
-the `View` class, the `Mediator` class, and the prefab with a `ViewInjector` component
-already on it.
+Pick the module and sub-module, name the view, and the generator writes the `View` class
+and the `Mediator` class, with the actions you listed already on both.
 
-That third item is the reason to use the tool rather than writing the pair by hand. A
-view without `ViewInjector` compiles, binds, and then silently never registers — the
-mediator's `OnRegister` never runs and nothing in the console says why.
+The `View` carries `[RequireComponent(typeof(ViewInjector))]`, which is the reason to use
+the tool rather than writing the pair by hand: a view without `ViewInjector` compiles,
+binds, and then silently never registers — the mediator's `OnRegister` never runs and
+nothing in the console says why. The prefab is yours to make; only Create Module builds
+one, for a screen module.
 
 The generated mediator comes with empty `OnRegister` / `OnRemove` bodies. Whatever you
 subscribe in the first, unsubscribe in the second; mediators are pooled, and a
@@ -99,8 +100,10 @@ public override void MediationBindings()
 
 **Tools ▸ FlowIoC ▸ Create Command**
 
-Writes a command into the module's `Controllers` folder with the right namespace. It
-does not write the binding — add that yourself in `CommandBindings()`:
+Writes a command into the module's `Controllers` folder with the right namespace. Tick
+`Bind` and name the signal holder and the signal, and it writes the binding into the
+module's Context as well — `Is Sequel` choosing between `ToSequence` and `ToParallel`.
+Left clear, the binding is yours to add in `CommandBindings()`:
 
 ```csharp
 CommandBinder.Bind(_signals.Incoming.Purchase)
@@ -236,16 +239,16 @@ when the project compiles.
    namespace, and the mismatch surfaces days later as a missing sub-context.
 ```
 
-### Let the tool make the prefab
+### Let the tool write the pair
 
 ```
-✅ Create View writes the view, the mediator and a prefab that already has
-   ViewInjector on it.
+✅ Create View writes the view and the mediator, and the view carries
+   RequireComponent(typeof(ViewInjector)) — so the component arrives with it.
 ```
 
 ```
-❌ Hand-written view and prefab. It compiles, the mediation binding is there, and
-   OnRegister never runs — with no error to search for.
+❌ Hand-written view with no ViewInjector on the object. It compiles, the mediation
+   binding is there, and OnRegister never runs — with no error to search for.
 ```
 
 ### Name a command after its effect
