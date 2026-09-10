@@ -6,6 +6,7 @@ using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Injectable.CrossContext;
 using FlowIoC.BaseModule.Provider.Coroutine;
 using FlowIoC.BaseModule.Root.Utils;
+using FlowIoC.BaseModule.SharedData;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ConsoleModule;
 
@@ -17,6 +18,13 @@ namespace FlowIoC.BaseModule.Root
         public MediatorCreatorController MediatorCreatorController { get; private set; }
         public BindingPoolController BindingPoolController { get; private set; }
         public Action<IContext> OnContextReady;
+
+        /// <summary>
+        /// The run's shared assets, filed by each Root as it registers and bound for every context
+        /// as ISharedDataModel. Owned here because the manager is the one object a run has before
+        /// any Root's context exists.
+        /// </summary>
+        public SharedDataModel SharedDataModel { get; private set; }
 
         /// <summary>
         /// Bumped whenever any binder in the run gains or loses a binding. What a pooled command
@@ -51,6 +59,9 @@ namespace FlowIoC.BaseModule.Root
             MediatorCreatorController = new MediatorCreatorController();
             ContextTypes = new ContextTypeIndex();
 
+            SharedDataModel = new SharedDataModel();
+            InjectionBinderCrossContext.BindInstance<ISharedDataModel>(SharedDataModel);
+
             FlowLogger.Log(SystemLogType.Context, "RootsManager | initialize completed");
         }
 
@@ -71,10 +82,16 @@ namespace FlowIoC.BaseModule.Root
             _contextRootList.Add(root);
             _contextRootMap[root.Name] = root;
             FlowLogger.Log(SystemLogType.Context, "RootsManager | " + root.GetType().Name + " registered");
+
+            // Awake, before any binding phase: what a Root shares is readable from the first
+            // PostConstruct on, whichever Root that is.
+            SharedDataModel.Register(root, root.SharedScriptables);
         }
 
         public void UnRegister(IRoot root)
         {
+            SharedDataModel.UnRegister(root);
+
             // The map is keyed by name, so removing by key alone would evict whichever Root answers
             // to that name - not necessarily the one being unregistered.
             if (_contextRootMap.TryGetValue(root.Name, out IRoot mapped) && mapped == root)

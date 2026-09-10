@@ -63,7 +63,8 @@ namespace FlowIoC.BaseModule.Injectable
             where TBindingType : new()
         {
             FlowLogger.Log(SystemLogType.Injection,
-                "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TBindingType).Name + ")]" + (name != "" ? "[name(" + name + ")]" : ""));
+                "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TBindingType).Name + ")]" +
+                (name != "" ? "[name(" + name + ")]" : ""));
 
             TBindingType instance = GetOrCreateInstance<TBindingType>(name);
 
@@ -78,7 +79,8 @@ namespace FlowIoC.BaseModule.Injectable
             where TConcrete : TAbstract, new()
         {
             FlowLogger.Log(SystemLogType.Injection,
-                "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TAbstract).Name + ")]" + (name != "" ? "[name(" + name + ")]" : ""));
+                "[InjectionBinder.Bind][context(" + _boundContext.GetType().Name + ")][type(" + typeof(TAbstract).Name + ")]" +
+                (name != "" ? "[name(" + name + ")]" : ""));
             return GetOrCreateInstance<TAbstract, TConcrete>(name);
         }
 
@@ -120,13 +122,18 @@ namespace FlowIoC.BaseModule.Injectable
         /// instance is filed under. Nothing is constructed here, so no <see cref="IConstructable"/>
         /// is collected and no context is recorded - an object handed in belongs to whoever made it
         /// and outlives the context that bound it.
+        ///
+        /// The one binder path that may run before any context exists: the RootsManager hands in
+        /// the run's shared data model as it initialises, so the log names no context then.
         /// </summary>
         private void BindInstanceAs(Type injectionType, object instance, string name)
         {
+            string boundContextName = _boundContext == null ? "no context" : _boundContext.GetType().Name;
+
             if (GetInstance(injectionType, name) != null)
             {
                 FlowLogger.LogWarning(SystemLogType.Injection,
-                    _boundContext.GetType().Name + " | There is a same injection! Type: " + injectionType.Name +
+                    boundContextName + " | There is a same injection! Type: " + injectionType.Name +
                     (name != "" ? (" Name: " + name) : ""));
                 return;
             }
@@ -140,7 +147,8 @@ namespace FlowIoC.BaseModule.Injectable
             injectionBinding.SetKey(injectionType);
 
             FlowLogger.Log(SystemLogType.Injection,
-                "[InjectionBinder.BindInstanceAs][context(" + _boundContext.GetType().Name + ")][type(" + injectionType.Name + ")]" + (name != "" ? "[name(" + name + ")]" : ""));
+                "[InjectionBinder.BindInstanceAs][context(" + boundContextName + ")][type(" + injectionType.Name + ")]" +
+                (name != "" ? "[name(" + name + ")]" : ""));
             _container[injectionType].Add(injectionBinding);
             NoteContainerChanged();
         }

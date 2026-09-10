@@ -5,6 +5,28 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **A shared asset is filed once and read anywhere.** `RootAdapter` has a third map, *Shared
+  Scriptables*: a ScriptableObject other modules read is filed there, on one Root, and any
+  injectable reads it through `ISharedDataModel.GetScriptable<T>()` - the adapter's verb, the
+  adapter's two overloads. `RootsManager` owns the registry for the run and binds it for every
+  context; a Root files its slot when it registers, at `Awake`, so what is shared is readable
+  before the first binding phase, and takes it back when its context goes. The slot says the asset
+  is common, not who produces it - a test Root files a ready-made `RD_` asset when the producer is
+  not in the scene. A second filing of a name is reported at the Root that made it, a warning for
+  the same asset and an error for a different one, and the first filing answers; an asset nobody
+  filed is an error naming it. The adapter's own `GetScriptable` looks in both slots, so a module
+  reads its own asset the same way whichever slot it sits in. `IRoot` gains `SharedScriptables`.
+
+### Fixed
+
+- **`BindInstance` before any context exists no longer throws.** The binder's log line named the
+  bound context, and the run's first framework binding - the shared data model, handed in by the
+  `RootsManager` as it initialises - happens before there is one. The line now says `no context`.
+
 ## [1.13.0] - 2026-09-10
 
 ### Added

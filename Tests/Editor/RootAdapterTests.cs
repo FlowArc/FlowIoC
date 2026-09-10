@@ -85,10 +85,57 @@ namespace FlowIoC.Tests
             Assert.IsNull(_adapter.GetScriptable<RootAdapterProbe>("CD_Probe"));
         }
 
+        [Test]
+        public void GetScriptable_finds_an_asset_filed_as_shared()
+        {
+            SetMap(new SerializedDictionary<string, ScriptableObject>());
+            SetSharedMap(new SerializedDictionary<string, ScriptableObject> {{"RD_Probe", _probe}});
+
+            Assert.AreSame(_probe, _adapter.GetScriptable<RootAdapterProbe>("RD_Probe"));
+        }
+
+        /// <summary>
+        /// The private slot is the module's own and answers first. Nothing is reported: the same
+        /// name in both slots of one adapter is a slip with one adapter to look at.
+        /// </summary>
+        [Test]
+        public void GetScriptable_prefers_the_private_slot_when_both_slots_hold_the_name()
+        {
+            var shared = ScriptableObject.CreateInstance<RootAdapterProbe>();
+            SetMap(new SerializedDictionary<string, ScriptableObject> {{"RD_Probe", _probe}});
+            SetSharedMap(new SerializedDictionary<string, ScriptableObject> {{"RD_Probe", shared}});
+
+            Assert.AreSame(_probe, _adapter.GetScriptable<RootAdapterProbe>("RD_Probe"));
+
+            Object.DestroyImmediate(shared);
+        }
+
+        [Test]
+        public void SharedScriptables_is_the_shared_slot()
+        {
+            var map = new SerializedDictionary<string, ScriptableObject> {{"RD_Probe", _probe}};
+            SetSharedMap(map);
+
+            Assert.AreSame(map, _adapter.SharedScriptables);
+        }
+
+        [Test]
+        public void SharedScriptables_is_null_until_the_slot_is_filled()
+        {
+            Assert.IsNull(_adapter.SharedScriptables);
+        }
+
         private void SetMap(SerializedDictionary<string, ScriptableObject> map)
         {
             FieldInfo field = typeof(RootAdapter)
                 .GetField("_scriptableMap", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(_adapter, map);
+        }
+
+        private void SetSharedMap(SerializedDictionary<string, ScriptableObject> map)
+        {
+            FieldInfo field = typeof(RootAdapter)
+                .GetField("_sharedScriptableMap", BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(_adapter, map);
         }
 

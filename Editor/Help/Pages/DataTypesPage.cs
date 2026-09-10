@@ -72,6 +72,33 @@ namespace FlowIoC.Editor.Help.Pages
                 "The five are what FlowIoC ships, not the whole vocabulary. A project that needs "
                 + "another kind adds a prefix and its matching suffix, and declares both in the "
                 + "solution code style so the IDE stops flagging the name.");
+
+            painter.Separator();
+            painter.SubHeading("An asset other modules read");
+            painter.Paragraph(
+                "The Shared assembly settles the type; the instance is filed once. A ScriptableObject "
+                + "other modules read goes in the Shared Scriptables of one Root's adapter - the slot "
+                + "beside the module's own map - and any injectable reads it through ISharedDataModel. "
+                + "The slot says the asset is common, not who produces it: a test Root files a ready-made "
+                + "RD_ asset there when the producer is not in the scene.");
+
+            painter.Space();
+            painter.Code(
+                "[Inject] private ISharedDataModel _sharedDataModel { get; set; }\n"
+                + "\n"
+                + "RD_Match match = _sharedDataModel.GetScriptable<RD_Match>();");
+
+            painter.Space();
+            painter.Note(
+                "Important: do not drag a shared asset onto the reader's own adapter and read it from "
+                + "there. It works while the producer is in the scene, and reads an asset nobody fills "
+                + "when it is not - nothing reports it. Read it through ISharedDataModel, which reports "
+                + "an asset nobody filed and points at the fix.");
+
+            painter.Bullet("A Root files its slot when it registers, at Awake - before any binding phase, so a PostConstruct may read one.");
+            painter.Bullet("A second filing of the same name is reported at the Root that made it; the first filing answers.");
+            painter.Bullet(
+                "The reader references the module's .Shared assembly, as for any published type. That line is the record of who reads whose data.");
         }
 
         private void DrawRules(HelpPainter painter)
