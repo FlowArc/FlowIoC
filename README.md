@@ -1463,6 +1463,34 @@ A `PlayerScreenModule` can read `CD_PlayerRules` and still has no way to reach
 a main module and `Create Module` writes the reference for you — into the module's own
 assembly, and into every screen, sub and test module created under it afterwards.
 
+The assembly settles the type; the instance is filed once. A ScriptableObject other modules
+read goes in the **Shared Scriptables** of one Root's `RootAdapter` — the slot beside the
+module's own map — and any injectable reads it through `ISharedDataModel`:
+
+```csharp
+public class ShowMatchResultCommand : Command
+{
+    [Inject] private ISharedDataModel _sharedDataModel { get; set; }
+
+    public override void Execute()
+    {
+        RD_Match match = _sharedDataModel.GetScriptable<RD_Match>();
+        // ...
+    }
+}
+```
+
+`GetScriptable<T>()` looks the asset up under its type name and `GetScriptable<T>(name)` under
+the name it was filed as — the adapter's own two overloads. The slot says the asset is common,
+not who produces it: a test module's Root files a ready-made `RD_Match` when the producer is
+not in the scene, and the reader cannot tell the difference. A Root files its shared map when
+it registers, at `Awake`, so every shared asset in a scene is readable before the first binding
+phase — a `PostConstruct` may read one. Nothing is dragged onto a second adapter: a second
+filing of a name is reported at the Root that made it — a warning when it is the same asset, an
+error when it is a different one under the same name — and the first filing answers. An asset
+nobody filed is an error naming it, and the reader gets null. The reference to the `.Shared`
+assembly stays: it is the one line that records who reads whose data.
+
 Namespaces follow the folder, as they already do for a module: a value object under
 `Scripts/Shared/Data/ValueObjects/` is in
 `Modules.PlayerModule.Shared.Data.ValueObjects`, so it cannot collide with the

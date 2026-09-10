@@ -1,6 +1,6 @@
 ---
 name: flowioc-data-types
-description: Use when adding or naming data in a FlowIoC Unity project - a ScriptableObject data asset, a serializable value object, saved player state, downloaded backend data, editor-only settings - or when unsure whether a class should be CD_/RD_/PD_/ED_/DD_ or carry a VO/CVO/RVO/PVO/EVO/DVO suffix.
+description: Use when adding or naming data in a FlowIoC Unity project - a ScriptableObject data asset, a serializable value object, saved player state, downloaded backend data, editor-only settings - when unsure whether a class should be CD_/RD_/PD_/ED_/DD_ or carry a VO/CVO/RVO/PVO/EVO/DVO suffix, or when one module needs to read a ScriptableObject another module filed as shared.
 ---
 
 # FlowIoC Data Types
@@ -94,6 +94,39 @@ Ask where the value comes from, not what it is about:
 A project may add a family of its own - a new prefix and its matching suffix - by
 declaring both in `<Solution>.sln.DotSettings`.
 
+## Reading another module's asset
+
+The `.Shared` assembly settles the type; the instance is filed once. A ScriptableObject other
+modules read goes in the **Shared Scriptables** of one Root's `RootAdapter` - the slot beside the
+module's own map - and any injectable reads it through `ISharedDataModel`:
+
+```csharp
+public class ShowMatchResultCommand : Command
+{
+    [Inject] private ISharedDataModel _sharedDataModel { get; set; }
+
+    public override void Execute()
+    {
+        RD_Match match = _sharedDataModel.GetScriptable<RD_Match>();
+    }
+}
+```
+
+- `GetScriptable<T>()` looks under the type name, `GetScriptable<T>(name)` under the name it was
+  filed as - the adapter's own two overloads.
+- The slot says the asset is common, not who produces it. A test module's Root files a ready-made
+  `RD_Match` when the producer is not in the scene, and the reader cannot tell.
+- A Root files its slot when it registers, at `Awake`, before any binding phase - so a
+  `PostConstruct` may read one. Nothing waits for `Setup`.
+- A second filing of the same name is reported at the Root that made it - a warning for the same
+  asset, an error for a different asset under the same name - and the first filing answers.
+- An asset nobody filed is an error naming it, and the reader gets null.
+- The reader references `Modules.Match.Shared`, as for any published type. That one line is the
+  record of who reads whose data; the compiler keeps `Modules.Match` out of reach.
+
+A Mediator injects nothing but its View, so a screen that needs shared data dispatches, and a
+Command reads it.
+
 ## Common Mistakes
 
 | Mistake | Why it is wrong |
@@ -103,6 +136,8 @@ declaring both in `<Solution>.sln.DotSettings`.
 | A `CVO` list inside a `PD_` asset | The suffix has to match the asset it lives in, or the name stops predicting the lifetime. |
 | Naming a mixed holder `GameHexCVO` | Name a two-kind holder plain `VO` and keep the lettered suffixes on its parts. |
 | A new `.cs` file dropped anywhere | Data lives in `Data/UnityObjects/` or `Data/ValueObjects/`; the generators and namespace tools depend on it. |
+| The same `RD_` asset dragged onto every reader's adapter | It works while the producer is in the scene and reads an asset nobody fills when it is not, and nothing reports it. File it once, in one Root's Shared Scriptables, and read it through `ISharedDataModel`. |
+| Reading a shared asset from the reader's own `RootAdapter` | The adapter is the module's own map. Another module's asset comes through `ISharedDataModel`, which reports an asset nobody filed. |
 
 ## Related
 

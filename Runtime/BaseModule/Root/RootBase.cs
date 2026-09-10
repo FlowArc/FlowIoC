@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FlowIoC.BaseModule.Adapters;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Root.Utils;
 using FlowIoC.ConsoleModule;
@@ -78,6 +79,14 @@ namespace FlowIoC.BaseModule.Root
         protected RootsManager _rootsManager;
 
         public string Name => transform.name;
+
+        /// <summary>
+        /// What the adapter on this GameObject files as shared, or null when there is no adapter.
+        /// Read by the RootsManager at registration, which is Awake - before any binding phase, so
+        /// what is filed here is readable from the first PostConstruct on.
+        /// </summary>
+        public IReadOnlyDictionary<string, ScriptableObject> SharedScriptables =>
+            TryGetComponent(out RootAdapter adapter) ? adapter.SharedScriptables : null;
 
         public virtual void StartContext(bool forceToStart = false)
         {
