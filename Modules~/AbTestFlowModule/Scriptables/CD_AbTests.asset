@@ -16,7 +16,7 @@ MonoBehaviour:
   - Id: Probe
     Version: 1
     IsActive: 1
-    RolloutPercent: 44.9
+    RolloutPercent: 80
     Groups:
     - Name: A
       Overrides: []
