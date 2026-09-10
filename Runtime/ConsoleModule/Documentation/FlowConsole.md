@@ -108,6 +108,7 @@ console you keep open.
 | `Timing` | Leads each row with the frame it was written in and the gap since the row above, instead of the clock. |
 | search box | See [Searching](#searching). |
 | `Locate` | Scrolls the selected row back into view. |
+| `⚙` | Floats over the list's top-right corner and opens the three controls below, over the rows rather than on a bar of their own. `Filters` sits beside it while its panel is closed and heads the panel once it is open. |
 | `1/2/3 lines` | How many lines a row shows. Two is Unity's shape: the message, and underneath it where it came from. |
 | `Source:` | `StackTraceCapture`, raised and lowered where the flow is being read rather than three windows away. |
 | `Presets` | Channel filters saved under a name. Two ship with the console; the rest are yours. |
