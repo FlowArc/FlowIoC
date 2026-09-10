@@ -34,6 +34,11 @@ namespace FlowIoC.Editor.Console
                     FiltersPanelBackgroundColor);
             }
 
+            // The switch that opened the panel, as the panel's own header. It is level with the
+            // strip floating over the list, so the two read as one row across the window.
+            FiltersToggleGUI(GUILayoutUtility.GetRect(FiltersPanelWidth, FloatingStripHeight,
+                GUILayout.Width(FiltersPanelWidth), GUILayout.Height(FloatingStripHeight)));
+
             // The bar is drawn rather than taken from EditorStyles.toolbar: the toolbar's own
             // background is lighter than the panel under it, and it painted over the edge line
             // down the panel's left side.

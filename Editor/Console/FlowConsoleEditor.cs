@@ -26,7 +26,6 @@ namespace FlowIoC.Editor.Console
 
         private Dictionary<LogType, bool> _logFilter;
         private Vector2 _logsPanelScroll;
-        private Vector2 _topPanelScroll;
         private Vector2 _detailPanelScroll;
         private float _detailPanelHeight = 150f;
         private bool _isResizingDetailPanel;
@@ -203,6 +202,22 @@ namespace FlowIoC.Editor.Console
 
         private Rect _toolbarRect;
         private bool _mouseWasOverToolbar;
+
+        /// <summary>
+        /// The list's outer rect, kept from the last repaint because a layout pass answers with
+        /// a placeholder, and the strip that floats over the list needs the real one on every
+        /// event.
+        /// </summary>
+        private Rect _logsViewportRect;
+
+        private Rect _floatingStripRect;
+
+        /// <summary>
+        /// Whether the pointer is on the floating strip, decided once per event in window space
+        /// before the list's scroll view moves the coordinates. A row lying under the strip reads
+        /// it and lets the press go by, so the gear takes the click and not the row it covers.
+        /// </summary>
+        private bool _pointerOverFloatingStrip;
 
         // Unity's own console icons, fetched once. IconContent is a lookup and a row draws many
         // times a second.
@@ -419,11 +434,11 @@ namespace FlowIoC.Editor.Console
 
             DrawToolbar();
 
-            TopPanelGUI();
-
-            // The list and the filters panel side by side. The panel's width is fixed, so what a
-            // wider window buys is more room for the messages rather than a wider column of
-            // channel names.
+            // The list and the filters panel side by side, straight under the toolbar. The
+            // panel's width is fixed, so what a wider window buys is more room for the messages
+            // rather than a wider column of channel names. The row settings and the gear that
+            // opens them float over the list's top-right corner rather than taking a bar of
+            // their own - see FloatingStripGUI.
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.BeginVertical();
@@ -442,8 +457,8 @@ namespace FlowIoC.Editor.Console
         /// A toolbar button only looks hovered while the window is repainting, and a console that
         /// is not receiving logs repaints for nothing - which is why hovering used to take about a
         /// second to show. The window asks for mouse-move events and repaints on them, but only
-        /// while the pointer is over the toolbar, or has just left it. Moving across the log list
-        /// still costs nothing.
+        /// while the pointer is over the toolbar or the strip floating on the list, or has just
+        /// left one of them. Moving across the log list still costs nothing.
         /// </summary>
         private void RepaintForToolbarHover()
         {
@@ -457,7 +472,8 @@ namespace FlowIoC.Editor.Console
                 return;
             }
 
-            bool overToolbar = _toolbarRect.Contains(Event.current.mousePosition);
+            Vector2 mouse = Event.current.mousePosition;
+            bool overToolbar = _toolbarRect.Contains(mouse) || _floatingStripRect.Contains(mouse);
             if (!overToolbar && !_mouseWasOverToolbar) return;
 
             _mouseWasOverToolbar = overToolbar;
@@ -720,10 +736,9 @@ namespace FlowIoC.Editor.Console
         /// console is showing - filters, search and Collapse included - because the rows the
         /// reader narrowed down to are the ones worth sending.
         /// </summary>
-        private void ExportMenuGUI()
+        private void ExportMenuGUI(Rect rect)
         {
             var content = new GUIContent("Export", "Save or copy the rows the console is showing.");
-            Rect rect = GUILayoutUtility.GetRect(content, EditorStyles.toolbarDropDown, GUILayout.Width(60));
 
             if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
 
@@ -907,37 +922,13 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>
-        /// The bar under the toolbar. It carries the switch that opens the filters panel and the
-        /// two things that say what the list is holding; the channels themselves live in the panel
-        /// rather than in a horizontal strip, because thirty channels do not fit across a window
-        /// and reading them meant scrolling sideways for a list that is read downwards.
+        /// The switch that opens the filters panel, with the count that says whether the list is
+        /// narrowed. While the panel is closed it floats over the list beside the gear; open, it
+        /// is drawn at the top of the panel as that panel's own header. Either way it is as wide
+        /// as the panel, so it never changes size under the pointer that toggles it.
         /// </summary>
-        private void TopPanelGUI()
+        private void FiltersToggleGUI(Rect rect)
         {
-            EditorGUILayout.BeginVertical();
-
-            RebuildCachedLogs();
-
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-
-            GUILayout.FlexibleSpace();
-
-            // Laid along this bar rather than in a panel of their own, because there are two of
-            // them and they are read where the rows they shape are read.
-            SettingsControlsGUI();
-
-            var settingsLabel = SettingsButtonContent();
-
-            bool showSettings = GUILayout.Toggle(_showSettings, settingsLabel, EditorStyles.toolbarButton,
-                GUILayout.Width(30f), GUILayout.ExpandHeight(true));
-
-            if (showSettings != _showSettings)
-            {
-                _showSettings = showSettings;
-                _state.ShowSettings = showSettings;
-                _needsRepaint = true;
-            }
-
             // Every channel the panel holds, all three groups together, so the button says whether
             // the list is narrowed without the panel having to be open. Isolation is one channel
             // showing however many switches are on underneath it.
@@ -948,12 +939,7 @@ namespace FlowIoC.Editor.Console
                 "Open the panel that holds every channel this console can show.\n"
                 + "The count is how many of them are showing.");
 
-            // As wide as the panel it opens and hard against the right edge, so it reads as that
-            // panel's own header rather than as another toolbar button.
-            Rect filtersRect = GUILayoutUtility.GetRect(filtersLabel, EditorStyles.toolbarButton,
-                GUILayout.Width(FiltersPanelWidth), GUILayout.ExpandHeight(true));
-
-            bool showFilters = GUI.Toggle(filtersRect, _showFilters, filtersLabel, EditorStyles.toolbarButton);
+            bool showFilters = GUI.Toggle(rect, _showFilters, filtersLabel, EditorStyles.toolbarButton);
 
             // The count is drawn beside the word rather than inside it, in the same small type the
             // panel's own group headers use, so the two read as one thing.
@@ -961,21 +947,16 @@ namespace FlowIoC.Editor.Console
             {
                 EnsureChannelRowStyles();
 
-                GUI.Label(new Rect(filtersRect.xMax - 54f, filtersRect.y, 46f, filtersRect.height),
+                GUI.Label(new Rect(rect.xMax - 54f, rect.y, 46f, rect.height),
                     channelsShown + " / " + channelsTotal,
                     channelsShown == channelsTotal ? _groupCountStyle : _groupCountHighlightStyle);
             }
 
-            if (showFilters != _showFilters)
-            {
-                _showFilters = showFilters;
-                _state.ShowFilters = showFilters;
-                _needsRepaint = true;
-            }
+            if (showFilters == _showFilters) return;
 
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndVertical();
+            _showFilters = showFilters;
+            _state.ShowFilters = showFilters;
+            _needsRepaint = true;
         }
 
         private void LogsPanelGUI()
@@ -988,6 +969,10 @@ namespace FlowIoC.Editor.Console
                 ScrollToSelectedLog();
 
             int totalCount = _cachedVisibleLogs.Count;
+
+            // Decided here, in window space: inside the scroll view the mouse position is
+            // scrolled along with the content, and the strip is not.
+            _pointerOverFloatingStrip = _floatingStripRect.Contains(Event.current.mousePosition);
 
             _logsPanelScroll = EditorGUILayout.BeginScrollView(_logsPanelScroll);
 
@@ -1046,7 +1031,8 @@ namespace FlowIoC.Editor.Console
             // dragging the detail panel moves that bottom, so a view resting on it follows.
             if (Event.current.type == EventType.Repaint)
             {
-                float height = GUILayoutUtility.GetLastRect().height;
+                _logsViewportRect = GUILayoutUtility.GetLastRect();
+                float height = _logsViewportRect.height;
 
                 if (height > 0f && !Mathf.Approximately(height, _logsViewportHeight))
                 {
@@ -1065,6 +1051,8 @@ namespace FlowIoC.Editor.Console
                     }
                 }
             }
+
+            FloatingStripGUI(_logsViewportRect);
 
             DetailPanelGUI();
         }
@@ -1453,7 +1441,7 @@ namespace FlowIoC.Editor.Console
 
             Event currentEvent = Event.current;
             if (currentEvent.type != EventType.MouseDown || !rect.Contains(currentEvent.mousePosition)) return;
-            if (currentEvent.button != 0) return;
+            if (currentEvent.button != 0 || _pointerOverFloatingStrip) return;
 
             if (!_collapsedFlowIds.Add(flowId))
                 _collapsedFlowIds.Remove(flowId);
@@ -1772,8 +1760,12 @@ namespace FlowIoC.Editor.Console
                 GUI.Label(sourceRect, SecondLineFor(consoleLog), _secondLineStyle);
             }
 
+            // A press on the strip floating over this row belongs to the strip, which is drawn
+            // after the list and would otherwise never see it.
             Event currentEvent = Event.current;
-            if (currentEvent.type == EventType.MouseDown && rect.Contains(currentEvent.mousePosition))
+            bool pressed = currentEvent.type == EventType.MouseDown && rect.Contains(currentEvent.mousePosition);
+
+            if (pressed && !_pointerOverFloatingStrip)
             {
                 if (currentEvent.button == 0)
                 {
