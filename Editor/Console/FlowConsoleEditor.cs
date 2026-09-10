@@ -60,6 +60,7 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleExport _export = new FlowConsoleExport();
         private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
         private readonly FlowConsoleEmptyListHint _emptyListHint = new FlowConsoleEmptyListHint();
+        private readonly FlowConsoleStyleGuard _styleGuard = new FlowConsoleStyleGuard();
         private GUIStyle _emptyListHintStyle;
 
         private bool _showFilters;
@@ -809,7 +810,7 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void EnsureToolbarLabelStyle()
         {
-            if (_toolbarLabelStyle != null) return;
+            if (_styleGuard.IsBuilt(_toolbarLabelStyle, "FlowConsoleToolbarLabel")) return;
 
             _toolbarLabelStyle = new GUIStyle(GUIStyle.none)
             {
@@ -1486,7 +1487,7 @@ namespace FlowIoC.Editor.Console
 
         private void EnsureFlowHeaderStyle()
         {
-            if (_flowHeaderStyle != null) return;
+            if (_styleGuard.IsBuilt(_flowHeaderStyle, "FlowConsoleFlowHeader")) return;
 
             _flowHeaderStyle = new GUIStyle(EditorStyles.miniLabel)
             {
@@ -1887,13 +1888,16 @@ namespace FlowIoC.Editor.Console
             string text = _emptyListHint.Text(IsAnyChannelShown(), _allLogs.Count);
             if (text == null) return;
 
-            _emptyListHintStyle ??= new GUIStyle(EditorStyles.centeredGreyMiniLabel)
+            if (!_styleGuard.IsBuilt(_emptyListHintStyle, "FlowConsoleEmptyListHint"))
             {
-                name = "FlowConsoleEmptyListHint",
-                alignment = TextAnchor.MiddleCenter,
-                wordWrap = true,
-                fontSize = 11
-            };
+                _emptyListHintStyle = new GUIStyle(EditorStyles.centeredGreyMiniLabel)
+                {
+                    name = "FlowConsoleEmptyListHint",
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true,
+                    fontSize = 11
+                };
+            }
 
             GUI.Label(viewport, text, _emptyListHintStyle);
         }

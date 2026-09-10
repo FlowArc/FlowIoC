@@ -565,7 +565,7 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void EnsureChannelRowStyles()
         {
-            if (_channelOnStyle == null)
+            if (!_styleGuard.IsBuilt(_channelOnStyle, "FlowConsoleChannelOn"))
             {
                 _channelOnStyle = new GUIStyle(EditorStyles.label)
                 {
@@ -576,13 +576,13 @@ namespace FlowIoC.Editor.Console
                 _channelOnStyle.normal.textColor = ChannelOnTextColor;
             }
 
-            if (_channelOffStyle == null)
+            if (!_styleGuard.IsBuilt(_channelOffStyle, "FlowConsoleChannelOff"))
             {
                 _channelOffStyle = new GUIStyle(_channelOnStyle) {name = "FlowConsoleChannelOff"};
                 _channelOffStyle.normal.textColor = ChannelOffTextColor;
             }
 
-            if (_channelAllOnStyle == null)
+            if (!_styleGuard.IsBuilt(_channelAllOnStyle, "FlowConsoleChannelAllOn"))
             {
                 _channelAllOnStyle = new GUIStyle(_channelOnStyle)
                 {
@@ -591,7 +591,7 @@ namespace FlowIoC.Editor.Console
                 };
             }
 
-            if (_channelAllOffStyle == null)
+            if (!_styleGuard.IsBuilt(_channelAllOffStyle, "FlowConsoleChannelAllOff"))
             {
                 _channelAllOffStyle = new GUIStyle(_channelOffStyle)
                 {
@@ -604,7 +604,7 @@ namespace FlowIoC.Editor.Console
             // to - a column of numbers is read down its right edge.
             // Derived from the row style rather than from EditorStyles.miniLabel, which came back
             // as a placeholder and left the count black, full size and aligned top left.
-            if (_groupCountStyle == null)
+            if (!_styleGuard.IsBuilt(_groupCountStyle, "FlowConsoleGroupCount"))
             {
                 _groupCountStyle = new GUIStyle(_channelOffStyle)
                 {
@@ -614,7 +614,7 @@ namespace FlowIoC.Editor.Console
                 };
             }
 
-            if (_groupCountHighlightStyle != null) return;
+            if (_styleGuard.IsBuilt(_groupCountHighlightStyle, "FlowConsoleGroupCountHighlight")) return;
 
             _groupCountHighlightStyle = new GUIStyle(_groupCountStyle) {name = "FlowConsoleGroupCountHighlight"};
             _groupCountHighlightStyle.normal.textColor = ChannelOnTextColor;

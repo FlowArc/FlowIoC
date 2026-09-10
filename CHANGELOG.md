@@ -98,6 +98,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Flow headers came out black and stayed black.** A style copied from an editor style that was
+  not ready is a copy of nothing - every setter after the copy is lost and it reads back with no
+  name, no size and black text - and cached behind a null check it was never built again. A domain
+  reload then serialised the window's private fields and handed the placeholder straight back, so
+  closing and reopening the window was the only way out. `FlowConsoleStyleGuard` now takes the
+  style's name as the proof it was built, and every cached style the console derives from
+  `EditorStyles` - the flow header, the channel rows, the group counts, the toolbar label, the
+  empty-list hint - is built again on the next repaint when the name is not there.
 - **A generator window opens empty.** The inputs of Create View, Create Model, Create Command and
   Create Function were static, so a closed window handed what was typed into it to the next one
   opened. They are instance state now: a new window starts blank, and one that survives a domain
