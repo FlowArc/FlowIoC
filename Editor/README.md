@@ -138,7 +138,7 @@ Open it from `Tools/FlowIoC/Folder Painter`. Edits repaint the Project window as
 make them.
 
 The settings live in your project, at
-`Assets/Plugins/FlowIoC/Editor/FolderPainter/FlowIoCFolderPainterConfig.asset`, not in the
+`Assets/Plugins/FlowIoC/Editor/FolderPainter/ED_FolderPainter.asset`, not in the
 package — so colours are per project, and are created with a sensible default set the
 first time the Editor opens.
 
