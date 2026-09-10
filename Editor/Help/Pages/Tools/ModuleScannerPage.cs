@@ -23,8 +23,8 @@ namespace FlowIoC.Editor.Help.Pages.Tools
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Image(_images.Get("ModuleScannerWindow.png"),
-                "Tools > FlowIoC > Module Scanner. One project finding is fixable, and every "
-                + "module in this project is in order.");
+                "Tools > FlowIoC > Module Scanner. Every module in this project is in order, and "
+                + "each one sits under the module it lives in.");
 
             painter.SubHeading("What it checks");
             painter.Bullet(
@@ -72,8 +72,15 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "A row wears the worst answer its checks gave: green for a module with nothing "
                 + "wrong, amber for something Fix All repairs on its own, red for something only "
                 + "a person can. The whole row is the foldout, so clicking anywhere on it shows "
-                + "the findings behind the colour, and \"Only issues\" hides every row that is "
-                + "already green.");
+                + "the findings behind the colour.");
+            painter.Paragraph(
+                "A module sits under the module it lives in, stepped in and hung from its parent's "
+                + "row by a guide line - sub modules first, then screens, then tests. The foldout "
+                + "opens a module's own findings and nothing else: what is inside it is always "
+                + "listed, because which module sits in which is what the tree is there to show. "
+                + "\"Only issues\" hides every row that is already green, except a parent whose "
+                + "child has something to say - it stays, so the child still has a row to hang "
+                + "from.");
 
             painter.SubHeading("Fix All");
             painter.Paragraph(

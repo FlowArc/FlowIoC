@@ -16,8 +16,9 @@ namespace FlowIoC.Editor.ModuleScanner
     /// whose index entry is stale or whose assembly is missing - and no way to say what was
     /// actually wrong.
     ///
-    /// The window only draws. Scanning is ModuleScannerRunner's job and repairing is ModuleRepair's,
-    /// the same division ScreenScannerWindow makes with ScreenScannerRunner.
+    /// The window only draws. Scanning is ModuleScannerRunner's job, repairing is ModuleRepair's
+    /// and the order of the rows is ModuleTree's, the same division ScreenScannerWindow makes with
+    /// ScreenScannerRunner.
     /// </summary>
     internal class ModuleScannerWindow : EditorWindow
     {
@@ -33,6 +34,16 @@ namespace FlowIoC.Editor.ModuleScanner
         private const float BADGE_WIDTH = 78f;
         private const float FINDING_INDENT = 26f;
         private const float STATUS_WIDTH = 55f;
+
+        /// <summary>
+        /// How far a row steps in for each module it sits inside: one arrow's width, so a nested
+        /// row's arrow sits under the icon of the row it lives in and the guide line between them
+        /// has one arrow's room to hang in.
+        /// </summary>
+        private const float INDENT_WIDTH = ARROW_WIDTH;
+
+        /// <summary>The air between a guide line's stub and the arrow it points at.</summary>
+        private const float GUIDE_GAP = 2f;
 
         [MenuItem("Tools/FlowIoC/" + TITLE, false, -1250)]
         internal static void Open()
@@ -50,7 +61,16 @@ namespace FlowIoC.Editor.ModuleScanner
 
         private readonly Dictionary<string, bool> _expanded = new Dictionary<string, bool>();
 
+        /// <summary>
+        /// Where each module's row was drawn this pass, so a nested row can hang its guide line
+        /// from the row it lives in. A parent is always drawn before its children, so by the time
+        /// a child asks, the rect is there - unless "Only issues" hid the parent, in which case the
+        /// child was hidden with it.
+        /// </summary>
+        private readonly Dictionary<ModuleTreeRowEVO, Rect> _rects = new Dictionary<ModuleTreeRowEVO, Rect>();
+
         private ModuleScannerReportEVO _report;
+        private List<ModuleTreeRowEVO> _tree;
         private ProjectTargetEVO _project;
         private List<ModuleTargetEVO> _modules;
         private FlowHeaderBar _bar;
@@ -102,6 +122,7 @@ namespace FlowIoC.Editor.ModuleScanner
             _project = project;
             _modules = modules;
             _report = new ModuleScannerRunner(new ModuleCheckPipeline()).Run(project, modules);
+            _tree = new ModuleTree().Build(_report.Modules);
 
             Repaint();
         }
@@ -146,13 +167,17 @@ namespace FlowIoC.Editor.ModuleScanner
 
             DrawProjectRow();
 
+            _rects.Clear();
+
             int drawn = 0;
 
-            foreach (ModuleRowEVO row in _report.Modules)
+            // A green row stays when something under it is not: the row with the issue is drawn
+            // indented, and the indent has to hang from something.
+            foreach (ModuleTreeRowEVO entry in _tree)
             {
-                if (_onlyIssues && row.Status == ModuleCheckStatus.Ok) continue;
+                if (_onlyIssues && !entry.HasIssue) continue;
 
-                DrawModuleRow(row);
+                DrawModuleRow(entry);
                 drawn++;
             }
 
@@ -245,12 +270,12 @@ namespace FlowIoC.Editor.ModuleScanner
         {
             ModuleCheckStatus status = WorstProject();
 
-            _projectExpanded = DrawHeaderRow(_projectExpanded, status, "Project", null, "PROJECT");
+            _projectExpanded = DrawHeaderRow(_projectExpanded, status, "Project", null, "PROJECT", 0f, out _);
 
             if (_projectExpanded && _report != null)
             {
                 foreach (FindingEVO finding in _report.Project)
-                    DrawFinding(finding);
+                    DrawFinding(finding, 0f);
             }
 
             GUILayout.Space(2f);
@@ -285,37 +310,71 @@ namespace FlowIoC.Editor.ModuleScanner
             return worst;
         }
 
-        private void DrawModuleRow(ModuleRowEVO row)
+        /// <summary>
+        /// One module, stepped in by how deep inside other modules it sits and hung from the row
+        /// of the one it lives in. The foldout opens the module's own findings and nothing else:
+        /// the modules inside it are always listed, because which sits in which is what the tree
+        /// is there to show, and a foldout would hide exactly that behind a click.
+        /// </summary>
+        private void DrawModuleRow(ModuleTreeRowEVO entry)
         {
+            ModuleRowEVO row = entry.Row;
+            float indent = entry.Depth * INDENT_WIDTH;
+
             bool expanded = _expanded.TryGetValue(row.Name, out bool value) && value;
 
             _expanded[row.Name] = DrawHeaderRow(
-                expanded, row.Status, row.Name, row.AssemblyName, row.Kind.ToString().ToUpperInvariant());
+                expanded, row.Status, row.Name, row.AssemblyName, row.Kind.ToString().ToUpperInvariant(),
+                indent, out Rect rect);
+
+            _rects[entry] = rect;
+
+            if (entry.Parent != null && _rects.TryGetValue(entry.Parent, out Rect parentRect))
+                DrawGuide(parentRect, entry.Parent.Depth, rect, entry.Depth);
 
             if (_expanded[row.Name])
             {
                 foreach (FindingEVO finding in row.Findings)
-                    DrawFinding(finding);
+                    DrawFinding(finding, indent);
             }
 
             GUILayout.Space(2f);
         }
 
         /// <summary>
+        /// The line from a parent row's arrow down to a nested row's: an L from the parent to its
+        /// last child, with a stub reaching every child on the way. Each child draws the whole
+        /// drop from the parent to itself rather than the piece since the previous sibling, so no
+        /// row has to know which sibling came before it or whether "Only issues" hid one; the
+        /// segments overlap, and the guide colour is opaque so the overlap does not show.
+        /// </summary>
+        private void DrawGuide(Rect parentRect, int parentDepth, Rect rect, int depth)
+        {
+            float column = Mathf.Round(
+                parentRect.x + _painter.ContentX - 1f + parentDepth * INDENT_WIDTH + ARROW_WIDTH / 2f);
+            float middle = Mathf.Round(rect.y + FlowRowPainter.ROW_HEIGHT / 2f);
+            float arrow = rect.x + _painter.ContentX - 1f + depth * INDENT_WIDTH;
+
+            _painter.DrawGuide(new Rect(column, parentRect.yMax, 1f, middle - parentRect.yMax));
+            _painter.DrawGuide(new Rect(column, middle, arrow - GUIDE_GAP - column, 1f));
+        }
+
+        /// <summary>
         /// One row of the list: the status as a stripe and an icon, the name, what the row is made
         /// of, and what kind of thing it is. The whole row is the foldout, so the reader does not
-        /// have to find a triangle to open it.
+        /// have to find a triangle to open it. The indent moves the arrow, the icon and the name
+        /// and nothing else, so the assembly column and the badge line up down the whole list.
         /// </summary>
         private bool DrawHeaderRow(bool expanded, ModuleCheckStatus status, string label, string subtitle,
-            string badge)
+            string badge, float indent, out Rect rect)
         {
-            Rect rect = _painter.Row();
+            rect = _painter.Row();
             Color accent = ColorFor(status);
 
             _painter.Paint(rect, accent, Alpha(status));
 
             bool hovered = _painter.IsHovered(rect);
-            float x = rect.x + _painter.ContentX - 1f;
+            float x = rect.x + _painter.ContentX - 1f + indent;
 
             GUI.Label(new Rect(x, rect.y, ARROW_WIDTH, rect.height), expanded ? "▾" : "▸", _painter.Arrow);
             x += ARROW_WIDTH;
@@ -326,8 +385,8 @@ namespace FlowIoC.Editor.ModuleScanner
             GUI.color = previous;
             x += ICON_WIDTH + 4f;
 
-            GUI.Label(new Rect(x, rect.y, NAME_WIDTH, rect.height), label, _painter.Name(hovered));
-            x += NAME_WIDTH + 6f;
+            GUI.Label(new Rect(x, rect.y, NAME_WIDTH - indent, rect.height), label, _painter.Name(hovered));
+            x += NAME_WIDTH - indent + 6f;
 
             float room = rect.xMax - BADGE_WIDTH - 10f - x;
 
@@ -351,14 +410,14 @@ namespace FlowIoC.Editor.ModuleScanner
         /// in the Project window. A finding that names nothing stays quiet and takes no click,
         /// because a highlight that promises a click doing nothing is worse than no highlight.
         /// </summary>
-        private void DrawFinding(FindingEVO finding)
+        private void DrawFinding(FindingEVO finding, float indent)
         {
             if (_onlyIssues && finding.Status == ModuleCheckStatus.Ok) return;
 
             Object asset = AssetFor(finding);
 
             float statusWidth = finding.Status == ModuleCheckStatus.Ok ? 0f : STATUS_WIDTH;
-            float textX = FINDING_INDENT + ICON_WIDTH + 4f;
+            float textX = indent + FINDING_INDENT + ICON_WIDTH + 4f;
             float textWidth = Mathf.Max(40f, position.width - textX - statusWidth - 18f);
 
             float height = Mathf.Max(
@@ -373,7 +432,7 @@ namespace FlowIoC.Editor.ModuleScanner
 
             Color previous = GUI.color;
             GUI.color = accent;
-            GUI.Label(new Rect(rect.x + FINDING_INDENT, rect.y, ICON_WIDTH, FlowRowPainter.ROW_HEIGHT),
+            GUI.Label(new Rect(rect.x + indent + FINDING_INDENT, rect.y, ICON_WIDTH, FlowRowPainter.ROW_HEIGHT),
                 IconFor(finding.Status), _painter.Icon);
             GUI.color = previous;
 

@@ -38,7 +38,8 @@ namespace FlowIoC.Editor.ModuleScanner
                     Name = module.Name,
                     Kind = module.Kind,
                     AssetPath = module.AssetPath,
-                    AssemblyName = module.ExpectedAssemblyName
+                    AssemblyName = module.ExpectedAssemblyName,
+                    ParentName = module.ParentName
                 };
 
                 foreach (IModuleCheck check in _pipeline.ModuleChecks)
