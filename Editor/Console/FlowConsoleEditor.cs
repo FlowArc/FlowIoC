@@ -196,6 +196,7 @@ namespace FlowIoC.Editor.Console
         private CD_FlowConsole _settings;
         private GUIStyle _richTextStyle;
         private GUIStyle _detailRichTextStyle;
+        private GUIStyle _detailPanelStyle;
         private GUIStyle _linkStyle;
         private GUIStyle _secondLineStyle;
         private GUIStyle _toolbarLabelStyle;
@@ -305,11 +306,19 @@ namespace FlowIoC.Editor.Console
             _detailRichTextStyle.wordWrap = true;
             _detailRichTextStyle.normal.textColor = Color.white;
 
+            // Wrapped like the message above it. A trace frame is one long line, and unwrapped it
+            // pushed the panel into scrolling sideways - Unity's console folds it instead.
             _linkStyle = new GUIStyle();
             _linkStyle.normal.textColor = new Color(0.3f, 0.7f, 1f);
             _linkStyle.hover.textColor = new Color(0.5f, 0.85f, 1f);
             _linkStyle.active.textColor = new Color(0.2f, 0.6f, 0.9f);
-            _linkStyle.wordWrap = false;
+            _linkStyle.wordWrap = true;
+
+            // No box and no margin around the panel: the splitter already says where the list ends,
+            // and Unity's console starts its text straight under the line. The padding is what
+            // keeps the first letter off the window's edge.
+            _detailPanelStyle = new GUIStyle();
+            _detailPanelStyle.padding = new RectOffset(4, 4, 2, 2);
 
             // Unity ships each console icon at two sizes. Scaling the large one down to 14px is
             // what made the shapes come out ragged, so each is drawn at the size it was authored

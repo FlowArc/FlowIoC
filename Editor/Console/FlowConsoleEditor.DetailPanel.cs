@@ -44,12 +44,12 @@ namespace FlowIoC.Editor.Console
                     _isResizingDetailPanel = false;
                 }
 
+                // Only a vertical scrollbar. Everything in the panel wraps to its width, the way
+                // Unity's console folds a long line, so there is nothing to scroll sideways to.
                 _detailPanelScroll = EditorGUILayout.BeginScrollView(
-                    _detailPanelScroll,
-                    "box",
+                    _detailPanelScroll, false, false,
+                    GUIStyle.none, GUI.skin.verticalScrollbar, _detailPanelStyle,
                     GUILayout.Height(_detailPanelHeight));
-
-                EditorGUILayout.LabelField("Details:", EditorStyles.boldLabel);
 
                 GUILayout.Label(_selectedLog.Message, _detailRichTextStyle);
                 EditorGUILayout.Space(4);
@@ -185,8 +185,8 @@ namespace FlowIoC.Editor.Console
 
         private void DrawNonClickableTraceLine(string displayText)
         {
-            Rect rect = GUILayoutUtility.GetRect(new GUIContent(displayText), EditorStyles.label);
-            GUI.Label(rect, displayText);
+            Rect rect = GUILayoutUtility.GetRect(new GUIContent(displayText), EditorStyles.wordWrappedLabel);
+            GUI.Label(rect, displayText, EditorStyles.wordWrappedLabel);
 
             if (rect.Contains(Event.current.mousePosition) &&
                 Event.current.type == EventType.MouseDown && Event.current.button == 1)
