@@ -1,7 +1,8 @@
 {
   "name": "Modules.Gameplay.Signals",
   "references": [
-    "FlowIoC"
+    "FlowIoC",
+    "Modules.Gameplay.Shared"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
