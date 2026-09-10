@@ -75,12 +75,13 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
             painter.PageLink("View & Mediator", "Read: View & Mediator");
 
             painter.Separator();
-            painter.SubHeading("IsTest");
+            painter.SubHeading("A view in a test module");
             painter.Paragraph(
-                "Ticked, the pair is wrapped in UNITY_EDITOR directives, which is what a view "
-                + "written for a test module needs. Everything under zTestModules is editor-only "
-                + "code, and that is what buys a test module the right to reference any module in "
-                + "the project.");
+                "Pick the test module and the pair is written into it wrapped in UNITY_EDITOR "
+                + "directives, under the namespace its folder gives it. Everything under "
+                + "zTestModules is editor-only code, and that is what buys a test module the right "
+                + "to reference any module in the project - so every generator wraps what it "
+                + "writes into one, and nothing asks you to say so twice.");
         }
     }
 }

@@ -27,7 +27,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string INVALID_VIEW_NAME_MESSAGE = "Please enter a valid View name.";
         private const string PARENT_MODULE_REQUIRED_TITLE = "Parent Module Required";
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
-        private const string ISTEST_LABEL = "IsTest: ";
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
 
         private static string _viewName;
@@ -36,7 +35,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private ModuleRegistry _registry;
         private readonly DirectoryStructureConfigProvider _configProvider = new DirectoryStructureConfigProvider();
         private List<string> _actionNames = new List<string>();
-        private bool _isTest;
         private ModuleKind _selectedModuleKind;
         private static GenerationState _generationState;
         private string _selectedModuleName = string.Empty;
@@ -95,10 +93,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 EditorGUILayout.LabelField($"{_viewName}View", EditorStyles.boldLabel);
             }
 
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField(ISTEST_LABEL);
-            _isTest = EditorGUILayout.Toggle(_isTest);
-
             DisplayActionsSection();
             DisplayParentModuleSelection();
             _body.End();
@@ -132,10 +126,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             EditorGUILayout.BeginVertical();
 
-            // Exact-kind filter: a regular view's parent may be anything but Test; a test
-            // view's parent must be Test and nothing else.
-            _picker.Draw(ref _parentModulePath, ref _selectedModuleName,
-                parent => _isTest ? parent == ModuleKind.Test : parent != ModuleKind.Test, false);
+            // Any module may hold a view. A test module's view is wrapped in UNITY_EDITOR like the
+            // rest of the module, and the pick is what says so - there is no toggle to agree with.
+            _picker.Draw(ref _parentModulePath, ref _selectedModuleName, _ => true, false);
+            _selectedModuleKind = _picker.PickedKind;
 
             EditorGUILayout.EndVertical();
 
@@ -220,17 +214,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             Debug.Log($"[CreateModuleStructureForViewGeneration] Base Module Path: {baseModulePath}");
 
-            string subDirectory = _selectedModuleKind switch
-            {
-                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
-                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules],
-                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
-                _ => string.Empty
-            };
-
-            string modulePath = string.IsNullOrEmpty(subDirectory)
-                ? baseModulePath
-                : Path.Combine(baseModulePath, subDirectory);
+            // The pick is the module itself, whatever kind it is - a test module's own folder, not
+            // the module it tests - so the file goes into the folder the pick names.
+            string modulePath = baseModulePath;
 
             string viewsAndMediatorsPath = _configProvider.ConfigFor(_selectedModuleKind)
                 .FindFullFolderPathByID(FolderEVO.FolderType.ViewsAndMediators, modulePath);
@@ -239,18 +225,25 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 
 
-            CreateViewAndMediator(viewsAndMediatorsPath, _isTest, moduleNamespace);
-            BindMediationInContext(rootsAndContextsPath, _isTest, moduleNamespace);
+            bool isTest = _selectedModuleKind == ModuleKind.Test;
+
+            CreateViewAndMediator(viewsAndMediatorsPath, isTest, moduleNamespace);
+            BindMediationInContext(rootsAndContextsPath, moduleNamespace);
 
             _generationState = GenerationState.Idle;
         }
 
 
+        /// <summary>
+        /// The view and the mediator, into the module's ViewsMediators folder under the namespace
+        /// that folder gives them. A test module gets the same two files wrapped in UNITY_EDITOR:
+        /// its namespace comes off its folder like any other module's, and the name is the view's
+        /// own - the module is the test, not the view.
+        /// </summary>
         private void CreateViewAndMediator(string path, bool isTest, string moduleNamespace)
         {
-            string suffix = isTest ? "Test" : "";
-            string viewName = _viewName + suffix + "View";
-            string mediatorName = _viewName + suffix + "Mediator";
+            string viewName = _viewName + "View";
+            string mediatorName = _viewName + "Mediator";
 
             ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
@@ -259,40 +252,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 return;
             }
 
-            if (isTest)
-            {
-                CodeGeneratorUtils.CreateView(viewName, "TempView", path, CodeGeneratorStrings.TempViewPath,
-                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
-                    _actionNames, true);
-                CodeGeneratorUtils.CreateMediator(mediatorName, viewName, "TempMediator", path, CodeGeneratorStrings.TempMediatorPath,
-                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
-                    _actionNames, true);
-            }
-            else
-            {
-                CodeGeneratorUtils.CreateView(viewName, "TempView", path, CodeGeneratorStrings.TempViewPath,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}", _actionNames,
-                    false);
-                CodeGeneratorUtils.CreateMediator(mediatorName, viewName, "TempMediator", path, CodeGeneratorStrings.TempMediatorPath,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
-                    _actionNames, false);
-            }
+            string folder = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators];
+            string viewsNamespace = moduleNamespace + "." + folder;
 
-            EnsureNamespaceImport(mediatorName, path, isTest,
-                $"{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}", moduleNamespace);
-            EnsureNamespaceImport(viewName, path, isTest, $"{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}",
-                moduleNamespace);
+            CodeGeneratorUtils.CreateView(viewName, "TempView", path, CodeGeneratorStrings.TempViewPath,
+                viewsNamespace, _actionNames, isTest);
+            CodeGeneratorUtils.CreateMediator(mediatorName, viewName, "TempMediator", path, CodeGeneratorStrings.TempMediatorPath,
+                viewsNamespace, _actionNames, isTest);
+
+            EnsureNamespaceImport(mediatorName, path, folder, moduleNamespace);
+            EnsureNamespaceImport(viewName, path, folder, moduleNamespace);
         }
 
-        private void BindMediationInContext(string contextPath, bool isTest, string moduleNamespace)
+        private void BindMediationInContext(string contextPath, string moduleNamespace)
         {
-            string suffix = isTest ? "Test" : "";
-            string viewName = _viewName + suffix + "View";
-            string mediatorName = _viewName + suffix + "Mediator";
+            string viewName = _viewName + "View";
+            string mediatorName = _viewName + "Mediator";
 
             // A module whose Root roots a System or a Service names its context for that role, so
-            // the file is looked up rather than assumed to be {module}Context.cs.
-            string contextFile = new ModuleContextFile().Find(contextPath, _selectedModuleName, suffix);
+            // the file is looked up rather than assumed to be {module}Context.cs. A test module's
+            // name already ends in Test, so its context is found under its own name.
+            string contextFile = new ModuleContextFile().Find(contextPath, _selectedModuleName);
 
             ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
@@ -301,23 +281,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 return;
             }
 
-            if (isTest)
-            {
-                CodeGeneratorUtils.BindMediationInContext(contextFile, viewName, mediatorName,
-                    moduleNamespace + $".Tests.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}");
-            }
-            else
-            {
-                CodeGeneratorUtils.BindMediationInContext(contextFile, viewName, mediatorName,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]}");
-            }
+            CodeGeneratorUtils.BindMediationInContext(contextFile, viewName, mediatorName,
+                moduleNamespace + "." + codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ViewsAndMediators]);
         }
 
-        private void EnsureNamespaceImport(string className, string path, bool isTest, string type, string moduleNamespace)
+        private void EnsureNamespaceImport(string className, string path, string type, string moduleNamespace)
         {
             string filePath = path + "/" + className + ".cs";
             string[] fileLines = File.ReadAllLines(filePath);
-            string namespaceLine = isTest ? "using " + moduleNamespace + $".Tests.{type};" : "using " + moduleNamespace + $".{type};";
+            string namespaceLine = "using " + moduleNamespace + "." + type + ";";
             if (!Array.Exists(fileLines, line => line.Contains(namespaceLine)))
             {
                 List<string> newLines = new List<string>(fileLines);

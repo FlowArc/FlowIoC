@@ -255,8 +255,13 @@ namespace FlowIoC.Editor.CodeGenerator
             AssetDatabase.Refresh();
         }
 
+        /// <summary>
+        /// <paramref name="isDummy"/> and <paramref name="isTest"/> each wrap the file in UNITY_EDITOR:
+        /// a dummy model exists for the Editor and never ships, and every script in a test module
+        /// is wrapped, or one unwrapped file would carry the whole module into a player build.
+        /// </summary>
         public static void CreateModel(string modelName, string tempClassName, string modelPath,
-            string tempClassPath, string namespaceName, List<string> injectables, bool isDummy)
+            string tempClassPath, string namespaceName, List<string> injectables, bool isDummy, bool isTest = false)
         {
             var newViewPath = modelPath + "/" + modelName + ".cs";
 
@@ -264,8 +269,7 @@ namespace FlowIoC.Editor.CodeGenerator
             var newModelContent = new List<string>();
             var usingsToAdd = new HashSet<string>();
 
-            if (isDummy)
-                newModelContent.Add("#if UNITY_EDITOR");
+            bool wrap = isDummy || isTest;
 
             for (var ii = 0; ii < tempModelContent.Length; ii++)
             {
@@ -299,13 +303,9 @@ namespace FlowIoC.Editor.CodeGenerator
                 newModelContent.Add(content);
             }
 
-            if (isDummy)
-                newModelContent.Add("#endif");
-
             if (!Directory.Exists(modelPath)) Directory.CreateDirectory(modelPath);
 
-            var finalContent = new List<string>(usingsToAdd);
-            finalContent.AddRange(newModelContent);
+            List<string> finalContent = Wrapped(usingsToAdd, newModelContent, wrap);
 
             File.WriteAllLines(newViewPath, finalContent.ToArray());
             AssetDatabase.Refresh();
@@ -313,7 +313,7 @@ namespace FlowIoC.Editor.CodeGenerator
         }
 
         public static void CreateModelInterface(string modelName, string tempClassName, string modelPath,
-            string tempClassPath, string namespaceName)
+            string tempClassPath, string namespaceName, bool isTest = false)
         {
             var newViewPath = modelPath + "/" + modelName + ".cs";
 
@@ -338,12 +338,12 @@ namespace FlowIoC.Editor.CodeGenerator
 
             if (!Directory.Exists(modelPath)) Directory.CreateDirectory(modelPath);
 
-            File.WriteAllLines(newViewPath, newViewContent.ToArray());
+            File.WriteAllLines(newViewPath, Wrapped(new List<string>(), newViewContent, isTest).ToArray());
             AssetDatabase.Refresh();
         }
 
         public static void CreateCommand(string commandName, string tempClassName, string commandPath,
-            string tempClassPath, string namespaceName, List<string> injectables)
+            string tempClassPath, string namespaceName, List<string> injectables, bool isTest = false)
         {
             var newViewPath = commandPath + "/" + commandName + ".cs";
 
@@ -375,8 +375,7 @@ namespace FlowIoC.Editor.CodeGenerator
 
             if (!Directory.Exists(commandPath)) Directory.CreateDirectory(commandPath);
 
-            var finalContent = new List<string>(usingsToAdd);
-            finalContent.AddRange(newViewContent);
+            List<string> finalContent = Wrapped(usingsToAdd, newViewContent, isTest);
 
             File.WriteAllLines(newViewPath, finalContent.ToArray());
             AssetDatabase.Refresh();
@@ -834,6 +833,26 @@ namespace FlowIoC.Editor.CodeGenerator
         /// makes. The path is turned into one relative to the project, because that is the only
         /// kind AssetDatabase loads.
         /// </summary>
+        /// <summary>
+        /// The file as it is written: the usings the injectables asked for, then the body, the
+        /// whole of it inside UNITY_EDITOR when the module the file goes into compiles only there.
+        /// The directive goes above the usings, not between them and the body - a using outside
+        /// the directive is a reference a player build still has to resolve.
+        /// </summary>
+        private static List<string> Wrapped(IEnumerable<string> usings, List<string> body, bool wrap)
+        {
+            var file = new List<string>();
+
+            if (wrap) file.Add("#if UNITY_EDITOR");
+
+            file.AddRange(usings);
+            file.AddRange(body);
+
+            if (wrap) file.Add("#endif");
+
+            return file;
+        }
+
         internal static void Highlight(string writtenPath)
         {
             if (string.IsNullOrEmpty(writtenPath)) return;

@@ -60,6 +60,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         private GUIStyle _mark;
 
+        /// <summary>
+        /// What kind of module the pick is - what decides the folder layout the file is written
+        /// into, and whether it is wrapped in UNITY_EDITOR. Main while the pick is the modules
+        /// folder or nothing yet. Read back after Draw, which is where the pick is known.
+        /// </summary>
+        internal ModuleKind PickedKind { get; private set; } = ModuleKind.Main;
+
         /// <summary>See ROOT_LABEL. Read on use: Application.dataPath is not there when the fields are.</summary>
         private string RootPath => System.IO.Path.Combine(Application.dataPath, ROOT_LABEL);
 
@@ -87,6 +94,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         {
             _tree.Begin();
 
+            PickedKind = ModuleKind.Main;
+
             Rect rootRect = DrawRow(ROOT_LABEL, null, 0, rootSelectable, parentModulePath == RootPath, out bool rootPicked);
 
             _tree.Hang(_rootKey, rootRect, 0, null);
@@ -102,8 +111,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 ModulePickEVO pick = entry.Row;
                 int depth = entry.Depth + 1;
 
-                Rect rect = DrawRow(
-                    pick.Name, pick, depth, canHost(pick.Kind), parentModulePath == pick.Path, out bool picked);
+                bool selected = parentModulePath == pick.Path;
+
+                if (selected) PickedKind = pick.Kind;
+
+                Rect rect = DrawRow(pick.Name, pick, depth, canHost(pick.Kind), selected, out bool picked);
 
                 _tree.Hang(entry, rect, depth, entry.Parent ?? _rootKey);
 
@@ -111,6 +123,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
                 parentModulePath = pick.Path;
                 selectedModuleName = TrimModuleSuffix(pick.Name);
+                PickedKind = pick.Kind;
             }
         }
 

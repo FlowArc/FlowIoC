@@ -153,6 +153,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             // CreateCommandMenu never restricted which module kind could host a command.
             _picker.Draw(ref _parentModulePath, ref _selectedModuleName, _ => true, false);
+            _selectedModuleKind = _picker.PickedKind;
 
             EditorGUILayout.EndVertical();
 
@@ -265,17 +266,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             Debug.Log($"[CreateModuleStructureForCommandGeneration] Base Module Path: {baseModulePath}");
 
-            string subDirectory = _selectedModuleKind switch
-            {
-                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
-                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules],
-                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
-                _ => string.Empty
-            };
-
-            string modulePath = string.IsNullOrEmpty(subDirectory)
-                ? baseModulePath
-                : Path.Combine(baseModulePath, subDirectory);
+            // The pick is the module itself, whatever kind it is - a test module's own folder, not
+            // the module it tests - so the file goes into the folder the pick names.
+            string modulePath = baseModulePath;
 
             string commandPath = _configProvider.ConfigFor(_selectedModuleKind)
                 .FindFullFolderPathByID(FolderEVO.FolderType.Controllers, modulePath);
@@ -306,7 +299,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             }
 
             CodeGeneratorUtils.CreateCommand(commandName, "TempCommand", path, CodeGeneratorStrings.TempCommandPath,
-                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}", _injectableNames);
+                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}", _injectableNames,
+                _selectedModuleKind == ModuleKind.Test);
 
             EnsureNamespaceImport(commandName, path, $"{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}",
                 moduleNamespace);
