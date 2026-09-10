@@ -19,6 +19,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// <summary>The row over the whole tree: the modules folder, which every top level module hangs from.</summary>
         private const string ROOT_LABEL = "Modules";
 
+        private const string ROOT_BADGE = "PROJECT";
+
         private Vector2 _scrollPosition;
         private string _searchText = "";
 
@@ -136,11 +138,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         private void DrawRootRow()
         {
             Rect rect = _rows.Row();
+            Color accent = _palette.Chrome(EditorGUIUtility.isProSkin);
 
-            _rows.Paint(rect, _palette.Chrome(EditorGUIUtility.isProSkin), FlowRowPainter.QUIET_ALPHA);
+            _rows.Paint(rect, accent, FlowRowPainter.QUIET_ALPHA);
             _tree.Hang(_rootKey, rect, 0, null);
 
             GUI.Label(new Rect(_tree.TextX(rect, 0), rect.y, rect.width, rect.height), ROOT_LABEL, _rows.Name(false));
+
+            // The same word Module Scanner and the pickers put on this row, in the badge column the
+            // module rows use, so the folder reads as one thing wherever it heads a tree.
+            float right = rect.xMax - BUTTON_WIDTH - 12f;
+
+            GUI.Label(new Rect(right - BADGE_WIDTH, rect.y, BADGE_WIDTH, rect.height), ROOT_BADGE, _rows.BadgeIn(accent));
         }
 
         private void DrawModuleRow(ModuleTreeRowEVO<ModulePickEVO> entry)

@@ -15,8 +15,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
     /// inside which, and a foldout would hide exactly that behind a click.
     ///
     /// The whole row is the button. A row the rules say cannot host what is being created is
-    /// drawn dim, takes no click and does not light up under the pointer: a highlight promises a
-    /// click that does something, and this one would not.
+    /// drawn a few tones darker, takes no click and does not light up under the pointer: a
+    /// highlight promises a click that does something, and this one would not.
     /// </summary>
     internal class ModulePicker
     {
@@ -28,6 +28,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         /// level module from a nested one, so it is built the way the generator builds it.
         /// </summary>
         private const string ROOT_LABEL = "Modules";
+
+        /// <summary>
+        /// What the modules folder's badge says, where a module's says what its Root roots. The
+        /// word Module Scanner puts on the row over every module, in FlowIoC's own colour: the
+        /// folder is the project's, not any module's.
+        /// </summary>
+        private const string ROOT_BADGE = "PROJECT";
 
         private readonly object _rootKey = new object();
         private const float BADGE_WIDTH = 78f;
@@ -44,12 +51,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         /// <summary>The dot at a size that fits the column: the label glyph is twice what the column has room for.</summary>
         private const int PICK_MARK_SIZE = 7;
-
-        /// <summary>
-        /// A row that cannot be picked, taken down rather than tinted - it is out of the question
-        /// rather than in a state.
-        /// </summary>
-        private const float DIM_ALPHA = 0.12f;
 
         private readonly FlowRowPainter _rows = new FlowRowPainter();
         private readonly FlowTreePainter _tree;
@@ -140,7 +141,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             Color accent = _palette.Chrome(EditorGUIUtility.isProSkin);
             bool hovered = selectable && _rows.IsHovered(rect);
 
-            if (!selectable) _rows.Darken(rect, DIM_ALPHA);
+            // A row that is not a pick - the modules folder while a module is being made inside one,
+            // a module that cannot host what is being made - is shaded rather than blacked out: it
+            // keeps its tint and its name at full size and reads as a row to be read, not a gap.
+            if (!selectable) _rows.PaintShaded(rect, accent);
             else if (selected) _rows.Paint(rect, accent, FlowRowPainter.HEADING_ALPHA);
             else _rows.Paint(rect, accent, hovered ? FlowRowPainter.FILL_ALPHA : FlowRowPainter.QUIET_ALPHA);
 
@@ -157,13 +161,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             float room = rect.xMax - BADGE_WIDTH - 10f - x;
 
             GUI.Label(new Rect(x, rect.y, room, rect.height), label,
-                selectable ? _rows.Name(hovered || selected) : _rows.Mini(false));
+                selectable ? _rows.Name(hovered || selected) : _rows.Muted());
 
-            if (pick != null)
-            {
-                GUI.Label(new Rect(rect.xMax - BADGE_WIDTH - 6f, rect.y, BADGE_WIDTH, rect.height),
-                    _badge.Text(pick), _badge.Style(pick, _rows, hovered));
-            }
+            var badge = new Rect(rect.xMax - BADGE_WIDTH - 6f, rect.y, BADGE_WIDTH, rect.height);
+
+            if (pick != null) GUI.Label(badge, _badge.Text(pick), _badge.Style(pick, _rows, hovered));
+            else GUI.Label(badge, ROOT_BADGE, _rows.BadgeIn(accent));
 
             picked = false;
 
