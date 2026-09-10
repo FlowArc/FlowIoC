@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 {
     /// <summary>
@@ -17,7 +19,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override string Title => "Create Command";
 
-        public override string Icon => "cs Script Icon";
+        public override FlowIcon Icon => FlowIcon.Bolt;
 
         protected override string BodyHeadline => "Tools > FlowIoC > Create Command.";
 

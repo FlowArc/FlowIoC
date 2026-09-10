@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
 {
@@ -17,7 +18,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Title => "Connectors";
 
-        public override string Icon => "Linked";
+        public override FlowIcon Icon => FlowIcon.Link;
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {

@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
 using FlowIoC.Editor.Help.WhatsNew;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
 {
@@ -33,7 +34,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Subtitle => "What is FlowIoC";
 
-        public override string Icon => "console.infoicon";
+        public override FlowIcon Icon => FlowIcon.Info;
 
         public override bool Featured => true;
 

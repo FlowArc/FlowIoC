@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages
 {
     internal class FolderLayoutPage : HelpPage
@@ -10,7 +12,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Title => "Folder Layout";
 
-        public override string Icon => "Folder Icon";
+        public override FlowIcon Icon => FlowIcon.Folder;
 
         /// <summary>
         /// Exposed so a test can check the tree against the folder list Create Module actually

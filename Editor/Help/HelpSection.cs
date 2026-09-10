@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help
 {
@@ -27,7 +28,7 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>A category of topics. Clicking it folds them open and shut.</summary>
-        public HelpSection(string title, string icon, params IHelpPage[] pages)
+        public HelpSection(string title, FlowIcon icon, params IHelpPage[] pages)
             : this(title, icon, ToSections(pages))
         {
         }
@@ -37,7 +38,7 @@ namespace FlowIoC.Editor.Help
         /// allowed and reads in the order given: Wiki puts its own topics first and the categories
         /// that go deeper after them.
         /// </summary>
-        public HelpSection(string title, string icon, params HelpSection[] children)
+        public HelpSection(string title, FlowIcon icon, params HelpSection[] children)
         {
             Title = title;
             Subtitle = string.Empty;
@@ -50,7 +51,7 @@ namespace FlowIoC.Editor.Help
 
         public string Title { get; }
         public string Subtitle { get; }
-        public string Icon { get; }
+        public FlowIcon Icon { get; }
         public bool Featured { get; }
         public bool IsCategory { get; }
 

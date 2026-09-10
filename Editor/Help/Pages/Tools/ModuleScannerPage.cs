@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class ModuleScannerPage : HelpPage
@@ -12,7 +14,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Title => "Module Scanner";
 
-        public override string Icon => "Settings";
+        public override FlowIcon Icon => FlowIcon.Search;
 
         protected override string BodyHeadline => "Every module in the project, and what each one is missing.";
 

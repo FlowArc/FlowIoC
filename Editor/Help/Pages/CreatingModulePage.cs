@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages
 {
     /// <summary>
@@ -18,7 +20,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Subtitle => "Start every module here";
 
-        public override string Icon => "CreateAddNew";
+        public override FlowIcon Icon => FlowIcon.Plus;
 
         protected override string BodyHeadline => "Every module is written by Create Module.";
 

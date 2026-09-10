@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
@@ -49,7 +50,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string Subtitle => "Named Cinemachine cameras";
 
-        public override string Icon => "Camera Icon";
+        public override FlowIcon Icon => FlowIcon.Camera;
 
         public override HelpAction Action => _install;
 

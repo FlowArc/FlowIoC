@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages
 {
     /// <summary>
@@ -15,7 +17,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Title => "Code Style";
 
-        public override string Icon => "TextAsset Icon";
+        public override FlowIcon Icon => FlowIcon.Pencil;
 
         protected override string BodyHeadline => "Most of the style is a file. These four are not.";
 

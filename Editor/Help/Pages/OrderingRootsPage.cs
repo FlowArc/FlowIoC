@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
 {
@@ -21,7 +22,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Subtitle => "Which module is built first";
 
-        public override string Icon => "AlphabeticalSorting";
+        public override FlowIcon Icon => FlowIcon.SortDown;
 
         /// <summary>
         /// The seats the shipped Roots already occupy. Exposed for the same reason the data type

@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
 {
@@ -20,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Title => "Controllers";
 
-        public override string Icon => "cs Script Icon";
+        public override FlowIcon Icon => FlowIcon.Bolt;
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {

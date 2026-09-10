@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class ScreenScannerPage : HelpPage
@@ -12,7 +14,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Title => "Screen Scanner";
 
-        public override string Icon => "Canvas Icon";
+        public override FlowIcon Icon => FlowIcon.Windows;
 
         protected override string BodyHeadline => "Every screen in the open scenes, under the manager it registers at.";
 

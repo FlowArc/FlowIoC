@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FlowIoC.Editor.Help;
+using FlowIoC.Editor.Icons;
 using NUnit.Framework;
 
 namespace FlowIoC.Tests
@@ -47,7 +48,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_page_that_names_no_icon_still_names_one()
         {
-            Assert.IsFalse(string.IsNullOrWhiteSpace(new SparsePage().Icon));
+            Assert.AreNotEqual(FlowIcon.None, new SparsePage().Icon);
         }
 
         [Test]

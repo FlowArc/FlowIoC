@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class ModelViewerPage : HelpPage
@@ -10,7 +12,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Title => "Model Viewer";
 
-        public override string Icon => "ScriptableObject Icon";
+        public override FlowIcon Icon => FlowIcon.Eye;
 
         protected override string BodyHeadline => "A Model is a plain C# object, so the Inspector cannot show it.";
 

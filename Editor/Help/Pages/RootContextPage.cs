@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
 {
@@ -18,7 +19,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Title => "Root & Context";
 
-        public override string Icon => "UnityEditor.SceneHierarchyWindow";
+        public override FlowIcon Icon => FlowIcon.ListNested;
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {

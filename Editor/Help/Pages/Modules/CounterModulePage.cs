@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
@@ -37,7 +38,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string Subtitle => "Named timers, up and down";
 
-        public override string Icon => "UnityEditor.AnimationWindow";
+        public override FlowIcon Icon => FlowIcon.Stopwatch;
 
         public override HelpAction Action => _install;
 

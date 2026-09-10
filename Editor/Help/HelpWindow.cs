@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,10 +27,17 @@ namespace FlowIoC.Editor.Help
         private const float SidebarButtonHeight = 54f;
 
         /// <summary>
-        /// One box for every icon whatever its own resolution, so the icons line up down the
-        /// column and every title starts at the same x.
+        /// One box for every icon, so the icons line up down the column and every title starts at
+        /// the same x. A top level entry fills it; a row inside a category draws the smaller size
+        /// centred in it.
         /// </summary>
-        private const float SidebarIconSize = 22f;
+        private const float SidebarIconSize = 24f;
+
+        /// <summary>
+        /// The size an icon is drawn at inside a category. Both sizes are ones the icons ship at,
+        /// so an icon is never resampled - which is what made Unity's own icons blur here.
+        /// </summary>
+        private const float SidebarChildIconSize = 16f;
 
         private const float SidebarPadding = 8f;
 
@@ -186,6 +194,7 @@ namespace FlowIoC.Editor.Help
 
         private HelpPageCatalog _catalog;
         private HelpTheme _theme;
+        private FlowIcons _icons;
         private HelpPainter _painter;
         private IHelpPage _selected;
         private readonly HashSet<string> _openCategories = new HashSet<string>();
@@ -196,7 +205,8 @@ namespace FlowIoC.Editor.Help
         {
             _catalog = new HelpPageCatalog();
             _theme = new HelpTheme();
-            _painter = new HelpPainter(_theme, _catalog);
+            _icons = new FlowIcons();
+            _painter = new HelpPainter(_theme, _catalog, _icons);
             _selected = _catalog.OpeningPage;
             _openCategories.Clear();
 
@@ -355,15 +365,15 @@ namespace FlowIoC.Editor.Help
         /// <summary>
         /// One sidebar row. The row itself is a rectangle that takes the click and draws nothing:
         /// the fill, the hairline under it, the icon and the text are all placed by hand. The icons
-        /// are the reason for the last two - the built-in ones come in different sizes, and letting
-        /// a style lay them out leaves every row starting somewhere else - and the fill is the
-        /// reason for the first: a row is filled to both edges of the panel, which a button drawn
-        /// inside its own margins cannot be.
+        /// are the reason for the last two - an icon has to land on whole pixels at the size it
+        /// ships at, and a style laying it out with the text would scale it and leave every row
+        /// starting somewhere else - and the fill is the reason for the first: a row is filled to
+        /// both edges of the panel, which a button drawn inside its own margins cannot be.
         ///
         /// The indent moves what is drawn in the row rather than the row, so a topic two categories
         /// deep is still highlighted the full width of the menu.
         /// </summary>
-        private bool DrawRow(string label, string icon, bool featured, bool active, float height,
+        private bool DrawRow(string label, FlowIcon icon, bool featured, bool active, float height,
             int depth, bool? expanded)
         {
             bool pressed = GUILayout.Toggle(active, GUIContent.none, _theme.SidebarRow,
@@ -378,25 +388,22 @@ namespace FlowIoC.Editor.Help
 
             DrawRowBackground(row, featured, active, depth);
 
-            float iconSize = height < SidebarButtonHeight ? SidebarIconSize - 4f : SidebarIconSize;
-            Texture texture = string.IsNullOrEmpty(icon)
-                ? null
-                : EditorGUIUtility.IconContent(icon).image;
+            GUIStyle text = active ? _theme.SidebarLabelActive : _theme.SidebarLabel;
 
-            if (texture != null)
-            {
-                Rect iconRect = new Rect(row.x + indent + SidebarPadding,
-                    row.y + (row.height - iconSize) * 0.5f, iconSize, iconSize);
+            // Centred in the box, and on whole pixels: an icon drawn from a half pixel is blurred
+            // by the same bilinear sampling that makes a resampled one blurry. The icon takes the
+            // colour of the words beside it, so it goes white with them on the selected row.
+            float iconSize = height < SidebarButtonHeight ? SidebarChildIconSize : SidebarIconSize;
+            Rect iconRect = new Rect(
+                Mathf.Round(row.x + indent + SidebarPadding + (SidebarIconSize - iconSize) * 0.5f),
+                Mathf.Round(row.y + (row.height - iconSize) * 0.5f), iconSize, iconSize);
 
-                GUI.DrawTexture(iconRect, texture, ScaleMode.ScaleToFit);
-            }
+            _icons.Draw(iconRect, icon, text.normal.textColor);
 
             float arrowWidth = expanded.HasValue ? 14f : 0f;
             float textX = row.x + indent + SidebarPadding + SidebarIconSize + SidebarPadding;
             Rect textRect = new Rect(textX, row.y,
                 row.xMax - SidebarPadding - arrowWidth - textX, row.height);
-
-            GUIStyle text = active ? _theme.SidebarLabelActive : _theme.SidebarLabel;
 
             GUI.Label(textRect, label, text);
 

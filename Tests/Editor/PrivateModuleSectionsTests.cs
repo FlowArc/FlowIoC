@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.Editor.Help;
+using FlowIoC.Editor.Icons;
 using NUnit.Framework;
 
 namespace FlowIoC.Tests
@@ -64,7 +65,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_category_names_an_icon()
         {
-            Assert.IsFalse(string.IsNullOrWhiteSpace(CategoryOf("Ads").Icon));
+            Assert.AreNotEqual(FlowIcon.None, CategoryOf("Ads").Icon);
         }
 
         /// <summary>

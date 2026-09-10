@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
 {
@@ -19,7 +20,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Subtitle => "The logic a module owns";
 
-        public override string Icon => "cs Script Icon";
+        public override FlowIcon Icon => FlowIcon.Gear;
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
