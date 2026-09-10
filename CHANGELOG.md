@@ -89,11 +89,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Modules~` and `SetupModules~` carries its `Scripts/Generated` part - the module's `FlowLogType`
   channel - and none carries a `Functions` folder any more, because a Function lives in
   `Controllers/` beside the Commands it is called from.
-- **The README leads with the agent rules as well as the tooling**, the Editor README names the
-  Folder Painter config asset as it is on disk, and two shapes that were on a to-do list carry their
-  own reason in the code: the signal payload array is allocated per dispatch and will not be pooled
-  (`SignalT1.Dispatch` says why), and `Context.InjectAllInstances` walks every cross-context object
-  once per context to resolve forward references between modules binding in any order.
+- **The documentation says where things are.** The README leads with the agent rules as well as
+  the tooling, and the Editor README names the Folder Painter config asset as it is on disk. Two
+  shapes that were on a to-do list carry their own reason in the code: the signal payload array is
+  allocated per dispatch and will not be pooled (`SignalT1.Dispatch` says why), and
+  `Context.InjectAllInstances` walks every cross-context object once per context to resolve forward
+  references between modules binding in any order.
 
 ### Fixed
 
