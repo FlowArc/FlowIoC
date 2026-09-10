@@ -5,6 +5,17 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **`UpdateProvider` runs after the cameras.** Its `LateUpdate` and `CinemachineBrain`'s both sat
+  at execution order 0, so which moved first was undefined, and a module placing UI over the world
+  through `IUpdateProvider.AddLateUpdate` was one frame behind the camera whenever the brain went
+  second. The provider now carries `[DefaultExecutionOrder(UpdateProvider.EXECUTION_ORDER)]`,
+  `1000`, so a LateUpdate callback sees the camera and the animation where this frame left them. A
+  module that has to run before the camera has `AddUpdate` for that.
+
 ## [1.12.0] - 2026-09-10
 
 ### Added
