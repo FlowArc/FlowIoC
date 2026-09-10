@@ -43,9 +43,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
 
-        private static string _functionName;
-        private static FunctionKind _kind;
-        private static string _returnType = "double";
+        private string _functionName = string.Empty;
+        private FunctionKind _kind;
+        private string _returnType = "double";
         private static GenerationState _generationState;
 
         private readonly List<FunctionParameter> _parameters = new List<FunctionParameter>();
