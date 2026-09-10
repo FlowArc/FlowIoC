@@ -307,7 +307,7 @@ namespace FlowIoC.Editor.Console
                 if (!belongs(logType)) continue;
 
                 total++;
-                if (logType.IsVisible) shown++;
+                if (_settings.IsLogTypeVisible(logType)) shown++;
             }
         }
 
@@ -458,10 +458,11 @@ namespace FlowIoC.Editor.Console
                 var labelRect = new Rect(ChannelLabelLeft(rect), rect.y,
                     rect.width - (ChannelLabelLeft(rect) - rect.x) - 22f, rect.height);
 
-                GUI.Label(labelRect, name,
-                    logType.IsVisible && !muted ? _channelOnStyle : _channelOffStyle);
+                bool shown = _settings.IsLogTypeVisible(logType) && !muted;
 
-                if (logType.IsVisible && !muted)
+                GUI.Label(labelRect, name, shown ? _channelOnStyle : _channelOffStyle);
+
+                if (shown)
                 {
                     Texture tick = EditorGUIUtility.IconContent("Valid")?.image;
                     var tickRect = new Rect(rect.xMax - 18f, rect.y + (rect.height - 14f) * 0.5f, 14f, 14f);
@@ -489,8 +490,7 @@ namespace FlowIoC.Editor.Console
             }
             else
             {
-                logType.IsVisible = !logType.IsVisible;
-                EditorUtility.SetDirty(_settings);
+                _settings.Visibility.Show(logType, !_settings.IsLogTypeVisible(logType));
                 OnLogTypeSelectionChanged();
             }
 
@@ -625,7 +625,7 @@ namespace FlowIoC.Editor.Console
             for (int i = 0; i < _settings.LogTypes.Count; i++)
             {
                 var logType = _settings.LogTypes[i];
-                if (!logType.IsMandatory && !logType.IsVisible) return false;
+                if (!logType.IsMandatory && !_settings.IsLogTypeVisible(logType)) return false;
             }
 
             return true;
@@ -637,10 +637,9 @@ namespace FlowIoC.Editor.Console
             {
                 var logType = _settings.LogTypes[i];
                 if (!logType.IsMandatory)
-                    logType.IsVisible = enabled;
+                    _settings.Visibility.Show(logType, enabled);
             }
 
-            EditorUtility.SetDirty(_settings);
             OnLogTypeSelectionChanged();
         }
 
@@ -650,7 +649,7 @@ namespace FlowIoC.Editor.Console
             {
                 var lt = _settings.LogTypes[i];
                 if (IsUnityChannel(lt.Value)) continue;
-                if (lt.IsMandatory && lt.Value != (int) SystemLogType.All && !lt.IsVisible)
+                if (lt.IsMandatory && lt.Value != (int) SystemLogType.All && !_settings.IsLogTypeVisible(lt))
                     return false;
             }
 
@@ -664,10 +663,8 @@ namespace FlowIoC.Editor.Console
                 var lt = _settings.LogTypes[i];
                 if (IsUnityChannel(lt.Value)) continue;
                 if (lt.IsMandatory && lt.Value != (int) SystemLogType.All)
-                    lt.IsVisible = visible;
+                    _settings.Visibility.Show(lt, visible);
             }
-
-            EditorUtility.SetDirty(_settings);
         }
     }
 }

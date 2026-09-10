@@ -96,6 +96,10 @@ namespace FlowIoC.Editor.Console
         {
             EditorGUILayout.LabelField("System Log Types", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Flow Console window background colors for system-level log filtering.", MessageType.Info);
+            EditorGUILayout.HelpBox(
+                "On and off here is the project default, committed with this asset. What the Flow Console "
+                + "window shows on this machine is yours and lives in EditorPrefs; Presets > Project defaults in "
+                + "the window puts it back to what is set here.", MessageType.None);
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
 
@@ -105,7 +109,7 @@ namespace FlowIoC.Editor.Console
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button("Show All", EditorStyles.miniButton, GUILayout.Width(60)))
+            if (GUILayout.Button("All on", EditorStyles.miniButton, GUILayout.Width(60)))
             {
                 SetAllSystemLogTypesVisibility(true);
             }
@@ -114,7 +118,7 @@ namespace FlowIoC.Editor.Console
             GUILayout.Space(4);
 
             GUI.backgroundColor = Color.red;
-            if (GUILayout.Button("Hide All", EditorStyles.miniButton, GUILayout.Width(60)))
+            if (GUILayout.Button("All off", EditorStyles.miniButton, GUILayout.Width(60)))
             {
                 SetAllSystemLogTypesVisibility(false);
             }
@@ -144,10 +148,10 @@ namespace FlowIoC.Editor.Console
                     EditorUtility.SetDirty(_settings);
                 }
 
-                GUI.backgroundColor = logTypeSetting.IsVisible ? Color.green : Color.red;
-                if (GUILayout.Button(logTypeSetting.IsVisible ? "Visible" : "Hidden", GUILayout.Width(60)))
+                GUI.backgroundColor = logTypeSetting.IsVisibleByDefault ? Color.green : Color.red;
+                if (GUILayout.Button(logTypeSetting.IsVisibleByDefault ? "Default on" : "Default off", GUILayout.Width(80)))
                 {
-                    logTypeSetting.IsVisible = !logTypeSetting.IsVisible;
+                    logTypeSetting.IsVisibleByDefault = !logTypeSetting.IsVisibleByDefault;
                     EditorUtility.SetDirty(_settings);
                 }
                 GUI.backgroundColor = Color.white;
@@ -338,7 +342,7 @@ namespace FlowIoC.Editor.Console
             GUILayout.FlexibleSpace();
 
             GUI.backgroundColor = Color.green;
-            if (GUILayout.Button("Show All", EditorStyles.miniButton, GUILayout.Width(60)))
+            if (GUILayout.Button("All on", EditorStyles.miniButton, GUILayout.Width(60)))
             {
                 SetAllProjectLogTypesVisibility(true);
             }
@@ -347,7 +351,7 @@ namespace FlowIoC.Editor.Console
             GUILayout.Space(4);
 
             GUI.backgroundColor = Color.red;
-            if (GUILayout.Button("Hide All", EditorStyles.miniButton, GUILayout.Width(60)))
+            if (GUILayout.Button("All off", EditorStyles.miniButton, GUILayout.Width(60)))
             {
                 SetAllProjectLogTypesVisibility(false);
             }
@@ -383,10 +387,10 @@ namespace FlowIoC.Editor.Console
                     EditorUtility.SetDirty(_settings);
                 }
 
-                GUI.backgroundColor = logType.IsVisible ? Color.green : Color.red;
-                if (GUILayout.Button(logType.IsVisible ? "Visible" : "Hidden", GUILayout.Width(60)))
+                GUI.backgroundColor = logType.IsVisibleByDefault ? Color.green : Color.red;
+                if (GUILayout.Button(logType.IsVisibleByDefault ? "Default on" : "Default off", GUILayout.Width(80)))
                 {
-                    logType.IsVisible = !logType.IsVisible;
+                    logType.IsVisibleByDefault = !logType.IsVisibleByDefault;
                     EditorUtility.SetDirty(_settings);
                 }
                 GUI.backgroundColor = Color.white;
@@ -498,7 +502,7 @@ namespace FlowIoC.Editor.Console
                 if (!logType.IsMandatory || logType.Value == (int)SystemLogType.All)
                     continue;
 
-                logType.IsVisible = visible;
+                logType.IsVisibleByDefault = visible;
             }
             EditorUtility.SetDirty(_settings);
         }
@@ -510,7 +514,7 @@ namespace FlowIoC.Editor.Console
                 if (Enum.IsDefined(typeof(SystemLogType), logType.Value) || logType.IsMandatory)
                     continue;
 
-                logType.IsVisible = visible;
+                logType.IsVisibleByDefault = visible;
             }
             EditorUtility.SetDirty(_settings);
         }

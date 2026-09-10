@@ -41,6 +41,21 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "the frame and the gap since the row above. Pinning a row keeps it through the "
                 + "filters, the trim and every automatic clear.");
 
+            painter.SubHeading("The channels you switch off are yours");
+            painter.Paragraph(
+                "Clicking a channel in the Filters panel writes EditorPrefs, not CD_FlowConsole. "
+                + "The asset is committed, and one developer's filter has no business turning up in "
+                + "everybody else's diff - or switching their channels to match when they pull. What "
+                + "the asset carries is the project default, set in its inspector as Default on or "
+                + "Default off per channel: what somebody sees who has not touched it, and what a "
+                + "channel a module added yesterday shows as. Presets > Project defaults drops your "
+                + "switches and puts you back on what the asset says.");
+            painter.Note(
+                "Important: every channel switched off looks exactly like a quiet game. The list "
+                + "says so in its middle when that is the case, and counts the rows the filters "
+                + "hold back when rows exist and none is passing - so an empty console is never "
+                + "silently one of the two.");
+
             painter.SubHeading("Silencing a noisy loop");
             painter.Paragraph(
                 "A tick loop dispatching many times per second drowns everything else. Two flags "

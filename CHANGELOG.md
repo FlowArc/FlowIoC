@@ -50,6 +50,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The channels you switch off in the Flow Console are yours, not the project's.** Clicking a
+  channel, an All row or a preset used to write `IsVisible` into `CD_FlowConsole.asset`, which is
+  committed - so one developer's filter turned up in everybody's diff and switched their channels
+  to match when they pulled. The window now writes the developer's own switches to EditorPrefs,
+  keyed by the project, through `FlowConsoleChannelVisibility`; the asset keeps only the project
+  default, renamed `IsVisibleByDefault` (the old name still reads), authored in its inspector as
+  *Default on* / *Default off*. Only the switches thrown are stored, so a channel nobody touched -
+  or one a module added later - follows the default, and **Presets > Project defaults** drops them.
+  `CD_FlowConsole.IsLogTypeVisible` answers the developer's switch in the Editor and the default in
+  a build, so `SendLogsToUnityConsole` follows the window as before. An empty list now says why it
+  is empty: *every channel is switched off*, or the count of rows the filters hold back.
 - **`RootAdapter` hands out one asset by name, and reports a miss itself.** `GetScriptable<T>` of
   an asset that is not filed used to throw `KeyNotFoundException` from inside the framework; it now
   logs an error naming the asset and the Root - double-click it to reach the Root - and answers

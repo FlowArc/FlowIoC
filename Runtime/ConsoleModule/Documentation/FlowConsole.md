@@ -136,6 +136,19 @@ Clicking a channel hides or shows it. **Alt+clicking** one narrows the console t
 and alt+clicking the one that is already alone brings the rest back — twenty-nine clicks
 are not an answer when one channel of thirty is interesting.
 
+What you switch on and off is yours. It lives in EditorPrefs, keyed by the project, and
+`CD_FlowConsole.asset` is not written when you click — the asset is committed, and one
+developer's filter has no business turning up in everybody else's diff, or switching their
+channels to match when they pull. The asset carries only the project's defaults: which
+channels are on for somebody who has not touched them, set in the asset's inspector. A
+channel you never touched follows that default, and so does one a module added after you
+last opened the panel. **Presets ▸ Project defaults** drops your switches and puts you back
+on what the asset says.
+
+An empty list says why it is empty when there is a reason: *every channel is switched
+off*, or *N rows hidden by filters* when rows exist and none passes the channels, the
+mute, the isolation, the severity toggles or the search.
+
 ### Searching
 
 Terms are ANDed, a term starting with `-` excludes, and a term wrapped in slashes is a
@@ -254,9 +267,11 @@ The `CD_FlowConsole` asset controls the whole layer.
 | `MaxLogCount` | How many logs are kept. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. `0` keeps all of them. |
 | `SendLogsToUnityConsole` | Mirror everything into Unity's own console, for when you need the two side by side. |
 | `AutoAddEnableLogDefine` | Manage the `ENABLE_LOG` scripting define automatically. |
-| `LogTypes` | The channel list: name, value, colour, visibility, and whether the channel is mandatory or auto-registered. |
+| `LogTypes` | The channel list: name, value, colour, whether the channel is on by default, and whether it is mandatory or auto-registered. |
 
-Per-channel, `IsVisible` is what the window's toggles write. `IsMandatory` marks a
+Per-channel, `IsVisibleByDefault` is the project default — what a developer who has not
+touched the channel sees. The window's toggles do not write it; they write the
+developer's own switches to EditorPrefs (see [Channels](#channels)). `IsMandatory` marks a
 channel that cannot be **removed** — it is what the framework's own channels carry, so
 that module detection never deletes one — and says nothing about hiding: every channel
 can be switched off in the window. `ProfileName` attaches a default profile to every log
@@ -316,9 +331,10 @@ Both are needed for a fully silent loop — the signal flag does not cover the c
 lines and vice versa. Neither affects your own `FlowLogger` calls inside the command
 body.
 
-To hide a whole project channel, clear its `IsVisible` in the settings, or switch it off
-in the window. That is a global switch, not a per-loop one, so prefer the two flags above
-when only one loop is noisy.
+To hide a whole project channel, switch it off in the window — for yourself — or clear
+its `IsVisibleByDefault` in the settings, for everybody who has not touched it. Either is
+a whole-channel switch, not a per-loop one, so prefer the two flags above when only one
+loop is noisy.
 
 For a loop you did not write — somebody else's module, or the framework's own lines — the
 search box does the same job without touching any code: `-tick` hides every row whose
@@ -406,8 +422,9 @@ FlowLogger.LogError(FlowLogType.ShopModule, "Player cannot afford this item.");
 
 ### Nothing appears in the console
 
-Check in this order: `IsLoggingEnabled` in the settings; the channel's `IsVisible`
-toggle in the window; and whether `ENABLE_LOG` is defined. Without the define every
+Check in this order: `IsLoggingEnabled` in the settings; the channel's switch in the
+window — an empty list says so when every channel is off; and whether `ENABLE_LOG` is
+defined. Without the define every
 `FlowLogger` call is compiled away, so the code looks correct and produces nothing.
 
 ### A log says "Source not captured"
