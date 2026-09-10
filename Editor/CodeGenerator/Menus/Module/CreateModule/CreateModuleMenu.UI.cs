@@ -364,7 +364,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             }
 
             _allowAsSubContext = EditorGUILayout.ToggleLeft(
-                "Allow As Sub Context", _allowAsSubContext, GUILayout.Width(160));
+                "Allow As Sub Context", _allowAsSubContext, GUILayout.Width(144));
         }
 
         /// <summary>
@@ -660,42 +660,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             GUI.enabled = wasEnabled && hasParent;
         }
 
+        /// <summary>
+        /// The modules folder over the whole tree, then every module under the module it lives
+        /// in. The folder is a pick of its own only for a main module - that is the one kind that
+        /// goes there - and for the other kinds it is drawn dim, so the reader sees where the tree
+        /// hangs from without being offered it.
+        /// </summary>
         private void DrawModulesHierarchy()
         {
-            GUI.backgroundColor = new ModulePanelTheme().Row;
-            EditorGUILayout.BeginHorizontal("box");
-            GUI.backgroundColor = Color.white;
-
-            GUILayout.Space(10);
-            bool isSelected = _parentModulePath == Path.Combine(Application.dataPath, MODULES_PATH);
-            string buttonText = isSelected ? "Selected" : "Select";
-            GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
-            {
-                normal = {textColor = isSelected ? Color.cyan : GUI.skin.button.normal.textColor},
-                hover = {textColor = isSelected ? Color.cyan : Color.yellow}
-            };
-
-            EditorGUILayout.LabelField("Modules", EditorStyles.label);
-
-            if (_selectedModuleType == ModuleType.Main)
-            {
-                if (GUILayout.Button(buttonText, buttonStyle, GUILayout.Width(60)))
-                {
-                    _parentModulePath = Path.Combine(Application.dataPath, MODULES_PATH);
-                    _selectedModuleName = string.Empty;
-                }
-            }
-            else
-            {
-                EditorGUI.BeginDisabledGroup(true);
-                GUILayout.Button("Select", GUILayout.Width(60));
-                EditorGUI.EndDisabledGroup();
-            }
-
-            EditorGUILayout.EndHorizontal();
-
-            ModuleHierarchyDrawer.DrawModuleHierarchy(_registry, MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath,
-                ref _selectedModuleName, parent => _selectionRules.CanHost(ToModuleKind(_selectedModuleType), parent));
+            _picker.Draw(ref _parentModulePath, ref _selectedModuleName,
+                parent => _selectionRules.CanHost(ToModuleKind(_selectedModuleType), parent),
+                _selectedModuleType == ModuleType.Main);
         }
 
         /// <summary>

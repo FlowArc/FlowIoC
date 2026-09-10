@@ -33,7 +33,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private static string _modelName;
         private string _parentModulePath;
-        private Dictionary<string, bool> _moduleExpandedState;
+        private ModulePicker _picker;
         private ModuleRegistry _registry;
         private readonly DirectoryStructureConfigProvider _configProvider = new DirectoryStructureConfigProvider();
         private List<string> _injectableNames = new List<string>();
@@ -56,12 +56,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void OnEnable()
         {
-            _moduleExpandedState = new Dictionary<string, bool>();
             _parentModulePath = string.Empty;
             ED_CodeGenerator.CreateConfig();
             LoadCodeGeneratorSettings();
             _generationState = GenerationState.Idle;
             _registry = new ModuleRegistryFactory().FromProject();
+            _picker = new ModulePicker(_registry);
+
+            // Without this the window is sent no MouseMove events at all, and a row of the picker
+            // would only light up when something else happened to repaint it.
+            wantsMouseMove = true;
         }
 
         private bool LoadCodeGeneratorSettings()
@@ -78,6 +82,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void OnGUI()
         {
+            if (Event.current.type == EventType.MouseMove) Repaint();
+
             _bar.DrawWindow("Create Model", "FlowIoC", "An interface and the class behind it",
                 null, null, "Create Model");
 
@@ -127,8 +133,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.BeginVertical();
 
             // CreateModelMenu never restricted which module kind could host a model.
-            ModuleHierarchyDrawer.DrawModuleHierarchy(_registry, MODULES_PATH, 0, ref _moduleExpandedState, ref _parentModulePath,
-                ref _selectedModuleName, _ => true);
+            _picker.Draw(ref _parentModulePath, ref _selectedModuleName, _ => true, false);
 
             EditorGUILayout.EndVertical();
 

@@ -20,7 +20,7 @@ namespace FlowIoC.Editor.CodeGenerator
         private static void CreateModule()
         {
             var window = EditorWindow.GetWindow<CreateModuleMenu>("Create Module");
-            window.minSize = new Vector2(800, 800);
+            window.minSize = new Vector2(820, 800);
         }
 
         [MenuItem("Tools/FlowIoC/Delete Module", false, -1300)]

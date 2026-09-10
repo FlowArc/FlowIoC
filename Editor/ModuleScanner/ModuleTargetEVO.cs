@@ -12,10 +12,10 @@ namespace FlowIoC.Editor.ModuleScanner
     /// and these targets come from the folder tree - which is exactly what lets the index be one
     /// of the things under test rather than a precondition of testing anything.
     /// </summary>
-    internal class ModuleTargetEVO
+    internal class ModuleTargetEVO : IModuleTreeItem
     {
-        internal string Name { get; set; }
-        internal ModuleKind Kind { get; set; }
+        public string Name { get; set; }
+        public ModuleKind Kind { get; set; }
         internal string AbsolutePath { get; set; }
         internal string AssetPath { get; set; }
         internal DirectoryStructureConfig Layout { get; set; }
@@ -25,7 +25,7 @@ namespace FlowIoC.Editor.ModuleScanner
         /// The name of the module this one lives in, or null for a top level module. It is what
         /// the panel hangs the row from when it draws a module under its parent.
         /// </summary>
-        internal string ParentName { get; set; }
+        public string ParentName { get; set; }
 
         internal string ParentSharedAssemblyName { get; set; }
 

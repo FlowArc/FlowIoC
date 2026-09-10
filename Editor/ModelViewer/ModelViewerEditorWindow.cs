@@ -17,6 +17,16 @@ namespace FlowIoC.Editor.ModelViewer
 
         private RootBase _inspectedRoot;
 
+        /// <summary>
+        /// Room for the Roots in the scene and, once one is picked, the list of what it injected
+        /// with an Inspect beside each. Set here rather than where the window is opened, so a
+        /// window Unity brings back from a saved layout has it too.
+        /// </summary>
+        private void OnEnable()
+        {
+            minSize = new Vector2(480f, 360f);
+        }
+
         private void OnGUI()
         {
             if (!Application.isPlaying)

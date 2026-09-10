@@ -31,6 +31,15 @@ namespace FlowIoC.Editor.ModelViewer
             }
         }
 
+        /// <summary>
+        /// Room for a model's fields, one per line with its value beside it. Set here rather than
+        /// where the window is made - it is made two ways, and both come through here.
+        /// </summary>
+        private void OnEnable()
+        {
+            minSize = new Vector2(400f, 300f);
+        }
+
         public void OnGUI()
         {
             if (!Application.isPlaying)

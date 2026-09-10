@@ -42,7 +42,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _folderPreviewScrollPosition = EditorGUILayout.BeginScrollView(_folderPreviewScrollPosition,
                 GUILayout.MinHeight(height), GUILayout.MaxHeight(height));
             EditorGUILayout.BeginVertical();
-            DrawFolderPreview(_directoryConfigMap[_selectedModuleType].RootFolders, 0);
+            DrawFolderPreview(_directoryConfigMap[_selectedModuleType].RootFolders);
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
@@ -85,57 +85,63 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             return null;
         }
 
-        private void DrawFolderPreview(List<FolderEVO> folders, int indentLevel)
+        /// <summary>
+        /// The folders as the tree they will be written as: a folder under the folder it sits in,
+        /// hung from it by the same guide line the module lists draw. Only the folders the layout
+        /// says are mandatory or optional are shown - the rest are internal to the generator.
+        /// </summary>
+        private void DrawFolderPreview(List<FolderEVO> folders)
+        {
+            _previewTree.Begin();
+
+            DrawFolderPreview(folders, 0, null);
+        }
+
+        private void DrawFolderPreview(List<FolderEVO> folders, int depth, FolderEVO parent)
         {
             foreach (FolderEVO folder in folders)
             {
                 if (!folder.IsMandatory && !folder.IsOptional)
                     continue;
 
-                DrawTreeLine(new string(' ', indentLevel * 2) + "-" + folder.FolderName, indentLevel, folder);
+                DrawFolderRow(folder, depth, parent);
 
                 if (folder.SubFolders != null && folder.SubFolders.Count > 0)
-                {
-                    DrawFolderPreview(folder.SubFolders, indentLevel + 1);
-                }
+                    DrawFolderPreview(folder.SubFolders, depth + 1, folder);
             }
         }
 
-        private void DrawTreeLine(string text, int indentLevel, FolderEVO folder)
+        /// <summary>
+        /// One folder: the checkbox at the row's edge for a folder the reader may leave out, nothing
+        /// there for one the layout insists on, then the name and what the folder is for.
+        /// The row does not light up under the pointer - the checkbox is the one thing to press.
+        /// </summary>
+        private void DrawFolderRow(FolderEVO folder, int depth, FolderEVO parent)
         {
-            GUI.backgroundColor = new ModulePanelTheme().Row;
-            EditorGUILayout.BeginHorizontal("box");
-            GUI.backgroundColor = Color.white;
-            GUILayout.Space(indentLevel * 20);
+            Rect rect = _previewRows.RowInset();
 
-            if (folder.IsMandatory)
-            {
-                GUILayout.Space(20);
-            }
-            else if (folder.IsOptional)
-            {
-                bool isSelected = _selectedOptionalFolders.Contains(folder);
-                bool newSelection = EditorGUILayout.Toggle(isSelected, GUILayout.Width(18));
+            _previewRows.Paint(rect, new FlowPalette().Chrome(EditorGUIUtility.isProSkin), FlowRowPainter.QUIET_ALPHA);
+            _previewTree.Hang(folder, rect, depth, parent);
 
-                if (newSelection && !isSelected)
-                {
-                    _selectedOptionalFolders.Add(folder);
-                }
-                else if (!newSelection && isSelected)
-                {
-                    _selectedOptionalFolders.Remove(folder);
-                }
+            if (folder.IsOptional)
+            {
+                bool wasSelected = _selectedOptionalFolders.Contains(folder);
+                bool selected = EditorGUI.Toggle(
+                    new Rect(_previewTree.LeadX(rect), rect.y, PREVIEW_LEAD_WIDTH, rect.height), wasSelected);
+
+                if (selected && !wasSelected) _selectedOptionalFolders.Add(folder);
+                else if (!selected && wasSelected) _selectedOptionalFolders.Remove(folder);
             }
 
-            if (indentLevel > 0)
-                GUILayout.Space(-15);
+            float x = _previewTree.TextX(rect, depth);
 
-            EditorGUILayout.LabelField(text, GUILayout.Width(200));
+            var label = new GUIContent(folder.FolderName);
+            GUIStyle nameStyle = _previewRows.Name(false);
+            float nameWidth = nameStyle.CalcSize(label).x;
 
-            DrawHint(_previewHints.For(folder));
+            GUI.Label(new Rect(x, rect.y, nameWidth, rect.height), label, nameStyle);
 
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
+            DrawHint(_previewHints.For(folder), new Rect(x + nameWidth + 8f, rect.y, rect.xMax - x - nameWidth - 14f, rect.height));
         }
 
         /// <summary>
@@ -143,16 +149,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// Dimmed, because it is an aside: the reader is here to pick folders, and the hint is only
         /// there for the moment they wonder which Signals is which.
         /// </summary>
-        private void DrawHint(string hint)
+        private void DrawHint(string hint, Rect rect)
         {
-            if (string.IsNullOrEmpty(hint)) return;
+            if (string.IsNullOrEmpty(hint) || rect.width < 40f) return;
 
-            Color previous = GUI.color;
-            GUI.color = new Color(previous.r, previous.g, previous.b, 0.5f);
-
-            GUILayout.Label(hint, EditorStyles.miniLabel);
-
-            GUI.color = previous;
+            GUI.Label(rect, hint, _previewRows.Mini(false));
         }
 
         /// <summary>

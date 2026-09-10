@@ -93,12 +93,13 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
             painter.Separator();
             painter.SubHeading("Parent Module");
             painter.Paragraph(
-                "The list at the bottom is where the module is placed. Modules puts it at the top "
-                + "level; picking an existing module nests it inside, under zSubModules, "
-                + "zScreenModules or zTestModules according to the type. A parent that cannot host "
-                + "the type you chose is offered no Select button - a screen belongs to the module "
-                + "whose feature it shows, so another screen module and a test module are not "
-                + "parents.");
+                "The list at the bottom is where the module is placed: the project's module tree, "
+                + "a module under the module it lives in, and clicking a row picks it. Modules, the "
+                + "row the whole tree hangs from, puts it at the top level; picking an existing "
+                + "module nests it inside, under zSubModules, zScreenModules or zTestModules "
+                + "according to the type. A parent that cannot host the type you chose is drawn dim "
+                + "and takes no click - a screen belongs to the module whose feature it shows, so "
+                + "another screen module and a test module are not parents.");
 
             painter.Separator();
             painter.SubHeading("What a Screen module gets on top");

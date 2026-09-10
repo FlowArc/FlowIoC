@@ -33,9 +33,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         /// <summary>
         /// How wide an optional-folder toggle is drawn. Wide enough for the longest of them, so the
-        /// three in a row line up: a per-label width would leave the second column ragged.
+        /// three in a row line up: a per-label width would leave the second column ragged. No wider,
+        /// because the three have to fit the right column at the window's minimum width - the
+        /// columns now run to the edge, and what used to spill into the strip kept back for a
+        /// scrollbar spills off the window instead.
         /// </summary>
-        private const float TOGGLE_WIDTH = 150f;
+        private const float TOGGLE_WIDTH = 142f;
 
         private const string NEW_ACTION = "NewAction";
         private const string ADD_ACTION = "Add Action";
@@ -95,15 +98,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const float LEFT_COLUMN_SHARE = 0.45f;
 
         private const float COLUMNS_SPACING = 8f;
-        private const float COLUMNS_MARGIN = 30f;
-        private const float COLUMN_MIN_WIDTH = 260f;
 
-        /// <summary>
-        /// Width kept back for the form's own scrollbar. It is reserved whether or not the bar is
-        /// showing, because a width that changed with it would make the two columns jump sideways
-        /// the moment the content grew past the window.
-        /// </summary>
-        private const float SCROLLBAR_RESERVE = 15f;
+        private const float COLUMN_MIN_WIDTH = 260f;
 
         private const string CONFIG_BUTTON_TOOLTIP =
             "Select the folder layout this module type is generated from.";
@@ -123,11 +119,25 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private static string _moduleConcepts;
         private string _parentModulePath;
-        private Dictionary<string, bool> _moduleExpandedState;
+        private ModulePicker _picker;
         private ModuleRegistry _registry;
         private ModuleSelectionRules _selectionRules;
         private Vector2 _scrollPosition;
         private Vector2 _folderPreviewScrollPosition;
+
+        /// <summary>
+        /// The form's scroll view as it was last painted - its width and height, and how tall the
+        /// content inside it came to - remembered from the last Repaint because the Layout pass
+        /// answers with placeholders. Together they say whether the scrollbar is showing, and the
+        /// columns fill the width left of it: nothing is held back for a bar that is not there,
+        /// and when one appears the columns give up its width once rather than carrying an empty
+        /// strip on every window that never needed to scroll. Measured off the view rather than
+        /// off the content, because the content is the columns themselves and a width read from
+        /// them would feed back into them, a little wider every frame.
+        /// </summary>
+        private Rect _view;
+
+        private float _contentHeight;
         private Dictionary<ModuleType, DirectoryStructureConfig> _directoryConfigMap;
         private readonly List<FolderEVO> _selectedOptionalFolders = new();
 
@@ -156,6 +166,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
         private readonly FolderPreviewHints _previewHints = new FolderPreviewHints();
+
+        /// <summary>
+        /// The column the preview keeps at the row edge for an optional folder's checkbox: the box
+        /// and a little air, and no more - on the rows with no box it reads as a gap.
+        /// </summary>
+        private const float PREVIEW_LEAD_WIDTH = 16f;
+
+        /// <summary>The rows of the folder preview, and the tree that hangs each folder from its parent.</summary>
+        private readonly FlowRowPainter _previewRows = new FlowRowPainter();
+
+        private FlowTreePainter _previewTree;
 
         private bool _createRoot;
         private bool _createContext;
@@ -196,7 +217,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private void OnEnable()
         {
-            _moduleExpandedState = new Dictionary<string, bool>();
             _parentModulePath = string.Empty;
             _moduleName = string.Empty;
             _modulePurpose = string.Empty;
@@ -210,6 +230,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _allowAsSubContext = false;
             _actionNames = new List<string>();
             _registry = new ModuleRegistryFactory().FromProject();
+            _picker = new ModulePicker(_registry);
+            _previewTree = new FlowTreePainter(_previewRows, PREVIEW_LEAD_WIDTH);
+
+            // Without this the window is sent no MouseMove events at all, and a row of the picker
+            // would only light up when something else happened to repaint it.
+            wantsMouseMove = true;
             _selectionRules = new ModuleSelectionRules();
             SelectSignalsFolderByDefault();
             ClearSharedFolderByDefault();
@@ -217,6 +243,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private void OnGUI()
         {
+            if (Event.current.type == EventType.MouseMove) Repaint();
+
             // The Root's purple, not the scanners' green: those windows report a state, this one
             // writes the Root and Context a module is built around.
             _bar.DrawWindow(
@@ -234,8 +262,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             // preview would take everything, because the rows inside it end in a FlexibleSpace.
             // Every row above the panels stands in the same two columns, so the window reads as
             // two lanes rather than as rows that each stretch differently.
-            float available = Mathf.Max(
-                position.width - COLUMNS_MARGIN - SCROLLBAR_RESERVE, COLUMN_MIN_WIDTH * 2f);
+            bool scrolling = _contentHeight > _view.height;
+            float viewWidth = _view.width > 0f ? _view.width : position.width;
+
+            if (scrolling) viewWidth -= GUI.skin.verticalScrollbar.fixedWidth;
+
+            float available = Mathf.Max(viewWidth - COLUMNS_SPACING, COLUMN_MIN_WIDTH * 2f);
             float leftWidth = Mathf.Max(available * LEFT_COLUMN_SHARE, COLUMN_MIN_WIDTH);
             float rightWidth = Mathf.Max(available - leftWidth, COLUMN_MIN_WIDTH);
 
@@ -349,7 +381,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                 DisplayActionsSection();
             }
 
+            // A rect of no height at the foot of the content is where the content ends, and the
+            // scroll view's own rect is what it was drawn in.
+            Rect foot = GUILayoutUtility.GetRect(0f, 0f, GUILayout.ExpandWidth(false));
+
             EditorGUILayout.EndScrollView();
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                _contentHeight = foot.yMax;
+                _view = GUILayoutUtility.GetLastRect();
+            }
 
             // How much room the form was given, which is what the action list inside it stretches
             // to fill. It is the scroll view's own rect, so it is read out here rather than guessed

@@ -72,9 +72,10 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
             painter.Separator();
             painter.SubHeading("Parent Module");
             painter.Paragraph(
-                "Any module may host a command, so every module in the project is offered. The file "
-                + "lands in that module's Controllers folder, which is where its Functions are too - "
-                + "both are controllers.");
+                "Any module may host a command, so every module in the project is offered, as the "
+                + "tree Module Scanner draws - a module under the module it lives in - and clicking "
+                + "a row picks it. The file lands in that module's Controllers folder, which is "
+                + "where its Functions are too - both are controllers.");
             painter.PageLink("Create Function", "Writing a Function instead");
 
             painter.Note(

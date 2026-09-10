@@ -1,37 +1,35 @@
 using System.Collections.Generic;
 using System.Linq;
-using FlowIoC.Editor.ModuleScanner;
 using FlowIoC.Editor.Modules;
 using NUnit.Framework;
 
 namespace FlowIoC.Tests
 {
     /// <summary>
-    /// The tree turns the flat list of rows a scan produces into the order the window draws them
-    /// in: a module under the module it lives in. The rows arrive in any order, carrying only the
-    /// name of their parent, and the tree is what turns that name into a depth, a place in the
-    /// list and the guide lines a row is drawn with.
+    /// The tree turns a flat list of modules into the order a window draws them in: a module
+    /// under the module it lives in. The items arrive in any order, carrying only the name of
+    /// their parent, and the tree is what turns that name into a depth, a place in the list, the
+    /// entry the row hangs from and everything drawn inside it.
     /// </summary>
     public class ModuleTreeTests
     {
-        private static ModuleRowEVO Row(
-            string name, ModuleKind kind = ModuleKind.Main, string parent = null,
-            ModuleCheckStatus status = ModuleCheckStatus.Ok)
+        private class Item : IModuleTreeItem
         {
-            var row = new ModuleRowEVO {Name = name, Kind = kind, ParentName = parent};
-
-            row.Findings.Add(new FindingEVO("check", status, name));
-
-            return row;
+            public string Name { get; set; }
+            public ModuleKind Kind { get; set; }
+            public string ParentName { get; set; }
         }
 
-        private static List<string> Names(IEnumerable<ModuleTreeRowEVO> tree) =>
+        private static Item Row(string name, ModuleKind kind = ModuleKind.Main, string parent = null) =>
+            new Item {Name = name, Kind = kind, ParentName = parent};
+
+        private static List<string> Names(IEnumerable<ModuleTreeRowEVO<Item>> tree) =>
             tree.Select(entry => entry.Row.Name).ToList();
 
         [Test]
         public void A_module_sits_under_the_module_it_lives_in()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerTestModule", ModuleKind.Test, "PlayerModule"),
                 Row("PlayerModule")
@@ -45,7 +43,7 @@ namespace FlowIoC.Tests
         [Test]
         public void Top_level_modules_are_ordered_by_name()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerModule"),
                 Row("InputModule")
@@ -61,7 +59,7 @@ namespace FlowIoC.Tests
         [Test]
         public void Siblings_are_ordered_by_kind_and_then_by_name()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerModule"),
                 Row("PlayerTestModule", ModuleKind.Test, "PlayerModule"),
@@ -81,7 +79,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_module_and_everything_inside_it_come_before_the_next_sibling()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerModule"),
                 Row("PlayerTestModule", ModuleKind.Test, "PlayerModule"),
@@ -104,7 +102,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_row_hangs_from_the_row_of_the_module_it_lives_in()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerModule"),
                 Row("HudScreenModule", ModuleKind.Screen, "PlayerModule"),
@@ -125,7 +123,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_row_whose_parent_is_not_in_the_list_is_drawn_at_the_top()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerModule"),
                 Row("LostTestModule", ModuleKind.Test, "GoneModule")
@@ -137,33 +135,34 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// "Only issues" keeps a row whose descendant has something to say, so the indent under
-        /// it still has something to hang from. The issue rises through every ancestor and no
-        /// further: a sibling of the broken row stays hidden.
+        /// What an entry carries below it, in drawing order: what Module Scanner's "Only issues"
+        /// asks to keep a green parent over a red child, what Delete Module's search asks to keep
+        /// a module whose child matched, and what its confirmation names as going with the module.
         /// </summary>
         [Test]
-        public void An_issue_rises_from_a_descendant_to_every_ancestor()
+        public void Descendants_are_everything_inside_a_row_in_drawing_order()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerModule"),
                 Row("HudScreenModule", ModuleKind.Screen, "PlayerModule"),
-                Row("HudScreenTestModule", ModuleKind.Test, "HudScreenModule", ModuleCheckStatus.Manual),
+                Row("HudScreenTestModule", ModuleKind.Test, "HudScreenModule"),
                 Row("PlayerTestModule", ModuleKind.Test, "PlayerModule"),
                 Row("ShopModule")
             });
 
-            Assert.IsTrue(tree[0].HasIssue, "PlayerModule");
-            Assert.IsTrue(tree[1].HasIssue, "HudScreenModule");
-            Assert.IsTrue(tree[2].HasIssue, "HudScreenTestModule");
-            Assert.IsFalse(tree[3].HasIssue, "PlayerTestModule");
-            Assert.IsFalse(tree[4].HasIssue, "ShopModule");
+            CollectionAssert.AreEqual(
+                new[] {"HudScreenModule", "HudScreenTestModule", "PlayerTestModule"},
+                Names(tree[0].Descendants));
+            CollectionAssert.AreEqual(new[] {"HudScreenTestModule"}, Names(tree[1].Descendants));
+            CollectionAssert.IsEmpty(tree[2].Descendants);
+            CollectionAssert.IsEmpty(tree[4].Descendants);
         }
 
         [Test]
         public void Every_row_is_drawn_exactly_once()
         {
-            List<ModuleTreeRowEVO> tree = new ModuleTree().Build(new[]
+            List<ModuleTreeRowEVO<Item>> tree = new ModuleTree().Build(new[]
             {
                 Row("PlayerModule"),
                 Row("HudScreenModule", ModuleKind.Screen, "PlayerModule"),
