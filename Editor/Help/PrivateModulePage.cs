@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help
 {
@@ -29,11 +30,10 @@ namespace FlowIoC.Editor.Help
         public virtual string Subtitle => string.Empty;
 
         /// <summary>
-        /// The built-in Editor icon drawn beside the topic, by the name
-        /// EditorGUIUtility.IconContent takes. Skin-neutral names only: Unity picks the dark
-        /// variant itself.
+        /// The drawing beside the topic in the sidebar, one of FlowIoC's own. The cube unless the
+        /// page says otherwise.
         /// </summary>
-        public virtual string Icon => "Prefab Icon";
+        public virtual FlowIcon Icon => FlowIcon.Cube;
 
         /// <summary>
         /// The folder under PrivateModules~ this page installs, inside the package the page

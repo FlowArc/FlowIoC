@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help
 {
@@ -20,11 +21,10 @@ namespace FlowIoC.Editor.Help
         string Subtitle { get; }
 
         /// <summary>
-        /// The built-in Editor icon drawn beside the topic in the sidebar, by the name
-        /// EditorGUIUtility.IconContent takes. Skin-neutral names only: Unity picks the dark
-        /// variant itself.
+        /// The drawing beside the topic in the sidebar. One of FlowIoC's own, so it is drawn at
+        /// the pixels it was made for and takes the colour of the name next to it.
         /// </summary>
-        string Icon { get; }
+        FlowIcon Icon { get; }
 
         /// <summary>
         /// Whether the sidebar draws this topic on the banner colour. The introduction is the one

@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help
 {
@@ -25,7 +26,7 @@ namespace FlowIoC.Editor.Help
 
         public virtual string Subtitle => string.Empty;
 
-        public abstract string Icon { get; }
+        public abstract FlowIcon Icon { get; }
 
         public virtual bool Featured => false;
 

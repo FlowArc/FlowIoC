@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.Help.Graph;
+using FlowIoC.Editor.Icons;
 using UnityEditor;
 using UnityEngine;
 
@@ -25,6 +26,7 @@ namespace FlowIoC.Editor.Help
         private readonly HelpTheme _theme;
         private readonly HelpGraphPainter _graphPainter;
         private readonly HelpCodeHighlighter _highlighter;
+        private readonly FlowIcons _icons;
 
         /// <summary>
         /// What a page link is checked against, and null for a painter that is not the help
@@ -39,16 +41,21 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         private readonly HelpGraphStepper _mapStepper = new HelpGraphStepper(0);
 
-        internal HelpPainter(HelpTheme theme) : this(theme, null)
+        internal HelpPainter(HelpTheme theme) : this(theme, null, new FlowIcons())
         {
         }
 
-        internal HelpPainter(HelpTheme theme, HelpPageCatalog catalog)
+        /// <summary>
+        /// The help window's own painter, sharing the window's icons so a card and the sidebar
+        /// row above it load one texture between them.
+        /// </summary>
+        internal HelpPainter(HelpTheme theme, HelpPageCatalog catalog, FlowIcons icons)
         {
             _theme = theme;
             _graphPainter = new HelpGraphPainter(theme);
             _highlighter = new HelpCodeHighlighter(theme);
             _catalog = catalog;
+            _icons = icons;
         }
 
         /// <summary>
@@ -313,13 +320,13 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         private float TitleRowHeight(HelpPart part, float inner)
         {
-            float titleWidth = string.IsNullOrEmpty(part.Icon)
+            float titleWidth = part.Icon == FlowIcon.None
                 ? inner
                 : inner - _theme.CardIconSize - 6f;
 
             float height = _theme.PartTitle.CalcHeight(new GUIContent(part.Title), titleWidth);
 
-            return string.IsNullOrEmpty(part.Icon) ? height : Mathf.Max(height, _theme.CardIconSize);
+            return part.Icon == FlowIcon.None ? height : Mathf.Max(height, _theme.CardIconSize);
         }
 
         private void DrawPart(Rect rect, HelpPart part)
@@ -343,17 +350,12 @@ namespace FlowIoC.Editor.Help
             float titleX = x;
             float titleWidth = inner;
 
-            if (!string.IsNullOrEmpty(part.Icon))
+            if (part.Icon != FlowIcon.None)
             {
-                GUIContent icon = EditorGUIUtility.IconContent(part.Icon);
-
-                if (icon != null && icon.image != null)
-                {
-                    GUI.DrawTexture(
-                        new Rect(x, y + (titleRow - _theme.CardIconSize) * 0.5f,
-                            _theme.CardIconSize, _theme.CardIconSize),
-                        icon.image, ScaleMode.ScaleToFit);
-                }
+                _icons.Draw(
+                    new Rect(Mathf.Round(x), Mathf.Round(y + (titleRow - _theme.CardIconSize) * 0.5f),
+                        _theme.CardIconSize, _theme.CardIconSize),
+                    part.Icon, _theme.PartTitle.normal.textColor);
 
                 titleX += _theme.CardIconSize + 6f;
                 titleWidth -= _theme.CardIconSize + 6f;

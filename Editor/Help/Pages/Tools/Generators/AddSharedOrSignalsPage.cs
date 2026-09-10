@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 {
     /// <summary>
@@ -17,7 +19,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override string Title => "Add Shared or Signals";
 
-        public override string Icon => "Settings";
+        public override FlowIcon Icon => FlowIcon.Layers;
 
         protected override string BodyHeadline => "Tools > FlowIoC > Add Shared or Signals.";
 

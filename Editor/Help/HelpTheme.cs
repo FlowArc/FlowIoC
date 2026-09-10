@@ -509,8 +509,8 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         public float CardMinWidth => 190f;
 
-        /// <summary>One box for every card icon, whatever the icon's own resolution.</summary>
-        public float CardIconSize => 20f;
+        /// <summary>The size a card's icon is drawn at - one the icons ship at, so it is never resampled.</summary>
+        public float CardIconSize => 16f;
 
         /// <summary>
         /// The text on a topic row. The window draws it into a rectangle of its own, so this

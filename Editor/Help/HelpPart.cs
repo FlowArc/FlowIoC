@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help
 {
     /// <summary>
@@ -12,7 +14,8 @@ namespace FlowIoC.Editor.Help
     /// </summary>
     public class HelpPart
     {
-        public HelpPart(string title, string summary, string signature = null, string icon = null)
+        public HelpPart(string title, string summary, string signature = null,
+            FlowIcon icon = FlowIcon.None)
         {
             Title = title;
             Summary = summary;
@@ -32,11 +35,10 @@ namespace FlowIoC.Editor.Help
         public string Signature { get; }
 
         /// <summary>
-        /// The built-in Editor icon drawn beside the title, by the name EditorGUIUtility.IconContent
-        /// takes. Skin-neutral names only, the way a page's own icon is: Unity picks the dark
-        /// variant itself. Empty for a card that carries no icon.
+        /// The drawing beside the title, one of FlowIoC's own the way a page's is. None for a card
+        /// that carries no icon.
         /// </summary>
-        public string Icon { get; }
+        public FlowIcon Icon { get; }
     }
 }
 

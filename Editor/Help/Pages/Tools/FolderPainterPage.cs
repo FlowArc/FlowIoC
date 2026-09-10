@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class FolderPainterPage : HelpPage
@@ -10,7 +12,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Title => "Folder Painter";
 
-        public override string Icon => "FolderOpened Icon";
+        public override FlowIcon Icon => FlowIcon.Brush;
 
         protected override string BodyHeadline => "Tinted folders keep a large module tree readable.";
 

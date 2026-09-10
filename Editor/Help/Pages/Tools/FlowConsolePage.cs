@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class FlowConsolePage : HelpPage
@@ -10,7 +12,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Title => "Flow Console";
 
-        public override string Icon => "UnityEditor.ConsoleWindow";
+        public override FlowIcon Icon => FlowIcon.Terminal;
 
         protected override string BodyHeadline => "The framework logs itself into one window.";
 

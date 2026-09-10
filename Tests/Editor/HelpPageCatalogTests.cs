@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.Editor.Help;
+using FlowIoC.Editor.Icons;
 using NUnit.Framework;
 
 namespace FlowIoC.Tests
@@ -31,7 +32,7 @@ namespace FlowIoC.Tests
         public void Every_page_names_an_icon()
         {
             foreach (IHelpPage page in _catalog.Pages)
-                Assert.IsFalse(string.IsNullOrWhiteSpace(page.Icon), $"'{page.Title}' has no icon.");
+                Assert.AreNotEqual(FlowIcon.None, page.Icon, $"'{page.Title}' has no icon.");
         }
 
         /// <summary>

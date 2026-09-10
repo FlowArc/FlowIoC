@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.Help;
+using FlowIoC.Editor.Icons;
 using FlowIoC.Editor.ModuleInstall;
 using NUnit.Framework;
 
@@ -18,7 +19,7 @@ namespace FlowIoC.Tests
 
             public override string Subtitle => "LevelPlay mediation";
 
-            public override string Icon => "Prefab Icon";
+            public override FlowIcon Icon => FlowIcon.Camera;
 
             public override string ModuleFolderName => "AdsModule";
 
@@ -68,7 +69,7 @@ namespace FlowIoC.Tests
 
             Assert.AreEqual("Ads", adapter.Title);
             Assert.AreEqual("LevelPlay mediation", adapter.Subtitle);
-            Assert.AreEqual("Prefab Icon", adapter.Icon);
+            Assert.AreEqual(FlowIcon.Camera, adapter.Icon);
         }
 
         /// <summary>

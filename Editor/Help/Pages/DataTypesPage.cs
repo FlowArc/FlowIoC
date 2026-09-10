@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
 {
@@ -12,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages
 
         public override string Title => "Data Types";
 
-        public override string Icon => "ScriptableObject Icon";
+        public override FlowIcon Icon => FlowIcon.Braces;
 
         /// <summary>
         /// Exposed for the same reason the folder tree is: a test can check the names here against

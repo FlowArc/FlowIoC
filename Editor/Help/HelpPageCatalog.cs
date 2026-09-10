@@ -5,6 +5,7 @@ using FlowIoC.Editor.Help.Pages;
 using FlowIoC.Editor.Help.Pages.Modules;
 using FlowIoC.Editor.Help.Pages.Tools;
 using FlowIoC.Editor.Help.Pages.Tools.Generators;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help
 {
@@ -23,13 +24,13 @@ namespace FlowIoC.Editor.Help
             Sections = new List<HelpSection>
             {
                 new HelpSection(new WelcomePage()),
-                new HelpSection("Wiki", "TextAsset Icon",
+                new HelpSection("Wiki", FlowIcon.Book,
                     new HelpSection(new CreatingModulePage()),
                     new HelpSection(new FolderLayoutPage()),
                     new HelpSection(new DataTypesPage()),
                     new HelpSection(new CodeStylePage()),
                     new HelpSection(new OrderingRootsPage()),
-                    new HelpSection("Structure", "UnityEditor.SceneHierarchyWindow",
+                    new HelpSection("Structure", FlowIcon.Diagram,
                         new RootContextPage(),
                         new SignalsPage(),
                         new ControllersPage(),
@@ -37,8 +38,8 @@ namespace FlowIoC.Editor.Help
                         new SystemsServicesPage(),
                         new ViewMediatorPage(),
                         new ConnectorsPage()),
-                    new HelpSection("Editor Tools", "Settings",
-                        new HelpSection("Code Generators", "cs Script Icon",
+                    new HelpSection("Editor Tools", FlowIcon.Wrench,
+                        new HelpSection("Code Generators", FlowIcon.Wand,
                             new CreateModulePage(),
                             new CreateCommandPage(),
                             new CreateFunctionPage(),
@@ -52,7 +53,7 @@ namespace FlowIoC.Editor.Help
                         new HelpSection(new FlowConsolePage()),
                         new HelpSection(new ModelViewerPage()),
                         new HelpSection(new FolderPainterPage()))),
-                new HelpSection("Modules", "Prefab Icon", ModuleSections())
+                new HelpSection("Modules", FlowIcon.Puzzle, ModuleSections())
             };
 
             var pages = new List<IHelpPage>();

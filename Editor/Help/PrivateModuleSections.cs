@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace FlowIoC.Editor.Help
         /// A lock, because what puts these modules in a package of their own is that they cannot
         /// be published.
         /// </summary>
-        private const string CategoryIcon = "InspectorLock";
+        private const FlowIcon CategoryIcon = FlowIcon.Lock;
 
         private readonly IReadOnlyList<PrivateModulePage> _pages;
 

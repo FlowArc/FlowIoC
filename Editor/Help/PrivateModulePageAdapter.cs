@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using FlowIoC.Editor.AgentRules;
+using FlowIoC.Editor.Icons;
 using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
 
@@ -49,7 +50,7 @@ namespace FlowIoC.Editor.Help
 
         public override string Subtitle => _page.Subtitle;
 
-        public override string Icon => _page.Icon;
+        public override FlowIcon Icon => _page.Icon;
 
         public override HelpAction Action => _install;
 

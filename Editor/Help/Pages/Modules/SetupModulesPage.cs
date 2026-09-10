@@ -5,6 +5,7 @@ using FlowIoC.Editor.ModuleInstall;
 using FlowIoC.Editor.SetupModules;
 using UnityEditor;
 using UnityEditor.PackageManager;
+using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
@@ -36,7 +37,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string Subtitle => "What a new FlowIoC project starts with";
 
-        public override string Icon => "Prefab Icon";
+        public override FlowIcon Icon => FlowIcon.Grid;
 
         public override HelpAction Action => _install;
 

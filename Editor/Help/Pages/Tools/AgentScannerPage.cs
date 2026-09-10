@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Icons;
+
 namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class AgentScannerPage : HelpPage
@@ -10,7 +12,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
         public override string Title => "Agent Scanner";
 
-        public override string Icon => "console.infoicon";
+        public override FlowIcon Icon => FlowIcon.Robot;
 
         protected override string BodyHeadline =>
             "Everything this project tells an AI assistant, in one list.";
