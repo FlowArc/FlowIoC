@@ -1210,6 +1210,7 @@ you do not want.
 | Module | Injected as | What it does |
 |---|---|---|
 | **CounterModule** | `ICounterService` | Named counters with once-a-second callbacks: `CountDownFrom` towards zero or `CountUpFrom` measuring elapsed time, seconds left or 0..1, several listeners per id, and a pluggable time source so a server clock can replace the device one. |
+| **WorldPointerModule** | `IWorldPointerService` | A UI element that follows a 3D object on screen every frame - a health bar, a name, a "wave incoming" notice - and, outside the frame, hides, clamps to the edge with an arrow aimed at the target, or carries on. The frame is the camera's pixel rect inset by margins, so a HUD bar is a margin; a destroyed target drops itself; `TryProject` places something once. |
 
 Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its
 page. Copying the files is only part of it — the installer also registers the module in the module
