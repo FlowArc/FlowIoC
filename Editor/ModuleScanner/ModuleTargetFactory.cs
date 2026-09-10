@@ -93,6 +93,7 @@ namespace FlowIoC.Editor.ModuleScanner
                     AssetPath = paths.ToAssetPath(module.AbsolutePath),
                     Layout = configs.ConfigFor(module.Kind),
                     ParentAbsolutePath = parent,
+                    ParentName = parent == null ? null : Path.GetFileName(parent),
                     ParentSharedAssemblyName = parent == null
                         ? null
                         : shared.FindIn(parent, configs.ConfigFor(ModuleKind.Main)),

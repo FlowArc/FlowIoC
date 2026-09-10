@@ -109,8 +109,22 @@ namespace FlowIoC.Editor.Inspector
             EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, alpha));
         }
 
+        /// <summary>
+        /// The line a nested row hangs from: down from the arrow of the row it lives in, then
+        /// across to its own. Opaque, so the segments the rows draw one after another overlap
+        /// without a darker joint where they meet, and grey rather than a status colour - the
+        /// line says where a row sits, and the row's tint already says how it is.
+        /// </summary>
+        public Color Guide { get; } = new Color(0.55f, 0.55f, 0.55f);
+
         /// <summary>Where a row's first cell starts: past the stripe, with air after it.</summary>
         public float ContentX => STRIPE_WIDTH + 6f;
+
+        /// <summary>One segment of a guide line, a pixel thick in whichever direction it runs.</summary>
+        public void DrawGuide(Rect line)
+        {
+            EditorGUI.DrawRect(line, Guide);
+        }
 
         /// <summary>
         /// Whether the pointer is over this row. A row lights up as a whole rather than one cell

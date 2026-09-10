@@ -20,6 +20,13 @@ namespace FlowIoC.Editor.ModuleScanner
         internal string AssetPath { get; set; }
         internal DirectoryStructureConfig Layout { get; set; }
         internal string ParentAbsolutePath { get; set; }
+
+        /// <summary>
+        /// The name of the module this one lives in, or null for a top level module. It is what
+        /// the panel hangs the row from when it draws a module under its parent.
+        /// </summary>
+        internal string ParentName { get; set; }
+
         internal string ParentSharedAssemblyName { get; set; }
 
         /// <summary>

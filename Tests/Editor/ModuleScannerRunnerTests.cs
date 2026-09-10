@@ -153,5 +153,22 @@ namespace FlowIoC.Tests
             Assert.AreEqual("Assets/Modules/PlayerModule", report.Modules[0].AssetPath);
             Assert.AreEqual("Modules.Player", report.Modules[0].AssemblyName);
         }
+
+        /// <summary>
+        /// The panel draws a module under the module it lives in, and the parent's name is what
+        /// the tree hangs the row from - so the row carries it the way it carries the rest of the
+        /// module's identity.
+        /// </summary>
+        [Test]
+        public void A_row_carries_the_name_of_the_module_it_lives_in()
+        {
+            var pipeline = new ModuleCheckPipeline(new IModuleCheck[0], new IProjectCheck[0]);
+
+            var target = new ModuleTargetEVO {Name = "PlayerTestModule", ParentName = "PlayerModule"};
+
+            ModuleScannerReportEVO report = new ModuleScannerRunner(pipeline).Run(new ProjectTargetEVO(), new[] {target});
+
+            Assert.AreEqual("PlayerModule", report.Modules[0].ParentName);
+        }
     }
 }

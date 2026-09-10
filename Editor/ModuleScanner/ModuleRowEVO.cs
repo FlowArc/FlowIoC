@@ -13,6 +13,10 @@ namespace FlowIoC.Editor.ModuleScanner
         internal ModuleKind Kind { get; set; }
         internal string AssetPath { get; set; }
         internal string AssemblyName { get; set; }
+
+        /// <summary>The module this one lives in, by name, or null for a top level module.</summary>
+        internal string ParentName { get; set; }
+
         internal List<FindingEVO> Findings { get; } = new List<FindingEVO>();
 
         /// <summary>
