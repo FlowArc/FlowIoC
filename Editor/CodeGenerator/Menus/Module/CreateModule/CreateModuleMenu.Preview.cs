@@ -94,20 +94,24 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         {
             _previewTree.Begin();
 
-            DrawFolderPreview(folders, 0, null);
+            DrawFolderPreview(folders, 0, null, false);
         }
 
-        private void DrawFolderPreview(List<FolderEVO> folders, int depth, FolderEVO parent)
+        /// <summary>
+        /// <paramref name="leftOut"/> is whether a folder above this level was unticked: a folder
+        /// under one that is not written is not written either, whatever its own box says.
+        /// </summary>
+        private void DrawFolderPreview(List<FolderEVO> folders, int depth, FolderEVO parent, bool leftOut)
         {
             foreach (FolderEVO folder in folders)
             {
                 if (!folder.IsMandatory && !folder.IsOptional)
                     continue;
 
-                DrawFolderRow(folder, depth, parent);
+                bool written = DrawFolderRow(folder, depth, parent, leftOut);
 
                 if (folder.SubFolders != null && folder.SubFolders.Count > 0)
-                    DrawFolderPreview(folder.SubFolders, depth + 1, folder);
+                    DrawFolderPreview(folder.SubFolders, depth + 1, folder, !written);
             }
         }
 
@@ -115,12 +119,21 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// One folder: the checkbox at the row's edge for a folder the reader may leave out, nothing
         /// there for one the layout insists on, then the name and what the folder is for.
         /// The row does not light up under the pointer - the checkbox is the one thing to press.
+        /// A folder that will not be written - unticked, or under one that is - is shaded and its
+        /// name muted, so the tree shows what the module will actually get. Answers whether the
+        /// folder is written, which is what its children hang on.
         /// </summary>
-        private void DrawFolderRow(FolderEVO folder, int depth, FolderEVO parent)
+        private bool DrawFolderRow(FolderEVO folder, int depth, FolderEVO parent, bool leftOut)
         {
             Rect rect = _previewRows.RowInset();
+            Color accent = new FlowPalette().Chrome(EditorGUIUtility.isProSkin);
 
-            _previewRows.Paint(rect, new FlowPalette().Chrome(EditorGUIUtility.isProSkin), FlowRowPainter.QUIET_ALPHA);
+            bool ticked = !folder.IsOptional || _selectedOptionalFolders.Contains(folder);
+            bool written = ticked && !leftOut;
+
+            if (written) _previewRows.Paint(rect, accent, FlowRowPainter.QUIET_ALPHA);
+            else _previewRows.PaintShaded(rect, accent);
+
             _previewTree.Hang(folder, rect, depth, parent);
 
             if (folder.IsOptional)
@@ -136,12 +149,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             float x = _previewTree.TextX(rect, depth);
 
             var label = new GUIContent(folder.FolderName);
-            GUIStyle nameStyle = _previewRows.Name(false);
+            GUIStyle nameStyle = written ? _previewRows.Name(false) : _previewRows.Muted();
             float nameWidth = nameStyle.CalcSize(label).x;
 
             GUI.Label(new Rect(x, rect.y, nameWidth, rect.height), label, nameStyle);
 
             DrawHint(_previewHints.For(folder), new Rect(x + nameWidth + 8f, rect.y, rect.xMax - x - nameWidth - 14f, rect.height));
+
+            return written;
         }
 
         /// <summary>

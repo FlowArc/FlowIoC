@@ -333,6 +333,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             EditorGUILayout.BeginHorizontal(GUILayout.Width(leftWidth));
             DrawModuleRole();
+
+            // Holds the column open when there is no role to draw - a screen or a test module - so
+            // the toggles beside it stay in the right column rather than sliding into this one.
+            // Only then: beside the dropdown it would take half the width the dropdown expands into.
+            if (_selectedModuleType != ModuleType.Main || !_createRoot) GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(COLUMNS_SPACING);
@@ -346,8 +351,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             EditorGUILayout.EndHorizontal();
 
+            // The sections that span both columns are given the columns' width outright rather than
+            // left to fill the scroll view: its content runs under the scrollbar once one shows,
+            // and a section that filled it would lose its right edge behind the bar.
             if (_selectedModuleType == ModuleType.Screen)
+            {
+                EditorGUILayout.BeginVertical(GUILayout.Width(viewWidth));
                 DrawScreenSettings();
+                EditorGUILayout.EndVertical();
+            }
 
             // The two panels answer one question each - what the module will contain, and where it
             // will sit - so they are read together, side by side, and split the width evenly.
@@ -382,7 +394,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             if (_selectedModuleType == ModuleType.Screen)
             {
+                EditorGUILayout.BeginVertical(GUILayout.Width(viewWidth));
                 DisplayActionsSection();
+                EditorGUILayout.EndVertical();
             }
 
             // A rect of no height at the foot of the content is where the content ends, and the

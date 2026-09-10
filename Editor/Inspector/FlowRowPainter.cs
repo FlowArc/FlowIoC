@@ -32,6 +32,11 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public const float QUIET_ALPHA = 0.08f;
 
+        /// <summary>How much darker than a quiet row a shaded one is, and how much darker its stripe.</summary>
+        private const float SHADE = 0.10f;
+
+        private const float STRIPE_SHADE = 0.45f;
+
         /// <summary>
         /// What a row's text sits at while the pointer is elsewhere. Off white rather than white,
         /// so a row has somewhere to go when the pointer arrives.
@@ -49,6 +54,7 @@ namespace FlowIoC.Editor.Inspector
         private readonly GUIStyle[] _strong = new GUIStyle[2];
         private readonly GUIStyle[] _cell = new GUIStyle[2];
         private readonly GUIStyle[] _mini = new GUIStyle[2];
+        private readonly GUIStyle[] _muted = new GUIStyle[2];
         private readonly GUIStyle[] _miniWrapped = new GUIStyle[2];
         private readonly GUIStyle[] _badge = new GUIStyle[2];
 
@@ -120,6 +126,20 @@ namespace FlowIoC.Editor.Inspector
         }
 
         /// <summary>
+        /// A row that is there to be read and not to be acted on - the folder a tree hangs from, a
+        /// module that cannot host what is being made, a folder that has been left out: the quiet
+        /// tint taken down a few tones, the stripe further still so the edge says it too. A few
+        /// tones rather than a blackout, so the row keeps its place in the list and its name
+        /// stays legible in <see cref="Muted"/>.
+        /// </summary>
+        public void PaintShaded(Rect rect, Color accent)
+        {
+            Paint(rect, accent, QUIET_ALPHA);
+            Darken(rect, SHADE);
+            Darken(new Rect(rect.x, rect.y, STRIPE_WIDTH, rect.height), STRIPE_SHADE);
+        }
+
+        /// <summary>
         /// The line a nested row hangs from: down from the arrow of the row it lives in, then
         /// across to its own. Opaque, so the segments the rows draw one after another overlap
         /// without a darker joint where they meet, and grey rather than a status colour - the
@@ -172,6 +192,16 @@ namespace FlowIoC.Editor.Inspector
         public GUIStyle Mini(bool hovered)
         {
             return Style(_mini, hovered, EditorStyles.miniLabel, TextAnchor.MiddleLeft, IdleMuted, HoverMuted);
+        }
+
+        /// <summary>
+        /// A name at its full size but taken down to the quiet grey: a row that is there to be read
+        /// and not to be picked - the folder a tree hangs from, a module that cannot host what is
+        /// being made. Smaller text would say the row matters less; it does not, it only does less.
+        /// </summary>
+        public GUIStyle Muted()
+        {
+            return Style(_muted, false, EditorStyles.label, TextAnchor.MiddleLeft, IdleMuted, HoverMuted);
         }
 
         /// <summary>

@@ -29,6 +29,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private const float PANEL_HEADER_HEIGHT = 33f;
 
+        /// <summary>The air between the two halves of a row, the same the name row keeps.</summary>
+        private const float COLUMNS_SPACING = 8f;
+
         private const string FUNCTION_NAME_LABEL = "Function Name: ";
         private const string CREATE_FUNCTION_BUTTON = "Create Function";
         private const string ADD_PARAMETER_BUTTON = "Add Parameter";
@@ -122,36 +125,60 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         /// </summary>
         private string BaseTypePreview() => _writer.BaseTypeFor(BuildRequest("Preview"));
 
+        /// <summary>
+        /// The kind on the left and, on the right, the one field the kind asks for - a return
+        /// type, or the type an async callback carries - on the same line, in the two columns
+        /// the name and its preview stand in above. A void function asks for nothing, and the
+        /// right half stays empty rather than closing up, so the kind does not slide about.
+        /// </summary>
         private void DisplayKindSection()
         {
+            float half = Mathf.Round((EditorGUIUtility.currentViewWidth - COLUMNS_SPACING) * 0.5f);
+
             EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.BeginHorizontal(GUILayout.Width(half));
             GUILayout.Label("Kind", GUILayout.Width(80));
             _kind = (FunctionKind) EditorGUILayout.EnumPopup(_kind);
             EditorGUILayout.EndHorizontal();
 
-            if (_kind == FunctionKind.Void) return;
+            GUILayout.Space(COLUMNS_SPACING);
 
             EditorGUILayout.BeginHorizontal();
-            GUILayout.Label(_kind == FunctionKind.Async ? "Callback Type" : "Return Type", GUILayout.Width(80));
-            _returnType = EditorGUILayout.TextField(_returnType);
+
+            if (_kind != FunctionKind.Void)
+            {
+                GUILayout.Label(_kind == FunctionKind.Async ? "Callback Type" : "Return Type", GUILayout.Width(90));
+                _returnType = EditorGUILayout.TextField(_returnType);
+            }
+            else
+            {
+                GUILayout.FlexibleSpace();
+            }
+
             EditorGUILayout.EndHorizontal();
 
-            if (_kind == FunctionKind.Async)
-            {
-                EditorGUILayout.HelpBox(
-                    "An async function's Execute takes no parameters and returns IEnumerator. It answers through " +
-                    "FunctionCompletedCallback, and an empty Callback Type gives the arity that carries no value.",
-                    MessageType.Info);
-            }
+            EditorGUILayout.EndHorizontal();
+
         }
 
         /// <summary>
         /// The parameters of Execute, up to the four the shipped arities go to. An async function
-        /// has none at all, so the section is not drawn for it rather than drawn and ignored.
+        /// has none at all, so the section gives way to the warning that says so - drawn where
+        /// the list would have been, so the reader looking for it finds the reason instead.
         /// </summary>
         private void DisplayParametersSection()
         {
-            if (_kind == FunctionKind.Async) return;
+            if (_kind == FunctionKind.Async)
+            {
+                EditorGUILayout.Space(10);
+                EditorGUILayout.HelpBox(
+                    "An async function's Execute takes no parameters and returns IEnumerator. It answers through "
+                    + "FunctionCompletedCallback, and an empty Callback Type gives the arity that carries no value.",
+                    MessageType.Warning);
+
+                return;
+            }
 
             if (_listBar.Draw(PARAMETERS_LABEL, ADD_PARAMETER_BUTTON, _parameters.Count < FunctionScriptWriter.MAX_PARAMETERS))
                 _parameters.Add(new FunctionParameter {Type = "int", Name = "value"});
