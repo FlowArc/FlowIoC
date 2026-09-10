@@ -58,6 +58,12 @@ namespace FlowIoC.Editor.CodeGenerator
 
         public List<FunctionParameter> Parameters = new List<FunctionParameter>();
         public List<FunctionInjectable> Injectables = new List<FunctionInjectable>();
+
+        /// <summary>
+        /// Whether the function goes into a test module, where every script is wrapped in
+        /// UNITY_EDITOR - one unwrapped file would carry the whole module into a player build.
+        /// </summary>
+        public bool IsTest;
     }
 
     /// <summary>
@@ -101,6 +107,8 @@ namespace FlowIoC.Editor.CodeGenerator
         {
             var file = new StringBuilder();
 
+            if (request.IsTest) file.AppendLine("#if UNITY_EDITOR");
+
             foreach (string usingLine in UsingsFor(request))
                 file.AppendLine("using " + usingLine + ";");
 
@@ -120,6 +128,8 @@ namespace FlowIoC.Editor.CodeGenerator
 
             file.AppendLine("    }");
             file.AppendLine("}");
+
+            if (request.IsTest) file.AppendLine("#endif");
 
             return file.ToString();
         }

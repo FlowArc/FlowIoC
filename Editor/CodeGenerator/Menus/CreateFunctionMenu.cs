@@ -315,6 +315,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.BeginVertical();
 
             _picker.Draw(ref _parentModulePath, ref _selectedModuleName, _ => true, false);
+            _selectedModuleKind = _picker.PickedKind;
 
             EditorGUILayout.EndVertical();
 
@@ -349,15 +350,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             if (!baseModulePath.EndsWith($"{_selectedModuleName}Module", StringComparison.OrdinalIgnoreCase))
                 baseModulePath = Path.Combine(baseModulePath, $"{_selectedModuleName}Module");
 
-            string subDirectory = _selectedModuleKind switch
-            {
-                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
-                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules],
-                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
-                _ => string.Empty
-            };
-
-            string modulePath = string.IsNullOrEmpty(subDirectory) ? baseModulePath : Path.Combine(baseModulePath, subDirectory);
+            // The pick is the module itself, whatever kind it is - a test module's own folder, not
+            // the module it tests - so the file goes into the folder the pick names.
+            string modulePath = baseModulePath;
 
             string controllersFolder = _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers];
             string functionPath = _configProvider.ConfigFor(_selectedModuleKind)
@@ -378,7 +373,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 ClassName = className,
                 Kind = _kind,
                 ReturnType = _kind == FunctionKind.Void ? string.Empty : _returnType,
-                Parameters = _parameters
+                Parameters = _parameters,
+                IsTest = _selectedModuleKind == ModuleKind.Test
             };
         }
 

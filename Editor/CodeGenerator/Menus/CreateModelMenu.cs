@@ -134,6 +134,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             // CreateModelMenu never restricted which module kind could host a model.
             _picker.Draw(ref _parentModulePath, ref _selectedModuleName, _ => true, false);
+            _selectedModuleKind = _picker.PickedKind;
 
             EditorGUILayout.EndVertical();
 
@@ -218,17 +219,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             Debug.Log($"[CreateModuleStructureForModelGeneration] Base Module Path: {baseModulePath}");
 
-            string subDirectory = _selectedModuleKind switch
-            {
-                ModuleKind.Sub => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
-                ModuleKind.Test => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules],
-                ModuleKind.Screen => _codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
-                _ => string.Empty
-            };
-
-            string modulePath = string.IsNullOrEmpty(subDirectory)
-                ? baseModulePath
-                : Path.Combine(baseModulePath, subDirectory);
+            // The pick is the module itself, whatever kind it is - a test module's own folder, not
+            // the module it tests - so the file goes into the folder the pick names.
+            string modulePath = baseModulePath;
 
             string modelPath = _configProvider.ConfigFor(_selectedModuleKind).FindFullFolderPathByID(FolderEVO.FolderType.Models, modulePath);
             string rootsAndContextsPath = _configProvider.ConfigFor(_selectedModuleKind)
@@ -277,13 +270,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 return;
             }
 
+            // Every script in a test module is wrapped in UNITY_EDITOR, the interface included.
+            bool isTest = _selectedModuleKind == ModuleKind.Test;
+
             CodeGeneratorUtils.CreateModel(modelName, "TempModel", path, CodeGeneratorStrings.TempModelPath,
-                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", _injectableNames, false);
+                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", _injectableNames, false, isTest);
             if (_useDummyBinding)
                 CodeGeneratorUtils.CreateModel(dummyModelName, "TempModel", path, CodeGeneratorStrings.TempModelPath,
-                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", _injectableNames, true);
+                    moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", _injectableNames, true, isTest);
             CodeGeneratorUtils.CreateModelInterface(modelInterfaceName, "ITempModel", path, CodeGeneratorStrings.TempIModelPath,
-                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}");
+                moduleNamespace + $".{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Models]}", isTest);
 
             EnsureNamespaceImport(modelName, path, "Models", moduleNamespace);
         }

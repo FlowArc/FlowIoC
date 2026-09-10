@@ -266,5 +266,27 @@ namespace FlowIoC.Tests
             Assert.That(imports.FindAll(line => line.StartsWith("using Modules.Player.Models;")), Has.Count.EqualTo(1));
             Assert.That(imports.FindAll(line => line.StartsWith("using Modules.Player.Controllers;")), Is.Empty);
         }
+
+        /// <summary>
+        /// Every script in a test module is wrapped in UNITY_EDITOR, so a function written into
+        /// one is wrapped by the writer rather than left for a person to remember.
+        /// </summary>
+        [Test]
+        public void A_function_for_a_test_module_is_wrapped_in_UNITY_EDITOR()
+        {
+            FunctionScriptRequest request = Request(FunctionKind.Void);
+            request.IsTest = true;
+
+            string[] lines = _writer.Write(request).TrimEnd().Split('\n');
+
+            Assert.AreEqual("#if UNITY_EDITOR", lines[0].TrimEnd());
+            Assert.AreEqual("#endif", lines[lines.Length - 1].TrimEnd());
+        }
+
+        [Test]
+        public void A_function_for_a_module_that_ships_is_not_wrapped()
+        {
+            Assert.That(_writer.Write(Request(FunctionKind.Void)), Does.Not.Contain("UNITY_EDITOR"));
+        }
     }
 }
