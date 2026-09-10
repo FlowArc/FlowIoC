@@ -5,6 +5,95 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **An A/B Test module**, ready-made under `Modules~/AbTestFlowModule` with a Help page under
+  *Modules* and an Install button. A test is an id, a version, a rollout percentage and its groups;
+  the first group is the control and carries nothing, every other group carries pairs of a config
+  asset another module owns and the variant to write over it, applied as a set. The service starts
+  the module from its `PostConstruct`, during the binding pass, by dispatching
+  `Incoming.ResolveAbTests`; `ReadStoredAbTestsCommand` files the decisions that still stand in
+  PlayerPrefs, `ProcessAbTestCommand` decides the rest with two dice and writes them, and
+  `ApplyOverridesCommand` copies each variant over its original with `JsonUtility` - so a Root at
+  `-90` has changed every config asset before any game module's own `PostConstruct` reads it.
+  Nothing is announced: the decision is made before any other module is listening, so where the
+  player stands is published in `RD_AbTestStatus` in the module's Shared assembly, and
+  `IAbTestFlowService` answers `GetGroup` and `IsInGroup` from code. Raising a test's version is
+  the only way to decide again, and it decides for everybody. In the Editor the originals are
+  captured before the first override and put back on quit. The module has no sub services - nobody
+  outside calls its work - and no Outgoing. It ships with a test module and the scene it runs in:
+  the group, the probe config after the override, and Clear, Raise version and Re-roll buttons.
+- **Every module list is the same tree, and a row's badge is the role its Root plays.** Module
+  Scanner, the parent picker of the five generators, Delete Module, Add Shared or Signals and the
+  folder preview draw a module under the module it lives in - sub modules, then screens, then
+  tests - hung from its parent's row by a guide line, with the modules folder as the row the whole
+  tree hangs from. The badge says what the module's Root roots - SYSTEM, SERVICE, CONNECTOR, CORE -
+  in the Root's inspector colour, and SCREEN or TEST for the two kinds whose kind is their role.
+  `ModuleTree` is generic over `IModuleTreeItem`, `FlowTreePainter` carries the guide geometry for
+  every window, and `ModulePicker` replaces the static `ModuleHierarchyDrawer`.
+- **The Help window draws FlowIoC's own icons.** Unity's built-in icons are 16 pixel point-filtered
+  bitmaps or 256 pixel mip chains, and either drawn into a 22 pixel box is jagged or smeared. The
+  sidebar and the cards now draw a set of the package's own: 32 drawings on one 16 grid, shipped at
+  16, 24, 32 and 48 pixels and tinted with the label beside them. `FlowIcon` names them,
+  `FlowIconImporter` keeps them imported as plain GUI textures, `FlowIconsTests` keeps every value
+  shipping every size, and the SVG sources sit in `Editor/Icons/Source~`.
+- **Flow Console's row settings float over the list.** The settings and their gear sit over the
+  list's top-right corner instead of taking a bar of their own; the Filters switch floats beside
+  the gear while its panel is closed and heads the panel when it is open; and the strip is painted
+  in the filters panel's bar grey with the panel's edge line, because the toolbar grey was four
+  levels off the rows and got lost on them.
+- **The detail panel wraps its text.** The box and its margins are gone, so is the *Details:*
+  heading, and the message, the source link and the trace lines wrap to the panel's width rather
+  than running off under a horizontal scrollbar.
+
+### Changed
+
+- **`RootAdapter` hands out one asset by name, and reports a miss itself.** `GetScriptable<T>` of
+  an asset that is not filed used to throw `KeyNotFoundException` from inside the framework; it now
+  logs an error naming the asset and the Root - double-click it to reach the Root - and answers
+  null, so a module only has to notice the null. `Scriptables`, the whole map, is gone from the
+  public surface: a module reads its own assets by name, and the one adapter that is a registry and
+  has to walk every entry derives from `RootAdapter` and reads the now-protected `_scriptableMap` -
+  the save module's `LocalSaveRootAdapter` is that adapter.
+- **The generators share Create Module's shape, and Create Command shows the binding instead of
+  writing it.** The name field of Create View, Model, Command and Function stands beside a preview
+  panel the way Create Module's does, and every list they hold sits under a green bar with a square
+  plus at its edge. Create Command's *Bind* toggle wrote a binding that no longer compiled, from two
+  names typed as text that nothing checked, and where a command sits in a sequence is a decision
+  about the flow; the window now shows the binding beside the file, spelled against the holder
+  field the picked module's Context declares, with a Copy button.
+- **A script generated into a test module is wrapped in `UNITY_EDITOR`.** Create Command, Create
+  Function and Create Model never wrapped what they wrote, and Create View wrapped only behind an
+  *IsTest* toggle that also gave the pair a `Test` suffix and a `.Tests.` namespace segment left
+  over from the layout before `zTestModules`. The picked module's kind decides now, the writers put
+  the directive above the usings, the toggle is gone, and the generators write into the picked
+  module's own folder rather than a sub folder chosen by kind.
+- **A row nobody can act on is shaded rather than blacked out**, and the folder preview shades what
+  will not be written. The modules folder carries the PROJECT badge Module Scanner gives its own
+  top row. Create Function puts the return or callback type beside the kind, and the note that an
+  async function takes no parameters is a warning where the parameters would have been.
+- **The shipped modules are published as they are in the workspace.** Every module under
+  `Modules~` and `SetupModules~` carries its `Scripts/Generated` part - the module's `FlowLogType`
+  channel - and none carries a `Functions` folder any more, because a Function lives in
+  `Controllers/` beside the Commands it is called from.
+- **The README leads with the agent rules as well as the tooling**, the Editor README names the
+  Folder Painter config asset as it is on disk, and two shapes that were on a to-do list carry their
+  own reason in the code: the signal payload array is allocated per dispatch and will not be pooled
+  (`SignalT1.Dispatch` says why), and `Context.InjectAllInstances` walks every cross-context object
+  once per context to resolve forward references between modules binding in any order.
+
+### Fixed
+
+- **A generator window opens empty.** The inputs of Create View, Create Model, Create Command and
+  Create Function were static, so a closed window handed what was typed into it to the next one
+  opened. They are instance state now: a new window starts blank, and one that survives a domain
+  reload keeps what it had through serialization.
+- **The default test-module folder rule matches `TestModules`, not `Test`.** The word alone matched
+  too widely - an `AbTestFlowModule` is not a test module - so the Folder Painter rule names the
+  folder.
+
 ## [1.11.1] - 2026-09-09
 
 ### Added
