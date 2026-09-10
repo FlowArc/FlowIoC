@@ -59,11 +59,11 @@ namespace FlowIoC.Tests
         public void Saving_a_preset_does_not_touch_the_settings_asset()
         {
             _presets.Delete("probe");
-            FlowLogger.Settings.LogTypes[0].IsVisible = true;
+            FlowLogger.Settings.LogTypes[0].IsVisibleByDefault = true;
 
             _presets.Save("probe", new List<string> {"Context"});
 
-            Assert.IsTrue(FlowLogger.Settings.LogTypes[0].IsVisible);
+            Assert.IsTrue(FlowLogger.Settings.LogTypes[0].IsVisibleByDefault);
             _presets.Delete("probe");
         }
     }

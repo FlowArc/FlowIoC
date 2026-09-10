@@ -71,7 +71,7 @@ namespace FlowIoC.Tests
             {
                 settings.LogTypes.Add(new CD_FlowConsole.FlowConsoleLogTypeCVO
                 {
-                    Name = "Model", Value = 35, IsVisible = true, IsMandatory = true
+                    Name = "Model", Value = 35, IsVisibleByDefault = true, IsMandatory = true
                 });
 
                 // Looked up once so the name cache holds the stale row. A prune that drops it from
@@ -101,7 +101,7 @@ namespace FlowIoC.Tests
             {
                 settings.LogTypes.Add(new CD_FlowConsole.FlowConsoleLogTypeCVO
                 {
-                    Name = "PlayerModule", Value = 1000, IsVisible = true, IsMandatory = false
+                    Name = "PlayerModule", Value = 1000, IsVisibleByDefault = true, IsMandatory = false
                 });
 
                 settings.RebuildCache();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FlowIoC.ConsoleModule
 {
@@ -77,13 +78,35 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         [NonSerialized] internal bool IsStandIn;
 
+#if UNITY_EDITOR
+        [NonSerialized] private FlowConsoleChannelVisibility _visibility;
+
+        /// <summary>
+        /// The channels this developer has switched on and off, over the defaults the rows in
+        /// LogTypes carry. Keyed by the project, because a module's channel is named for the
+        /// module and two projects on one machine may each have a PlayerModule.
+        /// </summary>
+        public FlowConsoleChannelVisibility Visibility =>
+            _visibility ??= new FlowConsoleChannelVisibility(
+                "FlowIoC.Console.Channels." + UnityEditor.PlayerSettings.productGUID);
+#endif
+
         [Serializable]
         public class FlowConsoleLogTypeCVO
         {
             public string Name;
             public int Value;
             public Color LogColor = Color.white;
-            public bool IsVisible = true;
+
+            /// <summary>
+            /// Whether the channel is on for a developer who has not touched it. This is the
+            /// project's default and is committed with the asset; what one developer actually
+            /// has switched on is theirs, and lives in <see cref="FlowConsoleChannelVisibility"/>.
+            /// </summary>
+            [Tooltip(
+                "Whether the channel is on for a developer who has not touched it. What the Flow Console window shows on this machine is the developer's own and is kept in EditorPrefs.")]
+            [FormerlySerializedAs("IsVisible")]
+            public bool IsVisibleByDefault = true;
 
             [Tooltip("If true, this log type cannot be removed")]
             public bool IsMandatory;
@@ -297,7 +320,7 @@ namespace FlowIoC.ConsoleModule
                     {
                         Name = name,
                         Value = value,
-                        IsVisible = true,
+                        IsVisibleByDefault = true,
                         IsMandatory = true,
                         LogColor = GetDefaultColorForLogType(defaultType)
                     });
@@ -338,7 +361,7 @@ namespace FlowIoC.ConsoleModule
                 Name = "Default",
                 Value = 100,
                 LogColor = Color.white,
-                IsVisible = true,
+                IsVisibleByDefault = true,
                 IsMandatory = false,
                 IsAutoRegistered = false,
                 ProfileName = "Default"
@@ -598,7 +621,7 @@ namespace FlowIoC.ConsoleModule
                 {
                     Name = defaultType.ToString(),
                     Value = (int) defaultType,
-                    IsVisible = true,
+                    IsVisibleByDefault = true,
                     IsMandatory = true,
                     LogColor = GetDefaultColorForLogType(defaultType)
                 });
@@ -680,13 +703,26 @@ namespace FlowIoC.ConsoleModule
         public bool IsLogTypeVisible(int logTypeValue)
         {
             if (_logTypeByValue == null) RebuildCache();
-            return !_logTypeByValue.TryGetValue(logTypeValue, out var type) || type.IsVisible;
+            return !_logTypeByValue.TryGetValue(logTypeValue, out var type) || IsLogTypeVisible(type);
         }
 
         public bool IsLogTypeVisible(string typeName)
         {
             if (_logTypeByName == null) RebuildCache();
-            return !_logTypeByName.TryGetValue(typeName, out var type) || type.IsVisible;
+            return !_logTypeByName.TryGetValue(typeName, out var type) || IsLogTypeVisible(type);
+        }
+
+        /// <summary>
+        /// In the Editor this is the developer's own answer, switches and all; in a build there is
+        /// nobody at the machine, so the project default is the only answer there is.
+        /// </summary>
+        public bool IsLogTypeVisible(FlowConsoleLogTypeCVO logType)
+        {
+#if UNITY_EDITOR
+            return Visibility.IsShown(logType);
+#else
+            return logType.IsVisibleByDefault;
+#endif
         }
 
         public FlowConsoleLogTypeCVO AddLogType(string name, int value = -1, Color? color = null)
@@ -740,7 +776,7 @@ namespace FlowIoC.ConsoleModule
                 Name = name,
                 Value = value,
                 LogColor = color ?? Color.white,
-                IsVisible = true,
+                IsVisibleByDefault = true,
                 IsMandatory = false,
                 ProfileName = "Default"
             };

@@ -59,6 +59,8 @@ namespace FlowIoC.Editor.Console
 
         private readonly FlowConsoleExport _export = new FlowConsoleExport();
         private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
+        private readonly FlowConsoleEmptyListHint _emptyListHint = new FlowConsoleEmptyListHint();
+        private GUIStyle _emptyListHintStyle;
 
         private bool _showFilters;
         private bool _showSettings;
@@ -79,7 +81,7 @@ namespace FlowIoC.Editor.Console
         private static readonly Color ChannelOffTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
         private static readonly Color ChannelTickColor = new Color(0.35f, 0.8f, 0.4f, 1f);
 
-        // Muting is a display decision, not a stored one: it never writes IsVisible, so unmuting
+        // Muting is a display decision, not a stored one: it throws no channel switch, so unmuting
         // brings back the exact selection the reader had. Index 0 Unity, 1 Framework, 2 Modules.
         private readonly List<bool> _groupUnmuted = new() {true, true, true};
 
@@ -679,6 +681,15 @@ namespace FlowIoC.Editor.Console
 
             var menu = new GenericMenu();
 
+            // Offered only while there is something to put back: a reader whose channels already
+            // stand where the project has them would pick it and see nothing change.
+            if (_settings.Visibility.HasSwitches)
+                menu.AddItem(new GUIContent("Project defaults"), false, ApplyProjectDefaults);
+            else
+                menu.AddDisabledItem(new GUIContent("Project defaults"));
+
+            menu.AddSeparator("");
+
             for (int i = 0; i < _presets.BuiltIn.Count; i++)
             {
                 FilterPreset preset = _presets.BuiltIn[i];
@@ -719,10 +730,20 @@ namespace FlowIoC.Editor.Console
                 var logType = _settings.LogTypes[i];
                 if (logType.Value == (int) SystemLogType.All) continue;
 
-                logType.IsVisible = preset.VisibleChannels.Contains(logType.Name);
+                _settings.Visibility.Show(logType, preset.VisibleChannels.Contains(logType.Name));
             }
 
-            EditorUtility.SetDirty(_settings);
+            OnLogTypeSelectionChanged();
+        }
+
+        /// <summary>
+        /// The set the project ships, which is a preset like the others except that nobody saved
+        /// it: it is what the settings asset says, and it is what a developer sees before they
+        /// throw a switch of their own. Applying it drops their switches rather than writing them.
+        /// </summary>
+        private void ApplyProjectDefaults()
+        {
+            _settings.Visibility.Reset();
             OnLogTypeSelectionChanged();
         }
 
@@ -734,7 +755,7 @@ namespace FlowIoC.Editor.Console
             {
                 var logType = _settings.LogTypes[i];
                 if (logType.Value == (int) SystemLogType.All) continue;
-                if (logType.IsVisible) visible.Add(logType.Name);
+                if (_settings.IsLogTypeVisible(logType)) visible.Add(logType.Name);
             }
 
             FlowConsolePresetNameWindow.Show(name => _presets.Save(name, visible));
@@ -1059,6 +1080,9 @@ namespace FlowIoC.Editor.Console
                         Repaint();
                     }
                 }
+
+                if (totalCount == 0)
+                    EmptyListHintGUI(_logsViewportRect);
             }
 
             FloatingStripGUI(_logsViewportRect);
@@ -1083,7 +1107,7 @@ namespace FlowIoC.Editor.Console
                 {
                     var lt = _settings.LogTypes[i];
                     if (lt.Value == (int) SystemLogType.All) continue;
-                    if (!lt.IsVisible)
+                    if (!_settings.IsLogTypeVisible(lt))
                     {
                         allTypesVisible = false;
                         break;
@@ -1130,7 +1154,7 @@ namespace FlowIoC.Editor.Console
                         continue;
                     }
 
-                    if (_settings.TryGetLogType(log.Channel, out var type) && type.IsVisible && !IsGroupMuted(type))
+                    if (_settings.TryGetLogType(log.Channel, out var type) && _settings.IsLogTypeVisible(type) && !IsGroupMuted(type))
                         _multiTypeFilterBuffer.Add(log);
                 }
 
@@ -1851,6 +1875,41 @@ namespace FlowIoC.Editor.Console
 
                 return;
             }
+        }
+
+        /// <summary>
+        /// One grey line in the middle of an empty list, saying why it is empty when there is a
+        /// reason. Drawn over the viewport after the scroll view has closed, because an empty
+        /// scroll view has no content to lay a line out in.
+        /// </summary>
+        private void EmptyListHintGUI(Rect viewport)
+        {
+            string text = _emptyListHint.Text(IsAnyChannelShown(), _allLogs.Count);
+            if (text == null) return;
+
+            _emptyListHintStyle ??= new GUIStyle(EditorStyles.centeredGreyMiniLabel)
+            {
+                name = "FlowConsoleEmptyListHint",
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true,
+                fontSize = 11
+            };
+
+            GUI.Label(viewport, text, _emptyListHintStyle);
+        }
+
+        private bool IsAnyChannelShown()
+        {
+            if (_settings == null) return true;
+
+            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            {
+                var logType = _settings.LogTypes[i];
+                if (logType.Value == (int) SystemLogType.All) continue;
+                if (_settings.IsLogTypeVisible(logType)) return true;
+            }
+
+            return false;
         }
 
         private void OnLogTypeSelectionChanged()
