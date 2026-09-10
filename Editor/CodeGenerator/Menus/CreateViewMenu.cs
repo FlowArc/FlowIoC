@@ -29,7 +29,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
 
-        private static string _viewName;
+        private string _viewName = string.Empty;
         private string _parentModulePath;
         private ModulePicker _picker;
         private ModuleRegistry _registry;

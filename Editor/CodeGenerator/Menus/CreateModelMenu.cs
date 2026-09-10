@@ -31,7 +31,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string USE_DUMMY_BINDING_LABEL = "Create Dummy Model";
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
 
-        private static string _modelName;
+        private string _modelName = string.Empty;
         private string _parentModulePath;
         private ModulePicker _picker;
         private ModuleRegistry _registry;
