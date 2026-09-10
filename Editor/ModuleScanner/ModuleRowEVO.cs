@@ -7,15 +7,15 @@ namespace FlowIoC.Editor.ModuleScanner
     /// <summary>
     /// One module's row in the panel: what it is, and what every check said about it.
     /// </summary>
-    internal class ModuleRowEVO
+    internal class ModuleRowEVO : IModuleTreeItem
     {
-        internal string Name { get; set; }
-        internal ModuleKind Kind { get; set; }
+        public string Name { get; set; }
+        public ModuleKind Kind { get; set; }
         internal string AssetPath { get; set; }
         internal string AssemblyName { get; set; }
 
         /// <summary>The module this one lives in, by name, or null for a top level module.</summary>
-        internal string ParentName { get; set; }
+        public string ParentName { get; set; }
 
         internal List<FindingEVO> Findings { get; } = new List<FindingEVO>();
 

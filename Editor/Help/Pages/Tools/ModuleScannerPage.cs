@@ -23,8 +23,8 @@ namespace FlowIoC.Editor.Help.Pages.Tools
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Image(_images.Get("ModuleScannerWindow.png"),
-                "Tools > FlowIoC > Module Scanner. Every module in this project is in order, and "
-                + "each one sits under the module it lives in.");
+                "Tools > FlowIoC > Module Scanner. Each module sits under the module it lives in, "
+                + "and the one red row is a card whose purpose nobody has written yet.");
 
             painter.SubHeading("What it checks");
             painter.Bullet(
@@ -81,6 +81,12 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "\"Only issues\" hides every row that is already green, except a parent whose "
                 + "child has something to say - it stays, so the child still has a row to hang "
                 + "from.");
+            painter.Paragraph(
+                "The word at a row's right edge is what the module's Root roots - SYSTEM, SERVICE, "
+                + "CONNECTOR or CORE - in the colour that Root wears in the inspector, read off the "
+                + "Root the same way its own header bar reads it. A screen module says SCREEN and a "
+                + "test module TEST: for those two the kind is the role. The same badge sits on "
+                + "every module list FlowIoC draws.");
 
             painter.SubHeading("Fix All");
             painter.Paragraph(

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -51,6 +52,8 @@ namespace FlowIoC.Editor.Inspector
         private readonly GUIStyle[] _miniWrapped = new GUIStyle[2];
         private readonly GUIStyle[] _badge = new GUIStyle[2];
 
+        private readonly Dictionary<Color, GUIStyle> _badgeIn = new Dictionary<Color, GUIStyle>();
+
         private GUIStyle _heading;
         private GUIStyle _icon;
         private GUIStyle _arrow;
@@ -85,6 +88,13 @@ namespace FlowIoC.Editor.Inspector
 
         /// <summary>One row's worth of vertical space, reaching both edges of the window.</summary>
         public Rect Row(float height = ROW_HEIGHT) => Bleed(EditorGUILayout.GetControlRect(false, height));
+
+        /// <summary>
+        /// The same row kept inside the layout's margin, for a list drawn under a panel header
+        /// rather than under the window's own bar: the rows line up with the header's edges, the
+        /// way every panel's rows line up with the bar over them.
+        /// </summary>
+        public Rect RowInset(float height = ROW_HEIGHT) => EditorGUILayout.GetControlRect(false, height);
 
         /// <summary>
         /// A rect that runs the full width of the window rather than sitting inside the margin a
@@ -204,6 +214,27 @@ namespace FlowIoC.Editor.Inspector
         public GUIStyle Badge(bool hovered)
         {
             return Style(_badge, hovered, EditorStyles.miniLabel, TextAnchor.MiddleRight, IdleMuted, HoverMuted);
+        }
+
+        /// <summary>
+        /// The same badge in a colour of the caller's - a role's accent, for a row whose kind the
+        /// inspector paints. It does not brighten under the pointer: the colour is the point, and
+        /// a hover shade of it would read as a different role.
+        /// </summary>
+        public GUIStyle BadgeIn(Color accent)
+        {
+            if (_badgeIn.TryGetValue(accent, out GUIStyle style)) return style;
+
+            style = new GUIStyle(EditorStyles.miniBoldLabel) {alignment = TextAnchor.MiddleRight};
+
+            style.normal.textColor = accent;
+            style.hover.textColor = accent;
+            style.active.textColor = accent;
+            style.focused.textColor = accent;
+
+            _badgeIn[accent] = style;
+
+            return style;
         }
 
         /// <summary>

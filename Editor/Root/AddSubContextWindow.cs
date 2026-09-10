@@ -106,6 +106,16 @@ namespace FlowIoC.Editor.Root
         private bool IsNotABaseContext(Type type) =>
             type != typeof(Context) && type != typeof(BaseScreenContext);
 
+        /// <summary>
+        /// Room for the search field and a handful of context rows with their kind and the Roots
+        /// that already list them. Set here rather than where the window is opened, so a window
+        /// Unity brings back from a saved layout has it too.
+        /// </summary>
+        private void OnEnable()
+        {
+            minSize = new Vector2(440f, 320f);
+        }
+
         private void OnGUI()
         {
             GUILayout.Label("Search Context:", EditorStyles.boldLabel);

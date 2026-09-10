@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using FlowIoC.Editor.Inspector;
+using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
@@ -35,16 +36,6 @@ namespace FlowIoC.Editor.ModuleScanner
         private const float FINDING_INDENT = 26f;
         private const float STATUS_WIDTH = 55f;
 
-        /// <summary>
-        /// How far a row steps in for each module it sits inside: one arrow's width, so a nested
-        /// row's arrow sits under the icon of the row it lives in and the guide line between them
-        /// has one arrow's room to hang in.
-        /// </summary>
-        private const float INDENT_WIDTH = ARROW_WIDTH;
-
-        /// <summary>The air between a guide line's stub and the arrow it points at.</summary>
-        private const float GUIDE_GAP = 2f;
-
         [MenuItem("Tools/FlowIoC/" + TITLE, false, -1250)]
         internal static void Open()
         {
@@ -58,19 +49,14 @@ namespace FlowIoC.Editor.ModuleScanner
         /// button rather than filling it and anything softer disappears into the strip.
         /// </summary>
         private readonly FlowRowPainter _painter = new FlowRowPainter();
+        private readonly ModuleRoleBadge _badge = new ModuleRoleBadge();
 
         private readonly Dictionary<string, bool> _expanded = new Dictionary<string, bool>();
 
-        /// <summary>
-        /// Where each module's row was drawn this pass, so a nested row can hang its guide line
-        /// from the row it lives in. A parent is always drawn before its children, so by the time
-        /// a child asks, the rect is there - unless "Only issues" hid the parent, in which case the
-        /// child was hidden with it.
-        /// </summary>
-        private readonly Dictionary<ModuleTreeRowEVO, Rect> _rects = new Dictionary<ModuleTreeRowEVO, Rect>();
+        private FlowTreePainter _tree;
 
         private ModuleScannerReportEVO _report;
-        private List<ModuleTreeRowEVO> _tree;
+        private List<ModuleTreeRowEVO<ModuleRowEVO>> _rows;
         private ProjectTargetEVO _project;
         private List<ModuleTargetEVO> _modules;
         private FlowHeaderBar _bar;
@@ -91,6 +77,7 @@ namespace FlowIoC.Editor.ModuleScanner
 
             _onlyIssues = EditorPrefs.GetBool(ONLY_ISSUES_KEY, true);
             _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
+            _tree = new FlowTreePainter(_painter);
 
             // A repair that wrote an asmdef triggered a domain reload and took this window with
             // it, so the summary comes back from SessionState rather than from a field.
@@ -122,7 +109,7 @@ namespace FlowIoC.Editor.ModuleScanner
             _project = project;
             _modules = modules;
             _report = new ModuleScannerRunner(new ModuleCheckPipeline()).Run(project, modules);
-            _tree = new ModuleTree().Build(_report.Modules);
+            _rows = new ModuleTree().Build(_report.Modules);
 
             Repaint();
         }
@@ -167,15 +154,15 @@ namespace FlowIoC.Editor.ModuleScanner
 
             DrawProjectRow();
 
-            _rects.Clear();
+            _tree.Begin();
 
             int drawn = 0;
 
             // A green row stays when something under it is not: the row with the issue is drawn
             // indented, and the indent has to hang from something.
-            foreach (ModuleTreeRowEVO entry in _tree)
+            foreach (ModuleTreeRowEVO<ModuleRowEVO> entry in _rows)
             {
-                if (_onlyIssues && !entry.HasIssue) continue;
+                if (_onlyIssues && !HasIssue(entry)) continue;
 
                 DrawModuleRow(entry);
                 drawn++;
@@ -270,7 +257,7 @@ namespace FlowIoC.Editor.ModuleScanner
         {
             ModuleCheckStatus status = WorstProject();
 
-            _projectExpanded = DrawHeaderRow(_projectExpanded, status, "Project", null, "PROJECT", 0f, out _);
+            _projectExpanded = DrawHeaderRow(_projectExpanded, status, "Project", null, null, 0f, out _);
 
             if (_projectExpanded && _report != null)
             {
@@ -316,21 +303,18 @@ namespace FlowIoC.Editor.ModuleScanner
         /// the modules inside it are always listed, because which sits in which is what the tree
         /// is there to show, and a foldout would hide exactly that behind a click.
         /// </summary>
-        private void DrawModuleRow(ModuleTreeRowEVO entry)
+        private void DrawModuleRow(ModuleTreeRowEVO<ModuleRowEVO> entry)
         {
             ModuleRowEVO row = entry.Row;
-            float indent = entry.Depth * INDENT_WIDTH;
+            float indent = _tree.Indent(entry.Depth);
 
             bool expanded = _expanded.TryGetValue(row.Name, out bool value) && value;
 
             _expanded[row.Name] = DrawHeaderRow(
-                expanded, row.Status, row.Name, row.AssemblyName, row.Kind.ToString().ToUpperInvariant(),
+                expanded, row.Status, row.Name, row.AssemblyName, row,
                 indent, out Rect rect);
 
-            _rects[entry] = rect;
-
-            if (entry.Parent != null && _rects.TryGetValue(entry.Parent, out Rect parentRect))
-                DrawGuide(parentRect, entry.Parent.Depth, rect, entry.Depth);
+            _tree.Hang(entry, rect, entry.Depth, entry.Parent);
 
             if (_expanded[row.Name])
             {
@@ -342,21 +326,20 @@ namespace FlowIoC.Editor.ModuleScanner
         }
 
         /// <summary>
-        /// The line from a parent row's arrow down to a nested row's: an L from the parent to its
-        /// last child, with a stub reaching every child on the way. Each child draws the whole
-        /// drop from the parent to itself rather than the piece since the previous sibling, so no
-        /// row has to know which sibling came before it or whether "Only issues" hid one; the
-        /// segments overlap, and the guide colour is opaque so the overlap does not show.
+        /// Whether a row, or anything under it, has more than Ok to say. "Only issues" keeps a
+        /// row that is green itself when something under it is not, so that the row with the
+        /// issue still has a parent to hang from.
         /// </summary>
-        private void DrawGuide(Rect parentRect, int parentDepth, Rect rect, int depth)
+        private bool HasIssue(ModuleTreeRowEVO<ModuleRowEVO> entry)
         {
-            float column = Mathf.Round(
-                parentRect.x + _painter.ContentX - 1f + parentDepth * INDENT_WIDTH + ARROW_WIDTH / 2f);
-            float middle = Mathf.Round(rect.y + FlowRowPainter.ROW_HEIGHT / 2f);
-            float arrow = rect.x + _painter.ContentX - 1f + depth * INDENT_WIDTH;
+            if (entry.Row.Status != ModuleCheckStatus.Ok) return true;
 
-            _painter.DrawGuide(new Rect(column, parentRect.yMax, 1f, middle - parentRect.yMax));
-            _painter.DrawGuide(new Rect(column, middle, arrow - GUIDE_GAP - column, 1f));
+            foreach (ModuleTreeRowEVO<ModuleRowEVO> descendant in entry.Descendants)
+            {
+                if (descendant.Row.Status != ModuleCheckStatus.Ok) return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -366,7 +349,7 @@ namespace FlowIoC.Editor.ModuleScanner
         /// and nothing else, so the assembly column and the badge line up down the whole list.
         /// </summary>
         private bool DrawHeaderRow(bool expanded, ModuleCheckStatus status, string label, string subtitle,
-            string badge, float indent, out Rect rect)
+            ModuleRowEVO module, float indent, out Rect rect)
         {
             rect = _painter.Row();
             Color accent = ColorFor(status);
@@ -393,9 +376,12 @@ namespace FlowIoC.Editor.ModuleScanner
             if (!string.IsNullOrEmpty(subtitle) && room > 40f)
                 GUI.Label(new Rect(x, rect.y, room, rect.height), subtitle, _painter.Mini(hovered));
 
-            if (!string.IsNullOrEmpty(badge))
-                GUI.Label(new Rect(rect.xMax - BADGE_WIDTH - 6f, rect.y, BADGE_WIDTH, rect.height), badge,
-                    _painter.Badge(hovered));
+            Rect badge = new Rect(rect.xMax - BADGE_WIDTH - 6f, rect.y, BADGE_WIDTH, rect.height);
+
+            if (module != null)
+                GUI.Label(badge, _badge.Text(module), _badge.Style(module, _painter, hovered));
+            else
+                GUI.Label(badge, "PROJECT", _painter.Badge(hovered));
 
             // Drawn last and painting nothing, so it takes the click without covering the row.
             if (GUI.Button(rect, GUIContent.none, GUIStyle.none))

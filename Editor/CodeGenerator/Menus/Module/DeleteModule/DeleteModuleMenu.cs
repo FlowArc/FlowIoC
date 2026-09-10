@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.Inspector;
 using System;
 using System.Collections.Generic;
@@ -12,42 +11,37 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 {
     internal class DeleteModuleMenu : EditorWindow
     {
+        /// <summary>The Delete button at the end of a row, and the kind badge beside it.</summary>
+        private const float BUTTON_WIDTH = 60f;
+
+        private const float BADGE_WIDTH = 78f;
+
+        /// <summary>The row over the whole tree: the modules folder, which every top level module hangs from.</summary>
+        private const string ROOT_LABEL = "Modules";
+
         private Vector2 _scrollPosition;
-        private List<ModuleEntry> _modules;
         private string _searchText = "";
+
+        /// <summary>
+        /// The rows are always expanded: what the reader is here to see is which modules sit
+        /// inside which, and a foldout would hide exactly that behind a click.
+        /// </summary>
+        private List<ModuleTreeRowEVO<ModulePickEVO>> _modules;
 
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
         private readonly CoreModules _coreModules = new CoreModules();
+        private readonly FlowRowPainter _rows = new FlowRowPainter();
+        private readonly ModuleRoleBadge _badge = new ModuleRoleBadge();
+        private readonly FlowPalette _palette = new FlowPalette();
 
-        /// <summary>
-        /// How far the indent is stepped per level of nesting. The rows are always expanded: what
-        /// the reader is here to see is which modules sit inside which, and a foldout would hide
-        /// exactly that behind a click.
-        /// </summary>
-        private const float INDENT_STEP = 14f;
+        private readonly object _rootKey = new object();
 
-        private const float NAME_WIDTH = 250f;
-
-        private struct ModuleEntry
-        {
-            public string Name;
-            public string Path;
-            public string Type;
-            public string FolderGuid;
-
-            /// <summary>How many modules this one sits inside. A main module is at zero.</summary>
-            public int Depth;
-
-            /// <summary>
-            /// The modules inside this one, in the order they are drawn under it. Deleting a module
-            /// deletes its folder, so every one of these goes with it - which is what the
-            /// confirmation has to say before the reader answers it.
-            /// </summary>
-            public List<string> Descendants;
-        }
+        private FlowTreePainter _tree;
 
         private void OnEnable()
         {
+            _tree = new FlowTreePainter(_rows);
+
             ScanModules();
         }
 
@@ -93,13 +87,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             // inside it matches, so what matched is never left without the module it lives in.
             var matchedDepth = -1;
 
-            foreach (ModuleEntry module in _modules)
+            _tree.Begin();
+
+            DrawRootRow();
+
+            foreach (ModuleTreeRowEVO<ModulePickEVO> module in _modules)
             {
                 if (matchedDepth >= 0 && module.Depth <= matchedDepth) matchedDepth = -1;
 
                 bool inMatchedSubtree = matchedDepth >= 0;
 
-                if (Matches(module.Name)) matchedDepth = module.Depth;
+                if (Matches(module.Row.Name)) matchedDepth = module.Depth;
                 else if (!inMatchedSubtree && !SubtreeMatches(module)) continue;
 
                 DrawModuleRow(module);
@@ -112,55 +110,70 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             string.IsNullOrEmpty(_searchText)
             || moduleName.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0;
 
-        private bool SubtreeMatches(ModuleEntry module)
+        private bool SubtreeMatches(ModuleTreeRowEVO<ModulePickEVO> module)
         {
-            foreach (string descendant in module.Descendants)
+            foreach (ModuleTreeRowEVO<ModulePickEVO> descendant in module.Descendants)
             {
-                if (Matches(descendant)) return true;
+                if (Matches(descendant.Row.Name)) return true;
             }
 
             return false;
         }
 
         /// <summary>
-        /// One module, indented by how deep inside another it sits. The indent is the whole point
-        /// of the list: a screen module and the test module inside it used to be two unrelated
-        /// rows, so the reader confirming a deletion could not see from the window what the
-        /// deletion would actually take.
+        /// One module, under the module it lives in and hung from it by the same guide line the
+        /// other module lists draw. The indent is the whole point of the list: a screen module and
+        /// the test module inside it used to be two unrelated rows, so the reader confirming a
+        /// deletion could not see from the window what the deletion would actually take.
+        ///
+        /// The row itself takes no click - only the Delete button does anything - so it does not
+        /// light up under the pointer either.
         /// </summary>
-        private void DrawModuleRow(ModuleEntry module)
+        /// <summary>
+        /// The modules folder itself, the row every top level module hangs from. Nothing to press
+        /// on it: the folder is not a module, and it is not for deleting.
+        /// </summary>
+        private void DrawRootRow()
         {
-            float indent = module.Depth * INDENT_STEP;
+            Rect rect = _rows.Row();
 
-            // The same row the other module panels draw: the Root's washed violet behind it,
-            // and the kind in the colour that kind wears everywhere else.
-            GUI.backgroundColor = new ModulePanelTheme().Row;
-            EditorGUILayout.BeginHorizontal("box");
-            GUI.backgroundColor = Color.white;
+            _rows.Paint(rect, _palette.Chrome(EditorGUIUtility.isProSkin), FlowRowPainter.QUIET_ALPHA);
+            _tree.Hang(_rootKey, rect, 0, null);
 
-            if (indent > 0f) GUILayout.Space(indent);
+            GUI.Label(new Rect(_tree.TextX(rect, 0), rect.y, rect.width, rect.height), ROOT_LABEL, _rows.Name(false));
+        }
 
-            EditorGUILayout.LabelField(
-                module.Name, EditorStyles.boldLabel, GUILayout.Width(NAME_WIDTH - indent));
+        private void DrawModuleRow(ModuleTreeRowEVO<ModulePickEVO> entry)
+        {
+            ModulePickEVO module = entry.Row;
+            int depth = entry.Depth + 1;
+            Rect rect = _rows.Row();
 
-            DrawKindLabel(module.Type);
-            GUILayout.FlexibleSpace();
+            _rows.Paint(rect, _palette.Chrome(EditorGUIUtility.isProSkin), FlowRowPainter.QUIET_ALPHA);
+            _tree.Hang(entry, rect, depth, entry.Parent ?? _rootKey);
+
+            float x = _tree.TextX(rect, depth);
+            float right = rect.xMax - BUTTON_WIDTH - 12f;
+
+            GUI.Label(new Rect(x, rect.y, right - BADGE_WIDTH - 6f - x, rect.height), module.Name, _rows.Name(false));
+
+            GUI.Label(new Rect(right - BADGE_WIDTH, rect.y, BADGE_WIDTH, rect.height),
+                _badge.Text(module), _badge.Style(module, _rows, false));
 
             string kept = _coreModules.WhyKept(module.Name);
 
-            if (kept != null) DrawKeptReason(kept);
-            else DrawDeleteButton(module);
-
-            EditorGUILayout.EndHorizontal();
+            if (kept != null) DrawKeptReason(kept, new Rect(x, rect.y, right - BADGE_WIDTH - 6f - x, rect.height));
+            else DrawDeleteButton(entry, new Rect(rect.xMax - BUTTON_WIDTH - 6f, rect.y + 1f, BUTTON_WIDTH, rect.height - 2f));
         }
 
-        private void DrawDeleteButton(ModuleEntry module)
+        private void DrawDeleteButton(ModuleTreeRowEVO<ModulePickEVO> entry, Rect rect)
         {
+            Color background = GUI.backgroundColor;
             GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
 
-            if (GUILayout.Button("Delete", GUILayout.Width(60))) Delete(module);
+            if (GUI.Button(rect, "Delete", EditorStyles.miniButton)) Delete(entry);
 
-            GUI.backgroundColor = Color.white;
+            GUI.backgroundColor = background;
         }
 
         /// <summary>
@@ -168,16 +181,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// built on. The reason goes in rather than a disabled button, because a button that cannot
         /// be pressed says only that something is wrong and leaves the reader to guess what.
         /// </summary>
-        private void DrawKeptReason(string reason)
+        private void DrawKeptReason(string reason, Rect rect)
         {
-            var style = new GUIStyle(EditorStyles.miniLabel) {alignment = TextAnchor.MiddleRight};
+            var style = new GUIStyle(_rows.Mini(false)) {alignment = TextAnchor.MiddleRight};
 
-            Color previous = GUI.color;
-            GUI.color = new Color(previous.r, previous.g, previous.b, 0.6f);
-
-            GUILayout.Label(reason, style);
-
-            GUI.color = previous;
+            GUI.Label(rect, reason, style);
         }
 
         /// <summary>
@@ -185,11 +193,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// the reader answers: deleting a module deletes its folder, so every module inside it goes
         /// too, and a reader who wanted only the parent can close this and delete those first.
         /// </summary>
-        private void Delete(ModuleEntry module)
+        private void Delete(ModuleTreeRowEVO<ModulePickEVO> entry)
         {
-            string alsoGoing = module.Descendants.Count == 0
+            ModulePickEVO module = entry.Row;
+            List<string> descendants = entry.Descendants.Select(descendant => descendant.Row.Name).ToList();
+
+            string alsoGoing = descendants.Count == 0
                 ? string.Empty
-                : $"These modules are inside it and go with it:\n{Listed(module.Descendants)}\n\n";
+                : $"These modules are inside it and go with it:\n{Listed(descendants)}\n\n";
 
             if (!EditorUtility.DisplayDialog(
                     "Delete Module",
@@ -211,7 +222,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             }
 
             IReadOnlyList<string> deleted =
-                ModuleDeleter.DeleteModule(module.Name, module.Path, module.FolderGuid);
+                ModuleDeleter.DeleteModule(module.Name, module.Path, module.Descriptor.FolderGuid);
 
             // The deleter reports rather than announces, so the summary dialog belongs here, where
             // there is already a user looking at a window.
@@ -225,45 +236,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>
-        /// What kind of module the row is, in the colour that kind wears in the inspector and in
-        /// the module trees. Main and Sub are the ordinary case and say nothing.
-        /// </summary>
-        private void DrawKindLabel(string kind)
-        {
-            if (!TryRoleOf(kind, out FlowRole role)) return;
-
-            var content = new GUIContent(kind.ToUpperInvariant());
-
-            var style = new GUIStyle(EditorStyles.miniBoldLabel)
-            {
-                alignment = TextAnchor.MiddleLeft,
-                margin = new RectOffset(0, 0, 0, 0),
-                padding = new RectOffset(0, 0, 0, 0)
-            };
-
-            style.normal.textColor = new FlowPalette().Accent(role, EditorGUIUtility.isProSkin);
-
-            GUILayout.Label(content, style, GUILayout.Width(style.CalcSize(content).x + 10f),
-                GUILayout.Height(EditorGUIUtility.singleLineHeight));
-        }
-
-        private bool TryRoleOf(string kind, out FlowRole role)
-        {
-            switch (kind)
-            {
-                case "Screen":
-                    role = FlowRole.Screen;
-                    return true;
-                case "Test":
-                    role = FlowRole.Test;
-                    return true;
-                default:
-                    role = FlowRole.Root;
-                    return false;
-            }
-        }
-
-        /// <summary>
         /// The Roots elsewhere in the project that list this module's sub-contexts, and what to do
         /// about them. Answers false when the reader chose to stop, in which case nothing at all has
         /// been deleted yet - which is why this runs before the deleter rather than inside it.
@@ -272,7 +244,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// one at a time; or take none out, see where they are, and keep the module. A module
         /// nothing lists asks nothing and goes straight through.
         /// </summary>
-        private bool UnwireSubContexts(ModuleEntry module)
+        private bool UnwireSubContexts(ModulePickEVO module)
         {
             string moduleAssetPath = new ModuleAssetPathResolver().ToAssetPath(module.Path);
 
@@ -310,7 +282,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>One entry, one question. Skipping is a real answer and is logged as one.</summary>
-        private bool Asked(ModuleEntry module, SubContextUnwireEVO entry)
+        private bool Asked(ModulePickEVO module, SubContextUnwireEVO entry)
         {
             return EditorUtility.DisplayDialog(
                 "Remove sub-context",
@@ -323,7 +295,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// What the cancelling answer leaves the reader with: every place to look, on the console
         /// where it can be read at leisure and copied, and the module still where it was.
         /// </summary>
-        private void Report(ModuleEntry module, IReadOnlyList<string> found)
+        private void Report(ModulePickEVO module, IReadOnlyList<string> found)
         {
             Debug.Log($"<color=cyan>[FlowIoC]</color> '{module.Name}' was not deleted. It is listed as a "
                       + $"sub-context in {found.Count} place(s):\n{string.Join("\n", found)}");
@@ -338,7 +310,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// What was done, line by line, on the console and in a dialog. A skipped entry and one
         /// removed from an open scene both say so, because both leave something for the reader.
         /// </summary>
-        private void Announce(ModuleEntry module, IReadOnlyList<SubContextUnwireEVO> outcomes)
+        private void Announce(ModulePickEVO module, IReadOnlyList<SubContextUnwireEVO> outcomes)
         {
             if (outcomes.Count == 0) return;
 
@@ -377,69 +349,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
         private void ScanModules()
         {
-            var registry = new ModuleRegistryFactory().FromProject();
-            var pathResolver = new ModuleAssetPathResolver();
-
-            _modules = new List<ModuleEntry>();
-
-            foreach (ModuleDescriptorEVO module in TopLevel(registry))
-                Add(module, 0, registry, pathResolver);
-        }
-
-        /// <summary>
-        /// The modules that sit in no other module, in the order the index holds them. Everything
-        /// else reaches the list under the one it lives in.
-        /// </summary>
-        private static IEnumerable<ModuleDescriptorEVO> TopLevel(ModuleRegistry registry) =>
-            registry.Modules.Where(module => !registry.AncestorsOf(module).Any());
-
-        /// <summary>
-        /// One module and then everything inside it, so the list is already in the order it is
-        /// drawn. The entry is added before its children are walked and its Descendants list filled
-        /// afterwards, because a struct copied into the list would not see a later addition - the
-        /// list is what holds them.
-        /// </summary>
-        private void Add(
-            ModuleDescriptorEVO module, int depth, ModuleRegistry registry, ModuleAssetPathResolver pathResolver)
-        {
-            string path = pathResolver.ToAbsolutePath(registry.PathOf(module));
-
-            if (string.IsNullOrEmpty(path)) return;
-
-            var descendants = new List<string>();
-
-            _modules.Add(new ModuleEntry
-            {
-                Name = module.Name,
-                Path = path,
-                Type = module.Kind.ToString(),
-                FolderGuid = module.FolderGuid,
-                Depth = depth,
-                Descendants = descendants
-            });
-
-            int first = _modules.Count;
-
-            foreach (ModuleDescriptorEVO child in ChildrenOf(module, registry))
-                Add(child, depth + 1, registry, pathResolver);
-
-            for (int index = first; index < _modules.Count; index++)
-                descendants.Add(_modules[index].Name);
-        }
-
-        /// <summary>
-        /// A module's children in the order a module holds them - its sub modules, then its
-        /// screens, then the test module that exercises it - and by name within each kind, so the
-        /// list does not reorder itself between two scans of an unchanged project.
-        /// </summary>
-        private static IEnumerable<ModuleDescriptorEVO> ChildrenOf(
-            ModuleDescriptorEVO module, ModuleRegistry registry)
-        {
-            foreach (ModuleKind kind in new[] {ModuleKind.Sub, ModuleKind.Screen, ModuleKind.Test})
-            {
-                foreach (ModuleDescriptorEVO child in registry.ChildrenOf(module, kind).OrderBy(c => c.Name))
-                    yield return child;
-            }
+            _modules = new ModuleTree().Build(new ModulePickFactory().From(new ModuleRegistryFactory().FromProject()));
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration;
 using FlowIoC.Editor.Inspector;
+using FlowIoC.Editor.Modules;
 using FlowIoC.Editor.ModuleScanner;
 using UnityEditor;
 using UnityEngine;
@@ -49,7 +50,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private readonly ModuleOffers _offers = new ModuleOffers();
 
         private FlowHeaderBar _bar;
-        private List<ModuleTargetEVO> _modules;
+        private FlowTreePainter _tree;
+
+        /// <summary>A module under the module it lives in, the way every module list is drawn.</summary>
+        private List<ModuleTreeRowEVO<ModuleTargetEVO>> _modules;
         private Vector2 _scroll;
         private string _lastResult;
 
@@ -62,6 +66,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             wantsMouseMove = true;
 
             _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
+            _tree = new FlowTreePainter(_painter);
 
             Rescan();
         }
@@ -82,7 +87,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             (ProjectTargetEVO _, List<ModuleTargetEVO> modules) = new ModuleTargetFactory().Build();
 
-            _modules = modules;
+            _modules = new ModuleTree().Build(modules);
             Repaint();
         }
 
@@ -131,8 +136,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             }
             else
             {
-                foreach (ModuleTargetEVO module in _modules)
-                    DrawModuleRow(module);
+                _tree.Begin();
+
+                foreach (ModuleTreeRowEVO<ModuleTargetEVO> entry in _modules)
+                    DrawModuleRow(entry);
             }
 
             EditorGUILayout.EndScrollView();
@@ -167,12 +174,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         /// up under the pointer either, because a highlight on a row that answers a click with
         /// nothing is a promise the panel cannot keep.
         /// </summary>
-        private void DrawModuleRow(ModuleTargetEVO module)
+        private void DrawModuleRow(ModuleTreeRowEVO<ModuleTargetEVO> entry)
         {
+            ModuleTargetEVO module = entry.Row;
             string notOffered = _offers.WhyNotOffered(module);
             IReadOnlyList<ModuleOfferEVO> offers = _offers.For(module);
 
             Rect rect = _painter.Row();
+            float indent = _tree.Indent(entry.Depth);
 
             // Every row that is offered something wears the settled green, not the amber a scanner
             // row would. Amber says a reader has to act, and nothing here is owed: a module with
@@ -181,11 +190,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             if (notOffered != null) _painter.Darken(rect, GREY_ALPHA);
             else _painter.Paint(rect, _painter.Ok, FlowRowPainter.QUIET_ALPHA);
 
-            float x = rect.x + _painter.ContentX;
+            _tree.Hang(entry, rect, entry.Depth, entry.Parent);
 
-            GUI.Label(new Rect(x, rect.y, NAME_WIDTH, rect.height), module.Name,
+            float x = _tree.TextX(rect, entry.Depth);
+
+            GUI.Label(new Rect(x, rect.y, NAME_WIDTH - indent, rect.height), module.Name,
                 notOffered != null ? _painter.Mini(false) : _painter.Name(false));
-            x += NAME_WIDTH + 6f;
+            x += NAME_WIDTH - indent + 6f;
 
             if (notOffered != null)
             {
