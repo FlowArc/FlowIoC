@@ -3,9 +3,9 @@
 namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 {
     /// <summary>
-    /// The Command generator. Its interesting half is the Bind toggle, which writes into the
-    /// module's Context as well as into Controllers - the only single-file generator that touches
-    /// a second file.
+    /// The Command generator. It writes the one file, and shows the binding the Context needs
+    /// beside it rather than writing that too - where a command sits in a sequence is a decision
+    /// about the flow, and the window does not take it.
     /// </summary>
     internal class CreateCommandPage : HelpPage
     {
@@ -22,44 +22,40 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
         protected override string BodyHeadline => "Tools > FlowIoC > Create Command.";
 
         protected override string BodyTagline =>
-            "One file in the module's Controllers folder, with the right namespace - and, if you "
-            + "ask for it, the binding in the Context that decides when it runs.";
+            "One file in the module's Controllers folder, with the right namespace - and the two "
+            + "lines the Context needs to run it, ready to paste where the flow reads right.";
 
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Image(_images.Get("CreateCommandWindow.png"),
-                "Create Command, with Bind ticked and the signal it answers named.");
+                "Create Command, with the binding it shows beside the file it writes.");
 
             painter.SubHeading("The name");
             painter.Paragraph(
                 "Type the verb and its object; the window adds Command and shows you the result "
-                + "under the field. Name a Command after what it does to the world - GrantItemCommand, "
+                + "beside the field. Name a Command after what it does to the world - GrantItemCommand, "
                 + "PersistMatchResultCommand - and never after the signal that triggers it. A command "
                 + "named OnPurchaseCommand cannot be bound into a second sequence without lying "
                 + "about itself.");
 
             painter.Separator();
-            painter.SubHeading("Bind");
+            painter.SubHeading("How it is bound");
             painter.Paragraph(
-                "Tick it and two more fields appear: the signal holder's class name, and the signal "
-                + "on it. The generator then writes into the module's Context the InjectSignal "
-                + "property for that holder, if it is not already there, and the binding that runs "
-                + "this command.");
+                "A command runs when a signal it is bound to is dispatched, and that binding lives "
+                + "in the module's Context. The window shows it rather than writing it: two lines, "
+                + "spelled against the holder field the picked module's Context declares, with the "
+                + "Incoming signal named after the command, and a Copy button beside them.");
             painter.Code(
-                "// Bind ticked, PlayerSignals / DecreaseCurrency, Is Sequel on:\n"
-                + "CommandBinder.Bind(_playerSignals.Incoming.DecreaseCurrency)\n"
+                "CommandBinder.Bind(_signals.Incoming.DecreaseCurrency)\n"
                 + "    .ToSequence<DecreaseCurrencyCommand>();",
-                "PlayerContext.cs - written for you");
+                "Paste it into CommandBindings, where the flow reads right");
             painter.Paragraph(
-                "Is Sequel is the choice between the two terminators: on writes ToSequence, off "
-                + "writes ToParallel. A step that needs what the step before it did is a sequence "
-                + "step; one that touches nobody else's result is a parallel one.");
-
-            painter.Note(
-                "Important: the holder and the signal are typed as text, and nothing checks that a "
-                + "signal of that name exists. A typo is written into the Context and reported by "
-                + "the C# compiler against the Context rather than by this window. Leave Bind clear "
-                + "and write the binding yourself when the signal is not there yet.");
+                "Where the command sits is yours to decide - which sequence it joins, which step it "
+                + "follows, whether it is a ToSequence step that needs what the step before it did "
+                + "or a ToParallel one that touches nobody else's result. That is a decision about "
+                + "the flow, and a flow is read from one Context, so it is made there and not in a "
+                + "window that cannot see the sequence it would be joining.");
+            painter.PageLink("Controllers", "Read: Controllers");
 
             painter.Separator();
             painter.SubHeading("Injectables");

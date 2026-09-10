@@ -42,6 +42,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private const string NEW_ACTION = "NewAction";
         private const string ADD_ACTION = "Add Action";
+        private const string ACTIONS_LABEL = "Actions:";
         private const string MODULE_TYPE_LABEL = " Module Type:";
         private const string MODULE_ROLE_LABEL = " Role:";
         private const string NAME_PLACEHOLDER = "Enter module name here...";
@@ -166,6 +167,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
         private readonly FolderPreviewHints _previewHints = new FolderPreviewHints();
+
+        /// <summary>The bar over the screen's actions, with the plus that adds one.</summary>
+        private readonly GeneratorListBar _actionsBar = new GeneratorListBar();
 
         /// <summary>
         /// The column the preview keeps at the row edge for an optional folder's checkbox: the box
