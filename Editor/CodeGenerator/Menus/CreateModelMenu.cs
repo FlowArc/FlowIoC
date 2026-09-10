@@ -46,6 +46,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
         private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
+        private readonly GeneratorNamePreview _preview = new GeneratorNamePreview();
+        private readonly GeneratorListBar _listBar = new GeneratorListBar();
 
         private enum GenerationState
         {
@@ -88,12 +90,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 null, null, "Create Model");
 
             _body.Begin(this);
-            EditorGUILayout.LabelField(MODEL_NAME_LABEL, GUILayout.Width(100));
-            _modelName = EditorGUILayout.TextField(_modelName);
-            if (!string.IsNullOrEmpty(_modelName))
-            {
-                EditorGUILayout.LabelField($"{_modelName}Model", EditorStyles.boldLabel);
-            }
+            _modelName = _preview.Draw(MODEL_NAME_LABEL, _modelName, _modelName + "Model");
 
             EditorGUILayout.Space(10);
             _useDummyBinding = EditorGUILayout.Toggle(USE_DUMMY_BINDING_LABEL, _useDummyBinding);
@@ -126,7 +123,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(PANEL_HEADER_HEIGHT));
             GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"),
                 GUILayout.Width(35), GUILayout.Height(PANEL_HEADER_HEIGHT));
-            EditorGUILayout.LabelField(PARENT_MODULE_LABEL, labelStyle, GUILayout.Height(PANEL_HEADER_HEIGHT));
+            EditorGUILayout.LabelField(_picker.Title(PARENT_MODULE_LABEL, _parentModulePath), labelStyle,
+                GUILayout.Height(PANEL_HEADER_HEIGHT));
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
 
@@ -137,23 +135,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _selectedModuleKind = _picker.PickedKind;
 
             EditorGUILayout.EndVertical();
-
-            if (!string.IsNullOrEmpty(_parentModulePath))
-                EditorGUILayout.LabelField($"Selected: {Path.GetFileName(_parentModulePath)}", EditorStyles.boldLabel);
         }
 
         private void DisplayInjectablesSection()
         {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField(INJECTABLES_LABEL, EditorStyles.boldLabel);
-
-            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
-            if (GUILayout.Button(ADD_INJECTABLE_BUTTON))
-            {
+            if (_listBar.Draw(INJECTABLES_LABEL, ADD_INJECTABLE_BUTTON))
                 _injectableNames.Add("NewInjectable");
-            }
-
-            GUI.backgroundColor = Color.white;
 
             // Noted here, dropped once the list has been drawn: leaving the loop from inside a row
             // ends the frame with that row's horizontal group still open, and IMGUI reports an
@@ -166,12 +153,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 _injectableNames[i] = EditorGUILayout.TextField(_injectableNames[i]);
 
-                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
-
-                if (GUILayout.Button("-", GUILayout.Width(30)))
+                if (_listBar.DrawRemove())
                     removeAt = i;
-
-                GUI.backgroundColor = Color.white;
 
                 EditorGUILayout.EndHorizontal();
             }

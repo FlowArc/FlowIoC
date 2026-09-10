@@ -8,13 +8,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
     {
         private void DisplayActionsSection()
         {
-            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
-            if (GUILayout.Button(ADD_ACTION))
-            {
+            if (_actionsBar.Draw(ACTIONS_LABEL, ADD_ACTION))
                 _actionNames.Add(NEW_ACTION);
-            }
-
-            GUI.backgroundColor = Color.white;
 
             MeasureActionListHeight();
 
@@ -39,12 +34,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
                 _actionNames[ii] = EditorGUILayout.TextField(_actionNames[ii]);
 
-                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
-
-                if (GUILayout.Button("-", GUILayout.Width(30)))
+                if (_actionsBar.DrawRemove())
                     removeAt = ii;
-
-                GUI.backgroundColor = Color.white;
 
                 EditorGUILayout.EndHorizontal();
             }

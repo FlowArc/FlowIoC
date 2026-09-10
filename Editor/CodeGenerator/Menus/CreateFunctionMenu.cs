@@ -54,6 +54,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
         private readonly FunctionScriptWriter _writer = new FunctionScriptWriter();
         private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
+        private readonly GeneratorNamePreview _preview = new GeneratorNamePreview();
+        private readonly GeneratorListBar _listBar = new GeneratorListBar();
 
         private HelpPainter _painter;
         private InjectableTypeIndex _typeIndex;
@@ -98,11 +100,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             _body.Begin(this);
 
-            EditorGUILayout.LabelField(FUNCTION_NAME_LABEL, GUILayout.Width(100));
-            _functionName = EditorGUILayout.TextField(_functionName);
-
-            if (!string.IsNullOrEmpty(_functionName))
-                EditorGUILayout.LabelField($"{_functionName}Function : {BaseTypePreview()}", EditorStyles.boldLabel);
+            _functionName = _preview.Draw(
+                FUNCTION_NAME_LABEL, _functionName, _functionName + "Function", "Base Type:", BaseTypePreview());
 
             EditorGUILayout.Space(10);
 
@@ -154,17 +153,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         {
             if (_kind == FunctionKind.Async) return;
 
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField(PARAMETERS_LABEL, EditorStyles.boldLabel);
-
-            EditorGUI.BeginDisabledGroup(_parameters.Count >= FunctionScriptWriter.MAX_PARAMETERS);
-            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
-
-            if (GUILayout.Button(ADD_PARAMETER_BUTTON))
+            if (_listBar.Draw(PARAMETERS_LABEL, ADD_PARAMETER_BUTTON, _parameters.Count < FunctionScriptWriter.MAX_PARAMETERS))
                 _parameters.Add(new FunctionParameter {Type = "int", Name = "value"});
-
-            GUI.backgroundColor = Color.white;
-            EditorGUI.EndDisabledGroup();
 
             // Noted here and dropped once the list has been drawn: leaving the loop from inside a
             // row ends the frame with that row's horizontal group still open, and IMGUI reports an
@@ -178,12 +168,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 _parameters[i].Type = EditorGUILayout.TextField(_parameters[i].Type);
                 _parameters[i].Name = EditorGUILayout.TextField(_parameters[i].Name);
 
-                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
-
-                if (GUILayout.Button("-", GUILayout.Width(30)))
+                if (_listBar.DrawRemove())
                     removeAt = i;
-
-                GUI.backgroundColor = Color.white;
 
                 EditorGUILayout.EndHorizontal();
             }
@@ -194,15 +180,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
         private void DisplayInjectablesSection()
         {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField(INJECTABLES_LABEL, EditorStyles.boldLabel);
-
-            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
-
-            if (GUILayout.Button(ADD_INJECTABLE_BUTTON))
+            if (_listBar.Draw(INJECTABLES_LABEL, ADD_INJECTABLE_BUTTON))
                 _injectableNames.Add("NewInjectable");
-
-            GUI.backgroundColor = Color.white;
 
             int removeAt = -1;
 
@@ -214,12 +193,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 DisplayInjectableStatus(_injectableNames[i]);
 
-                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
-
-                if (GUILayout.Button("-", GUILayout.Width(30)))
+                if (_listBar.DrawRemove())
                     removeAt = i;
-
-                GUI.backgroundColor = Color.white;
 
                 EditorGUILayout.EndHorizontal();
             }
@@ -310,7 +285,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         /// </summary>
         private void DisplayParentModuleSelection()
         {
-            PanelHeader(PARENT_MODULE_LABEL);
+            PanelHeader(_picker.Title(PARENT_MODULE_LABEL, _parentModulePath));
 
             EditorGUILayout.BeginVertical();
 
@@ -318,9 +293,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _selectedModuleKind = _picker.PickedKind;
 
             EditorGUILayout.EndVertical();
-
-            if (!string.IsNullOrEmpty(_parentModulePath))
-                EditorGUILayout.LabelField($"Selected: {Path.GetFileName(_parentModulePath)}", EditorStyles.boldLabel);
         }
 
         private void DisplayCreateFunctionButton()

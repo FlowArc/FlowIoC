@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Help;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -20,9 +21,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const float PANEL_HEADER_HEIGHT = 33f;
 
         private const string COMMAND_NAME_LABEL = "Command Name: ";
-        private const string SIGNAL_LABEL = "Signal";
-        private const string SIGNAL_CLASS_NAME_LABEL = "Class Name: ";
-        private const string SIGNAL_NAME_LABEL = "Signal Name: ";
+        private const string BINDING_LABEL = "How it is bound:";
+        private const string BINDING_CAPTION = "Into the module's Context, where the flow reads right";
         private const string CREATE_COMMAND_BUTTON = "Create Command";
         private const string ADD_INJECTABLE_BUTTON = "Add Injectable";
         private const string INJECTABLES_LABEL = "Injectables:";
@@ -34,10 +34,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
 
         private string _commandName = string.Empty;
-        private string _signalClassName = string.Empty;
-        private string _signalName = string.Empty;
-        private bool _isSequence;
-        private bool _isBind;
         private string _parentModulePath;
         private ModulePicker _picker;
         private ModuleRegistry _registry;
@@ -51,6 +47,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private readonly FlowHeaderBar _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
         private readonly GeneratorWindowBody _body = new GeneratorWindowBody();
+        private readonly GeneratorNamePreview _preview = new GeneratorNamePreview();
+        private readonly GeneratorListBar _listBar = new GeneratorListBar();
+        private readonly CommandBindingSnippet _binding = new CommandBindingSnippet();
+
+        private HelpPainter _painter;
 
         private enum GenerationState
         {
@@ -93,23 +94,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
                 null, null, "Create Command");
 
             _body.Begin(this);
-            EditorGUILayout.LabelField(COMMAND_NAME_LABEL, GUILayout.Width(100));
-            _commandName = EditorGUILayout.TextField(_commandName);
-            if (!string.IsNullOrEmpty(_commandName))
-            {
-                EditorGUILayout.LabelField($"{_commandName}Command", EditorStyles.boldLabel);
-            }
+            _commandName = _preview.Draw(COMMAND_NAME_LABEL, _commandName, _commandName + "Command");
 
-            EditorGUILayout.Space(10);
-
-            DisplayBindToggleSection();
-
-            if (_isBind)
-            {
-                DisplayTogglesSection();
-                DisplaySignalEntrySection();
-            }
-
+            DisplayBindingPreview();
             DisplayInjectablesSection();
             DisplayParentModuleSelection();
             _body.End();
@@ -117,20 +104,43 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             DisplayCreateCommandButton();
         }
 
-        private void DisplayBindToggleSection()
+        /// <summary>
+        /// The binding the Context needs for this command, drawn as the Help window draws a
+        /// snippet - the same colouring, and the same Copy button beside it - and spelled with the
+        /// holder field the picked module's Context declares. It is shown rather than written:
+        /// where a command sits in a sequence is a decision about the flow, and the window used
+        /// to take it from two names typed as text that nothing checked.
+        /// </summary>
+        private void DisplayBindingPreview()
         {
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Bind", GUILayout.Width(80));
-            _isBind = EditorGUILayout.Toggle(_isBind, GUILayout.Width(20));
-            EditorGUILayout.EndHorizontal();
+            if (string.IsNullOrEmpty(_commandName)) return;
+
+            _painter ??= new HelpPainter(new HelpTheme());
+
+            PanelHeader(BINDING_LABEL);
+
+            _painter.Code(_binding.For(_commandName, HolderField()), BINDING_CAPTION);
         }
 
         /// <summary>
-        /// The module the command lands in, in the shape Add Shared or Signals asks the same question: a
-        /// bar in the Root's purple over a list tall enough to read, and the pick spelled out
-        /// under it.
+        /// The picked module's Context, asked for the field its holder lives in. The conventional
+        /// name until a module is picked - the snippet is drawn before the list is.
         /// </summary>
-        private void DisplayParentModuleSelection()
+        private string HolderField()
+        {
+            if (string.IsNullOrEmpty(_parentModulePath)) return _binding.HolderFieldIn(null);
+
+            string rootsAndContextsPath = _configProvider.ConfigFor(_selectedModuleKind)
+                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, _parentModulePath);
+
+            return _binding.HolderFieldIn(ContextFile(rootsAndContextsPath));
+        }
+
+        /// <summary>
+        /// The bar a panel in this window wears: the Root's purple, an icon, and the panel's name,
+        /// the same one the parent-module list carries below.
+        /// </summary>
+        private void PanelHeader(string label)
         {
             EditorGUILayout.Space(10);
 
@@ -145,9 +155,19 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(PANEL_HEADER_HEIGHT));
             GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"),
                 GUILayout.Width(35), GUILayout.Height(PANEL_HEADER_HEIGHT));
-            EditorGUILayout.LabelField(PARENT_MODULE_LABEL, labelStyle, GUILayout.Height(PANEL_HEADER_HEIGHT));
+            EditorGUILayout.LabelField(label, labelStyle, GUILayout.Height(PANEL_HEADER_HEIGHT));
             EditorGUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
+        }
+
+        /// <summary>
+        /// The module the command lands in, in the shape Add Shared or Signals asks the same question: a
+        /// bar in the Root's purple over a list tall enough to read, and the pick spelled out
+        /// under it.
+        /// </summary>
+        private void DisplayParentModuleSelection()
+        {
+            PanelHeader(_picker.Title(PARENT_MODULE_LABEL, _parentModulePath));
 
             EditorGUILayout.BeginVertical();
 
@@ -156,23 +176,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
             _selectedModuleKind = _picker.PickedKind;
 
             EditorGUILayout.EndVertical();
-
-            if (!string.IsNullOrEmpty(_parentModulePath))
-                EditorGUILayout.LabelField($"Selected: {Path.GetFileName(_parentModulePath)}", EditorStyles.boldLabel);
         }
 
         private void DisplayInjectablesSection()
         {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField(INJECTABLES_LABEL, EditorStyles.boldLabel);
-
-            GUI.backgroundColor = new ModulePanelTheme().ActionAdd;
-            if (GUILayout.Button(ADD_INJECTABLE_BUTTON))
-            {
+            if (_listBar.Draw(INJECTABLES_LABEL, ADD_INJECTABLE_BUTTON))
                 _injectableNames.Add("NewInjectable");
-            }
-
-            GUI.backgroundColor = Color.white;
 
             // Noted here, dropped once the list has been drawn: leaving the loop from inside a row
             // ends the frame with that row's horizontal group still open, and IMGUI reports an
@@ -185,12 +194,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
                 _injectableNames[i] = EditorGUILayout.TextField(_injectableNames[i]);
 
-                GUI.backgroundColor = new ModulePanelTheme().ActionRemove;
-
-                if (GUILayout.Button("-", GUILayout.Width(30)))
+                if (_listBar.DrawRemove())
                     removeAt = i;
-
-                GUI.backgroundColor = Color.white;
 
                 EditorGUILayout.EndHorizontal();
             }
@@ -216,34 +221,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             _generationState = GenerationState.InProgress;
             CreateModuleStructureForCommandGeneration();
-        }
-
-        private void DisplayTogglesSection()
-        {
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Is Sequel", GUILayout.Width(80));
-            _isSequence = EditorGUILayout.Toggle(_isSequence, GUILayout.Width(20));
-
-            // GUILayout.Label("Is Pre-Binded", GUILayout.Width(80));
-            // _isPreBinded = EditorGUILayout.Toggle(_isPreBinded, GUILayout.Width(20));
-            EditorGUILayout.EndHorizontal();
-        }
-
-        private void DisplaySignalEntrySection()
-        {
-            EditorGUILayout.Space(10);
-            EditorGUILayout.BeginVertical("box");
-            GUIStyle boldLabelStyle = new GUIStyle(GUI.skin.label);
-            boldLabelStyle.fontStyle = FontStyle.Bold;
-            EditorGUILayout.LabelField(SIGNAL_LABEL, boldLabelStyle, GUILayout.Width(50));
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(SIGNAL_CLASS_NAME_LABEL, GUILayout.Width(75));
-            _signalClassName = EditorGUILayout.TextField(_signalClassName);
-            EditorGUILayout.Space(2);
-            EditorGUILayout.LabelField(SIGNAL_NAME_LABEL, GUILayout.Width(75));
-            _signalName = EditorGUILayout.TextField(_signalName);
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.EndHorizontal();
         }
 
         private void CreateModuleStructureForCommandGeneration()
@@ -272,17 +249,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             string commandPath = _configProvider.ConfigFor(_selectedModuleKind)
                 .FindFullFolderPathByID(FolderEVO.FolderType.Controllers, modulePath);
-            string rootsAndContextsPath = _configProvider.ConfigFor(_selectedModuleKind)
-                .FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
             string moduleNamespace = NamespaceUtility.GetModuleNamespace(modulePath);
 
             CreateCommand(commandPath, moduleNamespace);
-
-            if (_isBind)
-            {
-                InjectSignalInContext(rootsAndContextsPath);
-                BindCommandInContext(rootsAndContextsPath, moduleNamespace);
-            }
 
             _generationState = GenerationState.Idle;
         }
@@ -304,37 +273,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
 
             EnsureNamespaceImport(commandName, path, $"{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}",
                 moduleNamespace);
-        }
-
-        private void InjectSignalInContext(string contextPath)
-        {
-            string signalClassName = _signalClassName;
-            CodeGeneratorUtils.InjectSignalInContext(ContextFile(contextPath), signalClassName);
-        }
-
-        /// <summary>
-        /// The using the context needs is the namespace the command was actually written into, so
-        /// it is read off the same Controllers folder <see cref="CreateCommand"/> writes to. A
-        /// hardcoded ".Commands" left the context importing a namespace no module has.
-        /// </summary>
-        private void BindCommandInContext(string contextPath, string moduleNamespace)
-        {
-            string commandName = _commandName + "Command";
-            string signalClassName = _signalClassName;
-            string signalName = _signalName;
-
-            ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
-            if (codeGenSettings == null)
-            {
-                Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
-                return;
-            }
-
-            string commandNamespace =
-                $"{moduleNamespace}.{codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.Controllers]}";
-
-            CodeGeneratorUtils.BindCommandInContext(ContextFile(contextPath), commandName, signalClassName, signalName,
-                commandNamespace, _isSequence);
         }
 
         /// <summary>

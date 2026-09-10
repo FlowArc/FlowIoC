@@ -640,7 +640,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             GUILayout.Label(EditorGUIUtility.IconContent(hasParent ? "console.infoicon" : "console.erroricon"),
                 GUILayout.Width(35), GUILayout.Height(PANEL_HEADER_HEIGHT));
             EditorGUILayout.LabelField(
-                hasParent ? PARENT_MODULE_LABEL : "<size=12>Please, select <b>parent module</b>!</size>",
+                hasParent
+                    ? _picker.Title(PARENT_MODULE_LABEL, _parentModulePath)
+                    : "<size=12>Please, select <b>parent module</b>!</size>",
                 style, GUILayout.Height(PANEL_HEADER_HEIGHT));
             EditorGUILayout.EndHorizontal();
 

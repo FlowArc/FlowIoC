@@ -184,6 +184,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             fontSize = PICK_MARK_SIZE
         };
 
+        /// <summary>
+        /// What the bar over the picker says: its label alone until something is picked, then
+        /// the pick's folder name after it in the yellow the previews use - on the bar, where the
+        /// eye already is, rather than on a line under a list it has to scroll past.
+        /// </summary>
+        internal string Title(string label, string parentModulePath)
+        {
+            if (string.IsNullOrEmpty(parentModulePath)) return label;
+
+            return label + " <color=#ffdd00ff>" + System.IO.Path.GetFileName(parentModulePath) + "</color>";
+        }
+
         private string TrimModuleSuffix(string moduleName)
         {
             if (string.IsNullOrEmpty(moduleName) || !moduleName.EndsWith(MODULE_SUFFIX)) return moduleName;
