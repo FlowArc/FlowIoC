@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A World Pointer module**, ready-made under `Modules~/WorldPointerModule`. A Service that moves
+  a UI element to a 3D object's screen position every frame - a health bar over a unit, a name over
+  a player, a "wave incoming" notice over a gate - and decides what happens when the object leaves
+  the frame: `Hide`, `ClampToEdge` with an arrow aimed at the target, or `Ignore`. The whole
+  surface is `IWorldPointerService`: `Register` hands back a disposable handle, `UnregisterAll`
+  clears, `TryProject` answers a one-shot point. The frame is the camera's pixel rect inset by
+  `ScreenMargins`, so a HUD bar is a margin rather than a special case; behind the camera the
+  projection is mirrored back before anything reads it; a destroyed target drops itself. A
+  `WorldPointerIndicator` component covers the ordinary prefab, and the module's test scene shows
+  the three modes side by side.
+
 ### Changed
 
 - **`UpdateProvider` runs after the cameras.** Its `LateUpdate` and `CinemachineBrain`'s both sat
