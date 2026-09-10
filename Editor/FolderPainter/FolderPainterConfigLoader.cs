@@ -93,7 +93,9 @@ namespace FlowIoC.Editor.FolderPainter
                     new Color(0.4f, 0.13930716f, 0.10196078f, 0.101960786f),
                     new Color(0.29803923f, 0.10196077f, 0.105761915f, 0.14901961f)),
 
-                CreatePathRule("Test", FolderPainterPathCheckType.Contains,
+                // The test module folder and everything under it. The word alone matched too
+                // widely - an AbTestFlowModule is not a test module - so the rule names the folder.
+                CreatePathRule("TestModules", FolderPainterPathCheckType.Contains,
                     new Color(0.4f, 0.101960786f, 0.29803923f, 0.101960786f),
                     new Color(0.29803923f, 0.101960786f, 0.2f, 0.14901961f)),
 
