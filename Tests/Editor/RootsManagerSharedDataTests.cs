@@ -110,6 +110,26 @@ namespace FlowIoC.Tests
             Assert.IsNull(_manager.SharedDataModel.GetScriptable<ScriptableObject>("RD_Probe"));
         }
 
+        /// <summary>
+        /// The mono slot goes the same way as the scriptable one. The adapter itself is the
+        /// component filed, which spares the test a probe type of its own.
+        /// </summary>
+        [Test]
+        public void A_registering_Root_files_the_components_its_adapter_shares()
+        {
+            GameObject host = new GameObject("MatchRoot");
+            _hosts.Add(host);
+
+            RootAdapter adapter = host.AddComponent<RootAdapter>();
+            typeof(RootAdapter)
+                .GetField("_sharedMonoMap", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(adapter, new SerializedDictionary<string, MonoBehaviour> {{"Adapter", adapter}});
+
+            host.AddComponent<SharedRoot>().Build();
+
+            Assert.AreSame(adapter, _manager.SharedDataModel.GetMonoBehaviour<RootAdapter>("Adapter"));
+        }
+
         /// <summary>A Root in a scene, built: Awake has run, so it is registered and its slot is filed.</summary>
         private SharedRoot BuildRoot(string name, ScriptableObject shared)
         {

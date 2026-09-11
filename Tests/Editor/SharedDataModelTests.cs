@@ -25,6 +25,7 @@ namespace FlowIoC.Tests
 
             public string Name { get; }
             public IReadOnlyDictionary<string, ScriptableObject> SharedScriptables => null;
+            public IReadOnlyDictionary<string, MonoBehaviour> SharedMonoBehaviours => null;
 
             public void StartContext(bool forceToStart = false)
             {
@@ -70,12 +71,17 @@ namespace FlowIoC.Tests
         public void TearDown()
         {
             Object.DestroyImmediate(_probe);
+
+            if (_monoHost != null)
+                Object.DestroyImmediate(_monoHost);
+
+            _monoHost = null;
         }
 
         [Test]
         public void A_filed_asset_answers_by_name()
         {
-            _model.Register(_first, Filing("RD_Probe", _probe));
+            RegisterScriptables(_first, Filing("RD_Probe", _probe));
 
             Assert.AreSame(_probe, _model.GetScriptable<SharedProbe>("RD_Probe"));
         }
@@ -83,7 +89,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_filed_asset_answers_by_type_name_when_no_name_is_given()
         {
-            _model.Register(_first, Filing(nameof(SharedProbe), _probe));
+            RegisterScriptables(_first, Filing(nameof(SharedProbe), _probe));
 
             Assert.AreSame(_probe, _model.GetScriptable<SharedProbe>());
         }
@@ -100,7 +106,7 @@ namespace FlowIoC.Tests
         public void An_asset_filed_as_another_type_logs_an_error_and_answers_null()
         {
             var other = ScriptableObject.CreateInstance<ScriptableObject>();
-            _model.Register(_first, Filing("RD_Probe", other));
+            RegisterScriptables(_first, Filing("RD_Probe", other));
 
             LogAssert.Expect(LogType.Error, new Regex("another type[\\s\\S]*RD_Probe[\\s\\S]*MatchRoot"));
 
@@ -116,7 +122,7 @@ namespace FlowIoC.Tests
         [Test]
         public void An_empty_entry_is_not_filed()
         {
-            _model.Register(_first, Filing("RD_Probe", null));
+            RegisterScriptables(_first, Filing("RD_Probe", null));
 
             LogAssert.Expect(LogType.Error, new Regex("not filed on any Root[\\s\\S]*RD_Probe"));
 
@@ -126,7 +132,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_null_map_files_nothing_and_throws_nothing()
         {
-            Assert.DoesNotThrow(() => _model.Register(_first, null));
+            Assert.DoesNotThrow(() => RegisterScriptables(_first, null));
         }
 
         /// <summary>
@@ -137,9 +143,9 @@ namespace FlowIoC.Tests
         [Test]
         public void A_second_filing_of_the_same_asset_logs_a_warning_and_the_first_answers()
         {
-            _model.Register(_first, Filing("RD_Probe", _probe));
+            RegisterScriptables(_first, Filing("RD_Probe", _probe));
 
-            ConsoleLog warning = Capture(LogType.Warning, () => _model.Register(_second, Filing("RD_Probe", _probe)));
+            ConsoleLog warning = Capture(LogType.Warning, () => RegisterScriptables(_second, Filing("RD_Probe", _probe)));
 
             Assert.IsNotNull(warning, "no warning was logged for the second filing");
             StringAssert.Contains("filed twice", warning.Message);
@@ -157,11 +163,11 @@ namespace FlowIoC.Tests
         {
             var other = ScriptableObject.CreateInstance<SharedProbe>();
             other.name = "RD_Probe_Test";
-            _model.Register(_first, Filing("RD_Probe", _probe));
+            RegisterScriptables(_first, Filing("RD_Probe", _probe));
 
             LogAssert.Expect(LogType.Error,
                 new Regex("under one name[\\s\\S]*RD_Probe[\\s\\S]*MatchRoot[\\s\\S]*HudRoot[\\s\\S]*RD_Probe_Test"));
-            _model.Register(_second, Filing("RD_Probe", other));
+            RegisterScriptables(_second, Filing("RD_Probe", other));
 
             Assert.AreSame(_probe, _model.GetScriptable<SharedProbe>("RD_Probe"));
 
@@ -176,9 +182,9 @@ namespace FlowIoC.Tests
         public void When_the_first_filer_goes_the_next_filing_answers()
         {
             var other = ScriptableObject.CreateInstance<SharedProbe>();
-            _model.Register(_first, Filing("RD_Probe", _probe));
+            RegisterScriptables(_first, Filing("RD_Probe", _probe));
             LogAssert.Expect(LogType.Error, new Regex("under one name"));
-            _model.Register(_second, Filing("RD_Probe", other));
+            RegisterScriptables(_second, Filing("RD_Probe", other));
 
             _model.UnRegister(_first);
 
@@ -190,7 +196,7 @@ namespace FlowIoC.Tests
         [Test]
         public void When_every_filer_has_gone_the_asset_is_not_filed()
         {
-            _model.Register(_first, Filing("RD_Probe", _probe));
+            RegisterScriptables(_first, Filing("RD_Probe", _probe));
 
             _model.UnRegister(_first);
 
@@ -203,6 +209,88 @@ namespace FlowIoC.Tests
         {
             Assert.DoesNotThrow(() => _model.UnRegister(_second));
         }
+
+        [Test]
+        public void A_filed_component_answers_by_name()
+        {
+            SharedMonoProbe probe = MonoProbe();
+            RegisterMonoBehaviours(_first, new Dictionary<string, MonoBehaviour> {{"Probe", probe}});
+
+            Assert.AreSame(probe, _model.GetMonoBehaviour<SharedMonoProbe>("Probe"));
+        }
+
+        [Test]
+        public void A_filed_component_answers_by_type_name_when_no_name_is_given()
+        {
+            SharedMonoProbe probe = MonoProbe();
+            RegisterMonoBehaviours(_first, new Dictionary<string, MonoBehaviour> {{nameof(SharedMonoProbe), probe}});
+
+            Assert.AreSame(probe, _model.GetMonoBehaviour<SharedMonoProbe>());
+        }
+
+        [Test]
+        public void A_component_nobody_filed_logs_an_error_and_answers_null()
+        {
+            LogAssert.Expect(LogType.Error, new Regex("not filed on any Root[\\s\\S]*Probe"));
+
+            Assert.IsNull(_model.GetMonoBehaviour<SharedMonoProbe>("Probe"));
+        }
+
+        [Test]
+        public void A_second_filing_of_the_same_component_logs_a_warning_and_the_first_answers()
+        {
+            SharedMonoProbe probe = MonoProbe();
+            RegisterMonoBehaviours(_first, new Dictionary<string, MonoBehaviour> {{"Probe", probe}});
+
+            ConsoleLog warning = Capture(LogType.Warning,
+                () => RegisterMonoBehaviours(_second, new Dictionary<string, MonoBehaviour> {{"Probe", probe}}));
+
+            Assert.IsNotNull(warning, "no warning was logged for the second filing");
+            StringAssert.Contains("filed twice", warning.Message);
+            Assert.AreSame(probe, _model.GetMonoBehaviour<SharedMonoProbe>("Probe"));
+        }
+
+        /// <summary>Scriptables and components are filed apart: a name in one says nothing about the other.</summary>
+        [Test]
+        public void A_component_and_an_asset_under_the_same_name_do_not_collide()
+        {
+            SharedMonoProbe probe = MonoProbe();
+            RegisterScriptables(_first, Filing("Probe", _probe));
+            RegisterMonoBehaviours(_first, new Dictionary<string, MonoBehaviour> {{"Probe", probe}});
+
+            Assert.AreSame(_probe, _model.GetScriptable<SharedProbe>("Probe"));
+            Assert.AreSame(probe, _model.GetMonoBehaviour<SharedMonoProbe>("Probe"));
+        }
+
+        [Test]
+        public void When_a_components_filer_has_gone_the_component_is_not_filed()
+        {
+            SharedMonoProbe probe = MonoProbe();
+            RegisterMonoBehaviours(_first, new Dictionary<string, MonoBehaviour> {{"Probe", probe}});
+
+            _model.UnRegister(_first);
+
+            LogAssert.Expect(LogType.Error, new Regex("not filed on any Root[\\s\\S]*Probe"));
+            Assert.IsNull(_model.GetMonoBehaviour<SharedMonoProbe>("Probe"));
+        }
+
+        private class SharedMonoProbe : MonoBehaviour
+        {
+        }
+
+        private GameObject _monoHost;
+
+        private SharedMonoProbe MonoProbe()
+        {
+            _monoHost = new GameObject("SharedMonoProbeHost");
+            return _monoHost.AddComponent<SharedMonoProbe>();
+        }
+
+        private void RegisterScriptables(FakeRoot root, Dictionary<string, ScriptableObject> scriptables) =>
+            _model.Register(root, scriptables, null);
+
+        private void RegisterMonoBehaviours(FakeRoot root, Dictionary<string, MonoBehaviour> monoBehaviours) =>
+            _model.Register(root, null, monoBehaviours);
 
         private Dictionary<string, ScriptableObject> Filing(string name, ScriptableObject asset) =>
             new() {{name, asset}};

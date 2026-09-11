@@ -104,9 +104,10 @@ namespace FlowIoC.Editor.Help.Pages
                 "A GameObject the module needs in the scene goes under its Root. The Root is the "
                 + "module's one presence there, so an EventSystem, an adapter, anything the module "
                 + "owns hangs off it rather than sitting loose beside it. The adapter on the Root "
-                + "files the module's assets by name, and its Shared Scriptables slot files the ones "
-                + "other modules read through ISharedDataModel - once, on this Root, never on the "
-                + "reader's.");
+                + "files the module's assets and scene components by name, and its two Shared slots "
+                + "file the ones other modules read through ISharedDataModel - once, on this Root, "
+                + "never on the reader's. The Root Adapter tab of the Data Types page walks through "
+                + "all four.");
 
             painter.Separator();
             painter.SubHeading("Living past a scene");

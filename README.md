@@ -1491,6 +1491,13 @@ error when it is a different one under the same name — and the first filing an
 nobody filed is an error naming it, and the reader gets null. The reference to the `.Shared`
 assembly stays: it is the one line that records who reads whose data.
 
+Scene components go the same way. The adapter's **Mono Map** holds the MonoBehaviours the
+module drives — a spawner, a marker, a rig under its Root — read by its Model with
+`GetMonoBehaviour<T>()`; the **Shared Mono Map** holds the ones other modules read, through
+`ISharedDataModel.GetMonoBehaviour<T>()`: a Canvas every module parents its overlays to, the
+one Camera a pointer projects through. *Tools ▸ FlowIoC ▸ Help ▸ Data Types* has a **Root
+Adapter** tab that walks through the four slots with the Model and the Command that read each.
+
 Namespaces follow the folder, as they already do for a module: a value object under
 `Scripts/Shared/Data/ValueObjects/` is in
 `Modules.PlayerModule.Shared.Data.ValueObjects`, so it cannot collide with the

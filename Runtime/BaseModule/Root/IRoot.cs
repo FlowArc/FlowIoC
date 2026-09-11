@@ -14,6 +14,9 @@ namespace FlowIoC.BaseModule.Root
         /// </summary>
         IReadOnlyDictionary<string, ScriptableObject> SharedScriptables { get; }
 
+        /// <summary>The scene components this Root files as shared, or null when it has none.</summary>
+        IReadOnlyDictionary<string, MonoBehaviour> SharedMonoBehaviours { get; }
+
         void StartContext(bool forceToStart = false);
         void InitializeSubContexts();
         IContext GetContext();
