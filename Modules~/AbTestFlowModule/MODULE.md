@@ -22,7 +22,8 @@ IAbTestFlowService, CD_AbTests, RD_AbTestStatus, AbTestStatusRVO, AbTestId
   group; the dice, PlayerPrefs and the copy sit in the three commands.
 - **Nothing is announced.** The decision is made at boot, before any other module is listening, so
   an Outgoing signal would reach nobody. Where the player stands is `RD_AbTestStatus` in Shared,
-  read by whoever wants it when they are ready, and the deciding commands log it in words.
+  filed in the Root's Shared Scriptables and read through `ISharedDataModel` by whoever wants it
+  when they are ready, and the deciding commands log it in words.
 - **Storage.** PlayerPrefs at `flowioc.abtest.<AbTestId>` as `"<version>|<group>"`, `-` for a
   player the rollout left out. Raising a test's `Version` is the only way to decide again, and it
   decides for everybody - a test is restarted, not amended. A stored group the config no longer has

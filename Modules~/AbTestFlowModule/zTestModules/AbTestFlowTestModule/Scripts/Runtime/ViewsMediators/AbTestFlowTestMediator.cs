@@ -38,8 +38,9 @@ namespace Modules.AbTestFlowModule.AbTestFlowTestModule.ViewsMediators
         private void OnStateChanged(AbTestFlowTestStateVO state)
         {
             string group = state.Group ?? "outside the test";
+            string sharedGroup = state.SharedGroup ?? "outside the test";
 
-            _view.SetExperiment($"{state.AbTestId} v{state.Version}: {group}");
+            _view.SetExperiment($"{state.AbTestId} v{state.Version}: {group} (shared data says {sharedGroup})");
             _view.SetProbe($"Probe - Lives {state.Lives}, Speed {state.Speed:0.##}");
         }
     }

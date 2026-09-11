@@ -11,6 +11,13 @@ namespace Modules.AbTestFlowModule.AbTestFlowTestModule.Data.ValueObjects
         /// <summary>Null when the player is outside the test.</summary>
         public string Group;
 
+        /// <summary>
+        /// The same group, read the other way a module can: off RD_AbTestStatus through
+        /// ISharedDataModel, the asset the service Root files as shared. Null when the player is
+        /// outside the test - or when nothing filed the asset, which the console then reports.
+        /// </summary>
+        public string SharedGroup;
+
         public int Lives;
         public float Speed;
     }
