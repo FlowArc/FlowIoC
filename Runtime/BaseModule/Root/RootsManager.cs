@@ -85,7 +85,7 @@ namespace FlowIoC.BaseModule.Root
 
             // Awake, before any binding phase: what a Root shares is readable from the first
             // PostConstruct on, whichever Root that is.
-            SharedDataModel.Register(root, root.SharedScriptables);
+            SharedDataModel.Register(root, root.SharedScriptables, root.SharedMonoBehaviours);
         }
 
         public void UnRegister(IRoot root)

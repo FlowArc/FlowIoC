@@ -121,15 +121,18 @@ what is true whatever you are about to do.
   `Incoming` and no `Outgoing` - those two halves describe a boundary, and an internal signal never
   crosses one.
 - **A shared asset is filed once, on one Root.** A ScriptableObject other modules read goes in the
-  *Shared Scriptables* of one Root's adapter, and a reader injects `ISharedDataModel` and calls
-  `GetScriptable<RD_Match>()` - never a second copy dragged onto its own adapter, which reads an
-  asset nobody fills when the producer is not in the scene and reports nothing. The slot says the
-  asset is common, not who produces it: a test module's Root files a ready-made `RD_Match` when
-  the producer is not in the scene. Filing happens when the Root registers, at `Awake`, before any
-  binding phase, so a `PostConstruct` may read one. A second filing of the same name is reported
-  at the Root that made it and the first filing answers. The reader still references the `.Shared`
-  assembly the type lives in - that one line is the record of who reads whose data, and the
-  compiler is what keeps a Runtime type out of reach.
+  *Shared Scriptables* of one Root's adapter - a scene component in its *Shared Monos* - and a
+  reader injects `ISharedDataModel` and calls `GetScriptable<RD_Match>()` or
+  `GetMonoBehaviour<Canvas>("OverlayCanvas")` - never a second copy dragged onto its own adapter,
+  which reads an asset nobody fills when the producer is not in the scene and reports nothing. The
+  slot says the asset is common, not who produces it: a test module's Root files a ready-made
+  `RD_Match` when the producer is not in the scene. Filing happens when the Root registers, at
+  `Awake`, before any binding phase, so a `PostConstruct` may read one. A second filing of the same
+  name is reported at the Root that made it and the first filing answers. The reader still
+  references the `.Shared` assembly the type lives in - that one line is the record of who reads
+  whose data, and the compiler is what keeps a Runtime type out of reach. The module's own two
+  slots are read by its Model off the adapter, and a Command asks the Model - a Command never
+  reaches for the adapter.
 - A module adds nothing to the `Tools/FlowIoC` menu. Whatever it hands the reader ships
   inside the module instead: a test module brings the scene it runs in, already built, so
   installing the module is the only step there is. That holds for the modules FlowIoC ships

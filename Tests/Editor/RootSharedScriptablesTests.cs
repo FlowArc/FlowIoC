@@ -51,5 +51,27 @@ namespace FlowIoC.Tests
 
             Object.DestroyImmediate(probe);
         }
+
+        [Test]
+        public void A_Root_shares_what_its_adapter_files_as_shared_components()
+        {
+            RootAdapter adapter = _host.AddComponent<RootAdapter>();
+            var map = new SerializedDictionary<string, MonoBehaviour> {{"Adapter", adapter}};
+
+            typeof(RootAdapter)
+                .GetField("_sharedMonoMap", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(adapter, map);
+            RootBase root = _host.AddComponent<RootBase>();
+
+            Assert.AreSame(map, root.SharedMonoBehaviours);
+        }
+
+        [Test]
+        public void A_Root_without_an_adapter_shares_no_components()
+        {
+            RootBase root = _host.AddComponent<RootBase>();
+
+            Assert.IsNull(root.SharedMonoBehaviours);
+        }
     }
 }

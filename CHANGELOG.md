@@ -20,12 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same asset and an error for a different one, and the first filing answers; an asset nobody
   filed is an error naming it. The adapter's own `GetScriptable` looks in both slots, so a module
   reads its own asset the same way whichever slot it sits in. `IRoot` gains `SharedScriptables`.
+- **Scene components are shared the same way.** A fourth map on `RootAdapter`, *Shared Monos*,
+  filed into the same registry and read through `ISharedDataModel.GetMonoBehaviour<T>()`, by type
+  name or by the name it was filed under. `IRoot` gains `SharedMonoBehaviours`.
+- **`RootAdapter.GetMonoBehaviour<T>()`**, the type-name overload the scriptable side already had.
+- **A Root Adapter tab on the Data Types Help page**: the four slots, the Model that reads the
+  module's own two and the Command that asks it, the Command that reads another module's through
+  `ISharedDataModel`, and what each report looks like.
 
 ### Fixed
 
 - **`BindInstance` before any context exists no longer throws.** The binder's log line named the
   bound context, and the run's first framework binding - the shared data model, handed in by the
   `RootsManager` as it initialises - happens before there is one. The line now says `no context`.
+- **`RootAdapter.GetMonoBehaviour` reports a miss instead of throwing.** It indexed the map
+  directly, so a component that was never filed came back as a `KeyNotFoundException` from inside
+  the framework. It now logs the same error a missing asset gets - naming the component and the
+  Root - and answers null.
 
 ## [1.13.0] - 2026-09-10
 

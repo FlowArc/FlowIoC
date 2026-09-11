@@ -123,9 +123,17 @@ public class ShowMatchResultCommand : Command
 - An asset nobody filed is an error naming it, and the reader gets null.
 - The reader references `Modules.Match.Shared`, as for any published type. That one line is the
   record of who reads whose data; the compiler keeps `Modules.Match` out of reach.
+- Scene components go the same way: the adapter's **Shared Mono Map**, read with
+  `ISharedDataModel.GetMonoBehaviour<Canvas>("OverlayCanvas")`. The type has to be one the reader
+  can name - Unity's own, or one from a Shared assembly.
 
 A Mediator injects nothing but its View, so a screen that needs shared data dispatches, and a
 Command reads it.
+
+The module's own two slots - Scriptable Map and Mono Map - are read by its Model off the adapter
+in `PostConstruct`, and a Command asks the Model; a Command never reaches for the adapter.
+*Tools ▸ FlowIoC ▸ Help ▸ Data Types ▸ Root Adapter* shows all four slots with the Model and the
+Command that read each.
 
 ## Common Mistakes
 

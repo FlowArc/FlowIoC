@@ -3,11 +3,11 @@ using UnityEngine;
 namespace FlowIoC.BaseModule.SharedData
 {
     /// <summary>
-    /// The assets filed as shared on any Root in the scene, readable from any injectable. A Root
-    /// files them in its adapter's Shared Scriptables and the RootsManager files them here when
-    /// the Root registers, so what a reader gets is the instance one Root holds - never a second
-    /// copy dragged onto the reader's own adapter. Filing happens at Awake, before any binding
-    /// phase, so a PostConstruct may read one.
+    /// What the Roots in the scene file as shared, readable from any injectable: assets from
+    /// their adapters' Shared Scriptables, scene components from their Shared Monos. The
+    /// RootsManager files them here when a Root registers, so what a reader gets is the instance
+    /// one Root holds - never a second copy dragged onto the reader's own adapter. Filing happens
+    /// at Awake, before any binding phase, so a PostConstruct may read one.
     /// </summary>
     public interface ISharedDataModel
     {
@@ -20,5 +20,14 @@ namespace FlowIoC.BaseModule.SharedData
         /// is noticed: one filing, in the Shared Scriptables of one Root.
         /// </summary>
         T GetScriptable<T>(string assetName) where T : ScriptableObject;
+
+        /// <summary>The shared scene component filed under the type's name.</summary>
+        T GetMonoBehaviour<T>() where T : MonoBehaviour;
+
+        /// <summary>
+        /// The shared scene component filed under that name, or null with an error naming it - the
+        /// same report, the same one fix: a filing in the Shared Monos of one Root.
+        /// </summary>
+        T GetMonoBehaviour<T>(string componentName) where T : MonoBehaviour;
     }
 }

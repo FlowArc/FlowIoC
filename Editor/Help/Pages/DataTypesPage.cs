@@ -34,8 +34,15 @@ namespace FlowIoC.Editor.Help.Pages
                 new HelpTreeNode("MapEVO", "what ED_MapTools holds"),
                 new HelpTreeNode("MapDVO", "what DD_Maps holds")));
 
+        private readonly HelpImages _images = new HelpImages();
+
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
+            new HelpTab("Root Adapter", DrawRootAdapter,
+                "One component beside the Root hands the module what the scene holds for it.",
+                "Assets by name in two slots, scene components by name in two more. The module's own "
+                + "slots are read off the adapter by its Model; the Shared ones reach every module "
+                + "through ISharedDataModel."),
             new HelpTab("Rules", DrawRules,
                 "The rules, in one list.",
                 "Which prefix a type takes, and which of the two folders it belongs in.")
@@ -74,19 +81,96 @@ namespace FlowIoC.Editor.Help.Pages
                 + "solution code style so the IDE stops flagging the name.");
 
             painter.Separator();
-            painter.SubHeading("An asset other modules read");
+            painter.SubHeading("Where an asset is reached from");
+            painter.Paragraph(
+                "An asset gets to the code through the RootAdapter on the module's Root - its own "
+                + "assets from one slot, the ones other modules read from another. The Root Adapter "
+                + "tab walks through the four slots, with the Model and the Command that read each.");
+        }
+
+        private void DrawRootAdapter(HelpPainter painter)
+        {
+            painter.SubHeading("What the adapter is");
+            painter.Paragraph(
+                "One component beside the Root, with four maps. Each files something by name - an "
+                + "asset or a scene component - and the name is usually the type name, so the "
+                + "parameterless overloads find it. Two of the maps are the module's own; the two "
+                + "Shared ones reach every module in the scene through ISharedDataModel.");
+            painter.Image(_images.Get("RootAdapterInspector.png"),
+                "AbTestFlowServiceRoot's adapter: the config it reads in Scriptable Map, the status it "
+                + "publishes in Shared Scriptable Map. The mono maps hold scene components the same way.");
+
+            painter.Separator();
+            painter.SubHeading("Scriptable Map - the module's own assets");
+            painter.Paragraph(
+                "The Model reads them. It is handed the Root's GameObject by the context's name, "
+                + "takes the adapter off it, and asks for each asset by type - in PostConstruct, "
+                + "so the data is there before any Command runs. A miss is an error naming the "
+                + "asset and the Root, and the Model only has to notice the null.");
+            painter.Code(
+                "public class MatchModel : IMatchModel, IConstructable\n"
+                + "{\n"
+                + "    [Inject(nameof(MatchContext))] private GameObject _root { get; set; }\n"
+                + "\n"
+                + "    private CD_MatchRules _rules;\n"
+                + "    private RD_Match      _match;\n"
+                + "\n"
+                + "    public MatchRulesCVO Rules => _rules.Rules;\n"
+                + "    public RD_Match      Match => _match;\n"
+                + "\n"
+                + "    public void PostConstruct()\n"
+                + "    {\n"
+                + "        RootAdapter adapter = _root.GetComponent<RootAdapter>();\n"
+                + "\n"
+                + "        _rules = adapter.GetScriptable<CD_MatchRules>();             // filed as CD_MatchRules\n"
+                + "        _match = adapter.GetScriptable<RD_Match>(\"RD_Match_Ranked\"); // filed under a name\n"
+                + "    }\n"
+                + "}",
+                "The Model reads the adapter once and owns what it found.");
+            painter.Paragraph(
+                "A Command never reaches for the adapter. It injects the Model and asks it - the "
+                + "Model owns the module's data, and the Command is a step that uses it:");
+            painter.Code(
+                "public class StartMatchCommand : Command\n"
+                + "{\n"
+                + "    [Inject]       private IMatchModel  _matchModel { get; set; }\n"
+                + "    [InjectSignal] private MatchSignals _signals    { get; set; }\n"
+                + "\n"
+                + "    public override void Execute()\n"
+                + "    {\n"
+                + "        _matchModel.Begin(_matchModel.Rules.RoundSeconds);\n"
+                + "        _signals.Outgoing.MatchStarted.Dispatch();\n"
+                + "    }\n"
+                + "}");
+
+            painter.Separator();
+            painter.SubHeading("Shared Scriptable Map - the assets other modules read");
             painter.Paragraph(
                 "The Shared assembly settles the type; the instance is filed once. A ScriptableObject "
-                + "other modules read goes in the Shared Scriptables of one Root's adapter - the slot "
-                + "beside the module's own map - and any injectable reads it through ISharedDataModel. "
-                + "The slot says the asset is common, not who produces it: a test Root files a ready-made "
-                + "RD_ asset there when the producer is not in the scene.");
-
-            painter.Space();
+                + "other modules read goes in this slot on one Root, and any injectable in any module "
+                + "reads it through ISharedDataModel - the same two overloads the adapter has. The "
+                + "slot says the asset is common, not who produces it: a test Root files a ready-made "
+                + "RD_ asset here when the producer is not in the scene, and the reader cannot tell.");
             painter.Code(
-                "[Inject] private ISharedDataModel _sharedDataModel { get; set; }\n"
+                "public class ShowMatchResultCommand : Command\n"
+                + "{\n"
+                + "    [Inject] private ISharedDataModel _sharedDataModel { get; set; }\n"
+                + "    [Inject] private IHudModel        _hudModel        { get; set; }\n"
                 + "\n"
-                + "RD_Match match = _sharedDataModel.GetScriptable<RD_Match>();");
+                + "    public override void Execute()\n"
+                + "    {\n"
+                + "        RD_Match match = _sharedDataModel.GetScriptable<RD_Match>();\n"
+                + "        if (match == null)\n"
+                + "            return; // already reported: nobody filed it\n"
+                + "\n"
+                + "        _hudModel.SetResult(match.Winner, match.Score);\n"
+                + "    }\n"
+                + "}",
+                "A Command in HudModule reading MatchModule's data. Modules.Hud references Modules.Match.Shared and nothing else of Match.");
+            painter.Paragraph(
+                "A Model may read one too, in its PostConstruct: the Root filed its slot at Awake, "
+                + "before any binding phase, so nothing waits for Setup. A Mediator cannot - it "
+                + "injects nothing but its View - so a screen dispatches and a Command reads.");
 
             painter.Space();
             painter.Note(
@@ -95,10 +179,44 @@ namespace FlowIoC.Editor.Help.Pages
                 + "when it is not - nothing reports it. Read it through ISharedDataModel, which reports "
                 + "an asset nobody filed and points at the fix.");
 
-            painter.Bullet("A Root files its slot when it registers, at Awake - before any binding phase, so a PostConstruct may read one.");
-            painter.Bullet("A second filing of the same name is reported at the Root that made it; the first filing answers.");
+            painter.Separator();
+            painter.SubHeading("Mono Map - the scene components the module drives");
+            painter.Paragraph(
+                "What the module needs from the scene and cannot make itself: a Canvas, a spawn "
+                + "point, a camera rig, an EventSystem. They sit under the Root, and the adapter files "
+                + "them by name so the Model finds them the same way it finds an asset.");
+            painter.Code(
+                "public void PostConstruct()\n"
+                + "{\n"
+                + "    RootAdapter adapter = _root.GetComponent<RootAdapter>();\n"
+                + "\n"
+                + "    _spawner = adapter.GetMonoBehaviour<EnemySpawner>();              // filed as EnemySpawner\n"
+                + "    _arena   = adapter.GetMonoBehaviour<WorldPose>(\"ArenaCentre\"); // filed under a name\n"
+                + "}",
+                "The slot holds MonoBehaviours. A bare Transform is not one - a marker component of the module's own, a WorldPose, is what gets filed.");
+
+            painter.Separator();
+            painter.SubHeading("Shared Mono Map - the components other modules read");
+            painter.Paragraph(
+                "The same rule for scene components: filed once, on one Root, read anywhere. A shared "
+                + "Canvas every module parents its overlays to, the one Camera a pointer projects "
+                + "through, an EventSystem. The component's type has to be one the reader can name - "
+                + "Unity's own, or one from a Shared assembly.");
+            painter.Code(
+                "[Inject] private ISharedDataModel _sharedDataModel { get; set; }\n"
+                + "\n"
+                + "Canvas overlay = _sharedDataModel.GetMonoBehaviour<Canvas>(\"OverlayCanvas\");");
+
+            painter.Separator();
+            painter.SubHeading("What goes wrong");
             painter.Bullet(
-                "The reader references the module's .Shared assembly, as for any published type. That line is the record of who reads whose data.");
+                "Nothing filed under the name: an error naming it and the slot to fix, and the caller gets null. The adapter says the same for its own slots.");
+            painter.Bullet("The same asset filed as shared on two Roots: a warning naming both; the first filing answers. Remove the second.");
+            painter.Bullet("Two different assets shared under one name: an error naming both Roots and both assets; the first answers. Rename one.");
+            painter.Bullet(
+                "A shared asset read off the reader's own adapter: works until the producer is missing, then reads empty data in silence.");
+            painter.Image(_images.Get("SharedAssetNotFiledError.png"),
+                "The report for an asset nobody filed. Double-clicking it opens the reader that asked.");
         }
 
         private void DrawRules(HelpPainter painter)

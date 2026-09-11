@@ -125,6 +125,55 @@ namespace FlowIoC.Tests
             Assert.IsNull(_adapter.SharedScriptables);
         }
 
+        [Test]
+        public void GetMonoBehaviour_answers_the_component_filed_under_the_name()
+        {
+            RootAdapterMonoProbe probe = _host.AddComponent<RootAdapterMonoProbe>();
+            SetMonoMap("_monoMap", new SerializedDictionary<string, MonoBehaviour> {{"Probe", probe}});
+
+            Assert.AreSame(probe, _adapter.GetMonoBehaviour<RootAdapterMonoProbe>("Probe"));
+        }
+
+        [Test]
+        public void GetMonoBehaviour_without_a_name_files_under_the_type_name()
+        {
+            RootAdapterMonoProbe probe = _host.AddComponent<RootAdapterMonoProbe>();
+            SetMonoMap("_monoMap", new SerializedDictionary<string, MonoBehaviour> {{nameof(RootAdapterMonoProbe), probe}});
+
+            Assert.AreSame(probe, _adapter.GetMonoBehaviour<RootAdapterMonoProbe>());
+        }
+
+        [Test]
+        public void GetMonoBehaviour_finds_a_component_filed_as_shared()
+        {
+            RootAdapterMonoProbe probe = _host.AddComponent<RootAdapterMonoProbe>();
+            SetMonoMap("_sharedMonoMap", new SerializedDictionary<string, MonoBehaviour> {{"Probe", probe}});
+
+            Assert.AreSame(probe, _adapter.GetMonoBehaviour<RootAdapterMonoProbe>("Probe"));
+        }
+
+        /// <summary>
+        /// A miss used to be a KeyNotFoundException thrown from inside the framework. It is the
+        /// same authoring mistake as a missing asset, so it is reported the same way.
+        /// </summary>
+        [Test]
+        public void GetMonoBehaviour_of_a_component_that_is_not_filed_logs_an_error_and_answers_null()
+        {
+            LogAssert.Expect(LogType.Error, new Regex("Probe[\\s\\S]*RootAdapterTestHost"));
+
+            Assert.IsNull(_adapter.GetMonoBehaviour<RootAdapterMonoProbe>("Probe"));
+        }
+
+        [Test]
+        public void SharedMonoBehaviours_is_the_shared_mono_slot()
+        {
+            RootAdapterMonoProbe probe = _host.AddComponent<RootAdapterMonoProbe>();
+            var map = new SerializedDictionary<string, MonoBehaviour> {{"Probe", probe}};
+            SetMonoMap("_sharedMonoMap", map);
+
+            Assert.AreSame(map, _adapter.SharedMonoBehaviours);
+        }
+
         private void SetMap(SerializedDictionary<string, ScriptableObject> map)
         {
             FieldInfo field = typeof(RootAdapter)
@@ -139,7 +188,18 @@ namespace FlowIoC.Tests
             field.SetValue(_adapter, map);
         }
 
+        private void SetMonoMap(string fieldName, SerializedDictionary<string, MonoBehaviour> map)
+        {
+            FieldInfo field = typeof(RootAdapter)
+                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(_adapter, map);
+        }
+
         private class RootAdapterProbe : ScriptableObject
+        {
+        }
+
+        private class RootAdapterMonoProbe : MonoBehaviour
         {
         }
     }

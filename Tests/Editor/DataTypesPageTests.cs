@@ -65,10 +65,14 @@ namespace FlowIoC.Tests
             }
         }
 
+        /// <summary>
+        /// The Root Adapter tab sits between the two: it is where an asset gets to the code from,
+        /// which a reader wants after the names and before the rules.
+        /// </summary>
         [Test]
-        public void The_page_offers_a_second_reading()
+        public void The_page_offers_the_adapter_and_the_rules_after_the_introduction()
         {
-            CollectionAssert.AreEqual(new[] {"Introduction", "Rules"},
+            CollectionAssert.AreEqual(new[] {"Introduction", "Root Adapter", "Rules"},
                 _page.Tabs.Select(tab => tab.Title).ToList());
         }
 

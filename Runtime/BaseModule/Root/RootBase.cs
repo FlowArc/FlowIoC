@@ -88,6 +88,10 @@ namespace FlowIoC.BaseModule.Root
         public IReadOnlyDictionary<string, ScriptableObject> SharedScriptables =>
             TryGetComponent(out RootAdapter adapter) ? adapter.SharedScriptables : null;
 
+        /// <summary>The adapter's shared components, read at the same moment as the shared assets.</summary>
+        public IReadOnlyDictionary<string, MonoBehaviour> SharedMonoBehaviours =>
+            TryGetComponent(out RootAdapter adapter) ? adapter.SharedMonoBehaviours : null;
+
         public virtual void StartContext(bool forceToStart = false)
         {
         }
