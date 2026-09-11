@@ -68,9 +68,12 @@ MonoBehaviour:
   _scriptableMap:
     m_Keys:
     - CD_AbTests
-    - RD_AbTestStatus
     m_Values:
     - {fileID: 11400000, guid: 57b72d3bb272c294faa6a153be62975c, type: 2}
+  _sharedScriptableMap:
+    m_Keys:
+    - RD_AbTestStatus
+    m_Values:
     - {fileID: 11400000, guid: bb1d2bde512f5c74594e8d952b8fd322, type: 2}
   _monoMap:
     m_Keys: []
