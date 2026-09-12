@@ -2,6 +2,7 @@
   "name": "Modules.Main",
   "references": [
     "FlowIoC",
+    "Modules.Loading",
     "Modules.Main.Signals"
   ],
   "includePlatforms": [],

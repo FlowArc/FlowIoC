@@ -426,7 +426,6 @@ when every step it lists has completed, skipped or failed.
 
 ```csharp
 CommandBinder.Bind(_internalSignals.Launch)
-    .ToSequence<LogStartupCommand>()
     .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)                // the screen goes up
     .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.BootStarted)   // beside the boot: SDKs, a profile fetch
     .ToParallel<PreloadScreensCommand>()                                    // reports Screens

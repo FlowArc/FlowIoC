@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Loading",
+  "references": [
+    "FlowIoC",
+    "Modules.Loading.Shared",
+    "Modules.Loading.Signals"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

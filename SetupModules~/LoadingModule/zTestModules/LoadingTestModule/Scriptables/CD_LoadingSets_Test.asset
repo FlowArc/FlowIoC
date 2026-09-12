@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b523c1fbe4265c648a620dd5afb22788, type: 3}
+  m_Name: CD_LoadingSets_Test
+  m_EditorClassIdentifier: Modules.Loading::Modules.LoadingModule.Data.UnityObjects.CD_LoadingSets
+  Sets:
+  - Key: TestBoot
+    Presentation: 1
+    StallWarningSeconds: 10
+    Steps:
+    - Key: TestScreens
+      Weight: 2
+      Message: Preparing screens
+      ChildSet: 
+    - Key: TestPools
+      Weight: 1
+      Message: Warming up
+      ChildSet: 
+    - Key: TestAssets
+      Weight: 3
+      Message: Fetching assets
+      ChildSet: TestDownload
+    - Key: TestProfile
+      Weight: 1
+      Message: Loading your progress
+      ChildSet: 
+  - Key: TestDownload
+    Presentation: 0
+    StallWarningSeconds: 10
+    Steps:
+    - Key: TestCatalog
+      Weight: 1
+      Message: Reading the catalogue
+      ChildSet: 
+    - Key: TestBundles
+      Weight: 4
+      Message: Downloading
+      ChildSet: 
+  - Key: TestBackground
+    Presentation: 0
+    StallWarningSeconds: 10
+    Steps:
+    - Key: TestAds
+      Weight: 1
+      Message: Ads
+      ChildSet: 
+    - Key: TestClan
+      Weight: 1
+      Message: Clan
+      ChildSet: 

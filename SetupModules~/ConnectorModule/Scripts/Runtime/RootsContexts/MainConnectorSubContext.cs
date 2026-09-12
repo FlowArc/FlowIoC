@@ -1,6 +1,7 @@
 using FlowIoC.BaseModule.Connectors;
 using FlowIoC.BaseModule.Contexts;
 using Modules.GameplayModule.GameplayScreenModule.Signals;
+using Modules.LoadingModule.LoadingScreenModule.Signals;
 using Modules.MainModule.MainScreenModule.Signals;
 using Modules.MainModule.Signals;
 
@@ -11,6 +12,7 @@ namespace Modules.ConnectorModule.RootsContexts
         private MainSignals _mainSignals;
         private MainScreenSignals _mainScreenSignals;
         private GameplayScreenSignals _gameplayScreenSignals;
+        private LoadingScreenSignals _loadingScreenSignals;
 
         public override void Setup()
         {
@@ -19,6 +21,7 @@ namespace Modules.ConnectorModule.RootsContexts
             _mainSignals = InjectionBinderCrossContext.GetInstance<MainSignals>();
             _mainScreenSignals = InjectionBinderCrossContext.GetInstance<MainScreenSignals>();
             _gameplayScreenSignals = InjectionBinderCrossContext.GetInstance<GameplayScreenSignals>();
+            _loadingScreenSignals = InjectionBinderCrossContext.GetInstance<LoadingScreenSignals>();
 
             IncomingSignals();
             OutgoingSignals();
@@ -27,6 +30,9 @@ namespace Modules.ConnectorModule.RootsContexts
         private void IncomingSignals()
         {
             _mainSignals.Outgoing.Started.Connect(_mainScreenSignals.Incoming.OpenMainScreen);
+
+            // The loading screen's retry button asks Main to boot again; the set it names is Main's boot.
+            _loadingScreenSignals.Outgoing.RetryClicked.Connect(_ => _mainSignals.Incoming.RetryBoot.Dispatch());
         }
 
         private void OutgoingSignals()
@@ -42,8 +48,11 @@ namespace Modules.ConnectorModule.RootsContexts
             base.DestroyContext();
         }
 
-        private void UnbindIncomingSignals() =>
+        private void UnbindIncomingSignals()
+        {
             _mainSignals.Outgoing.Started.Disconnect();
+            _loadingScreenSignals.Outgoing.RetryClicked.Disconnect();
+        }
 
         private void UnbindOutgoingSignals() =>
             _mainScreenSignals.Outgoing.DifficultySelected.Disconnect();

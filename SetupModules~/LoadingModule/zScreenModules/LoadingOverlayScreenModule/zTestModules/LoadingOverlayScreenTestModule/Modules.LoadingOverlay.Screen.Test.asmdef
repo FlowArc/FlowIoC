@@ -1,0 +1,18 @@
+{
+  "name": "Modules.LoadingOverlay.Screen.Test",
+  "references": [
+    "FlowIoC",
+    "Modules.LoadingOverlay.Screen",
+    "Modules.LoadingOverlay.Screen.Signals",
+    "Modules.Loading.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
