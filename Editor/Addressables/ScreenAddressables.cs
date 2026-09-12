@@ -102,6 +102,49 @@ namespace FlowIoC.Editor.Addressables
             return removed;
         }
 
+        /// <summary>
+        /// Re-addresses a screen whose module is being renamed. The entry is found by the prefab's
+        /// GUID, so it is found whatever its address is - and left where it is when that address is
+        /// not the one the generator gave it, because then somebody chose it and a rename of the
+        /// module is not a reason to take that back. Otherwise the address becomes the new name and
+        /// the entry moves to the group the new name implies, the old group going when it is empty,
+        /// for the same reason Unregister removes it.
+        ///
+        /// One line comes back for the report, whichever of those happened.
+        /// </summary>
+        internal string Rename(string prefabAssetPath, ScreenAddressableEntry old, ScreenAddressableEntry updated)
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(false);
+            if (settings == null) return "No Addressables settings: the screen's address was not touched.";
+
+            string guid = AssetDatabase.AssetPathToGUID(prefabAssetPath);
+            AddressableAssetEntry entry = string.IsNullOrEmpty(guid) ? null : settings.FindAssetEntry(guid);
+
+            if (entry == null) return prefabAssetPath + " is not addressable, so it has no address to rename.";
+
+            if (entry.address != old.Address)
+                return "Address '" + entry.address + "' kept: it is not the one the generator gave the screen.";
+
+            entry.SetAddress(updated.Address);
+
+            AddressableAssetGroup from = entry.parentGroup;
+            AddressableAssetGroup to = settings.FindGroup(updated.GroupName)
+                                       ?? settings.CreateGroup(updated.GroupName, false, false, false, settings.DefaultGroup.Schemas);
+
+            if (from != to)
+            {
+                settings.MoveEntry(entry, to);
+
+                if (from != null && from.entries.Count == 0 && from.Name == old.GroupName)
+                    settings.RemoveGroup(from);
+            }
+
+            EditorUtility.SetDirty(settings);
+            settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
+
+            return "Addressable " + old.Address + " → " + updated.Address + " in " + to.Name;
+        }
+
         private bool RemoveEntry(
             AddressableAssetSettings settings, AddressableAssetGroup group, ScreenAddressableEntry entry)
         {

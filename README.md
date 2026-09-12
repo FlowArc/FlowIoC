@@ -1241,6 +1241,7 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 | `Tools/FlowIoC/Create View` | Generate a View, a Mediator, and the prefab |
 | `Tools/FlowIoC/Add Shared or Signals` | Give an existing module a `Scripts/Shared` assembly and wire the references to it, or the public signal holder it was created without |
 | `Tools/FlowIoC/Delete Module` | Remove a module and its references |
+| `Tools/FlowIoC/Rename Module` | Rename a module and carry the name to its assemblies, namespaces, settings files, channel, generated classes, screen prefab and the Roots that list its contexts |
 | `Tools/FlowIoC/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
@@ -1597,6 +1598,22 @@ How far it goes depends on what holds the Root. A prefab is a file and is writte
 is not open is opened, written and closed again. A scene that **is** open is changed and left
 dirty — whatever else is unsaved in it belongs to whoever opened it, so saving is theirs. Every
 entry removed, skipped or left is named on the console with its Root and its asset.
+
+### Renaming a module
+
+`Tools/FlowIoC/Rename Module` renames a module the way the tools built it. Pick the module in the
+tree, type the new name without its suffix, and read the preview: the folder, the assemblies and
+every asmdef that references them, the namespaces, the `.csproj.DotSettings` files, the Flow Console
+channel, the Root, Context and signal holders Create Module named after the module, a screen's
+prefab and Addressables address, and the Roots in scenes and prefabs that list its contexts. A module
+inside it that carries its name - `CounterTestModule` under `CounterModule` - follows, each with a
+tick you can take off. Classes you named yourself, and the card's own text, are not touched, and
+every line the panel leaves alone says why.
+
+Renaming the folder in the Project window changes one of those things and breaks the rest, and the
+Module Scanner then reports what it can and refuses the assembly rename, which cascades. The panel
+is the cascade. It cannot be undone as an Undo step, but every GUID is kept, so renaming back
+through the same panel restores everything.
 
 ---
 

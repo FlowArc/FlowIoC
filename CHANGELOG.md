@@ -37,6 +37,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A Root Adapter tab on the Data Types Help page**: the four slots, the Model that reads the
   module's own two and the Command that asks it, the Command that reads another module's through
   `ISharedDataModel`, and what each report looks like.
+- **Rename Module.** `Tools/FlowIoC/Rename Module` picks a module from the tree, takes a new name,
+  and carries it to everything the name reaches: the folder and the folders of the nested modules
+  that carry its name, the assemblies and every asmdef that references them, the namespaces in every
+  source file, the `.csproj.DotSettings` files, the Flow Console channel with its number and colour
+  kept, the generated `FlowLogType` part and its uses, the Root, Context and signal holders Create
+  Module wrote from the name, a screen's View, Mediator, prefab and Addressables address, the prefabs
+  and scenes in the module's own folders named after it, the card heading, the index, and the
+  `ContextFullName` of every Root in every scene and prefab that lists one of its contexts - a prefab
+  written, a closed scene opened and saved, an open scene left dirty for its owner. The preview lists
+  each change and a reason for each thing kept; a name that collides with a type elsewhere is skipped
+  with a warning, and a folder, assembly or class already taken blocks the press. Renaming back
+  restores everything: every GUID is kept. `CD_FlowConsole.RenameLogType`,
+  `AssemblyDefinitionReferences.Rename` and `ScreenAddressables.Rename` are the pieces it is made of.
+- **One bar over every module tree.** The Parent Module bar of Create Command, Create Function,
+  Create Model and Create View, and the bar Delete Module and Rename Module now put over their
+  lists, are one `ModuleTreeBar`: the label, the pick after it, and at the right edge a search over
+  the tree - a match with everything inside it, and the modules above a match - through one
+  `ModuleTreeSearch`. Delete Module's own Search and Refresh row is gone with it; the list rescans
+  on every reload.
 
 ### Fixed
 

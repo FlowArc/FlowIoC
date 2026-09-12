@@ -38,6 +38,15 @@ namespace FlowIoC.Editor.Inspector
         private const float STRIPE_SHADE = 0.45f;
 
         /// <summary>
+        /// How much of its own colour a rect keeps under a disabled group - the half Unity leaves a
+        /// disabled control - and the window backgrounds it is blended toward, one per skin.
+        /// </summary>
+        private const float DISABLED_STRENGTH = 0.5f;
+
+        private static readonly Color DarkBackground = new Color(0.22f, 0.22f, 0.22f);
+        private static readonly Color LightBackground = new Color(0.76f, 0.76f, 0.76f);
+
+        /// <summary>
         /// What a row's text sits at while the pointer is elsewhere. Off white rather than white,
         /// so a row has somewhere to go when the pointer arrives.
         /// </summary>
@@ -56,6 +65,8 @@ namespace FlowIoC.Editor.Inspector
         private readonly GUIStyle[] _mini = new GUIStyle[2];
         private readonly GUIStyle[] _muted = new GUIStyle[2];
         private readonly GUIStyle[] _miniWrapped = new GUIStyle[2];
+        private readonly GUIStyle[] _nameWrapped = new GUIStyle[2];
+        private readonly GUIStyle[] _mutedWrapped = new GUIStyle[2];
         private readonly GUIStyle[] _badge = new GUIStyle[2];
 
         private readonly Dictionary<Color, GUIStyle> _badgeIn = new Dictionary<Color, GUIStyle>();
@@ -111,8 +122,8 @@ namespace FlowIoC.Editor.Inspector
         /// <summary>The row's tint and the stripe down its left edge.</summary>
         public void Paint(Rect rect, Color accent, float alpha = FILL_ALPHA)
         {
-            EditorGUI.DrawRect(rect, new Color(accent.r, accent.g, accent.b, alpha));
-            EditorGUI.DrawRect(new Rect(rect.x, rect.y, STRIPE_WIDTH, rect.height), accent);
+            Fill(rect, new Color(accent.r, accent.g, accent.b, alpha));
+            Fill(new Rect(rect.x, rect.y, STRIPE_WIDTH, rect.height), accent);
         }
 
         /// <summary>
@@ -122,7 +133,33 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public void Darken(Rect rect, float alpha = 0.22f)
         {
-            EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, alpha));
+            Fill(rect, new Color(0f, 0f, 0f, alpha));
+        }
+
+        /// <summary>
+        /// Every rect this painter draws goes through here, so a disabled group dims it. Unity
+        /// draws a disabled control at half strength inside GUIStyle.Draw, and a rect painted with
+        /// EditorGUI.DrawRect is not a control: under a disabled group the row tints, the stripes
+        /// and the guide lines stayed at full colour while every word around them dimmed.
+        ///
+        /// Dimmed by blending toward the window's background rather than by halving the alpha,
+        /// which keeps an opaque line opaque. The guide segments overlap by design, and a
+        /// translucent one would draw a darker joint at every overlap.
+        /// </summary>
+        private void Fill(Rect rect, Color color)
+        {
+            if (!GUI.enabled)
+            {
+                Color background = EditorGUIUtility.isProSkin ? DarkBackground : LightBackground;
+
+                color = new Color(
+                    Mathf.Lerp(background.r, color.r, DISABLED_STRENGTH),
+                    Mathf.Lerp(background.g, color.g, DISABLED_STRENGTH),
+                    Mathf.Lerp(background.b, color.b, DISABLED_STRENGTH),
+                    color.a);
+            }
+
+            EditorGUI.DrawRect(rect, color);
         }
 
         /// <summary>
@@ -153,7 +190,7 @@ namespace FlowIoC.Editor.Inspector
         /// <summary>One segment of a guide line, a pixel thick in whichever direction it runs.</summary>
         public void DrawGuide(Rect line)
         {
-            EditorGUI.DrawRect(line, Guide);
+            Fill(line, Guide);
         }
 
         /// <summary>
@@ -217,6 +254,31 @@ namespace FlowIoC.Editor.Inspector
 
             // Set every call rather than once: the cache hands back the same instance, so this
             // costs an assignment and saves a second cache to say whether it has been done.
+            style.wordWrap = true;
+
+            return style;
+        }
+
+        /// <summary>
+        /// <see cref="Name"/>, wrapped, for a row whose text may outgrow the window - a rename
+        /// preview line naming two long namespaces. Built from EditorStyles for the reason
+        /// <see cref="MiniWrapped"/> gives, and anchored at the top so a line that wraps reads
+        /// from its first line down rather than floating in the middle of a taller row.
+        /// </summary>
+        public GUIStyle NameWrapped(bool hovered)
+        {
+            GUIStyle style = Style(_nameWrapped, hovered, EditorStyles.label, TextAnchor.UpperLeft, IdleText, HoverText);
+
+            style.wordWrap = true;
+
+            return style;
+        }
+
+        /// <summary>The quiet grey of <see cref="Muted"/>, wrapped, for the same reason as <see cref="NameWrapped"/>.</summary>
+        public GUIStyle MutedWrapped()
+        {
+            GUIStyle style = Style(_mutedWrapped, false, EditorStyles.label, TextAnchor.UpperLeft, IdleMuted, HoverMuted);
+
             style.wordWrap = true;
 
             return style;

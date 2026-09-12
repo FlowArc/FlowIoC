@@ -86,6 +86,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "hand leaves its asmdef reference behind in every module that named it, and the "
                 + "compile error that follows never mentions the module you removed.");
             painter.PageLink("Delete Module", "Read: Delete Module");
+            painter.PageLink("Rename Module", "Read: Rename Module");
         }
     }
 }

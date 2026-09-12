@@ -102,8 +102,8 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// The seven generator panels sit in a category of their own inside Editor Tools. They are
-        /// one tool at seven scales, and listed flat they would bury the six scanners beside them.
+        /// The eight generator panels sit in a category of their own inside Editor Tools. They are
+        /// one tool at eight scales, and listed flat they would bury the six scanners beside them.
         /// </summary>
         [Test]
         public void The_code_generators_category_covers_every_generator_panel()
@@ -116,7 +116,8 @@ namespace FlowIoC.Tests
                 "Create Model",
                 "Create View",
                 "Add Shared or Signals",
-                "Delete Module"
+                "Delete Module",
+                "Rename Module"
             }, ChildTitles("Code Generators"));
         }
 

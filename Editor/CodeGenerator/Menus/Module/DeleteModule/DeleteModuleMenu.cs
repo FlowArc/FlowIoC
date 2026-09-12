@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using FlowIoC.Editor.Inspector;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using FlowIoC.Editor.Modules;
@@ -21,6 +20,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
         private const string ROOT_BADGE = "PROJECT";
 
+        /// <summary>What the bar over the tree says. Nothing is picked here - every row has its own Delete.</summary>
+        private const string MODULES_LABEL = "Modules:";
+
         private Vector2 _scrollPosition;
         private string _searchText = "";
 
@@ -35,6 +37,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         private readonly FlowRowPainter _rows = new FlowRowPainter();
         private readonly ModuleRoleBadge _badge = new ModuleRoleBadge();
         private readonly FlowPalette _palette = new FlowPalette();
+        private readonly ModuleTreeSearch _search = new ModuleTreeSearch();
+        private readonly ModuleTreeBar _treeBar = new ModuleTreeBar();
 
         private readonly object _rootKey = new object();
 
@@ -64,17 +68,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
                 + "built on them, and each row says which part.",
                 MessageType.Warning);
 
-            EditorGUILayout.Space();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Search:", GUILayout.Width(50));
-            _searchText = EditorGUILayout.TextField(_searchText);
-            if (GUILayout.Button("Refresh", GUILayout.Width(60)))
-                ScanModules();
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space();
-
             if (_modules == null || _modules.Count == 0)
             {
                 EditorGUILayout.HelpBox("No modules found.", MessageType.Info);
@@ -83,43 +76,23 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
-            // A module whose name matches brings its whole subtree with it, because that subtree is
-            // what deleting it would take - hiding it would answer the search with less than the
-            // reader needs. A module that matches nothing itself is still drawn while something
-            // inside it matches, so what matched is never left without the module it lives in.
-            var matchedDepth = -1;
+            // Inside the scroll, not over it: the bar is the heading of the module list, and a heading
+            // that stayed put while its list scrolled away read as a toolbar of the window instead.
+            _searchText = _treeBar.Draw(MODULES_LABEL, null, _searchText);
+
+            EditorGUILayout.Space();
 
             _tree.Begin();
 
             DrawRootRow();
 
-            foreach (ModuleTreeRowEVO<ModulePickEVO> module in _modules)
-            {
-                if (matchedDepth >= 0 && module.Depth <= matchedDepth) matchedDepth = -1;
-
-                bool inMatchedSubtree = matchedDepth >= 0;
-
-                if (Matches(module.Row.Name)) matchedDepth = module.Depth;
-                else if (!inMatchedSubtree && !SubtreeMatches(module)) continue;
-
+            // A match brings its whole subtree with it, because that subtree is what deleting it
+            // would take, and a module that matches nothing is still drawn while something inside
+            // it matches - the one search every module tree runs, so the lists agree.
+            foreach (ModuleTreeRowEVO<ModulePickEVO> module in _search.Filter(_modules, _searchText))
                 DrawModuleRow(module);
-            }
 
             EditorGUILayout.EndScrollView();
-        }
-
-        private bool Matches(string moduleName) =>
-            string.IsNullOrEmpty(_searchText)
-            || moduleName.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0;
-
-        private bool SubtreeMatches(ModuleTreeRowEVO<ModulePickEVO> module)
-        {
-            foreach (ModuleTreeRowEVO<ModulePickEVO> descendant in module.Descendants)
-            {
-                if (Matches(descendant.Row.Name)) return true;
-            }
-
-            return false;
         }
 
         /// <summary>

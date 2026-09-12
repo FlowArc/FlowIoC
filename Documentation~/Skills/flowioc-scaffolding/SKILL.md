@@ -32,6 +32,7 @@ code generators and namespace tools depend on the exact shape they produce.
 | `Tools/FlowIoC/Create View` | A View and its Mediator, in `ViewsMediators/` |
 | `Tools/FlowIoC/Module Scanner` | Reports every module's folders, assemblies, references and namespace settings, and repairs what is safe to repair |
 | `Tools/FlowIoC/Delete Module` | Removes the folder, asmdef, DotSettings, csproj, index entry and log channel together |
+| `Tools/FlowIoC/Rename Module` | Renames a module and carries the name to its assemblies and their references, namespaces, DotSettings, log channel, the Root, Context and signal holders named after it, a screen's prefab and address, and the Roots that list its contexts. Never rename a module folder in the Project window |
 
 ## Create Module: what to fill in
 

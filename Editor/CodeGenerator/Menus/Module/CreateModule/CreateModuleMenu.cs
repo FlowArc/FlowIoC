@@ -234,7 +234,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _allowAsSubContext = false;
             _actionNames = new List<string>();
             _registry = new ModuleRegistryFactory().FromProject();
-            _picker = new ModulePicker(_registry);
+            _picker = new ModulePicker(_registry, capped: false);
             _previewTree = new FlowTreePainter(_previewRows, PREVIEW_LEAD_WIDTH);
 
             // Without this the window is sent no MouseMove events at all, and a row of the picker
