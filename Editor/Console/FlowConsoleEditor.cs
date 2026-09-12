@@ -257,6 +257,23 @@ namespace FlowIoC.Editor.Console
         private Rect _toolbarRect;
         private bool _mouseWasOverToolbar;
 
+        // The toolbar's fixed widths, named so the fit can be worked out before anything is laid
+        // out: a control the window has no room for is left out, never drawn half.
+        private const float ClearWidth = 46f;
+        private const float ClearArrowWidth = 22f;
+        private const float CollapseWidth = 70f;
+        private const float ErrorPauseWidth = 80f;
+        private const float FocusLogWidth = 70f;
+
+        /// <summary>The narrowest the search field goes before it is dropped instead.</summary>
+        private const float SearchMinWidth = 80f;
+
+        /// <summary>The "shown / held" count beside the search, drawn only while a search is on.</summary>
+        private const float SearchCountWidth = 90f;
+
+        /// <summary>The toolbar's own padding and the gaps between its controls, so a fit is decided a little early rather than a little late.</summary>
+        private const float ToolbarSlack = 12f;
+
         /// <summary>
         /// The list's outer rect, kept from the last repaint because a layout pass answers with
         /// a placeholder, and the strip that floats over the list needs the real one on every
@@ -600,10 +617,35 @@ namespace FlowIoC.Editor.Console
             if (Event.current.type == EventType.Repaint)
                 _toolbarRect = toolbarRect;
 
+            // What a narrow window drops, and in what order, the way Unity's own console drops
+            // it: the search first, then the player picker, then Error Pause. Clear, Collapse and
+            // the severity counts are always drawn - the counts are the one thing a console must
+            // never lose, and they were the first thing the right edge cut off. A control that
+            // does not fit is left out rather than drawn half.
+            bool searching = !string.IsNullOrEmpty(_searchText);
+            bool focusVisible = IsSelectedLogOffScreen();
+
+            float mandatory = ClearWidth + ClearArrowWidth + CollapseWidth + SeverityTogglesWidth()
+                              + (focusVisible ? FocusLogWidth : 0f)
+                              + (searching ? SearchMinWidth + SearchCountWidth : 0f)
+                              + ToolbarSlack;
+
+            float editorWidth = _connectionState != null ? EditorDropdownWidth() : 0f;
+            float width = position.width;
+
+            bool showErrorPause = width >= mandatory + ErrorPauseWidth;
+            bool showEditor = showErrorPause && width >= mandatory + ErrorPauseWidth + editorWidth;
+
+            // A search with something typed in it is never hidden: it is narrowing the list, and a
+            // reader has to be able to see that and clear it.
+            bool showSearch = searching
+                              || (showEditor && width >= mandatory + ErrorPauseWidth + editorWidth + SearchMinWidth);
+
             ClearButtonGUI();
 
             // Collapse before Error Pause, which is the order Unity's own console puts them in.
-            bool collapse = GUILayout.Toggle(_collapseRows, "Collapse", EditorStyles.toolbarButton, GUILayout.Width(70));
+            bool collapse = GUILayout.Toggle(_collapseRows, "Collapse", EditorStyles.toolbarButton,
+                GUILayout.Width(CollapseWidth));
             if (collapse != _collapseRows)
             {
                 _collapseRows = collapse;
@@ -612,26 +654,29 @@ namespace FlowIoC.Editor.Console
                 _needsRepaint = true;
             }
 
-            bool errorPause = GUILayout.Toggle(_state.ErrorPause, "Error Pause", EditorStyles.toolbarButton,
-                GUILayout.Width(80));
-            if (errorPause != _state.ErrorPause)
-                _state.ErrorPause = errorPause;
+            if (showErrorPause)
+            {
+                bool errorPause = GUILayout.Toggle(_state.ErrorPause, "Error Pause", EditorStyles.toolbarButton,
+                    GUILayout.Width(ErrorPauseWidth));
+                if (errorPause != _state.ErrorPause)
+                    _state.ErrorPause = errorPause;
+            }
 
             // Unity's own attach-to-player picker, where Unity's console puts it. A development
             // player picked here sends its rows over the same connection, through PlayerLogSender.
-            if (_connectionState != null)
+            if (showEditor)
                 PlayerConnectionGUILayout.ConnectionTargetSelectionDropdown(_connectionState, EditorStyles.toolbarDropDown);
 
-            // Flow, Pinned and Timing are not here: they are view switches rather than console
+            // Flow, Pinned and Time are not here: they are view switches rather than console
             // actions, and they sit at the left end of the bar the gear opens - see SettingsBarGUI.
 
             // Only while the selected row is somewhere the reader cannot see. A button that is
             // there when it would do nothing asks them to work out why nothing happened.
-            if (IsSelectedLogOffScreen())
+            if (focusVisible)
             {
                 var focusLabel = new GUIContent("Focus Log", "Scroll the selected row back into view.");
 
-                if (GUILayout.Button(focusLabel, EditorStyles.toolbarButton, GUILayout.Width(70f),
+                if (GUILayout.Button(focusLabel, EditorStyles.toolbarButton, GUILayout.Width(FocusLogWidth),
                         GUILayout.ExpandHeight(true)))
                 {
                     _scrollToSelectedLog = true;
@@ -644,13 +689,13 @@ namespace FlowIoC.Editor.Console
             // Only while a search is on. A search is typed and its effect is invisible - the reader
             // cannot tell a term that matched nothing from one that matched everything - where the
             // channels they switched off are shown by the panel and counted on its button.
-            if (!string.IsNullOrEmpty(_searchText))
+            if (searching)
             {
                 int shownRows = _cachedVisibleLogs?.Count ?? 0;
                 int heldRows = _allLogs?.Count ?? 0;
 
                 Rect countRect = GUILayoutUtility.GetRect(new GUIContent("0 / 0"), EditorStyles.miniLabel,
-                    GUILayout.Width(90f), GUILayout.ExpandHeight(true));
+                    GUILayout.Width(SearchCountWidth), GUILayout.ExpandHeight(true));
 
                 if (Event.current.type == EventType.Repaint)
                 {
@@ -663,7 +708,10 @@ namespace FlowIoC.Editor.Console
 
             _searchField ??= new SearchField();
 
-            string newSearch = _searchField.OnToolbarGUI(_searchText, GUILayout.MinWidth(200));
+            string newSearch = showSearch
+                ? _searchField.OnToolbarGUI(_searchText, GUILayout.MinWidth(SearchMinWidth))
+                : _searchText;
+
             if (newSearch != _searchText)
             {
                 bool startingSearch = string.IsNullOrEmpty(_searchText) && !string.IsNullOrEmpty(newSearch);
@@ -712,12 +760,49 @@ namespace FlowIoC.Editor.Console
             SeverityToggleGUI(LogType.Error, _cachedErrorCount);
         }
 
+        /// <summary>
+        /// How wide the three severity switches come out, measured from what they will say, so the
+        /// toolbar can keep room for them before it lays anything else out. They are the one part
+        /// of the toolbar that is never dropped.
+        /// </summary>
+        private float SeverityTogglesWidth()
+        {
+            return SeverityToggleWidth(LogType.Log, _cachedLogCount)
+                   + SeverityToggleWidth(LogType.Warning, _cachedWarningCount)
+                   + SeverityToggleWidth(LogType.Error, _cachedErrorCount);
+        }
+
+        private float SeverityToggleWidth(LogType logType, int count)
+        {
+            return Mathf.Max(SeverityToggleMinWidth,
+                EditorStyles.toolbarButton.CalcSize(SeverityContent(logType, count)).x);
+        }
+
+        /// <summary>
+        /// How wide the player picker comes out. It sizes itself to the name of what it is attached
+        /// to - "Editor", or a device's name - so it is measured rather than assumed.
+        /// </summary>
+        private float EditorDropdownWidth()
+        {
+            string name = _connectionState.connectionName;
+            if (string.IsNullOrEmpty(name)) name = "Editor";
+
+            return EditorStyles.toolbarDropDown.CalcSize(new GUIContent(name)).x;
+        }
+
+        private const float SeverityToggleMinWidth = 38f;
+
+        private GUIContent SeverityContent(LogType logType, int count)
+        {
+            return new GUIContent(" " + count, IconFor(logType, true), logType + " messages");
+        }
+
         private void SeverityToggleGUI(LogType logType, int count)
         {
-            var content = new GUIContent(" " + count, IconFor(logType, true), logType + " messages");
+            GUIContent content = SeverityContent(logType, count);
 
             bool shown = GUILayout.Toggle(_logFilter[logType], content, EditorStyles.toolbarButton,
-                GUILayout.MinWidth(38f), GUILayout.ExpandHeight(true));
+                GUILayout.MinWidth(SeverityToggleMinWidth), GUILayout.ExpandHeight(true));
 
             if (shown == _logFilter[logType]) return;
 
@@ -883,8 +968,8 @@ namespace FlowIoC.Editor.Console
         {
             EnsureToolbarLabelStyle();
 
-            const float clearWidth = 46f;
-            const float arrowWidth = 22f;
+            const float clearWidth = ClearWidth;
+            const float arrowWidth = ClearArrowWidth;
 
             // The height is the toolbar row's, not a number of our own. Asking for
             // singleLineHeight made this button two pixels shorter than the ones beside it, which

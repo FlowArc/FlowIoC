@@ -66,11 +66,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   line Unity wrote is recorded, searched, collapsed and copied exactly as Unity wrote it.
 - **The gear opens a bar of its own, and Flow, Pinned and Time moved onto it.** Pressed, the gear
   no longer grows the strip leftwards over the rows: it opens a second toolbar row across the top
-  of the list, in the toolbar's own grey, and the rows start under it. The three view controls sit
-  at its left end while the row settings, Export and the gear keep the right. Closed, the gear
+  of the list, in the toolbar's own grey, and the rows start under it. Time, the line count, Flow
+  and Pinned sit at its left end; Source, Export and the gear keep the right. Closed, the gear
   floats over the list's corner as before, with the filters switch beside it while its panel is
   closed. The toolbar keeps the console's actions: Clear, Collapse, Error Pause, the player
   picker, the search.
+- **A narrow window drops controls whole instead of drawing them half.** The toolbar used to let
+  the search hold its 200 pixels and push the severity counts off the right edge - the one thing a
+  console must never lose - while the bar clipped Flow, Pinned and Time to slivers. Both now do
+  what Unity's console does: a control the window has no room for is left out, in a fixed order.
+  Toolbar: the search first, then `Editor ▾`, then Error Pause; Clear, Collapse and the counts
+  always stay, and so does a search with something typed in it. Bar: Source, then Export, then
+  Pinned, Flow, the line count and Time; the gear and the filters switch always stay.
 - **`Time ▾` replaces the Timing switch, with three formats.** *Classic* leads a row with the clock
   to the second, `13:05:23`, the way Unity's console does; *Extended*, the default, adds the
   milliseconds; *Frame* is what Timing was - the frame the row was written in and the gap since

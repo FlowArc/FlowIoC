@@ -25,7 +25,7 @@ namespace FlowIoC.Editor.Console
 
         private const float FlowToggleWidth = 50f;
         private const float PinnedToggleWidth = 76f;
-        private const float TimeFormatWidth = 118f;
+        private const float TimeFormatWidth = 58f;
 
         /// <summary>
         /// The grey the filters panel's bar comes out as, but opaque: the bar is a shade over the
@@ -105,11 +105,16 @@ namespace FlowIoC.Editor.Console
 
         /// <summary>
         /// The bar the gear opens: a row of its own under the toolbar, as wide as the list, so the
-        /// rows start under it rather than lying beneath it. The three view controls - Flow, Pinned
-        /// and what leads a row - sit at its left end, where the eye starts a bar; the row settings,
-        /// Export and the gear that closes it keep the right end the floating strip had, so the gear
-        /// is in the same place open and closed. The filters switch heads its own panel, or sits
-        /// beside the gear while the panel is closed, the way it does on the strip.
+        /// rows start under it rather than lying beneath it. What shapes the rows sits at its left
+        /// end, in the order the owner set - Time, the line count, Flow, Pinned - where the eye
+        /// starts a bar; Source and Export sit at the right with the gear that closes it, so the
+        /// gear is in the same place open and closed. The filters switch heads its own panel, or
+        /// sits beside the gear while the panel is closed, the way it does on the strip.
+        ///
+        /// A bar too narrow for all of it drops controls whole rather than drawing them half, the
+        /// way the toolbar does: the right group first - Source, then Export - and then the left
+        /// group from its right end - Pinned, Flow, the line count, Time. The gear and the filters
+        /// switch are never dropped; they are how the bar is closed and the panel opened.
         ///
         /// Painted as a toolbar, in the toolbar's own grey: it is a second row of the toolbar, not
         /// a thing lying on the rows, so it needs none of the darkness the floating strip needs to
@@ -127,47 +132,72 @@ namespace FlowIoC.Editor.Console
                 EditorStyles.toolbar.Draw(bar, false, false, false, false);
             }
 
-            // The left group is clipped at the right group's edge rather than drawn under it: a
-            // window too narrow for both shows as much of Flow, Pinned and Time as fits, and the
-            // right group stays whole and reachable.
-            float rightStart = bar.xMax - RightControlsWidth();
+            // What always stays, then what fits after it, taken in the order it is kept - the
+            // reverse of the order it is dropped. Once one does not fit, none after it is drawn
+            // either, so the bar never shows a less important control in place of a more
+            // important one that happened to be wider.
+            float room = bar.width - SettingsButtonWidth - (_showFilters ? 0f : _filtersPanelWidth);
+            float used = 0f;
 
-            GUI.BeginGroup(new Rect(bar.x, bar.y, Mathf.Max(0f, rightStart - bar.x), bar.height));
+            bool showTime = Fits(TimeFormatWidth, ref used, room);
+            bool showLines = showTime && Fits(RowLinesWidth, ref used, room);
+            bool showFlow = showLines && Fits(FlowToggleWidth, ref used, room);
+            bool showPinned = showFlow && Fits(PinnedToggleWidth, ref used, room);
+            bool showExport = showPinned && Fits(ExportWidth, ref used, room);
+            bool showSource = showExport && Fits(SourceCaptureWidth, ref used, room);
 
-            float x = 0f;
+            float x = bar.x;
 
-            FlowToggleGUI(new Rect(x, 0f, FlowToggleWidth, bar.height));
-            x += FlowToggleWidth;
+            if (showTime)
+            {
+                TimeFormatGUI(new Rect(x, bar.y, TimeFormatWidth, bar.height));
+                x += TimeFormatWidth;
+            }
 
-            PinnedToggleGUI(new Rect(x, 0f, PinnedToggleWidth, bar.height));
-            x += PinnedToggleWidth;
+            if (showLines)
+            {
+                RowLinesSettingGUI(new Rect(x, bar.y, RowLinesWidth, bar.height));
+                x += RowLinesWidth;
+            }
 
-            TimeFormatGUI(new Rect(x, 0f, TimeFormatWidth, bar.height));
+            if (showFlow)
+            {
+                FlowToggleGUI(new Rect(x, bar.y, FlowToggleWidth, bar.height));
+                x += FlowToggleWidth;
+            }
 
-            GUI.EndGroup();
+            if (showPinned)
+                PinnedToggleGUI(new Rect(x, bar.y, PinnedToggleWidth, bar.height));
 
-            RightControlsGUI(bar);
+            RightControlsGUI(bar, showSource, showExport);
+        }
+
+        /// <summary>Whether a control of this width still fits, and the room it takes if it does.</summary>
+        private static bool Fits(float width, ref float used, float room)
+        {
+            if (used + width > room) return false;
+
+            used += width;
+            return true;
         }
 
         /// <summary>
-        /// How wide the controls at the right end are: the gear, the filters switch while its panel
-        /// is closed, and the three settings while the gear is open. The floating strip is exactly
-        /// this wide; the bar is as wide as the list and these sit at its right end.
+        /// How wide the floating strip is: the gear, and the filters switch while its panel is
+        /// closed. The bar is as wide as the list and lays its own controls out.
         /// </summary>
         private float RightControlsWidth()
         {
             float width = SettingsButtonWidth;
-            if (_showSettings) width += RowLinesWidth + SourceCaptureWidth + ExportWidth;
             if (!_showFilters) width += _filtersPanelWidth;
             return width;
         }
 
         /// <summary>
         /// The controls at the right end of the strip and the bar alike, laid from the right edge
-        /// leftwards so they end where the list does: the filters switch, the gear, and while the
-        /// gear is open the row settings and Export to its left.
+        /// leftwards so they end where the list does: the filters switch, the gear, and on the bar
+        /// Export and Source to the gear's left, each when the bar has room for it.
         /// </summary>
-        private void RightControlsGUI(Rect strip)
+        private void RightControlsGUI(Rect strip, bool showSource = false, bool showExport = false)
         {
             float x = strip.xMax;
 
@@ -180,16 +210,17 @@ namespace FlowIoC.Editor.Console
             x -= SettingsButtonWidth;
             SettingsButtonGUI(new Rect(x, strip.y, SettingsButtonWidth, strip.height));
 
-            if (!_showSettings) return;
+            if (showExport)
+            {
+                x -= ExportWidth;
+                ExportMenuGUI(new Rect(x, strip.y, ExportWidth, strip.height));
+            }
 
-            x -= ExportWidth;
-            ExportMenuGUI(new Rect(x, strip.y, ExportWidth, strip.height));
-
-            x -= SourceCaptureWidth;
-            SourceCaptureSettingGUI(new Rect(x, strip.y, SourceCaptureWidth, strip.height));
-
-            x -= RowLinesWidth;
-            RowLinesSettingGUI(new Rect(x, strip.y, RowLinesWidth, strip.height));
+            if (showSource)
+            {
+                x -= SourceCaptureWidth;
+                SourceCaptureSettingGUI(new Rect(x, strip.y, SourceCaptureWidth, strip.height));
+            }
         }
 
         private void SettingsButtonGUI(Rect rect)
@@ -247,7 +278,9 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void TimeFormatGUI(Rect rect)
         {
-            var content = new GUIContent("Time: " + _timeFormat,
+            // The word alone, not the format: the rows beside it already show which one is on,
+            // and the menu ticks it. Keeps the button as narrow as the line count beside it.
+            var content = new GUIContent("Time",
                 "What leads a row: the clock to the second, as Unity's console shows it; the clock "
                 + "with its milliseconds; or the frame the row was written in and the gap since the "
                 + "row above.");
