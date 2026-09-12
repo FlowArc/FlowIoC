@@ -21,6 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         private const string InputSystemPackage = "com.unity.inputsystem";
 
         private readonly SetupModulesStartup _setup = new SetupModulesStartup();
+        private readonly HelpImages _images = new HelpImages();
         private readonly HelpAction _install;
 
         private bool _isInstalled;
@@ -175,6 +176,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Bullet(
                 "Every step is timed on the module's channel, so the Flow Console reads "
                 + "\"Boot completed in 4.20 s - Screens 1.12, Pools skipped\" without a stopwatch anywhere.");
+
+            painter.Image(_images.Get("LoadingScreen.png"),
+                "LoadingTestScene: the Boot set's bar over the download set it waits for.");
 
             painter.Space();
             painter.Note(
