@@ -57,6 +57,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ModuleTreeSearch`. Delete Module's own Search and Refresh row is gone with it; the list rescans
   on every reload.
 
+### Changed
+
+- **A line Unity wrote carries an icon instead of a `[Unity]`, `[Compiler]` or `[Shader]` tag.**
+  The Flow Console draws it on the row where the framework channels' tag begins - the Unity logo
+  the Hierarchy draws beside a scene, the C# script icon, the shader icon, each at the 16 pixels
+  the Project window draws them at - and the three profiles write nothing into the message, so a
+  line Unity wrote is recorded, searched, collapsed and copied exactly as Unity wrote it.
+- **The gear opens a bar of its own, and Flow, Pinned and Time moved onto it.** Pressed, the gear
+  no longer grows the strip leftwards over the rows: it opens a second toolbar row across the top
+  of the list, in the toolbar's own grey, and the rows start under it. The three view controls sit
+  at its left end while the row settings, Export and the gear keep the right. Closed, the gear
+  floats over the list's corner as before, with the filters switch beside it while its panel is
+  closed. The toolbar keeps the console's actions: Clear, Collapse, Error Pause, the player
+  picker, the search.
+- **`Time ▾` replaces the Timing switch, with three formats.** *Classic* leads a row with the clock
+  to the second, `13:05:23`, the way Unity's console does; *Extended*, the default, adds the
+  milliseconds; *Frame* is what Timing was - the frame the row was written in and the gap since
+  the row above. `FlowConsoleTimeFormat` is the choice, saved in EditorPrefs as before.
+- **The filters panel's edge drags.** The panel was 220 pixels wide and nothing else; now its left
+  edge is a splitter, from half that width up to whatever leaves the list 200 pixels, and the width
+  is kept in EditorPrefs with the reader's other switches. Below 200 pixels the counts on the
+  headers are not drawn, so they never land on the words.
+
 ### Fixed
 
 - **`BindInstance` before any context exists no longer throws.** The binder's log line named the

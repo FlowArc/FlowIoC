@@ -90,9 +90,9 @@ namespace FlowIoC.Tests
             Assert.AreEqual(LogSource.Unity, FlowLogger.Logs[0].Source);
             Assert.AreEqual("Unity", FlowLogger.Logs[0].Channel);
 
-            // The channel's profile puts its tag on the front, so the message is what it ends with
-            // rather than the whole of it.
-            StringAssert.EndsWith("hello", FlowLogger.Logs[0].Message);
+            // The Unity channel carries no text tag - the console draws the Unity logo on the row
+            // instead - so the message is exactly what Unity wrote.
+            Assert.AreEqual("hello", FlowLogger.Logs[0].Message);
         }
 
         [Test]
@@ -103,6 +103,10 @@ namespace FlowIoC.Tests
             Assert.AreEqual("Compiler", FlowLogger.Logs[0].Channel);
             Assert.AreEqual("Assets/A.cs", FlowLogger.Logs[0].SourceFilePath);
             Assert.AreEqual(12, FlowLogger.Logs[0].SourceLineNumber);
+
+            // The compiler's line, like Unity's, carries an icon on the row rather than a tag in
+            // the message.
+            Assert.AreEqual("CS0103", FlowLogger.Logs[0].Message);
         }
 
         /// <summary>

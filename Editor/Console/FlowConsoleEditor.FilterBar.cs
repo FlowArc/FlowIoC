@@ -21,29 +21,36 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void FiltersPanelGUI()
         {
-            EditorGUILayout.BeginVertical(GUILayout.Width(FiltersPanelWidth));
+            // Read once: a drag changes the width part-way through a pass, and the layout that
+            // pass was measured with has to be the one it is drawn with.
+            float width = _filtersPanelWidth;
 
-            Rect panelRect = GUILayoutUtility.GetRect(FiltersPanelWidth, 0f, GUILayout.Width(FiltersPanelWidth),
+            EditorGUILayout.BeginVertical(GUILayout.Width(width));
+
+            Rect panelRect = GUILayoutUtility.GetRect(width, 0f, GUILayout.Width(width),
                 GUILayout.Height(0f));
 
             // A ground of its own, darker than the list. Sharing the list's tone made the two read
             // as one surface, and the panel is a different thing on a different side.
             if (Event.current.type == EventType.Repaint)
             {
-                EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, FiltersPanelWidth, position.height),
+                EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, width, position.height),
                     FiltersPanelBackgroundColor);
             }
 
+            // Before the header, so a press on the edge is the edge's and not the switch's.
+            FiltersPanelSplitterGUI(panelRect);
+
             // The switch that opened the panel, as the panel's own header. It is level with the
             // strip floating over the list, so the two read as one row across the window.
-            FiltersToggleGUI(GUILayoutUtility.GetRect(FiltersPanelWidth, FloatingStripHeight,
-                GUILayout.Width(FiltersPanelWidth), GUILayout.Height(FloatingStripHeight)));
+            FiltersToggleGUI(GUILayoutUtility.GetRect(width, FloatingStripHeight,
+                GUILayout.Width(width), GUILayout.Height(FloatingStripHeight)));
 
             // The bar is drawn rather than taken from EditorStyles.toolbar: the toolbar's own
             // background is lighter than the panel under it, and it painted over the edge line
             // down the panel's left side.
-            Rect barRect = GUILayoutUtility.GetRect(FiltersPanelWidth, FiltersPanelBarHeight,
-                GUILayout.Width(FiltersPanelWidth), GUILayout.Height(FiltersPanelBarHeight));
+            Rect barRect = GUILayoutUtility.GetRect(width, FiltersPanelBarHeight,
+                GUILayout.Width(width), GUILayout.Height(FiltersPanelBarHeight));
 
             if (Event.current.type == EventType.Repaint)
             {
@@ -55,7 +62,7 @@ namespace FlowIoC.Editor.Console
             PresetMenuGUI(new Rect(barRect.xMax - 70f, barRect.y + 1f, 66f, barRect.height - 2f));
 
             _filtersPanelScroll = EditorGUILayout.BeginScrollView(_filtersPanelScroll,
-                GUILayout.Width(FiltersPanelWidth));
+                GUILayout.Width(width));
 
             if (!string.IsNullOrEmpty(_isolatedChannel))
             {
@@ -113,6 +120,55 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>
+        /// The panel's left edge, dragged to make the panel wider or narrower. The width is the
+        /// reader's and is saved when the drag ends, not on every pixel of it.
+        /// </summary>
+        private void FiltersPanelSplitterGUI(Rect panelRect)
+        {
+            var splitter = new Rect(panelRect.x, panelRect.y, FiltersPanelSplitterWidth,
+                position.height - panelRect.y);
+
+            EditorGUIUtility.AddCursorRect(splitter, MouseCursor.ResizeHorizontal);
+
+            Event e = Event.current;
+
+            if (e.type == EventType.MouseDown && e.button == 0 && splitter.Contains(e.mousePosition))
+            {
+                _isResizingFiltersPanel = true;
+                e.Use();
+            }
+
+            if (e.type == EventType.MouseDrag && _isResizingFiltersPanel)
+            {
+                // The edge moves with the pointer: dragging left widens the panel.
+                _filtersPanelWidth = ClampFiltersPanelWidth(_filtersPanelWidth - e.delta.x);
+                Repaint();
+                e.Use();
+            }
+
+            if (e.type == EventType.MouseUp && _isResizingFiltersPanel)
+            {
+                _isResizingFiltersPanel = false;
+                _state.FiltersPanelWidth = _filtersPanelWidth;
+                e.Use();
+            }
+        }
+
+        /// <summary>
+        /// Between the floor and what leaves the list its reserve. The ceiling follows the window,
+        /// so a width saved on a wide monitor is brought in on a narrow one rather than pushing
+        /// the list off the edge.
+        /// </summary>
+        private float ClampFiltersPanelWidth(float width)
+        {
+            float max = Mathf.Max(FiltersPanelMinWidth, position.width - FiltersPanelListReserve);
+            return Mathf.Clamp(width, FiltersPanelMinWidth, max);
+        }
+
+        /// <summary>Whether the panel is wide enough for the counts on its headers - see <see cref="FiltersPanelCountsMinWidth"/>.</summary>
+        private bool FiltersPanelShowsCounts => _filtersPanelWidth >= FiltersPanelCountsMinWidth;
+
+        /// <summary>
         /// A group's title, and how many of its channels are showing. The count is what a reader
         /// wants from a folded group - whether anything in there is hidden - so the group can stay
         /// folded and still answer it.
@@ -147,7 +203,7 @@ namespace FlowIoC.Editor.Console
             // Only on a repaint, because that is the pass EditorStyles is real in. Built during a
             // layout pass the style came back blank - no name, no font, black text, aligned to the
             // top left - which is what a style derived from a placeholder looks like.
-            if (Event.current.type == EventType.Repaint)
+            if (Event.current.type == EventType.Repaint && FiltersPanelShowsCounts)
             {
                 EnsureChannelRowStyles();
 

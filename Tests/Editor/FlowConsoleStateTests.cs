@@ -8,6 +8,8 @@ namespace FlowIoC.Tests
         private FlowConsoleState _state;
         private bool _clearOnPlay;
         private bool _errorPause;
+        private FlowConsoleTimeFormat _timeFormat;
+        private float _filtersPanelWidth;
 
         [SetUp]
         public void Remember()
@@ -15,6 +17,8 @@ namespace FlowIoC.Tests
             _state = new FlowConsoleState();
             _clearOnPlay = _state.ClearOnPlay;
             _errorPause = _state.ErrorPause;
+            _timeFormat = _state.TimeFormat;
+            _filtersPanelWidth = _state.FiltersPanelWidth;
         }
 
         [TearDown]
@@ -22,6 +26,33 @@ namespace FlowIoC.Tests
         {
             _state.ClearOnPlay = _clearOnPlay;
             _state.ErrorPause = _errorPause;
+            _state.TimeFormat = _timeFormat;
+            _state.FiltersPanelWidth = _filtersPanelWidth;
+        }
+
+        /// <summary>
+        /// Saved as its number, so a value outside the enum - a build of the console that knew
+        /// one more format, or a hand-edited pref - reads back as one of the three rather than as
+        /// a format the row drawer has no branch for.
+        /// </summary>
+        [Test]
+        public void The_time_format_reads_back_what_was_written_and_never_leaves_the_enum()
+        {
+            _state.TimeFormat = FlowConsoleTimeFormat.Frame;
+            Assert.AreEqual(FlowConsoleTimeFormat.Frame, new FlowConsoleState().TimeFormat);
+
+            UnityEditor.EditorPrefs.SetInt("FlowIoC.Console.TimeFormat", 7);
+            Assert.AreEqual(FlowConsoleTimeFormat.Frame, new FlowConsoleState().TimeFormat);
+
+            UnityEditor.EditorPrefs.SetInt("FlowIoC.Console.TimeFormat", -3);
+            Assert.AreEqual(FlowConsoleTimeFormat.Classic, new FlowConsoleState().TimeFormat);
+        }
+
+        [Test]
+        public void The_filters_panel_width_reads_back_what_was_dragged()
+        {
+            _state.FiltersPanelWidth = 310f;
+            Assert.AreEqual(310f, new FlowConsoleState().FiltersPanelWidth);
         }
 
         [Test]

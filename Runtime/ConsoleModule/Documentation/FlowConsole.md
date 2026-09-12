@@ -48,6 +48,11 @@ three are recorded whether or not `ENABLE_LOG` is defined: turning the define of
 statement about *your* logging, and a console that then showed no compile errors would be
 useless at the moment it is most needed.
 
+Their rows carry an icon where the other channels carry their `[Name]` tag — the Unity
+logo the Hierarchy draws beside a scene, the C# script icon, the shader icon — so a line
+that is not the framework's is told apart at a glance, and the message is exactly what
+Unity wrote: searched, collapsed and copied as it came.
+
 `Shader` is a channel of its own rather than part of `Compiler`, because the two answer
 different questions. A C# error stops the domain reloading and nothing runs at all; a
 broken shader renders one material magenta and everything else carries on. Somebody who
@@ -104,12 +109,12 @@ console you keep open.
 | `Collapse` | Folds rows that say the same thing from the same place onto one line with a count. The row keeps the place of its first occurrence, so the list does not reorder itself while you read it. |
 | `Error Pause` | Pauses play mode on the next error, exception or assert. |
 | `Editor ▾` | Unity's attach-to-player picker, the same one the Console and the Profiler draw. Pick a development player and its rows arrive here - see [Attaching a device](#attaching-a-device). |
-| `Flow` | Groups the rows into the flows they belong to. See below. |
-| `Pinned` | Shows only the rows you pinned. |
-| `Timing` | Leads each row with the frame it was written in and the gap since the row above, instead of the clock. |
 | search box | See [Searching](#searching). |
 | `Locate` | Scrolls the selected row back into view. |
-| `⚙` | Floats over the list's top-right corner and opens the three controls below, over the rows rather than on a bar of their own. `Filters` sits beside it while its panel is closed and heads the panel once it is open. |
+| `⚙` | Floats over the list's top-right corner while it is closed. Pressed, it opens a bar of its own across the top of the list - the rows start under it - with the three view switches at its left end and the row settings at its right. `Filters` sits beside the gear while its panel is closed and heads the panel once it is open. |
+| `Flow` | Groups the rows into the flows they belong to. See below. |
+| `Pinned` | Shows only the rows you pinned. |
+| `Time ▾` | What leads a row. **Classic** is the clock to the second, `13:05:23`, the way Unity's console leads a row; **Extended**, the default, adds the milliseconds, `13:05:23:088`; **Frame** is the frame the row was written in and the gap since the row above, `f120  +12ms`. |
 | `1/2/3 lines` | How many lines a row shows. Two is Unity's shape: the message, and underneath it where it came from. |
 | `Source:` | `StackTraceCapture`, raised and lowered where the flow is being read rather than three windows away. |
 | `Presets` | Channel filters saved under a name. Two ship with the console; the rest are yours. |
@@ -136,6 +141,11 @@ thousand rows are written down before the reload and read back after it.
 Clicking a channel hides or shows it. **Alt+clicking** one narrows the console to it,
 and alt+clicking the one that is already alone brings the rest back — twenty-nine clicks
 are not an answer when one channel of thirty is interesting.
+
+The panel's left edge drags, so a module name that does not fit gets the room it needs.
+It goes no narrower than half its starting width and no wider than leaves the list its
+room; as it narrows, the counts on its headers come off before the names do. The width
+is yours, kept with your switches.
 
 What a switch hides is the channel's plain logs. **A warning and an error show whatever
 its channel's switch, its group's mute or an isolation says.** `Context` is off by

@@ -49,13 +49,15 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>
-        /// Whether a row leads with the frame it was written in and the gap since the row above,
-        /// instead of the wall clock.
+        /// What leads a row: the clock to the second, the clock with its milliseconds, or the
+        /// frame it was written in and the gap since the row above.
         /// </summary>
-        public bool Timing
+        public FlowConsoleTimeFormat TimeFormat
         {
-            get => EditorPrefs.GetBool(PREFIX + nameof(Timing), false);
-            set => EditorPrefs.SetBool(PREFIX + nameof(Timing), value);
+            get => (FlowConsoleTimeFormat) Mathf.Clamp(
+                EditorPrefs.GetInt(PREFIX + nameof(TimeFormat), (int) FlowConsoleTimeFormat.Extended),
+                (int) FlowConsoleTimeFormat.Classic, (int) FlowConsoleTimeFormat.Frame);
+            set => EditorPrefs.SetInt(PREFIX + nameof(TimeFormat), (int) value);
         }
 
         /// <summary>
@@ -114,6 +116,16 @@ namespace FlowIoC.Editor.Console
         {
             get => EditorPrefs.GetBool(PREFIX + nameof(ShowFilters), false);
             set => EditorPrefs.SetBool(PREFIX + nameof(ShowFilters), value);
+        }
+
+        /// <summary>
+        /// How wide that panel is, as the reader last dragged it. The window clamps it to what
+        /// fits when it reads it back, so a value saved on a wide monitor is safe on a narrow one.
+        /// </summary>
+        public float FiltersPanelWidth
+        {
+            get => EditorPrefs.GetFloat(PREFIX + nameof(FiltersPanelWidth), 220f);
+            set => EditorPrefs.SetFloat(PREFIX + nameof(FiltersPanelWidth), value);
         }
 
         public bool UnityChannelsExpanded

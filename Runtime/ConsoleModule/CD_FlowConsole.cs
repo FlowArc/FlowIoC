@@ -480,7 +480,11 @@ namespace FlowIoC.ConsoleModule
                     ? channelType.LogColor
                     : GetDefaultColorForLogType(channel);
 
-                string prefix = "[" + name + "]";
+                // A channel Unity writes has an icon for a tag - the Unity logo, the script icon,
+                // the shader icon - which the console window draws on the row itself, so its
+                // profile writes nothing into the message: a line Unity wrote is recorded as
+                // Unity wrote it.
+                string prefix = IsWrittenByUnity(channel) ? "" : "[" + name + "]";
 
                 if (profile.Prefix != prefix || profile.PrefixColor != channelColor
                                              || profile.PrefixStyle != FlowTextStyle.None
@@ -510,6 +514,18 @@ namespace FlowIoC.ConsoleModule
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
+        }
+
+        /// <summary>
+        /// The three channels Unity writes rather than the framework: its own lines, the compiler's
+        /// and a shader's. They are the Unity group in the console's Filters panel, and the rows
+        /// that carry an icon instead of a text tag.
+        /// </summary>
+        private static bool IsWrittenByUnity(SystemLogType channel)
+        {
+            return channel == SystemLogType.Unity
+                   || channel == SystemLogType.Compiler
+                   || channel == SystemLogType.Shader;
         }
 
         private void ValidateLogTypes()
