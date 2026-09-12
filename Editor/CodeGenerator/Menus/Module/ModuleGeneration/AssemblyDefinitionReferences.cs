@@ -95,6 +95,46 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         }
 
         /// <summary>
+        /// Returns the asmdef text with the entry <paramref name="oldAssembly"/> reading
+        /// <paramref name="newAssembly"/>, or the text unchanged when it was not listed.
+        /// <paramref name="renamed"/> says which happened.
+        ///
+        /// This is what a module being renamed needs of every asmdef that named one of its
+        /// assemblies: the same entry, the new name, every other byte where it was. The entry is
+        /// matched with its quotes, so Modules.Counter does not reach into Modules.Counter.Signals.
+        /// </summary>
+        public string Rename(string asmdefContent, string oldAssembly, string newAssembly, out bool renamed)
+        {
+            renamed = false;
+
+            if (string.IsNullOrEmpty(asmdefContent) || string.IsNullOrEmpty(oldAssembly) || string.IsNullOrEmpty(newAssembly))
+                return asmdefContent;
+
+            int keyIndex = asmdefContent.IndexOf(REFERENCES_KEY, StringComparison.Ordinal);
+            if (keyIndex < 0) return asmdefContent;
+
+            int openIndex = asmdefContent.IndexOf('[', keyIndex);
+            if (openIndex < 0) return asmdefContent;
+
+            int closeIndex = asmdefContent.IndexOf(']', openIndex);
+            if (closeIndex < 0) return asmdefContent;
+
+            string inner = asmdefContent.Substring(openIndex + 1, closeIndex - openIndex - 1);
+            string quotedOld = "\"" + oldAssembly + "\"";
+
+            int entryIndex = inner.IndexOf(quotedOld, StringComparison.Ordinal);
+            if (entryIndex < 0) return asmdefContent;
+
+            renamed = true;
+
+            string replaced = inner.Substring(0, entryIndex)
+                              + "\"" + newAssembly + "\""
+                              + inner.Substring(entryIndex + quotedOld.Length);
+
+            return asmdefContent.Substring(0, openIndex + 1) + replaced + asmdefContent.Substring(closeIndex);
+        }
+
+        /// <summary>
         /// The entry and the comma that joined it to its neighbour - the one before it where there
         /// is one, so the last entry in a list does not leave a trailing comma behind, and the one
         /// after it otherwise. A list left holding nothing comes back empty rather than as a line
