@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directly, so a component that was never filed came back as a `KeyNotFoundException` from inside
   the framework. It now logs the same error a missing asset gets - naming the component and the
   Root - and answers null.
+- **A warning and an error show in the Flow Console whatever their channel's switch says.** The
+  switches, the group mute and the isolation applied to every row, reports included, while
+  `FlowLogger.LogError` reaches Unity's console whatever the switch says - so the shared data
+  reports, written on the `Context` channel that is off by default, showed in Unity's window and
+  not in Flow Console. A switch now hides a channel's plain logs; a warning and an error pass it,
+  the way a pinned row does, and the severity toggles on the bar are what hide them. The counters
+  on the bar count them too. `SendLogsToUnityConsole` follows the same rule, mirroring a warning
+  whatever the switch says. `FlowConsoleChannelRule` is the decision, asked by both.
 
 ## [1.13.0] - 2026-09-10
 

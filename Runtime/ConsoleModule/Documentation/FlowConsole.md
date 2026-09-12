@@ -136,6 +136,14 @@ Clicking a channel hides or shows it. **Alt+clicking** one narrows the console t
 and alt+clicking the one that is already alone brings the rest back — twenty-nine clicks
 are not an answer when one channel of thirty is interesting.
 
+What a switch hides is the channel's plain logs. **A warning and an error show whatever
+its channel's switch, its group's mute or an isolation says.** `Context` is off by
+default, and *Shared asset is not filed on any Root!* is written on it, so a console that
+let the switch decide showed the error in Unity's window and not in this one. The Warning
+and Error toggles on the bar are what hide a report. `SendLogsToUnityConsole` follows the
+same rule: a warning is forwarded whatever the switch says, a plain log only while its
+channel is on, and an error always.
+
 What you switch on and off is yours. It lives in EditorPrefs, keyed by the project, and
 `CD_FlowConsole.asset` is not written when you click — the asset is committed, and one
 developer's filter has no business turning up in everybody else's diff, or switching their
@@ -170,7 +178,9 @@ console is holding.
 
 Pinning a row is you saying this one is not noise, so it outranks everything that hides
 rows: the channel switches, the severity toggles, the trim that bounds the list, and the
-automatic clears on play, recompile and build. A search still narrows past it — that is
+automatic clears on play, recompile and build. A warning and an error outrank the channel
+switches the same way, and nothing else — the severity toggles still hide them, the trim
+still takes them. A search still narrows past it — that is
 looking for something rather than hiding a kind of log — and the `Clear` button still
 empties everything, because pressing it is asking for exactly that.
 
@@ -265,7 +275,7 @@ The `CD_FlowConsole` asset controls the whole layer.
 | `DeepAnalysis` | On: the detail panel shows the class name and the full stack trace. Off: only the source line. Editor-only — on device no `ConsoleLog` object is created at all. |
 | `StackTraceCapture` | Which logs work out where they came from. `WarningsAndErrors` is the default and the one to leave alone: capturing a source builds the whole managed stack as a string and picks it apart, and the framework logs every signal, injection and command, so this is the most expensive thing the console does. Raise it to `Always` while following a flow and put it back afterwards. `Never` is the cheapest and shows no source for anything. |
 | `MaxLogCount` | How many logs are kept. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. `0` keeps all of them. |
-| `SendLogsToUnityConsole` | Mirror everything into Unity's own console, for when you need the two side by side. |
+| `SendLogsToUnityConsole` | Mirror everything into Unity's own console, for when you need the two side by side. A plain log is mirrored only while its channel is on; a warning whatever the channel says; an error always, switch or no switch. |
 | `AutoAddEnableLogDefine` | Manage the `ENABLE_LOG` scripting define automatically. |
 | `LogTypes` | The channel list: name, value, colour, whether the channel is on by default, and whether it is mandatory or auto-registered. |
 

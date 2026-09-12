@@ -50,6 +50,13 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "Default off per channel: what somebody sees who has not touched it, and what a "
                 + "channel a module added yesterday shows as. Presets > Project defaults drops your "
                 + "switches and puts you back on what the asset says.");
+            painter.Paragraph(
+                "A switch hides the channel's plain logs. A warning and an error show whatever "
+                + "its channel's switch, its group's mute or an isolation says - Context is off by "
+                + "default, and the shared data reports are written on it. The Warning and Error "
+                + "toggles on the bar are what hide a report, and Send Logs To Unity Console "
+                + "follows the same rule: a warning is mirrored whatever the switch says, a plain "
+                + "log only while its channel is on, an error always.");
             painter.Note(
                 "Important: every channel switched off looks exactly like a quiet game. The list "
                 + "says so in its middle when that is the case, and counts the rows the filters "
