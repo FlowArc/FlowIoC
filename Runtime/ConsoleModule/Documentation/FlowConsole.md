@@ -111,14 +111,20 @@ console you keep open.
 | `Editor ▾` | Unity's attach-to-player picker, the same one the Console and the Profiler draw. Pick a development player and its rows arrive here - see [Attaching a device](#attaching-a-device). |
 | search box | See [Searching](#searching). |
 | `Locate` | Scrolls the selected row back into view. |
-| `⚙` | Floats over the list's top-right corner while it is closed. Pressed, it opens a bar of its own across the top of the list - the rows start under it - with the three view switches at its left end and the row settings at its right. `Filters` sits beside the gear while its panel is closed and heads the panel once it is open. |
-| `Flow` | Groups the rows into the flows they belong to. See below. |
-| `Pinned` | Shows only the rows you pinned. |
+| `⚙` | Floats over the list's top-right corner while it is closed. Pressed, it opens a bar of its own across the top of the list - the rows start under it - with what shapes the rows at its left end and `Source` and `Export` at its right. `Filters` sits beside the gear while its panel is closed and heads the panel once it is open. |
 | `Time ▾` | What leads a row. **Classic** is the clock to the second, `13:05:23`, the way Unity's console leads a row; **Extended**, the default, adds the milliseconds, `13:05:23:088`; **Frame** is the frame the row was written in and the gap since the row above, `f120  +12ms`. |
 | `1/2/3 lines` | How many lines a row shows. Two is Unity's shape: the message, and underneath it where it came from. |
+| `Flow` | Groups the rows into the flows they belong to. See below. |
+| `Pinned` | Shows only the rows you pinned. |
 | `Source:` | `StackTraceCapture`, raised and lowered where the flow is being read rather than three windows away. |
-| `Presets` | Channel filters saved under a name. Two ship with the console; the rest are yours. |
 | `Export` | Saves or copies the rows that are showing, as plain text. |
+| `Presets` | Channel filters saved under a name. Two ship with the console; the rest are yours. |
+
+A window too narrow for all of that drops controls whole rather than drawing them half, the
+way Unity's console does. On the toolbar the search goes first, then `Editor ▾`, then `Error
+Pause`; `Clear`, `Collapse` and the three counts are never dropped, and neither is a search
+with something typed in it. On the bar `Source` goes first, then `Export`, then `Pinned`,
+`Flow`, the line count and `Time` in that order; the gear and `Filters` stay.
 
 The list follows new logs down while it is resting at the bottom and leaves you alone
 once you scroll up. Arrows walk it, PageUp/PageDown move by a screen, Home and End take
