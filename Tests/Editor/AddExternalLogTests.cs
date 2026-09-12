@@ -139,5 +139,40 @@ namespace FlowIoC.Tests
 
             Assert.AreEqual(LogSource.Flow, FlowLogger.Logs[0].Source);
         }
+
+        /// <summary>
+        /// A channel's switch holds back its chatter and nothing else, in Unity's console as in
+        /// the window. The developer's switch on the Default channel is thrown for the test and
+        /// put back as it was found, because it is theirs.
+        /// </summary>
+        [Test]
+        public void A_warning_on_a_hidden_channel_is_still_mirrored_and_a_log_is_not()
+        {
+            Assert.IsTrue(FlowLogger.Settings.TryGetLogType(DEFAULT_CHANNEL, out var channel));
+
+            bool wasShown = FlowLogger.Settings.Visibility.IsShown(channel);
+            var mirrored = new System.Collections.Generic.List<string>();
+
+            void Capture(string condition, string stackTrace, LogType type) => mirrored.Add(type + ":" + condition);
+
+            FlowLogger.Settings.IsLoggingEnabled = true;
+            FlowLogger.Settings.SendLogsToUnityConsole = true;
+            FlowLogger.Settings.Visibility.Show(channel, false);
+            Application.logMessageReceived += Capture;
+
+            try
+            {
+                FlowLogger.LogWarning(DEFAULT_CHANNEL, "hidden-channel-warning-probe");
+                FlowLogger.Log(DEFAULT_CHANNEL, "hidden-channel-log-probe");
+            }
+            finally
+            {
+                Application.logMessageReceived -= Capture;
+                FlowLogger.Settings.Visibility.Show(channel, wasShown);
+            }
+
+            Assert.IsTrue(mirrored.Exists(line => line.StartsWith("Warning:") && line.Contains("hidden-channel-warning-probe")));
+            Assert.IsFalse(mirrored.Exists(line => line.Contains("hidden-channel-log-probe")));
+        }
     }
 }

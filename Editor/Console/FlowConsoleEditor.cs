@@ -61,6 +61,7 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
         private readonly FlowConsoleEmptyListHint _emptyListHint = new FlowConsoleEmptyListHint();
         private readonly FlowConsoleStyleGuard _styleGuard = new FlowConsoleStyleGuard();
+        private readonly FlowConsoleChannelRule _channelRule = new FlowConsoleChannelRule();
         private GUIStyle _emptyListHintStyle;
 
         private bool _showFilters;
@@ -1139,7 +1140,9 @@ namespace FlowIoC.Editor.Console
 
                     // A pin outranks a filter. Turning a channel off means hide that kind of log,
                     // and the reader already said this particular one is not the kind they meant.
-                    if (log.Pinned)
+                    // A warning and an error outrank it too: a switch hides chatter, and only the
+                    // severity toggles hide a report.
+                    if (!_channelRule.AnswersToChannels(log))
                     {
                         _multiTypeFilterBuffer.Add(log);
                         continue;

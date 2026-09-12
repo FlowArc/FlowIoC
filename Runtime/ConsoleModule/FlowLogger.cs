@@ -38,6 +38,7 @@ namespace FlowIoC.ConsoleModule
 
         private static readonly CollapseKeyBuilder CollapseKeys = new();
         private static readonly FlowStackFrameFilter StackFrames = new();
+        private static readonly FlowConsoleChannelRule ChannelRule = new();
 
         private static int _flowCounter;
         private static int _currentFlowId;
@@ -836,7 +837,12 @@ namespace FlowIoC.ConsoleModule
 
         private static void ForwardToUnityConsole(string channel, string message, LogType logType)
         {
-            if (!Settings.SendLogsToUnityConsole || !Settings.IsLogTypeVisible(channel)) return;
+            if (!Settings.SendLogsToUnityConsole) return;
+
+            // A channel's switch holds back its chatter and nothing else, here as in the window: a
+            // warning is forwarded whatever the switch says, so the two consoles show the same
+            // warnings whichever one is being read.
+            if (ChannelRule.AnswersToChannels(logType) && !Settings.IsLogTypeVisible(channel)) return;
 
             // Raised so the editor bridge can tell this log apart from somebody else's when
             // Unity hands it straight back through Application.logMessageReceived.
