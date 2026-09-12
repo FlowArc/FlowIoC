@@ -79,8 +79,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   edge is a splitter, from half that width up to whatever leaves the list 200 pixels, and the width
   is kept in EditorPrefs with the reader's other switches. Below 200 pixels the counts on the
   headers are not drawn, so they never land on the words.
+- **Model Viewer is one window, and it reads only.** One tree in the house style: a row per Root
+  in Initialize Order, in its role's colour; under it everything the module bound - Models,
+  Services, Systems, sub services, each badged - and under each the members it chose to show,
+  read only while the row is open and ten times a second. A dictionary opens to its entries, a
+  list to its items, fifty at a time; a `UnityEngine.Object` pings when clicked; a getter that
+  throws is a red row and not a broken window; a value already open on the same path says so
+  instead of opening again. The last row, Shared, is what the RootsManager bound before any Root.
+  `[ShowInModelViewer]` and `[HideInModelViewer]` mean what they did, and base classes now count.
+  Editing a value from the window is gone with the floating `InspectWindow` per object and the
+  thirty drawer classes behind it: a value changed from a window skipped the rules the Model
+  exists to keep.
 
 ### Fixed
+
+- **Model Viewer never listed a module's own models.** Only the sub contexts were walked, so a
+  Service Root with two models and eleven sub services showed *Local Injected Objects* empty; what
+  it did list was the cross-context binder, the same for every Root.
+- **Model Viewer threw on every repaint for a get-only property**, wrote every value back into
+  the model on every frame, froze a dictionary's values at their first reading, threw when a list
+  shrank, and showed a value object inside a collection as its `ToString()` alone.
 
 - **`BindInstance` before any context exists no longer throws.** The binder's log line named the
   bound context, and the run's first framework binding - the shared data model, handed in by the

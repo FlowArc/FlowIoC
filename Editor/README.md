@@ -105,7 +105,9 @@ See [Flow Console](../Runtime/ConsoleModule/Documentation/FlowConsole.md).
 
 ### Model Viewer
 
-Shows the live contents of your models while the game runs. Mark what you want to see:
+Shows the live contents of your models while the game runs, in one tree: a row per Root in
+Initialize Order, under it everything that module bound - badged Model, Service, System or sub
+service - and under each of those the members it chose to show. Mark what you want to see:
 
 ```csharp
 public class CameraModel : ICameraModel
@@ -117,8 +119,11 @@ public class CameraModel : ICameraModel
 }
 ```
 
-Because models are plain C# objects rather than `MonoBehaviour`s, the Unity Inspector
-cannot show them — this window is the replacement.
+A public member is listed unless it is hidden, a private one only when it is shown; base classes
+count. Only an open row is read, ten times a second, so depth costs nothing until you open it.
+The window reads and never writes: a value is changed where it is always changed, by a Command
+through the Model. Because models are plain C# objects rather than `MonoBehaviour`s, the Unity
+Inspector cannot show them — this window is the replacement.
 
 ### Folder Painter
 
