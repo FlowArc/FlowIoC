@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.ResourceManagement.AsyncOperations;
+using FlowIoC.AssetModule.Gateway;
 
 namespace FlowIoC.AssetModule.Data
 {
     internal sealed class AssetEntryVO
     {
-        public AsyncOperationHandle Handle;
+        public IAssetHandle Handle;
         public object Result;
         public Type AssetType;
 

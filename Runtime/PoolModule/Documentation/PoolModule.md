@@ -206,7 +206,12 @@ _poolService.Create.Group("boss_phase_2", poolGroupCVO);
 
 Set `IsAddressable` and fill `AddressablePrefab` with an
 `AssetReferenceSpawnableObject`. The pool then loads through Addressables instead of
-holding a direct prefab reference.
+holding a direct prefab reference — through `IAssetService`, claimed under
+`Pool/<groupKey>`, so `AssetServiceRoot` has to be in the scene (its absence is
+reported at the first load, naming the item's key), a prefab a screen also holds is
+loaded once, and a label preloaded earlier under a silent loading set is what `GetAsync`
+finds already in memory. Destroying a group or an item releases the pool's claim; the
+asset goes when nobody else holds it.
 
 This is the difference between a scene that references every VFX prefab it might ever
 show — and therefore loads all of them with the scene — and one that pulls them in on

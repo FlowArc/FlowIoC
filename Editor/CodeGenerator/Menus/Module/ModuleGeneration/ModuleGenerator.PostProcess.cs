@@ -169,6 +169,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 Debug.LogError($"ScreenServiceRoot prefab not found at: {CodeGeneratorStrings.SCREEN_SERVICE_ROOT_PATH}");
             }
 
+            // The screen is addressable, and an addressable screen loads through the asset service,
+            // so the scene that runs it carries AssetServiceRoot beside ScreenServiceRoot.
+            GameObject assetServiceRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH);
+            if (assetServiceRootPrefab != null)
+            {
+                PrefabUtility.InstantiatePrefab(assetServiceRootPrefab, SceneManager.GetActiveScene());
+            }
+            else
+            {
+                Debug.LogError($"AssetServiceRoot prefab not found at: {CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH}");
+            }
+
             GameObject rootGameObject = new GameObject(rootPrefixName + "TestRoot");
             if (rootType != null)
             {

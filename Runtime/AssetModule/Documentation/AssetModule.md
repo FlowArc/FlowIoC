@@ -14,6 +14,7 @@ gives you the prefab — you call `Instantiate` yourself, or hand the prefab to 
 - [Setting Up](#setting-up)
 - [Loading a Single Asset](#loading-a-single-asset)
 - [Runtime Groups](#runtime-groups)
+- [Progress, Background and Downloads](#progress-background-and-downloads)
 - [Signals](#signals)
 - [Scenarios](#scenarios)
 - [Pitfalls](#pitfalls)
@@ -30,6 +31,22 @@ Root.
 ```csharp
 [Inject] private IAssetService _assetService { get; set; }
 ```
+
+**This is the package's one door to Addressables.** The screen service and the pool
+service load their addressable prefabs through it too, so `AssetServiceRoot` has to be
+in every scene that has an addressable screen or an addressable pool item — the Create
+Module panel puts it in the test scene it builds for a screen. A scene whose screens are
+all `Resource` screens and whose pools hold only direct prefabs does not need it. When it
+is missing, the first addressable load reports it and answers nothing:
+
+```
+[ScreenService.Load] 'SettingsScreenView' is addressable and AssetServiceRoot is not in the scene.
+Put AssetServiceRoot in the scene; it is what loads addressables.
+```
+
+Each of the two services claims what it loads under an owner of its own —
+`Screen/<managerId>` and `Pool/<groupKey>` — so a prefab a pool and a screen both touch
+is loaded once and released when the last of them lets go.
 
 ---
 
@@ -116,6 +133,43 @@ When the label and the group name are the same thing — which is the common cas
 
 ---
 
+## Progress, Background and Downloads
+
+A group load takes an `AssetLoadOptions`:
+
+```csharp
+await _assetService.LoadGroupByLabelAsync<GameObject>("level30", "Preload/Level30",
+    new AssetLoadOptions
+    {
+        Progress = new Progress<float>(fraction => step.Progress(fraction)),
+        Background = true
+    });
+```
+
+- **`Progress`** is `0..1`, the mean of the loads still in flight, reported once per
+  frame and `1f` once at the end. A group whose assets are already in memory reports
+  `1f` once. This is what a loading step's `Progress(float)` is fed from.
+- **`Background`** lowers `Application.backgroundLoadingPriority` to `Low` for as long
+  as any background load is in flight, and puts back the value it found when the last
+  one ends. It is a global setting: a foreground load that overlaps a background one
+  runs at the lower priority too, so a game that cares lets its boot finish before it
+  preloads silently.
+
+For a remote catalogue, two more calls:
+
+```csharp
+long bytes = await _assetService.GetDownloadSizeAsync("level30");      // 0 when cached
+
+bool ok = await _assetService.DownloadDependenciesAsync("level30",
+    new AssetLoadOptions { Progress = new Progress<float>(step.Progress) });
+```
+
+A download is not a claim. It brings the bundles into Addressables' cache and holds
+nothing afterwards; the loads that follow find them there. A download that fails
+answers `false` and dispatches `AssetLoadFailed` with the key.
+
+---
+
 ## Signals
 
 The module exposes signals so other modules can drive it without injecting the
@@ -156,6 +210,27 @@ if (!_myCache.TryGetValue(key, out var icon))
     icon = await _assetService.LoadAssetAsync<Sprite>(key);
     _myCache[key] = icon;
 }
+```
+
+### A pool and a screen share a prefab
+
+Nothing to write. The pool claims the prefab under `Pool/<groupKey>` and the screen
+under `Screen/<managerId>`; Addressables keys its own cache by resource location, so
+the address the screen names and the GUID the pool's `AssetReference` carries share
+one operation and one loaded asset. The registry keeps the two keys as they were given
+— `TryGetAsset` answers under the spelling that was loaded — and decides only when a
+claim ends: the asset goes when the last owner releases.
+
+### Preload a level silently, then let the pool find it
+
+```csharp
+// At level 20, beside the game, under a silent loading set:
+await _assetService.LoadGroupByLabelAsync<GameObject>("level30", "Preload/Level30",
+    new AssetLoadOptions { Background = true });
+
+// At level 30 the pool's GetAsync loads the same prefabs and finds the operation cached.
+// The pool's claim is added beside the preload's; releasing the preload keeps the pool's.
+_assetService.ReleaseGroup("Preload/Level30");
 ```
 
 ### Release by group at a phase boundary
@@ -267,7 +342,9 @@ you who else is holding it.
 - [README — FlowIoC at a Glance](../../../README.md#flowioc-at-a-glance)
 - [Pooling](../../PoolModule/Documentation/PoolModule.md) — what to do with a loaded
   prefab
-- [Screens](../../ScreenModule/Documentation/ScreenModule.md) — screens load their own
-  prefabs through this layer
+- [Screens](../../ScreenModule/Documentation/ScreenModule.md) — screens load their
+  prefabs through this layer, under `Screen/<managerId>`
 - [Commands](../../BaseModule/Controller/Documentation/Controller.md) — retaining
   across an `await`
+- HitNPoP's `AudioModule` is the worked example of the group lifecycle: a group per
+  scene of clips, loaded by label on entry and released as one on exit

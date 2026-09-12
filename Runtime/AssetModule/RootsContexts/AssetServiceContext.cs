@@ -1,4 +1,5 @@
 using FlowIoC.AssetModule.Commands;
+using FlowIoC.AssetModule.Gateway;
 using FlowIoC.AssetModule.Model;
 using FlowIoC.AssetModule.Service;
 using FlowIoC.AssetModule.Service.Sub;
@@ -23,10 +24,15 @@ namespace FlowIoC.AssetModule.RootsContexts
 
             InjectionBinderCrossContext.Bind<IAssetService, AssetService>();
 
+            // The one door to Addressables; every sub service below goes through it.
+            InjectionBinder.Bind<IAddressablesGateway, AddressablesGateway>();
+
             InjectionBinder.Bind<IAssetRegistryModel, AssetRegistryModel>();
             InjectionBinder.Bind<AssetLoadSubService>();
             InjectionBinder.Bind<AssetGroupSubService>();
             InjectionBinder.Bind<AssetReleaseSubService>();
+            InjectionBinder.Bind<AssetPrioritySubService>();
+            InjectionBinder.Bind<AssetDownloadSubService>();
         }
 
         public override void CommandBindings()

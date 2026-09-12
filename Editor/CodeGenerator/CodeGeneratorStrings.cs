@@ -28,6 +28,7 @@ namespace FlowIoC.Editor.CodeGenerator
         public static readonly string CONFIG_PATH = Paths.CodeGeneratorSettings;
 
         public static readonly string SCREEN_SERVICE_ROOT_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenServiceRoot.prefab";
+        public static readonly string ASSET_SERVICE_ROOT_PATH = PackageAssetRoot + "/Assets/Prefabs/AssetServiceRoot.prefab";
         internal static readonly string SCREEN_MANAGER_PREFAB_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenManager.prefab";
 
 

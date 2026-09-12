@@ -1,12 +1,11 @@
 using System.Threading.Tasks;
 using FlowIoC.AssetModule.Data;
 using FlowIoC.AssetModule.Extensions;
+using FlowIoC.AssetModule.Gateway;
 using FlowIoC.AssetModule.Model;
 using FlowIoC.AssetModule.Signals;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace FlowIoC.AssetModule.Service.Sub
 {
@@ -14,6 +13,7 @@ namespace FlowIoC.AssetModule.Service.Sub
     {
         [Inject] private IAssetRegistryModel _registry { get; set; }
         [Inject] private AssetReleaseSubService _release { get; set; }
+        [Inject] private IAddressablesGateway _gateway { get; set; }
         [InjectSignal] private AssetSignals _signals { get; set; }
 
         public async Task<T> LoadAssetAsync<T>(object key, string groupId = null)
@@ -54,21 +54,20 @@ namespace FlowIoC.AssetModule.Service.Sub
             if (entry.Result is T cached)
                 return cached;
 
-            AsyncOperationHandle<T> handle;
-            if (entry.Handle.IsValid())
+            // A load already in flight for this key is waited on rather than started again, which
+            // is what the async path's in-flight map does for its own callers.
+            IAssetHandle handle = entry.Handle != null && entry.Handle.IsValid ? entry.Handle : null;
+
+            if (handle == null)
             {
-                handle = entry.Handle.Convert<T>();
-            }
-            else
-            {
-                handle = Addressables.LoadAssetAsync<T>(runtimeKey);
+                handle = _gateway.LoadAsset<T>(runtimeKey);
                 entry.Handle = handle;
                 entry.AssetType = typeof(T);
             }
 
             var result = handle.WaitForCompletion();
 
-            if (handle.Status != AsyncOperationStatus.Succeeded || result == null)
+            if (!handle.Succeeded || result == null)
             {
                 FlowLogger.LogError(SystemLogType.Asset, $"[AssetService] LoadAsset failed: {regKey}");
                 _signals.Outgoing.AssetLoadFailed.Dispatch(regKey);
@@ -77,12 +76,13 @@ namespace FlowIoC.AssetModule.Service.Sub
             }
 
             entry.Result = result;
-            return result;
+            return result is T typed ? typed : default;
         }
 
         public bool TryGetAsset<T>(object key, out T asset)
         {
             asset = default;
+
             if (!AssetKeyExtensions.TryNormalize(key, out var regKey, out _)) return false;
 
             if (_registry.Entries.TryGetValue(regKey, out var entry) && entry.Result is T typed)
@@ -110,13 +110,13 @@ namespace FlowIoC.AssetModule.Service.Sub
         {
             try
             {
-                var handle = Addressables.LoadAssetAsync<T>(runtimeKey);
+                var handle = _gateway.LoadAsset<T>(runtimeKey);
                 entry.Handle = handle;
                 entry.AssetType = typeof(T);
 
                 await handle.Task;
 
-                if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+                if (!handle.Succeeded || handle.Result == null)
                 {
                     FlowLogger.LogError(SystemLogType.Asset, $"[AssetService] Load failed: {regKey}");
                     _signals.Outgoing.AssetLoadFailed.Dispatch(regKey);

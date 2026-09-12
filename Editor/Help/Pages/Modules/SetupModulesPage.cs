@@ -124,7 +124,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "MainModule launches the game and owns MainScene. ScreenModule holds the "
                 + "ScreenManager and the layers every screen opens into. ConnectorModule is where "
                 + "the modules meet - one sub-context wiring MainModule to the main screen, and the "
-                + "main screen to the gameplay screen. GameplayModule is the game itself.");
+                + "main screen to the gameplay screen. GameplayModule is the game itself. Above them "
+                + "MainScene carries the package's own ScreenServiceRoot, PoolServiceRoot and "
+                + "AssetServiceRoot - the screens are addressable, and AssetServiceRoot is what loads them.");
             painter.Paragraph(
                 "MainScreenModule and GameplayScreenModule sit inside their parents, under "
                 + "zScreenModules. Together they make the flow: the game launches, the main screen "

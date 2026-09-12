@@ -1,100 +1,82 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using FlowIoC.AssetModule.Service;
+using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.BaseModule.Injectable.CrossContext;
 using FlowIoC.BaseModule.ViewsMediators.Utils;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace FlowIoC.ScreenModule.Service.Sub.Load
 {
+    /// <summary>
+    /// The addressable half of loading a screen. It keeps no cache of its own: the prefab comes
+    /// from IAssetService under the owner "Screen/" + manager id, so a prefab a pool also holds is
+    /// loaded once and released when the last of them lets go, and a screen registered at two
+    /// managers holds it twice. The service is resolved at the first load rather than injected:
+    /// AssetServiceRoot is optional in a scene whose screens are all Resource screens, and
+    /// initialises after ScreenServiceRoot when it is there.
+    /// </summary>
     internal class AddressableLoadSubService
     {
-        private readonly Dictionary<string, AsyncOperationHandle<GameObject>> _loadedScreenHandles = new();
-        private readonly Dictionary<string, bool> _loadingScreens = new();
+        [Inject] private InjectionBinderCrossContext _crossContext { get; set; }
+
+        private IAssetService _assets;
 
         public async Task<IScreenBody> LoadScreen(ScreenEntry entry)
         {
             string address = entry.Screen.Load.Key;
+            string owner = OwnerOf(entry);
+
+            if (!TryResolveAssets(entry))
+                return null;
 
             try
             {
-                FlowLogger.Log(SystemLogType.Screen, $"[AddressableLoadSubService.LoadScreen][address({address})]");
+                FlowLogger.Log(SystemLogType.Screen, $"[AddressableLoadSubService.LoadScreen][address({address})][owner({owner})]");
 
-                // A second load of an address already in flight used to be refused with a warning and
-                // a null screen. Nobody asked for that: the caller meant the load, and the same
-                // address is legitimately loaded twice when one screen is registered at two
-                // managers. It waits for the handle already loading instead, the way the pool's
-                // loader does.
-                if (_loadingScreens.TryGetValue(address, out bool isLoading) && isLoading
-                                                                             && _loadedScreenHandles.TryGetValue(address,
-                                                                                 out AsyncOperationHandle<GameObject> inFlight))
-                {
-                    FlowLogger.Log(SystemLogType.Screen,
-                        $"[AddressableLoadSubService.LoadScreen][address({address})][state(alreadyLoading)]");
+                GameObject prefab = await _assets.LoadAssetAsync<GameObject>(address, owner);
 
-                    await inFlight.Task;
+                // Two loads of one entry are one screen: the second await lands after the first
+                // instantiated, and a second instance would be a leak nothing holds.
+                if (entry.Loaded != null)
+                    return entry.Loaded;
 
-                    // Two loads of one entry are one screen, and a second instance of it is a leak
-                    // nothing holds. Two entries sharing an address each still get their own.
-                    if (entry.Loaded != null)
-                        return entry.Loaded;
-                }
-
-                _loadingScreens[address] = true;
-
-                if (!_loadedScreenHandles.TryGetValue(address, out AsyncOperationHandle<GameObject> handle))
-                {
-                    handle = Addressables.LoadAssetAsync<GameObject>(address);
-                    _loadedScreenHandles[address] = handle;
-                }
-
-                await handle.Task;
-
-                if (handle.Status != AsyncOperationStatus.Succeeded)
+                if (prefab == null)
                 {
                     FlowLogger.LogError(SystemLogType.Screen, $"[AddressableLoadService] Failed to load addressable asset for {address}");
-                    _loadingScreens.Remove(address);
-                    return default;
+                    return null;
                 }
 
-                GameObject screenInstance = UnityEngine.Object.Instantiate(handle.Result);
+                GameObject screenInstance = UnityEngine.Object.Instantiate(prefab);
                 screenInstance.SetActive(false);
 
                 IScreenBody screenBody = screenInstance.GetComponent<IScreenBody>();
+
                 if (screenBody == null)
                 {
                     FlowLogger.LogError(SystemLogType.Screen, $"[AddressableLoadService] IScreenBody component not found on prefab for {address}");
                     UnityEngine.Object.Destroy(screenInstance);
-                    _loadingScreens.Remove(address);
-                    return default;
+                    _assets.Release(address, owner);
+                    return null;
                 }
 
-                _loadingScreens.Remove(address);
                 entry.Loaded = screenBody;
                 return screenBody;
             }
             catch (Exception e)
             {
                 FlowLogger.LogError(SystemLogType.Screen, $"[AddressableLoadService] Error loading {address}: {e.Message}\n{e.StackTrace}");
-                _loadingScreens.Remove(address);
-                return default;
+                return null;
             }
         }
 
         public void UnloadScreen(ScreenEntry entry, IScreenBody screenBody)
         {
-            string address = entry.Screen.Load.Key;
             entry.Loaded = null;
-
-            if (_loadedScreenHandles.TryGetValue(address, out AsyncOperationHandle<GameObject> handle))
-            {
-                Addressables.Release(handle);
-                _loadedScreenHandles.Remove(address);
-            }
+            _assets?.Release(entry.Screen.Load.Key, OwnerOf(entry));
 
             // Not == null: an IScreenBody is an interface, so that compares the managed reference
             // and says a screen Unity destroyed on play mode exit is still there.
@@ -108,6 +90,25 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
             {
                 FlowLogger.LogError(SystemLogType.Screen, $"[ScreenService] Error unloading addressable screen: {e.Message}\n{e.StackTrace}");
             }
+        }
+
+        private static string OwnerOf(ScreenEntry entry) => "Screen/" + entry.Screen.ManagerId;
+
+        private bool TryResolveAssets(ScreenEntry entry)
+        {
+            if (_assets != null)
+                return true;
+
+            if (!_crossContext.HasBinding<IAssetService>())
+            {
+                FlowLogger.LogError(SystemLogType.Screen,
+                    $"[ScreenService.Load] '{entry.ViewType.Name}' is addressable and AssetServiceRoot is not in the scene. "
+                    + "Put AssetServiceRoot in the scene; it is what loads addressables.");
+                return false;
+            }
+
+            _assets = _crossContext.GetInstance<IAssetService>();
+            return true;
         }
     }
 }
