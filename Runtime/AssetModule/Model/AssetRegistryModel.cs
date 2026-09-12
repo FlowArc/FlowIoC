@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FlowIoC.AssetModule.Data;
-using UnityEngine.AddressableAssets;
 
 namespace FlowIoC.AssetModule.Model
 {
@@ -36,8 +35,7 @@ namespace FlowIoC.AssetModule.Model
         public void Clear()
         {
             foreach (var entry in Entries.Values)
-                if (entry.Handle.IsValid())
-                    Addressables.Release(entry.Handle);
+                entry.Handle?.Release();
 
             Entries.Clear();
             Groups.Clear();

@@ -141,7 +141,7 @@ public class SettingsScreenContext : ScreenSubContext<SettingsScreenView, Settin
 
 | `ScreenCVO` field | Meaning |
 |---|---|
-| `Load` | `ScreenLoadCVO.Addressable(address)` or `ScreenLoadCVO.Resource(path)`. Required — a screen without it is refused at registration, and it is the one field a Root cannot override |
+| `Load` | `ScreenLoadCVO.Addressable(address)` or `ScreenLoadCVO.Resource(path)`. Required — a screen without it is refused at registration, and it is the one field a Root cannot override. An addressable screen loads through `IAssetService`, claimed under `Screen/<managerId>`, so `AssetServiceRoot` has to be in the scene — its absence is reported at the first load, naming the screen |
 | `Layer` | The layer this screen opens in unless `OpenInLayer` overrides it |
 | `ManagerId` | The `ScreenManager` it opens in. `0` unless you have more than one |
 | `Tag` | `Default` or `GroupA`…`GroupH` — used for bulk load, hide and unload |

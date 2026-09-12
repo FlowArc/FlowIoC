@@ -21,7 +21,7 @@ namespace FlowIoC.PoolModule.Services.Sub
             {
                 if (itemConfig.IsAddressable && itemConfig is PoolItemCVO preloadAddressable)
                 {
-                    await _addressableLoadService.PreloadItemAsync(preloadAddressable.AddressablePrefab);
+                    await _addressableLoadService.PreloadItemAsync(preloadAddressable.AddressablePrefab, group);
                 }
 
                 return;
@@ -29,7 +29,7 @@ namespace FlowIoC.PoolModule.Services.Sub
 
             for (int i = 0; i < itemConfig.InitialCreateCount; i++)
             {
-                IPoolableItem newItem = await CreateItem(itemConfig);
+                IPoolableItem newItem = await CreateItem(itemConfig, group);
                 if (newItem != null)
                 {
                     _runtimeModel.AddToPassivePool(newItem, itemKey, group);
@@ -41,7 +41,7 @@ namespace FlowIoC.PoolModule.Services.Sub
         /// Builds one item from its config. An addressable prefab is loaded first, which is the one
         /// step here that waits; a direct prefab is built on the spot.
         /// </summary>
-        public async Task<IPoolableItem> CreateItem(PoolItemBaseCVO itemConfig)
+        public async Task<IPoolableItem> CreateItem(PoolItemBaseCVO itemConfig, string groupKey)
         {
             if (!TryGetPrefabConfig(itemConfig, out PoolItemCVO poolData))
                 return null;
@@ -49,7 +49,7 @@ namespace FlowIoC.PoolModule.Services.Sub
             if (!poolData.IsAddressable)
                 return CreateItemSync(itemConfig);
 
-            IPoolableItem poolableItem = await _addressableLoadService.LoadItem(poolData.AddressablePrefab);
+            IPoolableItem poolableItem = await _addressableLoadService.LoadItem(poolData.AddressablePrefab, groupKey);
             return poolableItem == null ? null : Ready(poolableItem);
         }
 

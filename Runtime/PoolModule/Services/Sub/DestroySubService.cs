@@ -27,7 +27,7 @@ namespace FlowIoC.PoolModule.Services.Sub
             {
                 if (item is PoolItemCVO poolItem && poolItem.IsAddressable)
                 {
-                    _addressableLoadService.UnloadItem(poolItem.AddressablePrefab);
+                    _addressableLoadService.UnloadItem(poolItem.AddressablePrefab, groupKey);
                 }
             }
             
@@ -57,7 +57,7 @@ namespace FlowIoC.PoolModule.Services.Sub
             
             if (itemConfig is PoolItemCVO addressableCfg && addressableCfg.IsAddressable)
             {
-                _addressableLoadService.UnloadItem(addressableCfg.AddressablePrefab);
+                _addressableLoadService.UnloadItem(addressableCfg.AddressablePrefab, tag);
             }
 
             _runtimeModel.ClearPoolByItemKey(itemKey, tag);

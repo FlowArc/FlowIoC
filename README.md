@@ -384,6 +384,7 @@ MainScene
 ├── ScreenServiceRoot          -99
 ├── PoolServiceRoot             -2
 ├── LoadingServiceRoot          -1
+├── AssetServiceRoot            -1
 ├── ------------------------
 ├── GameplayRoot                 0
 ├── ------------------------
@@ -1204,7 +1205,7 @@ provider runs its coroutine to the end before it pools anything.
 |---|---|---|
 | **ScreenModule** | `IScreenService.Open<TScreen>().Show()` | UI screens and popups: layers, pooling, addressable loading, opening and closing animations. → [docs](Runtime/ScreenModule/Documentation/ScreenModule.md) |
 | **PoolModule** | `IPoolService.Get<T>(key, parent)` | Config-driven object pooling with groups and prewarming. → [docs](Runtime/PoolModule/Documentation/PoolModule.md) |
-| **AssetModule** | `IAssetService.LoadAssetAsync<T>(key, groupId)` | Load-once Addressables layer with group-scoped release. → [docs](Runtime/AssetModule/Documentation/AssetModule.md) |
+| **AssetModule** | `IAssetService.LoadAssetAsync<T>(key, groupId)` | The one Addressables door: load-once with owner-scoped release, group loads with progress and background priority, download size and dependencies. Screens and pools load through it. → [docs](Runtime/AssetModule/Documentation/AssetModule.md) |
 | **ConsoleModule** | `FlowLogger.Log(FlowLogType.PlayerModule, …)` | A filterable in-editor console, wired into the framework itself. → [docs](Runtime/ConsoleModule/Documentation/FlowConsole.md) |
 | **ExtensionModule** | `transform.position.WithY(0f)` | Extension methods that carry no framework of their own: vector and float maths, enum flags, list conversion and UTC time formatting. |
 

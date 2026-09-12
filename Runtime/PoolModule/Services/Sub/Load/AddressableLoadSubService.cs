@@ -1,130 +1,103 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using FlowIoC.AssetModule.Service;
+using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.BaseModule.Injectable.CrossContext;
 using FlowIoC.ConsoleModule;
 using FlowIoC.PoolModule.Components;
 using FlowIoC.PoolModule.Entities;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace FlowIoC.PoolModule.Services.Sub.Load
 {
+    /// <summary>
+    /// The addressable half of building a pool item. It keeps no cache of its own: the prefab
+    /// comes from IAssetService under the owner "Pool/" + group key, so a prefab a screen also
+    /// holds is loaded once, a group's release lets it go only when nobody else holds it, and a
+    /// label preloaded silently earlier is found in memory here. The service is resolved at the
+    /// first load rather than injected: AssetServiceRoot is optional in a scene whose pools hold
+    /// only direct prefabs, and initialises after PoolServiceRoot when it is there.
+    /// </summary>
     internal class AddressableLoadSubService
     {
-        // Shared dictionaries across all instances to prevent redundant loading/unloading
-        private static readonly Dictionary<string, AsyncOperationHandle<GameObject>> _loadedHandles = new();
-        private static readonly Dictionary<string, bool> _loadingItems = new();
+        [Inject] private InjectionBinderCrossContext _crossContext { get; set; }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics()
-        {
-            foreach (var handle in _loadedHandles.Values)
-            {
-                if (handle.IsValid())
-                    Addressables.Release(handle);
-            }
-            _loadedHandles.Clear();
-            _loadingItems.Clear();
-        }
+        private IAssetService _assets;
 
-        public async Task<IPoolableItem> LoadItem(AssetReferenceSpawnableObject assetReference)
+        public async Task<IPoolableItem> LoadItem(AssetReferenceSpawnableObject assetReference, string groupKey)
         {
-            if (assetReference == null || !assetReference.RuntimeKeyIsValid())
+            if (!IsValid(assetReference, "LoadItem") || !TryResolveAssets(assetReference))
+                return null;
+
+            string owner = OwnerOf(groupKey);
+            FlowLogger.Log(SystemLogType.Pool, $"[AddressableLoadSubService.LoadItem][key({assetReference.AssetGUID})][owner({owner})]");
+
+            GameObject prefab = await _assets.LoadAssetAsync<GameObject>(assetReference, owner);
+
+            if (prefab == null)
             {
-                FlowLogger.LogError(SystemLogType.Pool, "[AddressableLoadService] Invalid AssetReference.");
+                FlowLogger.LogError(SystemLogType.Pool,
+                    $"[AddressableLoadService] Failed to load addressable asset with key: {assetReference.AssetGUID}");
                 return null;
             }
 
-            var key = assetReference.AssetGUID;
-            
-            // Prevent duplicate load attempts while one is already in progress
-            if (_loadingItems.TryGetValue(key, out bool isLoading) && isLoading)
-            {
-                // Wait until existing load operation completes
-                await _loadedHandles[key].Task;
-            }
+            GameObject instance = Object.Instantiate(prefab);
+            IPoolableItem poolableItem = instance.GetComponent<IPoolableItem>();
 
-            AsyncOperationHandle<GameObject> handle;
+            if (poolableItem != null)
+                return poolableItem;
 
-            if (_loadedHandles.TryGetValue(key, out handle))
-            {
-                FlowLogger.Log(SystemLogType.Pool, $"[AddressableLoadSubService.LoadItem][key({key})]");
-            }
-            else
-            {
-                _loadingItems[key] = true;
-                handle = assetReference.LoadAssetAsync<GameObject>();
-                _loadedHandles[key] = handle;
-            }
-
-            await handle.Task;
-
-            // Loading finished
-            if (_loadingItems.ContainsKey(key))
-                _loadingItems.Remove(key);
-
-            if (handle.Status == AsyncOperationStatus.Succeeded)
-            {
-                var instance = Object.Instantiate(handle.Result);
-                var poolableItem = instance.GetComponent<IPoolableItem>();
-                if (poolableItem != null)
-                {
-                    return poolableItem;
-                }
-                FlowLogger.LogError(SystemLogType.Pool, "[AddressableLoadService] Loaded prefab does not have an IPoolableItem component.");
-                Object.Destroy(instance);
-            }
-            else
-            {
-                FlowLogger.LogError(SystemLogType.Pool, $"[AddressableLoadService] Failed to load addressable asset with key: {key}");
-            }
-            
+            FlowLogger.LogError(SystemLogType.Pool, "[AddressableLoadService] Loaded prefab does not have an IPoolableItem component.");
+            Object.Destroy(instance);
             return null;
         }
 
-        public void UnloadItem(AssetReferenceSpawnableObject assetReference)
+        /// <summary>The claim without the instance, for a lazy item that wants its prefab in memory.</summary>
+        public async Task PreloadItemAsync(AssetReferenceSpawnableObject assetReference, string groupKey)
+        {
+            if (!IsValid(assetReference, "PreloadItemAsync") || !TryResolveAssets(assetReference))
+                return;
+
+            GameObject prefab = await _assets.LoadAssetAsync<GameObject>(assetReference, OwnerOf(groupKey));
+
+            if (prefab == null)
+                FlowLogger.LogError(SystemLogType.Pool, $"[AddressableLoadService] Failed to preload asset with key: {assetReference.AssetGUID}");
+            else
+                FlowLogger.Log(SystemLogType.Pool, $"[AddressableLoadSubService.PreloadItemAsync][key({assetReference.AssetGUID})]");
+        }
+
+        public void UnloadItem(AssetReferenceSpawnableObject assetReference, string groupKey)
         {
             if (assetReference == null || !assetReference.RuntimeKeyIsValid()) return;
-            
-            var key = assetReference.AssetGUID;
-            if (_loadedHandles.TryGetValue(key, out var handle))
-            {
-                Addressables.Release(handle);
-                _loadedHandles.Remove(key);
-            }
 
-            // Ensure we also clear any loading-state residue
-            if (_loadingItems.ContainsKey(key))
-            {
-                _loadingItems.Remove(key);
-            }
+            _assets?.Release(assetReference, OwnerOf(groupKey));
         }
 
-        public async Task PreloadItemAsync(AssetReferenceSpawnableObject assetReference)
+        private static string OwnerOf(string groupKey) => "Pool/" + groupKey;
+
+        private static bool IsValid(AssetReferenceSpawnableObject assetReference, string call)
         {
-            if (assetReference == null || !assetReference.RuntimeKeyIsValid())
+            if (assetReference != null && assetReference.RuntimeKeyIsValid())
+                return true;
+
+            FlowLogger.LogError(SystemLogType.Pool, $"[AddressableLoadService] Invalid AssetReference in {call}.");
+            return false;
+        }
+
+        private bool TryResolveAssets(AssetReferenceSpawnableObject assetReference)
+        {
+            if (_assets != null)
+                return true;
+
+            if (!_crossContext.HasBinding<IAssetService>())
             {
-                FlowLogger.LogError(SystemLogType.Pool, "[AddressableLoadService] Invalid AssetReference while preloading.");
-                return;
+                FlowLogger.LogError(SystemLogType.Pool,
+                    $"[PoolService] The pool item with key {assetReference.AssetGUID} is addressable and AssetServiceRoot is not in the scene. "
+                    + "Put AssetServiceRoot in the scene; it is what loads addressables.");
+                return false;
             }
 
-            var key = assetReference.AssetGUID;
-
-            if (_loadedHandles.ContainsKey(key)) return; // already preloaded
-
-            var handle = assetReference.LoadAssetAsync<GameObject>();
-            _loadedHandles[key] = handle;
-            await handle.Task;
-
-            if (handle.Status == AsyncOperationStatus.Succeeded)
-            {
-                FlowLogger.Log(SystemLogType.Pool, $"[AddressableLoadSubService.PreloadItemAsync][key({key})]");
-            }
-            else
-            {
-                FlowLogger.LogError(SystemLogType.Pool, $"[AddressableLoadService] Failed to preload asset with key: {key}");
-                _loadedHandles.Remove(key);
-            }
+            _assets = _crossContext.GetInstance<IAssetService>();
+            return true;
         }
     }
-} 
+}

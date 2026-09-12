@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The asset service is the package's one door to Addressables.** `ScreenModule` and `PoolModule`
+  load their addressable prefabs through `IAssetService`, each under an owner of its own -
+  `Screen/<managerId>`, `Pool/<groupKey>` - so a prefab both touch is loaded once and released when
+  the last of them lets go, and a label preloaded under a silent loading set is what the pool's
+  `GetAsync` later finds in memory. Group loads take `AssetLoadOptions`: `Progress`, the mean of
+  the loads in flight reported once per frame and `1f` at the end, and `Background`, which holds
+  `Application.backgroundLoadingPriority` at `Low` for as long as any background load runs.
+  `GetDownloadSizeAsync` and `DownloadDependenciesAsync` serve a remote catalogue; a download is
+  not a claim. Every Addressables call sits behind an internal `IAddressablesGateway`, and the
+  registry, the ownership, the in-flight sharing, the progress and the priority are proved in
+  `FlowIoC.Tests` through a fake of it. `AssetServiceRoot` is therefore required wherever a screen
+  or a pool item is addressable: the first load without it reports the Root by name, and the
+  Create Module panel puts it in the test scene it builds for a screen.
+- **The setup set boots through a Loading module.** `LoadingModule` is a Service that shows, waits
+  and times the game's loading and loads nothing itself: steps are named in `CD_LoadingSets`,
+  grouped into sets with a presentation - `Fullscreen`, `Overlay`, `Silent` - and the Command doing
+  the work reports its step by name, `_loadingService.Report("Pools").Start()/Progress/Detail/
+  Complete/Skip/Fail`. A set completes itself when every step it lists has ended, a step may stand
+  for a child set drawn on a second bar, a running set that hears nothing for `StallWarningSeconds`
+  is reported once naming the steps it waits for, and a failed set reopens when its failed step
+  reports again. `MainContext` ships the boot as one chain - `BeginLoadingCommand`, `BootStarted`
+  for what runs beside the boot, the screen preload and the pool fill in parallel,
+  `AwaitLoadingCommand`, `Started` - with `LoadingScreenModule` and `LoadingOverlayScreenModule`
+  as the two presentations and `LoadingConnectorSubContext` joining them to the service. The Help
+  window documents it as a tab on the Setup Modules page. `MainScreen`, `LoadingScreen` and
+  `LoadingOverlayScreen` ship the test scene the Create Module panel builds for a screen.
 - **A device's rows reach the Flow Console.** `Editor ▾` in the toolbar is Unity's attach-to-player
   picker, on the connection the Console and the Profiler share. A development player sends every
   row FlowLogger would have recorded - channel, flow, frame, source - and its own Unity lines with
@@ -59,6 +85,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A sub-module reads its parent's Shared assembly, never its Signals.** A screen or sub module
+  may reference the parent's `.Shared` and use what it publishes there; what a parent and its
+  child say to each other crosses a Connector like any other traffic. The Module Scanner's
+  reference check no longer allows a parent's `.Signals` on a screen or sub module, and a test
+  module is exempt from the check, because it may reference anything.
+- **A module's internal signal holder is bound with `InjectionBinder.Bind`, never across
+  contexts.** Create Module used to emit `InjectionBinderCrossContext.Bind` for both holders; the
+  generator, the shipped modules and the rule text now bind only the public holder and a
+  Service interface where another module can reach them.
+- **`IAssetService.LoadGroupByLabelAsync` and `LoadAssetsAsync` take an `AssetLoadOptions`.** The
+  old calls compile unchanged; the parameter defaults to no progress and foreground priority.
 - **A line Unity wrote carries an icon instead of a `[Unity]`, `[Compiler]` or `[Shader]` tag.**
   The Flow Console draws it on the row where the framework channels' tag begins - the Unity logo
   the Hierarchy draws beside a scene, the C# script icon, the shader icon, each at the 16 pixels
@@ -100,6 +137,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The pool's addressable loader kept its handles in statics.** Two pool services shared one
+  cache reset from a `RuntimeInitializeOnLoadMethod`, and a screen loading the same prefab loaded
+  it again. Both loaders are gone; the asset service's registry is the one cache.
 - **Model Viewer never listed a module's own models.** Only the sub contexts were walked, so a
   Service Root with two models and eleven sub services showed *Local Injected Objects* empty; what
   it did list was the cross-context binder, the same for every Root.

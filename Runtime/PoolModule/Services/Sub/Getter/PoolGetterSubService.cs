@@ -77,7 +77,7 @@ namespace FlowIoC.PoolModule.Services.Sub.Getter
             if (itemConfig.LazyLoad)
             {
                 T created = await FillLazilyAsync(itemKey, groupConfigKey, itemConfig,
-                    async () => await _load.CreateItem(itemConfig) as T);
+                    async () => await _load.CreateItem(itemConfig, groupConfigKey) as T);
 
                 if (created != null)
                     return CheckOut(created, itemKey, groupConfigKey, parent, callback);
@@ -85,7 +85,7 @@ namespace FlowIoC.PoolModule.Services.Sub.Getter
 
             if (itemConfig.IsExtendable)
             {
-                T extended = await _load.CreateItem(itemConfig) as T;
+                T extended = await _load.CreateItem(itemConfig, groupConfigKey) as T;
                 if (extended != null)
                     return CheckOut(extended, itemKey, groupConfigKey, parent, callback);
             }

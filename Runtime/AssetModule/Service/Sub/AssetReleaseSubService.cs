@@ -4,7 +4,6 @@ using FlowIoC.AssetModule.Model;
 using FlowIoC.AssetModule.Signals;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
-using UnityEngine.AddressableAssets;
 
 namespace FlowIoC.AssetModule.Service.Sub
 {
@@ -58,8 +57,7 @@ namespace FlowIoC.AssetModule.Service.Sub
                 if (_registry.Groups.TryGetValue(groupId, out var group))
                     group.Keys.Remove(regKey);
 
-            if (entry.Handle.IsValid())
-                Addressables.Release(entry.Handle);
+            entry.Handle?.Release();
 
             _registry.Entries.Remove(regKey);
         }
