@@ -56,8 +56,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         private readonly FlowTreePainter _tree;
         private readonly ModuleRoleBadge _badge = new ModuleRoleBadge();
         private readonly FlowPalette _palette = new FlowPalette();
+        private readonly ModuleTreeSearch _search = new ModuleTreeSearch();
+        private readonly ModuleTreeBar _bar = new ModuleTreeBar();
+        private readonly ModuleTreeScroll _scroll;
 
         private readonly List<ModuleTreeRowEVO<ModulePickEVO>> _entries;
+
+        private string _searchText = string.Empty;
 
         private GUIStyle _mark;
 
@@ -71,10 +76,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         /// <summary>See ROOT_LABEL. Read on use: Application.dataPath is not there when the fields are.</summary>
         private string RootPath => System.IO.Path.Combine(Application.dataPath, ROOT_LABEL);
 
-        internal ModulePicker(ModuleRegistry registry)
+        /// <summary>
+        /// <paramref name="capped"/> puts the tree in a scroll of its own past a dozen rows. Off for
+        /// the one window that draws the picker inside a box of its own height already - Create
+        /// Module, whose panel stays level with the folder preview beside it.
+        /// </summary>
+        internal ModulePicker(ModuleRegistry registry, bool capped = true)
         {
             _tree = new FlowTreePainter(_rows, LEAD_WIDTH);
             _entries = new ModuleTree().Build(new ModulePickFactory().From(registry));
+            _scroll = capped ? new ModuleTreeScroll() : null;
         }
 
         /// <summary>
@@ -93,6 +104,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             ref string parentModulePath, ref string selectedModuleName, Func<ModuleKind, bool> canHost,
             bool rootSelectable)
         {
+            List<ModuleTreeRowEVO<ModulePickEVO>> shown = _search.Filter(_entries, _searchText);
+
+            _scroll?.Begin(1 + shown.Count);
             _tree.Begin();
 
             PickedKind = ModuleKind.Main;
@@ -107,7 +121,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 selectedModuleName = string.Empty;
             }
 
-            foreach (ModuleTreeRowEVO<ModulePickEVO> entry in _entries)
+            foreach (ModuleTreeRowEVO<ModulePickEVO> entry in shown)
             {
                 ModulePickEVO pick = entry.Row;
                 int depth = entry.Depth + 1;
@@ -126,6 +140,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 selectedModuleName = TrimModuleSuffix(pick.Name);
                 PickedKind = pick.Kind;
             }
+
+            _scroll?.End();
         }
 
         /// <summary>
@@ -188,16 +204,22 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         };
 
         /// <summary>
-        /// What the bar over the picker says: its label alone until something is picked, then
-        /// the pick's folder name after it in the yellow the previews use - on the bar, where the
-        /// eye already is, rather than on a line under a list it has to scroll past.
+        /// The bar over the list, with the search over the list at its right edge: its label alone
+        /// until something is picked, then the pick's folder name after it - on the bar, where the
+        /// eye already is, rather than on a line under a list it has to scroll past. What the
+        /// search filters is the tree <see cref="Draw"/> paints: a match with everything inside
+        /// it, and the modules above a match.
         /// </summary>
-        internal string Title(string label, string parentModulePath)
+        internal void DrawBar(string label, string parentModulePath)
         {
-            if (string.IsNullOrEmpty(parentModulePath)) return label;
-
-            return label + " <color=#ffdd00ff>" + System.IO.Path.GetFileName(parentModulePath) + "</color>";
+            _searchText = _bar.Draw(label, Pick(parentModulePath), _searchText);
         }
+
+        /// <summary>What the bar says after its label: the pick's folder name, or nothing yet.</summary>
+        internal string Title(string label, string parentModulePath) => _bar.Title(label, Pick(parentModulePath));
+
+        private static string Pick(string parentModulePath) =>
+            string.IsNullOrEmpty(parentModulePath) ? null : System.IO.Path.GetFileName(parentModulePath);
 
         private string TrimModuleSuffix(string moduleName)
         {

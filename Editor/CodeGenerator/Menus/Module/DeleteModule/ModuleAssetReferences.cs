@@ -119,6 +119,34 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         }
 
         /// <summary>
+        /// The same list with the module's own scenes and prefabs in it. Delete Module leaves those
+        /// out because they go with the folder; Rename Module needs them, because a test scene
+        /// inside the module lists the module's own screen context and has to follow the name.
+        /// </summary>
+        internal IReadOnlyList<string> AssetsPointingIntoOrInside(string moduleAssetPath)
+        {
+            var found = new List<string>();
+
+            string module = Folder(moduleAssetPath);
+
+            if (string.IsNullOrEmpty(module)) return found;
+
+            foreach (string candidate in _candidates())
+            {
+                foreach (string dependency in _dependenciesOf(candidate))
+                {
+                    if (!IsInside(dependency, module)) continue;
+
+                    found.Add(candidate);
+
+                    break;
+                }
+            }
+
+            return found;
+        }
+
+        /// <summary>
         /// The module folder as a path that can only match inside it. The trailing slash is what
         /// keeps PlayerHudModule out of PlayerModule's answer.
         /// </summary>

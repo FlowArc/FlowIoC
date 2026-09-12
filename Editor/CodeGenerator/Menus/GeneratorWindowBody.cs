@@ -96,7 +96,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         /// <c>GUI.Button</c> rather than <c>GUILayout.Button</c>, because a layout button would add
         /// its own margin inside whatever rect it was given and put the arithmetic back.
         /// </summary>
-        internal bool FooterButton(EditorWindow window, string label, bool disabled, Color background)
+        internal bool FooterButton(EditorWindow window, string label, bool disabled, Color background) =>
+            FooterButton(window, new GUIContent(label), disabled, background);
+
+        /// <summary>The same button with an icon before its label - Rename Module's warning sign.</summary>
+        internal bool FooterButton(EditorWindow window, GUIContent label, bool disabled, Color background)
         {
             var rect = new Rect(BUTTON_INSET,
                 window.position.height - BUTTON_INSET - BUTTON_HEIGHT,

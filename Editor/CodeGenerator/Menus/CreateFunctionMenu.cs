@@ -312,7 +312,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         /// </summary>
         private void DisplayParentModuleSelection()
         {
-            PanelHeader(_picker.Title(PARENT_MODULE_LABEL, _parentModulePath));
+            _picker.DrawBar(PARENT_MODULE_LABEL, _parentModulePath);
 
             EditorGUILayout.BeginVertical();
 

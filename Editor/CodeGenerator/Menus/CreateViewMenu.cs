@@ -17,7 +17,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
     {
         private const string MODULES_PATH = "Modules";
 
-        private const float PANEL_HEADER_HEIGHT = 33f;
         private const string VIEW_NAME_LABEL = "View Name: ";
         private const string CREATE_VIEW_BUTTON = "Create View";
         private const string ADD_ACTION_BUTTON = "Add Action";
@@ -104,23 +103,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         /// </summary>
         private void DisplayParentModuleSelection()
         {
-            EditorGUILayout.Space(10);
-
-            var labelStyle = new GUIStyle(EditorStyles.whiteLabel)
-            {
-                alignment = TextAnchor.MiddleLeft,
-                fontSize = 12,
-                richText = true
-            };
-
-            GUI.backgroundColor = new ModulePanelTheme().Header;
-            EditorGUILayout.BeginHorizontal(new GUIStyle(EditorStyles.helpBox), GUILayout.Height(PANEL_HEADER_HEIGHT));
-            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"),
-                GUILayout.Width(35), GUILayout.Height(PANEL_HEADER_HEIGHT));
-            EditorGUILayout.LabelField(_picker.Title(PARENT_MODULE_LABEL, _parentModulePath), labelStyle,
-                GUILayout.Height(PANEL_HEADER_HEIGHT));
-            EditorGUILayout.EndHorizontal();
-            GUI.backgroundColor = Color.white;
+            _picker.DrawBar(PARENT_MODULE_LABEL, _parentModulePath);
 
             EditorGUILayout.BeginVertical();
 

@@ -221,6 +221,11 @@ Modules/
             PlayerSignals            # the module's public surface
 ```
 
+Do not rename a module in the Project window either. `Tools/FlowIoC/Rename Module` carries the name
+to everything it reaches - the assemblies and their references, the namespaces, the settings files,
+the log channel, the Root, Context and signal holders named after it, and the Roots in scenes that
+list its contexts - and a folder renamed by hand leaves every one of those pointing at the old name.
+
 `Create Command`, `Create Function`, `Create Model` and `Create View` place their files correctly on
 their own. Prefer them over writing files by hand.
 
