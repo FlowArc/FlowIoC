@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.ConsoleModule;
 using UnityEngine;
@@ -18,8 +19,8 @@ namespace FlowIoC.BaseModule.SharedData
     /// </summary>
     public class SharedDataModel : ISharedDataModel
     {
-        private readonly Filings _scriptables = new("asset", "Shared Scriptables");
-        private readonly Filings _monoBehaviours = new("component", "Shared Monos");
+        [ShowInModelViewer] private readonly Filings _scriptables = new("asset", "Shared Scriptables");
+        [ShowInModelViewer] private readonly Filings _monoBehaviours = new("component", "Shared Monos");
 
         public T GetScriptable<T>() where T : ScriptableObject => GetScriptable<T>(typeof(T).Name);
 
@@ -85,7 +86,7 @@ namespace FlowIoC.BaseModule.SharedData
 
             private readonly string _kind;
             private readonly string _slot;
-            private readonly Dictionary<string, List<Filing>> _byName = new();
+            [ShowInModelViewer] private readonly Dictionary<string, List<Filing>> _byName = new();
 
             public Filings(string kind, string slot)
             {
