@@ -72,5 +72,40 @@ namespace FlowIoC.Tests
             Assert.IsFalse(_intake.IsCompilerMessage("Damage (12,5): applied"));
             Assert.IsFalse(_intake.IsCompilerMessage(null));
         }
+
+        private const string ECHO = "<i>AndroidPlayer \"Pixel 7\"</i> Shared asset is not filed on any Root!";
+
+        /// <summary>
+        /// Unity's own forwarding re-logs a player's line in the editor as the player's name in
+        /// italics and the text, with no trace. While a FlowIoC player is attached the same row
+        /// has already arrived over our own message, so this copy is the echo.
+        /// </summary>
+        [Test]
+        public void A_forwarded_player_line_is_an_echo_while_a_FlowIoC_player_is_attached()
+        {
+            Assert.IsTrue(_intake.IsPlayerEcho(ECHO, "", flowPlayerPresent: true));
+            Assert.IsTrue(_intake.IsPlayerEcho(ECHO, null, flowPlayerPresent: true));
+        }
+
+        /// <summary>An older player, or an app without FlowIoC: the forwarded line is the only copy.</summary>
+        [Test]
+        public void The_same_line_is_kept_when_no_FlowIoC_player_is_attached()
+        {
+            Assert.IsFalse(_intake.IsPlayerEcho(ECHO, "", flowPlayerPresent: false));
+        }
+
+        [Test]
+        public void A_line_with_a_trace_is_the_editors_own_and_kept()
+        {
+            Assert.IsFalse(_intake.IsPlayerEcho(ECHO, "Probe:Start() (at Assets/Probe.cs:3)", flowPlayerPresent: true));
+        }
+
+        [Test]
+        public void A_line_that_does_not_open_with_a_player_name_is_kept()
+        {
+            Assert.IsFalse(_intake.IsPlayerEcho("<i>italic</i> but no player", "", flowPlayerPresent: true));
+            Assert.IsFalse(_intake.IsPlayerEcho("plain", "", flowPlayerPresent: true));
+            Assert.IsFalse(_intake.IsPlayerEcho(null, "", flowPlayerPresent: true));
+        }
     }
 }

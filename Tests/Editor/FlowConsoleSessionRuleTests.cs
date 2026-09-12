@@ -57,5 +57,42 @@ namespace FlowIoC.Tests
             Assert.AreEqual("Play mode", _rule.Label(Log(true)));
             Assert.AreEqual("Edit mode", _rule.Label(Log(false)));
         }
+
+        private static ConsoleLog PlayerLog(string player)
+        {
+            return new ConsoleLog {InPlayMode = true, Player = player};
+        }
+
+        /// <summary>
+        /// A device's rows and the editor's own interleave in one list, and the line is what says
+        /// which block is which. The first row from a player opens a session the same way the
+        /// first row of play mode does.
+        /// </summary>
+        [Test]
+        public void The_first_row_from_a_player_starts_a_session()
+        {
+            Assert.IsTrue(_rule.StartsSession(Log(false), PlayerLog("Pixel 7")));
+            Assert.IsTrue(_rule.StartsSession(PlayerLog("Pixel 7"), Log(true)));
+        }
+
+        [Test]
+        public void Two_rows_from_one_player_do_not()
+        {
+            Assert.IsFalse(_rule.StartsSession(PlayerLog("Pixel 7"), PlayerLog("Pixel 7")));
+        }
+
+        /// <summary>A local row carries no player, whether that reads as null or as empty.</summary>
+        [Test]
+        public void No_player_and_an_empty_player_are_the_same_side()
+        {
+            Assert.IsFalse(_rule.StartsSession(new ConsoleLog {InPlayMode = true, Player = null},
+                new ConsoleLog {InPlayMode = true, Player = ""}));
+        }
+
+        [Test]
+        public void The_line_names_the_player_it_is_opening()
+        {
+            Assert.AreEqual("Pixel 7", _rule.Label(PlayerLog("Pixel 7")));
+        }
     }
 }

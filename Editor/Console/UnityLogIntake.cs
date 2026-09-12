@@ -60,6 +60,24 @@ namespace FlowIoC.Editor.Console
             new(@"^Shader\s+(error|warning)\s+in\s+'", RegexOptions.Compiled);
 
         /// <summary>
+        /// Whether the message is Unity's own forwarding of a player's line. The receiver behind
+        /// Unity's Console re-logs one as the player's kind and name in italics, then the text,
+        /// with no stack trace of its own. While a FlowIoC player is attached that row has already
+        /// arrived over our message with its channel and flow, so this copy is dropped; when no
+        /// such player is attached it is the only copy and is kept.
+        /// </summary>
+        public bool IsPlayerEcho(string message, string stackTrace, bool flowPlayerPresent)
+        {
+            if (!flowPlayerPresent) return false;
+            if (!string.IsNullOrEmpty(stackTrace)) return false;
+
+            return message != null && PlayerEcho.IsMatch(message);
+        }
+
+        /// <summary>What Unity's receiver writes: <i>PlayerType "name"</i>, a space, the line.</summary>
+        private static readonly Regex PlayerEcho = new(@"^<i>[^<]*""</i> ", RegexOptions.Compiled);
+
+        /// <summary>
         /// Folds Exception and Assert onto Error. The console offers three filters, so a kind
         /// outside them would answer to none and could neither be hidden nor found.
         /// </summary>

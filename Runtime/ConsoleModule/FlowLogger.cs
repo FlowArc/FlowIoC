@@ -40,6 +40,9 @@ namespace FlowIoC.ConsoleModule
         private static readonly FlowStackFrameFilter StackFrames = new();
         private static readonly FlowConsoleChannelRule ChannelRule = new();
 
+        /// <summary>The player's end of the console. Installed only in a development player.</summary>
+        internal static readonly PlayerLogSender Sender = new();
+
         private static int _flowCounter;
         private static int _currentFlowId;
         private static int _currentParentFlowId;
@@ -522,18 +525,19 @@ namespace FlowIoC.ConsoleModule
         private static void WriteError(string channel, SystemLogType? systemLogType, string message,
             string unityMessage, UnityEngine.Object context, Type blame = null)
         {
-#if UNITY_EDITOR
-            var log = CreateLogEntry(message, LogType.Error, blame);
-            log.Channel = channel;
+            if (IsRecording)
+            {
+                var log = CreateLogEntry(message, LogType.Error, blame);
+                log.Channel = channel;
 
-            if (systemLogType.HasValue)
-                log.SystemLogType = systemLogType.Value;
+                if (systemLogType.HasValue)
+                    log.SystemLogType = systemLogType.Value;
 
-            if (Settings.TryGetLogType(channel, out var typeInfo))
-                log.LogColor = typeInfo.LogColor;
+                if (Settings.TryGetLogType(channel, out var typeInfo))
+                    log.LogColor = typeInfo.LogColor;
 
-            AppendLog(log);
-#endif
+                Record(log);
+            }
 
             // Unlike an ordinary log, an error always reaches Unity's console - it is not gated
             // on SendLogsToUnityConsole. The flag is raised anyway, because the editor bridge
@@ -616,13 +620,6 @@ namespace FlowIoC.ConsoleModule
         // ======================== External intake ========================
 
         /// <summary>
-        /// The door Unity's own logs come in through. It carries no [Conditional] attribute and
-        /// consults no setting, because a developer who turned logging off - or never defined
-        /// ENABLE_LOG - still has to be able to read Unity's console in this window. That is the
-        /// whole promise of Flow Console being the console rather than a second one.
-        /// Only the editor bridge calls it.
-        /// </summary>
-        /// <summary>
         /// The channel each door writes to. Flow does not come through here at all - it is the
         /// door the framework and the game use - so it answers with the Unity channel the way any
         /// unrecognised source does, rather than being given a channel of its own to sit in.
@@ -637,10 +634,23 @@ namespace FlowIoC.ConsoleModule
             }
         }
 
+        /// <summary>
+        /// The door Unity's own logs come in through. It carries no [Conditional] attribute and
+        /// consults no setting, because a developer who turned logging off - or never defined
+        /// ENABLE_LOG - still has to be able to read Unity's console in this window. That is the
+        /// whole promise of Flow Console being the console rather than a second one. The editor
+        /// bridge calls it for the editor's Unity, and PlayerLogSender for a player's.
+        /// </summary>
         public static void AddExternalLog(LogSource source, LogType logType, string message,
             string stackTrace, string filePath, int lineNumber)
         {
-#if UNITY_EDITOR
+            if (!IsRecording) return;
+
+            // Exception and Assert fold onto Error here, for both doors: the console offers three
+            // filters, and a kind outside them would answer to none.
+            if (logType == LogType.Exception || logType == LogType.Assert)
+                logType = LogType.Error;
+
             SystemLogType systemLogType = ChannelForSource(source);
 
             string channel = SystemChannelName(systemLogType);
@@ -679,11 +689,30 @@ namespace FlowIoC.ConsoleModule
             if (string.IsNullOrEmpty(log.SourceFilePath) && !string.IsNullOrEmpty(stackTrace))
                 FillSourceFromTrace(log, stackTrace);
 
+            Record(log);
+        }
+
+        /// <summary>
+        /// The door a player's rows come in through, from the editor bridge. The row was built on
+        /// the device, so what is filled here is what only this end has: the channel's colour
+        /// from the editor's settings, the source out of the trace when the device could not
+        /// name it, and the collapse key.
+        /// </summary>
+        public static void AddPlayerLog(ConsoleLog log)
+        {
+#if UNITY_EDITOR
+            if (log == null) return;
+
+            if (Settings.TryGetLogType(log.Channel, out var typeInfo))
+                log.LogColor = typeInfo.LogColor;
+
+            if (string.IsNullOrEmpty(log.SourceFilePath) && !string.IsNullOrEmpty(log.StackTrace))
+                FillSourceFromTrace(log, log.StackTrace);
+
             AppendLog(log);
 #endif
         }
 
-#if UNITY_EDITOR
         private static void FillSourceFromTrace(ConsoleLog log, string stackTrace)
         {
             string[] lines = stackTrace.Split('\n');
@@ -711,7 +740,37 @@ namespace FlowIoC.ConsoleModule
                 log.SourceLineNumber = lineNumber;
             }
         }
+
+        // ======================== Recording ========================
+
+        /// <summary>
+        /// Whether a row built now goes anywhere. In the editor it always does; in a development
+        /// player only while an editor is attached, so an unattached device does not pay to build
+        /// entries nobody reads; a release player never does.
+        /// </summary>
+        private static bool IsRecording
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return true;
+#elif DEVELOPMENT_BUILD
+                return Sender.IsConnected;
+#else
+                return false;
 #endif
+            }
+        }
+
+        /// <summary>The one place a finished row goes: the editor's list, or the attached editor.</summary>
+        private static void Record(ConsoleLog log)
+        {
+#if UNITY_EDITOR
+            AppendLog(log);
+#elif DEVELOPMENT_BUILD
+            Sender.Send(log);
+#endif
+        }
 
         // ======================== Internal ========================
 
@@ -727,23 +786,24 @@ namespace FlowIoC.ConsoleModule
             // lines gets it rather than only the ones a caller passed a profile to.
             message = ResolveMessage(SystemChannelName(systemLogType), message);
 
-#if UNITY_EDITOR
-            var log = CreateLogEntry(message, logType, blame, captureSource, forceCapture);
-            log.SystemLogType = systemLogType;
-
-            if (!string.IsNullOrEmpty(filePath))
+            if (IsRecording)
             {
-                log.SourceFilePath = filePath;
-                log.SourceLineNumber = lineNumber;
+                var log = CreateLogEntry(message, logType, blame, captureSource, forceCapture);
+                log.SystemLogType = systemLogType;
+
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    log.SourceFilePath = filePath;
+                    log.SourceLineNumber = lineNumber;
+                }
+
+                log.Channel = SystemChannelName(systemLogType);
+
+                if (Settings.TryGetLogType(log.Channel, out var typeInfo))
+                    log.LogColor = typeInfo.LogColor;
+
+                Record(log);
             }
-
-            log.Channel = SystemChannelName(systemLogType);
-
-            if (Settings.TryGetLogType(log.Channel, out var typeInfo))
-                log.LogColor = typeInfo.LogColor;
-
-            AppendLog(log);
-#endif
 
             ForwardToUnityConsole(SystemChannelName(systemLogType), message, logType);
         }
@@ -753,20 +813,20 @@ namespace FlowIoC.ConsoleModule
         {
             if (!Settings.IsLoggingEnabled) return;
 
-#if UNITY_EDITOR
-            var log = CreateLogEntry(message, logType, blame);
-            log.Channel = channel;
+            if (IsRecording)
+            {
+                var log = CreateLogEntry(message, logType, blame);
+                log.Channel = channel;
 
-            if (Settings.TryGetLogType(channel, out var typeInfo))
-                log.LogColor = typeInfo.LogColor;
+                if (Settings.TryGetLogType(channel, out var typeInfo))
+                    log.LogColor = typeInfo.LogColor;
 
-            AppendLog(log);
-#endif
+                Record(log);
+            }
 
             ForwardToUnityConsole(channel, message, logType);
         }
 
-#if UNITY_EDITOR
         private static ConsoleLog CreateLogEntry(string message, LogType logType, Type blame = null,
             bool captureSource = true, bool forceCapture = false)
         {
@@ -815,6 +875,7 @@ namespace FlowIoC.ConsoleModule
             }
         }
 
+#if UNITY_EDITOR
         /// <summary>
         /// Keeps the console's own list to the size the settings ask for. Trimmed in one block once
         /// it has run past the limit rather than one entry per log, because dropping the front of a
@@ -833,6 +894,7 @@ namespace FlowIoC.ConsoleModule
 
             Trimmer.Trim(Logs, maxLogCount);
         }
+
 #endif
 
         private static void ForwardToUnityConsole(string channel, string message, LogType logType)
@@ -918,7 +980,6 @@ namespace FlowIoC.ConsoleModule
 
         // ======================== Source Info ========================
 
-#if UNITY_EDITOR
         private static void GetSourceInfo(ConsoleLog log)
         {
             string rawTrace = StackTraceUtility.ExtractStackTrace();
@@ -1007,6 +1068,5 @@ namespace FlowIoC.ConsoleModule
 
             log.StackTrace = filteredTrace.ToString();
         }
-#endif
     }
 }
