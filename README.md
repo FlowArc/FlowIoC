@@ -373,8 +373,8 @@ can be and `100` is as late.
 | 100 | `MainRoot` | The entry point. Its `Launch()` dispatches the first signal, last of all. |
 
 The shipped Roots use `-99` for the screen service, `-2` for the pool service, `-1` for
-the asset service, `0` for gameplay and input, `1` for the camera system. Inside a band
-the exact number rarely matters - two modules that never touch can both sit at `0`.
+the loading and asset services, `0` for gameplay and input, `1` for the camera system. Inside a
+band the exact number rarely matters - two modules that never touch can both sit at `0`.
 
 `MainScene` is authored in the same order, with separators between the bands, so the
 Hierarchy shows the boot order without opening an inspector:
@@ -383,6 +383,7 @@ Hierarchy shows the boot order without opening an inspector:
 MainScene
 ├── ScreenServiceRoot          -99
 ├── PoolServiceRoot             -2
+├── LoadingServiceRoot          -1
 ├── ------------------------
 ├── GameplayRoot                 0
 ├── ------------------------
@@ -414,6 +415,51 @@ protected override void BeforeCreateContext()
 
 The reparenting is not decoration: Unity marks only root level objects as do not destroy, so a
 Root authored under something else has to detach itself before it can survive.
+
+### The boot, and the Loading module
+
+`MainContext` binds the boot as one chain, and the setup set's `LoadingModule` is what draws it.
+The module shows, waits and times; it loads nothing. Whoever does the loading - the pool service
+filling its groups, the screen service preloading its screens, a game module fetching its data -
+reports a **step** to `ILoadingService`, and a **set** of steps declared in `CD_LoadingSets` ends
+when every step it lists has completed, skipped or failed.
+
+```csharp
+CommandBinder.Bind(_internalSignals.Launch)
+    .ToSequence<LogStartupCommand>()
+    .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)                // the screen goes up
+    .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.BootStarted)   // beside the boot: SDKs, a profile fetch
+    .ToParallel<PreloadScreensCommand>()                                    // reports Screens
+    .ToSequence<FillPoolsCommand>()                                         // reports Pools - Skip when there are no groups
+    .ToSequence<AwaitLoadingCommand>(MainConstants.BOOT_SET)                // waits for the whole set
+    .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.Started);      // after the player is in: the main screen, heavy preloads
+```
+
+A Command reports by step name and nothing else:
+
+```csharp
+[Inject] private ILoadingService _loadingService { get; set; }
+
+ILoadingStep step = _loadingService.Report("Pools");
+step.Start();
+await _poolService.InitializeGroupAsync("Match");
+step.Progress(0.5f);
+step.Complete();            // or Skip(), or Fail("no network")
+```
+
+Which set a step belongs to - and so whether the boot waits for it - is the asset's business.
+`CD_LoadingSets` on `LoadingServiceRoot`'s adapter lists every set with its presentation
+(`Fullscreen`, `Overlay` or `Silent`), its `StallWarningSeconds`, and its steps with a weight and
+a message; moving `ClanData` from `Boot` to a silent `PostBoot` opens the main screen without it,
+and no Command changes. A step may stand for a child set, which the fullscreen screen draws on a
+second bar while it runs. A running set that hears nothing for its `StallWarningSeconds` is
+reported once, naming the steps it is waiting for, so a Root missing from the scene shows up as a
+warning rather than a bar that never moves.
+
+The loading screen and the overlay are two screen modules under `LoadingModule`, joined to the
+service by `LoadingConnectorSubContext` in the setup `ConnectorModule`; the screen's retry button
+reaches `MainSignals.Incoming.RetryBoot` the same way and the boot runs again. The Help window's
+*Loading* page walks through sets, the reporting API and the two fan-out points.
 
 ---
 

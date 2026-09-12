@@ -100,7 +100,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         protected override string BodyHeadline => "A new project starts on a flow that already runs.";
 
         protected override string BodyTagline =>
-            "A project with no modules of its own gets these six the first time the Editor opens on "
+            "A project with no modules of its own gets these nine the first time the Editor opens on "
             + "it. There is no button to press and no dialog to answer, so the wiring is something "
             + "to read rather than something to be told.";
 
@@ -118,6 +118,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "zScreenModules. Together they make the flow: the game launches, the main screen "
                 + "opens, picking Easy, Medium or Hard closes it and opens the gameplay screen with "
                 + "the difficulty carried as a signal parameter.");
+            painter.Paragraph(
+                "LoadingModule owns the boot's bar: MainContext begins the Boot set, "
+                + "PreloadScreensCommand and FillPoolsCommand report into it, and the main screen "
+                + "opens when the set completes. LoadingScreenModule and LoadingOverlayScreenModule "
+                + "under it are the two presentations, and LoadingConnectorSubContext in "
+                + "ConnectorModule joins them to the service. The Loading page has the rest.");
 
             painter.Space();
             painter.SubHeading("Installed once, and only once");
