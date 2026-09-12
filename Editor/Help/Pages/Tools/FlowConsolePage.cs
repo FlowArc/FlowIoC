@@ -41,6 +41,20 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "the frame and the gap since the row above. Pinning a row keeps it through the "
                 + "filters, the trim and every automatic clear.");
 
+            painter.SubHeading("A device's rows arrive too");
+            painter.Paragraph(
+                "Editor in the toolbar is Unity's own attach-to-player picker, the one the Console "
+                + "and the Profiler draw. Pick a development player and every row it would have "
+                + "recorded arrives here with its channel, its flow, its frame and its source, and "
+                + "the player's own Unity lines - an exception, a native warning - come with their "
+                + "trace. A line is drawn where the device's rows begin and each row carries a dim "
+                + "tag with the device's name after the time.");
+            painter.Note(
+                "Important: two steps fail silently when skipped. The build must be a Development "
+                + "Build - a release player never connects. And the flow is visible only when the "
+                + "build's scripting defines carry ENABLE_LOG, the same define the editor needs; "
+                + "without it only errors and Unity's own lines arrive from the device.");
+
             painter.SubHeading("The channels you switch off are yours");
             painter.Paragraph(
                 "Clicking a channel in the Filters panel writes EditorPrefs, not CD_FlowConsole. "

@@ -103,6 +103,7 @@ console you keep open.
 | `Clear ▾` | Empties the list. The arrow holds **Clear on Play**, **Clear on Recompile** and **Clear on Build**. |
 | `Collapse` | Folds rows that say the same thing from the same place onto one line with a count. The row keeps the place of its first occurrence, so the list does not reorder itself while you read it. |
 | `Error Pause` | Pauses play mode on the next error, exception or assert. |
+| `Editor ▾` | Unity's attach-to-player picker, the same one the Console and the Profiler draw. Pick a development player and its rows arrive here - see [Attaching a device](#attaching-a-device). |
 | `Flow` | Groups the rows into the flows they belong to. See below. |
 | `Pinned` | Shows only the rows you pinned. |
 | `Timing` | Leads each row with the frame it was written in and the gap since the row above, instead of the clock. |
@@ -196,6 +197,36 @@ A silenced command contributes no node — `[HideCommandLog]` suppresses the fra
 lines and there is nothing left to make one from — so a log you wrote inside it sits
 directly under the flow's root. Inventing a node for a command somebody asked to hide
 would undo the request.
+
+### Attaching a device
+
+Pick a running development player under `Editor ▾` — the same connection Unity's Console
+and the Profiler attach through. From then on every row the player would have recorded
+arrives in this window with what it had on the device: the channel, the flow it belongs
+to, the frame, and the source file and line as far as the build's stack traces carry
+them. The player's own Unity lines come too — an exception, a native warning, a third
+party's `Debug.Log` — on the `Unity` channel with their trace, so double-clicking one
+opens the file.
+
+A line is drawn where the device's rows begin, named for the device, and each row carries
+a dim tag after the time — `13:05:23:088 · Android Pixel 7 |` — so editor rows and device
+rows that interleave still say which is which. In Flow mode a device's flows are grouped
+on their own, never under an editor flow that happens to share the number.
+
+Two setup steps fail silently when skipped. The build must be a **Development Build**: a
+release player never connects and sends nothing. And the flow is visible only when the
+build's scripting defines carry **`ENABLE_LOG`**, the same define the editor needs;
+without it `FlowLogger.Log` and `LogWarning` compile out of the player and only errors
+and Unity's own lines arrive.
+
+Unity's own forwarding — the `Player Logging` toggle in Unity's Console — keeps working
+beside this. While a FlowIoC player is attached its copy of each line is dropped here,
+because the row has already arrived with its channel and flow; attached to a player
+without FlowIoC, that copy is the only one and is kept.
+
+Rows go one message each with `TrySend`, so a buffer the editor has not drained drops
+rows rather than stalling the game. The connection is single: one player at a time, the
+one the Profiler is on.
 
 ---
 
@@ -464,9 +495,11 @@ code uses the `int` overloads with a `FlowLogType` constant.
 
 ### Logs are missing their stack trace on device
 
-`DeepAnalysis` captures class and stack information in the Editor only; on a device
-no `ConsoleLog` object is created for it. For on-device diagnosis, put the context
-you need into the message itself.
+A device builds a row only while an editor is attached to it (see [Attaching a
+device](#attaching-a-device)), and then only with what the build's stack traces carry: a
+Mono development build names the file and the line, an IL2CPP build needs its symbols.
+Unattached, no `ConsoleLog` is built at all. For on-device diagnosis without an editor,
+put the context you need into the message itself.
 
 ### The console is slow with a long session
 

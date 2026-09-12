@@ -54,6 +54,12 @@ namespace FlowIoC.Editor.Console
                 GUILayout.Label(_selectedLog.Message, _detailRichTextStyle);
                 EditorGUILayout.Space(4);
 
+                if (!string.IsNullOrEmpty(_selectedLog.Player))
+                {
+                    EditorGUILayout.LabelField("Player:", _selectedLog.Player);
+                    EditorGUILayout.Space(4);
+                }
+
                 if (_settings != null && _settings.DeepAnalysis)
                 {
                     bool hasClassInfo = !string.IsNullOrEmpty(_selectedLog.SourceClassName);

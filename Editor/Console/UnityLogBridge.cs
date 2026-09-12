@@ -62,6 +62,10 @@ namespace FlowIoC.Editor.Console
             // strength of the wording alone would lose that error altogether.
             if (Intake.IsShaderMessage(condition) && ShaderLogBridge.Intake.WasReported(condition)) return;
 
+            // Unity's forwarding of a player's line, while that player's rows are already coming
+            // in over FlowIoC's own message with their channel and flow.
+            if (Intake.IsPlayerEcho(condition, stackTrace, PlayerLogBridge.IsFlowPlayerPresent)) return;
+
             FlowLogger.AddExternalLog(LogSource.Unity, Intake.ToLogType(type), condition,
                 stackTrace, null, 0);
         }

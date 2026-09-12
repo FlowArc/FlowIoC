@@ -64,6 +64,13 @@ namespace FlowIoC.ConsoleModule
         public bool InPlayMode;
 
         /// <summary>
+        /// The player this row came from over the player connection, by the name it gave when it
+        /// connected. Empty for a row the editor wrote itself. The console draws a line wherever
+        /// this changes, the way it does when play mode begins, and a dim tag on every row.
+        /// </summary>
+        public string Player;
+
+        /// <summary>
         /// The full name of the type this diagnostic is about, when it knows. Double-clicking
         /// the log opens this type's script even when the object was never on the stack - an
         /// asynchronous release, or a resolver noticing a step later than it happened.

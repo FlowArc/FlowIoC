@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A device's rows reach the Flow Console.** `Editor ▾` in the toolbar is Unity's attach-to-player
+  picker, on the connection the Console and the Profiler share. A development player sends every
+  row FlowLogger would have recorded - channel, flow, frame, source - and its own Unity lines with
+  their trace, over FlowIoC's own message (`PlayerLogEnvelope`, JSON, one row per message, sent
+  with `TrySend`); `PlayerLogBridge` receives them and `FlowLogger.AddPlayerLog` files them, the
+  device's flow ids moved out of the editor's range. A session line names the device where its rows
+  begin, each row carries a dim tag with its name, and the detail panel says it. While a FlowIoC
+  player is attached, Unity's own forwarding of the same lines is dropped as an echo. `ConsoleLog`
+  gains `Player`; `FlowLogger.AddExternalLog` now serves the player's Unity lines as well as the
+  editor's. Needs a Development Build, and `ENABLE_LOG` in the build's defines to see the flow.
 - **A shared asset is filed once and read anywhere.** `RootAdapter` has a third map, *Shared
   Scriptables*: a ScriptableObject other modules read is filed there, on one Root, and any
   injectable reads it through `ISharedDataModel.GetScriptable<T>()` - the adapter's verb, the

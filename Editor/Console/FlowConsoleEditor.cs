@@ -5,7 +5,9 @@ using System.IO;
 using FlowIoC.ConsoleModule;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
+using UnityEngine.Networking.PlayerConnection;
 
 namespace FlowIoC.Editor.Console
 {
@@ -127,6 +129,14 @@ namespace FlowIoC.Editor.Console
 
 
         private readonly FlowConsoleSessionRule _sessionRule = new FlowConsoleSessionRule();
+
+        /// <summary>
+        /// The player connection's picker, the same one Unity's Console and the Profiler draw.
+        /// Taken from the window on enable and disposed on disable, because it registers itself
+        /// with the profiler driver for as long as it lives.
+        /// </summary>
+        private IConnectionState _connectionState;
+
         private GUIStyle _sessionSeparatorStyle;
         private const float SessionSeparatorHeight = 18f;
         private static readonly Color SessionSeparatorColor = new Color(0.78f, 0.78f, 0.78f, 0.9f);
@@ -298,6 +308,7 @@ namespace FlowIoC.Editor.Console
             CD_FlowConsole.OnSettingsValidated += OnSettingsValidated;
 
             _settings = FlowLogger.Settings;
+            _connectionState = PlayerConnectionGUIUtility.GetConnectionState(this);
 
             _richTextStyle = new GUIStyle();
             _richTextStyle.richText = true;
@@ -437,6 +448,9 @@ namespace FlowIoC.Editor.Console
             FlowLogger.OnLogAdded -= OnLogAdded;
             FlowLogger.OnLogsCleared -= OnLogsCleared;
             CD_FlowConsole.OnSettingsValidated -= OnSettingsValidated;
+
+            _connectionState?.Dispose();
+            _connectionState = null;
         }
 
         private void OnGUI()
@@ -524,6 +538,11 @@ namespace FlowIoC.Editor.Console
                 GUILayout.Width(80));
             if (errorPause != _state.ErrorPause)
                 _state.ErrorPause = errorPause;
+
+            // Unity's own attach-to-player picker, where Unity's console puts it. A development
+            // player picked here sends its rows over the same connection, through PlayerLogSender.
+            if (_connectionState != null)
+                PlayerConnectionGUILayout.ConnectionTargetSelectionDropdown(_connectionState, EditorStyles.toolbarDropDown);
 
             var flowLabel = new GUIContent("Flow",
                 "Group the rows into the flows they belong to. A flow started from inside another sits under it.");
@@ -1696,6 +1715,10 @@ namespace FlowIoC.Editor.Console
                 dateRich = clock + Dim(milliseconds);
             }
 
+            // Where the row came from, when it came from a device. Part of the prefix rather than
+            // the message, so the message stays plain text for the search and the collapse key.
+            string playerTag = string.IsNullOrEmpty(consoleLog.Player) ? "" : " · " + consoleLog.Player;
+
             float textWidth = rect.width - (textLeft - rect.x) - 4f;
 
             // The count of a folded row, right-aligned so the messages stay lined up under each
@@ -1752,10 +1775,10 @@ namespace FlowIoC.Editor.Console
                 // The prefix is its own label so the message can keep being measured as plain
                 // text. A colour tag inside the drawn string would move every character along and
                 // the search highlight is placed by character index.
-                float prefixWidth = _richTextStyle.CalcSize(new GUIContent(date + " | ")).x;
+                float prefixWidth = _richTextStyle.CalcSize(new GUIContent(date + playerTag + " | ")).x;
                 var prefixRect = new Rect(lineRect.x, lineRect.y, prefixWidth, lineRect.height);
 
-                GUI.Label(prefixRect, dateRich + " | ", _richTextStyle);
+                GUI.Label(prefixRect, dateRich + Dim(playerTag) + " | ", _richTextStyle);
 
                 // The pin sits between the time and the message, which is where the eye already
                 // travels along the row. Drawn at the size the texture was authored for - scaling
