@@ -849,6 +849,54 @@ namespace FlowIoC.ConsoleModule
             return false;
         }
 
+        /// <summary>
+        /// Renames a channel and keeps everything else about it - the number every line already
+        /// written carries, the colour, the default visibility, the profile. Rename Module calls
+        /// this for a module's channel; removing and adding instead would hand the module a new
+        /// number and lose whatever somebody chose for it.
+        ///
+        /// A change of case only is a rename of the same channel, because names are compared
+        /// case-insensitively everywhere else in here.
+        /// </summary>
+        public bool RenameLogType(string oldName, string newName)
+        {
+            if (string.IsNullOrWhiteSpace(oldName) || string.IsNullOrWhiteSpace(newName)) return false;
+
+            FlowConsoleLogTypeCVO found = null;
+
+            foreach (var logType in _logTypes)
+            {
+                bool isOld = string.Equals(logType.Name, oldName, StringComparison.OrdinalIgnoreCase);
+
+                if (!isOld && string.Equals(logType.Name, newName, StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.LogWarning($"Log type '{newName}' already exists.");
+                    return false;
+                }
+
+                if (isOld) found = logType;
+            }
+
+            if (found == null) return false;
+
+            if (found.IsMandatory)
+            {
+                Debug.LogWarning($"Cannot rename mandatory log type: {found.Name}");
+                return false;
+            }
+
+            found.Name = newName;
+            _logTypeByValue = null;
+            _logTypeByName = null;
+            InvalidateProfileCache();
+
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+
+            return true;
+        }
+
         private Dictionary<string, FlowLogProfileData> _profileByName;
         private Dictionary<string, FlowLogProfile> _resolvedProfileByLogType;
 
