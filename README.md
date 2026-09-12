@@ -1566,9 +1566,12 @@ with its own Context:
 - **`zTestModules/`** — an isolated test scene and context, marked `IsTest` so it
   never starts in a real build.
 
-A nested module may use the types of the module it sits in — a screen module reaching
-its parent's System, for instance. The direction is one way: a module never knows what
-its own `z` folders contain, so the parent's assembly never references theirs.
+A nested module may read the data of the module it sits in — a screen module referencing
+its parent's `.Shared` assembly for a published enum, for instance — and nothing else of
+it: not its Runtime assembly, and not its `.Signals`. What a parent and its child say to
+each other crosses a Connector like any other traffic. The direction is one way as well: a
+module never knows what its own `z` folders contain, so the parent's assembly never
+references theirs.
 
 `zTestModules` is exempt from all of it. Everything there is test code, so it may
 reference any module in the project; in exchange, every script in it is wrapped in

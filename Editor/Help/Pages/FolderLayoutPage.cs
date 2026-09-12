@@ -48,7 +48,7 @@ namespace FlowIoC.Editor.Help.Pages
                     new HelpTreeNode("Enums", "enumerations the shared data needs")),
                 new HelpTreeNode("Signals", "Modules.Player.Signals - PlayerSignals, the module's whole public surface")),
             new HelpTreeNode("zScreenModules", "screens of this module - each one a module of its own"),
-            new HelpTreeNode("zSubModules", "sub modules, which may use their parent's types"),
+            new HelpTreeNode("zSubModules", "sub modules, which may read their parent's Shared data"),
             new HelpTreeNode("zTestModules", "test code, wrapped in #if UNITY_EDITOR, may reference anything"));
 
         protected override string BodyHeadline => "A module is a folder with an assembly definition of its own.";
@@ -73,8 +73,11 @@ namespace FlowIoC.Editor.Help.Pages
 
             painter.SubHeading("The direction of a sub module");
             painter.Paragraph(
-                "A screen or a sub module may use its parent's types. The direction is one way: a "
-                + "module never knows what sits in its own zScreenModules or zSubModules.");
+                "A screen or a sub module may reference its parent's .Shared assembly and use what the "
+                + "parent publishes there. It never references the parent's .Signals assembly: what a "
+                + "parent and its child say to each other crosses a Connector like any other traffic. "
+                + "The direction is one way: a module never knows what sits in its own zScreenModules "
+                + "or zSubModules.");
 
             painter.Separator();
             painter.SubHeading("What a module carries with it");

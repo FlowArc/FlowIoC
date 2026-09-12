@@ -178,10 +178,13 @@ namespace FlowIoC.Editor.Help.Pages
                 "In a Command of any module that references Modules.Counter");
 
             painter.Space();
-            painter.SubHeading("A sub-module reaches the module it lives in");
+            painter.SubHeading("A sub-module reads the module it lives in, and only its data");
             painter.Paragraph(
-                "A screen or sub module may use its parent's types. The direction is one way: a "
-                + "module never knows what sits in its own zScreenModules or zSubModules.");
+                "A screen or sub module may reference its parent's .Shared assembly and use what the "
+                + "parent publishes there. It never references the parent's .Signals assembly: what a "
+                + "parent and its child say to each other crosses a Connector like any other traffic. "
+                + "The direction is one way: a module never knows what sits in its own zScreenModules "
+                + "or zSubModules.");
 
             painter.Space();
             painter.SubHeading("A test module reaches anything");
