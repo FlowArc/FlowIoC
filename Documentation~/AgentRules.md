@@ -21,9 +21,12 @@ what is true whatever you are about to do.
 - **A Service crosses directly.** Reference the Service module's assembly and inject its
   interface, the way `OpenMatchBoardScreenCommand` injects `ICounterService`. Being
   usable this way is the point of a Service.
-- **A sub-module reaches the module it lives in.** A screen or sub module may use its
-  parent's types. The direction is one way: a module never knows what sits in its own
-  `zScreenModules` or `zSubModules`.
+- **A sub-module reads the module it lives in, and only its data.** A screen or sub module may
+  reference its parent's `.Shared` assembly and use what the parent publishes there. It never
+  references the parent's `.Signals` assembly: what a parent and its child say to each other
+  crosses a Connector like any other traffic, so that `[InjectSignal]` of the parent's holder
+  cannot compile inside the child. The direction is one way: a module never knows what sits in
+  its own `zScreenModules` or `zSubModules`.
 - **A test module reaches anything.** Everything under `zTestModules` is test code, so it
   may reference any module in the project. In exchange, every script in it is wrapped in
   `#if UNITY_EDITOR`.
