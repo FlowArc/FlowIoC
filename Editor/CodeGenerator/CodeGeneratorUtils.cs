@@ -440,15 +440,21 @@ namespace FlowIoC.Editor.CodeGenerator
         /// Declares the module's own signal holder on a Context and binds it in SignalBindings.
         /// A Context that owns its signals holds it as a plain field rather than an injected one -
         /// it is the thing doing the binding, so there is nothing to inject it from.
+        ///
+        /// The public holder is bound across contexts, because a Connector and a test module reach
+        /// it from outside. The internal holder is bound with the plain binder: an internal signal
+        /// never crosses a boundary, and the binding is where the code says so.
         /// </summary>
         public static void BindSignalsInContext(string contextPath, string signalsClassName, string signalsNamespace,
-            string defaultFieldName = "_signals")
+            string defaultFieldName = "_signals", bool crossContext = true)
         {
             if (!File.Exists(contextPath)) return;
 
             List<string> contextLines = File.ReadAllLines(contextPath).ToList();
 
-            if (contextLines.Any(line => line.Contains($"InjectionBinderCrossContext.Bind<{signalsClassName}>()"))) return;
+            string binder = crossContext ? "InjectionBinderCrossContext" : "InjectionBinder";
+
+            if (contextLines.Any(line => line.Contains($"{binder}.Bind<{signalsClassName}>()"))) return;
 
             string fieldName = ResolveSignalFieldName(contextLines, signalsClassName, defaultFieldName);
             bool fieldDeclared = contextLines.Any(line => line.Contains($"{signalsClassName} {fieldName}"));
@@ -468,7 +474,7 @@ namespace FlowIoC.Editor.CodeGenerator
 
                 if (line.Contains("base.SignalBindings();"))
                 {
-                    newContextContent.Add($"\t\t\t{fieldName} = InjectionBinderCrossContext.Bind<{signalsClassName}>();");
+                    newContextContent.Add($"\t\t\t{fieldName} = {binder}.Bind<{signalsClassName}>();");
                 }
             }
 

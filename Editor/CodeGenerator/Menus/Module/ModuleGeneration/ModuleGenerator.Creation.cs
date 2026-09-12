@@ -187,7 +187,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 CodeGeneratorStrings.TempInternalSignalsPath, isTest, false, out string internalNamespace);
 
             if (bindInContext)
-                CodeGeneratorUtils.BindSignalsInContext(contextPath, internalName, internalNamespace, "_internalSignals");
+                CodeGeneratorUtils.BindSignalsInContext(contextPath, internalName, internalNamespace, "_internalSignals", crossContext: false);
         }
 
         /// <summary>

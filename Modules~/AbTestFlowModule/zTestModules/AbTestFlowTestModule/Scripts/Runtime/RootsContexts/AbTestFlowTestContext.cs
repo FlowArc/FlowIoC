@@ -16,7 +16,7 @@ namespace Modules.AbTestFlowModule.AbTestFlowTestModule.RootsContexts
         {
             base.SignalBindings();
 
-            _signals = InjectionBinderCrossContext.Bind<AbTestFlowTestInternalSignals>();
+            _signals = InjectionBinder.Bind<AbTestFlowTestInternalSignals>();
         }
 
         public override void InjectionBindings()
