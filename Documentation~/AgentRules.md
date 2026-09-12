@@ -122,7 +122,8 @@ what is true whatever you are about to do.
 - `Scripts/Runtime/Signals/` holds the module's **internal** holder, `PlayerInternalSignals`: what
   the module says to its own commands, dispatched by nothing outside its own assembly. It has no
   `Incoming` and no `Outgoing` - those two halves describe a boundary, and an internal signal never
-  crosses one.
+  crosses one. Its Context binds it with `InjectionBinder.Bind`, never across contexts: only the
+  public holder and a Service interface are bound where another module can reach them.
 - **A shared asset is filed once, on one Root.** A ScriptableObject other modules read goes in the
   *Shared Scriptables* of one Root's adapter - a scene component in its *Shared Monos* - and a
   reader injects `ISharedDataModel` and calls `GetScriptable<RD_Match>()` or

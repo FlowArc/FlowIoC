@@ -677,7 +677,9 @@ Shared assembly `CameraCVO` lives in.
 `PlayerInternalSignals` lives in `Scripts/Runtime/Signals/` and is what the module
 says to its own commands. It is `internal`, so nothing outside the module's assembly
 can dispatch it, and it has no `Incoming` or `Outgoing`: those two halves describe a
-boundary, and an internal signal never crosses one.
+boundary, and an internal signal never crosses one. Its Context binds it with
+`InjectionBinder.Bind`, never across contexts - only the public holder and a Service
+interface are bound where another module can reach them.
 
 ```csharp
 internal class PlayerInternalSignals : ISignalHolder

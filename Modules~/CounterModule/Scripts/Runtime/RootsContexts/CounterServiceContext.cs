@@ -16,7 +16,7 @@ namespace Modules.CounterModule.RootsContexts
             base.SignalBindings();
 
             _signals = InjectionBinderCrossContext.Bind<CounterServiceSignals>();
-            _internalSignals = InjectionBinderCrossContext.Bind<CounterServiceInternalSignals>();
+            _internalSignals = InjectionBinder.Bind<CounterServiceInternalSignals>();
         }
 
         public override void InjectionBindings()

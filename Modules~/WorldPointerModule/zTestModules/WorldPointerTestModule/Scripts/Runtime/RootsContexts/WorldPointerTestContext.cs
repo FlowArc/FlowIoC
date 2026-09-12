@@ -14,7 +14,7 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.RootsContexts
         {
             base.SignalBindings();
 
-            _signals = InjectionBinderCrossContext.Bind<WorldPointerTestInternalSignals>();
+            _signals = InjectionBinder.Bind<WorldPointerTestInternalSignals>();
         }
 
         public override void MediationBindings()
