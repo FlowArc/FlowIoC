@@ -19,10 +19,12 @@ namespace FlowIoC.Editor.ModuleScanner
     /// signals. Now the two live in different assemblies and the reference itself says which one
     /// a module meant.
     ///
-    /// Three references are allowed and everything else is reported. A module's own Signals
-    /// assembly, because that is where it keeps its own holder. Its parent's, because a screen or
-    /// sub module may use the types of the module it lives in, and a test module may use anything.
-    /// And every reference on a Connector, which is the one place allowed to know the game's shape.
+    /// One reference is allowed and everything else is reported: a module's own Signals assembly,
+    /// because that is where it keeps its own holder. A screen or sub module gets no allowance for
+    /// its parent's - it may read the parent's Shared data, and what the two say to each other
+    /// crosses a Connector like any other traffic. Two kinds of module are not inspected at all: a
+    /// Connector, which is the one place allowed to know the game's shape, and a test module, which
+    /// is test code and may reference anything.
     ///
     /// The finding is Manual rather than Fixable. Removing a reference breaks whatever was using
     /// it, and what to do instead - move the traffic into a Connector, or fold the two modules into
@@ -62,6 +64,10 @@ namespace FlowIoC.Editor.ModuleScanner
             if (_isConnector(module))
                 return FindingEVO.Ok(Id, "Signal references (a Connector may name any of them)");
 
+            // Test code may reference anything, its parent and its siblings included.
+            if (module.Kind == ModuleKind.Test)
+                return FindingEVO.Ok(Id, "Signal references (a test module may name any of them)");
+
             string asmdef = _asmdefTextOf(module);
 
             // Whether the assembly exists at all is AssemblyDefinitionCheck's finding to make.
@@ -87,7 +93,6 @@ namespace FlowIoC.Editor.ModuleScanner
             return References(asmdef)
                 .Where(reference => reference.EndsWith(SignalsAssemblyDefinition.ASSEMBLY_SUFFIX, StringComparison.Ordinal))
                 .Where(reference => reference != own)
-                .Where(reference => reference != module.ParentSignalsAssemblyName)
                 .Distinct(StringComparer.Ordinal)
                 .ToList();
         }

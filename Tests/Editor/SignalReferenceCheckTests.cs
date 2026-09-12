@@ -95,22 +95,25 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// A screen or sub module may use the types of the module it lives in, and a test module
-        /// may use anything. The parent's holder is therefore allowed whatever the kind.
+        /// A screen or sub module may read its parent's Shared data and nothing else of it: what
+        /// the two say to each other crosses a Connector, so the parent's holder is reported like
+        /// any other module's.
         /// </summary>
         [Test]
-        public void The_parents_Signals_assembly_is_allowed()
+        public void The_parents_Signals_assembly_is_reported_on_a_screen_module()
         {
             FindingEVO finding = Check(Asmdef("FlowIoC", "Modules.Hero.Signals"))
                 .Inspect(Target(ModuleKind.Screen, "Modules.Hero.Signals"));
 
-            Assert.AreEqual(ModuleCheckStatus.Ok, finding.Status);
+            Assert.AreEqual(ModuleCheckStatus.Manual, finding.Status);
+            StringAssert.Contains("Modules.Hero.Signals", finding.Message);
         }
 
+        /// <summary>A test module is test code and may reference anything - its parent and its siblings alike.</summary>
         [Test]
-        public void A_test_module_may_name_its_parents_Signals_assembly()
+        public void A_test_module_may_name_any_Signals_assembly()
         {
-            FindingEVO finding = Check(Asmdef("FlowIoC", "Modules.Hero", "Modules.Hero.Signals"))
+            FindingEVO finding = Check(Asmdef("FlowIoC", "Modules.Hero", "Modules.Hero.Signals", "Modules.Hero.Screen.Signals"))
                 .Inspect(Target(ModuleKind.Test, "Modules.Hero.Signals"));
 
             Assert.AreEqual(ModuleCheckStatus.Ok, finding.Status);
