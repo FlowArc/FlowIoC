@@ -32,14 +32,18 @@ namespace FlowIoC.Editor.Help.Pages.Tools
             painter.Paragraph(
                 "Unity's own output is here too - Debug.Log, exceptions, and compile errors - so "
                 + "Clear, Collapse, Error Pause, Clear on Play and Clear on Recompile all behave "
-                + "the way they do in Unity's console. Double-clicking a row opens the code that "
+                + "the way they do in Unity's console. A line Unity wrote carries an icon - the Unity "
+                + "logo, the script icon, the shader icon - where the framework's channels carry "
+                + "their tag. Double-clicking a row opens the code that "
                 + "wrote it, and where the row is the framework complaining about your code, it "
                 + "opens your file rather than the framework's guard clause.");
             painter.Paragraph(
                 "Flow groups the rows into the flows they belong to, so a busy frame reads as one "
-                + "block per operation rather than four interleaved. Timing swaps the clock for "
+                + "block per operation rather than four interleaved. Time picks what leads a row: "
+                + "the clock to the second as Unity shows it, the clock with its milliseconds, or "
                 + "the frame and the gap since the row above. Pinning a row keeps it through the "
-                + "filters, the trim and every automatic clear.");
+                + "filters, the trim and every automatic clear. All three sit on the bar the gear "
+                + "opens.");
 
             painter.SubHeading("A device's rows arrive too");
             painter.Paragraph(

@@ -7,10 +7,11 @@ using UnityEngine;
 namespace FlowIoC.Editor.Console
 {
     /// <summary>
-    /// How a row is drawn, and how much a log is asked to remember about where it came from. These
-    /// are settings a reader changes while following one flow and then puts back, which is why they
-    /// are here rather than three windows away in the asset - but they are not read every minute,
-    /// so they are folded behind the gear until it is pressed.
+    /// How the list is viewed: which rows it shows and how they are grouped and led, how a row is
+    /// drawn, and how much a log is asked to remember about where it came from. These are switches
+    /// a reader throws while following one flow and puts back afterwards, which is why they are
+    /// here rather than three windows away in the asset - but they are not read every minute, so
+    /// they are folded behind the gear until it is pressed, and the toolbar keeps the actions.
     /// </summary>
     internal partial class FlowConsoleEditor
     {
@@ -21,6 +22,10 @@ namespace FlowIoC.Editor.Console
         private const float RowLinesWidth = 60f;
         private const float SourceCaptureWidth = 150f;
         private const float ExportWidth = 60f;
+
+        private const float FlowToggleWidth = 50f;
+        private const float PinnedToggleWidth = 76f;
+        private const float TimeFormatWidth = 118f;
 
         /// <summary>
         /// The grey the filters panel's bar comes out as, but opaque: the bar is a shade over the
@@ -59,15 +64,13 @@ namespace FlowIoC.Editor.Console
         };
 
         /// <summary>
-        /// The strip that lies over the top-right corner of the list: the gear, the three controls
-        /// it opens, and the filters switch while its panel is closed. They used to have a bar of
-        /// their own under the toolbar, empty from its left edge to the gear, and the bar cost the
-        /// list a row. Now the list runs up to the toolbar and the strip floats on it. Pressing the
-        /// gear grows the strip leftwards over the rows rather than bringing the bar back, so the
-        /// list never moves under the reader.
+        /// The strip that lies over the top-right corner of the list while the gear is closed: the
+        /// gear itself, and the filters switch while its panel is closed. Nothing else needs a row
+        /// while the gear is closed, so the list runs up to the toolbar and the strip floats on it.
+        /// Pressing the gear opens <see cref="SettingsBarGUI"/> in its place.
         ///
         /// Drawn after the list so that it paints over the rows, which is also why a row lying under
-        /// it has to be told to let a press go by - see <see cref="_pointerOverFloatingStrip"/>.
+        /// it has to be told to let a press go by - see <see cref="_pointerOverStrip"/>.
         /// </summary>
         private void FloatingStripGUI(Rect viewport)
         {
@@ -76,12 +79,10 @@ namespace FlowIoC.Editor.Console
             float right = viewport.xMax;
             if (ContentHeight() > viewport.height) right -= GUI.skin.verticalScrollbar.fixedWidth;
 
-            float width = SettingsButtonWidth;
-            if (_showSettings) width += RowLinesWidth + SourceCaptureWidth + ExportWidth;
-            if (!_showFilters) width += FiltersPanelWidth;
+            float width = RightControlsWidth();
 
             var strip = new Rect(right - width, viewport.y, width, FloatingStripHeight);
-            _floatingStripRect = strip;
+            _stripRect = strip;
 
             // The toolbar's grey is four levels off the rows', and a strip painted in it was lost
             // on them. It is painted in the filters panel's bar instead, so it reads as the same
@@ -92,25 +93,7 @@ namespace FlowIoC.Editor.Console
             if (Event.current.type == EventType.Repaint)
                 EditorGUI.DrawRect(strip, FloatingStripColor);
 
-            float x = strip.x;
-
-            if (_showSettings)
-            {
-                RowLinesSettingGUI(new Rect(x, strip.y, RowLinesWidth, strip.height));
-                x += RowLinesWidth;
-
-                SourceCaptureSettingGUI(new Rect(x, strip.y, SourceCaptureWidth, strip.height));
-                x += SourceCaptureWidth;
-
-                ExportMenuGUI(new Rect(x, strip.y, ExportWidth, strip.height));
-                x += ExportWidth;
-            }
-
-            SettingsButtonGUI(new Rect(x, strip.y, SettingsButtonWidth, strip.height));
-            x += SettingsButtonWidth;
-
-            if (!_showFilters)
-                FiltersToggleGUI(new Rect(x, strip.y, FiltersPanelWidth, strip.height));
+            RightControlsGUI(strip);
 
             // The edge the filters panel draws down its side, along the strip's left and bottom,
             // so it ends the way the panel does rather than fading into the row behind it.
@@ -118,6 +101,95 @@ namespace FlowIoC.Editor.Console
 
             EditorGUI.DrawRect(new Rect(strip.x, strip.y, 1f, strip.height), FiltersPanelEdgeColor);
             EditorGUI.DrawRect(new Rect(strip.x, strip.yMax - 1f, strip.width, 1f), FiltersPanelEdgeColor);
+        }
+
+        /// <summary>
+        /// The bar the gear opens: a row of its own under the toolbar, as wide as the list, so the
+        /// rows start under it rather than lying beneath it. The three view controls - Flow, Pinned
+        /// and what leads a row - sit at its left end, where the eye starts a bar; the row settings,
+        /// Export and the gear that closes it keep the right end the floating strip had, so the gear
+        /// is in the same place open and closed. The filters switch heads its own panel, or sits
+        /// beside the gear while the panel is closed, the way it does on the strip.
+        ///
+        /// Painted as a toolbar, in the toolbar's own grey: it is a second row of the toolbar, not
+        /// a thing lying on the rows, so it needs none of the darkness the floating strip needs to
+        /// be picked out of them.
+        /// </summary>
+        private void SettingsBarGUI()
+        {
+            Rect bar = GUILayoutUtility.GetRect(0f, FloatingStripHeight,
+                GUILayout.ExpandWidth(true), GUILayout.Height(FloatingStripHeight));
+
+            // Kept only from a repaint: a layout pass answers with a placeholder rect.
+            if (Event.current.type == EventType.Repaint)
+            {
+                _stripRect = bar;
+                EditorStyles.toolbar.Draw(bar, false, false, false, false);
+            }
+
+            // The left group is clipped at the right group's edge rather than drawn under it: a
+            // window too narrow for both shows as much of Flow, Pinned and Time as fits, and the
+            // right group stays whole and reachable.
+            float rightStart = bar.xMax - RightControlsWidth();
+
+            GUI.BeginGroup(new Rect(bar.x, bar.y, Mathf.Max(0f, rightStart - bar.x), bar.height));
+
+            float x = 0f;
+
+            FlowToggleGUI(new Rect(x, 0f, FlowToggleWidth, bar.height));
+            x += FlowToggleWidth;
+
+            PinnedToggleGUI(new Rect(x, 0f, PinnedToggleWidth, bar.height));
+            x += PinnedToggleWidth;
+
+            TimeFormatGUI(new Rect(x, 0f, TimeFormatWidth, bar.height));
+
+            GUI.EndGroup();
+
+            RightControlsGUI(bar);
+        }
+
+        /// <summary>
+        /// How wide the controls at the right end are: the gear, the filters switch while its panel
+        /// is closed, and the three settings while the gear is open. The floating strip is exactly
+        /// this wide; the bar is as wide as the list and these sit at its right end.
+        /// </summary>
+        private float RightControlsWidth()
+        {
+            float width = SettingsButtonWidth;
+            if (_showSettings) width += RowLinesWidth + SourceCaptureWidth + ExportWidth;
+            if (!_showFilters) width += _filtersPanelWidth;
+            return width;
+        }
+
+        /// <summary>
+        /// The controls at the right end of the strip and the bar alike, laid from the right edge
+        /// leftwards so they end where the list does: the filters switch, the gear, and while the
+        /// gear is open the row settings and Export to its left.
+        /// </summary>
+        private void RightControlsGUI(Rect strip)
+        {
+            float x = strip.xMax;
+
+            if (!_showFilters)
+            {
+                x -= _filtersPanelWidth;
+                FiltersToggleGUI(new Rect(x, strip.y, _filtersPanelWidth, strip.height));
+            }
+
+            x -= SettingsButtonWidth;
+            SettingsButtonGUI(new Rect(x, strip.y, SettingsButtonWidth, strip.height));
+
+            if (!_showSettings) return;
+
+            x -= ExportWidth;
+            ExportMenuGUI(new Rect(x, strip.y, ExportWidth, strip.height));
+
+            x -= SourceCaptureWidth;
+            SourceCaptureSettingGUI(new Rect(x, strip.y, SourceCaptureWidth, strip.height));
+
+            x -= RowLinesWidth;
+            RowLinesSettingGUI(new Rect(x, strip.y, RowLinesWidth, strip.height));
         }
 
         private void SettingsButtonGUI(Rect rect)
@@ -129,6 +201,85 @@ namespace FlowIoC.Editor.Console
             _showSettings = showSettings;
             _state.ShowSettings = showSettings;
             _needsRepaint = true;
+        }
+
+        private void FlowToggleGUI(Rect rect)
+        {
+            var flowLabel = new GUIContent("Flow",
+                "Group the rows into the flows they belong to. A flow started from inside another sits under it.");
+
+            bool flowMode = GUI.Toggle(rect, _flowMode, flowLabel, EditorStyles.toolbarButton);
+            if (flowMode == _flowMode) return;
+
+            _flowMode = flowMode;
+            _state.FlowMode = flowMode;
+            _logsDirty = true;
+            _needsRepaint = true;
+        }
+
+        private void PinnedToggleGUI(Rect rect)
+        {
+            // Fetched every draw, never kept: the texture behind an editor icon is freed on a
+            // domain reload and a GUIContent holding one draws nothing.
+            var pinnedLabel = new GUIContent(" Pinned", EditorGUIUtility.IconContent("pin")?.image,
+                "Show only the rows you pinned. Pin one with the row's right-click menu, or with P.");
+
+            // Tinted rather than drawn behind: a toolbar button paints its own pressed background
+            // and covered anything under it. GUI.backgroundColor multiplies that background, so
+            // the switch takes the same colour the pinned rows carry.
+            Color backgroundWas = GUI.backgroundColor;
+            if (_pinnedOnly) GUI.backgroundColor = PinBadgeTintColor;
+
+            bool pinnedOnly = GUI.Toggle(rect, _pinnedOnly, pinnedLabel, EditorStyles.toolbarButton);
+
+            GUI.backgroundColor = backgroundWas;
+            if (pinnedOnly == _pinnedOnly) return;
+
+            _pinnedOnly = pinnedOnly;
+            _logsDirty = true;
+            _needsRepaint = true;
+        }
+
+        /// <summary>
+        /// What leads a row. A menu rather than a switch because there are three answers: the
+        /// clock to the second the way Unity's console leads a row, the clock with its
+        /// milliseconds, or the frame and the gap since the row above.
+        /// </summary>
+        private void TimeFormatGUI(Rect rect)
+        {
+            var content = new GUIContent("Time: " + _timeFormat,
+                "What leads a row: the clock to the second, as Unity's console shows it; the clock "
+                + "with its milliseconds; or the frame the row was written in and the gap since the "
+                + "row above.");
+
+            if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
+
+            var menu = new GenericMenu();
+
+            foreach (FlowConsoleTimeFormat value in Enum.GetValues(typeof(FlowConsoleTimeFormat)))
+            {
+                FlowConsoleTimeFormat chosen = value;
+                menu.AddItem(new GUIContent(TimeFormatLabel(value)), _timeFormat == value, () =>
+                {
+                    _timeFormat = chosen;
+                    _state.TimeFormat = chosen;
+                    _needsRepaint = true;
+                });
+            }
+
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
+
+        /// <summary>The menu shows what each format looks like, so nobody has to try all three.</summary>
+        private static string TimeFormatLabel(FlowConsoleTimeFormat format)
+        {
+            switch (format)
+            {
+                case FlowConsoleTimeFormat.Classic: return "Classic     13:05:23";
+                case FlowConsoleTimeFormat.Extended: return "Extended   13:05:23:088";
+                case FlowConsoleTimeFormat.Frame: return "Frame       f120  +12ms";
+                default: return format.ToString();
+            }
         }
 
         private void RowLinesSettingGUI(Rect rect)

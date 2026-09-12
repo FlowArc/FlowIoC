@@ -139,6 +139,35 @@ namespace FlowIoC.Tests
             }
         }
 
+        /// <summary>
+        /// A channel Unity writes has an icon for a tag, drawn by the console on the row, so its
+        /// profile writes nothing into the message: a line Unity wrote is recorded as Unity wrote
+        /// it. The framework's own channels keep their text tag.
+        /// </summary>
+        [Test]
+        public void The_channels_Unity_writes_carry_no_text_tag()
+        {
+            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
+
+            try
+            {
+                foreach (string name in new[] {"Unity", "Compiler", "Shader"})
+                {
+                    FlowLogProfileData profile = settings.LogProfiles.Find(p => p.Name == name);
+
+                    Assert.IsNotNull(profile, name + " has no profile.");
+                    Assert.IsTrue(string.IsNullOrEmpty(profile.Prefix), name + "'s profile writes a tag.");
+                    Assert.IsNull(settings.GetResolvedProfile(name), "A " + name + " line is decorated.");
+                }
+
+                Assert.AreEqual("[Context]", settings.LogProfiles.Find(p => p.Name == "Context").Prefix);
+            }
+            finally
+            {
+                ScriptableObject.DestroyImmediate(settings);
+            }
+        }
+
         [Test]
         public void The_new_channels_are_not_left_white()
         {

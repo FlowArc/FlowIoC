@@ -42,6 +42,15 @@ namespace FlowIoC.Editor.Console
         private const float LogEntryLineHeight = 16f;
         private const float LogEntryPadding = 6f;
         private const float PinIconSize = 16f;
+
+        /// <summary>
+        /// The pin's size, so the two icons a row can carry sit on one line. The channel icons are
+        /// the asset icons the Project window draws - 256 pixels with a mip chain - so at 16 they
+        /// come out as crisp as they do there. The About window's UnityLogo was tried first: 67
+        /// pixels, point-filtered and without mips, it came out ragged at this size.
+        /// </summary>
+        private const float ChannelIconSize = 16f;
+
         private const int LogTrimChunk = 256;
 
         private float[] _cachedLogHeights;
@@ -57,7 +66,7 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleSearch _search = new FlowConsoleSearch();
         private readonly FlowConsoleHighlight _highlight = new FlowConsoleHighlight();
         private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
-        private bool _showTiming;
+        private FlowConsoleTimeFormat _timeFormat;
 
         private readonly FlowConsoleExport _export = new FlowConsoleExport();
         private readonly FlowConsoleFilterPresets _presets = new FlowConsoleFilterPresets();
@@ -102,7 +111,37 @@ namespace FlowIoC.Editor.Console
         private bool _systemChannelsExpanded = true;
         private bool _moduleChannelsExpanded = true;
         private Vector2 _filtersPanelScroll;
-        private const float FiltersPanelWidth = 220f;
+
+        /// <summary>
+        /// How wide the filters panel is. The reader's, dragged at the panel's edge and kept in
+        /// EditorPrefs, so a module name that does not fit at the default is theirs to make room
+        /// for. Read once from the state on enable and written back when a drag ends.
+        /// </summary>
+        private float _filtersPanelWidth = FiltersPanelDefaultWidth;
+
+        private bool _isResizingFiltersPanel;
+
+        private const float FiltersPanelDefaultWidth = 220f;
+
+        /// <summary>Half the default: the floor the owner set, under which the panel is no longer a panel.</summary>
+        private const float FiltersPanelMinWidth = 110f;
+
+        /// <summary>What the list keeps whatever the panel is dragged to.</summary>
+        private const float FiltersPanelListReserve = 200f;
+
+        /// <summary>
+        /// The panel's edge, as wide as a finger can find. Inside the panel rather than astride the
+        /// line, so it never takes a press meant for the list's scrollbar beside it.
+        /// </summary>
+        private const float FiltersPanelSplitterWidth = 5f;
+
+        /// <summary>
+        /// Below this the counts on the panel's headers - "2 / 12" beside a group, "7 / 25" beside
+        /// Filters - are not drawn, because they would sit on top of the words. The widest header,
+        /// Framework with its Mute button, needs this much to hold all three.
+        /// </summary>
+        private const float FiltersPanelCountsMinWidth = 200f;
+
         private static readonly Color FiltersPanelEdgeColor = new Color(0f, 0f, 0f, 0.45f);
         private static readonly Color FiltersPanelBackgroundColor = new Color(0f, 0f, 0f, 0.16f);
         private static readonly Color FiltersPanelBarColor = new Color(0f, 0f, 0f, 0.30f);
@@ -225,14 +264,20 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private Rect _logsViewportRect;
 
-        private Rect _floatingStripRect;
+        /// <summary>
+        /// Where the gear and what it opens are: the strip floating over the list's corner while
+        /// the gear is closed, the bar above the list while it is open. Either way the hover
+        /// repaint watches it.
+        /// </summary>
+        private Rect _stripRect;
 
         /// <summary>
         /// Whether the pointer is on the floating strip, decided once per event in window space
         /// before the list's scroll view moves the coordinates. A row lying under the strip reads
         /// it and lets the press go by, so the gear takes the click and not the row it covers.
+        /// While the bar is open no row lies under it, and this is simply false over the rows.
         /// </summary>
-        private bool _pointerOverFloatingStrip;
+        private bool _pointerOverStrip;
 
         // Unity's own console icons, fetched once. IconContent is a lookup and a row draws many
         // times a second.
@@ -245,6 +290,16 @@ namespace FlowIoC.Editor.Console
         private Texture _infoIconSmall;
         private Texture _warningIconSmall;
         private Texture _errorIconSmall;
+
+        /// <summary>
+        /// What a row on one of Unity's own channels carries where the framework's channels carry
+        /// a text tag: the scene icon the Hierarchy draws - the Unity logo - for the Unity channel,
+        /// the C# script icon for Compiler, the shader icon for Shader.
+        /// </summary>
+        private Texture _unityChannelIcon;
+
+        private Texture _compilerChannelIcon;
+        private Texture _shaderChannelIcon;
 
         /// <summary>
         /// How many lines of a message a row shows. Unity's console shows two - the message and
@@ -276,9 +331,10 @@ namespace FlowIoC.Editor.Console
 
             _rowLineCount = _state.RowLineCount;
             _collapseRows = _state.Collapse;
-            _showTiming = _state.Timing;
+            _timeFormat = _state.TimeFormat;
             _flowMode = _state.FlowMode;
             _showFilters = _state.ShowFilters;
+            _filtersPanelWidth = ClampFiltersPanelWidth(_state.FiltersPanelWidth);
             _showSettings = _state.ShowSettings;
             _isolatedChannel = _state.IsolatedChannel;
             _groupUnmuted[0] = !_state.UnityMuted;
@@ -360,6 +416,10 @@ namespace FlowIoC.Editor.Console
             _infoIconSmall = EditorGUIUtility.IconContent("console.infoicon.sml").image;
             _warningIconSmall = EditorGUIUtility.IconContent("console.warnicon.sml").image;
             _errorIconSmall = EditorGUIUtility.IconContent("console.erroricon.sml").image;
+
+            _unityChannelIcon = EditorGUIUtility.IconContent("SceneAsset Icon").image;
+            _compilerChannelIcon = EditorGUIUtility.IconContent("cs Script Icon").image;
+            _shaderChannelIcon = EditorGUIUtility.IconContent("Shader Icon").image;
         }
 
         /// <summary>
@@ -443,6 +503,24 @@ namespace FlowIoC.Editor.Console
             }
         }
 
+        /// <summary>
+        /// The icon a row carries in place of its channel's text tag. A line Unity wrote carries
+        /// one: the message is then exactly what Unity said, and the row still says at a glance
+        /// which lines are not the framework's and which of the three kinds it is. Every other
+        /// channel writes its tag into the message through its profile, so there is nothing to
+        /// draw for it.
+        /// </summary>
+        private Texture ChannelIconFor(ConsoleLog log)
+        {
+            switch (log.SystemLogType)
+            {
+                case SystemLogType.Unity: return _unityChannelIcon;
+                case SystemLogType.Compiler: return _compilerChannelIcon;
+                case SystemLogType.Shader: return _shaderChannelIcon;
+                default: return null;
+            }
+        }
+
         private void OnDisable()
         {
             FlowLogger.OnLogAdded -= OnLogAdded;
@@ -463,9 +541,9 @@ namespace FlowIoC.Editor.Console
 
             // The list and the filters panel side by side, straight under the toolbar. The
             // panel's width is fixed, so what a wider window buys is more room for the messages
-            // rather than a wider column of channel names. The row settings and the gear that
-            // opens them float over the list's top-right corner rather than taking a bar of
-            // their own - see FloatingStripGUI.
+            // rather than a wider column of channel names. The gear floats over the list's
+            // top-right corner while it is closed, and opens a bar of its own above the list -
+            // see FloatingStripGUI and SettingsBarGUI.
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.BeginVertical();
@@ -500,7 +578,7 @@ namespace FlowIoC.Editor.Console
             }
 
             Vector2 mouse = Event.current.mousePosition;
-            bool overToolbar = _toolbarRect.Contains(mouse) || _floatingStripRect.Contains(mouse);
+            bool overToolbar = _toolbarRect.Contains(mouse) || _stripRect.Contains(mouse);
             if (!overToolbar && !_mouseWasOverToolbar) return;
 
             _mouseWasOverToolbar = overToolbar;
@@ -544,50 +622,8 @@ namespace FlowIoC.Editor.Console
             if (_connectionState != null)
                 PlayerConnectionGUILayout.ConnectionTargetSelectionDropdown(_connectionState, EditorStyles.toolbarDropDown);
 
-            var flowLabel = new GUIContent("Flow",
-                "Group the rows into the flows they belong to. A flow started from inside another sits under it.");
-
-            bool flowMode = GUILayout.Toggle(_flowMode, flowLabel, EditorStyles.toolbarButton, GUILayout.Width(50));
-            if (flowMode != _flowMode)
-            {
-                _flowMode = flowMode;
-                _state.FlowMode = flowMode;
-                _logsDirty = true;
-                _needsRepaint = true;
-            }
-
-            // Fetched every draw, never kept: the texture behind an editor icon is freed on a
-            // domain reload and a GUIContent holding one draws nothing.
-            var pinnedLabel = new GUIContent(" Pinned", EditorGUIUtility.IconContent("pin")?.image,
-                "Show only the rows you pinned. Pin one with the row's right-click menu, or with P.");
-
-            // Tinted rather than drawn behind: a toolbar button paints its own pressed background
-            // and covered anything under it. GUI.backgroundColor multiplies that background, so
-            // the switch takes the same colour the pinned rows carry.
-            Color backgroundWas = GUI.backgroundColor;
-            if (_pinnedOnly) GUI.backgroundColor = PinBadgeTintColor;
-
-            bool pinnedOnly = GUILayout.Toggle(_pinnedOnly, pinnedLabel, EditorStyles.toolbarButton,
-                GUILayout.Width(76), GUILayout.ExpandHeight(true));
-
-            GUI.backgroundColor = backgroundWas;
-            if (pinnedOnly != _pinnedOnly)
-            {
-                _pinnedOnly = pinnedOnly;
-                _logsDirty = true;
-                _needsRepaint = true;
-            }
-
-            var timingLabel = new GUIContent("Timing",
-                "Lead each row with the frame it was written in and the gap since the row above, instead of the clock.");
-
-            bool timing = GUILayout.Toggle(_showTiming, timingLabel, EditorStyles.toolbarButton, GUILayout.Width(60));
-            if (timing != _showTiming)
-            {
-                _showTiming = timing;
-                _state.Timing = timing;
-                _needsRepaint = true;
-            }
+            // Flow, Pinned and Timing are not here: they are view switches rather than console
+            // actions, and they sit at the left end of the bar the gear opens - see SettingsBarGUI.
 
             // Only while the selected row is somewhere the reader cannot see. A button that is
             // there when it would do nothing asks them to work out why nothing happened.
@@ -994,7 +1030,7 @@ namespace FlowIoC.Editor.Console
 
             // The count is drawn beside the word rather than inside it, in the same small type the
             // panel's own group headers use, so the two read as one thing.
-            if (Event.current.type == EventType.Repaint)
+            if (Event.current.type == EventType.Repaint && FiltersPanelShowsCounts)
             {
                 EnsureChannelRowStyles();
 
@@ -1023,7 +1059,16 @@ namespace FlowIoC.Editor.Console
 
             // Decided here, in window space: inside the scroll view the mouse position is
             // scrolled along with the content, and the strip is not.
-            _pointerOverFloatingStrip = _floatingStripRect.Contains(Event.current.mousePosition);
+            _pointerOverStrip = _stripRect.Contains(Event.current.mousePosition);
+
+            // A row of its own above the list, so the rows start under it. Closed, the gear
+            // floats over the list instead and is drawn after it - see the end of this method.
+            // Read once: the gear on either can flip the switch part-way through this pass, and
+            // the other must not then be drawn in the same one.
+            bool settingsBarOpen = _showSettings;
+
+            if (settingsBarOpen)
+                SettingsBarGUI();
 
             _logsPanelScroll = EditorGUILayout.BeginScrollView(_logsPanelScroll);
 
@@ -1106,7 +1151,8 @@ namespace FlowIoC.Editor.Console
                     EmptyListHintGUI(_logsViewportRect);
             }
 
-            FloatingStripGUI(_logsViewportRect);
+            if (!settingsBarOpen)
+                FloatingStripGUI(_logsViewportRect);
 
             DetailPanelGUI();
         }
@@ -1497,7 +1543,7 @@ namespace FlowIoC.Editor.Console
 
             Event currentEvent = Event.current;
             if (currentEvent.type != EventType.MouseDown || !rect.Contains(currentEvent.mousePosition)) return;
-            if (currentEvent.button != 0 || _pointerOverFloatingStrip) return;
+            if (currentEvent.button != 0 || _pointerOverStrip) return;
 
             if (!_collapsedFlowIds.Add(flowId))
                 _collapsedFlowIds.Remove(flowId);
@@ -1692,10 +1738,12 @@ namespace FlowIoC.Editor.Console
             // Two forms of the same prefix: the plain one is what the row is measured with, and the
             // rich one is what is drawn. The second half of it - the milliseconds, or the gap since
             // the row above - is dimmed, because it is read only when the seconds are not enough.
+            // Classic has no second half: it is the clock to the second, as Unity's console leads
+            // a row.
             string date;
             string dateRich;
 
-            if (_showTiming)
+            if (_timeFormat == FlowConsoleTimeFormat.Frame)
             {
                 bool hasPrevious = rowIndex > 0 && rowIndex - 1 < _cachedVisibleLogs.Count;
                 float previousRealtime = hasPrevious ? _cachedVisibleLogs[rowIndex - 1].Realtime : 0f;
@@ -1709,10 +1757,19 @@ namespace FlowIoC.Editor.Console
             {
                 string clock = consoleLog.Hour.ToString("00") + ":" + consoleLog.Minute.ToString("00") + ":" +
                                consoleLog.Second.ToString("00");
-                string milliseconds = ":" + consoleLog.Millisecond.ToString("000");
 
-                date = clock + milliseconds;
-                dateRich = clock + Dim(milliseconds);
+                if (_timeFormat == FlowConsoleTimeFormat.Classic)
+                {
+                    date = clock;
+                    dateRich = clock;
+                }
+                else
+                {
+                    string milliseconds = ":" + consoleLog.Millisecond.ToString("000");
+
+                    date = clock + milliseconds;
+                    dateRich = clock + Dim(milliseconds);
+                }
             }
 
             // Where the row came from, when it came from a device. Part of the prefix rather than
@@ -1806,8 +1863,25 @@ namespace FlowIoC.Editor.Console
                     pinWidth = PinIconSize + 3f;
                 }
 
-                var messageRect = new Rect(lineRect.x + prefixWidth + pinWidth, lineRect.y,
-                    Mathf.Max(0f, lineRect.width - prefixWidth - pinWidth), lineRect.height);
+                // The channel's icon, where the text tag would have begun. Drawn in its own
+                // colours, the way the Project window draws it; the channel's colour is already
+                // on the strip at the row's edge.
+                float channelIconWidth = 0f;
+                Texture channelIcon = ChannelIconFor(consoleLog);
+
+                if (channelIcon != null)
+                {
+                    var channelIconRect = new Rect(lineRect.x + prefixWidth + pinWidth,
+                        lineRect.y + (lineRect.height - ChannelIconSize) * 0.5f, ChannelIconSize, ChannelIconSize);
+
+                    GUI.DrawTexture(channelIconRect, channelIcon, ScaleMode.ScaleToFit);
+
+                    channelIconWidth = ChannelIconSize + 3f;
+                }
+
+                float messageLeft = prefixWidth + pinWidth + channelIconWidth;
+                var messageRect = new Rect(lineRect.x + messageLeft, lineRect.y,
+                    Mathf.Max(0f, lineRect.width - messageLeft), lineRect.height);
 
                 DrawSearchHighlight(messageRect, text);
                 GUI.Label(messageRect, text, _richTextStyle);
@@ -1825,7 +1899,7 @@ namespace FlowIoC.Editor.Console
             Event currentEvent = Event.current;
             bool pressed = currentEvent.type == EventType.MouseDown && rect.Contains(currentEvent.mousePosition);
 
-            if (pressed && !_pointerOverFloatingStrip)
+            if (pressed && !_pointerOverStrip)
             {
                 if (currentEvent.button == 0)
                 {
