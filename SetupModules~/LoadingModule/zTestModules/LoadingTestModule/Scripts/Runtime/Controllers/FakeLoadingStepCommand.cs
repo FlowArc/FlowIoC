@@ -18,6 +18,10 @@ namespace Modules.LoadingModule.LoadingTestModule.Controllers
         [Inject] private ILoadingService _loadingService { get; set; }
         [Inject] private ICoroutineProvider _coroutineProvider { get; set; }
 
+        // The Editor's first frames after entering play mode can carry several seconds of
+        // delta - the domain reload and the scene load - which would end every step at once.
+        private const float MAX_FRAME_SECONDS = 0.1f;
+
         public override void Execute(string stepKey, float seconds, bool fails)
         {
             Retain();
@@ -32,7 +36,7 @@ namespace Modules.LoadingModule.LoadingTestModule.Controllers
             float elapsed = 0f;
             while (elapsed < seconds)
             {
-                elapsed += Time.unscaledDeltaTime;
+                elapsed += Mathf.Min(Time.unscaledDeltaTime, MAX_FRAME_SECONDS);
                 float fraction = Mathf.Clamp01(elapsed / seconds);
                 step.Progress(fraction);
                 step.Detail($"{Mathf.RoundToInt(fraction * 200f)} MB / 200 MB");

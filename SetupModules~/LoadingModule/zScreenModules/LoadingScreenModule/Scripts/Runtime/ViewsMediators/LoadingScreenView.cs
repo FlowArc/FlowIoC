@@ -54,8 +54,8 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
             ShowingSet = null;
             _target = _shown = 0f;
             _childTarget = _childShown = 0f;
-            _fill.fillAmount = 0f;
-            _childFill.fillAmount = 0f;
+            SetFill(_fill, 0f);
+            SetFill(_childFill, 0f);
             _percent.text = "0%";
             _message.text = string.Empty;
             _detail.text = string.Empty;
@@ -93,13 +93,18 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
         private void Update()
         {
             _shown = Approach(_shown, _target);
-            _fill.fillAmount = _shown;
+            SetFill(_fill, _shown);
             _percent.text = $"{Mathf.RoundToInt(_shown * 100f)}%";
 
             if (!_childGroup.activeSelf) return;
             _childShown = Approach(_childShown, _childTarget);
-            _childFill.fillAmount = _childShown;
+            SetFill(_childFill, _childShown);
         }
+
+        // The fill is a plain quad stretched to a share of the track - an Image with no sprite
+        // draws its whole rect whatever its fill amount says, so the width is the progress.
+        private static void SetFill(Image fill, float amount) =>
+            fill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(amount), 1f);
 
         private static float Approach(float shown, float target)
         {
