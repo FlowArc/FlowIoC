@@ -274,6 +274,9 @@ namespace FlowIoC.Editor.Console
         /// <summary>The toolbar's own padding and the gaps between its controls, so a fit is decided a little early rather than a little late.</summary>
         private const float ToolbarSlack = 12f;
 
+        /// <summary>What the list moves per unit of a wheel notch's delta - the factor Unity's own scroll views use.</summary>
+        private const float WheelStep = 20f;
+
         /// <summary>
         /// The list's outer rect, kept from the last repaint because a layout pass answers with
         /// a placeholder, and the strip that floats over the list needs the real one on every
@@ -640,7 +643,7 @@ namespace FlowIoC.Editor.Console
             // than the label Unity puts on it, so it is drawn that once and measured rather than
             // dropped on a guess.
             bool showEditor = showErrorPause && _connectionState != null
-                              && (width >= mandatory + ErrorPauseWidth + editorWidth || !IsEditorDropdownMeasured());
+                                             && (width >= mandatory + ErrorPauseWidth + editorWidth || !IsEditorDropdownMeasured());
 
             // The search is dropped first, and on its own account: what is left after the controls
             // that are drawn has to hold it at its narrowest. A search with something typed in it
@@ -813,7 +816,7 @@ namespace FlowIoC.Editor.Console
         private bool IsEditorDropdownMeasured()
         {
             return _connectionState != null && _measuredEditorDropdownWidth > 0f
-                   && _measuredEditorDropdownName == _connectionState.connectionName;
+                                            && _measuredEditorDropdownName == _connectionState.connectionName;
         }
 
         /// <summary>The picker's width off the last repaint that drew it, and the connection it was drawn for.</summary>
@@ -1177,6 +1180,8 @@ namespace FlowIoC.Editor.Console
             // scrolled along with the content, and the strip is not.
             _pointerOverStrip = _stripRect.Contains(Event.current.mousePosition);
 
+            HandleListWheel();
+
             // A row of its own above the list, so the rows start under it. Closed, the gear
             // floats over the list instead and is drawn after it - see the end of this method.
             // Read once: the gear on either can flip the switch part-way through this pass, and
@@ -1271,6 +1276,26 @@ namespace FlowIoC.Editor.Console
                 FloatingStripGUI(_logsViewportRect);
 
             DetailPanelGUI();
+        }
+
+        /// <summary>
+        /// The wheel over the list, taken here rather than left to the scroll view. Unity's scroll
+        /// view takes a notch on the event and hands the new position back on the next pass, and
+        /// with the detail panel open that hand-back never came: the notch was used and the list
+        /// stayed where it was. Moved here, in window space and before the scroll view opens, the
+        /// position is the window's own and the wheel answers whatever else is drawn. The step is
+        /// the one Unity's scroll views move by, so the list feels like the panel beside it.
+        /// </summary>
+        private void HandleListWheel()
+        {
+            Event current = Event.current;
+            if (current.type != EventType.ScrollWheel || !_logsViewportRect.Contains(current.mousePosition)) return;
+
+            float bottom = _stickyTail.BottomOf(_logsViewportHeight, ContentHeight());
+            _logsPanelScroll.y = Mathf.Clamp(_logsPanelScroll.y + current.delta.y * WheelStep, 0f, bottom);
+
+            current.Use();
+            Repaint();
         }
 
         private void RebuildCachedLogs()
