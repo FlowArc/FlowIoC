@@ -40,7 +40,7 @@ namespace Modules.MainModule.Controllers
                 {
                     if (!_poolService.Check.IsGroupConfigExist(groups[index]))
                     {
-                        FlowLogger.LogError(FlowModule.MainModule,
+                        FlowLogger.LogError(
                             $"FillPoolsCommand - MainConstants.BootPoolGroups names '{groups[index]}', which the pool config does not have.");
                         step.Fail($"pool group '{groups[index]}' is not configured");
                         Stop();
@@ -57,7 +57,7 @@ namespace Modules.MainModule.Controllers
             }
             catch (Exception exception)
             {
-                FlowLogger.LogError(FlowModule.MainModule, $"FillPoolsCommand threw while filling a pool group: {exception}");
+                FlowLogger.LogError($"FillPoolsCommand threw while filling a pool group: {exception}");
                 step.Fail(exception.Message);
                 Stop();
             }

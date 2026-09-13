@@ -88,7 +88,7 @@ public class LoadWeaponIconCommand : Command
         var icon = await _assetService.LoadAssetAsync<Sprite>($"icon_{_weaponId}", "weapons");
         if (icon == null)
         {
-            FlowLogger.LogError(FlowModule.WeaponModule, $"Icon missing for '{_weaponId}'.");
+            FlowLogger.LogError($"Icon missing for '{_weaponId}'.");
             Stop();
             return;
         }

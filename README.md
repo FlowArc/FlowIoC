@@ -764,8 +764,7 @@ public override async void Execute()
 
         if (screen == null)
         {
-            FlowLogger.LogError(FlowModule.MainScreenModule,
-                "OpenMainScreenCommand - the screen did not open.");
+            FlowLogger.LogError("OpenMainScreenCommand - the screen did not open.");
             Stop();
             return;
         }
@@ -775,8 +774,7 @@ public override async void Execute()
     }
     catch (Exception exception)
     {
-        FlowLogger.LogError(FlowModule.MainScreenModule,
-            $"OpenMainScreenCommand threw: {exception}");
+        FlowLogger.LogError($"OpenMainScreenCommand threw: {exception}");
         Stop();
     }
 }
@@ -1206,7 +1204,7 @@ provider runs its coroutine to the end before it pools anything.
 | **ScreenModule** | `IScreenService.Open<TScreen>().Show()` | UI screens and popups: layers, pooling, addressable loading, opening and closing animations. → [docs](Runtime/ScreenModule/Documentation/ScreenModule.md) |
 | **PoolModule** | `IPoolService.Get<T>(key, parent)` | Config-driven object pooling with groups and prewarming. → [docs](Runtime/PoolModule/Documentation/PoolModule.md) |
 | **AssetModule** | `IAssetService.LoadAssetAsync<T>(key, groupId)` | The one Addressables door: load-once with owner-scoped release, group loads with progress and background priority, download size and dependencies. Screens and pools load through it. → [docs](Runtime/AssetModule/Documentation/AssetModule.md) |
-| **ConsoleModule** | `FlowLogger.Log(FlowModule.PlayerModule, …)` | A filterable in-editor console, wired into the framework itself. → [docs](Runtime/ConsoleModule/Documentation/FlowConsole.md) |
+| **ConsoleModule** | `FlowLogger.Log("…")` | A filterable in-editor console, wired into the framework itself. → [docs](Runtime/ConsoleModule/Documentation/FlowConsole.md) |
 | **ExtensionModule** | `transform.position.WithY(0f)` | Extension methods that carry no framework of their own: vector and float maths, enum flags, list conversion and UTC time formatting. |
 
 The framework logs its own activity on the built-in channels `Context`,
@@ -1222,15 +1220,23 @@ complaining about your code — a command that released without retaining, a vie
 no Context above it — it opens **your** file rather than the framework's guard clause,
 which is the only answer that tells the reader something they did not already know.
 
-For your own logs, Flow Console generates one channel per module - a `const string` on
-`FlowModule`, with the module's colour beside it - in the module itself, as a part of its own:
+For your own logs, name nothing but the message. The compiler writes the file the call sits in
+into the call, and the module is in the path: a Command under `Modules/PlayerModule/…` logs on
+`PlayerModule`, a screen under `zScreenModules/MainScreenModule/…` on `MainScreenModule`, and a
+test module's files on the module they test. A line copied into another module lands on that
+module by itself.
 
 ```csharp
 using FlowIoC.ConsoleModule;
 
-FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
-FlowLogger.LogError(FlowModule.PlayerModule, "Currency went negative.");
+FlowLogger.Log("Execute - AddCurrencyCommand");
+FlowLogger.LogError("Currency went negative.");
 ```
+
+The channel behind that is one per module - a `const string` on `FlowModule`, with the module's
+colour beside it, generated in the module itself as a part of its own. Name it by hand only where
+the file is not the module the line is about, a Connector reporting on the module it wires:
+`FlowLogger.Log(FlowModule.PlayerModule, "…")`.
 
 Every module is coloured from the day it is created, picked from twelve tones by its name. A module
 that wants a colour or a tag of its own says so in its `MODULE.md`, as `Colour:` and `Profile:` lines

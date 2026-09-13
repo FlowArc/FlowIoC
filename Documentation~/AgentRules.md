@@ -459,9 +459,18 @@ by hand or through the Flow Console's Filters panel - never the generated part.
 ### Logging
 
 ```csharp
-FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
-FlowLogger.LogError(FlowModule.PlayerModule, "Currency went negative.");
+FlowLogger.Log("Execute - AddCurrencyCommand");
+FlowLogger.LogError("Currency went negative.");
 ```
+
+**A log names no channel.** The compiler writes the file the call sits in into the call, and the
+module is in the path - a Command under `Modules/PlayerModule/…` logs on `PlayerModule`, a screen
+under `zScreenModules/MainScreenModule/…` on `MainScreenModule`, a test module's files on the module
+they test. A line copied into another module lands on that module by itself, which a line that
+names `FlowModule.PlayerModule` does not. Name the channel by hand only where the file is not the
+module the line is about - a Connector reporting on the module it wires - and then with the
+module's constant: `FlowLogger.Log(FlowModule.PlayerModule, "…")`. Two strings are channel then
+message, so `FlowLogger.Log("Player", "…")` logs on a channel called `Player` that no module owns.
 
 **A log message spells names out. Never `nameof` inside one.**
 `$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand` is a real

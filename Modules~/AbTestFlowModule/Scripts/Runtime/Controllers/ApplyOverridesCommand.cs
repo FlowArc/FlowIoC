@@ -26,7 +26,7 @@ namespace Modules.AbTestFlowModule.Controllers
 
         public override void Execute()
         {
-            FlowLogger.Log(FlowModule.AbTestFlowModule, "Execute - ApplyOverridesCommand");
+            FlowLogger.Log("Execute - ApplyOverridesCommand");
 
             foreach (AbTestStatusRVO status in _model.Statuses)
             {
@@ -42,10 +42,9 @@ namespace Modules.AbTestFlowModule.Controllers
                     if (Apply(pair.Original, pair.Variant))
                         continue;
 
-                    FlowLogger.LogError(FlowModule.AbTestFlowModule,
-                        $"Execute - ApplyOverridesCommand - '{status.AbTestId}' group '{group.Name}' "
-                        + "could not write its variant over the original. The two are a different type, or "
-                        + "a slot is empty.", pair.Original);
+                    FlowLogger.LogError($"Execute - ApplyOverridesCommand - '{status.AbTestId}' group '{group.Name}' "
+                                        + "could not write its variant over the original. The two are a different type, or "
+                                        + "a slot is empty.", pair.Original);
                 }
             }
         }

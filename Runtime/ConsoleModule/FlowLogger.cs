@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -47,6 +48,7 @@ namespace FlowIoC.ConsoleModule
         private static readonly CollapseKeyBuilder CollapseKeys = new();
         private static readonly FlowStackFrameFilter StackFrames = new();
         private static readonly FlowConsoleChannelRule ChannelRule = new();
+        private static readonly CallerModuleResolver CallerModule = new();
 
         /// <summary>The player's end of the console. Installed only in a development player.</summary>
         internal static readonly PlayerLogSender Sender = new();
@@ -398,6 +400,21 @@ namespace FlowIoC.ConsoleModule
             AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log);
         }
 
+        /// <summary>
+        /// A line on the caller's own module. The compiler writes the file the call sits in into
+        /// the call, and the module is in the path - <c>Modules/PlayerModule/...</c> logs on
+        /// <c>PlayerModule</c> - so nothing has to be named, and the row knows its source without a
+        /// stack being built. The <c>line</c> parameter is what keeps this apart from
+        /// <c>Log(channel, message)</c> for the compiler; neither is ever passed by hand.
+        /// </summary>
+        [HideInCallstack]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
+        public static void Log(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
+        {
+            string channel = CallerModule.ChannelOf(file);
+            AddCustomLogAt(channel, ResolveMessage(channel, message), LogType.Log, file, line);
+        }
+
         [HideInCallstack]
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void Log(string channel, string message)
@@ -432,6 +449,15 @@ namespace FlowIoC.ConsoleModule
         internal static void LogWarning(SystemLogType systemLogType, string message, Type blame)
         {
             AddLog(systemLogType, message, LogType.Warning, blame);
+        }
+
+        /// <summary>A warning on the caller's own module - see <see cref="Log(string, int, string)"/>.</summary>
+        [HideInCallstack]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
+        public static void LogWarning(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
+        {
+            string channel = CallerModule.ChannelOf(file);
+            AddCustomLogAt(channel, ResolveMessage(channel, message), LogType.Warning, file, line);
         }
 
         [HideInCallstack]
@@ -469,6 +495,28 @@ namespace FlowIoC.ConsoleModule
             WriteError(SystemChannelName(systemLogType), systemLogType, message, unityMessage, context, blame);
         }
 
+        /// <summary>
+        /// An error on the caller's own module - see <see cref="Log(string, int, string)"/>. An
+        /// error still works out its stack, whatever the capture setting says, because the detail
+        /// panel shows the whole of it; the caller's file and line stand in only where the stack
+        /// has nothing to say.
+        /// </summary>
+        [HideInCallstack]
+        public static void LogError(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
+        {
+            string channel = CallerModule.ChannelOf(file);
+            WriteError(channel, null, ResolveMessage(channel, message), null, null, null, file, line);
+        }
+
+        /// <summary>An error on the caller's own module, about the object that is selected when the row is clicked.</summary>
+        [HideInCallstack]
+        public static void LogError(string message, UnityEngine.Object context, [CallerLineNumber] int line = 0,
+            [CallerFilePath] string file = "")
+        {
+            string channel = CallerModule.ChannelOf(file);
+            WriteError(channel, null, ResolveMessage(channel, message), null, context, null, file, line);
+        }
+
         [HideInCallstack]
         public static void LogError(string channel, string message, UnityEngine.Object context = null)
         {
@@ -490,12 +538,19 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         [HideInCallstack]
         private static void WriteError(string channel, SystemLogType? systemLogType, string message,
-            string unityMessage, UnityEngine.Object context, Type blame = null)
+            string unityMessage, UnityEngine.Object context, Type blame = null, string filePath = null,
+            int lineNumber = 0)
         {
             if (IsRecording)
             {
                 var log = CreateLogEntry(message, LogType.Error, blame);
                 log.Channel = channel;
+
+                if (string.IsNullOrEmpty(log.SourceFilePath) && !string.IsNullOrEmpty(filePath))
+                {
+                    log.SourceFilePath = filePath;
+                    log.SourceLineNumber = lineNumber;
+                }
 
                 if (systemLogType.HasValue)
                     log.SystemLogType = systemLogType.Value;
@@ -522,6 +577,15 @@ namespace FlowIoC.ConsoleModule
         }
 
         // ======================== LogLong ========================
+
+        /// <summary>A long line on the caller's own module - see <see cref="Log(string, int, string)"/>.</summary>
+        [HideInCallstack]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
+        public static void LogLong(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
+        {
+            string channel = CallerModule.ChannelOf(file);
+            LogLongInternal(channel, message, Channels.ProfileOf(channel));
+        }
 
         [HideInCallstack]
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
@@ -791,6 +855,33 @@ namespace FlowIoC.ConsoleModule
             {
                 var log = CreateLogEntry(message, logType, blame);
                 log.Channel = channel;
+
+                if (Channels.TryGet(channel, out FlowLogChannel channelInfo))
+                    log.LogColor = channelInfo.Color;
+
+                Record(log);
+            }
+
+            ForwardToUnityConsole(channel, message, logType);
+        }
+
+        /// <summary>
+        /// A game line that already knows where it came from: the compiler wrote the caller's file
+        /// and line into the call, so no stack is built whatever the capture setting says - the
+        /// same bargain <see cref="LogAt"/> makes for a Connector.
+        /// </summary>
+        [HideInCallstack]
+        private static void AddCustomLogAt(string channel, string message, LogType logType, string filePath, int lineNumber)
+        {
+            if (!Preferences.IsLoggingEnabled) return;
+
+            if (IsRecording)
+            {
+                var log = CreateLogEntry(message, logType, null, false);
+                log.Channel = channel;
+                log.SourceFilePath = filePath;
+                log.SourceLineNumber = lineNumber;
+                log.SourceTrace = StackFrames.FileNameOf(filePath) + ":" + lineNumber;
 
                 if (Channels.TryGet(channel, out FlowLogChannel channelInfo))
                     log.LogColor = channelInfo.Color;

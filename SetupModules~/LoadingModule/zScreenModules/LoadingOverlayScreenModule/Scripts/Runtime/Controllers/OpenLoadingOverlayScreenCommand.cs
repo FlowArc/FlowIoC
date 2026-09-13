@@ -40,7 +40,7 @@ namespace Modules.LoadingModule.LoadingOverlayScreenModule.Controllers
 
                 if (screen == null)
                 {
-                    FlowLogger.LogError(FlowModule.LoadingOverlayScreenModule, "OpenLoadingOverlayScreenCommand - the overlay did not open.");
+                    FlowLogger.LogError("OpenLoadingOverlayScreenCommand - the overlay did not open.");
                     Stop();
                     return;
                 }
@@ -50,8 +50,7 @@ namespace Modules.LoadingModule.LoadingOverlayScreenModule.Controllers
             }
             catch (Exception exception)
             {
-                FlowLogger.LogError(FlowModule.LoadingOverlayScreenModule,
-                    $"OpenLoadingOverlayScreenCommand threw while opening the overlay: {exception}");
+                FlowLogger.LogError($"OpenLoadingOverlayScreenCommand threw while opening the overlay: {exception}");
                 Stop();
             }
         }
