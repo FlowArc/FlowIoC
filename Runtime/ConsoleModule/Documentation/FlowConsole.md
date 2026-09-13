@@ -306,6 +306,11 @@ reporting on the module it wires, a test outside the modules — with the module
 FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
 ```
 
+The Module Scanner's *Log channels* check reports a channel typed by hand, `FlowModule.Default`,
+or a module's own constant inside that module, with the file and the line, and Fix rewrites the
+call: it cuts the channel where only the message follows, and writes the module's constant where
+a profile or a context follows.
+
 `LogLong` is for output you want kept intact — a JSON body, a serialized save — that
 would otherwise be truncated.
 

@@ -15,8 +15,9 @@ namespace FlowIoC.Editor.ModuleScanner
     /// asmdef that has to name the Shared assembly written above. The signal-reference check reads
     /// a finished reference list, so it comes after the ones that
     /// add to it, the log type part is checked once the module's own assemblies are settled
-    /// because its asmref is about which assembly the part lands in, and the card is written last
-    /// because its block names the assemblies every check above it settles. On the project side the index is refreshed first, and the orphan
+    /// because its asmref is about which assembly the part lands in, the log channels are read once the
+    /// part exists because a repair may write the module's constant into a call, and the card is
+    /// written last because its block names the assemblies every check above it settles. On the project side the index is refreshed first, and the orphan
     /// sweep runs after the assemblies are known so that a newly written one is not mistaken for
     /// a stray file.
     ///
@@ -40,6 +41,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 new SignalReferenceCheck(),
                 new DotSettingsCheck(),
                 new FlowModulePartCheck(),
+                new LogChannelCheck(),
                 new ModuleCardCheck()
             },
             new IProjectCheck[]
