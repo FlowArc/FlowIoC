@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.BaseModule.ProjectPaths;
-using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.Addressables;
 using FlowIoC.Editor.Config.ModuleConfig;
 using UnityEditor;
@@ -34,7 +33,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
             RemoveScreenAddressables(moduleName, modulePath, deletedItems);
             RemoveReferencesToModule(moduleName, modulePath, deletedItems);
 
-            RemoveLogType(moduleName, modulePath, deletedItems);
             RemoveProjectFiles(moduleName, modulePath, deletedItems);
             DeleteModuleFolder(modulePath, deletedItems);
             CleanupEmptyParentFolder(modulePath, deletedItems);
@@ -196,27 +194,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
             foreach (string line in new ModuleReferenceCleaner().Clean(modulePath, assemblies))
                 Log(line, deletedItems);
-        }
-
-        /// <summary>
-        /// The FlowLogType channel of the module and of every module inside it. A nested module has
-        /// a channel of its own, so a parent deleted without this leaves an empty column in the
-        /// Filters panel that nothing will ever write to.
-        ///
-        /// ModuleAutoDetector removes an orphaned channel on its own, but only once per Editor
-        /// session, so leaving it to that means the channel is wrong for as long as the Editor stays
-        /// open. Doing it here also lets the deletion say which channels went, which is the report
-        /// this whole method exists to write.
-        /// </summary>
-        private static void RemoveLogType(string moduleName, string modulePath, List<string> deletedItems)
-        {
-            CD_FlowConsole settings = FlowLogger.Settings;
-            if (settings == null) return;
-
-            foreach (string name in new ModuleNames().Of(modulePath, moduleName))
-            {
-                if (settings.RemoveLogType(name)) Log($"Log type removed: {name}", deletedItems);
-            }
         }
 
         /// <summary>

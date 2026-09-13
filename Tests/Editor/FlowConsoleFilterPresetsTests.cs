@@ -52,18 +52,19 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// Presets are one developer's, so they live in EditorPrefs. CD_FlowConsole is committed
-        /// and a personal filter must not turn up in somebody's diff.
+        /// Presets are one developer's, so they live in EditorPrefs. Saving one is not applying
+        /// it: the switches a developer has thrown stay exactly where they were.
         /// </summary>
         [Test]
-        public void Saving_a_preset_does_not_touch_the_settings_asset()
+        public void Saving_a_preset_does_not_throw_a_switch()
         {
             _presets.Delete("probe");
-            FlowLogger.Settings.LogTypes[0].IsVisibleByDefault = true;
+            Assert.IsTrue(FlowLogger.Channels.TryGet("Context", out FlowLogChannel context));
+            bool before = FlowLogger.Channels.IsShown(context);
 
             _presets.Save("probe", new List<string> {"Context"});
 
-            Assert.IsTrue(FlowLogger.Settings.LogTypes[0].IsVisibleByDefault);
+            Assert.AreEqual(before, FlowLogger.Channels.IsShown(context));
             _presets.Delete("probe");
         }
     }

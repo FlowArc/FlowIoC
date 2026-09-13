@@ -108,8 +108,7 @@ namespace FlowIoC.Tests
 
         /// <summary>
         /// A scan that found nothing is far more likely to be a failed scan than a project with
-        /// no modules, and rebuilding on the strength of it would empty the index. The same
-        /// caution ModuleLogTypePlan already takes about removals.
+        /// no modules, and rebuilding on the strength of it would empty the index.
         /// </summary>
         [Test]
         public void An_empty_scan_is_not_treated_as_an_empty_project()

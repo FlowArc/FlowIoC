@@ -8,12 +8,21 @@ using System.Text.RegularExpressions;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.Migration;
+using FlowIoC.Editor.ModuleCards;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
 using UnityEngine;
 
 namespace FlowIoC.Editor.Console
 {
+    /// <summary>One module's channel as its generated part declares it: the name, the colour, and what decorates a line.</summary>
+    internal class ChannelPartEVO
+    {
+        internal string Name { get; set; }
+        internal Color32 Color { get; set; }
+        internal FlowLogProfile Profile { get; set; }
+    }
+
     internal static class FlowLogTypeGenerator
     {
         private static readonly FlowIoCProjectPaths Paths = new FlowIoCProjectPaths();
@@ -22,6 +31,8 @@ namespace FlowIoC.Editor.Console
         private static readonly string GeneratedFilePath = Paths.FlowLogType;
         private static readonly string AsmRefPath = Paths.GeneratedAsmRef;
 
+        private const string DEFAULT_CHANNEL = "Default";
+
         /// <summary>
         /// What puts a generated file into FlowIoC's own assembly rather than into whatever asmdef
         /// sits above it. The parts of FlowLogType have to share an assembly to be one class, and
@@ -29,81 +40,31 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private const string ASM_REF_CONTENT = "{\n    \"reference\": \"FlowIoC\"\n}";
 
-        private static bool _generatePending;
-
         [InitializeOnLoadMethod]
         private static void Initialize()
         {
-            CD_FlowConsole.OnProjectLogTypesChanged -= OnProjectLogTypesChanged;
-            CD_FlowConsole.OnProjectLogTypesChanged += OnProjectLogTypesChanged;
-
             EditorApplication.delayCall += Generate;
         }
 
-        private static void OnProjectLogTypesChanged()
-        {
-            if (_generatePending) return;
-            _generatePending = true;
-            EditorApplication.delayCall += () =>
-            {
-                _generatePending = false;
-                Generate();
-            };
-        }
-
+        /// <summary>
+        /// Writes every part from what the project is: one per module in the index, and the
+        /// shared file that carries the Default channel. There is no list of channels to consult -
+        /// a module has a channel because it is a module - so a run reads the index and the cards
+        /// and writes whatever differs from what is on disk.
+        /// </summary>
         public static void Generate()
         {
             // Before anything is written at the new path. A copy of FlowLogType at the old path and
             // one at the new path at the same time is a duplicate type definition, not clutter.
             new FlowIoCPathMigrator().MigrateIfNeeded();
 
-            var settings = FlowLogger.Settings;
-            if (settings == null) return;
-
-            CD_FlowConsole.FlowConsoleLogTypeCVO defaultType = null;
-            var moduleTypes = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>();
-            var customTypes = new List<CD_FlowConsole.FlowConsoleLogTypeCVO>();
-
-            foreach (var logType in settings.LogTypes)
-            {
-                if (logType.IsMandatory) continue;
-
-                if (string.Equals(logType.Name, "Default", StringComparison.OrdinalIgnoreCase))
-                {
-                    defaultType = logType;
-                    continue;
-                }
-
-                if (logType.IsAutoRegistered)
-                    moduleTypes.Add(logType);
-                else
-                    customTypes.Add(logType);
-            }
-
-            if (defaultType == null && moduleTypes.Count == 0 && customTypes.Count == 0)
-            {
-                // Nothing to generate is a legitimate state, but so is "the settings asset did not
-                // load and this object is a stand-in". Only the first one may delete source.
-                if (!new LogTypeSettingsGuard().IsTrustworthy(settings.IsStandIn, settings.LogTypes))
-                {
-                    Debug.LogWarning(
-                        "<color=cyan>FlowConsole:</color> the log types came back empty on a settings object that " +
-                        "did not come from disk, which means CD_FlowConsole.asset could not be loaded rather than " +
-                        $"that the project has no log types. {GeneratedFolder} was left in place, and the file is " +
-                        "regenerated as soon as the settings load.");
-                    return;
-                }
-
-                CleanupGeneratedFiles();
-                return;
-            }
-
             EnsureDirectoryExists();
             EnsureAsmRefExists();
 
-            bool wroteSomething = WriteModuleParts(moduleTypes);
+            int moduleCount = 0;
+            bool wroteSomething = WriteModuleParts(ref moduleCount);
 
-            string content = GenerateClassContent(defaultType, customTypes);
+            string content = GenerateClassContent();
             string fullPath = GetFullPath(GeneratedFilePath);
 
             bool centralChanged = !File.Exists(fullPath) || File.ReadAllText(fullPath) != content;
@@ -116,13 +77,11 @@ namespace FlowIoC.Editor.Console
 
             if (!centralChanged && !wroteSomething)
             {
-                Debug.Log($"<color=cyan>FlowConsole:</color> FlowLogType is already up to date " +
-                          $"({moduleTypes.Count} module type(s), {customTypes.Count} custom type(s)).");
+                Debug.Log($"<color=cyan>FlowConsole:</color> FlowLogType is already up to date ({moduleCount} module channel(s)).");
                 return;
             }
 
-            Debug.Log($"<color=cyan>FlowConsole:</color> FlowLogType generated with " +
-                      $"{moduleTypes.Count} module type(s) and {customTypes.Count} custom type(s).");
+            Debug.Log($"<color=cyan>FlowConsole:</color> FlowLogType generated with {moduleCount} module channel(s).");
         }
 
         /// <summary>
@@ -135,28 +94,34 @@ namespace FlowIoC.Editor.Console
         /// The part carries an asmref beside it so that it compiles into FlowIoC rather than into
         /// the module's own assembly. Partial parts must share an assembly, and every module has an
         /// assembly of its own - so without the asmref this could not be a partial class at all.
+        ///
+        /// The colour beside the name is the module's own: what its card says, or the palette's
+        /// pick for the name when the card says nothing. A test module has no channel.
         /// </summary>
-        private static bool WriteModuleParts(List<CD_FlowConsole.FlowConsoleLogTypeCVO> moduleTypes)
+        private static bool WriteModuleParts(ref int moduleCount)
         {
             ED_ModuleIndex index = new ModuleIndexProvider().LoadOrCreate();
             if (index == null) return false;
 
             bool wrote = false;
             var written = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var reader = new ChannelPartReader();
 
-            foreach (var type in moduleTypes.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
+            foreach (ModuleDescriptorEVO module in index.Modules
+                         .Where(m => m.Kind != ModuleKind.Test)
+                         .OrderBy(m => m.Name, StringComparer.OrdinalIgnoreCase))
             {
-                if (!index.TryGetByName(type.Name, out ModuleDescriptorEVO module)) continue;
-
                 string moduleFolder = AssetDatabase.GUIDToAssetPath(module.FolderGuid);
                 if (string.IsNullOrEmpty(moduleFolder)) continue;
 
+                moduleCount++;
+
                 string folder = moduleFolder + "/Scripts/Generated";
-                string filePath = folder + "/FlowLogType." + type.Name + ".cs";
+                string filePath = folder + "/FlowLogType." + module.Name + ".cs";
 
                 written.Add(filePath);
 
-                string content = GeneratePartContent(type);
+                string content = GeneratePartContent(reader.Read(module.Name, GetFullPath(moduleFolder)));
                 string fullPath = GetFullPath(filePath);
 
                 if (File.Exists(fullPath) && File.ReadAllText(fullPath) == content)
@@ -179,8 +144,8 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>
-        /// A part whose channel is gone. Delete Module takes the whole module folder, so this is
-        /// for the other way round: a channel unregistered while the module stayed.
+        /// A part whose channel is gone: a module renamed while its old part stayed in the folder.
+        /// Delete Module takes the whole module folder, so this is for the other way round.
         /// </summary>
         private static bool RemoveOrphanParts(ED_ModuleIndex index, HashSet<string> written)
         {
@@ -224,18 +189,39 @@ namespace FlowIoC.Editor.Console
             AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
         }
 
-        private static string GeneratePartContent(CD_FlowConsole.FlowConsoleLogTypeCVO type)
+        /// <summary>
+        /// The part: the channel, its colour, and its profile when the card declares one. The
+        /// colour is a Color32 written in bytes, so the file says exactly what the card said and a
+        /// regeneration from an unchanged card writes an identical file.
+        /// </summary>
+        internal static string GeneratePartContent(ChannelPartEVO channel)
         {
             var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            string identifier = SanitizeIdentifier(type.Name, used);
+            string identifier = SanitizeIdentifier(channel.Name, used);
+            string name = EscapeXml(channel.Name);
 
             var sb = new StringBuilder();
 
-            AppendHeader(sb);
+            AppendHeader(sb, true);
             sb.AppendLine("    public static partial class FlowLogType");
             sb.AppendLine("    {");
-            sb.AppendLine($"        /// <summary>The {EscapeXml(type.Name)} channel.</summary>");
-            sb.AppendLine($"        public const string {identifier} = \"{type.Name}\";");
+            sb.AppendLine($"        /// <summary>The {name} channel.</summary>");
+            sb.AppendLine($"        public const string {identifier} = \"{channel.Name}\";");
+            sb.AppendLine();
+            sb.AppendLine(
+                $"        /// <summary>The colour {name}'s rows are drawn in. A \"Colour: #RRGGBB\" line above the block in the module's MODULE.md sets it.</summary>");
+            sb.AppendLine(
+                $"        public static readonly Color {identifier}Color = new Color32({channel.Color.r}, {channel.Color.g}, {channel.Color.b}, {channel.Color.a});");
+
+            if (channel.Profile != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine(
+                    $"        /// <summary>What decorates a {name} line: the \"Profile:\" line above the block in the module's MODULE.md.</summary>");
+                sb.AppendLine($"        public static readonly FlowLogProfile {identifier}Profile = new FlowLogProfile()");
+                AppendProfileCalls(sb, channel.Profile);
+            }
+
             sb.AppendLine("    }");
             sb.Append("}");
 
@@ -243,52 +229,72 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>
-        /// What is left in the shared file once every module's channel is declared in the module:
-        /// the project's Default channel, and any channel somebody added by hand. Those belong to
-        /// no module, so there is nowhere else to put them.
+        /// The fluent calls that rebuild the profile at load. Colours go as hex strings, the way
+        /// the card wrote them, through the overloads FlowLogProfile already has for a hand-written
+        /// profile.
         /// </summary>
-        private static string GenerateClassContent(
-            CD_FlowConsole.FlowConsoleLogTypeCVO defaultType,
-            List<CD_FlowConsole.FlowConsoleLogTypeCVO> customTypes)
+        private static void AppendProfileCalls(StringBuilder sb, FlowLogProfile profile)
+        {
+            var calls = new List<string>();
+
+            if (!string.IsNullOrEmpty(profile.Prefix))
+                calls.Add(
+                    $".SetPrefix({Literal(profile.Prefix)}, {StyleLiteral(profile.PrefixStyle)}, \"#{FlowLogProfileLine.HexOf(profile.PrefixColor)}\")");
+
+            if (profile.MessageStyle != FlowTextStyle.None)
+                calls.Add($".SetMessageStyle({StyleLiteral(profile.MessageStyle)})");
+
+            if (profile.MessageColor != Color.white)
+                calls.Add($".SetMessageColor(\"#{FlowLogProfileLine.HexOf(profile.MessageColor)}\")");
+
+            if (!string.IsNullOrEmpty(profile.Postfix))
+                calls.Add(
+                    $".SetPostfix({Literal(profile.Postfix)}, {StyleLiteral(profile.PostfixStyle)}, \"#{FlowLogProfileLine.HexOf(profile.PostfixColor)}\")");
+
+            for (int index = 0; index < calls.Count; index++)
+                sb.AppendLine("            " + calls[index] + (index == calls.Count - 1 ? ";" : ""));
+        }
+
+        private static string StyleLiteral(FlowTextStyle style)
+        {
+            if (style == FlowTextStyle.None) return "FlowTextStyle.None";
+
+            var names = new List<string>();
+            if ((style & FlowTextStyle.Bold) != 0) names.Add("FlowTextStyle.Bold");
+            if ((style & FlowTextStyle.Italic) != 0) names.Add("FlowTextStyle.Italic");
+            if ((style & FlowTextStyle.Underline) != 0) names.Add("FlowTextStyle.Underline");
+
+            return names.Count == 0 ? "FlowTextStyle.None" : string.Join(" | ", names);
+        }
+
+        private static string Literal(string text)
+        {
+            return "\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+        }
+
+        /// <summary>
+        /// What is left in the shared file once every module's channel is declared in the module:
+        /// the project's Default channel, which belongs to no module and so has nowhere else to go.
+        /// The file is kept - rather than the package declaring Default itself - because a project
+        /// upgrading already has it, and two declarations of one constant would stop the project
+        /// compiling before anything could delete the older one.
+        /// </summary>
+        private static string GenerateClassContent()
         {
             var sb = new StringBuilder();
-            var usedIdentifiers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            AppendHeader(sb);
+            AppendHeader(sb, false);
             sb.AppendLine("    public static partial class FlowLogType");
             sb.AppendLine("    {");
-
-            if (defaultType != null)
-            {
-                string identifier = SanitizeIdentifier(defaultType.Name, usedIdentifiers);
-                sb.AppendLine($"        /// <summary>The {EscapeXml(defaultType.Name)} channel.</summary>");
-                sb.AppendLine($"        public const string {identifier} = \"{defaultType.Name}\";");
-            }
-
-            if (customTypes.Count > 0)
-            {
-                sb.AppendLine();
-                sb.AppendLine("        #region Custom Log Types");
-                sb.AppendLine();
-
-                foreach (var type in customTypes.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase))
-                {
-                    string identifier = SanitizeIdentifier(type.Name, usedIdentifiers);
-                    sb.AppendLine($"        /// <summary>The {EscapeXml(type.Name)} channel.</summary>");
-                    sb.AppendLine($"        public const string {identifier} = \"{type.Name}\";");
-                    sb.AppendLine();
-                }
-
-                sb.AppendLine("        #endregion");
-            }
-
+            sb.AppendLine($"        /// <summary>The {DEFAULT_CHANNEL} channel.</summary>");
+            sb.AppendLine($"        public const string {DEFAULT_CHANNEL} = \"{DEFAULT_CHANNEL}\";");
             sb.AppendLine("    }");
             sb.Append("}");
 
             return sb.ToString();
         }
 
-        private static void AppendHeader(StringBuilder sb)
+        private static void AppendHeader(StringBuilder sb, bool usesUnityEngine)
         {
             sb.AppendLine("//------------------------------------------------------------------------------");
             sb.AppendLine("// <auto-generated>");
@@ -297,6 +303,13 @@ namespace FlowIoC.Editor.Console
             sb.AppendLine("// </auto-generated>");
             sb.AppendLine("//------------------------------------------------------------------------------");
             sb.AppendLine();
+
+            if (usesUnityEngine)
+            {
+                sb.AppendLine("using UnityEngine;");
+                sb.AppendLine();
+            }
+
             sb.AppendLine("namespace FlowIoC.ConsoleModule");
             sb.AppendLine("{");
         }
@@ -350,39 +363,53 @@ namespace FlowIoC.Editor.Console
             string fullPath = GetFullPath(AsmRefPath);
             if (File.Exists(fullPath)) return;
 
-            const string asmRefContent = "{\n    \"reference\": \"FlowIoC\"\n}";
-            File.WriteAllText(fullPath, asmRefContent);
+            File.WriteAllText(fullPath, ASM_REF_CONTENT);
             AssetDatabase.ImportAsset(AsmRefPath, ImportAssetOptions.ForceUpdate);
-        }
-
-        private static void CleanupGeneratedFiles()
-        {
-            string fullPath = GetFullPath(GeneratedFilePath);
-            if (!File.Exists(fullPath)) return;
-
-            AssetDatabase.DeleteAsset(GeneratedFilePath);
-
-            string asmRefFullPath = GetFullPath(AsmRefPath);
-            if (File.Exists(asmRefFullPath))
-                AssetDatabase.DeleteAsset(AsmRefPath);
-
-            string dirFullPath = GetFullPath(GeneratedFolder);
-            if (Directory.Exists(dirFullPath) && Directory.GetFiles(dirFullPath).Length == 0
-                                              && Directory.GetDirectories(dirFullPath).Length == 0)
-            {
-                AssetDatabase.DeleteAsset(GeneratedFolder);
-            }
-
-            Debug.Log(
-                $"<color=cyan>FlowConsole:</color> {GeneratedFilePath} was removed, because the settings " +
-                "carry no log types beyond the mandatory channels and there is nothing left to generate. " +
-                "It is written again the moment a module or a custom channel is registered.");
         }
 
         private static string GetFullPath(string assetPath)
         {
             string projectRoot = Path.GetDirectoryName(Application.dataPath);
             return Path.Combine(projectRoot, assetPath);
+        }
+    }
+
+    /// <summary>
+    /// What a module's part is written from: the card's Colour and Profile lines when it has them,
+    /// the palette's pick for the name when it does not. The card is read rather than the index
+    /// because the card is the module's own file - the one a person edits - and the index is a
+    /// cache the next scan rebuilds.
+    /// </summary>
+    internal class ChannelPartReader
+    {
+        private readonly ModuleCardFile _cards = new ModuleCardFile();
+        private readonly ModuleCardChannelLines _lines = new ModuleCardChannelLines();
+        private readonly FlowLogProfileLine _profileLine = new FlowLogProfileLine();
+        private readonly FlowChannelPalette _palette = new FlowChannelPalette();
+
+        internal ChannelPartEVO Read(string channelName, string moduleAbsolutePath)
+        {
+            return From(channelName, _lines.Read(_cards.Read(moduleAbsolutePath)));
+        }
+
+        internal ChannelPartEVO From(string channelName, ModuleCardChannelLinesEVO lines)
+        {
+            Color32 color = _palette.Pick(channelName);
+
+            if (!string.IsNullOrEmpty(lines.Colour))
+            {
+                string hex = lines.Colour.StartsWith("#", StringComparison.Ordinal) ? lines.Colour : "#" + lines.Colour;
+
+                if (ColorUtility.TryParseHtmlString(hex, out Color chosen))
+                    color = chosen;
+            }
+
+            return new ChannelPartEVO
+            {
+                Name = channelName,
+                Color = color,
+                Profile = _profileLine.Parse(lines.Profile)
+            };
         }
     }
 }

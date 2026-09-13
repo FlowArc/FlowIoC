@@ -14,7 +14,6 @@ namespace FlowIoC.Tests
             Assert.That(paths.FolderPainterConfig, Does.StartWith(paths.Root));
             Assert.That(paths.FlowLogType, Does.StartWith(paths.Root));
             Assert.That(paths.GeneratedAsmRef, Does.StartWith(paths.Root));
-            Assert.That(paths.ConsoleSettings, Does.StartWith(paths.Root));
             Assert.That(paths.DirectoryStructureConfig("Main"), Does.StartWith(paths.Root));
         }
 
@@ -32,19 +31,6 @@ namespace FlowIoC.Tests
             Assert.That(paths.CodeGeneratorSettings, Does.Contain("/Editor/"));
             Assert.That(paths.FolderPainterConfig, Does.Contain("/Editor/"));
             Assert.That(paths.DirectoryStructureConfig("Screen"), Does.Contain("/Editor/"));
-        }
-
-        /// <summary>
-        /// FlowLogger reads the settings with Resources.Load, which only searches folders named
-        /// exactly Resources.
-        /// </summary>
-        [Test]
-        public void The_console_settings_live_in_a_folder_named_Resources()
-        {
-            var paths = new FlowIoCProjectPaths();
-
-            Assert.AreEqual(paths.Root + "/Resources", paths.ResourcesRoot);
-            Assert.AreEqual(paths.ResourcesRoot + "/CD_FlowConsole.asset", paths.ConsoleSettings);
         }
 
         [Test]

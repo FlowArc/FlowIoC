@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using FlowIoC.ConsoleModule;
@@ -109,10 +110,11 @@ namespace FlowIoC.Tests
 
         /// <summary>
         /// The guard on the claim that a shipping build pays nothing for the flow tree. Without
-        /// [Conditional] these calls would survive into a player build.
+        /// [Conditional] these calls would survive into a release build. Two conditions, OR'd: the
+        /// Editor, and a Development Build - the two places somebody can read the console.
         /// </summary>
         [Test]
-        public void Every_flow_mutator_compiles_out_without_ENABLE_LOG()
+        public void Every_flow_mutator_compiles_out_of_a_release_build()
         {
             AssertConditional(nameof(FlowLogger.NextFlowId));
             AssertConditional(nameof(FlowLogger.EnterFlow));
@@ -130,8 +132,11 @@ namespace FlowIoC.Tests
             var attributes = (ConditionalAttribute[])
                 method.GetCustomAttributes(typeof(ConditionalAttribute), false);
 
-            Assert.AreEqual(1, attributes.Length, methodName + " carries no [Conditional].");
-            Assert.AreEqual("ENABLE_LOG", attributes[0].ConditionString);
+            var conditions = new List<string>();
+            foreach (ConditionalAttribute attribute in attributes) conditions.Add(attribute.ConditionString);
+
+            Assert.AreEqual(2, attributes.Length, methodName + " does not carry both [Conditional] attributes.");
+            CollectionAssert.AreEquivalent(new[] {"UNITY_EDITOR", "DEVELOPMENT_BUILD"}, conditions);
         }
     }
 }

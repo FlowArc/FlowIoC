@@ -1,18 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
-#if UNITY_EDITOR
-using FlowIoC.BaseModule.ProjectPaths;
-#endif
 
 namespace FlowIoC.ConsoleModule
 {
+    /// <summary>
+    /// The door every log goes through. Logging compiles only where somebody can read it: the
+    /// Editor, and a Development Build attached to one. Every plain log and warning carries
+    /// <c>[Conditional("UNITY_EDITOR")]</c> and <c>[Conditional("DEVELOPMENT_BUILD")]</c> - the two
+    /// are OR'd, the call stays if either symbol is defined - so a release build removes the calls
+    /// and the messages they would have built, and there is no scripting define to manage. An
+    /// error carries neither and is written whatever the build.
+    /// </summary>
     public static class FlowLogger
     {
+        private const string InEditor = "UNITY_EDITOR";
+        private const string InDevelopmentBuild = "DEVELOPMENT_BUILD";
+
         public static readonly List<ConsoleLog> Logs = new();
 
         private static readonly ConsoleLogTrimmer Trimmer = new();
@@ -29,12 +36,13 @@ namespace FlowIoC.ConsoleModule
         private const int LogTrimChunk = 256;
 
         private const string NotCaptured =
-            "Source not captured. Raise Stack Trace Capture in the Flow Console settings to see it.";
+            "Source not captured. Raise Source on the Flow Console's bar to see it.";
 
         private const char ArrowDown = '\u21d3';
         private const char ArrowUp = '\u21d1';
 
-        private static CD_FlowConsole _settings;
+        private static FlowConsolePreferences _preferences;
+        private static FlowLogChannels _channels;
 
         private static readonly CollapseKeyBuilder CollapseKeys = new();
         private static readonly FlowStackFrameFilter StackFrames = new();
@@ -63,11 +71,11 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>
         /// Takes the next flow id and records the flow it was started from. Returns nothing so
-        /// that it can carry [Conditional]: with ENABLE_LOG undefined the call and its
-        /// arguments are removed, and a shipping build pays nothing for the console's tree.
+        /// that it can carry [Conditional]: in a release build the call and its arguments are
+        /// removed, and a shipping build pays nothing for the console's tree.
         /// A caller must initialise the variables it passes, because nothing assigns them then.
         /// </summary>
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void NextFlowId(ref int flowId, ref int parentFlowId)
         {
             flowId = ++_flowCounter;
@@ -79,7 +87,7 @@ namespace FlowIoC.ConsoleModule
         /// carried rather than derived, so a log written three steps into a chain names the
         /// same parent as the one written at its start.
         /// </summary>
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void EnterFlow(int flowId, int parentFlowId, ref int previousFlowId,
             ref int previousParentFlowId)
         {
@@ -93,7 +101,7 @@ namespace FlowIoC.ConsoleModule
         /// Copies the flow that is current into a caller's own fields, for something that runs
         /// inside a flow somebody else started and has to re-enter it later.
         /// </summary>
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void CaptureCurrentFlow(ref int flowId, ref int parentFlowId)
         {
             flowId = _currentFlowId;
@@ -101,7 +109,7 @@ namespace FlowIoC.ConsoleModule
         }
 
         /// <summary>Puts back what EnterFlow displaced.</summary>
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void ExitFlow(int previousFlowId, int previousParentFlowId)
         {
             _currentFlowId = previousFlowId;
@@ -117,7 +125,7 @@ namespace FlowIoC.ConsoleModule
         /// It also costs nothing to have. The location is what the compiler wrote into the Bind
         /// call, and using it means a dispatch inside a group builds no stack at all.
         /// </summary>
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void EnterDeclaration(string file, int line, ref string previousFile, ref int previousLine)
         {
             previousFile = _currentDeclarationFile;
@@ -126,14 +134,14 @@ namespace FlowIoC.ConsoleModule
             _currentDeclarationLine = line;
         }
 
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void ExitDeclaration(string previousFile, int previousLine)
         {
             _currentDeclarationFile = previousFile;
             _currentDeclarationLine = previousLine;
         }
 
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void CaptureCurrentDeclaration(ref string file, ref int line)
         {
             file = _currentDeclarationFile;
@@ -161,7 +169,8 @@ namespace FlowIoC.ConsoleModule
             // Logs intentionally NOT cleared. What the console holds when a run starts is Clear on
             // Play's decision and nobody else's - wiping the list here threw away the rows the
             // reader had pinned, and did it after they had been carried across the domain reload.
-            _settings = null;
+            _preferences = null;
+            _channels = null;
             IsWritingToUnityConsole = false;
             _flowCounter = 0;
             _currentFlowId = 0;
@@ -173,61 +182,11 @@ namespace FlowIoC.ConsoleModule
             // subscription on every Play entry when domain reload is disabled.
         }
 
-        public static CD_FlowConsole Settings
-        {
-            get
-            {
-                if (_settings == null)
-                {
-                    _settings = Resources.Load<CD_FlowConsole>("CD_FlowConsole");
+        /// <summary>How much the logger does, as this developer set it. See <see cref="FlowConsolePreferences"/>.</summary>
+        public static FlowConsolePreferences Preferences => _preferences ??= new FlowConsolePreferences();
 
-                    if (_settings == null)
-                    {
-                        _settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
-                        _settings.ResetToDefaults();
-                        _settings.IsStandIn = true;
-
-#if UNITY_EDITOR
-                        UnityEditor.EditorApplication.delayCall += () =>
-                        {
-                            var paths = new FlowIoCProjectPaths();
-                            string resourcesPath = paths.ResourcesRoot;
-                            string fullPath = paths.ConsoleSettings;
-
-                            bool fileExistsOnDisk = File.Exists(fullPath);
-                            var existing = UnityEditor.AssetDatabase.LoadAssetAtPath<CD_FlowConsole>(fullPath);
-
-                            if (!new FlowConsoleSettingsCreationPolicy().ShouldCreate(existing != null, fileExistsOnDisk))
-                            {
-                                if (fileExistsOnDisk && existing == null)
-                                {
-                                    Debug.LogWarning(
-                                        "<color=cyan>FlowConsole:</color> CD_FlowConsole.asset is on disk but " +
-                                        "could not be loaded, so it was left untouched rather than replaced. Scripts " +
-                                        "are probably not compiling, or the package's asset paths changed. Fix the " +
-                                        "compile errors - or close the Editor, delete Library/ and reopen - and the " +
-                                        "settings will load again with your log types intact.");
-                                }
-
-                                return;
-                            }
-
-                            if (!Directory.Exists(resourcesPath))
-                                Directory.CreateDirectory(resourcesPath);
-
-                            UnityEditor.AssetDatabase.CreateAsset(_settings, fullPath);
-                            _settings.IsStandIn = false;
-                            UnityEditor.AssetDatabase.SaveAssets();
-                            UnityEditor.AssetDatabase.Refresh();
-                            Debug.Log("<color=cyan>FlowConsoleLogger:</color> Created CD_FlowConsole and verified FlowLogType.");
-                        };
-#endif
-                    }
-                }
-
-                return _settings;
-            }
-        }
+        /// <summary>Every channel the console knows, and where a channel's colour and tag come from.</summary>
+        public static FlowLogChannels Channels => _channels ??= new FlowLogChannels();
 
         public static void ClearLogs()
         {
@@ -270,7 +229,7 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>
         /// The channel's own name back, if the project has one by that name, and null if it does
-        /// not. What it is for is answering with the string the settings hold rather than the one
+        /// not. What it is for is answering with the string the channel table holds rather than the one
         /// the caller typed, so a channel found case-insensitively is still logged on under the
         /// spelling everything else uses.
         /// </summary>
@@ -278,13 +237,13 @@ namespace FlowIoC.ConsoleModule
         {
             if (string.IsNullOrEmpty(channel)) return null;
 
-            return Settings.TryGetLogType(channel, out var type) ? type.Name : null;
+            return Channels.TryGet(channel, out FlowLogChannel found) ? found.Name : null;
         }
 
         /// <summary>
         /// A framework channel's name, as a literal per case rather than <c>ToString()</c>, which
         /// allocates a string on every log. The names are the enum's own, because that is what the
-        /// settings asset stores for the mandatory channels.
+        /// channel table names the framework's channels by.
         /// </summary>
         private static string SystemChannelName(SystemLogType systemLogType)
         {
@@ -311,15 +270,15 @@ namespace FlowIoC.ConsoleModule
         /// <summary>
         /// Whether a log written now would be kept. For a call site that pays to build its message -
         /// an interpolation, an enum's name - and sits on a hot path: <c>[Conditional]</c> only removes
-        /// the call when the define is absent, and a project that defines it still builds every
-        /// message with logging switched off.
+        /// the call from a release build, and the Editor still builds every message with logging
+        /// switched off.
         /// </summary>
-        public static bool IsEnabled => Settings.IsLoggingEnabled;
+        public static bool IsEnabled => Preferences.IsLoggingEnabled;
 
         // ======================== Log ========================
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void Log(SystemLogType systemLogType, string message)
         {
             AddLog(systemLogType, message, LogType.Log);
@@ -333,11 +292,11 @@ namespace FlowIoC.ConsoleModule
         /// wrote into the call.
         /// </summary>
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void LogAt(SystemLogType systemLogType, string filePath, int lineNumber, string part1,
             string part2, string part3, string part4 = null)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
 
             AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log, null, false, false,
                 filePath, lineNumber);
@@ -350,11 +309,11 @@ namespace FlowIoC.ConsoleModule
         /// anything. The frame it would find is whichever of their own lines happened to be below.
         /// </summary>
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void LogPlumbing(SystemLogType systemLogType, string part1, string part2 = null,
             string part3 = null, string part4 = null)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
 
             AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log, null, false);
         }
@@ -367,10 +326,10 @@ namespace FlowIoC.ConsoleModule
         /// anybody wants to be taken to, and this is the console's most frequent log.
         /// </summary>
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void LogDispatch(bool isFrameworkOwned, string part1, string part2, string part3)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
 
             if (isFrameworkOwned)
             {
@@ -401,11 +360,11 @@ namespace FlowIoC.ConsoleModule
         /// line is about - and the type is the better answer anyway, for nothing.
         /// </summary>
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void LogAbout(SystemLogType systemLogType, Type about, string part1, string part2,
             string part3 = null, string part4 = null)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
 
             AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log, about, false);
         }
@@ -416,38 +375,38 @@ namespace FlowIoC.ConsoleModule
         /// but the call.
         /// </summary>
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void Log(SystemLogType systemLogType, string part1, string part2)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
             AddLog(systemLogType, part1 + part2, LogType.Log);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void Log(SystemLogType systemLogType, string part1, string part2, string part3)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
             AddLog(systemLogType, part1 + part2 + part3, LogType.Log);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void Log(SystemLogType systemLogType, string part1, string part2, string part3, string part4)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
             AddLog(systemLogType, part1 + part2 + part3 + part4, LogType.Log);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void Log(string channel, string message)
         {
             AddCustomLog(channel, ResolveMessage(channel, message), LogType.Log);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void Log(string channel, string message, FlowLogProfile profile)
         {
             string formatted = profile != null ? FormatWithProfile(message, profile) : message;
@@ -457,7 +416,7 @@ namespace FlowIoC.ConsoleModule
         // ======================== LogWarning ========================
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void LogWarning(SystemLogType systemLogType, string message)
         {
             AddLog(systemLogType, message, LogType.Warning);
@@ -469,21 +428,21 @@ namespace FlowIoC.ConsoleModule
         /// asynchronous release, or a resolver noticing a step later than it happened.
         /// </summary>
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal static void LogWarning(SystemLogType systemLogType, string message, Type blame)
         {
             AddLog(systemLogType, message, LogType.Warning, blame);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void LogWarning(string channel, string message)
         {
             AddCustomLog(channel, ResolveMessage(channel, message), LogType.Warning);
         }
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void LogWarning(string channel, string message, FlowLogProfile profile)
         {
             string formatted = profile != null ? FormatWithProfile(message, profile) : message;
@@ -526,7 +485,7 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>
         /// The one path an error takes. It carries no [Conditional] attribute and consults no setting,
-        /// because a project that never defined ENABLE_LOG - or turned logging off - is exactly the one
+        /// because a release build - or a developer who turned logging off - is exactly the one
         /// that has to be told something is broken. Every error is written here, and written once.
         /// </summary>
         [HideInCallstack]
@@ -541,8 +500,8 @@ namespace FlowIoC.ConsoleModule
                 if (systemLogType.HasValue)
                     log.SystemLogType = systemLogType.Value;
 
-                if (Settings.TryGetLogType(channel, out var typeInfo))
-                    log.LogColor = typeInfo.LogColor;
+                if (Channels.TryGet(channel, out FlowLogChannel channelInfo))
+                    log.LogColor = channelInfo.Color;
 
                 Record(log);
             }
@@ -565,17 +524,17 @@ namespace FlowIoC.ConsoleModule
         // ======================== LogLong ========================
 
         [HideInCallstack]
-        [Conditional("ENABLE_LOG")]
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void LogLong(string channel, string message, FlowLogProfile profile = null)
         {
-            profile ??= Settings.GetResolvedProfile(channel);
+            profile ??= Channels.ProfileOf(channel);
             LogLongInternal(channel, message, profile);
         }
 
         [HideInCallstack]
         private static void LogLongInternal(string channel, string message, FlowLogProfile profile)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
 
             int messageLength = message.Length;
             if (messageLength <= MaxMessageLength)
@@ -644,8 +603,8 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>
         /// The door Unity's own logs come in through. It carries no [Conditional] attribute and
-        /// consults no setting, because a developer who turned logging off - or never defined
-        /// ENABLE_LOG - still has to be able to read Unity's console in this window. That is the
+        /// consults no setting, because a developer who turned logging off still has to be able
+        /// to read Unity's console in this window. That is the
         /// whole promise of Flow Console being the console rather than a second one. The editor
         /// bridge calls it for the editor's Unity, and PlayerLogSender for a player's.
         /// </summary>
@@ -688,8 +647,8 @@ namespace FlowIoC.ConsoleModule
                 InPlayMode = Application.isPlaying
             };
 
-            if (Settings.TryGetLogType(channel, out var typeInfo))
-                log.LogColor = typeInfo.LogColor;
+            if (Channels.TryGet(channel, out FlowLogChannel channelInfo))
+                log.LogColor = channelInfo.Color;
 
             // A log from Application.logMessageReceived says where it came from only inside its
             // stack trace, so it is read out here. Without this a Unity message has no source and
@@ -711,8 +670,8 @@ namespace FlowIoC.ConsoleModule
 #if UNITY_EDITOR
             if (log == null) return;
 
-            if (Settings.TryGetLogType(log.Channel, out var typeInfo))
-                log.LogColor = typeInfo.LogColor;
+            if (Channels.TryGet(log.Channel, out FlowLogChannel channelInfo))
+                log.LogColor = channelInfo.Color;
 
             if (string.IsNullOrEmpty(log.SourceFilePath) && !string.IsNullOrEmpty(log.StackTrace))
                 FillSourceFromTrace(log, log.StackTrace);
@@ -793,12 +752,12 @@ namespace FlowIoC.ConsoleModule
         private static void AddLog(SystemLogType systemLogType, string message, LogType logType, Type blame = null,
             bool captureSource = true, bool forceCapture = false, string filePath = null, int lineNumber = 0)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
 
             // The channel's profile is what puts the tag on the front - "[Signal]", "[Command]" -
-            // so a message says only what happened. Resolved from a cache the settings rebuild
-            // whenever a profile changes, and applied here so every one of the framework's own
-            // lines gets it rather than only the ones a caller passed a profile to.
+            // so a message says only what happened. Read off the channel table, and applied here
+            // so every one of the framework's own lines gets it rather than only the ones a
+            // caller passed a profile to.
             message = ResolveMessage(SystemChannelName(systemLogType), message);
 
             if (IsRecording)
@@ -814,8 +773,8 @@ namespace FlowIoC.ConsoleModule
 
                 log.Channel = SystemChannelName(systemLogType);
 
-                if (Settings.TryGetLogType(log.Channel, out var typeInfo))
-                    log.LogColor = typeInfo.LogColor;
+                if (Channels.TryGet(log.Channel, out FlowLogChannel channelInfo))
+                    log.LogColor = channelInfo.Color;
 
                 Record(log);
             }
@@ -826,15 +785,15 @@ namespace FlowIoC.ConsoleModule
         [HideInCallstack]
         private static void AddCustomLog(string channel, string message, LogType logType, Type blame = null)
         {
-            if (!Settings.IsLoggingEnabled) return;
+            if (!Preferences.IsLoggingEnabled) return;
 
             if (IsRecording)
             {
                 var log = CreateLogEntry(message, logType, blame);
                 log.Channel = channel;
 
-                if (Settings.TryGetLogType(channel, out var typeInfo))
-                    log.LogColor = typeInfo.LogColor;
+                if (Channels.TryGet(channel, out FlowLogChannel channelInfo))
+                    log.LogColor = channelInfo.Color;
 
                 Record(log);
             }
@@ -877,7 +836,7 @@ namespace FlowIoC.ConsoleModule
 
         private static bool CapturesSourceFor(LogType logType)
         {
-            switch (Settings.StackTraceCapture)
+            switch (Preferences.StackTraceCapture)
             {
                 case FlowStackTraceCapture.Always:
                     return true;
@@ -903,7 +862,7 @@ namespace FlowIoC.ConsoleModule
             Logs.Add(log);
             OnLogAdded?.Invoke(log);
 
-            int maxLogCount = Settings.MaxLogCount;
+            int maxLogCount = Preferences.MaxLogCount;
             if (maxLogCount <= 0 || Logs.Count <= maxLogCount + LogTrimChunk)
                 return;
 
@@ -914,12 +873,12 @@ namespace FlowIoC.ConsoleModule
 
         private static void ForwardToUnityConsole(string channel, string message, LogType logType)
         {
-            if (!Settings.SendLogsToUnityConsole) return;
+            if (!Preferences.SendLogsToUnityConsole) return;
 
             // A channel's switch holds back its chatter and nothing else, here as in the window: a
             // warning is forwarded whatever the switch says, so the two consoles show the same
             // warnings whichever one is being read.
-            if (ChannelRule.AnswersToChannels(logType) && !Settings.IsLogTypeVisible(channel)) return;
+            if (ChannelRule.AnswersToChannels(logType) && !Channels.IsShown(channel)) return;
 
             // Raised so the editor bridge can tell this log apart from somebody else's when
             // Unity hands it straight back through Application.logMessageReceived.
@@ -947,7 +906,7 @@ namespace FlowIoC.ConsoleModule
         [HideInCallstack]
         private static string ResolveMessage(string channel, string message)
         {
-            var profile = Settings.GetResolvedProfile(channel);
+            var profile = Channels.ProfileOf(channel);
             return profile != null ? FormatWithProfile(message, profile) : message;
         }
 

@@ -5,9 +5,9 @@ using UnityEngine;
 namespace FlowIoC.Editor.Console
 {
     /// <summary>
-    /// The console's own switches, as one developer set them. They are in EditorPrefs rather
-    /// than in CD_FlowConsole because that asset is committed, and a toolbar toggle is nobody
-    /// else's business.
+    /// The console's own switches, as one developer set them. They are in EditorPrefs because
+    /// a toolbar toggle is nobody else's business, and a committed asset would put it in
+    /// everybody's diff.
     /// </summary>
     public class FlowConsoleState
     {
@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.Console
         /// <summary>
         /// Whether a whole group of channels is silenced. A group is muted at the console rather
         /// than by switching its channels off, so unmuting brings back exactly the selection the
-        /// reader had - and CD_FlowConsole, which is committed, is never written to say it.
+        /// reader had - and nothing committed is written to say it.
         /// </summary>
         public bool UnityMuted
         {

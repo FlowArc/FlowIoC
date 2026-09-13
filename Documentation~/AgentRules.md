@@ -446,7 +446,11 @@ the next free number. A number a deleted value used is never reused.
 file. A module's channel is a `const string` in a part of its own, at
 `<Module>/Scripts/Generated/FlowLogType.<Module>.cs`, with a `FlowIoC.Generated.asmref` beside it
 that compiles the part into FlowIoC's assembly rather than the module's;
-`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` holds only what belongs to no module.
+`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` holds only what belongs to no module. The part
+also carries the module's colour, picked from a palette by the module's name; a `Colour: #RRGGBB`
+line directly above the generated block of the module's `MODULE.md` overrides the pick, and a
+`Profile:` line beside it declares the tag on the front of the module's lines. Edit those two lines
+by hand or through the Flow Console's Filters panel - never the generated part.
 
 `<Solution>.sln.DotSettings` and the `*.csproj.DotSettings` files beside it are written by
 `Tools/FlowIoC/Module Scanner`. Run the menu item rather than editing them.
@@ -465,12 +469,13 @@ Command used* with the command's own logging lines. The trade is that a rename l
 stale, and a stale word in a log line is cheaper than a search that cannot be trusted. This is about
 the message text alone - `nameof` stays correct everywhere else.
 
-Logging compiles out unless the `ENABLE_LOG` scripting define is set. The framework already
+Logging compiles only in the Editor and in a Development Build - a release build carries none of
+it, and there is no scripting define to manage. The framework already
 logs its own contexts, injections, signals and commands on built-in channels, so watching a
 flow does not require adding log lines.
 
 **An error is the exception, and it is logged exactly once.** `FlowLogger.LogError` carries no
-`[Conditional]`, so an error reaches the console whether or not `ENABLE_LOG` is defined - a project
+`[Conditional]`, so an error reaches the console in a release build too - a project
 with logging switched off is exactly the one that most needs to be told something is broken. Never
 put a `Debug.LogError` beside a `FlowLogger.LogError` for the same fault: `FlowLogger` forwards to
 `Debug` itself, so the pair prints the error twice whenever logging is on.

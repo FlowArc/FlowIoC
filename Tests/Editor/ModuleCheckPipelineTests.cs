@@ -44,7 +44,7 @@ namespace FlowIoC.Tests
             List<string> ids = new ModuleCheckPipeline().ProjectChecks.Select(check => check.Id).ToList();
 
             CollectionAssert.AreEqual(
-                new[] {"index", "module-directory", "orphans", "log-types", "code-style"}, ids);
+                new[] {"index", "module-directory", "orphans", "code-style"}, ids);
         }
 
         /// <summary>

@@ -47,7 +47,6 @@ namespace FlowIoC.Editor.ModuleScanner
 
             // A scan that found nothing is far more likely to be a failed scan than a project
             // with no modules at all, and rebuilding on the strength of it would empty the index.
-            // ModuleLogTypePlan takes the same caution about removals.
             if (onDisk.Count == 0)
                 return FindingEVO.Ok(Id, $"Module index ({indexed.Count} modules)");
 

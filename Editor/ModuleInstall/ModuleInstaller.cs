@@ -4,7 +4,6 @@ using System;
 using System.IO;
 using FlowIoC.Editor.CodeGenerator.Detector;
 using FlowIoC.Editor.ModuleScanner;
-using FlowIoC.Editor.Console;
 using UnityEditor;
 using UnityEngine;
 
@@ -204,12 +203,9 @@ namespace FlowIoC.Editor.ModuleInstall
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 
-            // The index, and with it the module's own FlowLogType channel.
+            // The index, and with it the module's own FlowLogType part - written now rather than on
+            // the next load, so the module's own code compiles against the channel it just gained.
             ModuleAutoDetector.RescanModules();
-
-            // FlowLogType is otherwise regenerated on a delayed call, which is too late for the
-            // module's own code to compile against the channel it just gained.
-            FlowLogTypeGenerator.Generate();
 
             // <Assembly>.csproj.DotSettings at the project root, for this module and every other.
             new ModuleRepair().FixAll();

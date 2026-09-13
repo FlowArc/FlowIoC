@@ -420,8 +420,8 @@ namespace FlowIoC.Tests
         /// so the work they are waiting on eventually calls Release into a group that is over. The
         /// empty dictionary is what tells that Release its group is gone, and the instance must not
         /// reach the pool through it: two dispatches holding one command is the bug this guards.
-        /// The warning that goes with it is a FlowLogger warning, which compiles out without
-        /// ENABLE_LOG, so what is asserted here is the effect rather than the message.
+        /// The warning that goes with it is a FlowLogger warning, which compiles out of a release
+        /// build, so what is asserted here is the effect rather than the message.
         /// </summary>
         [Test]
         public void A_release_that_arrives_after_its_group_stopped_changes_nothing()
@@ -826,7 +826,7 @@ namespace FlowIoC.Tests
             signal.Dispatch();
 
             List<ConsoleLog> logs = CommandLogs();
-            Assert.IsNotEmpty(logs, "the command channel wrote nothing - is ENABLE_LOG defined?");
+            Assert.IsNotEmpty(logs, "the command channel wrote nothing - is logging enabled?");
 
             var flowIds = new HashSet<int>();
             foreach (ConsoleLog log in logs)

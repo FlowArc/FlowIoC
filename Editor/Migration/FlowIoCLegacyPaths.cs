@@ -31,7 +31,6 @@ namespace FlowIoC.Editor.Migration
             new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/TestModuleDirectoryStructureConfig.asset",
                 _paths.DirectoryStructureConfig("Test")),
             new LegacyAssetMove("Assets/Editor/FlowIoC/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderPainterConfig),
-            new LegacyAssetMove("Assets/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings),
 
             // The assets FlowIoC writes took the CD_/ED_ data-type prefixes the rest of the
             // framework already used. A project installed before that keeps them under the current
@@ -45,12 +44,25 @@ namespace FlowIoC.Editor.Migration
             new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/CodeGenerator/TestModuleDirectoryStructureConfig.asset",
                 _paths.DirectoryStructureConfig("Test")),
             new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/FolderDrawer/FlowIoCFolderDrawerConfig.asset", _paths.FolderPainterConfig),
-            new LegacyAssetMove("Assets/Plugins/FlowIoC/Resources/FlowConsoleSettings.asset", _paths.ConsoleSettings),
 
             // The folder drawer became the Folder Painter, which moved its folder and its asset
             // in one go. A project installed between the ED_ prefixes and the rename holds the
             // config under the old name in the old folder.
             new LegacyAssetMove("Assets/Plugins/FlowIoC/Editor/FolderDrawer/ED_FolderDrawer.asset", _paths.FolderPainterConfig)
+        };
+
+        /// <summary>
+        /// Assets FlowIoC used to write and no longer has a use for. The Flow Console settings asset
+        /// held four things with four owners - framework constants, the module list, one developer's
+        /// switches, a module's colour - and each of them lives with its owner now: a code table,
+        /// the module index, EditorPrefs, the module's own generated part. What is left on disk is
+        /// an asset with no script behind it, so it is deleted rather than moved.
+        /// </summary>
+        public IReadOnlyList<string> AssetsToDelete => new[]
+        {
+            "Assets/Resources/FlowConsoleSettings.asset",
+            "Assets/Plugins/FlowIoC/Resources/FlowConsoleSettings.asset",
+            "Assets/Plugins/FlowIoC/Resources/CD_FlowConsole.asset"
         };
 
         /// <summary>
@@ -65,7 +77,8 @@ namespace FlowIoC.Editor.Migration
             "Assets/Editor/FlowIoC",
             "Assets/Editor",
             "Assets/Resources",
-            "Assets/Plugins/FlowIoC/Editor/FolderDrawer"
+            "Assets/Plugins/FlowIoC/Editor/FolderDrawer",
+            "Assets/Plugins/FlowIoC/Resources"
         };
     }
 }

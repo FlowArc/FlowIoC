@@ -12,7 +12,7 @@ Open it at **Tools ▸ FlowIoC ▸ Console ▸ Flow Console**.
 - [The Window](#the-window)
 - [Logging From Your Code](#logging-from-your-code)
 - [Formatting With Profiles](#formatting-with-profiles)
-- [Settings](#settings)
+- [Preferences](#preferences)
 - [Reading a Flow](#reading-a-flow)
 - [Silencing Noise](#silencing-noise)
 - [Scenarios](#scenarios)
@@ -46,9 +46,9 @@ console shows is missing here. `Compiler` carries compile errors
 and warnings, taken from `CompilationPipeline`. `Shader` carries a shader that would not
 compile, read off the asset with `ShaderUtil` after it is imported. They are read through
 Unity's public API and nothing else, so a Unity upgrade cannot quietly break them. All
-three are recorded whether or not `ENABLE_LOG` is defined: turning the define off is a
-statement about *your* logging, and a console that then showed no compile errors would be
-useless at the moment it is most needed.
+three are recorded whether or not logging is switched on: turning it off is a statement about
+*your* logging, and a console that then showed no compile errors would be useless at the
+moment it is most needed.
 
 Their rows carry an icon where the other channels carry their `[Name]` tag — the Unity
 logo the Hierarchy draws beside a scene, the C# script icon, the shader icon — so a line
@@ -68,16 +68,23 @@ you see is the one you can double-click open. The second copy is dropped only wh
 first was really recorded — a variant that fails at play time was never imported, so
 Unity's text is then the only copy there is and it is kept.
 
-**Project channels** are yours: one per module, auto-registered, and generated as a `const string`
-on `FlowLogType`. A module's channel is declared **in the module**, in a part of its own:
+**Project channels** are yours: one per module, generated as a `const string` on `FlowLogType`
+with the module's colour beside it. A module's channel is declared **in the module**, in a part of
+its own:
 
 ```csharp
 // Modules/AnalyticsModule/Scripts/Generated/FlowLogType.AnalyticsModule.cs
+using UnityEngine;
+
 namespace FlowIoC.ConsoleModule
 {
     public static partial class FlowLogType
     {
+        /// <summary>The AnalyticsModule channel.</summary>
         public const string AnalyticsModule = "AnalyticsModule";
+
+        /// <summary>The colour AnalyticsModule's rows are drawn in. A "Colour: #RRGGBB" line above the block in the module's MODULE.md sets it.</summary>
+        public static readonly Color AnalyticsModuleColor = new Color32(103, 166, 228, 255);
     }
 }
 ```
@@ -86,7 +93,32 @@ Beside it sits a `FlowIoC.Generated.asmref`, which is what puts the part into Fl
 assembly rather than into the module's. Parts of a partial class have to share an assembly, and
 every module has an assembly of its own - without the asmref this could not be a partial class at
 all. `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` keeps what belongs to no module: the project's
-`Default` channel, and any channel added by hand.
+`Default` channel.
+
+There is no list of channels anywhere else. A module has a channel because it is in the module
+index, the generator writes the part from the index, and the console reads every `const string` on
+`FlowLogType` back - so a module that exists has a channel, a module that is gone has none, and
+nothing falls out of step with the modules.
+
+**A module's colour is the module's own.** Every module is coloured from the day it is created,
+picked from a palette of twelve tones by the module's name, so the same module is the same colour
+on every machine. A module that wants a colour of its own says so in its card, as a line directly
+above the generated block of `MODULE.md`, and may declare a profile - the tag on the front of its
+lines - the same way:
+
+```
+Colour: #E5A50A
+Profile: prefix="[Analytics]" prefix-style=bold prefix-colour=#39FF00
+```
+
+Both lines are read and written by the console: right-click the module's channel in the Filters
+panel and choose **Colour and profile...** to edit them in a window, which writes the card and
+regenerates the part. The console follows on the next compile. A colour left on the palette's pick
+writes no line, and a profile that decorates nothing writes none either, so a card says something
+only when somebody chose. The Profile line's keys are `prefix`, `prefix-style`, `prefix-colour`,
+`message-style`, `message-colour`, `postfix`, `postfix-style` and `postfix-colour`; text is quoted,
+a colour is hex, a style is `bold`, `italic`, `underline` or a comma-joined list of them, and every
+key is optional.
 
 **A channel is a name, not a number.** It used to be an `int`, handed out in order and reassigned
 whenever the list was sorted - so a module whose name sorted early moved every channel after it onto
@@ -118,7 +150,7 @@ console you keep open.
 | `1/2/3 lines` | How many lines a row shows. Two is Unity's shape: the message, and underneath it where it came from. |
 | `Flow` | Groups the rows into the flows they belong to. See below. |
 | `Pinned` | Shows only the rows you pinned. |
-| `Source:` | `StackTraceCapture`, raised and lowered where the flow is being read rather than three windows away. |
+| `Source:` | The Source capture, raised and lowered where the flow is being read rather than under Preferences. |
 | `Export` | Saves or copies the rows that are showing, as plain text. |
 | `Presets` | Channel filters saved under a name. Two ship with the console; the rest are yours. |
 
@@ -164,13 +196,12 @@ same rule: a warning is forwarded whatever the switch says, a plain log only whi
 channel is on, and an error always.
 
 What you switch on and off is yours. It lives in EditorPrefs, keyed by the project, and
-`CD_FlowConsole.asset` is not written when you click — the asset is committed, and one
-developer's filter has no business turning up in everybody else's diff, or switching their
-channels to match when they pull. The asset carries only the project's defaults: which
-channels are on for somebody who has not touched them, set in the asset's inspector. A
-channel you never touched follows that default, and so does one a module added after you
-last opened the panel. **Presets ▸ Project defaults** drops your switches and puts you back
-on what the asset says.
+nothing committed is written when you click — one developer's filter has no business turning up in
+everybody else's diff, or switching their channels to match when they pull. What a channel shows as
+for somebody who has not touched it is the default it ships with: `Signal`, `Command` and the three
+channels Unity writes are on, the framework's machinery underneath them is off, and every module
+is on. A channel you never touched follows that default, and so does one a module added after you
+last opened the panel. **Presets ▸ Defaults** drops your switches and puts you back on it.
 
 An empty list says why it is empty when there is a reason: *every channel is switched
 off*, or *N rows hidden by filters* when rows exist and none passes the channels, the
@@ -231,11 +262,10 @@ a dim tag after the time — `13:05:23:088 · Android Pixel 7 |` — so editor r
 rows that interleave still say which is which. In Flow mode a device's flows are grouped
 on their own, never under an editor flow that happens to share the number.
 
-Two setup steps fail silently when skipped. The build must be a **Development Build**: a
-release player never connects and sends nothing. And the flow is visible only when the
-build's scripting defines carry **`ENABLE_LOG`**, the same define the editor needs;
-without it `FlowLogger.Log` and `LogWarning` compile out of the player and only errors
-and Unity's own lines arrive.
+One setup step fails silently when skipped: the build must be a **Development Build**. A
+release player never connects and sends nothing - and it has nothing to send, because `FlowLogger.Log`
+and `LogWarning` compile only in the Editor and in a Development Build. There is no scripting
+define to add.
 
 Unity's own forwarding — the `Player Logging` toggle in Unity's Console — keeps working
 beside this. While a FlowIoC player is attached its copy of each line is dropped here,
@@ -268,13 +298,12 @@ would otherwise be truncated.
 > Command used* with the command's own logging lines instead of the Context that binds it.
 > A rename then leaves the literal stale, and that is the cheaper of the two costs.
 
-Every one of these methods carries `[Conditional("ENABLE_LOG")]`. Without that
-scripting define the calls are removed by the compiler, including the string
-interpolation that would have built the message. This is why you can leave
-`"..."` logs in shipping code without paying for them.
-
-`AutoAddEnableLogDefine` in the settings adds the define for you; turn it off for a
-release build and the entire logging layer disappears.
+Every one of these methods except `LogError` carries `[Conditional("UNITY_EDITOR")]` and
+`[Conditional("DEVELOPMENT_BUILD")]` - the two are OR'd, so the call stays wherever either symbol
+is defined. In the Editor and in a Development Build the logs are there; in a release build the
+calls are removed by the compiler, including the string interpolation that would have built the
+message. This is why you can leave `"..."` logs in shipping code without paying for them, and why
+there is no scripting define to manage: Unity defines both symbols itself.
 
 ---
 
@@ -314,28 +343,24 @@ log call, which matters exactly where logging matters least — inside a loop.
 
 ---
 
-## Settings
+## Preferences
 
-The `CD_FlowConsole` asset controls the whole layer.
+How much the logger does is yours, under **Edit ▸ Preferences ▸ FlowIoC ▸ Flow Console**. These are
+EditorPrefs, read through `FlowLogger.Preferences`; there is no committed settings asset, so one
+developer raising the capture while chasing a flow turns up in nobody else's diff. A player reads
+the defaults written here.
 
-| Setting | Effect |
+| Preference | Effect |
 |---|---|
-| `IsLoggingEnabled` | Master switch. Off: nothing is recorded. |
-| `DeepAnalysis` | On: the detail panel shows the class name and the full stack trace. Off: only the source line. Editor-only — on device no `ConsoleLog` object is created at all. |
-| `StackTraceCapture` | Which logs work out where they came from. `WarningsAndErrors` is the default and the one to leave alone: capturing a source builds the whole managed stack as a string and picks it apart, and the framework logs every signal, injection and command, so this is the most expensive thing the console does. Raise it to `Always` while following a flow and put it back afterwards. `Never` is the cheapest and shows no source for anything. |
-| `MaxLogCount` | How many logs are kept. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. `0` keeps all of them. |
-| `SendLogsToUnityConsole` | Mirror everything into Unity's own console, for when you need the two side by side. A plain log is mirrored only while its channel is on; a warning whatever the channel says; an error always, switch or no switch. |
-| `AutoAddEnableLogDefine` | Manage the `ENABLE_LOG` scripting define automatically. |
-| `LogTypes` | The channel list: name, value, colour, whether the channel is on by default, and whether it is mandatory or auto-registered. |
+| Logging enabled (`IsLoggingEnabled`) | Master switch. Off: nothing is recorded and nothing is mirrored. An error still reaches Unity's console. |
+| Mirror into Unity's console (`SendLogsToUnityConsole`) | Mirror everything into Unity's own console, for when you need the two side by side. A plain log is mirrored only while its channel is on; a warning whatever the channel says; an error always, switch or no switch. |
+| Source capture (`StackTraceCapture`) | Which logs work out where they came from. `WarningsAndErrors` is the default and the one to leave alone: capturing a source builds the whole managed stack as a string and picks it apart, and the framework logs every signal, injection and command, so this is the most expensive thing the console does. Raise it to `Always` while following a flow and put it back afterwards. `Never` is the cheapest and shows no source for anything. Also on the console's bar, as `Source`. |
+| Max log count (`MaxLogCount`) | How many logs are kept. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. `0` keeps all of them. |
+| Deep analysis in the detail panel (`DeepAnalysis`) | On: the detail panel shows the class name and the full stack trace. Off: only the source line. Editor-only — on device no trace is shown. |
 
-Per-channel, `IsVisibleByDefault` is the project default — what a developer who has not
-touched the channel sees. The window's toggles do not write it; they write the
-developer's own switches to EditorPrefs (see [Channels](#channels)). `IsMandatory` marks a
-channel that cannot be **removed** — it is what the framework's own channels carry, so
-that module detection never deletes one — and says nothing about hiding: every channel
-can be switched off in the window. `ProfileName` attaches a default profile to every log
-on that channel, so a module can have a consistent look without passing a profile at
-each call site.
+Which channels show is the Filters panel's, a module's colour and profile are the module's own in
+its `MODULE.md`, and the framework's channels - their colours, their `[Tag]`s, which of them are on
+by default - are a table in the package.
 
 ---
 
@@ -390,10 +415,8 @@ Both are needed for a fully silent loop — the signal flag does not cover the c
 lines and vice versa. Neither affects your own `FlowLogger` calls inside the command
 body.
 
-To hide a whole project channel, switch it off in the window — for yourself — or clear
-its `IsVisibleByDefault` in the settings, for everybody who has not touched it. Either is
-a whole-channel switch, not a per-loop one, so prefer the two flags above when only one
-loop is noisy.
+To hide a whole project channel, switch it off in the window. That is a whole-channel switch,
+not a per-loop one, so prefer the two flags above when only one loop is noisy.
 
 For a loop you did not write — somebody else's module, or the framework's own lines — the
 search box does the same job without touching any code: `-tick` hides every row whose
@@ -481,23 +504,23 @@ FlowLogger.LogError(FlowLogType.ShopModule, "Player cannot afford this item.");
 
 ### Nothing appears in the console
 
-Check in this order: `IsLoggingEnabled` in the settings; the channel's switch in the
-window — an empty list says so when every channel is off; and whether `ENABLE_LOG` is
-defined. Without the define every
-`FlowLogger` call is compiled away, so the code looks correct and produces nothing.
+Check in this order: *Logging enabled* under Preferences ▸ FlowIoC ▸ Flow Console; the channel's
+switch in the window — an empty list says so when every channel is off; and, for a device, whether
+the build is a Development Build. In a release build every `FlowLogger` call is compiled away, so
+the code looks correct and produces nothing.
 
 ### A log says "Source not captured"
 
-That is `StackTraceCapture`, and it is the default rather than a fault. Ordinary
-logs do not work out where they came from, because doing so is the console's most
-expensive operation and the framework writes a log for every signal, injection and
-command. Warnings and errors still carry their source. Set `StackTraceCapture` to
-`Always` while following a particular flow, and put it back when you are done.
+That is the Source capture, and it is the default rather than a fault. Ordinary logs do not
+work out where they came from, because doing so is the console's most expensive operation and
+the framework writes a log for every signal, injection and command. Warnings and errors still
+carry their source. Raise `Source` on the console's bar to `Always` while following a
+particular flow, and put it back when you are done.
 
 ### The console forgets old logs
 
-`MaxLogCount` caps what is kept, at 5000 by default, and the oldest go first. Raise
-it, or set it to `0` for no limit, if a long session has to be read back whole.
+*Max log count* under Preferences caps what is kept, at 5000 by default, and the oldest go
+first. Raise it, or set it to `0` for no limit, if a long session has to be read back whole.
 
 ### `FlowLogType.MyModule` does not exist
 

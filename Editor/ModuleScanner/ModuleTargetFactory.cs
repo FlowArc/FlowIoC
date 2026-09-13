@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FlowIoC.BaseModule.ProjectPaths;
-using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration;
@@ -63,11 +62,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 ProjectRoot = projectRoot,
                 ScannedModules = scanned,
                 Index = new ModuleIndexProvider().LoadOrCreate(),
-                AllAssemblyNames = AssemblyNames(projectRoot),
-                RegisteredAutoLogTypes = FlowLogger.Settings.LogTypes
-                    .Where(logType => logType.IsAutoRegistered && !logType.IsMandatory)
-                    .Select(logType => logType.Name)
-                    .ToList()
+                AllAssemblyNames = AssemblyNames(projectRoot)
             };
         }
 

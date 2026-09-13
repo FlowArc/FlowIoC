@@ -85,7 +85,7 @@ namespace FlowIoC.Editor.Console
             // framework's are the machinery underneath them, and Unity's are the floor. The group
             // ids stay 0 Unity, 1 Framework, 2 Modules - they key the mute snapshot and the saved
             // state, and renumbering them would read somebody's saved panel back wrongly.
-            CountChannels(logType => !logType.IsMandatory, out int moduleShown, out int moduleTotal);
+            CountChannels(channel => !channel.IsFrameworkOwned, out int moduleShown, out int moduleTotal);
             _moduleChannelsExpanded = FiltersGroupHeader("Modules", _moduleChannelsExpanded,
                 moduleShown, moduleTotal, 2);
 
@@ -94,7 +94,7 @@ namespace FlowIoC.Editor.Console
 
             EditorGUILayout.Space(4f);
 
-            CountChannels(logType => logType.IsMandatory && !IsUnityChannel(logType.Value),
+            CountChannels(channel => channel.IsFrameworkOwned && !channel.IsWrittenByUnity,
                 out int frameworkShown, out int frameworkTotal);
             _systemChannelsExpanded = FiltersGroupHeader("Framework", _systemChannelsExpanded,
                 frameworkShown, frameworkTotal, 1);
@@ -104,7 +104,7 @@ namespace FlowIoC.Editor.Console
 
             EditorGUILayout.Space(4f);
 
-            CountChannels(logType => IsUnityChannel(logType.Value), out int unityShown, out int unityTotal);
+            CountChannels(channel => channel.IsWrittenByUnity, out int unityShown, out int unityTotal);
             _unityChannelsExpanded = FiltersGroupHeader("Unity", _unityChannelsExpanded, unityShown, unityTotal, 0);
 
             if (_unityChannelsExpanded)
@@ -234,7 +234,7 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void IsolatedChannelGUI()
         {
-            if (!_settings.TryGetLogType(_isolatedChannel, out var typeInfo))
+            if (!Channels.TryGet(_isolatedChannel, out FlowLogChannel isolated))
             {
                 LeaveIsolation();
                 return;
@@ -243,7 +243,7 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.Space(2f);
             EditorGUILayout.LabelField("Isolated", EditorStyles.miniLabel);
 
-            ChannelRowGUI(typeInfo.Name, typeInfo, 0);
+            ChannelRowGUI(isolated.Name, isolated, 0);
 
             EditorGUILayout.Space(4f);
 
@@ -270,11 +270,11 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>Which of the three groups a channel belongs to: 0 Unity, 1 Framework, 2 Modules.</summary>
-        private static int GroupIndexOf(CD_FlowConsole.FlowConsoleLogTypeCVO logType)
+        private static int GroupIndexOf(FlowLogChannel channel)
         {
-            if (IsUnityChannel(logType.Value)) return 0;
+            if (channel.IsWrittenByUnity) return 0;
 
-            return logType.IsMandatory ? 1 : 2;
+            return channel.IsFrameworkOwned ? 1 : 2;
         }
 
         /// <summary>
@@ -282,9 +282,9 @@ namespace FlowIoC.Editor.Console
         /// a muted group takes its channels off the list without any of them being switched off -
         /// which is what lets unmuting bring the reader's selection back exactly as it was.
         /// </summary>
-        private bool IsGroupMuted(CD_FlowConsole.FlowConsoleLogTypeCVO logType)
+        private bool IsGroupMuted(FlowLogChannel channel)
         {
-            return !_groupUnmuted[GroupIndexOf(logType)];
+            return !_groupUnmuted[GroupIndexOf(channel)];
         }
 
         /// <summary>
@@ -350,20 +350,19 @@ namespace FlowIoC.Editor.Console
         }
 
         /// <summary>How many channels in a group are showing, and how many there are.</summary>
-        private void CountChannels(Func<CD_FlowConsole.FlowConsoleLogTypeCVO, bool> belongs, out int shown,
-            out int total)
+        private void CountChannels(Func<FlowLogChannel, bool> belongs, out int shown, out int total)
         {
             shown = 0;
             total = 0;
 
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
             {
-                var logType = _settings.LogTypes[i];
-                if (logType.Value == (int) SystemLogType.All) continue;
-                if (!belongs(logType)) continue;
+                if (!belongs(channels[i])) continue;
 
                 total++;
-                if (_settings.IsLogTypeVisible(logType)) shown++;
+                if (Channels.IsShown(channels[i])) shown++;
             }
         }
 
@@ -379,28 +378,14 @@ namespace FlowIoC.Editor.Console
 
             for (int i = 0; i < UnityChannels.Length; i++)
             {
-                SystemLogType channel = UnityChannels[i];
-                if (!_settings.TryGetLogType((int) channel, out var typeInfo)) continue;
+                if (!Channels.TryGet(UnityChannels[i], out FlowLogChannel channel)) continue;
 
-                ChannelRowGUI(channel.ToString(), typeInfo, row++);
+                ChannelRowGUI(channel.Name, channel, row++);
             }
         }
 
         private static readonly SystemLogType[] UnityChannels =
             {SystemLogType.Unity, SystemLogType.Compiler, SystemLogType.Shader};
-
-        /// <summary>
-        /// Read off the list above rather than repeating it, so a channel added to the group is
-        /// drawn there and skipped below without the two saying different things.
-        /// </summary>
-        private static bool IsUnityChannel(int value)
-        {
-            for (int i = 0; i < UnityChannels.Length; i++)
-                if ((int) UnityChannels[i] == value)
-                    return true;
-
-            return false;
-        }
 
         private void SystemChannelRowsGUI()
         {
@@ -414,23 +399,21 @@ namespace FlowIoC.Editor.Console
 
             for (int i = 0; i < FrameworkChannelOrder.Length; i++)
             {
-                SystemLogType channel = FrameworkChannelOrder[i];
-                if (!_settings.TryGetLogType((int) channel, out var typeInfo)) continue;
+                if (!Channels.TryGet(FrameworkChannelOrder[i], out FlowLogChannel channel)) continue;
 
-                ChannelRowGUI(channel.ToString(), typeInfo, row++);
+                ChannelRowGUI(channel.Name, channel, row++);
             }
 
             // Anything the list above has not heard of - a channel added to the enum and not to
             // the order - still appears, at the end, rather than quietly not being offered.
             for (int i = 0; i < SystemLogTypeValues.Length; i++)
             {
-                SystemLogType channel = SystemLogTypeValues[i];
-                if (channel == SystemLogType.All) continue;
-                if (IsUnityChannel((int) channel)) continue;
-                if (Array.IndexOf(FrameworkChannelOrder, channel) >= 0) continue;
-                if (!_settings.TryGetLogType((int) channel, out var typeInfo)) continue;
+                SystemLogType systemType = SystemLogTypeValues[i];
+                if (Array.IndexOf(FrameworkChannelOrder, systemType) >= 0) continue;
+                if (!Channels.TryGet(systemType, out FlowLogChannel channel)) continue;
+                if (channel.IsWrittenByUnity) continue;
 
-                ChannelRowGUI(channel.ToString(), typeInfo, row++);
+                ChannelRowGUI(channel.Name, channel, row++);
             }
         }
 
@@ -461,15 +444,14 @@ namespace FlowIoC.Editor.Console
             AllRowGUI("All", IsAllProjectTypesVisible(), SetAllProjectTypes, row++, !_groupUnmuted[2]);
 
             bool any = false;
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
 
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            for (int i = 0; i < channels.Count; i++)
             {
-                var logType = _settings.LogTypes[i];
-                if (logType.IsMandatory) continue;
+                if (channels[i].IsFrameworkOwned) continue;
 
                 any = true;
-                int value = logType.Value;
-                ChannelRowGUI(logType.Name, logType, row++);
+                ChannelRowGUI(channels[i].Name, channels[i], row++);
             }
 
             if (any) return;
@@ -484,14 +466,14 @@ namespace FlowIoC.Editor.Console
         /// narrows the console to that channel and alt+clicking the one that is already alone
         /// brings the rest back.
         /// </summary>
-        private void ChannelRowGUI(string name, CD_FlowConsole.FlowConsoleLogTypeCVO logType, int rowIndex)
+        private void ChannelRowGUI(string name, FlowLogChannel channel, int rowIndex)
         {
             Rect rect = GUILayoutUtility.GetRect(0f, ChannelRowHeight, GUILayout.ExpandWidth(true));
 
             // A muted group is not a group whose switches are off - the settings are still there,
             // only silenced - so its rows are drawn dim and answer to nothing. Letting them be
             // clicked would change a setting the reader cannot see the effect of.
-            bool muted = IsGroupMuted(logType);
+            bool muted = IsGroupMuted(channel);
             bool hovered = !muted && rect.Contains(Event.current.mousePosition);
 
             if (Event.current.type == EventType.Repaint)
@@ -507,14 +489,14 @@ namespace FlowIoC.Editor.Console
                 var swatch = new Rect(rect.x + ChannelRowIndent,
                     rect.y + (rect.height - ChannelSwatchSize) * 0.5f, ChannelSwatchSize, ChannelSwatchSize);
 
-                EditorGUI.DrawRect(swatch, logType.LogColor);
+                EditorGUI.DrawRect(swatch, channel.Color);
 
                 EnsureChannelRowStyles();
 
                 var labelRect = new Rect(ChannelLabelLeft(rect), rect.y,
                     rect.width - (ChannelLabelLeft(rect) - rect.x) - 22f, rect.height);
 
-                bool shown = _settings.IsLogTypeVisible(logType) && !muted;
+                bool shown = Channels.IsShown(channel) && !muted;
 
                 GUI.Label(labelRect, name, shown ? _channelOnStyle : _channelOffStyle);
 
@@ -532,7 +514,18 @@ namespace FlowIoC.Editor.Console
             if (hovered && Event.current.type == EventType.MouseMove)
                 Repaint();
 
-            if (Event.current.type != EventType.MouseDown || !hovered || Event.current.button != 0) return;
+            if (Event.current.type != EventType.MouseDown || !hovered) return;
+
+            // The right button opens what a module's channel has to offer: its colour and its
+            // profile, which the module keeps in its own card.
+            if (Event.current.button == 1)
+            {
+                ChannelContextMenu(channel);
+                Event.current.Use();
+                return;
+            }
+
+            if (Event.current.button != 0) return;
 
             // Alt+click isolates rather than switching everything else off. Nothing is written,
             // so leaving isolation needs no snapshot to put back.
@@ -542,16 +535,37 @@ namespace FlowIoC.Editor.Console
             }
             else if (Event.current.alt)
             {
-                EnterIsolation(logType.Name);
+                EnterIsolation(channel.Name);
             }
             else
             {
-                _settings.Visibility.Show(logType, !_settings.IsLogTypeVisible(logType));
+                Channels.Visibility.Show(channel, !Channels.IsShown(channel));
                 OnLogTypeSelectionChanged();
             }
 
             Event.current.Use();
             Repaint();
+        }
+
+        /// <summary>
+        /// What the right button offers on a channel row. A module's colour and profile are the
+        /// module's own, kept in its card, so the item opens the window that edits that card; a
+        /// framework channel is shipped as it is and the Default channel belongs to no module, so
+        /// for those the item says why it is off rather than not being there.
+        /// </summary>
+        private void ChannelContextMenu(FlowLogChannel channel)
+        {
+            var menu = new GenericMenu();
+            var content = new GUIContent("Colour and profile...");
+
+            if (channel.IsFrameworkOwned)
+                menu.AddDisabledItem(new GUIContent("Colour and profile (a framework channel is shipped as it is)"));
+            else if (!new ChannelModuleLocator().TryFolderOf(channel.Name, out _))
+                menu.AddDisabledItem(new GUIContent("Colour and profile (no module owns this channel)"));
+            else
+                menu.AddItem(content, false, () => FlowChannelStyleWindow.Open(channel));
+
+            menu.ShowAsContext();
         }
 
         /// <summary>
@@ -678,10 +692,11 @@ namespace FlowIoC.Editor.Console
 
         private bool IsAllProjectTypesVisible()
         {
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
             {
-                var logType = _settings.LogTypes[i];
-                if (!logType.IsMandatory && !_settings.IsLogTypeVisible(logType)) return false;
+                if (!channels[i].IsFrameworkOwned && !Channels.IsShown(channels[i])) return false;
             }
 
             return true;
@@ -689,11 +704,12 @@ namespace FlowIoC.Editor.Console
 
         private void SetAllProjectTypes(bool enabled)
         {
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
             {
-                var logType = _settings.LogTypes[i];
-                if (!logType.IsMandatory)
-                    _settings.Visibility.Show(logType, enabled);
+                if (!channels[i].IsFrameworkOwned)
+                    Channels.Visibility.Show(channels[i], enabled);
             }
 
             OnLogTypeSelectionChanged();
@@ -701,12 +717,12 @@ namespace FlowIoC.Editor.Console
 
         private bool IsAllSystemTypesVisible()
         {
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
             {
-                var lt = _settings.LogTypes[i];
-                if (IsUnityChannel(lt.Value)) continue;
-                if (lt.IsMandatory && lt.Value != (int) SystemLogType.All && !_settings.IsLogTypeVisible(lt))
-                    return false;
+                if (!channels[i].IsFrameworkOwned || channels[i].IsWrittenByUnity) continue;
+                if (!Channels.IsShown(channels[i])) return false;
             }
 
             return true;
@@ -714,12 +730,13 @@ namespace FlowIoC.Editor.Console
 
         private void SetAllSystemTypesVisible(bool visible)
         {
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
             {
-                var lt = _settings.LogTypes[i];
-                if (IsUnityChannel(lt.Value)) continue;
-                if (lt.IsMandatory && lt.Value != (int) SystemLogType.All)
-                    _settings.Visibility.Show(lt, visible);
+                if (!channels[i].IsFrameworkOwned || channels[i].IsWrittenByUnity) continue;
+
+                Channels.Visibility.Show(channels[i], visible);
             }
         }
     }

@@ -10,7 +10,7 @@ namespace FlowIoC.Editor.Console
     /// How the list is viewed: which rows it shows and how they are grouped and led, how a row is
     /// drawn, and how much a log is asked to remember about where it came from. These are switches
     /// a reader throws while following one flow and puts back afterwards, which is why they are
-    /// here rather than three windows away in the asset - but they are not read every minute, so
+    /// here rather than under Preferences - but they are not read every minute, so
     /// they are folded behind the gear until it is pressed, and the toolbar keeps the actions.
     /// </summary>
     internal partial class FlowConsoleEditor
@@ -349,7 +349,7 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void SourceCaptureSettingGUI(Rect rect)
         {
-            FlowStackTraceCapture capture = _settings.StackTraceCapture;
+            FlowStackTraceCapture capture = Preferences.StackTraceCapture;
 
             var content = new GUIContent("Source: " + capture,
                 "Which logs work out where they came from.");
@@ -363,8 +363,7 @@ namespace FlowIoC.Editor.Console
                 FlowStackTraceCapture chosen = value;
                 menu.AddItem(new GUIContent(CaptureLabel(value)), capture == value, () =>
                 {
-                    _settings.StackTraceCapture = chosen;
-                    EditorUtility.SetDirty(_settings);
+                    Preferences.StackTraceCapture = chosen;
                     _needsRepaint = true;
                 });
             }

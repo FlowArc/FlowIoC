@@ -118,7 +118,7 @@ namespace FlowIoC.Tests
         {
             ProbeView view = _viewHost.GetComponent<ProbeView>();
 
-            // Register reports the missing context through Debug.LogError and, with ENABLE_LOG on,
+            // Register reports the missing context through Debug.LogError and, in the Editor,
             // through FlowLogger as well; the number of error lines is not the point here.
             LogAssert.ignoreFailingMessages = true;
 

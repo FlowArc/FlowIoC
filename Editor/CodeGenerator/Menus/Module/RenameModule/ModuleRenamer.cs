@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.Addressables;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration;
 using FlowIoC.Editor.Console;
@@ -132,7 +131,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
                 RenameCardHeadings(plan, report);
                 RenameFolders(plan, report);
                 report.ModuleAssetPath = _paths.ToAssetPath(NewPath(picked));
-                RenameChannels(plan, report);
                 SettleProject(picked, report);
                 Remember(plan);
             }
@@ -276,21 +274,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
 
                 Move(_paths.ToAssetPath(module.OldPath), _paths.ToAssetPath(NewPath(module)));
                 Log("Folder " + module.OldName + " → " + module.NewName, report);
-            }
-        }
-
-        private void RenameChannels(ModuleRenamePlanEVO plan, ModuleRenameReportEVO report)
-        {
-            CD_FlowConsole settings = FlowLogger.Settings;
-
-            if (settings == null) return;
-
-            foreach (ChannelRenameEVO channel in plan.Channels)
-            {
-                Log(settings.RenameLogType(channel.OldName, channel.NewName)
-                        ? "Channel " + channel.OldName + " → " + channel.NewName
-                        : "No channel named " + channel.OldName,
-                    report);
             }
         }
 

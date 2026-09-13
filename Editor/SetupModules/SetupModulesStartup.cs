@@ -7,7 +7,6 @@ using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.CodeGenerator.Detector;
 using FlowIoC.Editor.ModuleScanner;
-using FlowIoC.Editor.Console;
 using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -114,7 +113,6 @@ namespace FlowIoC.Editor.SetupModules
 
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
             ModuleAutoDetector.RescanModules();
-            FlowLogTypeGenerator.Generate();
             new ModuleRepair().FixAll();
 
             // Here, and not from inside RescanModules: the repair above writes the settings files

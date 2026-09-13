@@ -15,8 +15,8 @@ namespace FlowIoC.Editor.Console
     /// A set of channels somebody reaches for often, under a name. Two ship with the console and
     /// the rest are whatever a reader saves.
     ///
-    /// Saved presets live in EditorPrefs rather than in CD_FlowConsole. That asset is committed,
-    /// and one developer's filter has no business turning up in everybody else's diff.
+    /// Saved presets live in EditorPrefs, like every other switch a developer throws here: one
+    /// developer's filter has no business turning up in everybody else's diff.
     /// </summary>
     public class FlowConsoleFilterPresets
     {

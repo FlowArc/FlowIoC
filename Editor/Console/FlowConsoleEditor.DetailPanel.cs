@@ -60,7 +60,7 @@ namespace FlowIoC.Editor.Console
                     EditorGUILayout.Space(4);
                 }
 
-                if (_settings != null && _settings.DeepAnalysis)
+                if (Preferences.DeepAnalysis)
                 {
                     bool hasClassInfo = !string.IsNullOrEmpty(_selectedLog.SourceClassName);
                     bool hasFileInfo = !string.IsNullOrEmpty(_selectedLog.SourceFilePath);

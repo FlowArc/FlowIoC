@@ -102,6 +102,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`CD_FlowConsole.asset` is gone; a module's colour lives in the module.** The asset held four
+  things with four owners in one committed file, so every module added, every field renamed and
+  every switch flipped landed in the same diff. Each part lives with its owner now. The framework's
+  channels - their colours, their `[Tag]`s, which are on by default - are `SystemLogChannelTable`
+  in the package; `Signal`, `Command`, `Unity`, `Compiler` and `Shader` are on, the machinery
+  underneath is off. What one developer switches on and off stays in EditorPrefs, and
+  `IsLoggingEnabled`, `SendLogsToUnityConsole`, `StackTraceCapture`, `MaxLogCount` and
+  `DeepAnalysis` join it as `FlowConsolePreferences`, edited under **Edit ▸ Preferences ▸ FlowIoC ▸
+  Flow Console**; a player reads the defaults. The module channel list is nowhere: the generator
+  writes a part for every module in the index, and `FlowLogChannels` reads every `const string` on
+  `FlowLogType` back by reflection, so nothing keeps a second list. A module's colour is written
+  beside its channel in the generated part - `PlayerModule` and `PlayerModuleColor` - picked from a
+  palette of twelve tones by the module's name, so every module is coloured from day one; a
+  `Colour: #RRGGBB` line directly above the generated block of the module's `MODULE.md` overrides
+  the pick, and a `Profile:` line beside it declares the tag on the front of the module's lines,
+  written into the part as `PlayerModuleProfile`. Right-clicking a module's channel in the Filters
+  panel opens the window that edits both lines. `FlowLogger.Settings` is `FlowLogger.Preferences`
+  and `FlowLogger.Channels`; `FlowLogChannel` replaces `CD_FlowConsole.FlowConsoleLogTypeCVO`;
+  `FlowLogTypeManager`, `FlowLogProfileData`, `LogTypeSettingsGuard`, `LogTypeCheck` and the
+  asset's inspector are gone with the asset, and Delete Module and Rename Module no longer touch a
+  channel list, because the part goes and comes with the folder. **Presets ▸ Project defaults** is
+  **Presets ▸ Defaults**. On the next Editor load the migrator deletes the asset under every name
+  it ever had and the empty `Resources` folder with it; a project upgrading loses nothing but the
+  file - its channel switches carry over, and a channel that was off by default in the asset is on
+  now until it is switched off again in the panel.
+- **Logging compiles only in the Editor and in a Development Build.** Every plain log and warning
+  carries `[Conditional("UNITY_EDITOR")]` and `[Conditional("DEVELOPMENT_BUILD")]` in place of
+  `[Conditional("ENABLE_LOG")]`; the two are OR'd, so the calls stay wherever either symbol is
+  defined and a release build removes them and the messages they would have built. Unity defines
+  both symbols itself, so FlowIoC no longer writes `ENABLE_LOG` into every platform's
+  PlayerSettings and no longer fights a build tool that strips it: `FlowConsoleDefineChecker` and
+  `AutoAddEnableLogDefine` are gone, and the device console needs one setup step rather than two.
+  An `ENABLE_LOG` a project still carries is harmless and can be removed.
 - **A sub-module reads its parent's Shared assembly, never its Signals.** A screen or sub module
   may reference the parent's `.Shared` and use what it publishes there; what a parent and its
   child say to each other crosses a Connector like any other traffic. The Module Scanner's

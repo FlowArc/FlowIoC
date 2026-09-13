@@ -7,8 +7,11 @@ namespace FlowIoC.Tests
 {
     public class AddExternalLogTests
     {
-        /// <summary>The Default project channel, which CD_FlowConsole always creates.</summary>
+        /// <summary>The Default project channel: any name will do here, because a channel nobody declared is still logged on.</summary>
         private const string DEFAULT_CHANNEL = "Default";
+
+        /// <summary>A framework channel, so the switch under test exists in every project the tests run in.</summary>
+        private const string HIDDEN_CHANNEL = "Signal";
 
         private bool _wasLoggingEnabled;
         private bool _wasForwarding;
@@ -16,21 +19,21 @@ namespace FlowIoC.Tests
         [SetUp]
         public void Remember()
         {
-            _wasLoggingEnabled = FlowLogger.Settings.IsLoggingEnabled;
-            _wasForwarding = FlowLogger.Settings.SendLogsToUnityConsole;
+            _wasLoggingEnabled = FlowLogger.Preferences.IsLoggingEnabled;
+            _wasForwarding = FlowLogger.Preferences.SendLogsToUnityConsole;
             FlowLogger.ClearLogs();
         }
 
         /// <summary>
-        /// The setting is put back as it was found rather than forced on. CD_FlowConsole is a
-        /// committed asset, and a test that leaves it switched differently would turn up in
-        /// somebody's diff.
+        /// The setting is put back as it was found rather than forced on. The preferences are
+        /// the developer's own EditorPrefs, and a test that leaves them switched differently would
+        /// change what they see in their next session.
         /// </summary>
         [TearDown]
         public void Restore()
         {
-            FlowLogger.Settings.IsLoggingEnabled = _wasLoggingEnabled;
-            FlowLogger.Settings.SendLogsToUnityConsole = _wasForwarding;
+            FlowLogger.Preferences.IsLoggingEnabled = _wasLoggingEnabled;
+            FlowLogger.Preferences.SendLogsToUnityConsole = _wasForwarding;
             FlowLogger.ClearLogs();
         }
 
@@ -55,8 +58,8 @@ namespace FlowIoC.Tests
         [Test]
         public void A_log_mirrored_into_Unitys_console_is_recorded_once()
         {
-            FlowLogger.Settings.IsLoggingEnabled = true;
-            FlowLogger.Settings.SendLogsToUnityConsole = true;
+            FlowLogger.Preferences.IsLoggingEnabled = true;
+            FlowLogger.Preferences.SendLogsToUnityConsole = true;
             FlowLogger.ClearLogs();
 
             FlowLogger.Log(DEFAULT_CHANNEL, "mirrored-log-probe");
@@ -73,7 +76,7 @@ namespace FlowIoC.Tests
         {
             LogAssert.Expect(LogType.Error, "mirrored-error-probe");
 
-            FlowLogger.Settings.SendLogsToUnityConsole = false;
+            FlowLogger.Preferences.SendLogsToUnityConsole = false;
             FlowLogger.ClearLogs();
 
             FlowLogger.LogError(DEFAULT_CHANNEL, "mirrored-error-probe");
@@ -116,7 +119,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_Unity_message_is_recorded_even_with_logging_switched_off()
         {
-            FlowLogger.Settings.IsLoggingEnabled = false;
+            FlowLogger.Preferences.IsLoggingEnabled = false;
 
             FlowLogger.AddExternalLog(LogSource.Unity, LogType.Error, "boom", null, null, 0);
 
@@ -146,33 +149,33 @@ namespace FlowIoC.Tests
 
         /// <summary>
         /// A channel's switch holds back its chatter and nothing else, in Unity's console as in
-        /// the window. The developer's switch on the Default channel is thrown for the test and
+        /// the window. The developer's switch on the Signal channel is thrown for the test and
         /// put back as it was found, because it is theirs.
         /// </summary>
         [Test]
         public void A_warning_on_a_hidden_channel_is_still_mirrored_and_a_log_is_not()
         {
-            Assert.IsTrue(FlowLogger.Settings.TryGetLogType(DEFAULT_CHANNEL, out var channel));
+            Assert.IsTrue(FlowLogger.Channels.TryGet(HIDDEN_CHANNEL, out FlowLogChannel channel));
 
-            bool wasShown = FlowLogger.Settings.Visibility.IsShown(channel);
+            bool wasShown = FlowLogger.Channels.Visibility.IsShown(channel);
             var mirrored = new System.Collections.Generic.List<string>();
 
             void Capture(string condition, string stackTrace, LogType type) => mirrored.Add(type + ":" + condition);
 
-            FlowLogger.Settings.IsLoggingEnabled = true;
-            FlowLogger.Settings.SendLogsToUnityConsole = true;
-            FlowLogger.Settings.Visibility.Show(channel, false);
+            FlowLogger.Preferences.IsLoggingEnabled = true;
+            FlowLogger.Preferences.SendLogsToUnityConsole = true;
+            FlowLogger.Channels.Visibility.Show(channel, false);
             Application.logMessageReceived += Capture;
 
             try
             {
-                FlowLogger.LogWarning(DEFAULT_CHANNEL, "hidden-channel-warning-probe");
-                FlowLogger.Log(DEFAULT_CHANNEL, "hidden-channel-log-probe");
+                FlowLogger.LogWarning(HIDDEN_CHANNEL, "hidden-channel-warning-probe");
+                FlowLogger.Log(HIDDEN_CHANNEL, "hidden-channel-log-probe");
             }
             finally
             {
                 Application.logMessageReceived -= Capture;
-                FlowLogger.Settings.Visibility.Show(channel, wasShown);
+                FlowLogger.Channels.Visibility.Show(channel, wasShown);
             }
 
             Assert.IsTrue(mirrored.Exists(line => line.StartsWith("Warning:") && line.Contains("hidden-channel-warning-probe")));
