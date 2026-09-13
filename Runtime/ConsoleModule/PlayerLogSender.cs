@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
@@ -13,6 +14,8 @@ namespace FlowIoC.ConsoleModule
     public class PlayerLogSender
     {
         private readonly ExternalLogEchoPolicy _echoPolicy = new();
+
+        private UnityLogRelay _relay;
 
         public bool IsConnected => PlayerConnection.instance.isConnected;
 
@@ -36,15 +39,18 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>
         /// Hooks the connection and the player's own log stream. Called once, from the engine's
-        /// entry point below; autoconnect can beat the hook, so a connection already up says hello
-        /// straight away.
+        /// entry point below, on the main thread: the relay learns that thread here, and takes
+        /// its synchronization context so a line a Task writes reaches the connection on the next
+        /// frame rather than never. Autoconnect can beat the hook, so a connection already up says
+        /// hello straight away.
         /// </summary>
         public void Install()
         {
             PlayerConnection.instance.RegisterConnection(OnConnected);
 
-            Application.logMessageReceived -= OnUnityLog;
-            Application.logMessageReceived += OnUnityLog;
+            _relay?.Unhook();
+            _relay = new UnityLogRelay(OnUnityLog, () => FlowLogger.IsWritingToUnityConsole, SynchronizationContext.Current);
+            _relay.Hook();
 
             if (IsConnected) SendHello();
         }
@@ -55,14 +61,14 @@ namespace FlowIoC.ConsoleModule
         }
 
         /// <summary>
-        /// The player's Unity lines - an exception, a native warning, a third party's Debug.Log.
-        /// FlowLogger's own lines come back through here too, and are skipped the way the editor
-        /// bridge skips them, so a row travels once.
+        /// The player's Unity lines - an exception, a native warning, a third party's Debug.Log,
+        /// from whichever thread wrote them. FlowLogger's own lines come back through here too,
+        /// and are skipped the way the editor bridge skips them, so a row travels once.
         /// </summary>
-        private void OnUnityLog(string condition, string stackTrace, LogType type)
+        private void OnUnityLog(string condition, string stackTrace, LogType type, bool isEcho)
         {
             if (!IsConnected) return;
-            if (_echoPolicy.IsEcho(FlowLogger.IsWritingToUnityConsole)) return;
+            if (_echoPolicy.IsEcho(isEcho)) return;
 
             FlowLogger.AddExternalLog(LogSource.Unity, type, condition, stackTrace, null, 0);
         }

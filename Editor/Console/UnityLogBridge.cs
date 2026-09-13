@@ -11,10 +11,13 @@ namespace FlowIoC.Editor.Console
     /// Everything Unity writes, on its way into Flow Console. Hooked at editor load rather than
     /// when the window opens, so a log written before anybody opened it is still recorded.
     ///
+    /// The hook is the threaded event, through UnityLogRelay: logMessageReceived alone misses
+    /// every line a Task or a thread writes, and Unity's own console shows those.
+    ///
     /// Nothing here reflects into UnityEditor.LogEntries. Compiler messages come from
     /// CompilationPipeline, which is public and has not moved, and the rest come from
-    /// Application.logMessageReceived. An internal API that breaks silently on a Unity upgrade
-    /// would be worse than a feature never promised.
+    /// Application.logMessageReceivedThreaded. An internal API that breaks silently on a Unity
+    /// upgrade would be worse than a feature never promised.
     /// </summary>
     [InitializeOnLoad]
     internal static class UnityLogBridge
@@ -23,11 +26,15 @@ namespace FlowIoC.Editor.Console
 
         private static readonly UnityLogIntake Intake = new();
         private static readonly CompilerLogStore Store = new();
+        private static readonly UnityLogRelay Relay = new(OnUnityLog, () => FlowLogger.IsWritingToUnityConsole);
 
         static UnityLogBridge()
         {
-            Application.logMessageReceived -= OnUnityLog;
-            Application.logMessageReceived += OnUnityLog;
+            Relay.Hook();
+
+            // A line from another thread waits in the relay until the editor's next update.
+            EditorApplication.update -= Relay.Drain;
+            EditorApplication.update += Relay.Drain;
 
             CompilationPipeline.assemblyCompilationFinished -= OnAssemblyCompiled;
             CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompiled;
@@ -48,9 +55,9 @@ namespace FlowIoC.Editor.Console
             SessionState.EraseString(PENDING_COMPILER_LOGS_KEY);
         }
 
-        private static void OnUnityLog(string condition, string stackTrace, LogType type)
+        private static void OnUnityLog(string condition, string stackTrace, LogType type, bool isEcho)
         {
-            if (!Intake.ShouldRecord(type, FlowLogger.IsWritingToUnityConsole)) return;
+            if (!Intake.ShouldRecord(type, isEcho)) return;
 
             // The compile error Unity is printing is the one CompilationPipeline already handed
             // over, with the file and the line this copy does not carry.
