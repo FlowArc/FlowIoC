@@ -99,5 +99,57 @@ namespace FlowIoC.Tests
             Assert.IsNull(_intake.Receive(3, new byte[] {1, 2, 3}, null));
             Assert.IsNull(_intake.Receive(3, null, null));
         }
+
+        /// <summary>
+        /// A recompile empties every static in the editor, the intake with them, while the player
+        /// stays connected and never says hello again. What it knew is written out and read back
+        /// around the reload, so the rows after it are still named and the echo still dropped.
+        /// </summary>
+        [Test]
+        public void What_it_knows_survives_a_round_trip_through_text()
+        {
+            _intake.Receive(3, Hello("Android Pixel 7"), null);
+            _intake.Receive(5, Hello("Android OnePlus 15"), null);
+
+            var reloaded = new PlayerLogIntake();
+            reloaded.Restore(_intake.Serialize(), new[] {3, 5});
+
+            Assert.IsTrue(reloaded.IsFlowPlayerPresent);
+            Assert.AreEqual("Android Pixel 7", reloaded.NameOf(3));
+            Assert.AreEqual("Android OnePlus 15", reloaded.NameOf(5));
+        }
+
+        [Test]
+        public void A_player_gone_during_the_reload_is_not_restored()
+        {
+            _intake.Receive(3, Hello("Android Pixel 7"), null);
+
+            var reloaded = new PlayerLogIntake();
+            reloaded.Restore(_intake.Serialize(), new int[0]);
+
+            Assert.IsFalse(reloaded.IsFlowPlayerPresent);
+            Assert.AreEqual("Player 3", reloaded.NameOf(3));
+        }
+
+        [Test]
+        public void Nothing_and_nonsense_restore_to_nothing()
+        {
+            _intake.Restore(null, new[] {3});
+            _intake.Restore("", new[] {3});
+            _intake.Restore("not:a:record;;3", new[] {3});
+
+            Assert.IsFalse(_intake.IsFlowPlayerPresent);
+        }
+
+        [Test]
+        public void A_name_with_the_separators_in_it_comes_back_whole()
+        {
+            _intake.Receive(3, Hello("Android Weird;Name=Yes"), null);
+
+            var reloaded = new PlayerLogIntake();
+            reloaded.Restore(_intake.Serialize(), new[] {3});
+
+            Assert.AreEqual("Android Weird;Name=Yes", reloaded.NameOf(3));
+        }
     }
 }

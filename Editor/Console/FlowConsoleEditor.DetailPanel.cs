@@ -222,9 +222,12 @@ namespace FlowIoC.Editor.Console
             bool hasFileInfo = !string.IsNullOrEmpty(log.SourceFilePath);
             bool hasClassInfo = !string.IsNullOrEmpty(log.SourceClassName);
 
+            // Nothing to open, so plain text - wrapped, because what is here can be more than one
+            // line: a trace that named no frame at all is shown whole, and a single-line field
+            // drew its first line under the row above it.
             if (!hasFileInfo && !hasClassInfo)
             {
-                EditorGUILayout.LabelField(displayText);
+                GUILayout.Label(displayText, EditorStyles.wordWrappedLabel);
                 return;
             }
 

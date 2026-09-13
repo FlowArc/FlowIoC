@@ -732,8 +732,15 @@ namespace FlowIoC.ConsoleModule
             // all, as a log the package's own editor tooling wrote does - falls back to the first
             // frame that carries a location. Reporting no source for a line Unity's own console
             // opens happily is worse than opening the framework's file.
+            int gameIndex = index;
+
             if (index < 0 || !StackFrames.TryParseFrame(lines[index], out _, out _))
                 index = StackFrames.FindFirstFrameWithLocation(lines);
+
+            // No frame anywhere says where it is - an IL2CPP player's trace carries method names
+            // and nothing else. The game's frame is still the one to name: one line, and a class
+            // the navigator can open by name, rather than the whole trace in the source field.
+            if (index < 0) index = gameIndex;
 
             if (index < 0) return;
 

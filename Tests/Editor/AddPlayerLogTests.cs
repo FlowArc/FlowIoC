@@ -50,6 +50,31 @@ namespace FlowIoC.Tests
             Assert.AreEqual(12, FlowLogger.Logs[0].SourceLineNumber);
         }
 
+        /// <summary>
+        /// An IL2CPP player's trace carries method names and no "(at file:line)". The source line
+        /// then names the game's frame - one line, the class to open by name - rather than the
+        /// whole trace, which the detail panel drew in a single-line field.
+        /// </summary>
+        [Test]
+        public void A_trace_with_no_location_names_the_games_frame()
+        {
+            FlowLogger.AddPlayerLog(DeviceRow(
+                "UnityEngine.DebugLogHandler:Internal_Log(LogType, LogOption, String, Object)\nHapticDeviceProbe:OnGUI()"));
+
+            Assert.AreEqual("HapticDeviceProbe:OnGUI()", FlowLogger.Logs[0].SourceTrace);
+            Assert.AreEqual("HapticDeviceProbe", FlowLogger.Logs[0].SourceClassName);
+            Assert.IsTrue(string.IsNullOrEmpty(FlowLogger.Logs[0].SourceFilePath));
+        }
+
+        [Test]
+        public void A_trace_that_is_all_plumbing_keeps_what_it_had()
+        {
+            FlowLogger.AddPlayerLog(DeviceRow("UnityEngine.DebugLogHandler:Internal_Log(LogType, LogOption, String, Object)"));
+
+            Assert.IsNull(FlowLogger.Logs[0].SourceTrace);
+            Assert.IsNull(FlowLogger.Logs[0].SourceClassName);
+        }
+
         [Test]
         public void A_row_carries_a_collapse_key()
         {

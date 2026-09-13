@@ -137,6 +137,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The Flow Console toolbar dropped the search and the player picker with room to spare.** The
+  picker was judged by its connection name - `AndroidPlayer(Oneplus_CPH2747@ADB:…)`, wider than
+  the label Unity draws on it - and the search was chained to the picker, so at 709 px both went
+  while 300 px sat empty. The picker is now measured off the repaint that drew it - drawn once to
+  be measured when it has not been - and the search is dropped on its own account, only when what
+  is left after the drawn controls is under its narrowest width.
+- **A device row's source read as the whole trace, in one line.** An IL2CPP player's trace names
+  methods and no file, so no frame was picked, the source field kept the whole trace, and the
+  detail panel drew its two lines in a one-line field with the first under the Player row. The
+  game's frame is named now - `HapticDeviceProbe:OnGUI()`, its class for the navigator to open by
+  name - and text the panel cannot open is drawn wrapped.
+- **A recompile while a player was attached lost its name and let Unity's echo back in.** The
+  player stays connected through a domain reload and never says hello again, while the bridge's
+  intake started empty: every row after the reload carried the connection's name, and the
+  `<i>Player "name"</i>` copy Unity forwards of each line was recorded beside it. What the intake
+  learns from a Hello is now parked in `SessionState` and read back at load, for the players
+  still connected.
 - **A `Debug.Log` from a thread reaches the Flow Console.** The editor bridge and the player's
   sender hooked `Application.logMessageReceived`, which Unity fires for the main thread only, so
   a line a `Task` or a thread wrote showed in Unity's console and not in Flow Console - in the

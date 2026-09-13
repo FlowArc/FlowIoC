@@ -171,6 +171,17 @@ namespace FlowIoC.Tests
             Assert.IsTrue(_filter.IsFrameworkFrame("UnityEditor.EditorApplication:Internal_CallDelayFunctions ()"));
         }
 
+        /// <summary>
+        /// A line written inside a player-connection callback - a probe pressed from the editor, a
+        /// message handler of the game's - is Unity delivering the message, not the game's frame.
+        /// </summary>
+        [Test]
+        public void A_player_connection_callback_is_plumbing_too()
+        {
+            Assert.IsTrue(_filter.IsFrameworkFrame(
+                "UnityEngine.Networking.PlayerConnection.PlayerConnection:MessageCallbackInternal(IntPtr, UInt64, UInt64, String)"));
+        }
+
         [Test]
         public void A_trace_with_no_location_anywhere_gives_up_none()
         {

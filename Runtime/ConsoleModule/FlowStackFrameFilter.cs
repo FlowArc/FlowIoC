@@ -25,6 +25,7 @@ namespace FlowIoC.ConsoleModule
             "UnityEngine.DebugLogHandler:",
             "UnityEngine.StackTraceUtility:",
             "UnityEngine.Events.",
+            "UnityEngine.Networking.PlayerConnection.",
             "UnityEditor.",
             "System.Reflection.",
             "System.Runtime.CompilerServices.",
