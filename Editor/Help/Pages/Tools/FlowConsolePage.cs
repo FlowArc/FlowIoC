@@ -73,9 +73,10 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "the Source capture, the mirror into Unity's console, how many rows are kept - is "
                 + "yours too, under Edit > Preferences > FlowIoC > Flow Console.");
             painter.SubHeading("A module's colour is the module's own");
-            painter.Image(_images.Get("FlowConsoleFilters.png"),
-                "The Filters panel's Modules group. Every module has a colour from the day it is "
-                + "created - the swatch, and the stripe down the left of its rows.");
+            painter.Image(_images.Get("ChannelContextMenu.png"),
+                "The Filters panel's Modules group, and the right-click on a module's channel. Every "
+                + "module has a colour from the day it is created - the swatch, and the stripe down "
+                + "the left of its rows.");
             painter.Paragraph(
                 "The colour is picked from twelve tones by the module's name, so the same module is "
                 + "the same colour on every machine, and it is written beside the channel in the "
