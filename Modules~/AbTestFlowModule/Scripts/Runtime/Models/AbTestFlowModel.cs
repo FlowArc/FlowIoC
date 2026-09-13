@@ -131,7 +131,7 @@ namespace Modules.AbTestFlowModule.Models
             var adapter = _root.GetComponent<RootAdapter>();
             if (adapter == null)
             {
-                FlowLogger.LogError(FlowLogType.AbTestFlowModule,
+                FlowLogger.LogError(FlowModule.AbTestFlowModule,
                     "AbTestFlowServiceRoot has no RootAdapter, so no experiment can run.", _root);
                 return false;
             }

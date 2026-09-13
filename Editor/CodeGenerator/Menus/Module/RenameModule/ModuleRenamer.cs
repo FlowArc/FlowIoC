@@ -288,8 +288,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
             new ModuleIndexRebuilder().Rebuild();
             Log("Module index rebuilt", report);
 
-            FlowLogTypeGenerator.Generate();
-            Log("FlowLogType parts regenerated", report);
+            FlowModuleGenerator.Generate();
+            Log("FlowModule parts regenerated", report);
 
             (ProjectTargetEVO project, List<ModuleTargetEVO> modules) = new ModuleTargetFactory().Build();
 

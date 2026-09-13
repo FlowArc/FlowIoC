@@ -46,7 +46,7 @@ namespace FlowIoC.Tests
                 {
                     "Modules.CounterModule.CounterTestModule",
                     "Modules.CounterModule",
-                    "FlowLogType.CounterModule",
+                    "FlowModule.CounterModule",
                     "CounterServiceSignalsIncoming",
                     "CounterServiceSignals"
                 },

@@ -27,7 +27,7 @@ namespace Modules.LoadingModule.Controllers
                 if (!completed)
                 {
                     // The failure itself was logged where it happened; this line only says the chain stopped.
-                    FlowLogger.Log(FlowLogType.LoadingModule, $"AwaitLoadingCommand - '{set}' did not complete, so the sequence stops here.");
+                    FlowLogger.Log(FlowModule.LoadingModule, $"AwaitLoadingCommand - '{set}' did not complete, so the sequence stops here.");
                     Stop();
                     return;
                 }
@@ -36,7 +36,7 @@ namespace Modules.LoadingModule.Controllers
             }
             catch (Exception exception)
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule, $"AwaitLoadingCommand threw while waiting for '{set}': {exception}");
+                FlowLogger.LogError(FlowModule.LoadingModule, $"AwaitLoadingCommand threw while waiting for '{set}': {exception}");
                 Stop();
             }
         }

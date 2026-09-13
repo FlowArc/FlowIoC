@@ -68,19 +68,20 @@ you see is the one you can double-click open. The second copy is dropped only wh
 first was really recorded — a variant that fails at play time was never imported, so
 Unity's text is then the only copy there is and it is kept.
 
-**Project channels** are yours: one per module, generated as a `const string` on `FlowLogType`
-with the module's colour beside it. A module's channel is declared **in the module**, in a part of
-its own:
+**Project channels** are yours: one per module, generated as a `const string` on `FlowModule`
+with the module's colour beside it. `FlowModule.AnalyticsModule` is the module's name - the console
+logs on it as the channel, and anything else that keys something by module reads the same constant.
+It is declared **in the module**, in a part of its own:
 
 ```csharp
-// Modules/AnalyticsModule/Scripts/Generated/FlowLogType.AnalyticsModule.cs
+// Modules/AnalyticsModule/Scripts/Generated/FlowModule.AnalyticsModule.cs
 using UnityEngine;
 
 namespace FlowIoC.ConsoleModule
 {
-    public static partial class FlowLogType
+    public static partial class FlowModule
     {
-        /// <summary>The AnalyticsModule channel.</summary>
+        /// <summary>The AnalyticsModule module, and its channel in the Flow Console.</summary>
         public const string AnalyticsModule = "AnalyticsModule";
 
         /// <summary>The colour AnalyticsModule's rows are drawn in. A "Colour: #RRGGBB" line above the block in the module's MODULE.md sets it.</summary>
@@ -92,12 +93,12 @@ namespace FlowIoC.ConsoleModule
 Beside it sits a `FlowIoC.Generated.asmref`, which is what puts the part into FlowIoC's own
 assembly rather than into the module's. Parts of a partial class have to share an assembly, and
 every module has an assembly of its own - without the asmref this could not be a partial class at
-all. `Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` keeps what belongs to no module: the project's
-`Default` channel.
+all. The one name that belongs to no module, `FlowModule.Default`, is declared by the package
+itself.
 
 There is no list of channels anywhere else. A module has a channel because it is in the module
 index, the generator writes the part from the index, and the console reads every `const string` on
-`FlowLogType` back - so a module that exists has a channel, a module that is gone has none, and
+`FlowModule` back - so a module that exists has a channel, a module that is gone has none, and
 nothing falls out of step with the modules.
 
 **A module's colour is the module's own.** Every module is coloured from the day it is created,
@@ -283,10 +284,10 @@ one the Profiler is on.
 ```csharp
 using FlowIoC.ConsoleModule;
 
-FlowLogger.Log(FlowLogType.PlayerModule, "Execute - AddCurrencyCommand");
-FlowLogger.LogWarning(FlowLogType.PlayerModule, "Currency clamped to zero.");
-FlowLogger.LogError(FlowLogType.PlayerModule, "Save slot is not writable.");
-FlowLogger.LogLong(FlowLogType.PlayerModule, serializedPayload);
+FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
+FlowLogger.LogWarning(FlowModule.PlayerModule, "Currency clamped to zero.");
+FlowLogger.LogError(FlowModule.PlayerModule, "Save slot is not writable.");
+FlowLogger.LogLong(FlowModule.PlayerModule, serializedPayload);
 ```
 
 `LogLong` is for output you want kept intact — a JSON body, a serialized save — that
@@ -319,7 +320,7 @@ private static readonly FlowLogProfile Warning = new FlowLogProfile()
     .SetMessageColor("#DDDDDD")
     .SetPostfix("<-- check this", FlowTextStyle.None, "#888888");
 
-FlowLogger.Log(FlowLogType.EconomyModule, "Currency went negative.", Warning);
+FlowLogger.Log(FlowModule.EconomyModule, "Currency went negative.", Warning);
 ```
 
 | Method | Sets |
@@ -447,26 +448,26 @@ Debug.Log("ValidatePurchaseCommand end");
 
 ```csharp
 // ✅ Auto-registered, so the console can filter to just this module.
-FlowLogger.Log(FlowLogType.EconomyModule, "Granted 100 soft currency.");
+FlowLogger.Log(FlowModule.EconomyModule, "Granted 100 soft currency.");
 ```
 
 ```csharp
 // ❌ Everything on Default. The filter becomes useless and you are back to reading
 //    a wall of text.
-FlowLogger.Log(FlowLogType.Default, "Granted 100 soft currency.");
+FlowLogger.Log(FlowModule.Default, "Granted 100 soft currency.");
 ```
 
 ### Say what happened, not that you got here
 
 ```csharp
 // ✅ The line is useful six months later, in a bug report from a player.
-FlowLogger.Log(FlowLogType.EconomyModule,
+FlowLogger.Log(FlowModule.EconomyModule,
     $"Purchase '{_itemId}' for {_price} {_currencyType}; balance now {_model.Balance}.");
 ```
 
 ```csharp
 // ❌ Tells you the method ran, which the Command channel already told you.
-FlowLogger.Log(FlowLogType.EconomyModule, "PurchaseCommand executed");
+FlowLogger.Log(FlowModule.EconomyModule, "PurchaseCommand executed");
 ```
 
 ### Reuse profiles
@@ -476,12 +477,12 @@ FlowLogger.Log(FlowLogType.EconomyModule, "PurchaseCommand executed");
 private static readonly FlowLogProfile Economy = new FlowLogProfile()
     .SetPrefix("[ECONOMY]", FlowTextStyle.Bold, "#FFAA00");
 
-FlowLogger.Log(FlowLogType.EconomyModule, message, Economy);
+FlowLogger.Log(FlowModule.EconomyModule, message, Economy);
 ```
 
 ```csharp
 // ❌ A new profile object per call, inside the hot path.
-FlowLogger.Log(FlowLogType.EconomyModule, message,
+FlowLogger.Log(FlowModule.EconomyModule, message,
     new FlowLogProfile().SetPrefix("[ECONOMY]", FlowTextStyle.Bold, "#FFAA00"));
 ```
 
@@ -489,13 +490,13 @@ FlowLogger.Log(FlowLogType.EconomyModule, message,
 
 ```csharp
 // ✅ An error is a state the game cannot recover from on its own.
-FlowLogger.LogError(FlowLogType.SaveModule, "Save file is corrupt; falling back to defaults.");
+FlowLogger.LogError(FlowModule.SaveModule, "Save file is corrupt; falling back to defaults.");
 ```
 
 ```csharp
 // ❌ Errors used for flow control. The error filter fills with expected outcomes and
 //    stops being the first place anyone looks.
-FlowLogger.LogError(FlowLogType.ShopModule, "Player cannot afford this item.");
+FlowLogger.LogError(FlowModule.ShopModule, "Player cannot afford this item.");
 ```
 
 ---
@@ -522,17 +523,17 @@ particular flow, and put it back when you are done.
 *Max log count* under Preferences caps what is kept, at 5000 by default, and the oldest go
 first. Raise it, or set it to `0` for no limit, if a long session has to be read back whole.
 
-### `FlowLogType.MyModule` does not exist
+### `FlowModule.MyModule` does not exist
 
-The generated file is out of date. It is regenerated when the console registers
-module channels — open the Flow Console window once after adding a module, or run
-*Tools ▸ FlowIoC ▸ Module Scanner*. Never edit
-`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` by hand; it is overwritten.
+The module's part is missing or out of date. It is written from the module index when the
+Editor loads and whenever a module is created, installed or renamed; run *Tools ▸ FlowIoC ▸
+Module Scanner* and repair, or delete `Scripts/Generated` in the module and let the next load
+write it again. Never edit a part by hand; it is overwritten.
 
 ### `FlowLogger.Log(SystemLogType.Signal, ...)` does not compile
 
 The `SystemLogType` overloads are `internal` — they belong to the framework. Game
-code uses the `int` overloads with a `FlowLogType` constant.
+code uses the string overloads with a `FlowModule` constant.
 
 ### Logs are missing their stack trace on device
 

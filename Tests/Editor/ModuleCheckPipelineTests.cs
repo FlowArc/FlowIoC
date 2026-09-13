@@ -28,7 +28,7 @@ namespace FlowIoC.Tests
                 {
                     "folders", "shared-assembly", "signals-assembly", "assembly", "references",
                     "signals-shared-reference", "signal-references",
-                    "dotsettings", "log-type-part", "module-card"
+                    "dotsettings", "module-part", "module-card"
                 },
                 ids);
         }

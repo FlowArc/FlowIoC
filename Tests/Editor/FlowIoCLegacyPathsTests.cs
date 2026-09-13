@@ -15,8 +15,8 @@ namespace FlowIoC.Tests
         [Test]
         public void Every_project_local_asset_FlowIoC_ever_wrote_is_covered()
         {
-            Assert.AreEqual(14, CreateLegacyPaths().AssetMoves.Count);
-            Assert.AreEqual(3, CreateLegacyPaths().AssetsToDelete.Count);
+            Assert.AreEqual(12, CreateLegacyPaths().AssetMoves.Count);
+            Assert.AreEqual(7, CreateLegacyPaths().AssetsToDelete.Count);
         }
 
         /// <summary>
@@ -41,6 +41,30 @@ namespace FlowIoC.Tests
             }
 
             Assert.IsTrue(legacy.FoldersToCleanUp.Contains("Assets/Plugins/FlowIoC/Resources"));
+        }
+
+        /// <summary>
+        /// The shared FlowLogType file carried only Default, which the package declares itself now.
+        /// It is deleted under both roots it ever had, with the asmref beside it, and never moved.
+        /// </summary>
+        [Test]
+        public void The_shared_FlowLogType_file_is_deleted_under_every_root_it_had()
+        {
+            FlowIoCLegacyPaths legacy = CreateLegacyPaths();
+
+            foreach (string retired in new[]
+                     {
+                         "Assets/FlowIoC/Generated/FlowLogType.cs",
+                         "Assets/FlowIoC/Generated/FlowIoC.Generated.asmref",
+                         "Assets/Plugins/FlowIoC/Generated/FlowLogType.cs",
+                         "Assets/Plugins/FlowIoC/Generated/FlowIoC.Generated.asmref"
+                     })
+            {
+                Assert.IsTrue(legacy.AssetsToDelete.Contains(retired), retired + " is not deleted.");
+                Assert.IsFalse(legacy.AssetMoves.Any(move => move.Legacy == retired), retired + " is still moved.");
+            }
+
+            Assert.IsTrue(legacy.FoldersToCleanUp.Contains("Assets/Plugins/FlowIoC/Generated"));
         }
 
         [Test]

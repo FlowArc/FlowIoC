@@ -234,7 +234,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
                 // The index above already knows the module, so its channel's part is written now
                 // rather than on the next load - the module's own code compiles against it.
-                FlowLogTypeGenerator.Generate();
+                FlowModuleGenerator.Generate();
             }
         }
 

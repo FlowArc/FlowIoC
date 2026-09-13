@@ -13,9 +13,9 @@ is in: FlowIoC put it there and is no longer in the project.
 
 A FlowIoC module is more than its folders. Creating one also writes an asmdef, writes a
 `<Assembly>.csproj.DotSettings` at the **project root**, registers the module in the module index,
-and adds its channel to `FlowLogType`. Typing the folders out by hand produces the first part and
+and writes its `FlowModule` part. Typing the folders out by hand produces the first part and
 silently skips the rest, which shows up later as a namespace with `Scripts` in the middle of it, a
-module the generators cannot find, or `FlowLogType.PlayerModule` failing to compile.
+module the generators cannot find, or `FlowModule.PlayerModule` failing to compile.
 
 Use the menu items below instead. They are the only supported way to lay a module out, and the
 code generators and namespace tools depend on the exact shape they produce.
@@ -207,7 +207,7 @@ has no part until the index is rebuilt and the generator runs. Force both:
 asm.GetType("FlowIoC.Editor.CodeGenerator.Detector.ModuleAutoDetector")
    .GetMethod("RescanModules", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
    .Invoke(null, null);
-asm.GetType("FlowIoC.Editor.Console.FlowLogTypeGenerator")
+asm.GetType("FlowIoC.Editor.Console.FlowModuleGenerator")
    .GetMethod("Generate", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
    .Invoke(null, null);
 ```

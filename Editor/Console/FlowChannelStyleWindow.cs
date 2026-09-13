@@ -178,7 +178,7 @@ namespace FlowIoC.Editor.Console
             _cards.Write(moduleFolder, _lines.Write(card, colourLine, profileLine));
             AssetDatabase.ImportAsset(AssetPathOf(_cards.PathFor(moduleFolder)));
 
-            FlowLogTypeGenerator.Generate();
+            FlowModuleGenerator.Generate();
         }
 
         private FlowLogProfile BuildProfile()

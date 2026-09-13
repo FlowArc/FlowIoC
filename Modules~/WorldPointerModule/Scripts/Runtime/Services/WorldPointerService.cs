@@ -50,7 +50,7 @@ namespace Modules.WorldPointerModule.Services
         {
             if (target == null || indicator == null || indicator.Rect == null)
             {
-                FlowLogger.LogError(FlowLogType.WorldPointerModule,
+                FlowLogger.LogError(FlowModule.WorldPointerModule,
                     "Register - a pointer needs a target and an indicator with a RectTransform, and one of them "
                     + $"is missing. Registered from {file}:{line}.");
                 return default;
@@ -60,7 +60,7 @@ namespace Modules.WorldPointerModule.Services
             Canvas canvas = indicator.Rect.GetComponentInParent<Canvas>(true);
             if (canvas == null)
             {
-                FlowLogger.LogError(FlowLogType.WorldPointerModule,
+                FlowLogger.LogError(FlowModule.WorldPointerModule,
                     $"Register - the indicator '{indicator.Rect.name}' has no Canvas above it, so it cannot be "
                     + $"placed. Parent it under a Canvas before registering it. Registered from {file}:{line}.",
                     indicator.Rect.gameObject);

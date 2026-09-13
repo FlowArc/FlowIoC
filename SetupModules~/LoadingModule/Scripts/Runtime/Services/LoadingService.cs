@@ -25,7 +25,7 @@ namespace Modules.LoadingModule.Services
         {
             if (!_model.TryGetSet(set, out _))
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule,
+                FlowLogger.LogError(FlowModule.LoadingModule,
                     $"Begin('{set}') - CD_LoadingSets declares no set named '{set}'.");
                 return;
             }
@@ -41,7 +41,7 @@ namespace Modules.LoadingModule.Services
         {
             if (!_model.TryGetSet(set, out LoadingSetRVO runtime))
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule,
+                FlowLogger.LogError(FlowModule.LoadingModule,
                     $"Await('{set}') - CD_LoadingSets declares no set named '{set}'.");
                 return Task.FromResult(false);
             }
@@ -59,7 +59,7 @@ namespace Modules.LoadingModule.Services
         {
             if (!_model.TryGetStep(report.Step, out _))
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule,
+                FlowLogger.LogError(FlowModule.LoadingModule,
                     $"Report('{report.Step}') - CD_LoadingSets lists no step named '{report.Step}' in any set.");
                 return;
             }

@@ -89,7 +89,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "type, so Find Usages and a plain search both answer where is this Command used "
                 + "with the command's own logging lines.");
             painter.Code(
-                "FlowLogger.Log(FlowLogType.PlayerModule, \"Execute - AddCurrencyCommand\");");
+                "FlowLogger.Log(FlowModule.PlayerModule, \"Execute - AddCurrencyCommand\");");
             painter.Paragraph(
                 "The trade is that a rename leaves the literal stale, and a stale word in a log line "
                 + "is cheaper than a search that cannot be trusted. This is about the message text "

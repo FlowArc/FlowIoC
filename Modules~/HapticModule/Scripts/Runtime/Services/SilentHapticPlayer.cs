@@ -14,7 +14,7 @@ namespace Modules.HapticModule.Services
         }
 
         public void Play(HapticPreset preset) =>
-            FlowLogger.Log(FlowLogType.HapticModule, $"Play - {preset} (no haptics on this platform)");
+            FlowLogger.Log(FlowModule.HapticModule, $"Play - {preset} (no haptics on this platform)");
 
         public void Stop()
         {

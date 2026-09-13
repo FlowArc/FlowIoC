@@ -22,7 +22,7 @@ namespace Modules.AbTestFlowModule.Controllers
 
         public override void Execute()
         {
-            FlowLogger.Log(FlowLogType.AbTestFlowModule, "Execute - ProcessAbTestCommand");
+            FlowLogger.Log(FlowModule.AbTestFlowModule, "Execute - ProcessAbTestCommand");
 
             var processed = false;
 
@@ -39,7 +39,7 @@ namespace Modules.AbTestFlowModule.Controllers
                 AbTestStatusRVO status = Status(test, group);
                 _model.SetStatus(status);
 
-                FlowLogger.Log(FlowLogType.AbTestFlowModule,
+                FlowLogger.Log(FlowModule.AbTestFlowModule,
                     $"Execute - ProcessAbTestCommand - '{test.Id}' v{test.Version} processed: the player "
                     + (status.IsInTest ? $"is in group '{status.Group}'." : "is outside the test."));
             }

@@ -41,7 +41,7 @@ namespace Modules.LoadingModule.LoadingScreenModule.Controllers
 
                 if (screen == null)
                 {
-                    FlowLogger.LogError(FlowLogType.LoadingScreenModule, "OpenLoadingScreenCommand - the loading screen did not open.");
+                    FlowLogger.LogError(FlowModule.LoadingScreenModule, "OpenLoadingScreenCommand - the loading screen did not open.");
                     Stop();
                     return;
                 }
@@ -51,7 +51,7 @@ namespace Modules.LoadingModule.LoadingScreenModule.Controllers
             }
             catch (Exception exception)
             {
-                FlowLogger.LogError(FlowLogType.LoadingScreenModule,
+                FlowLogger.LogError(FlowModule.LoadingScreenModule,
                     $"OpenLoadingScreenCommand threw while opening the loading screen: {exception}");
                 Stop();
             }

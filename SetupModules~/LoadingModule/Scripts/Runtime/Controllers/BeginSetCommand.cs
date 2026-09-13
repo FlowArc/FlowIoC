@@ -25,20 +25,20 @@ namespace Modules.LoadingModule.Controllers
         {
             if (!_model.TryGetSet(_set, out LoadingSetRVO set))
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule,
+                FlowLogger.LogError(FlowModule.LoadingModule,
                     $"BeginSetCommand - CD_LoadingSets declares no set named '{_set}'.", _model.Config);
                 return;
             }
 
             if (set.State == LoadingSetState.Running)
             {
-                FlowLogger.LogWarning(FlowLogType.LoadingModule,
+                FlowLogger.LogWarning(FlowModule.LoadingModule,
                     $"BeginSetCommand - '{_set}' is already running; the second Begin is ignored.");
                 return;
             }
 
             _model.Begin(set, Time.realtimeSinceStartup);
-            FlowLogger.Log(FlowLogType.LoadingModule, $"BeginSetCommand - '{_set}' began ({set.Config.Presentation}).");
+            FlowLogger.Log(FlowModule.LoadingModule, $"BeginSetCommand - '{_set}' began ({set.Config.Presentation}).");
 
             _internalSignals.SetTouched.Dispatch(_set);
             _internalSignals.WatchSet.Dispatch(_set);

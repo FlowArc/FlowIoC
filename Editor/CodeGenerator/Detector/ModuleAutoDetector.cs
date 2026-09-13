@@ -60,7 +60,7 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
             ED_ModuleIndex index = new ModuleIndexRebuilder().Rebuild();
             if (index == null) return;
 
-            FlowLogTypeGenerator.Generate();
+            FlowModuleGenerator.Generate();
         }
     }
 }

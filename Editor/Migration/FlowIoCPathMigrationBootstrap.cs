@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.Console;
 using UnityEditor;
 
 namespace FlowIoC.Editor.Migration
@@ -13,7 +14,11 @@ namespace FlowIoC.Editor.Migration
     /// FolderPainterBootstrap uses it: delayCall is only pumped by the editor GUI loop and
     /// never fires while the Editor sits unfocused or minimized.
     ///
-    /// It also runs the screen config migrator, which needs the same footing.
+    /// It runs the path migration through the FlowModule generator rather than on its own, because
+    /// the two are one pass: the migration rewrites what the parts are referenced as and deletes
+    /// the files an older FlowIoC wrote, and the generator writes the parts under the new name and
+    /// sweeps the old ones - all before assemblies reload, or the compile between would see a
+    /// reference with nothing declaring it. The screen config migrator needs the same footing.
     /// </summary>
     internal static class FlowIoCPathMigrationBootstrap
     {
@@ -30,7 +35,7 @@ namespace FlowIoC.Editor.Migration
 
             EditorApplication.update -= Run;
 
-            new FlowIoCPathMigrator().MigrateIfNeeded();
+            FlowModuleGenerator.Generate();
             new ScreenConfigMigrator().MigrateIfNeeded();
         }
     }

@@ -32,7 +32,7 @@ namespace Modules.CameraModule.ViewsMediators
             var configs = _view.GetCameraConfigs();
             if (configs == null || configs.Count == 0)
             {
-                FlowLogger.LogError(FlowLogType.CameraModule, "[CameraAdapterMediator]: No camera configurations found to register.");
+                FlowLogger.LogError(FlowModule.CameraModule, "[CameraAdapterMediator]: No camera configurations found to register.");
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace Modules.CameraModule.ViewsMediators
             var target = _view.GetCameraTarget();
             if (target == null)
             {
-                FlowLogger.LogWarning(FlowLogType.CameraModule, "[CameraAdapterMediator]: No camera target assigned.");
+                FlowLogger.LogWarning(FlowModule.CameraModule, "[CameraAdapterMediator]: No camera target assigned.");
                 return;
             }
 

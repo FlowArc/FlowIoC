@@ -5,11 +5,16 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using UnityEngine;
+
 namespace FlowIoC.ConsoleModule
 {
-    public static partial class FlowLogType
+    public static partial class FlowModule
     {
-        /// <summary>The MainScreenModule channel.</summary>
+        /// <summary>The MainScreenModule module, and its channel in the Flow Console.</summary>
         public const string MainScreenModule = "MainScreenModule";
+
+        /// <summary>The colour MainScreenModule's rows are drawn in. A "Colour: #RRGGBB" line above the block in the module's MODULE.md sets it.</summary>
+        public static readonly Color MainScreenModuleColor = new Color32(228, 103, 103, 255);
     }
 }

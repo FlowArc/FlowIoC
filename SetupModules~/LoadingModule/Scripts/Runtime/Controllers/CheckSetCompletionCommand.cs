@@ -34,13 +34,13 @@ namespace Modules.LoadingModule.Controllers
 
             if (set.State == LoadingSetState.Completed)
             {
-                FlowLogger.Log(FlowLogType.LoadingModule,
+                FlowLogger.Log(FlowModule.LoadingModule,
                     $"CheckSetCompletionCommand - '{_set}' completed in {set.EndedAt - set.BeganAt:0.00} s.");
                 _signals.Outgoing.SetCompleted.Dispatch(_set);
             }
             else
             {
-                FlowLogger.Log(FlowLogType.LoadingModule,
+                FlowLogger.Log(FlowModule.LoadingModule,
                     $"CheckSetCompletionCommand - '{_set}' failed at '{set.FailedStep}' after {set.EndedAt - set.BeganAt:0.00} s.");
                 _signals.Outgoing.SetFailed.Dispatch(_set, set.FailedStep);
             }

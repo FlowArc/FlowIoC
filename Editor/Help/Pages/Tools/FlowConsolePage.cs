@@ -74,7 +74,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
             painter.Paragraph(
                 "Every module is coloured from the day it is created, picked from twelve tones by "
                 + "its name, and the colour is written beside the channel in the module's generated "
-                + "FlowLogType part. A module that wants a colour of its own says so in its MODULE.md, "
+                + "FlowModule part. A module that wants a colour of its own says so in its MODULE.md, "
                 + "as a Colour line directly above the generated block, and may declare a profile - "
                 + "the tag on the front of its lines - the same way. Right-click the channel in the "
                 + "Filters panel and choose Colour and profile... to edit both; the window writes the "
@@ -119,10 +119,10 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
             painter.SubHeading("Logging from your own code");
             painter.Code(
-                "FlowLogger.Log(FlowLogType.PlayerModule,\n"
+                "FlowLogger.Log(FlowModule.PlayerModule,\n"
                 + "    \"Execute - AddCurrencyCommand\");\n"
                 + "\n"
-                + "FlowLogger.LogError(FlowLogType.PlayerModule, \"Currency went negative.\");");
+                + "FlowLogger.LogError(FlowModule.PlayerModule, \"Currency went negative.\");");
             painter.Note(
                 "Spell the names out. A log message never uses nameof: written inside "
                 + "AddCurrencyCommand, nameof(AddCurrencyCommand) is a real reference to the type, "
@@ -142,7 +142,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "a FlowLogger.LogError for the same fault: FlowLogger forwards to Debug itself, "
                 + "and the pair prints the error twice whenever logging is on.");
             painter.Paragraph(
-                "The channel list in FlowLogType is generated from the modules present in the "
+                "The channel list in FlowModule is generated from the modules present in the "
                 + "project. Change the modules, not the generated file.");
         }
     }

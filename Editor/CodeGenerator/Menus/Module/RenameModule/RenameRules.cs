@@ -29,7 +29,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
                 rules.Add(TextRule.Token(module.OldNamespace, module.NewNamespace));
 
             foreach (ChannelRenameEVO channel in plan.Channels)
-                rules.Add(TextRule.Token("FlowLogType." + channel.OldName, "FlowLogType." + channel.NewName));
+                rules.Add(TextRule.Token("FlowModule." + channel.OldName, "FlowModule." + channel.NewName));
 
             foreach (IdentifierRenameEVO identifier in plan.Classes
                          .SelectMany(file => file.Identifiers)

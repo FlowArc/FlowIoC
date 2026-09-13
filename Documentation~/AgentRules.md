@@ -442,11 +442,12 @@ the next free number. A number a deleted value used is never reused.
 
 ### Never hand-edit
 
-`FlowLogType` is generated from the modules present in the project. Change the modules, not the
-file. A module's channel is a `const string` in a part of its own, at
-`<Module>/Scripts/Generated/FlowLogType.<Module>.cs`, with a `FlowIoC.Generated.asmref` beside it
-that compiles the part into FlowIoC's assembly rather than the module's;
-`Assets/Plugins/FlowIoC/Generated/FlowLogType.cs` holds only what belongs to no module. The part
+`FlowModule` is generated from the modules present in the project. Change the modules, not the
+file. `FlowModule.PlayerModule` is the module's name - the Flow Console logs on it as the channel,
+and anything else that keys something by module reads the same constant. A module's constant is
+in a part of its own, at `<Module>/Scripts/Generated/FlowModule.<Module>.cs`, with a
+`FlowIoC.Generated.asmref` beside it that compiles the part into FlowIoC's assembly rather than the
+module's; `FlowModule.Default`, the one name that belongs to no module, is the package's. The part
 also carries the module's colour, picked from a palette by the module's name; a `Colour: #RRGGBB`
 line directly above the generated block of the module's `MODULE.md` overrides the pick, and a
 `Profile:` line beside it declares the tag on the front of the module's lines. Edit those two lines
@@ -458,8 +459,8 @@ by hand or through the Flow Console's Filters panel - never the generated part.
 ### Logging
 
 ```csharp
-FlowLogger.Log(FlowLogType.PlayerModule, "Execute - AddCurrencyCommand");
-FlowLogger.LogError(FlowLogType.PlayerModule, "Currency went negative.");
+FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
+FlowLogger.LogError(FlowModule.PlayerModule, "Currency went negative.");
 ```
 
 **A log message spells names out. Never `nameof` inside one.**

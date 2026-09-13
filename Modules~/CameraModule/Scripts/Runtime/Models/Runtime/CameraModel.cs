@@ -79,7 +79,7 @@ namespace Modules.CameraModule.Models.Runtime
             }
             else
             {
-                FlowLogger.LogError(FlowLogType.CameraModule, $"No active camera {cameraId}");
+                FlowLogger.LogError(FlowModule.CameraModule, $"No active camera {cameraId}");
             }
         }
 

@@ -5,11 +5,16 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using UnityEngine;
+
 namespace FlowIoC.ConsoleModule
 {
-    public static partial class FlowLogType
+    public static partial class FlowModule
     {
-        /// <summary>The WorldPointerModule channel.</summary>
+        /// <summary>The WorldPointerModule module, and its channel in the Flow Console.</summary>
         public const string WorldPointerModule = "WorldPointerModule";
+
+        /// <summary>The colour WorldPointerModule's rows are drawn in. A "Colour: #RRGGBB" line above the block in the module's MODULE.md sets it.</summary>
+        public static readonly Color WorldPointerModuleColor = new Color32(103, 103, 228, 255);
     }
 }

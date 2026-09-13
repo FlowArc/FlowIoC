@@ -38,7 +38,7 @@ namespace Modules.CounterModule.Controllers
         {
             if (!isPrepared)
             {
-                FlowLogger.LogError(FlowLogType.CounterModule,
+                FlowLogger.LogError(FlowModule.CounterModule,
                     "InitializeCounterServiceCommand - the time source could not be prepared. "
                     + "Nothing will tick until Initialize is dispatched again and succeeds.");
 

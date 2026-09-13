@@ -11,7 +11,7 @@ namespace FlowIoC.Tests
     ///
     /// Those two used to ask only about the module being deleted. A main module holds screen
     /// modules and each of those was registered in an Addressables group named after itself and
-    /// given a FlowLogType channel of its own, so deleting the parent left an empty Local_Screen-
+    /// given a FlowModule channel of its own, so deleting the parent left an empty Local_Screen-
     /// group with its schema assets and a column in the Filters panel that nothing writes to.
     /// </summary>
     public class ModuleNamesTests

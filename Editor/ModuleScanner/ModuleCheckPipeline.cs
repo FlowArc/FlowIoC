@@ -39,7 +39,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 new SignalsSharedReferenceCheck(),
                 new SignalReferenceCheck(),
                 new DotSettingsCheck(),
-                new LogTypePartCheck(),
+                new FlowModulePartCheck(),
                 new ModuleCardCheck()
             },
             new IProjectCheck[]

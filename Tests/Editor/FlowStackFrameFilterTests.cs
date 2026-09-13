@@ -152,8 +152,8 @@ namespace FlowIoC.Tests
             string[] trace =
             {
                 "UnityEngine.Debug:Log (object)",
-                "FlowIoC.Editor.Console.FlowLogTypeGenerator:Generate () (at ./Packages/FlowIoC/Editor/Console/FlowLogTypeGenerator.cs:104)",
-                "FlowIoC.Editor.Console.FlowLogTypeGenerator:OnScriptsReloaded ()"
+                "FlowIoC.Editor.Console.FlowModuleGenerator:Generate () (at ./Packages/FlowIoC/Editor/Console/FlowModuleGenerator.cs:104)",
+                "FlowIoC.Editor.Console.FlowModuleGenerator:OnScriptsReloaded ()"
             };
 
             Assert.AreEqual(-1, _filter.FindFirstGameFrame(trace));

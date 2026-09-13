@@ -4,7 +4,7 @@
 FlowIoC's own log window, with a channel per module and per framework concern.
 
 ## Concepts
-flow console, log channel, FlowLogger, FlowLogType, channel colour, channel profile, preferences,
+flow console, log channel, FlowLogger, FlowModule, channel colour, channel profile, preferences,
 command log, player connection, attach to player, device logs, PlayerLogSender, PlayerLogBridge
 
 ## Decisions
@@ -20,9 +20,9 @@ command log, player connection, attach to player, device logs, PlayerLogSender, 
   framework's channels are `SystemLogChannelTable` in code; a developer's switches and preferences
   are EditorPrefs (`FlowConsoleChannelVisibility`, `FlowConsolePreferences`, edited under
   Preferences ▸ FlowIoC ▸ Flow Console); the module list is the module index; a module's colour and
-  profile are in the module - written into its generated `FlowLogType` part from the `Colour:` and
+  profile are in the module - written into its generated `FlowModule` part from the `Colour:` and
   `Profile:` lines of its card, the palette picking by name when the card says nothing.
-  `FlowLogChannels` reads every `const string` on `FlowLogType` back by reflection, so nothing keeps
+  `FlowLogChannels` reads every `const string` on `FlowModule` back by reflection, so nothing keeps
   a second list of channels.
 - **Logging compiles only in the Editor and in a Development Build.** Every plain log carries
   `[Conditional("UNITY_EDITOR")]` and `[Conditional("DEVELOPMENT_BUILD")]`, OR'd, in place of an

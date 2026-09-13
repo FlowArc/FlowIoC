@@ -10,16 +10,16 @@ namespace FlowIoC.Tests
     /// A module's Flow Console channel is the generated part on disk, so this watches the part
     /// and the asmref that decides which assembly it lands in.
     /// </summary>
-    public class LogTypePartCheckTests
+    public class FlowModulePartCheckTests
     {
         private const string MODULE_PATH = "C:/Project/Assets/Modules/PlayerModule";
 
         private readonly List<string> _present = new List<string>();
         private int _regenerated;
 
-        private LogTypePartCheck Check()
+        private FlowModulePartCheck Check()
         {
-            return new LogTypePartCheck(
+            return new FlowModulePartCheck(
                 path => _present.Contains(path.Replace('\\', '/')),
                 () => _regenerated++);
         }
@@ -47,7 +47,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_module_with_both_files_is_ok()
         {
-            Given("FlowLogType.PlayerModule.cs", "FlowIoC.Generated.asmref");
+            Given("FlowModule.PlayerModule.cs", "FlowIoC.Generated.asmref");
 
             Assert.AreEqual(ModuleCheckStatus.Ok, Check().Inspect(Module()).Status);
         }
@@ -60,18 +60,18 @@ namespace FlowIoC.Tests
             FindingEVO finding = Check().Inspect(Module());
 
             Assert.AreEqual(ModuleCheckStatus.Fixable, finding.Status);
-            StringAssert.Contains("FlowLogType.PlayerModule.cs", finding.Message);
+            StringAssert.Contains("FlowModule.PlayerModule.cs", finding.Message);
         }
 
         /// <summary>
         /// Without the asmref the part still compiles - into the module's own assembly, where it
-        /// is a second FlowLogType that shares a name with the real one and nothing else. That is
+        /// is a second FlowModule that shares a name with the real one and nothing else. That is
         /// worth reporting on its own rather than only noticing the file is there.
         /// </summary>
         [Test]
         public void A_missing_asmref_is_fixable()
         {
-            Given("FlowLogType.PlayerModule.cs");
+            Given("FlowModule.PlayerModule.cs");
 
             FindingEVO finding = Check().Inspect(Module());
 
@@ -103,12 +103,12 @@ namespace FlowIoC.Tests
             ModuleTargetEVO module = Module();
 
             Assert.AreEqual(
-                MODULE_PATH + "/Scripts/Generated/FlowLogType.PlayerModule.cs",
-                LogTypePartCheck.PartPathOf(module).Replace('\\', '/'));
+                MODULE_PATH + "/Scripts/Generated/FlowModule.PlayerModule.cs",
+                FlowModulePartCheck.PartPathOf(module).Replace('\\', '/'));
 
             Assert.AreEqual(
                 MODULE_PATH + "/Scripts/Generated/FlowIoC.Generated.asmref",
-                LogTypePartCheck.AsmRefPathOf(module).Replace('\\', '/'));
+                FlowModulePartCheck.AsmRefPathOf(module).Replace('\\', '/'));
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace FlowIoC.Tests
 
             bool present = false;
             foreach (IModuleCheck check in pipeline.ModuleChecks)
-                present |= check is LogTypePartCheck;
+                present |= check is FlowModulePartCheck;
 
             Assert.IsTrue(present);
         }

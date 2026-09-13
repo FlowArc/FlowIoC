@@ -47,18 +47,18 @@ namespace FlowIoC.Tests
         {
             var rules = new List<TextRule>
             {
-                TextRule.Token("FlowLogType.CounterModule", "FlowLogType.TimerModule"),
+                TextRule.Token("FlowModule.CounterModule", "FlowModule.TimerModule"),
                 TextRule.Token("CounterServiceSignalsIncoming", "TimerServiceSignalsIncoming"),
                 TextRule.Token("CounterServiceSignals", "TimerServiceSignals")
             };
 
             string result = _rewriter.Rewrite(
-                "FlowLogger.Log(FlowLogType.CounterModule, \"Execute - CounterServiceSignals\");\n"
+                "FlowLogger.Log(FlowModule.CounterModule, \"Execute - CounterServiceSignals\");\n"
                 + "public CounterServiceSignalsIncoming Incoming;\nvar a = GetInstance<CounterServiceSignals>();",
                 rules, out _);
 
             Assert.AreEqual(
-                "FlowLogger.Log(FlowLogType.TimerModule, \"Execute - TimerServiceSignals\");\n"
+                "FlowLogger.Log(FlowModule.TimerModule, \"Execute - TimerServiceSignals\");\n"
                 + "public TimerServiceSignalsIncoming Incoming;\nvar a = GetInstance<TimerServiceSignals>();",
                 result);
         }

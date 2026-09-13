@@ -127,6 +127,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it ever had and the empty `Resources` folder with it; a project upgrading loses nothing but the
   file - its channel switches carry over, and a channel that was off by default in the asset is on
   now until it is switched off again in the panel.
+- **`FlowLogType` is `FlowModule`.** The constant names the module, not a log type - the Flow
+  Console reads it as the channel today, and anything that keys something by module reads the same
+  one tomorrow - so `FlowLogType.PlayerModule` is `FlowModule.PlayerModule`, the parts are
+  `Scripts/Generated/FlowModule.<Module>.cs`, and `FlowModule.Default`, the one name that belongs to
+  no module, is declared by the package; `Assets/Plugins/FlowIoC/Generated` and its asmref are gone,
+  and so are the `FlowIoCProjectPaths` entries that named them. The rename is also what makes the
+  upgrade land on its own: the package's `FlowModule.Default` compiles beside a project's old
+  `FlowLogType.Default`, so the migrator gets to run - it rewrites every whole-word `FlowLogType` in
+  the sources under `Assets` and the embedded module roots to `FlowModule`, deletes the old shared
+  file, and the generator writes the new parts and sweeps the old ones on the same locked pass,
+  before assemblies reload. A generated part is skipped by the rewrite, because it is about to go.
+  `FlowLogTypeGenerator` is `FlowModuleGenerator`, `LogTypePartCheck` is `FlowModulePartCheck`
+  (id `module-part`), and the generator no longer runs on its own delayed call: the migration
+  bootstrap runs it on the first update tick, which fires with the Editor unfocused.
 - **Logging compiles only in the Editor and in a Development Build.** Every plain log and warning
   carries `[Conditional("UNITY_EDITOR")]` and `[Conditional("DEVELOPMENT_BUILD")]` in place of
   `[Conditional("ENABLE_LOG")]`; the two are OR'd, so the calls stay wherever either symbol is

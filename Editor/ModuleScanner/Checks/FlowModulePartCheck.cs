@@ -7,7 +7,7 @@ using FlowIoC.Editor.Modules;
 namespace FlowIoC.Editor.ModuleScanner
 {
     /// <summary>
-    /// A module's Flow Console channel is declared in the module, in a part of FlowLogType at
+    /// A module's Flow Console channel is declared in the module, in a part of FlowModule at
     /// Scripts/Generated - and beside it an asmref, which is what compiles that part into FlowIoC
     /// rather than into the module's own assembly.
     ///
@@ -19,50 +19,47 @@ namespace FlowIoC.Editor.ModuleScanner
     ///
     /// A test module has no channel, so it owes no part.
     /// </summary>
-    internal class LogTypePartCheck : IModuleCheck
+    internal class FlowModulePartCheck : IModuleCheck
     {
-        internal const string GENERATED_FOLDER = "Scripts/Generated";
-        internal const string ASMREF_NAME = "FlowIoC.Generated.asmref";
-
         private readonly Func<string, bool> _fileExists;
         private readonly Action _regenerate;
 
-        internal LogTypePartCheck() : this(File.Exists, FlowLogTypeGenerator.Generate)
+        internal FlowModulePartCheck() : this(File.Exists, FlowModuleGenerator.Generate)
         {
         }
 
-        internal LogTypePartCheck(Func<string, bool> fileExists, Action regenerate)
+        internal FlowModulePartCheck(Func<string, bool> fileExists, Action regenerate)
         {
             _fileExists = fileExists;
             _regenerate = regenerate;
         }
 
-        public string Id => "log-type-part";
+        public string Id => "module-part";
 
         public FindingEVO Inspect(ModuleTargetEVO module)
         {
             if (module.Kind == ModuleKind.Test)
-                return FindingEVO.Ok(Id, "Log type part (a test module has no channel)");
+                return FindingEVO.Ok(Id, "FlowModule part (a test module has no channel)");
 
             bool hasPart = _fileExists(PartPathOf(module));
             bool hasAsmRef = _fileExists(AsmRefPathOf(module));
 
             if (hasPart && hasAsmRef)
-                return FindingEVO.Ok(Id, "Log type part");
+                return FindingEVO.Ok(Id, "FlowModule part");
 
             if (!hasPart)
             {
                 return FindingEVO.Fixable(
                     Id,
-                    $"{GENERATED_FOLDER}/FlowLogType.{module.Name}.cs is missing, so FlowLogType.{module.Name} "
-                    + "is not declared anywhere and nothing in this module can log on its own channel.");
+                    $"{FlowModuleGenerator.GENERATED_FOLDER}/{FlowModuleGenerator.PART_PREFIX}{module.Name}.cs is missing, "
+                    + $"so FlowModule.{module.Name} is not declared anywhere and nothing in this module can log on its own channel.");
             }
 
             return FindingEVO.Fixable(
                 Id,
-                $"{GENERATED_FOLDER}/{ASMREF_NAME} is missing, so FlowLogType.{module.Name} compiles into "
-                + "the module's own assembly instead of FlowIoC's - which makes it a second, unrelated "
-                + "FlowLogType rather than a part of the one everything else uses.");
+                $"{FlowModuleGenerator.GENERATED_FOLDER}/{FlowModuleGenerator.ASMREF_NAME} is missing, so FlowModule.{module.Name} "
+                + "compiles into the module's own assembly instead of FlowIoC's - which makes it a second, unrelated "
+                + "FlowModule rather than a part of the one everything else uses.");
         }
 
         /// <summary>
@@ -72,10 +69,11 @@ namespace FlowIoC.Editor.ModuleScanner
         public void Fix(ModuleTargetEVO module) => _regenerate();
 
         internal static string PartPathOf(ModuleTargetEVO module) =>
-            Path.Combine(module.AbsolutePath, GENERATED_FOLDER, "FlowLogType." + module.Name + ".cs");
+            Path.Combine(module.AbsolutePath, FlowModuleGenerator.GENERATED_FOLDER,
+                FlowModuleGenerator.PART_PREFIX + module.Name + ".cs");
 
         internal static string AsmRefPathOf(ModuleTargetEVO module) =>
-            Path.Combine(module.AbsolutePath, GENERATED_FOLDER, ASMREF_NAME);
+            Path.Combine(module.AbsolutePath, FlowModuleGenerator.GENERATED_FOLDER, FlowModuleGenerator.ASMREF_NAME);
     }
 }
 
