@@ -24,31 +24,72 @@ namespace FlowIoC.Editor.Migration
 
         internal void MigrateIfNeeded()
         {
-            if (SessionState.GetBool(CompletedKey, false)) return;
-            SessionState.SetBool(CompletedKey, true);
-
-            Migrate();
-        }
-
-        private void Migrate()
-        {
             var paths = new FlowIoCProjectPaths();
             var legacyPaths = new FlowIoCLegacyPaths(paths);
 
-            bool deletedAnything = DeleteRetiredAssets(legacyPaths);
+            // Not once per session. The session flag below was set by whatever FlowIoC was loaded
+            // when the session began, and a package upgraded under an open Editor is exactly the
+            // case this has to catch - so the retirements are gated by what is on disk instead,
+            // which is a handful of File.Exists once nothing is left.
+            RetireIfNeeded(legacyPaths);
+
+            if (SessionState.GetBool(CompletedKey, false)) return;
+            SessionState.SetBool(CompletedKey, true);
+
+            Migrate(paths, legacyPaths);
+        }
+
+        private void Migrate(FlowIoCProjectPaths paths, FlowIoCLegacyPaths legacyPaths)
+        {
             bool movedAnything = MoveLegacyAssets(legacyPaths);
-            if (!movedAnything && !deletedAnything) return;
+            if (!movedAnything) return;
 
-            if (movedAnything)
-                RewriteDirectoryStructureConfigPaths(paths);
-
+            RewriteDirectoryStructureConfigPaths(paths);
             CleanUpLegacyFolders(legacyPaths);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            if (movedAnything)
-                Debug.Log($"<color=cyan>FlowIoC:</color> project assets were moved to {paths.Root}.");
+            Debug.Log($"<color=cyan>FlowIoC:</color> project assets were moved to {paths.Root}.");
+        }
+
+        /// <summary>
+        /// What an older FlowIoC left that this one has no use for: the sources saying FlowLogType,
+        /// and the assets under <see cref="FlowIoCLegacyPaths.AssetsToDelete"/>. Sources first -
+        /// once nothing says the old name, the files that declared it are orphans and can go; the
+        /// module parts among them go on the generator's sweep, which runs this on the same locked
+        /// pass before it writes the new ones.
+        /// </summary>
+        private void RetireIfNeeded(FlowIoCLegacyPaths legacyPaths)
+        {
+            var references = new FlowModuleReferenceMigrator();
+
+            bool rewroteAnything = references.IsNeeded() && RewriteChannelReferences(references);
+            bool deletedAnything = DeleteRetiredAssets(legacyPaths);
+            if (!rewroteAnything && !deletedAnything) return;
+
+            CleanUpLegacyFolders(legacyPaths);
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// FlowLogType became FlowModule when the constants started naming the module rather than
+        /// the log. Every source that says the old name is rewritten, and said in the console: a
+        /// diff across the whole project deserves a sentence about where it came from.
+        /// </summary>
+        private static bool RewriteChannelReferences(FlowModuleReferenceMigrator references)
+        {
+            int rewritten = references.RewriteProject();
+            if (rewritten == 0) return false;
+
+            Debug.Log(
+                $"<color=cyan>FlowIoC:</color> {rewritten} source file(s) now say {FlowModuleReferenceMigrator.NEW_NAME} "
+                + $"where they said {FlowModuleReferenceMigrator.OLD_NAME}: the constants name the module, not a log type, "
+                + "and the class was renamed to say so.");
+
+            return true;
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace Modules.HapticModule.Services
         public void Initialize()
         {
             _ready = FlowHapticsInitialize();
-            FlowLogger.Log(FlowLogType.HapticModule, $"Initialize - IosHapticPlayer | ready={_ready}");
+            FlowLogger.Log(FlowModule.HapticModule, $"Initialize - IosHapticPlayer | ready={_ready}");
         }
 
         public void Play(HapticPreset preset)

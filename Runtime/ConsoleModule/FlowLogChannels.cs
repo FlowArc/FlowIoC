@@ -8,7 +8,7 @@ namespace FlowIoC.ConsoleModule
     /// <summary>
     /// Every channel the console knows, and the one place a channel's colour and tag are looked up.
     /// The framework's own come from <see cref="SystemLogChannelTable"/>; the project's are read
-    /// off <see cref="FlowLogType"/>, where each module's generated part declares its channel as a
+    /// off <see cref="FlowModule"/>, where each module's generated part declares its channel as a
     /// <c>const string</c> and, beside it, a <c>&lt;Name&gt;Color</c> and an optional
     /// <c>&lt;Name&gt;Profile</c>. So the list of a project's channels is what the compiler sees,
     /// and nothing keeps a second copy of it: a module that exists has a channel, a module that is
@@ -31,7 +31,7 @@ namespace FlowIoC.ConsoleModule
         private readonly Dictionary<SystemLogType, FlowLogChannel> _bySystemType =
             new Dictionary<SystemLogType, FlowLogChannel>();
 
-        public FlowLogChannels() : this(typeof(FlowLogType))
+        public FlowLogChannels() : this(typeof(FlowModule))
         {
         }
 

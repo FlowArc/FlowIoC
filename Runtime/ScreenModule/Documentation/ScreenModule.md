@@ -230,7 +230,7 @@ public class OpenSettingsScreenCommand : Command
 
         if (screen == null)
         {
-            FlowLogger.LogWarning(FlowLogType.SettingsModule, "Settings screen could not open.");
+            FlowLogger.LogWarning(FlowModule.SettingsModule, "Settings screen could not open.");
             Release();
             return;
         }

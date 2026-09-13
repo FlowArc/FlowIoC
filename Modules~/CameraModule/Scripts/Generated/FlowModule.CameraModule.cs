@@ -5,11 +5,16 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using UnityEngine;
+
 namespace FlowIoC.ConsoleModule
 {
-    public static partial class FlowLogType
+    public static partial class FlowModule
     {
-        /// <summary>The CameraModule channel.</summary>
+        /// <summary>The CameraModule module, and its channel in the Flow Console.</summary>
         public const string CameraModule = "CameraModule";
+
+        /// <summary>The colour CameraModule's rows are drawn in. A "Colour: #RRGGBB" line above the block in the module's MODULE.md sets it.</summary>
+        public static readonly Color CameraModuleColor = new Color32(228, 228, 103, 255);
     }
 }

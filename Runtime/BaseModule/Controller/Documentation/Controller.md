@@ -237,7 +237,7 @@ public class ValidateSaveCommand : Command
 
         if (!_saveService.HasWritableSlot)
         {
-            FlowLogger.LogError(FlowLogType.PlayerModule, "No writable save slot.");
+            FlowLogger.LogError(FlowModule.PlayerModule, "No writable save slot.");
             Stop();
             return;
         }
@@ -424,7 +424,7 @@ public override void Execute()
         onSuccess: () => Release(),
         onFailure: error =>
         {
-            FlowLogger.LogError(FlowLogType.PlayerModule, $"Save failed: {error}");
+            FlowLogger.LogError(FlowModule.PlayerModule, $"Save failed: {error}");
             Stop();
         });
 }
@@ -473,7 +473,7 @@ public override async void Execute()
 
         if (screen == null)
         {
-            FlowLogger.LogError(FlowLogType.MainScreenModule,
+            FlowLogger.LogError(FlowModule.MainScreenModule,
                 "OpenMainScreenCommand - the screen did not open.");
             Stop();
             return;
@@ -484,7 +484,7 @@ public override async void Execute()
     }
     catch (Exception exception)
     {
-        FlowLogger.LogError(FlowLogType.MainScreenModule,
+        FlowLogger.LogError(FlowModule.MainScreenModule,
             $"OpenMainScreenCommand threw while opening the screen: {exception}");
         Stop();
     }

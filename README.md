@@ -764,7 +764,7 @@ public override async void Execute()
 
         if (screen == null)
         {
-            FlowLogger.LogError(FlowLogType.MainScreenModule,
+            FlowLogger.LogError(FlowModule.MainScreenModule,
                 "OpenMainScreenCommand - the screen did not open.");
             Stop();
             return;
@@ -775,7 +775,7 @@ public override async void Execute()
     }
     catch (Exception exception)
     {
-        FlowLogger.LogError(FlowLogType.MainScreenModule,
+        FlowLogger.LogError(FlowModule.MainScreenModule,
             $"OpenMainScreenCommand threw: {exception}");
         Stop();
     }
@@ -1206,7 +1206,7 @@ provider runs its coroutine to the end before it pools anything.
 | **ScreenModule** | `IScreenService.Open<TScreen>().Show()` | UI screens and popups: layers, pooling, addressable loading, opening and closing animations. → [docs](Runtime/ScreenModule/Documentation/ScreenModule.md) |
 | **PoolModule** | `IPoolService.Get<T>(key, parent)` | Config-driven object pooling with groups and prewarming. → [docs](Runtime/PoolModule/Documentation/PoolModule.md) |
 | **AssetModule** | `IAssetService.LoadAssetAsync<T>(key, groupId)` | The one Addressables door: load-once with owner-scoped release, group loads with progress and background priority, download size and dependencies. Screens and pools load through it. → [docs](Runtime/AssetModule/Documentation/AssetModule.md) |
-| **ConsoleModule** | `FlowLogger.Log(FlowLogType.PlayerModule, …)` | A filterable in-editor console, wired into the framework itself. → [docs](Runtime/ConsoleModule/Documentation/FlowConsole.md) |
+| **ConsoleModule** | `FlowLogger.Log(FlowModule.PlayerModule, …)` | A filterable in-editor console, wired into the framework itself. → [docs](Runtime/ConsoleModule/Documentation/FlowConsole.md) |
 | **ExtensionModule** | `transform.position.WithY(0f)` | Extension methods that carry no framework of their own: vector and float maths, enum flags, list conversion and UTC time formatting. |
 
 The framework logs its own activity on the built-in channels `Context`,
@@ -1223,13 +1223,13 @@ no Context above it — it opens **your** file rather than the framework's guard
 which is the only answer that tells the reader something they did not already know.
 
 For your own logs, Flow Console generates one channel per module - a `const string` on
-`FlowLogType`, with the module's colour beside it - in the module itself, as a part of its own:
+`FlowModule`, with the module's colour beside it - in the module itself, as a part of its own:
 
 ```csharp
 using FlowIoC.ConsoleModule;
 
-FlowLogger.Log(FlowLogType.PlayerModule, "Execute - AddCurrencyCommand");
-FlowLogger.LogError(FlowLogType.PlayerModule, "Currency went negative.");
+FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
+FlowLogger.LogError(FlowModule.PlayerModule, "Currency went negative.");
 ```
 
 Every module is coloured from the day it is created, picked from twelve tones by its name. A module
@@ -1269,7 +1269,7 @@ you do not want.
 
 Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its
 page. Copying the files is only part of it — the installer also registers the module in the module
-index, gives it its `FlowLogType` channel, and writes the `.csproj.DotSettings` its namespaces
+index, gives it its `FlowModule` channel, and writes the `.csproj.DotSettings` its namespaces
 need, which is exactly what copying the folder by hand would miss.
 
 A module already in `Assets/Modules/` is never overwritten. The copy in your project is the one you

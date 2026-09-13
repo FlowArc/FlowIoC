@@ -21,8 +21,6 @@ namespace FlowIoC.Editor.Migration
 
         public IReadOnlyList<LegacyAssetMove> AssetMoves => new[]
         {
-            new LegacyAssetMove("Assets/FlowIoC/Generated/FlowLogType.cs", _paths.FlowLogType),
-            new LegacyAssetMove("Assets/FlowIoC/Generated/FlowIoC.Generated.asmref", _paths.GeneratedAsmRef),
             new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/CodeGeneratorSettings.asset", _paths.CodeGeneratorSettings),
             new LegacyAssetMove("Assets/Editor/FlowIoC/CodeGenerator/MainModuleDirectoryStructureConfig.asset",
                 _paths.DirectoryStructureConfig("Main")),
@@ -57,12 +55,22 @@ namespace FlowIoC.Editor.Migration
         /// switches, a module's colour - and each of them lives with its owner now: a code table,
         /// the module index, EditorPrefs, the module's own generated part. What is left on disk is
         /// an asset with no script behind it, so it is deleted rather than moved.
+        ///
+        /// The shared FlowLogType file went the same way: it carried the one channel that belongs to
+        /// no module, and the package declares that itself now, under the class's new name. The old
+        /// file compiles harmlessly beside the package's part - it declares a class nothing references
+        /// once the sources are rewritten - so its deletion can wait for a compile that has already
+        /// happened, which is what lets the migrator run at all.
         /// </summary>
         public IReadOnlyList<string> AssetsToDelete => new[]
         {
             "Assets/Resources/FlowConsoleSettings.asset",
             "Assets/Plugins/FlowIoC/Resources/FlowConsoleSettings.asset",
-            "Assets/Plugins/FlowIoC/Resources/CD_FlowConsole.asset"
+            "Assets/Plugins/FlowIoC/Resources/CD_FlowConsole.asset",
+            "Assets/FlowIoC/Generated/FlowLogType.cs",
+            "Assets/FlowIoC/Generated/FlowIoC.Generated.asmref",
+            "Assets/Plugins/FlowIoC/Generated/FlowLogType.cs",
+            "Assets/Plugins/FlowIoC/Generated/FlowIoC.Generated.asmref"
         };
 
         /// <summary>
@@ -78,7 +86,8 @@ namespace FlowIoC.Editor.Migration
             "Assets/Editor",
             "Assets/Resources",
             "Assets/Plugins/FlowIoC/Editor/FolderDrawer",
-            "Assets/Plugins/FlowIoC/Resources"
+            "Assets/Plugins/FlowIoC/Resources",
+            "Assets/Plugins/FlowIoC/Generated"
         };
     }
 }

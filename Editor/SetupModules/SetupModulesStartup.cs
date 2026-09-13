@@ -106,7 +106,7 @@ namespace FlowIoC.Editor.SetupModules
         {
             // The settings asset is what the module index is rebuilt through, and on a project this
             // hook has never run on there is none: the generator menus create it, and nobody has
-            // opened one yet. Without it the index stays empty, FlowLogType is written with no
+            // opened one yet. Without it the index stays empty, FlowModule is written with no
             // channels, and the modules that just landed - every one of them logging on its own
             // channel - take the project down with them.
             ED_CodeGenerator.CreateConfig();

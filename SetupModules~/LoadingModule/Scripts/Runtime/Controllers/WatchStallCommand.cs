@@ -41,7 +41,7 @@ namespace Modules.LoadingModule.Controllers
             while (set.State == LoadingSetState.Running)
             {
                 if (model.TryTakeStallWarning(set, Time.realtimeSinceStartup, out string warning))
-                    FlowLogger.LogWarning(FlowLogType.LoadingModule, warning);
+                    FlowLogger.LogWarning(FlowModule.LoadingModule, warning);
 
                 yield return wait;
             }

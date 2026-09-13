@@ -56,11 +56,11 @@ namespace Modules.HapticModule.Services
             catch (Exception exception)
             {
                 _hasVibrator = false;
-                FlowLogger.LogError(FlowLogType.HapticModule,
+                FlowLogger.LogError(FlowModule.HapticModule,
                     $"Initialize - AndroidHapticPlayer | the Vibrator service could not be reached, so nothing will vibrate: {exception.Message}");
             }
 
-            FlowLogger.Log(FlowLogType.HapticModule,
+            FlowLogger.Log(FlowModule.HapticModule,
                 $"Initialize - AndroidHapticPlayer | sdk={_sdk} vibrator={_hasVibrator} amplitudeControl={_hasAmplitudeControl}");
         }
 

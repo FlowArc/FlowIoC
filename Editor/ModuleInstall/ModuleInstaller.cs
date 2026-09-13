@@ -15,7 +15,7 @@ namespace FlowIoC.Editor.ModuleInstall
     /// tells Rider what the module's namespaces are.
     ///
     /// Copying alone would leave a folder that looks like a module and behaves like none - the
-    /// generators would not find it, FlowLogType would not name it, and its namespaces would carry
+    /// generators would not find it, FlowModule would not name it, and its namespaces would carry
     /// the Scripts folder in the middle of them.
     /// </summary>
     internal class ModuleInstaller
@@ -203,7 +203,7 @@ namespace FlowIoC.Editor.ModuleInstall
         {
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 
-            // The index, and with it the module's own FlowLogType part - written now rather than on
+            // The index, and with it the module's own FlowModule part - written now rather than on
             // the next load, so the module's own code compiles against the channel it just gained.
             ModuleAutoDetector.RescanModules();
 

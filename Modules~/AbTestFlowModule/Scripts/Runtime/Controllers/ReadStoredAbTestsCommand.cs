@@ -20,7 +20,7 @@ namespace Modules.AbTestFlowModule.Controllers
 
         public override void Execute()
         {
-            FlowLogger.Log(FlowLogType.AbTestFlowModule, "Execute - ReadStoredAbTestsCommand");
+            FlowLogger.Log(FlowModule.AbTestFlowModule, "Execute - ReadStoredAbTestsCommand");
 
             _model.ClearStatuses();
 
@@ -32,7 +32,7 @@ namespace Modules.AbTestFlowModule.Controllers
                 AbTestStatusRVO status = Status(test, group);
                 _model.SetStatus(status);
 
-                FlowLogger.Log(FlowLogType.AbTestFlowModule,
+                FlowLogger.Log(FlowModule.AbTestFlowModule,
                     $"Execute - ReadStoredAbTestsCommand - '{test.Id}' v{test.Version}: the player "
                     + (status.IsInTest ? $"is in group '{status.Group}'." : "is outside the test."));
             }
@@ -60,7 +60,7 @@ namespace Modules.AbTestFlowModule.Controllers
 
             if (parts[1] != AbTestConstants.OutOfTestMarker && !HasGroup(test, parts[1]))
             {
-                FlowLogger.LogWarning(FlowLogType.AbTestFlowModule,
+                FlowLogger.LogWarning(FlowModule.AbTestFlowModule,
                     $"TryReadStored - ReadStoredAbTestsCommand - '{test.Id}' v{test.Version} stored group "
                     + $"'{parts[1]}', which the config no longer has. It will be rolled again.");
                 return false;

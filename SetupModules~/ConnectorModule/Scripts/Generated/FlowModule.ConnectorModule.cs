@@ -5,11 +5,16 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using UnityEngine;
+
 namespace FlowIoC.ConsoleModule
 {
-    public static partial class FlowLogType
+    public static partial class FlowModule
     {
-        /// <summary>The ConnectorModule channel.</summary>
+        /// <summary>The ConnectorModule module, and its channel in the Flow Console.</summary>
         public const string ConnectorModule = "ConnectorModule";
+
+        /// <summary>The colour ConnectorModule's rows are drawn in. A "Colour: #RRGGBB" line above the block in the module's MODULE.md sets it.</summary>
+        public static readonly Color ConnectorModuleColor = new Color32(228, 103, 103, 255);
     }
 }

@@ -20,13 +20,10 @@ namespace FlowIoC.BaseModule.ProjectPaths
         public string EditorRoot => Root + "/Editor";
         public string CodeGeneratorRoot => EditorRoot + "/CodeGenerator";
         public string FolderPainterRoot => EditorRoot + "/FolderPainter";
-        public string GeneratedRoot => Root + "/Generated";
 
         public string CodeGeneratorSettings => CodeGeneratorRoot + "/ED_CodeGenerator.asset";
         public string ModuleIndex => CodeGeneratorRoot + "/ED_ModuleIndex.asset";
         public string FolderPainterConfig => FolderPainterRoot + "/ED_FolderPainter.asset";
-        public string FlowLogType => GeneratedRoot + "/FlowLogType.cs";
-        public string GeneratedAsmRef => GeneratedRoot + "/FlowIoC.Generated.asmref";
 
         /// <summary>
         /// The per module-type directory structure config, keyed the way

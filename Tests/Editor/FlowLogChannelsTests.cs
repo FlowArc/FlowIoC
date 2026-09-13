@@ -7,7 +7,7 @@ namespace FlowIoC.Tests
 {
     /// <summary>
     /// The table reads the project's channels off a class by reflection, the way it reads
-    /// FlowLogType. The class here stands in for what the generator writes, so the test says what
+    /// FlowModule. The class here stands in for what the generator writes, so the test says what
     /// a part has to look like for the table to understand it - and is not tied to whichever
     /// modules this project happens to have.
     /// </summary>
@@ -126,16 +126,18 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// The real FlowLogType has a part in the package that declares nothing, so a project that
-        /// has generated nothing yet still has a table - the framework's channels and no others.
+        /// The real FlowModule has a part in the package that declares only Default, so a project that
+        /// has generated nothing yet still has a table - the framework's channels and Default.
         /// </summary>
         [Test]
-        public void The_default_table_reads_FlowLogType_and_always_carries_the_framework()
+        public void The_default_table_reads_FlowModule_and_always_carries_the_framework()
         {
             var channels = new FlowLogChannels();
 
             Assert.IsTrue(channels.TryGet("Signal", out _));
-            Assert.GreaterOrEqual(channels.All.Count, 13, "the thirteen framework channels are always there");
+            Assert.IsTrue(channels.TryGet("Default", out FlowLogChannel byDefault));
+            Assert.IsFalse(byDefault.IsFrameworkOwned);
+            Assert.GreaterOrEqual(channels.All.Count, 14, "the thirteen framework channels and Default are always there");
         }
     }
 }

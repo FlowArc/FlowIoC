@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
     ///
     /// Delete Module needs this wherever a clean-up pass is keyed on a module's name rather than on
     /// its assemblies. Two were: the screen's Addressables registration, whose group name comes from
-    /// the screen module's name, and the FlowLogType channel, which is named for the module. Both
+    /// the screen module's name, and the FlowModule channel, which is named for the module. Both
     /// asked only about the module being deleted, so deleting a parent left the registration and the
     /// channel of every screen module inside it behind - an empty Local_Screen- group with its
     /// schema assets, and a column in the Filters panel with nothing to fill it.

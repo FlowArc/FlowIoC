@@ -4,7 +4,7 @@ namespace FlowIoC.ConsoleModule
 {
     /// <summary>
     /// One channel the console knows: the framework's own, or one a module declared on
-    /// <see cref="FlowLogType"/>. A channel is identified by its name and nothing else - the number
+    /// <see cref="FlowModule"/>. A channel is identified by its name and nothing else - the number
     /// a framework channel carries is its <see cref="SystemLogType"/>, and a project channel has
     /// none.
     /// </summary>

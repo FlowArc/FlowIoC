@@ -12,8 +12,6 @@ namespace FlowIoC.Tests
 
             Assert.That(paths.CodeGeneratorSettings, Does.StartWith(paths.Root));
             Assert.That(paths.FolderPainterConfig, Does.StartWith(paths.Root));
-            Assert.That(paths.FlowLogType, Does.StartWith(paths.Root));
-            Assert.That(paths.GeneratedAsmRef, Does.StartWith(paths.Root));
             Assert.That(paths.DirectoryStructureConfig("Main"), Does.StartWith(paths.Root));
         }
 
@@ -31,15 +29,6 @@ namespace FlowIoC.Tests
             Assert.That(paths.CodeGeneratorSettings, Does.Contain("/Editor/"));
             Assert.That(paths.FolderPainterConfig, Does.Contain("/Editor/"));
             Assert.That(paths.DirectoryStructureConfig("Screen"), Does.Contain("/Editor/"));
-        }
-
-        [Test]
-        public void The_generated_script_and_its_assembly_reference_share_one_folder()
-        {
-            var paths = new FlowIoCProjectPaths();
-
-            Assert.AreEqual(paths.GeneratedRoot + "/FlowLogType.cs", paths.FlowLogType);
-            Assert.AreEqual(paths.GeneratedRoot + "/FlowIoC.Generated.asmref", paths.GeneratedAsmRef);
         }
 
         [Test]

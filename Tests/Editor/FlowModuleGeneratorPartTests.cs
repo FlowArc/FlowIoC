@@ -11,19 +11,19 @@ namespace FlowIoC.Tests
     /// pinned here - the const, the Color field named after it, the Profile field - is a contract
     /// between the generator and <see cref="FlowLogChannels"/>.
     /// </summary>
-    public class FlowLogTypeGeneratorPartTests
+    public class FlowModuleGeneratorPartTests
     {
         [Test]
         public void A_part_declares_the_channel_and_its_colour_in_bytes()
         {
-            string content = FlowLogTypeGenerator.GeneratePartContent(new ChannelPartEVO
+            string content = FlowModuleGenerator.GeneratePartContent(new ChannelPartEVO
             {
                 Name = "PlayerModule",
                 Color = new Color32(229, 165, 10, 255)
             });
 
             StringAssert.Contains("using UnityEngine;", content);
-            StringAssert.Contains("public static partial class FlowLogType", content);
+            StringAssert.Contains("public static partial class FlowModule", content);
             StringAssert.Contains("public const string PlayerModule = \"PlayerModule\";", content);
             StringAssert.Contains("public static readonly Color PlayerModuleColor = new Color32(229, 165, 10, 255);", content);
             StringAssert.DoesNotContain("PlayerModuleProfile", content);
@@ -33,7 +33,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_profile_is_written_as_the_fluent_calls_that_rebuild_it()
         {
-            string content = FlowLogTypeGenerator.GeneratePartContent(new ChannelPartEVO
+            string content = FlowModuleGenerator.GeneratePartContent(new ChannelPartEVO
             {
                 Name = "PlayerModule",
                 Color = new Color32(229, 165, 10, 255),
@@ -54,7 +54,7 @@ namespace FlowIoC.Tests
         [Test]
         public void A_prefix_with_a_quote_in_it_is_escaped()
         {
-            string content = FlowLogTypeGenerator.GeneratePartContent(new ChannelPartEVO
+            string content = FlowModuleGenerator.GeneratePartContent(new ChannelPartEVO
             {
                 Name = "PlayerModule",
                 Color = new Color32(1, 2, 3, 255),
@@ -74,8 +74,8 @@ namespace FlowIoC.Tests
             var channel = new ChannelPartEVO {Name = "PlayerModule", Color = new Color32(229, 165, 10, 255)};
 
             Assert.AreEqual(
-                FlowLogTypeGenerator.GeneratePartContent(channel),
-                FlowLogTypeGenerator.GeneratePartContent(channel));
+                FlowModuleGenerator.GeneratePartContent(channel),
+                FlowModuleGenerator.GeneratePartContent(channel));
         }
 
         /// <summary>

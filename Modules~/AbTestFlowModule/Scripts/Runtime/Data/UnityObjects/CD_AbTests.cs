@@ -43,13 +43,13 @@ namespace Modules.AbTestFlowModule.Data.UnityObjects
                 switch (message.Severity)
                 {
                     case AbTestValidationSeverity.Error:
-                        FlowLogger.LogError(FlowLogType.AbTestFlowModule, message.Message, this);
+                        FlowLogger.LogError(FlowModule.AbTestFlowModule, message.Message, this);
                         break;
                     case AbTestValidationSeverity.Warning:
-                        FlowLogger.LogWarning(FlowLogType.AbTestFlowModule, message.Message);
+                        FlowLogger.LogWarning(FlowModule.AbTestFlowModule, message.Message);
                         break;
                     case AbTestValidationSeverity.Information:
-                        FlowLogger.Log(FlowLogType.AbTestFlowModule, message.Message);
+                        FlowLogger.Log(FlowModule.AbTestFlowModule, message.Message);
                         break;
                 }
             }

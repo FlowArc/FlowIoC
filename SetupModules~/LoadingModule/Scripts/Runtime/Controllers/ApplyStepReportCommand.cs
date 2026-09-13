@@ -27,7 +27,7 @@ namespace Modules.LoadingModule.Controllers
         {
             if (!_model.TryGetStep(_report.Step, out LoadingStepRVO step))
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule,
+                FlowLogger.LogError(FlowModule.LoadingModule,
                     $"ApplyStepReportCommand - CD_LoadingSets lists no step named '{_report.Step}'.", _model.Config);
                 return;
             }
@@ -38,14 +38,14 @@ namespace Modules.LoadingModule.Controllers
             {
                 // The failed step trying again: the set runs on from where it stopped, the steps
                 // that succeeded keep their end, and the screen stays as it is.
-                FlowLogger.Log(FlowLogType.LoadingModule, $"ApplyStepReportCommand - '{set.Key}' reopened by '{_report.Step}'.");
+                FlowLogger.Log(FlowModule.LoadingModule, $"ApplyStepReportCommand - '{set.Key}' reopened by '{_report.Step}'.");
                 _model.Reopen(set, _report.Time);
                 _internalSignals.WatchSet.Dispatch(set.Key);
             }
             else if (set.State != LoadingSetState.Running)
             {
                 if (set.Config.Presentation != LoadingPresentation.Silent)
-                    FlowLogger.LogWarning(FlowLogType.LoadingModule,
+                    FlowLogger.LogWarning(FlowModule.LoadingModule,
                         $"ApplyStepReportCommand - step '{_report.Step}' reported into '{set.Key}' before anybody called Begin, so the set began now. Begin it first, so its screen is up before the first step starts.");
 
                 _model.Begin(set, _report.Time);
@@ -53,7 +53,7 @@ namespace Modules.LoadingModule.Controllers
             }
             else if (_report.Kind == LoadingReportKind.Start && step.IsEnded)
             {
-                FlowLogger.LogWarning(FlowLogType.LoadingModule,
+                FlowLogger.LogWarning(FlowModule.LoadingModule,
                     $"ApplyStepReportCommand - step '{_report.Step}' had already ended and is running again.");
             }
 
@@ -72,17 +72,17 @@ namespace Modules.LoadingModule.Controllers
             switch (_report.Kind)
             {
                 case LoadingReportKind.Start:
-                    FlowLogger.Log(FlowLogType.LoadingModule, $"ApplyStepReportCommand - '{step.Owner.Key}'/'{step.Config.Key}' started.");
+                    FlowLogger.Log(FlowModule.LoadingModule, $"ApplyStepReportCommand - '{step.Owner.Key}'/'{step.Config.Key}' started.");
                     break;
                 case LoadingReportKind.Complete:
-                    FlowLogger.Log(FlowLogType.LoadingModule,
+                    FlowLogger.Log(FlowModule.LoadingModule,
                         $"ApplyStepReportCommand - '{step.Owner.Key}'/'{step.Config.Key}' completed in {step.EndedAt - step.StartedAt:0.00} s.");
                     break;
                 case LoadingReportKind.Skip:
-                    FlowLogger.Log(FlowLogType.LoadingModule, $"ApplyStepReportCommand - '{step.Owner.Key}'/'{step.Config.Key}' skipped.");
+                    FlowLogger.Log(FlowModule.LoadingModule, $"ApplyStepReportCommand - '{step.Owner.Key}'/'{step.Config.Key}' skipped.");
                     break;
                 case LoadingReportKind.Fail:
-                    FlowLogger.LogError(FlowLogType.LoadingModule,
+                    FlowLogger.LogError(FlowModule.LoadingModule,
                         $"'{step.Owner.Key}'/'{step.Config.Key}' failed{(string.IsNullOrEmpty(_report.Reason) ? "." : ": " + _report.Reason)}");
                     break;
             }

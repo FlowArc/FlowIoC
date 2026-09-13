@@ -44,7 +44,7 @@ namespace Modules.LoadingModule.Models
             var adapter = _root.GetComponent<RootAdapter>();
             if (adapter == null)
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule,
+                FlowLogger.LogError(FlowModule.LoadingModule,
                     "LoadingServiceRoot has no RootAdapter, so CD_LoadingSets cannot be read and no set can run.", _root);
                 return;
             }
@@ -52,7 +52,7 @@ namespace Modules.LoadingModule.Models
             CD_LoadingSets config = adapter.GetScriptable<CD_LoadingSets>();
             if (config == null)
             {
-                FlowLogger.LogError(FlowLogType.LoadingModule,
+                FlowLogger.LogError(FlowModule.LoadingModule,
                     "LoadingServiceRoot's adapter files no CD_LoadingSets, so no set can run.", _root);
                 return;
             }
@@ -78,13 +78,13 @@ namespace Modules.LoadingModule.Models
             {
                 if (string.IsNullOrEmpty(setConfig.Key))
                 {
-                    FlowLogger.LogError(FlowLogType.LoadingModule, "CD_LoadingSets has a set with no key.", config);
+                    FlowLogger.LogError(FlowModule.LoadingModule, "CD_LoadingSets has a set with no key.", config);
                     continue;
                 }
 
                 if (_setsByKey.ContainsKey(setConfig.Key))
                 {
-                    FlowLogger.LogError(FlowLogType.LoadingModule,
+                    FlowLogger.LogError(FlowModule.LoadingModule,
                         $"CD_LoadingSets declares the set '{setConfig.Key}' twice.", config);
                     continue;
                 }
@@ -94,21 +94,21 @@ namespace Modules.LoadingModule.Models
                 _setsByKey[setConfig.Key] = set;
 
                 if (setConfig.Steps.Count == 0)
-                    FlowLogger.LogWarning(FlowLogType.LoadingModule,
+                    FlowLogger.LogWarning(FlowModule.LoadingModule,
                         $"CD_LoadingSets set '{setConfig.Key}' has no steps, so it completes the moment it begins.");
 
                 foreach (LoadingStepCVO stepConfig in setConfig.Steps)
                 {
                     if (string.IsNullOrEmpty(stepConfig.Key))
                     {
-                        FlowLogger.LogError(FlowLogType.LoadingModule,
+                        FlowLogger.LogError(FlowModule.LoadingModule,
                             $"CD_LoadingSets set '{setConfig.Key}' has a step with no key.", config);
                         continue;
                     }
 
                     if (_stepsByKey.TryGetValue(stepConfig.Key, out LoadingStepRVO taken))
                     {
-                        FlowLogger.LogError(FlowLogType.LoadingModule,
+                        FlowLogger.LogError(FlowModule.LoadingModule,
                             $"CD_LoadingSets lists the step '{stepConfig.Key}' in both '{taken.Owner.Key}' and '{setConfig.Key}'. A step key belongs to one set.",
                             config);
                         continue;
@@ -127,14 +127,14 @@ namespace Modules.LoadingModule.Models
 
                 if (!_setsByKey.ContainsKey(step.Config.ChildSet))
                 {
-                    FlowLogger.LogError(FlowLogType.LoadingModule,
+                    FlowLogger.LogError(FlowModule.LoadingModule,
                         $"CD_LoadingSets step '{step.Config.Key}' stands for the set '{step.Config.ChildSet}', which is not declared.", config);
                     continue;
                 }
 
                 if (step.Config.ChildSet == step.Owner.Key)
                 {
-                    FlowLogger.LogError(FlowLogType.LoadingModule,
+                    FlowLogger.LogError(FlowModule.LoadingModule,
                         $"CD_LoadingSets step '{step.Config.Key}' stands for its own set '{step.Owner.Key}'.", config);
                     continue;
                 }

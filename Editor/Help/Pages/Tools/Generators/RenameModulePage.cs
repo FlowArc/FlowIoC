@@ -63,8 +63,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
                 "The settings files at the project root: renamed after the new assemblies, and rewritten "
                 + "for every module inside the folder, because the paths inside them changed.");
             painter.Bullet(
-                "The Flow Console channel, keeping its number and colour, the generated FlowLogType part, "
-                + "and every FlowLogType.<Name> in code.");
+                "The generated FlowModule part, and every FlowModule.<Name> in code.");
             painter.Bullet(
                 "The prefabs and scenes in the module's own Prefabs, Scenes and Resources folders whose "
                 + "name starts with the old one - the test scene, a Root prefab named after its class, "
