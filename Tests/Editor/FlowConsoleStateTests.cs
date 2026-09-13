@@ -66,7 +66,7 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// These are one developer's toolbar toggles. Putting them in CD_FlowConsole would put
+        /// These are one developer's toolbar toggles. Putting them in a committed asset would put
         /// them in everybody's diff, so they live in EditorPrefs instead.
         /// </summary>
         [Test]

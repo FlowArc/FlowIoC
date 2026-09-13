@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
-using FlowIoC.ConsoleModule;
 using FlowIoC.Editor.Console;
 using FlowIoC.Editor.Modules;
 
@@ -12,11 +11,11 @@ namespace FlowIoC.Editor.ModuleScanner
     /// Scripts/Generated - and beside it an asmref, which is what compiles that part into FlowIoC
     /// rather than into the module's own assembly.
     ///
-    /// LogTypeCheck already answers whether the channel is registered in CD_FlowConsole. This
-    /// answers the other half, which nothing was watching: the file on disk. It can go without the
-    /// settings changing at all - deleted by hand, lost in a merge, or never written because the
-    /// generator was interrupted - and the first anyone hears of it is the module failing to
-    /// compile against a constant that is no longer declared anywhere.
+    /// The part is the channel: there is no list elsewhere that says a module has one, so what
+    /// this watches is the file on disk. It can go without anything else changing - deleted by
+    /// hand, lost in a merge, or never written because the generator was interrupted - and the
+    /// first anyone hears of it is the module failing to compile against a constant that is no
+    /// longer declared anywhere.
     ///
     /// A test module has no channel, so it owes no part.
     /// </summary>
@@ -25,20 +24,15 @@ namespace FlowIoC.Editor.ModuleScanner
         internal const string GENERATED_FOLDER = "Scripts/Generated";
         internal const string ASMREF_NAME = "FlowIoC.Generated.asmref";
 
-        private readonly Func<string, bool> _channelExists;
         private readonly Func<string, bool> _fileExists;
         private readonly Action _regenerate;
 
-        internal LogTypePartCheck() : this(
-            channel => FlowLogger.Settings != null && FlowLogger.Settings.TryGetLogType(channel, out _),
-            File.Exists,
-            FlowLogTypeGenerator.Generate)
+        internal LogTypePartCheck() : this(File.Exists, FlowLogTypeGenerator.Generate)
         {
         }
 
-        internal LogTypePartCheck(Func<string, bool> channelExists, Func<string, bool> fileExists, Action regenerate)
+        internal LogTypePartCheck(Func<string, bool> fileExists, Action regenerate)
         {
-            _channelExists = channelExists;
             _fileExists = fileExists;
             _regenerate = regenerate;
         }
@@ -49,9 +43,6 @@ namespace FlowIoC.Editor.ModuleScanner
         {
             if (module.Kind == ModuleKind.Test)
                 return FindingEVO.Ok(Id, "Log type part (a test module has no channel)");
-
-            if (!_channelExists(module.Name))
-                return FindingEVO.Ok(Id, "Log type part (module has no channel)");
 
             bool hasPart = _fileExists(PartPathOf(module));
             bool hasAsmRef = _fileExists(AsmRefPathOf(module));
@@ -75,8 +66,8 @@ namespace FlowIoC.Editor.ModuleScanner
         }
 
         /// <summary>
-        /// The generator writes both files for every registered channel, so the repair is to run it
-        /// rather than to write the file here. One writer, one shape.
+        /// The generator writes both files for every module, so the repair is to run it rather
+        /// than to write the file here. One writer, one shape.
         /// </summary>
         public void Fix(ModuleTargetEVO module) => _regenerate();
 

@@ -246,7 +246,12 @@ namespace FlowIoC.Editor.Console
         private bool _collapseRows;
         private int[] _collapseCounts;
 
-        private CD_FlowConsole _settings;
+        /// <summary>The table every row is coloured and filtered by, and the developer's switches on it.</summary>
+        private static FlowLogChannels Channels => FlowLogger.Channels;
+
+        /// <summary>How much the logger does, as this developer set it.</summary>
+        private static FlowConsolePreferences Preferences => FlowLogger.Preferences;
+
         private GUIStyle _richTextStyle;
         private GUIStyle _detailRichTextStyle;
         private GUIStyle _detailPanelStyle;
@@ -381,9 +386,7 @@ namespace FlowIoC.Editor.Console
 
             FlowLogger.OnLogAdded += OnLogAdded;
             FlowLogger.OnLogsCleared += OnLogsCleared;
-            CD_FlowConsole.OnSettingsValidated += OnSettingsValidated;
 
-            _settings = FlowLogger.Settings;
             _connectionState = PlayerConnectionGUIUtility.GetConnectionState(this);
 
             _richTextStyle = new GUIStyle();
@@ -448,7 +451,7 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private string NoSourceHint()
         {
-            return _settings.StackTraceCapture == FlowStackTraceCapture.Always
+            return Preferences.StackTraceCapture == FlowStackTraceCapture.Always
                 ? "No source was found for this log."
                 : "This log captured no source.\nRaise Source in the toolbar to Always.";
         }
@@ -507,7 +510,7 @@ namespace FlowIoC.Editor.Console
             // Said on the row rather than discovered by double-clicking it and getting nothing.
             // Ordinary logs capture no source by default, because working one out builds the whole
             // managed stack as a string and the framework writes a log per signal and command.
-            if (FlowLogger.Settings.StackTraceCapture != FlowStackTraceCapture.Always)
+            if (Preferences.StackTraceCapture != FlowStackTraceCapture.Always)
                 return log.SystemLogType + "  ·  source not captured";
 
             return log.SystemLogType.ToString();
@@ -545,7 +548,6 @@ namespace FlowIoC.Editor.Console
         {
             FlowLogger.OnLogAdded -= OnLogAdded;
             FlowLogger.OnLogsCleared -= OnLogsCleared;
-            CD_FlowConsole.OnSettingsValidated -= OnSettingsValidated;
 
             _connectionState?.Dispose();
             _connectionState = null;
@@ -859,10 +861,10 @@ namespace FlowIoC.Editor.Console
 
             // Offered only while there is something to put back: a reader whose channels already
             // stand where the project has them would pick it and see nothing change.
-            if (_settings.Visibility.HasSwitches)
-                menu.AddItem(new GUIContent("Project defaults"), false, ApplyProjectDefaults);
+            if (Channels.Visibility.HasSwitches)
+                menu.AddItem(new GUIContent("Defaults"), false, ApplyDefaults);
             else
-                menu.AddDisabledItem(new GUIContent("Project defaults"));
+                menu.AddDisabledItem(new GUIContent("Defaults"));
 
             menu.AddSeparator("");
 
@@ -901,37 +903,34 @@ namespace FlowIoC.Editor.Console
 
         private void ApplyPreset(FilterPreset preset)
         {
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
-            {
-                var logType = _settings.LogTypes[i];
-                if (logType.Value == (int) SystemLogType.All) continue;
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
 
-                _settings.Visibility.Show(logType, preset.VisibleChannels.Contains(logType.Name));
-            }
+            for (int i = 0; i < channels.Count; i++)
+                Channels.Visibility.Show(channels[i], preset.VisibleChannels.Contains(channels[i].Name));
 
             OnLogTypeSelectionChanged();
         }
 
         /// <summary>
-        /// The set the project ships, which is a preset like the others except that nobody saved
-        /// it: it is what the settings asset says, and it is what a developer sees before they
-        /// throw a switch of their own. Applying it drops their switches rather than writing them.
+        /// The set the channels ship with, which is a preset like the others except that nobody
+        /// saved it: the framework's own defaults and every module on, which is what a developer
+        /// sees before they throw a switch of their own. Applying it drops their switches rather
+        /// than writing them.
         /// </summary>
-        private void ApplyProjectDefaults()
+        private void ApplyDefaults()
         {
-            _settings.Visibility.Reset();
+            Channels.Visibility.Reset();
             OnLogTypeSelectionChanged();
         }
 
         private void SaveCurrentPreset()
         {
             var visible = new List<string>();
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
 
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            for (int i = 0; i < channels.Count; i++)
             {
-                var logType = _settings.LogTypes[i];
-                if (logType.Value == (int) SystemLogType.All) continue;
-                if (_settings.IsLogTypeVisible(logType)) visible.Add(logType.Name);
+                if (Channels.IsShown(channels[i])) visible.Add(channels[i].Name);
             }
 
             FlowConsolePresetNameWindow.Show(name => _presets.Save(name, visible));
@@ -1101,12 +1100,6 @@ namespace FlowIoC.Editor.Console
                 _needsRepaint = false;
                 Repaint();
             }
-        }
-
-        private void OnSettingsValidated()
-        {
-            _logsDirty = true;
-            _needsRepaint = true;
         }
 
         /// <summary>
@@ -1309,18 +1302,14 @@ namespace FlowIoC.Editor.Console
             bool wasAtBottom = _stickyTail.IsAtBottom(_logsPanelScroll.y, _logsViewportHeight, ContentHeight());
 
             bool allTypesVisible = true;
-            if (_settings != null && _settings.LogTypes != null)
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
+
+            for (int i = 0; i < channels.Count; i++)
             {
-                for (int i = 0; i < _settings.LogTypes.Count; i++)
-                {
-                    var lt = _settings.LogTypes[i];
-                    if (lt.Value == (int) SystemLogType.All) continue;
-                    if (!_settings.IsLogTypeVisible(lt))
-                    {
-                        allTypesVisible = false;
-                        break;
-                    }
-                }
+                if (Channels.IsShown(channels[i])) continue;
+
+                allTypesVisible = false;
+                break;
             }
 
             // Isolation and muting hide rows without switching a channel off, so the shortcut for
@@ -1364,7 +1353,7 @@ namespace FlowIoC.Editor.Console
                         continue;
                     }
 
-                    if (_settings.TryGetLogType(log.Channel, out var type) && _settings.IsLogTypeVisible(type) && !IsGroupMuted(type))
+                    if (Channels.TryGet(log.Channel, out FlowLogChannel channel) && Channels.IsShown(channel) && !IsGroupMuted(channel))
                         _multiTypeFilterBuffer.Add(log);
                 }
 
@@ -2145,13 +2134,11 @@ namespace FlowIoC.Editor.Console
 
         private bool IsAnyChannelShown()
         {
-            if (_settings == null) return true;
+            IReadOnlyList<FlowLogChannel> channels = Channels.All;
 
-            for (int i = 0; i < _settings.LogTypes.Count; i++)
+            for (int i = 0; i < channels.Count; i++)
             {
-                var logType = _settings.LogTypes[i];
-                if (logType.Value == (int) SystemLogType.All) continue;
-                if (_settings.IsLogTypeVisible(logType)) return true;
+                if (Channels.IsShown(channels[i])) return true;
             }
 
             return false;
@@ -2179,7 +2166,7 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void TrimToMaxLogCount()
         {
-            int maxLogCount = FlowLogger.Settings.MaxLogCount;
+            int maxLogCount = Preferences.MaxLogCount;
             if (maxLogCount <= 0 || _allLogs.Count <= maxLogCount + LogTrimChunk)
                 return;
 

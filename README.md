@@ -1222,8 +1222,8 @@ complaining about your code — a command that released without retaining, a vie
 no Context above it — it opens **your** file rather than the framework's guard clause,
 which is the only answer that tells the reader something they did not already know.
 
-For your own logs, Flow Console auto-registers one channel per module and generates a
-`const string` for each — in the module itself, as a part of `FlowLogType`:
+For your own logs, Flow Console generates one channel per module - a `const string` on
+`FlowLogType`, with the module's colour beside it - in the module itself, as a part of its own:
 
 ```csharp
 using FlowIoC.ConsoleModule;
@@ -1232,16 +1232,22 @@ FlowLogger.Log(FlowLogType.PlayerModule, "Execute - AddCurrencyCommand");
 FlowLogger.LogError(FlowLogType.PlayerModule, "Currency went negative.");
 ```
 
+Every module is coloured from the day it is created, picked from twelve tones by its name. A module
+that wants a colour or a tag of its own says so in its `MODULE.md`, as `Colour:` and `Profile:` lines
+directly above the generated block - or through the Flow Console, by right-clicking the channel in
+its Filters panel.
+
 **Spell the names out. Never `nameof` inside a log message.**
 `$"{nameof(Execute)} - {nameof(AddCurrencyCommand)}"` written inside `AddCurrencyCommand` is a real
 reference to the type, so Find Usages and a plain search answer *where is this Command used* with
 the command's own logging lines rather than the Context that binds it. A rename then leaves the
 literal stale, and that is the cheaper of the two costs.
 
-Logging is compiled out unless the `ENABLE_LOG` scripting define is set.
+Logging compiles only in the Editor and in a Development Build; a release build carries none of
+it, and there is no scripting define to manage.
 
 **An error is the exception, and it is logged exactly once.** `FlowLogger.LogError` carries no
-`[Conditional]`, so an error reaches the console with or without `ENABLE_LOG` — a project with
+`[Conditional]`, so an error reaches the console in a release build too — a project with
 logging switched off is the one that most needs to be told something is broken. So never put a
 `Debug.LogError` beside a `FlowLogger.LogError` for the same fault: `FlowLogger` forwards to
 `Debug` itself, and the pair prints the error twice whenever logging is on.

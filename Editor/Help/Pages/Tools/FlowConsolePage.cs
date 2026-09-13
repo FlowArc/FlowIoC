@@ -54,20 +54,34 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "trace. A line is drawn where the device's rows begin and each row carries a dim "
                 + "tag with the device's name after the time.");
             painter.Note(
-                "Important: two steps fail silently when skipped. The build must be a Development "
-                + "Build - a release player never connects. And the flow is visible only when the "
-                + "build's scripting defines carry ENABLE_LOG, the same define the editor needs; "
-                + "without it only errors and Unity's own lines arrive from the device.");
+                "Important: one step fails silently when skipped. The build must be a Development "
+                + "Build - a release player never connects, and has nothing to send, because logging "
+                + "compiles only in the Editor and in a Development Build. There is no scripting "
+                + "define to add.");
 
             painter.SubHeading("The channels you switch off are yours");
             painter.Paragraph(
-                "Clicking a channel in the Filters panel writes EditorPrefs, not CD_FlowConsole. "
-                + "The asset is committed, and one developer's filter has no business turning up in "
-                + "everybody else's diff - or switching their channels to match when they pull. What "
-                + "the asset carries is the project default, set in its inspector as Default on or "
-                + "Default off per channel: what somebody sees who has not touched it, and what a "
-                + "channel a module added yesterday shows as. Presets > Project defaults drops your "
-                + "switches and puts you back on what the asset says.");
+                "Clicking a channel in the Filters panel writes EditorPrefs, and nothing committed: "
+                + "one developer's filter has no business turning up in everybody else's diff - or "
+                + "switching their channels to match when they pull. What a channel shows as for "
+                + "somebody who has not touched it is the default it ships with - Signal, Command and "
+                + "Unity's three on, the framework's machinery off, every module on - and that is "
+                + "what a channel a module added yesterday shows as. Presets > Defaults drops your "
+                + "switches and puts you back on it. How much the logger does - logging on or off, "
+                + "the Source capture, the mirror into Unity's console, how many rows are kept - is "
+                + "yours too, under Edit > Preferences > FlowIoC > Flow Console.");
+            painter.SubHeading("A module's colour is the module's own");
+            painter.Paragraph(
+                "Every module is coloured from the day it is created, picked from twelve tones by "
+                + "its name, and the colour is written beside the channel in the module's generated "
+                + "FlowLogType part. A module that wants a colour of its own says so in its MODULE.md, "
+                + "as a Colour line directly above the generated block, and may declare a profile - "
+                + "the tag on the front of its lines - the same way. Right-click the channel in the "
+                + "Filters panel and choose Colour and profile... to edit both; the window writes the "
+                + "card and regenerates the part, and the console follows on the next compile.");
+            painter.Code(
+                "Colour: #E5A50A\n"
+                + "Profile: prefix=\"[Analytics]\" prefix-style=bold prefix-colour=#39FF00");
             painter.Paragraph(
                 "A switch hides the channel's plain logs. A warning and an error show whatever "
                 + "its channel's switch, its group's mute or an isolation says - Context is off by "
@@ -116,13 +130,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "logging lines instead of the Context that binds it. A rename then leaves the "
                 + "literal stale, and that is the cheaper of the two costs.");
             painter.Note(
-                "Logging compiles out unless the ENABLE_LOG scripting define is set, so lines you "
-                + "leave in cost a shipped build nothing. The framework's own channels are always "
-                + "there, so watching a flow does not need any log lines of your own.");
+                "Logging compiles only in the Editor and in a Development Build, so lines you leave "
+                + "in cost a shipped build nothing and there is no scripting define to manage. The "
+                + "framework's own channels are always there, so watching a flow does not need any "
+                + "log lines of your own.");
             painter.Note(
                 "Important: an error is the exception, and it is logged exactly once. "
                 + "FlowLogger.LogError carries no [Conditional], so an error reaches the console "
-                + "with or without ENABLE_LOG - a project with logging switched off is the one that "
+                + "in a release build too - a project with logging switched off is the one that "
                 + "most needs to be told something is broken. So never put a Debug.LogError beside "
                 + "a FlowLogger.LogError for the same fault: FlowLogger forwards to Debug itself, "
                 + "and the pair prints the error twice whenever logging is on.");

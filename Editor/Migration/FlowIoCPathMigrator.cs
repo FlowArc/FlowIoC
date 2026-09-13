@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.Migration
     /// <summary>
     /// Moves a project that was set up by an older FlowIoC from the scattered layout
     /// (Assets/FlowIoC, Assets/Editor/FlowIoC, Assets/Resources) into the single root described by
-    /// <see cref="FlowIoCProjectPaths"/>, keeping the user's log types, folder colors and generator
+    /// <see cref="FlowIoCProjectPaths"/>, keeping the user's folder colors and generator
     /// configuration.
     ///
     /// Callers must be on an editor tick where the AssetDatabase is writable - after a delayCall,
@@ -35,16 +35,48 @@ namespace FlowIoC.Editor.Migration
             var paths = new FlowIoCProjectPaths();
             var legacyPaths = new FlowIoCLegacyPaths(paths);
 
+            bool deletedAnything = DeleteRetiredAssets(legacyPaths);
             bool movedAnything = MoveLegacyAssets(legacyPaths);
-            if (!movedAnything) return;
+            if (!movedAnything && !deletedAnything) return;
 
-            RewriteDirectoryStructureConfigPaths(paths);
+            if (movedAnything)
+                RewriteDirectoryStructureConfigPaths(paths);
+
             CleanUpLegacyFolders(legacyPaths);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log($"<color=cyan>FlowIoC:</color> project assets were moved to {paths.Root}.");
+            if (movedAnything)
+                Debug.Log($"<color=cyan>FlowIoC:</color> project assets were moved to {paths.Root}.");
+        }
+
+        /// <summary>
+        /// An asset FlowIoC has no use for any more goes rather than moves. Said in the console,
+        /// because a file disappearing from a tracked tree deserves a sentence about why.
+        /// </summary>
+        private bool DeleteRetiredAssets(FlowIoCLegacyPaths legacyPaths)
+        {
+            bool deletedAnything = false;
+
+            foreach (string assetPath in legacyPaths.AssetsToDelete)
+            {
+                if (!File.Exists(ToDiskPath(assetPath))) continue;
+
+                if (!AssetDatabase.DeleteAsset(assetPath))
+                {
+                    Debug.LogError($"<color=cyan>FlowIoC:</color> could not delete {assetPath}.");
+                    continue;
+                }
+
+                deletedAnything = true;
+                Debug.Log(
+                    $"<color=cyan>FlowIoC:</color> {assetPath} was removed. The Flow Console keeps a developer's "
+                    + "settings in EditorPrefs and a module's colour in the module now, so the asset had "
+                    + "nothing left to hold.");
+            }
+
+            return deletedAnything;
         }
 
         private bool MoveLegacyAssets(FlowIoCLegacyPaths legacyPaths)
@@ -96,7 +128,7 @@ namespace FlowIoC.Editor.Migration
             var settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(paths.CodeGeneratorSettings);
             if (settings == null || settings.DirectoryStructureConfigPaths == null) return;
 
-            foreach (string configKey in new[] { "Main", "Screen", "Test" })
+            foreach (string configKey in new[] {"Main", "Screen", "Test"})
             {
                 if (!settings.DirectoryStructureConfigPaths.ContainsKey(configKey)) continue;
 

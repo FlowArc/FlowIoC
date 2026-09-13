@@ -1,8 +1,6 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.Config.ModuleConfig;
@@ -12,42 +10,6 @@ using UnityEngine;
 
 namespace FlowIoC.Editor.Modules
 {
-    internal class LogTypeChanges
-    {
-        public List<string> ToAdd = new List<string>();
-        public List<string> ToRemove = new List<string>();
-    }
-
-    /// <summary>
-    /// What has to change for the auto-registered log types to match the modules that exist.
-    /// Only auto-registered names are passed in, so a channel the project added by hand is
-    /// never proposed for removal.
-    /// </summary>
-    internal class ModuleLogTypePlan
-    {
-        public LogTypeChanges Plan(IEnumerable<string> registeredAutoTypes, IEnumerable<string> moduleNames)
-        {
-            var registered = new HashSet<string>(
-                registeredAutoTypes ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-            var modules = new HashSet<string>(
-                moduleNames ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-
-            // A scan that found no modules at all is far more likely to be a failed scan than a
-            // project that genuinely has none. Proposing removals from an empty module list would
-            // wipe every auto-registered channel on the strength of that failure, so removals are
-            // skipped entirely unless at least one module was actually found.
-            List<string> toRemove = modules.Count == 0
-                ? new List<string>()
-                : registered.Where(r => !modules.Contains(r)).ToList();
-
-            return new LogTypeChanges
-            {
-                ToAdd = modules.Where(m => !registered.Contains(m)).ToList(),
-                ToRemove = toRemove
-            };
-        }
-    }
-
     internal class ModuleIndexRebuilder
     {
         private readonly FlowIoCProjectPaths _paths = new FlowIoCProjectPaths();

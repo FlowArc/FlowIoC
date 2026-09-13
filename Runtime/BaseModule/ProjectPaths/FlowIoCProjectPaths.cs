@@ -7,11 +7,11 @@ namespace FlowIoC.BaseModule.ProjectPaths
     /// in the package may hardcode an <c>Assets/</c> path: changing where FlowIoC writes has to be
     /// a one-line change here.
     ///
-    /// This lives in the runtime assembly rather than the editor one because FlowLogger is runtime
-    /// code and needs the same paths, and the runtime assembly cannot reference the editor
-    /// assembly. The whole file is editor-only because Assets paths mean nothing in a player
-    /// build, and internal because Runtime/AssemblyInfo.cs already grants FlowIoC.Editor and
-    /// FlowIoC.Tests access.
+    /// This lives in the runtime assembly rather than the editor one from the days FlowLogger
+    /// loaded a settings asset by one of these paths; nothing in Runtime reads it now, and it
+    /// stays here because moving it buys nothing. The whole file is editor-only because Assets
+    /// paths mean nothing in a player build, and internal because Runtime/AssemblyInfo.cs already
+    /// grants FlowIoC.Editor and FlowIoC.Tests access.
     /// </summary>
     internal class FlowIoCProjectPaths
     {
@@ -21,14 +21,12 @@ namespace FlowIoC.BaseModule.ProjectPaths
         public string CodeGeneratorRoot => EditorRoot + "/CodeGenerator";
         public string FolderPainterRoot => EditorRoot + "/FolderPainter";
         public string GeneratedRoot => Root + "/Generated";
-        public string ResourcesRoot => Root + "/Resources";
 
         public string CodeGeneratorSettings => CodeGeneratorRoot + "/ED_CodeGenerator.asset";
         public string ModuleIndex => CodeGeneratorRoot + "/ED_ModuleIndex.asset";
         public string FolderPainterConfig => FolderPainterRoot + "/ED_FolderPainter.asset";
         public string FlowLogType => GeneratedRoot + "/FlowLogType.cs";
         public string GeneratedAsmRef => GeneratedRoot + "/FlowIoC.Generated.asmref";
-        public string ConsoleSettings => ResourcesRoot + "/CD_FlowConsole.asset";
 
         /// <summary>
         /// The per module-type directory structure config, keyed the way

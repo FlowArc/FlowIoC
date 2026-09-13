@@ -1,20 +1,16 @@
 #if UNITY_EDITOR
-using System.Collections.Generic;
-using System.Linq;
-using FlowIoC.ConsoleModule;
+using FlowIoC.Editor.Console;
 using FlowIoC.Editor.ModuleScanner;
 using FlowIoC.Editor.Modules;
 using UnityEditor;
-using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Detector
 {
     /// <summary>
-    /// Rebuilds the module index on every Editor session and keeps the auto-registered log
-    /// types in step with it. This used to also write and repair _*_info.txt marker files; the
-    /// index replaces that job entirely, so the only work left here is the log type side of
-    /// module detection - adding a type for a module that has none, and now also removing one
-    /// whose module is gone.
+    /// Rebuilds the module index on every Editor session and writes the channel parts from it.
+    /// This used to also keep a list of auto-registered log types in step with the index; the
+    /// index is the record now, and a module's channel is the part the generator writes into it,
+    /// so the only work left here is rebuilding the one and regenerating the other.
     /// </summary>
     internal class ModuleAutoDetector
     {
@@ -58,33 +54,13 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
 
         private void DetectAndRegisterModules()
         {
-            // A rebuild that could not run has already said so. Carrying on with an index loaded
-            // independently would read an empty module list out of it and propose removing every
-            // auto-registered log type, on the strength of a scan that never happened.
+            // A rebuild that could not run has already said so. Generating from an index loaded
+            // independently would read whatever the last scan left there, on the strength of a scan
+            // that never happened.
             ED_ModuleIndex index = new ModuleIndexRebuilder().Rebuild();
             if (index == null) return;
 
-            IEnumerable<string> registeredAutoTypes = FlowLogger.Settings.LogTypes
-                .Where(logType => logType.IsAutoRegistered && !logType.IsMandatory)
-                .Select(logType => logType.Name);
-
-            IEnumerable<string> moduleNames = index.Modules
-                .Where(module => module.Kind != ModuleKind.Test)
-                .Select(module => module.Name);
-
-            LogTypeChanges changes = new ModuleLogTypePlan().Plan(registeredAutoTypes, moduleNames);
-
-            if (changes.ToAdd.Count > 0)
-            {
-                List<(string Name, int Value, Color LogColor)> toAdd = changes.ToAdd
-                    .Select(name => (Name: name, Value: -1, LogColor: Color.white))
-                    .ToList();
-
-                FlowLogTypeManager.AddFlowLogTypesBatch(toAdd);
-            }
-
-            if (changes.ToRemove.Count > 0)
-                FlowLogTypeManager.RemoveFlowLogTypesBatch(changes.ToRemove);
+            FlowLogTypeGenerator.Generate();
         }
     }
 }

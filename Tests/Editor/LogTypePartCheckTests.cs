@@ -7,9 +7,8 @@ using NUnit.Framework;
 namespace FlowIoC.Tests
 {
     /// <summary>
-    /// The half of a module's Flow Console channel that lives on disk. LogTypeCheck watches the
-    /// settings asset; this watches the generated part and the asmref that decides which assembly
-    /// it lands in.
+    /// A module's Flow Console channel is the generated part on disk, so this watches the part
+    /// and the asmref that decides which assembly it lands in.
     /// </summary>
     public class LogTypePartCheckTests
     {
@@ -18,10 +17,9 @@ namespace FlowIoC.Tests
         private readonly List<string> _present = new List<string>();
         private int _regenerated;
 
-        private LogTypePartCheck Check(bool hasChannel = true)
+        private LogTypePartCheck Check()
         {
             return new LogTypePartCheck(
-                _ => hasChannel,
                 path => _present.Contains(path.Replace('\\', '/')),
                 () => _regenerated++);
         }
@@ -87,19 +85,6 @@ namespace FlowIoC.Tests
             Given();
 
             Assert.AreEqual(ModuleCheckStatus.Ok, Check().Inspect(Module(ModuleKind.Test)).Status);
-        }
-
-        /// <summary>
-        /// A module whose channel was never registered has nothing to declare, so the file being
-        /// absent is the correct state rather than a fault. LogTypeCheck is what reports the
-        /// missing channel, and reporting it twice would say the same thing in two voices.
-        /// </summary>
-        [Test]
-        public void A_module_with_no_channel_owes_no_part()
-        {
-            Given();
-
-            Assert.AreEqual(ModuleCheckStatus.Ok, Check(false).Inspect(Module()).Status);
         }
 
         [Test]

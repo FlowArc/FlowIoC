@@ -14,7 +14,6 @@ namespace FlowIoC.Editor.ModuleScanner
         internal IReadOnlyList<string> AllAssemblyNames { get; set; }
         internal IReadOnlyList<ScannedModule> ScannedModules { get; set; }
         internal ED_ModuleIndex Index { get; set; }
-        internal IReadOnlyList<string> RegisteredAutoLogTypes { get; set; }
     }
 }
 

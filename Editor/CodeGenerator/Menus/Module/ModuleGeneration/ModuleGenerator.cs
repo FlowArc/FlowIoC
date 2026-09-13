@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
-using FlowIoC.ConsoleModule;
+using FlowIoC.Editor.Console;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule;
 using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
@@ -230,8 +230,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             if (selectedModuleType != ModuleType.Test)
             {
-                RegisterModuleLogType(moduleName);
                 WriteModuleCard(moduleName, modulePath, card);
+
+                // The index above already knows the module, so its channel's part is written now
+                // rather than on the next load - the module's own code compiles against it.
+                FlowLogTypeGenerator.Generate();
             }
         }
 
@@ -246,15 +249,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private static void WriteModuleCard(string moduleName, string modulePath, ModuleCardDraftEVO card)
         {
             new ModuleCardFile().Write(modulePath, new ModuleCardStub().For(moduleName, card));
-        }
-
-        private static void RegisterModuleLogType(string moduleName)
-        {
-            var newTypes = new List<(string Name, int Value, Color LogColor)>
-            {
-                ($"{moduleName}Module", -1, Color.white)
-            };
-            FlowLogTypeManager.AddFlowLogTypesBatch(newTypes);
         }
 
         private static void ClearPrefs()

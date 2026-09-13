@@ -71,8 +71,8 @@ namespace FlowIoC.Tests
         [Test]
         public void An_unknown_screen_comes_back_null_rather_than_throwing()
         {
-            // The misses are reported through FlowLogger, which reaches the console only with
-            // ENABLE_LOG on. The flag has to be set inside the test: the runner resets it before
+            // The misses are reported through FlowLogger, which reaches the console in the Editor.
+            // The flag has to be set inside the test: the runner resets it before
             // the test body runs, so a SetUp assignment does not survive.
             LogAssert.ignoreFailingMessages = true;
 

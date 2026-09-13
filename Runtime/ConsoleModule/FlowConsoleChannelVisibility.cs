@@ -8,16 +8,16 @@ namespace FlowIoC.ConsoleModule
 {
     /// <summary>
     /// Which channels one developer has switched on or off in the Flow Console, on top of the
-    /// project defaults the settings asset carries.
+    /// defaults each channel ships with.
     ///
-    /// It lives in EditorPrefs rather than in CD_FlowConsole because that asset is committed, and
-    /// somebody hiding Injection while they chase a signal is nobody else's business - pulled, it
-    /// would switch every other developer's channels to match. The asset keeps only what the
-    /// project agrees on: which channels are on for somebody who has not touched them.
+    /// It lives in EditorPrefs because somebody hiding Injection while they chase a signal is
+    /// nobody else's business - committed, it would switch every other developer's channels to
+    /// match when they pull. What the project agrees on is the default a channel carries: the
+    /// framework's in <see cref="SystemLogChannelTable"/>, a module's on.
     ///
     /// Only the switches the developer threw are stored, as the channel's name and where they put
-    /// it. A channel they never touched is not in the list, so it follows the project default -
-    /// and so does a channel a module added after they last opened the panel.
+    /// it. A channel they never touched is not in the list, so it follows its default - and so
+    /// does a channel a module added after they last opened the panel.
     /// </summary>
     public class FlowConsoleChannelVisibility
     {
@@ -30,22 +30,22 @@ namespace FlowIoC.ConsoleModule
             Load();
         }
 
-        public bool IsShown(CD_FlowConsole.FlowConsoleLogTypeCVO logType)
+        public bool IsShown(FlowLogChannel channel)
         {
-            return _switches.TryGetValue(logType.Name, out bool shown) ? shown : logType.IsVisibleByDefault;
+            return _switches.TryGetValue(channel.Name, out bool shown) ? shown : channel.IsVisibleByDefault;
         }
 
-        public void Show(CD_FlowConsole.FlowConsoleLogTypeCVO logType, bool shown)
+        public void Show(FlowLogChannel channel, bool shown)
         {
-            if (shown == logType.IsVisibleByDefault)
-                _switches.Remove(logType.Name);
+            if (shown == channel.IsVisibleByDefault)
+                _switches.Remove(channel.Name);
             else
-                _switches[logType.Name] = shown;
+                _switches[channel.Name] = shown;
 
             Save();
         }
 
-        /// <summary>Whether any channel stands somewhere other than its project default.</summary>
+        /// <summary>Whether any channel stands somewhere other than its default.</summary>
         public bool HasSwitches => _switches.Count > 0;
 
         public void Reset()

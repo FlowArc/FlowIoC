@@ -42,9 +42,9 @@ namespace FlowIoC.Editor.Modules
                 return index;
             }
 
-            // Recreating this asset costs a rescan and nothing else. Unlike CD_FlowConsole
-            // there is no user data in it to overwrite, which is why "could not load" and
-            // "does not exist" may be treated the same here and nowhere else.
+            // Recreating this asset costs a rescan and nothing else. There is no user data in it to
+            // overwrite, which is why "could not load" and "does not exist" may be treated the same
+            // here.
             EnsureDirectory();
 
             // Before the asset exists, so it is never stageable without the rule already in place.

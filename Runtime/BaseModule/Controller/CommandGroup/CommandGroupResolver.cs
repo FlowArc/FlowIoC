@@ -82,8 +82,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         // The flow this run belongs to, and the flow it was dispatched from. Everything the
         // console records while this resolver is running is tagged with them, which is what lets
         // the window draw a dispatch as a tree instead of a run of unrelated lines. Both stay 0
-        // in a player build, because the calls that fill them carry [Conditional("ENABLE_LOG")]
-        // and are removed by the compiler.
+        // in a release build, because the calls that fill them are conditional on the Editor or
+        // a Development Build and are removed by the compiler elsewhere.
         private int _flowId;
         private int _parentFlowId;
 

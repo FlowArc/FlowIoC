@@ -17,8 +17,8 @@ namespace FlowIoC.Tests
 
         /// <summary>
         /// Every enum value carries its number so that inserting one in the middle cannot
-        /// renumber the assets already on disk. Two values sharing a number would let one
-        /// channel's rows be filtered by the other's toggle.
+        /// renumber what is already on disk. Two values sharing a number would let one channel's
+        /// rows be filtered by the other's toggle.
         /// </summary>
         [Test]
         public void No_two_system_channels_share_a_number()
@@ -29,19 +29,29 @@ namespace FlowIoC.Tests
                 Assert.IsTrue(seen.Add((int) value), $"{value} shares its number with another channel.");
         }
 
+        /// <summary>
+        /// The table is the framework's channels, built from code rather than read from an asset,
+        /// so every value the enum declares is there - except All, which is not a channel anything
+        /// writes to.
+        /// </summary>
         [Test]
-        public void A_fresh_settings_asset_carries_a_row_for_every_channel()
+        public void The_table_carries_a_channel_for_every_framework_channel()
         {
-            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
+            var table = new SystemLogChannelTable();
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            try
+            foreach (FlowLogChannel channel in table.All())
             {
-                foreach (SystemLogType value in Enum.GetValues(typeof(SystemLogType)))
-                    Assert.IsTrue(settings.TryGetLogType((int) value, out _), $"{value} has no row.");
+                Assert.IsTrue(channel.IsFrameworkOwned, channel.Name + " is not framework-owned.");
+                names.Add(channel.Name);
             }
-            finally
+
+            foreach (SystemLogType value in Enum.GetValues(typeof(SystemLogType)))
             {
-                ScriptableObject.DestroyImmediate(settings);
+                if (value == SystemLogType.All)
+                    Assert.IsFalse(names.Contains("All"), "All is not a channel.");
+                else
+                    Assert.IsTrue(names.Contains(value.ToString()), $"{value} has no channel.");
             }
         }
 
@@ -58,132 +68,55 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// A settings asset written before a channel was retired still carries its row, and a
-        /// mandatory row cannot be deleted from the Filters panel. Without the prune the project
-        /// keeps a column nothing can fill and nobody can remove.
-        /// </summary>
-        [Test]
-        public void A_row_for_a_channel_the_enum_no_longer_declares_is_dropped()
-        {
-            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
-
-            try
-            {
-                settings.LogTypes.Add(new CD_FlowConsole.FlowConsoleLogTypeCVO
-                {
-                    Name = "Model", Value = 35, IsVisibleByDefault = true, IsMandatory = true
-                });
-
-                // Looked up once so the name cache holds the stale row. A prune that drops it from
-                // the list and leaves the cache alone still answers this call with it.
-                settings.RebuildCache();
-                Assert.IsTrue(settings.TryGetLogType("Model", out _), "The row under test was never there.");
-
-                Assert.IsTrue(settings.PruneRetiredSystemLogTypes(), "The stale row was not seen.");
-                Assert.IsFalse(settings.TryGetLogType("Model", out _), "The stale row is still there.");
-            }
-            finally
-            {
-                ScriptableObject.DestroyImmediate(settings);
-            }
-        }
-
-        /// <summary>
-        /// The prune reads a row's mandatory flag, not its name, so a game's own channel - which
-        /// is never in the enum - has to survive it.
-        /// </summary>
-        [Test]
-        public void A_projects_own_channel_survives_the_prune()
-        {
-            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
-
-            try
-            {
-                settings.LogTypes.Add(new CD_FlowConsole.FlowConsoleLogTypeCVO
-                {
-                    Name = "PlayerModule", Value = 1000, IsVisibleByDefault = true, IsMandatory = false
-                });
-
-                settings.RebuildCache();
-                settings.PruneRetiredSystemLogTypes();
-
-                Assert.IsTrue(settings.TryGetLogType("PlayerModule", out _), "A project channel was pruned.");
-            }
-            finally
-            {
-                ScriptableObject.DestroyImmediate(settings);
-            }
-        }
-
-        /// <summary>
-        /// Default is a mandatory profile and is not a channel, so the enum cannot vouch for it.
-        /// Pruning it would leave every log written without a profile printing no tag at all.
-        /// </summary>
-        [Test]
-        public void The_Default_profile_survives_the_prune()
-        {
-            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
-
-            try
-            {
-                settings.LogProfiles.Add(new FlowLogProfileData {Name = "Model", IsMandatory = true});
-
-                settings.PruneRetiredSystemProfiles();
-
-                Assert.IsNull(settings.LogProfiles.Find(p => p.Name == "Model"), "The stale profile is still there.");
-                Assert.IsNotNull(settings.LogProfiles.Find(p => p.Name == "Default"), "Default was pruned.");
-            }
-            finally
-            {
-                ScriptableObject.DestroyImmediate(settings);
-            }
-        }
-
-        /// <summary>
         /// A channel Unity writes has an icon for a tag, drawn by the console on the row, so its
         /// profile writes nothing into the message: a line Unity wrote is recorded as Unity wrote
-        /// it. The framework's own channels keep their text tag.
+        /// it. The framework's own channels keep their text tag, in the channel's own colour.
         /// </summary>
         [Test]
         public void The_channels_Unity_writes_carry_no_text_tag()
         {
-            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
+            var channels = new FlowLogChannels(null);
 
-            try
+            foreach (string name in new[] {"Unity", "Compiler", "Shader"})
             {
-                foreach (string name in new[] {"Unity", "Compiler", "Shader"})
-                {
-                    FlowLogProfileData profile = settings.LogProfiles.Find(p => p.Name == name);
-
-                    Assert.IsNotNull(profile, name + " has no profile.");
-                    Assert.IsTrue(string.IsNullOrEmpty(profile.Prefix), name + "'s profile writes a tag.");
-                    Assert.IsNull(settings.GetResolvedProfile(name), "A " + name + " line is decorated.");
-                }
-
-                Assert.AreEqual("[Context]", settings.LogProfiles.Find(p => p.Name == "Context").Prefix);
+                Assert.IsTrue(channels.TryGet(name, out FlowLogChannel channel), name + " is missing.");
+                Assert.IsTrue(channel.IsWrittenByUnity, name + " is not marked as Unity's.");
+                Assert.IsNull(channel.Profile, "A " + name + " line is decorated.");
+                Assert.IsNull(channels.ProfileOf(name));
             }
-            finally
-            {
-                ScriptableObject.DestroyImmediate(settings);
-            }
+
+            Assert.IsTrue(channels.TryGet("Context", out FlowLogChannel context));
+            Assert.AreEqual("[Context]", context.Profile.Prefix);
+            Assert.AreEqual(context.Color, context.Profile.PrefixColor);
+            Assert.IsFalse(context.IsWrittenByUnity);
         }
 
         [Test]
-        public void The_new_channels_are_not_left_white()
+        public void No_framework_channel_is_left_white()
         {
-            var settings = ScriptableObject.CreateInstance<CD_FlowConsole>();
+            foreach (FlowLogChannel channel in new SystemLogChannelTable().All())
+                Assert.AreNotEqual(Color.white, channel.Color, channel.Name + " is white.");
+        }
 
-            try
+        /// <summary>
+        /// What a reader sees before they throw a switch: the game's own traffic and what Unity
+        /// wrote, with the framework's machinery underneath switched off until it is wanted.
+        /// </summary>
+        [Test]
+        public void The_defaults_show_the_traffic_and_hide_the_machinery()
+        {
+            var channels = new FlowLogChannels(null);
+
+            foreach (string on in new[] {"Signal", "Command", "Unity", "Compiler", "Shader"})
             {
-                settings.TryGetLogType((int) SystemLogType.Unity, out var unity);
-                settings.TryGetLogType((int) SystemLogType.Compiler, out var compiler);
-
-                Assert.AreNotEqual(Color.white, unity.LogColor);
-                Assert.AreNotEqual(Color.white, compiler.LogColor);
+                Assert.IsTrue(channels.TryGet(on, out FlowLogChannel channel));
+                Assert.IsTrue(channel.IsVisibleByDefault, on + " is off by default.");
             }
-            finally
+
+            foreach (string off in new[] {"Context", "Injection", "SignalOperation", "CommandOperation", "Function", "Screen", "Pool", "Asset"})
             {
-                ScriptableObject.DestroyImmediate(settings);
+                Assert.IsTrue(channels.TryGet(off, out FlowLogChannel channel));
+                Assert.IsFalse(channel.IsVisibleByDefault, off + " is on by default.");
             }
         }
     }

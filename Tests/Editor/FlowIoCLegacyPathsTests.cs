@@ -15,7 +15,32 @@ namespace FlowIoC.Tests
         [Test]
         public void Every_project_local_asset_FlowIoC_ever_wrote_is_covered()
         {
-            Assert.AreEqual(16, CreateLegacyPaths().AssetMoves.Count);
+            Assert.AreEqual(14, CreateLegacyPaths().AssetMoves.Count);
+            Assert.AreEqual(3, CreateLegacyPaths().AssetsToDelete.Count);
+        }
+
+        /// <summary>
+        /// The settings asset held nothing of its own once its four owners took their parts back,
+        /// so every name it ever had is deleted rather than carried to a new home - and nothing
+        /// asks to move a file to a path that no longer exists.
+        /// </summary>
+        [Test]
+        public void The_console_settings_asset_is_deleted_under_every_name_it_had()
+        {
+            FlowIoCLegacyPaths legacy = CreateLegacyPaths();
+
+            foreach (string retired in new[]
+                     {
+                         "Assets/Resources/FlowConsoleSettings.asset",
+                         "Assets/Plugins/FlowIoC/Resources/FlowConsoleSettings.asset",
+                         "Assets/Plugins/FlowIoC/Resources/CD_FlowConsole.asset"
+                     })
+            {
+                Assert.IsTrue(legacy.AssetsToDelete.Contains(retired), retired + " is not deleted.");
+                Assert.IsFalse(legacy.AssetMoves.Any(move => move.Legacy == retired), retired + " is still moved.");
+            }
+
+            Assert.IsTrue(legacy.FoldersToCleanUp.Contains("Assets/Plugins/FlowIoC/Resources"));
         }
 
         [Test]

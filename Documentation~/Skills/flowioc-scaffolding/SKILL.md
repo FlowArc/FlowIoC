@@ -199,8 +199,9 @@ result rather than a failure. Verify by looking at the project - the module fold
 `CompilationPipeline.RequestScriptCompilation()`, and poll `recompile_status` until it reports
 `completed`. A stale `up_to_date` usually means the refresh has not landed yet.
 
-**The log channel is written on a delayed call.** If `FlowLogType.<Name>Module` is needed
-immediately - because code referring to it is about to compile - force it:
+**The log channel is written from the module index.** Create Module writes the part as soon as the
+index knows the module; a module folder that arrived another way - copied in, or written by hand -
+has no part until the index is rebuilt and the generator runs. Force both:
 
 ```csharp
 asm.GetType("FlowIoC.Editor.CodeGenerator.Detector.ModuleAutoDetector")
