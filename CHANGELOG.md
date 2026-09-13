@@ -154,6 +154,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The mouse wheel did not scroll the Flow Console's rows while the detail panel was open.** The
+  list left the wheel to Unity's scroll view, which takes a notch on the event and hands the new
+  position back on the next pass - and with a row selected that hand-back never came: the notch
+  was used and the list stayed put, while the filters panel beside it scrolled. The list now takes
+  the wheel itself, in window space before the scroll view opens, by the step Unity's scroll views
+  move.
 - **The Flow Console toolbar dropped the search and the player picker with room to spare.** The
   picker was judged by its connection name - `AndroidPlayer(Oneplus_CPH2747@ADB:…)`, wider than
   the label Unity draws on it - and the search was chained to the picker, so at 709 px both went
