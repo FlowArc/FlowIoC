@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using FlowIoC.ConsoleModule;
 
@@ -71,6 +72,54 @@ namespace FlowIoC.Editor.Console
         {
             _present.Remove(playerId);
             _names.Remove(playerId);
+        }
+
+        /// <summary>
+        /// What the intake knows, as one line the bridge parks in SessionState around a domain
+        /// reload: the player stays connected through a recompile and never says hello again,
+        /// while every static here starts empty. Names are escaped so a device called anything
+        /// comes back as it was.
+        /// </summary>
+        public string Serialize()
+        {
+            var text = new System.Text.StringBuilder();
+
+            foreach (int playerId in _present)
+            {
+                if (text.Length > 0) text.Append(';');
+
+                text.Append(playerId).Append('=');
+
+                if (_names.TryGetValue(playerId, out string name))
+                    text.Append(Uri.EscapeDataString(name));
+            }
+
+            return text.ToString();
+        }
+
+        /// <summary>
+        /// Reads Serialize's line back, keeping only the players still connected: one that left
+        /// during the reload sent no disconnect anybody was listening to.
+        /// </summary>
+        public void Restore(string text, IEnumerable<int> connectedPlayerIds)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+
+            var connected = new HashSet<int>(connectedPlayerIds ?? Array.Empty<int>());
+
+            foreach (string record in text.Split(';'))
+            {
+                int equals = record.IndexOf('=');
+                if (equals <= 0) continue;
+
+                if (!int.TryParse(record.Substring(0, equals), out int playerId)) continue;
+                if (!connected.Contains(playerId)) continue;
+
+                _present.Add(playerId);
+
+                string name = Uri.UnescapeDataString(record.Substring(equals + 1));
+                if (!string.IsNullOrEmpty(name)) _names[playerId] = name;
+            }
         }
     }
 }

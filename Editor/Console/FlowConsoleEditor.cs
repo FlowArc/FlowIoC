@@ -634,12 +634,20 @@ namespace FlowIoC.Editor.Console
             float width = position.width;
 
             bool showErrorPause = width >= mandatory + ErrorPauseWidth;
-            bool showEditor = showErrorPause && width >= mandatory + ErrorPauseWidth + editorWidth;
 
-            // A search with something typed in it is never hidden: it is narrowing the list, and a
-            // reader has to be able to see that and clear it.
-            bool showSearch = searching
-                              || (showEditor && width >= mandatory + ErrorPauseWidth + editorWidth + SearchMinWidth);
+            // The picker is judged by the width it really drew at, taken off the last repaint. Until
+            // it has drawn once there is only an estimate from its connection name, which is longer
+            // than the label Unity puts on it, so it is drawn that once and measured rather than
+            // dropped on a guess.
+            bool showEditor = showErrorPause && _connectionState != null
+                              && (width >= mandatory + ErrorPauseWidth + editorWidth || !IsEditorDropdownMeasured());
+
+            // The search is dropped first, and on its own account: what is left after the controls
+            // that are drawn has to hold it at its narrowest. A search with something typed in it
+            // is never hidden - it is narrowing the list, and a reader has to be able to see that
+            // and clear it.
+            float drawn = mandatory + (showErrorPause ? ErrorPauseWidth : 0f) + (showEditor ? editorWidth : 0f);
+            bool showSearch = searching || width >= drawn + SearchMinWidth;
 
             ClearButtonGUI();
 
@@ -665,7 +673,15 @@ namespace FlowIoC.Editor.Console
             // Unity's own attach-to-player picker, where Unity's console puts it. A development
             // player picked here sends its rows over the same connection, through PlayerLogSender.
             if (showEditor)
+            {
                 PlayerConnectionGUILayout.ConnectionTargetSelectionDropdown(_connectionState, EditorStyles.toolbarDropDown);
+
+                if (Event.current.type == EventType.Repaint)
+                {
+                    _measuredEditorDropdownWidth = GUILayoutUtility.GetLastRect().width;
+                    _measuredEditorDropdownName = _connectionState.connectionName;
+                }
+            }
 
             // Flow, Pinned and Time are not here: they are view switches rather than console
             // actions, and they sit at the left end of the bar the gear opens - see SettingsBarGUI.
@@ -780,15 +796,30 @@ namespace FlowIoC.Editor.Console
 
         /// <summary>
         /// How wide the player picker comes out. It sizes itself to the name of what it is attached
-        /// to - "Editor", or a device's name - so it is measured rather than assumed.
+        /// to - "Editor", or a device's name - so it is read off the last repaint that drew it. Until
+        /// there has been one, or when the connection has changed since, the connection name is
+        /// measured instead; Unity draws a shorter label than that name, so the estimate errs wide.
         /// </summary>
         private float EditorDropdownWidth()
         {
+            if (IsEditorDropdownMeasured()) return _measuredEditorDropdownWidth;
+
             string name = _connectionState.connectionName;
             if (string.IsNullOrEmpty(name)) name = "Editor";
 
             return EditorStyles.toolbarDropDown.CalcSize(new GUIContent(name)).x;
         }
+
+        private bool IsEditorDropdownMeasured()
+        {
+            return _connectionState != null && _measuredEditorDropdownWidth > 0f
+                   && _measuredEditorDropdownName == _connectionState.connectionName;
+        }
+
+        /// <summary>The picker's width off the last repaint that drew it, and the connection it was drawn for.</summary>
+        private float _measuredEditorDropdownWidth;
+
+        private string _measuredEditorDropdownName;
 
         private const float SeverityToggleMinWidth = 38f;
 
