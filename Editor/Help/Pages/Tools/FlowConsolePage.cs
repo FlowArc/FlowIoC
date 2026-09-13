@@ -6,6 +6,8 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class FlowConsolePage : HelpPage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public FlowConsolePage() : base(null)
         {
         }
@@ -71,17 +73,26 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "the Source capture, the mirror into Unity's console, how many rows are kept - is "
                 + "yours too, under Edit > Preferences > FlowIoC > Flow Console.");
             painter.SubHeading("A module's colour is the module's own");
+            painter.Image(_images.Get("FlowConsoleFilters.png"),
+                "The Filters panel's Modules group. Every module has a colour from the day it is "
+                + "created - the swatch, and the stripe down the left of its rows.");
             painter.Paragraph(
-                "Every module is coloured from the day it is created, picked from twelve tones by "
-                + "its name, and the colour is written beside the channel in the module's generated "
-                + "FlowModule part. A module that wants a colour of its own says so in its MODULE.md, "
-                + "as a Colour line directly above the generated block, and may declare a profile - "
-                + "the tag on the front of its lines - the same way. Right-click the channel in the "
-                + "Filters panel and choose Colour and profile... to edit both; the window writes the "
-                + "card and regenerates the part, and the console follows on the next compile.");
+                "The colour is picked from twelve tones by the module's name, so the same module is "
+                + "the same colour on every machine, and it is written beside the channel in the "
+                + "module's generated FlowModule part. A module that wants a colour of its own says so "
+                + "in its MODULE.md, as a Colour line directly above the generated block, and may "
+                + "declare a profile - the tag on the front of its lines - the same way. Right-click "
+                + "the channel in the Filters panel and choose Colour and profile... to edit both.");
+            painter.Image(_images.Get("ChannelStyleWindow.png"),
+                "Right-click a module's channel > Colour and profile... The window opens on the "
+                + "colour and profile the module has; Palette puts the colour back on the pick for "
+                + "its name. Apply writes the two lines into the module's MODULE.md and regenerates "
+                + "the part, and the console follows on the next compile. Cancel writes nothing.");
             painter.Code(
                 "Colour: #E5A50A\n"
-                + "Profile: prefix=\"[Analytics]\" prefix-style=bold prefix-colour=#39FF00");
+                + "Profile: prefix=\"[Analytics]\" prefix-style=bold prefix-colour=#39FF00",
+                "The two lines the window writes, above the generated block of MODULE.md. They can be "
+                + "written by hand as well.");
             painter.Paragraph(
                 "A switch hides the channel's plain logs. A warning and an error show whatever "
                 + "its channel's switch, its group's mute or an isolation says - Context is off by "
