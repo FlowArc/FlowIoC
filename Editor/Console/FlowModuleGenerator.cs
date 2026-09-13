@@ -109,6 +109,12 @@ namespace FlowIoC.Editor.Console
                 string moduleFolder = AssetDatabase.GUIDToAssetPath(module.FolderGuid);
                 if (string.IsNullOrEmpty(moduleFolder)) continue;
 
+                // The index can be a scan behind the disk - a module deleted outside the tools is
+                // still listed, and GUIDToAssetPath still answers with the folder it used to be at.
+                // Writing there would put a part and an asmref into a folder that is nothing else,
+                // a ghost module the setup installer then refuses to write over.
+                if (!Directory.Exists(GetFullPath(moduleFolder))) continue;
+
                 moduleCount++;
 
                 string folder = moduleFolder + "/" + GENERATED_FOLDER;
