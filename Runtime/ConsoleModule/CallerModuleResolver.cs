@@ -20,8 +20,8 @@ namespace FlowIoC.ConsoleModule
     /// </summary>
     public class CallerModuleResolver
     {
-        private const string ModuleSuffix = "Module";
-        private const string TestModuleSuffix = "TestModule";
+        private const string MODULE_SUFFIX = "Module";
+        private const string TEST_MODULE_SUFFIX = "TestModule";
 
         private readonly Dictionary<string, string> _byPath = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -46,9 +46,9 @@ namespace FlowIoC.ConsoleModule
             {
                 string folder = segments[index];
 
-                if (!folder.EndsWith(ModuleSuffix, StringComparison.Ordinal)) continue;
-                if (folder.Length == ModuleSuffix.Length) continue;
-                if (folder.EndsWith(TestModuleSuffix, StringComparison.Ordinal)) continue;
+                if (!folder.EndsWith(MODULE_SUFFIX, StringComparison.Ordinal)) continue;
+                if (folder.Length == MODULE_SUFFIX.Length) continue;
+                if (folder.EndsWith(TEST_MODULE_SUFFIX, StringComparison.Ordinal)) continue;
 
                 return folder;
             }

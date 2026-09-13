@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The Module Scanner reports a channel named by hand.** `log-channels`, a check per module:
+  every `FlowLogger` call whose first argument is a string typed by hand, `FlowModule.Default`, or
+  the constant of the very module the file sits in is listed with its file and line, because a log
+  names no channel - the module is read off the file. Fix cuts the channel where only the message
+  follows and writes the module's constant where a profile or a context follows; a literal that is
+  exactly another module's name becomes that module's constant. A Connector naming the module it
+  wires is left alone, a test module's own channel is its parent's, and `LogError("Word", value)` -
+  a bare word and then something that is no string, which is either a typed channel with a
+  variable message or the channel-less overload with its context - is neither reported nor
+  repaired. The calls are read by `LogCallReader`, which tokenises the source rather than matching
+  it: a comma inside the message, a quote inside an interpolation hole and a call commented out are
+  read as what they are.
 - **A Haptic module, ready-made.** `HapticModule` plays the nine presets iOS names - Selection,
   Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - through
   `IHapticService.Play(preset)`, called from the Command that decided the event; it has no signals.

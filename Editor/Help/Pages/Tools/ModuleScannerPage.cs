@@ -60,6 +60,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "Namespace settings - the .csproj.DotSettings at the project root that tells "
                 + "Rider which folders produce a namespace.");
             painter.Bullet(
+                "Log channels - a log names no channel, because the module is read off the file "
+                + "the call sits in. A FlowLogger call whose first argument is a string typed by "
+                + "hand, FlowModule.Default, or the constant of the very module it sits in is "
+                + "reported with its file and line. Fix cuts the channel where only the message "
+                + "follows, and writes the module's constant where a profile or a context follows; "
+                + "a literal that is exactly another module's name becomes that module's constant. "
+                + "A Connector naming the module it wires is left alone.");
+            painter.Bullet(
                 "Module card - every module but a test module carries a MODULE.md, and its "
                 + "generated block still describes the module. A card whose purpose nobody has "
                 + "written is reported but not written for you: saying what a module is for is "
