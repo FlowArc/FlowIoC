@@ -137,6 +137,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `Debug.Log` from a thread reaches the Flow Console.** The editor bridge and the player's
+  sender hooked `Application.logMessageReceived`, which Unity fires for the main thread only, so
+  a line a `Task` or a thread wrote showed in Unity's console and not in Flow Console - in the
+  editor and from a device alike. Both now listen through `UnityLogRelay` on the threaded event
+  and carry a line written off the main thread back onto it: the editor on its next update, the
+  player through its synchronization context. Whether a line is FlowLogger's own write coming
+  back is read on the thread that wrote it, and the flag that says so is per thread.
 - **The pool's addressable loader kept its handles in statics.** Two pool services shared one
   cache reset from a `RuntimeInitializeOnLoadMethod`, and a screen loading the same prefab loaded
   it again. Both loaders are gone; the asset service's registry is the one cache.

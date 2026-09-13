@@ -40,7 +40,9 @@ You never write to these — they are the framework narrating itself. You toggle
 in the console window.
 
 Three of them are not the framework narrating itself. `Unity` carries anything Unity
-wrote — a `Debug.Log`, an exception, a native warning. `Compiler` carries compile errors
+wrote — a `Debug.Log`, an exception, a native warning — from whichever thread wrote it: a
+line a `Task` writes reaches the window on the next editor update, so nothing Unity's own
+console shows is missing here. `Compiler` carries compile errors
 and warnings, taken from `CompilationPipeline`. `Shader` carries a shader that would not
 compile, read off the asset with `ShaderUtil` after it is imported. They are read through
 Unity's public API and nothing else, so a Unity upgrade cannot quietly break them. All

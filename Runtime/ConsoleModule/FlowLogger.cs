@@ -143,9 +143,17 @@ namespace FlowIoC.ConsoleModule
         /// <summary>
         /// True while a log of ours is being handed to Unity's console. The editor bridge reads
         /// it to drop the message Unity hands straight back, so a log that made that round trip
-        /// is recorded once rather than twice.
+        /// is recorded once rather than twice. Per thread, because the hand-back arrives on the
+        /// thread that wrote the log: a line a Task writes while the main thread is mid-write is
+        /// that Task's line, not ours.
         /// </summary>
-        public static bool IsWritingToUnityConsole { get; private set; }
+        public static bool IsWritingToUnityConsole
+        {
+            get => _isWritingToUnityConsole;
+            private set => _isWritingToUnityConsole = value;
+        }
+
+        [ThreadStatic] private static bool _isWritingToUnityConsole;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
