@@ -5,6 +5,18 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The generator no longer writes a part into a module that is gone.** The module index can be a
+  scan behind the disk - a module folder deleted outside the tools is still listed, and
+  `GUIDToAssetPath` still answers with the folder it used to be at - and the generator wrote the
+  part and its asmref there, a ghost module of nothing else, which the setup installer then refused
+  to write over ("already exists"). Found upgrading the template project to `1.14.0` with its
+  `Assets/Modules` deleted by hand: the index listed six modules, the generator wrote six ghosts,
+  and the setup set did not install. A module whose folder is not on disk is skipped now.
+
 ## [1.14.0] - 2026-09-14
 
 ### Added
