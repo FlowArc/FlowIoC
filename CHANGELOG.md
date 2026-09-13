@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A Haptic module, ready-made.** `HapticModule` plays the nine presets iOS names - Selection,
+  Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - through
+  `IHapticService.Play(preset)`, called from the Command that decided the event; it has no signals.
+  iOS plays UIKit's feedback generator of the same name through a 60-line `FlowHaptics.mm` that
+  ships inside the module; Android plays an envelope as one `VibrationEffect.createWaveform`
+  through the Vibrator over JNI, no native library, an off/on pattern where there is no amplitude
+  control and nothing where there is no vibrator. The envelopes are Nice Vibrations' nine tables
+  (Lofelt, MIT) with its 25 ms interpolation reproduced in `float`, so a game moving off that asset
+  feels the same - except Medium, which runs 120 ms rather than 80 after a device run showed a
+  OnePlus firmware performing every step of about 100 ms or under as its own 45 ms click; the Help
+  page carries the table and the measurements. `IsEnabled` and `SetEnabled` keep the player's
+  choice in PlayerPrefs, on by default, and turning off stops a vibration in progress. The
+  `VIBRATE` permission is written into the generated `unityLibrary` manifest by the module's own
+  `IPostGenerateGradleAndroidProject`. The Editor never vibrates: a `SilentHapticPlayer` logs
+  `Play - <preset>` on the module's channel, and `HapticTestScene` ships beside the module with
+  nine buttons and the toggle. The iOS file has not been through an Xcode build yet; the first
+  one is its test. Installed from the Help window like the other ready-made modules.
 - **The asset service is the package's one door to Addressables.** `ScreenModule` and `PoolModule`
   load their addressable prefabs through `IAssetService`, each under an owner of its own -
   `Screen/<managerId>`, `Pool/<groupKey>` - so a prefab both touch is loaded once and released when

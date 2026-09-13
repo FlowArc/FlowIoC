@@ -79,7 +79,8 @@ namespace FlowIoC.Editor.Help
                 new HelpSection(new CounterModulePage()),
                 new HelpSection(new CameraModulePage()),
                 new HelpSection(new AbTestFlowModulePage()),
-                new HelpSection(new WorldPointerModulePage())
+                new HelpSection(new WorldPointerModulePage()),
+                new HelpSection(new HapticModulePage())
             };
 
             HelpSection privateModules = new PrivateModuleSections().Category();

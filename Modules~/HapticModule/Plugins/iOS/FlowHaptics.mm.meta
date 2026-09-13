@@ -1,0 +1,33 @@
+fileFormatVersion: 2
+guid: a508c19d5909bc24d8c8646b8d723d1f
+PluginImporter:
+  externalObjects: {}
+  serializedVersion: 3
+  iconMap: {}
+  executionOrder: {}
+  defineConstraints: []
+  isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyReferenced: 0
+  validateReferences: 1
+  platformData:
+    Any:
+      enabled: 0
+      settings: {}
+    Editor:
+      enabled: 0
+      settings:
+        DefaultValueInitialized: true
+    VisionOS:
+      enabled: 0
+      settings: {}
+    iOS:
+      enabled: 1
+      settings:
+        CompileFlags: -fobjc-arc
+    tvOS:
+      enabled: 0
+      settings: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
