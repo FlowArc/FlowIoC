@@ -41,14 +41,11 @@ namespace Modules.HapticModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_internalSignals.Initialize)
-                .ToSequence<InitializeHapticCommand>();
+            CommandBinder.Bind(_internalSignals.Initialize).ToSequence<InitializeHapticCommand>();
 
-            CommandBinder.Bind(_internalSignals.Play)
-                .ToSequence<PlayHapticCommand>();
+            CommandBinder.Bind(_internalSignals.Play).ToSequence<PlayPresetCommand>();
 
-            CommandBinder.Bind(_internalSignals.SetEnabled)
-                .ToSequence<SetHapticsEnabledCommand>();
+            CommandBinder.Bind(_internalSignals.SetEnabled).ToSequence<ApplyHapticsEnabledCommand>();
         }
 
         public override void Setup()

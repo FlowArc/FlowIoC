@@ -1,28 +1,20 @@
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
-using Modules.HapticModule.Constants;
-using Modules.HapticModule.Models;
 using Modules.HapticModule.Services;
-using UnityEngine;
 
 namespace Modules.HapticModule.Controllers
 {
-    /// <summary>Stores the choice, applies it, and cuts a vibration short when turning off.</summary>
-    internal class SetHapticsEnabledCommand : Command
+    /// <summary>
+    /// A step a game binds to the signal its settings toggle dispatches - a Signal&lt;bool&gt; -
+    /// so the choice reaches the module without a Command of the game's own:
+    /// <c>CommandBinder.Bind(_signals.HapticsToggled).ToSequence&lt;SetHapticsEnabledCommand&gt;()</c>.
+    /// </summary>
+    public class SetHapticsEnabledCommand : Command
     {
         [SignalParam] private bool _on { get; set; }
 
-        [Inject] private IHapticModel _model { get; set; }
-        [Inject] private IHapticPlayer _player { get; set; }
+        [Inject] private IHapticService _haptics { get; set; }
 
-        public override void Execute()
-        {
-            _model.SetEnabled(_on);
-            PlayerPrefs.SetInt(HapticConstants.PrefsKey, _on ? 1 : 0);
-            PlayerPrefs.Save();
-
-            if (!_on)
-                _player.Stop();
-        }
+        public override void Execute() => _haptics.SetEnabled(_on);
     }
 }

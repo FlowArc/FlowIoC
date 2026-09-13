@@ -7,16 +7,22 @@ using UnityEngine;
 
 namespace Modules.HapticModule.Controllers
 {
-    /// <summary>Reads the stored choice into the model and readies the platform. Runs from Setup.</summary>
-    internal class InitializeHapticCommand : Command
+    /// <summary>Stores the choice, applies it, and cuts a vibration short when turning off.</summary>
+    internal class ApplyHapticsEnabledCommand : Command
     {
+        [SignalParam] private bool _on { get; set; }
+
         [Inject] private IHapticModel _model { get; set; }
         [Inject] private IHapticPlayer _player { get; set; }
 
         public override void Execute()
         {
-            _model.SetEnabled(PlayerPrefs.GetInt(HapticConstants.PREFS_KEY, 1) == 1);
-            _player.Initialize();
+            _model.SetEnabled(_on);
+            PlayerPrefs.SetInt(HapticConstants.PREFS_KEY, _on ? 1 : 0);
+            PlayerPrefs.Save();
+
+            if (!_on)
+                _player.Stop();
         }
     }
 }
