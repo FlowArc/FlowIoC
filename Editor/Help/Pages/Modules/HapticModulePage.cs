@@ -50,10 +50,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "iOS file ships inside it. The Editor never vibrates; a device build is where a "
                 + "preset is felt."),
             new HelpTab("Usage", DrawUsage,
-                "Inject IHapticService in a Command and call Play where the decision was made.",
-                "The preset is chosen by the Command that decided the event, which is why the "
-                + "module has no signals. A settings screen reads IsEnabled and dispatches to a "
-                + "Command that calls SetEnabled."),
+                "Bind PlayHapticCommand as a step with its preset, or inject the service and call Play.",
+                "A fixed haptic is a step read from the Context - ToSequence<PlayHapticCommand>"
+                + "(HapticPreset.Success). A preset that depends on a decision is a Play call in the "
+                + "Command that made it. A settings toggle binds SetHapticsEnabledCommand."),
             new HelpTab("Presets", DrawPresets,
                 "What each preset sends, and why two of them feel alike on some Android phones.",
                 "iOS plays the system haptic of the same name. Android plays an envelope through "
@@ -199,20 +199,36 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawUsage(HelpPainter painter)
         {
+            painter.SubHeading("A step in a sequence");
+            painter.Paragraph(
+                "Where a haptic is one fixed step of a flow, bind the module's own PlayHapticCommand "
+                + "and give it the preset where the step is bound. The flow then reads from the "
+                + "Context - which preset, after which step - without opening a Command to find the "
+                + "Play call. It is the same shape as DispatchSignalCommand bound with its signal.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.LevelCompleted)\n"
+                + "    .ToSequence<GrantRewardCommand>()\n"
+                + "    .ToSequence<PlayHapticCommand>(HapticPreset.Success);");
+            painter.Paragraph(
+                "PlayHapticCommand is a Command<HapticPreset>: the value in the binding reaches its "
+                + "Execute(HapticPreset). A step before it may also choose the preset at runtime and "
+                + "hand it on with Release(preset) instead.");
+
+            painter.SubHeading("A call from a Command");
+            painter.Paragraph(
+                "Where the preset is part of a decision - the same coin is a LightImpact when it "
+                + "lands and a Success when it completes the set - the game's own Command injects "
+                + "the service and calls Play at the point where it decided. Nothing happens while "
+                + "haptics are off, for None, or on a platform with nothing to vibrate; none of "
+                + "those is an error.");
             painter.Code(
                 "[Inject] private IHapticService _haptics { get; set; }\n"
                 + "\n"
                 + "public override void Execute()\n"
                 + "{\n"
                 + "    _playerModel.AddCurrency(_amount);\n"
-                + "    _haptics.Play(HapticPreset.Success);\n"
+                + "    _haptics.Play(_amount >= _setSize ? HapticPreset.Success : HapticPreset.LightImpact);\n"
                 + "}");
-
-            painter.Paragraph(
-                "Play is called from the Command that decided the event, because the preset is "
-                + "part of that decision: the same coin is a LightImpact when it lands and a Success "
-                + "when it completes the set. Nothing happens while haptics are off, for None, or "
-                + "on a platform with nothing to vibrate; none of those is an error.");
             painter.Note(
                 "Important: a Mediator may inject nothing but its View, so a button that should "
                 + "click dispatches a signal and a Command plays the preset. A Play call written in "
@@ -221,23 +237,19 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("The on/off choice");
             painter.Paragraph(
                 "A settings screen reads IsEnabled to draw its toggle and dispatches the new value "
-                + "to a Command of its own module, which calls SetEnabled. The choice is stored at "
-                + "once in PlayerPrefs and applies from the next Play; turning haptics off also "
-                + "stops whatever is vibrating.");
+                + "on a Signal<bool>. The module's SetHapticsEnabledCommand reads that bool off the "
+                + "signal and calls SetEnabled, so the sequence needs no Command of the game's own. "
+                + "The choice is stored at once in PlayerPrefs and applies from the next Play; "
+                + "turning haptics off also stops whatever is vibrating.");
             painter.Code(
-                "public class SetHapticsCommand : Command\n"
-                + "{\n"
-                + "    [Inject]      private IHapticService _haptics { get; set; }\n"
-                + "    [SignalParam] private bool           _on      { get; set; }\n"
-                + "\n"
-                + "    public override void Execute() => _haptics.SetEnabled(_on);\n"
-                + "}");
+                "CommandBinder.Bind(_signals.HapticsToggled)\n"
+                + "    .ToSequence<SetHapticsEnabledCommand>();");
 
             painter.SubHeading("Reading the flow");
             painter.Paragraph(
-                "Every call crosses the module's internal signals into a Command - PlayHapticCommand, "
-                + "SetHapticsEnabledCommand - so each one is a step in the Flow Console rather than "
-                + "a method that vanishes into a Service.");
+                "Every call crosses the module's internal signals into a step of its own - "
+                + "PlayPresetCommand, ApplyHapticsEnabledCommand - so a haptic shows in the Flow "
+                + "Console as a step rather than a method that vanishes into a Service.");
         }
 
         private void DrawPresets(HelpPainter painter)

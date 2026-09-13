@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A Haptic module, ready-made.** `HapticModule` plays the nine presets iOS names - Selection,
   Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - through
   `IHapticService.Play(preset)`, called from the Command that decided the event; it has no signals.
+  `PlayHapticCommand` is also a step a game binds with the preset given at the binding -
+  `.ToSequence<PlayHapticCommand>(HapticPreset.Success)`, the way `DispatchSignalCommand` takes its
+  signal - so a fixed haptic reads from the Context, and `SetHapticsEnabledCommand` binds to a
+  settings toggle's `Signal<bool>`.
   iOS plays UIKit's feedback generator of the same name through a 60-line `FlowHaptics.mm` that
   ships inside the module; Android plays an envelope as one `VibrationEffect.createWaveform`
   through the Vibrator over JNI, no native library, an off/on pattern where there is no amplitude

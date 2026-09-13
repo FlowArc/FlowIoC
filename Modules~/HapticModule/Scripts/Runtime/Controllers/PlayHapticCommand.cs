@@ -1,25 +1,21 @@
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using Modules.HapticModule.Enums;
-using Modules.HapticModule.Models;
 using Modules.HapticModule.Services;
 
 namespace Modules.HapticModule.Controllers
 {
-    /// <summary>The one decision a play involves - off, or nothing to play - and then the platform.</summary>
-    internal class PlayHapticCommand : Command
+    /// <summary>
+    /// A step a game binds in a sequence of its own, the preset given where the step is bound:
+    /// <c>.ToSequence&lt;PlayHapticCommand&gt;(HapticPreset.Success)</c>. The flow then reads from
+    /// the Context - which preset, and after which step - without opening a Command to find the
+    /// Play call. A step whose preset is decided at runtime is a game Command injecting
+    /// IHapticService; a previous step may also hand the preset on with Release(preset).
+    /// </summary>
+    public class PlayHapticCommand : Command<HapticPreset>
     {
-        [SignalParam] private HapticPreset _preset { get; set; }
+        [Inject] private IHapticService _haptics { get; set; }
 
-        [Inject] private IHapticModel _model { get; set; }
-        [Inject] private IHapticPlayer _player { get; set; }
-
-        public override void Execute()
-        {
-            if (!_model.IsEnabled || _preset == HapticPreset.None)
-                return;
-
-            _player.Play(_preset);
-        }
+        public override void Execute(HapticPreset preset) => _haptics.Play(preset);
     }
 }
