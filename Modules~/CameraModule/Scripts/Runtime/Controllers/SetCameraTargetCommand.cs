@@ -17,7 +17,7 @@ namespace Modules.CameraModule.Controllers
 
             if (activeCamera == null || _target == null)
             {
-                FlowLogger.LogError(FlowModule.CameraModule, "[SetCameraTargetCommand]: Active camera or target is null.");
+                FlowLogger.LogError("[SetCameraTargetCommand]: Active camera or target is null.");
                 return;
             }
 

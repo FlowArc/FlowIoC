@@ -284,10 +284,26 @@ one the Profiler is on.
 ```csharp
 using FlowIoC.ConsoleModule;
 
+FlowLogger.Log("Execute - AddCurrencyCommand");
+FlowLogger.LogWarning("Currency clamped to zero.");
+FlowLogger.LogError("Save slot is not writable.");
+FlowLogger.LogLong(serializedPayload);
+```
+
+A line names no channel. The compiler writes the file the call sits in into the call —
+`[CallerFilePath]`, resolved when the code compiles, not when it runs — and the module is in
+the path: a Command under `Modules/PlayerModule/…` logs on `PlayerModule`, a screen under
+`MainModule/zScreenModules/MainScreenModule/…` on `MainScreenModule`, a test module's files on
+the module they test, and a file outside any module on `Default`. The same call carries the line
+number, so the row knows its file and line without a stack being walked, whatever *Stack Trace
+Capture* says. A log line copied from one module into another lands on the right module by
+itself, because nothing in the line says which module it was written for.
+
+Name the channel by hand only where the file is not the module the line is about — a Connector
+reporting on the module it wires, a test outside the modules — with the module's constant:
+
+```csharp
 FlowLogger.Log(FlowModule.PlayerModule, "Execute - AddCurrencyCommand");
-FlowLogger.LogWarning(FlowModule.PlayerModule, "Currency clamped to zero.");
-FlowLogger.LogError(FlowModule.PlayerModule, "Save slot is not writable.");
-FlowLogger.LogLong(FlowModule.PlayerModule, serializedPayload);
 ```
 
 `LogLong` is for output you want kept intact — a JSON body, a serialized save — that
@@ -304,11 +320,18 @@ Every one of these methods except `LogError` carries `[Conditional("UNITY_EDITOR
 is defined. In the Editor and in a Development Build the logs are there; in a release build the
 calls are removed by the compiler, including the string interpolation that would have built the
 message. This is why you can leave `"..."` logs in shipping code without paying for them, and why
-there is no scripting define to manage: Unity defines both symbols itself.
+there is no scripting define to manage: Unity defines both symbols itself. `LogError` is the one
+that ships, and a channel-less `LogError` ships with the path of the file it sits in as a string
+literal - the compiler wrote it there. That is the same path a stack trace carries in a
+development build; name the channel by hand at an error site if a release build must not carry it.
 
 ---
 
 ## Formatting With Profiles
+
+A module's everyday look is the `Profile:` line in its card - every line the module logs without
+naming a channel wears it. A `FlowLogProfile` passed by hand is for one line that should stand out
+from the rest, and the call names the channel with it.
 
 A `FlowLogProfile` decorates a message with a prefix, a postfix, colours and styles.
 It is a fluent builder, so a module can define its profiles once and reuse them.
@@ -444,30 +467,36 @@ Debug.Log("ValidatePurchaseCommand start");
 Debug.Log("ValidatePurchaseCommand end");
 ```
 
-### One channel per module
+### Let the file name the channel
 
 ```csharp
-// ✅ Auto-registered, so the console can filter to just this module.
+// ✅ Written under Modules/EconomyModule, so it logs on EconomyModule - and still does
+//    after it is copied into another module.
+FlowLogger.Log("Granted 100 soft currency.");
+```
+
+```csharp
+// ❌ A channel named from inside the module it names. It says nothing the path did not,
+//    and the day the line is pasted into ShopModule it keeps logging as Economy.
 FlowLogger.Log(FlowModule.EconomyModule, "Granted 100 soft currency.");
 ```
 
 ```csharp
-// ❌ Everything on Default. The filter becomes useless and you are back to reading
-//    a wall of text.
-FlowLogger.Log(FlowModule.Default, "Granted 100 soft currency.");
+// ❌ Two strings are channel then message. This logs "Granted 100 soft currency." on a
+//    channel called "Economy" that no module owns - no colour, no switch, no card.
+FlowLogger.Log("Economy", "Granted 100 soft currency.");
 ```
 
 ### Say what happened, not that you got here
 
 ```csharp
 // ✅ The line is useful six months later, in a bug report from a player.
-FlowLogger.Log(FlowModule.EconomyModule,
-    $"Purchase '{_itemId}' for {_price} {_currencyType}; balance now {_model.Balance}.");
+FlowLogger.Log($"Purchase '{_itemId}' for {_price} {_currencyType}; balance now {_model.Balance}.");
 ```
 
 ```csharp
 // ❌ Tells you the method ran, which the Command channel already told you.
-FlowLogger.Log(FlowModule.EconomyModule, "PurchaseCommand executed");
+FlowLogger.Log("PurchaseCommand executed");
 ```
 
 ### Reuse profiles
@@ -490,13 +519,13 @@ FlowLogger.Log(FlowModule.EconomyModule, message,
 
 ```csharp
 // ✅ An error is a state the game cannot recover from on its own.
-FlowLogger.LogError(FlowModule.SaveModule, "Save file is corrupt; falling back to defaults.");
+FlowLogger.LogError("Save file is corrupt; falling back to defaults.");
 ```
 
 ```csharp
 // ❌ Errors used for flow control. The error filter fills with expected outcomes and
 //    stops being the first place anyone looks.
-FlowLogger.LogError(FlowModule.ShopModule, "Player cannot afford this item.");
+FlowLogger.LogError("Player cannot afford this item.");
 ```
 
 ---
@@ -532,8 +561,16 @@ write it again. Never edit a part by hand; it is overwritten.
 
 ### `FlowLogger.Log(SystemLogType.Signal, ...)` does not compile
 
-The `SystemLogType` overloads are `internal` — they belong to the framework. Game
-code uses the string overloads with a `FlowModule` constant.
+The `SystemLogType` overloads are `internal` — they belong to the framework, and the framework's
+channels are the framework's to write on. Game code logs the message alone and the module comes
+from the file; a line about another module names it with its `FlowModule` constant.
+
+### A line landed on `Default` that should be on my module
+
+The channel is read off the file's path, and the path had no folder named `*Module` above the
+file - the script sits outside `Modules/`, or the module's folder was renamed by hand to something
+without the suffix. Move the file into the module, or name the channel with the module's
+`FlowModule` constant at that one call.
 
 ### Logs are missing their stack trace on device
 

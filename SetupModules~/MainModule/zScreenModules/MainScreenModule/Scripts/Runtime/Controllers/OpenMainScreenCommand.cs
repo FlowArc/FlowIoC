@@ -24,7 +24,7 @@ namespace Modules.MainModule.MainScreenModule.Controllers
         {
             Retain();
 
-            FlowLogger.Log(FlowModule.MainScreenModule, "Execute - OpenMainScreenCommand");
+            FlowLogger.Log("Execute - OpenMainScreenCommand");
 
             try
             {
@@ -34,8 +34,7 @@ namespace Modules.MainModule.MainScreenModule.Controllers
 
                 if (screen == null)
                 {
-                    FlowLogger.LogError(FlowModule.MainScreenModule,
-                        "OpenMainScreenCommand - the screen did not open.");
+                    FlowLogger.LogError("OpenMainScreenCommand - the screen did not open.");
                     Stop();
                     return;
                 }
@@ -44,8 +43,7 @@ namespace Modules.MainModule.MainScreenModule.Controllers
             }
             catch (Exception exception)
             {
-                FlowLogger.LogError(FlowModule.MainScreenModule,
-                    $"OpenMainScreenCommand threw while opening the screen: {exception}");
+                FlowLogger.LogError($"OpenMainScreenCommand threw while opening the screen: {exception}");
                 Stop();
             }
         }

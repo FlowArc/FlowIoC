@@ -141,6 +141,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `FlowLogTypeGenerator` is `FlowModuleGenerator`, `LogTypePartCheck` is `FlowModulePartCheck`
   (id `module-part`), and the generator no longer runs on its own delayed call: the migration
   bootstrap runs it on the first update tick, which fires with the Editor unfocused.
+- **A log names no channel.** `FlowLogger.Log("…")`, `LogWarning`, `LogError` and `LogLong` take
+  the message alone: the compiler writes the caller's file into the call through
+  `[CallerFilePath]`, and `CallerModuleResolver` reads the module off the path - the innermost
+  folder named `*Module` above the file, so a Command under `Modules/PlayerModule/…` logs on
+  `PlayerModule`, a screen under `zScreenModules/MainScreenModule/…` on `MainScreenModule`, a test
+  module's files on the module they test, and a file outside any module on `Default`. The same
+  call carries `[CallerLineNumber]`, so a plain log knows its file and line without a stack being
+  walked whatever the capture setting says; an error keeps its stack and uses the two only where the
+  capture found nothing. A line copied from one module into another lands on the right module by
+  itself. The channel-first overloads stay for the one place the file is not the module the line is
+  about - a Connector reporting on the module it wires - and two strings are still channel then
+  message. The shipped modules log this way, as the example; the framework's own lines keep the
+  `SystemLogType` overloads, which stay `internal`. A channel-less `LogError` embeds the file's
+  path as a literal, in a release build too - name the channel at an error site that must not.
 - **Logging compiles only in the Editor and in a Development Build.** Every plain log and warning
   carries `[Conditional("UNITY_EDITOR")]` and `[Conditional("DEVELOPMENT_BUILD")]` in place of
   `[Conditional("ENABLE_LOG")]`; the two are OR'd, so the calls stay wherever either symbol is

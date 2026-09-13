@@ -23,8 +23,7 @@ namespace Modules.CounterModule.Controllers
             {
                 if (!_counterModel.DataMap.TryGetValue(_request.Id, out CounterVO counter))
                 {
-                    FlowLogger.LogError(FlowModule.CounterModule,
-                        $"RemoveCallbacksCommand - no counter is running with id '{_request.Id}'.");
+                    FlowLogger.LogError($"RemoveCallbacksCommand - no counter is running with id '{_request.Id}'.");
 
                     Release();
                     return;

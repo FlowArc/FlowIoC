@@ -20,7 +20,7 @@ namespace Modules.HapticModule.Editor
 
             if (!File.Exists(manifestPath))
             {
-                FlowLogger.LogError(FlowModule.HapticModule,
+                FlowLogger.LogError(
                     $"OnPostGenerateGradleAndroidProject - no AndroidManifest.xml at {manifestPath}, so android.permission.VIBRATE was not added and nothing will vibrate.");
                 return;
             }
@@ -30,12 +30,12 @@ namespace Modules.HapticModule.Editor
 
             if (after == before)
             {
-                FlowLogger.Log(FlowModule.HapticModule, "OnPostGenerateGradleAndroidProject - android.permission.VIBRATE was already in the unityLibrary manifest");
+                FlowLogger.Log("OnPostGenerateGradleAndroidProject - android.permission.VIBRATE was already in the unityLibrary manifest");
                 return;
             }
 
             File.WriteAllText(manifestPath, after);
-            FlowLogger.Log(FlowModule.HapticModule, "OnPostGenerateGradleAndroidProject - android.permission.VIBRATE added to the unityLibrary manifest");
+            FlowLogger.Log("OnPostGenerateGradleAndroidProject - android.permission.VIBRATE added to the unityLibrary manifest");
         }
     }
 }

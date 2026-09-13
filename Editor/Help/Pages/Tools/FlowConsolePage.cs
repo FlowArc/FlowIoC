@@ -131,10 +131,24 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
             painter.SubHeading("Logging from your own code");
             painter.Code(
-                "FlowLogger.Log(FlowModule.PlayerModule,\n"
-                + "    \"Execute - AddCurrencyCommand\");\n"
-                + "\n"
-                + "FlowLogger.LogError(FlowModule.PlayerModule, \"Currency went negative.\");");
+                "FlowLogger.Log(\"Execute - AddCurrencyCommand\");\n"
+                + "FlowLogger.LogWarning(\"Currency clamped to zero.\");\n"
+                + "FlowLogger.LogError(\"Currency went negative.\");");
+            painter.Paragraph(
+                "A line names no channel. The compiler writes the file the call sits in into the "
+                + "call, and the module is in the path: a Command under Modules/PlayerModule logs on "
+                + "PlayerModule, a screen under zScreenModules/MainScreenModule on MainScreenModule, "
+                + "a test module's files on the module they test, and a file outside any module on "
+                + "Default. The same call carries the line, so the row knows its file and line "
+                + "without a stack being walked. A line copied into another module lands on that "
+                + "module by itself.");
+            painter.Paragraph(
+                "Name the channel by hand only where the file is not the module the line is about "
+                + "- a Connector reporting on the module it wires - and then with the module's "
+                + "constant. Two strings are channel then message, so a plain word in the first "
+                + "place is a channel no module owns.");
+            painter.Code(
+                "FlowLogger.Log(FlowModule.PlayerModule, \"Execute - AddCurrencyCommand\");");
             painter.Note(
                 "Spell the names out. A log message never uses nameof: written inside "
                 + "AddCurrencyCommand, nameof(AddCurrencyCommand) is a real reference to the type, "

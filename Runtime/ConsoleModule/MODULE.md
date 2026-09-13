@@ -24,6 +24,13 @@ command log, player connection, attach to player, device logs, PlayerLogSender, 
   `Profile:` lines of its card, the palette picking by name when the card says nothing.
   `FlowLogChannels` reads every `const string` on `FlowModule` back by reflection, so nothing keeps
   a second list of channels.
+- **A log names no channel.** `FlowLogger.Log("…")` takes the message alone; the compiler writes
+  the caller's file into the call (`[CallerFilePath]`) and `CallerModuleResolver` reads the module
+  off the path, the innermost `*Module` folder above the file, a `*TestModule` folder passed over.
+  A line copied between modules lands on the right module by itself, and a plain log knows its
+  file and line without a stack being walked. The channel-first overloads stay for a Connector
+  reporting on the module it wires; the `SystemLogType` overloads are `internal`, so the
+  framework's channels are written only by the framework.
 - **Logging compiles only in the Editor and in a Development Build.** Every plain log carries
   `[Conditional("UNITY_EDITOR")]` and `[Conditional("DEVELOPMENT_BUILD")]`, OR'd, in place of an
   `ENABLE_LOG` define FlowIoC used to write into every platform's PlayerSettings and fight any
