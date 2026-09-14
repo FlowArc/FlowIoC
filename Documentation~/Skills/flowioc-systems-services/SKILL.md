@@ -91,8 +91,26 @@ to paint them.
    `Commands` - `IHapticService.Commands.Play`, never a top-level `PlayHapticCommand`. The one name
    a game knows, the interface it injects, is then also where its steps are found: type the
    interface, press `.`, and `Commands` lists every step it ships and nothing else. The step is a
-   normal class - `Command<HapticPreset>` with `[Inject] IHapticService` - written inside the
-   interface file. The module's own steps stay top-level in `Controllers/`, internal, verb-first.
+   normal class - `Command<HapticPreset>` with `[Inject] IHapticService` - in a file of its own
+   beside the interface, `IHapticService.Commands.Play.cs`:
+
+   ```csharp
+   public partial interface IHapticService
+   {
+       public static partial class Commands
+       {
+           public class Play : Command<HapticPreset>
+           {
+               [Inject] private IHapticService _haptics { get; set; }
+               public override void Execute(HapticPreset preset) => _haptics.Play(preset);
+           }
+       }
+   }
+   ```
+
+   The interface file declares the empty `partial class Commands` with its doc and nothing more,
+   so the contract stays readable on its own. The module's own steps stay top-level in
+   `Controllers/`, internal, verb-first.
 
 Exceptions aside, those two are the whole list.
 

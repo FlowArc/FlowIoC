@@ -25,10 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now also where its steps are found: type the interface, press `.`, and `Commands` lists every
   step it ships and nothing else. The path carries no module name, so a Rename Module never
   touches a consumer's Context, and a module with two interfaces splits its steps by itself. The
-  step is a normal class written inside the interface file; the module's own steps -
+  step is a normal class in a file of its own beside the interface -
+  `IHapticService.Commands.Play.cs`, the interface and its `Commands` class `partial`, so the
+  interface file stays the contract alone; the module's own steps -
   `PlayPresetCommand`, `BeginSetCommand` - stay top-level in `Controllers/`, internal, verb-first.
   A diagnostic prints the nested path (`IHapticService.Commands.Play executed as Sequence`),
-  through `CommandDisplayName`, and the Flow Console opens the interface's file for it.
+  through `CommandDisplayName`, and the Flow Console opens the step's own file for it.
   `DispatchSignalCommand` is `SignalDispatchCommand`; `RetryCommand` is a base class a game
   derives from, not a step it binds, and keeps its name. A project on the old names gets a
   compile error at each binding that uses one.

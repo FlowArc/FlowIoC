@@ -79,7 +79,8 @@ what is true whatever you are about to do.
   `Controllers/` is a step a Service ships for other modules to bind: it is nested in the
   Service's interface under a static class `Commands` - `IHapticService.Commands.Play`, bound as
   `.ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)` - so the one name a game knows
-  is also where its steps are found.
+  is also where its steps are found. Each step is a file of its own beside the interface,
+  `IHapticService.Commands.Play.cs`, the interface and `Commands` marked `partial`.
 - A Model owns the module's state and its data, and the rules that keep both valid. It knows
   nothing about Views, Commands, or any other module.
 - A Model never subscribes to a signal. Nothing reaches in and changes its state: an

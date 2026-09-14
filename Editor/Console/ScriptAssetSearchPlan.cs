@@ -56,6 +56,18 @@ namespace FlowIoC.Editor.Console
 
             if (!string.IsNullOrEmpty(blameTypeName))
             {
+                // A step a Service ships is nested - Ns.IHapticService+Commands+Play - and written in
+                // a file named the way its binding reads, IHapticService.Commands.Play.cs, so that
+                // file is tried first. The outermost type's file is the fallback, for a nested type
+                // declared inline.
+                if (IsNested(blameTypeName))
+                {
+                    attempts.Add(new ScriptSearchAttempt
+                    {
+                        Kind = ScriptSearchKind.FileName, Value = NestedFileNameOf(blameTypeName), LineNumber = 0
+                    });
+                }
+
                 attempts.Add(new ScriptSearchAttempt
                 {
                     Kind = ScriptSearchKind.BlameTypeName, Value = OutermostTypeOf(blameTypeName), LineNumber = 0
@@ -79,15 +91,29 @@ namespace FlowIoC.Editor.Console
             return attempts;
         }
 
+        private bool IsNested(string typeName) => typeName.IndexOf('+') >= 0;
+
         /// <summary>
-        /// A nested type is declared in its outermost type's file. Reflection spells the chain with
-        /// '+' - <c>Modules.HapticModule.Services.IHapticService+Commands+Play</c> - and the file to
-        /// open is <c>IHapticService.cs</c>, so everything from the first '+' on is dropped.
+        /// Reflection spells a nested chain with '+' - <c>Modules.HapticModule.Services.IHapticService+Commands+Play</c>.
+        /// The outermost type, <c>Modules.HapticModule.Services.IHapticService</c>, is what a file of
+        /// the ordinary shape declares, so everything from the first '+' on is dropped.
         /// </summary>
         private string OutermostTypeOf(string typeName)
         {
             int nested = typeName.IndexOf('+');
             return nested < 0 ? typeName : typeName.Substring(0, nested);
+        }
+
+        /// <summary>
+        /// The same chain as a file name: the namespace off, and the '+' as the '.' the binding is
+        /// written with - <c>IHapticService.Commands.Play</c>.
+        /// </summary>
+        private string NestedFileNameOf(string typeName)
+        {
+            int nested = typeName.IndexOf('+');
+            int lastDot = typeName.LastIndexOf('.', nested);
+            string chain = lastDot < 0 ? typeName : typeName.Substring(lastDot + 1);
+            return chain.Replace('+', '.');
         }
 
         private static string ToProjectRelative(string normalized)
