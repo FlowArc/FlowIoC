@@ -39,8 +39,9 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
 
                 GameObject prefab = await _assets.LoadAssetAsync<GameObject>(address, owner);
 
-                // Two loads of one entry are one screen: the second await lands after the first
-                // instantiated, and a second instance would be a leak nothing holds.
+                // An entry that is loaded is not instantiated again - a second instance would be a
+                // leak nothing holds. A load still out is shared one level up, in LoadSubService,
+                // so two callers reaching the entry together never get here twice.
                 if (entry.Loaded != null)
                     return entry.Loaded;
 

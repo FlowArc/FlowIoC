@@ -191,12 +191,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("The shipped boot");
             painter.Paragraph(
-                "MainContext binds the boot as one chain: begin the Boot set, announce BootStarted "
-                + "for what may run beside the boot, preload the screens and fill the pools in "
-                + "parallel, wait for the set, announce Started. The loading screen opens on the "
-                + "set's own signal, through LoadingConnectorSubContext, and closes when the set ends.");
+                "MainContext binds the boot as one chain: load the loading screens into the pool, "
+                + "begin the Boot set, announce BootStarted for what may run beside the boot, "
+                + "preload the screens and fill the pools in parallel, wait for the set, announce "
+                + "Started. The loading screen opens on the set's own signal, through "
+                + "LoadingConnectorSubContext, and closes when the set ends. It goes into the pool "
+                + "first because nothing is up to show its own load on - and a pooled open is on "
+                + "stage the same frame, so every load after it is drawn on the bar.");
             painter.Code(
                 "CommandBinder.Bind(_internalSignals.Launch)\n"
+                + "    .ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)\n"
                 + "    .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)\n"
                 + "    .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.BootStarted)\n"
                 + "    .ToParallel<PreloadScreensCommand>()\n"

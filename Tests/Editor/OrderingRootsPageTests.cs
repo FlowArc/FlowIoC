@@ -20,10 +20,15 @@ namespace FlowIoC.Tests
         /// <summary>Where each Root's initializeOrder actually lives, relative to the package root.</summary>
         private readonly Dictionary<string, string> _prefabs = new Dictionary<string, string>
         {
+            {"AbTestFlowServiceRoot", "Modules~/AbTestFlowModule/Prefabs/AbTestFlowServiceRoot.prefab"},
+            {"AssetServiceRoot", "Assets/Prefabs/AssetServiceRoot.prefab"},
             {"ScreenServiceRoot", "Assets/Prefabs/ScreenServiceRoot.prefab"},
             {"PoolServiceRoot", "Assets/Prefabs/PoolServiceRoot.prefab"},
-            {"AssetServiceRoot", "Assets/Prefabs/AssetServiceRoot.prefab"},
+            {"HapticServiceRoot", "Modules~/HapticModule/Prefabs/HapticServiceRoot.prefab"},
+            {"WorldPointerServiceRoot", "Modules~/WorldPointerModule/Prefabs/WorldPointerServiceRoot.prefab"},
+            {"LoadingServiceRoot", "SetupModules~/LoadingModule/Prefabs/LoadingServiceRoot.prefab"},
             {"GameplayRoot", "SetupModules~/GameplayModule/Prefabs/GameplayRoot.prefab"},
+            {"CameraRoot", "Modules~/CameraModule/Prefabs/CameraRoot.prefab"},
             {"ScreenRoot", "SetupModules~/ScreenModule/Prefabs/ScreenRoot.prefab"},
             {"MainRoot", "SetupModules~/MainModule/Prefabs/MainRoot.prefab"},
             {"ConnectorRoot", "SetupModules~/ConnectorModule/Prefabs/ConnectorRoot.prefab"}
@@ -65,7 +70,7 @@ namespace FlowIoC.Tests
         [Test]
         public void The_services_come_up_before_the_game_s_own_modules()
         {
-            var services = new[] {"ScreenServiceRoot", "PoolServiceRoot", "AssetServiceRoot"};
+            string[] services = _services;
 
             int firstModule = _page.Seats
                 .Where(seat => !services.Contains(seat.Key))
@@ -74,6 +79,31 @@ namespace FlowIoC.Tests
             foreach (string service in services)
                 Assert.Less(_page.Seats[service], firstModule);
         }
+
+        /// <summary>
+        /// The services sit on the tens, in the order the boot reads - and the two that put data in
+        /// place before anything reads it come first, so a service whose PostConstruct reads config
+        /// is seated after the A/B module that rewrites it.
+        /// </summary>
+        [Test]
+        public void The_services_sit_on_the_tens_after_the_data_seats()
+        {
+            foreach (string service in _services)
+            {
+                Assert.Zero(_page.Seats[service] % 10, $"'{service}' is not on a ten.");
+                Assert.LessOrEqual(_page.Seats[service], -10, $"'{service}' has left the negative band.");
+            }
+
+            foreach (string reader in new[] {"PoolServiceRoot", "LoadingServiceRoot"})
+                Assert.Greater(_page.Seats[reader], _page.Seats["AbTestFlowServiceRoot"],
+                    $"'{reader}' reads config in PostConstruct and has to bind after the A/B module.");
+        }
+
+        private readonly string[] _services =
+        {
+            "AbTestFlowServiceRoot", "AssetServiceRoot", "ScreenServiceRoot", "PoolServiceRoot",
+            "HapticServiceRoot", "WorldPointerServiceRoot", "LoadingServiceRoot"
+        };
 
         [Test]
         public void The_page_ships_the_hierarchy_it_shows()

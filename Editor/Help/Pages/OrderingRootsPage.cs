@@ -31,10 +31,15 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         public IReadOnlyDictionary<string, int> Seats { get; } = new Dictionary<string, int>
         {
-            {"ScreenServiceRoot", -99},
-            {"PoolServiceRoot", -2},
-            {"AssetServiceRoot", -1},
+            {"AbTestFlowServiceRoot", -90},
+            {"AssetServiceRoot", -80},
+            {"ScreenServiceRoot", -70},
+            {"PoolServiceRoot", -60},
+            {"HapticServiceRoot", -50},
+            {"WorldPointerServiceRoot", -30},
+            {"LoadingServiceRoot", -10},
             {"GameplayRoot", 0},
+            {"CameraRoot", 1},
             {"ScreenRoot", 99},
             {"MainRoot", 100},
             {"ConnectorRoot", 98}
@@ -60,9 +65,15 @@ namespace FlowIoC.Editor.Help.Pages
             painter.SubHeading("The bands");
             painter.Bullet("The whole range is -100 to 100. Nothing needs to sit outside it.");
             painter.Bullet(
-                "-100 - a module that must finish before anything reads its data. Restoring saved data is the case this exists for.");
-            painter.Bullet("Negative - Services. A Service depends on nothing else, so it comes up first and is ready for everyone.");
-            painter.Bullet("0 to 97 - the game's own modules and Systems. Gameplay, input, camera, whatever this game is made of.");
+                "Negative - Services, on the tens, in the order the boot reads. -100 and -90 are the two "
+                + "that put data in place before anything reads it: saved data restored at -100, config "
+                + "rewritten from an A/B assignment at -90. PostConstruct runs during the binding pass, so "
+                + "these go first, and a service whose PostConstruct reads config sits after -90.");
+            painter.Bullet(
+                "-80 - the asset service, the door every Addressables load goes through. -70 the screen "
+                + "service and -60 the pool service, which load through it. Then the helpers: -50 haptics, "
+                + "-30 world pointers, -10 the loading service - last of the services, because it opens a screen.");
+            painter.Bullet("0 to 97 - the game's own modules and Systems. Gameplay, camera, whatever this game is made of.");
             painter.Bullet("98 - ConnectorRoot. After every module it wires, so the scene reads as modules first and wiring after them.");
             painter.Bullet(
                 "99 - ScreenRoot. The screen manager owns the layers the screens open in, so it is up before the flow that opens the first screen.");
@@ -70,9 +81,9 @@ namespace FlowIoC.Editor.Help.Pages
 
             painter.Space();
             painter.Note(
-                "The shipped Roots use -99 for the screen service, -2 for the pool service, -1 for "
-                + "the asset service, 0 for gameplay and input, 1 for the camera system. Inside a "
-                + "band the exact number rarely matters - two modules that never touch can both sit at 0.");
+                "A game's own service takes a free ten, or a unit below the ten it leans on - -69 for "
+                + "one that wants the screen service bound first. Inside the 0 to 97 band the exact "
+                + "number rarely matters - two modules that never touch can both sit at 0.");
 
             painter.Separator();
             painter.SubHeading("The scene reads top to bottom");
@@ -83,7 +94,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "trap for the next reader.");
 
             painter.Image(_images.Get("MainSceneHierarchy.png"),
-                "MainScene: the two services, then the game's modules, then ConnectorRoot, ScreenRoot and MainRoot.");
+                "MainScene: the services in boot order, then the game's modules, then ConnectorRoot, ScreenRoot and MainRoot.");
 
             painter.Separator();
             painter.SubHeading("What the order actually buys");
@@ -108,7 +119,8 @@ namespace FlowIoC.Editor.Help.Pages
         private void DrawPicking(HelpPainter painter)
         {
             painter.SubHeading("Where a new Root goes");
-            painter.Bullet("A Service - self-contained, not specific to this game - takes a negative number, below anything that injects it.");
+            painter.Bullet(
+                "A Service - self-contained, not specific to this game - takes a free ten in the negative band, or a unit below the ten it leans on. After -90 if its PostConstruct reads config, and below anything that injects it at bind time.");
             painter.Bullet(
                 "A module or System this game is made of takes something in 0 to 97. Use 0 unless another Root genuinely has to bind first.");
             painter.Bullet(
@@ -124,7 +136,9 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet(
                 "Cross-module work done in Launch that belonged in Setup, then patched by nudging Initialize Order. The phase is the fix; the number is not.");
             painter.Bullet(
-                "A Service given a positive number. It cannot need one - if it does it is a System, and it belongs in the 0 to 98 band with a name to match.");
+                "A Service given a positive number. It cannot need one - if it does it is a System, and it belongs in the 0 to 97 band with a name to match.");
+            painter.Bullet(
+                "A service whose PostConstruct reads config seated above -90. It reads the original before the A/B variant lands, and nothing is logged, because nothing went wrong.");
 
             painter.Space();
             painter.Note(

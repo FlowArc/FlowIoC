@@ -68,7 +68,7 @@ MonoBehaviour:
     ScreenTag: 0
     ScreenHasShowAnimation: 0
     ScreenHasHideAnimation: 0
-  initializeOrder: -1
+  initializeOrder: -10
   AutoBindInjections: 1
   AutoBindMediations: 1
   AutoInitialize: 1

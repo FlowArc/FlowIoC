@@ -3,6 +3,7 @@
   "references": [
     "FlowIoC",
     "Modules.Loading",
+    "Modules.Loading.Shared",
     "Modules.Main.Signals"
   ],
   "includePlatforms": [],

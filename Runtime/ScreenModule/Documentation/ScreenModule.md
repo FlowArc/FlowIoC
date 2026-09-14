@@ -347,6 +347,24 @@ _screenService.Load.All(completeCallback: OnEverythingReady);
 Tag the screens a given phase needs, and preload the tag rather than naming each
 screen — the tag is declared once, in each screen's `ScreenCVO`.
 
+A preload is also a step a sequence binds, with the tag given where the step is bound:
+
+```csharp
+CommandBinder.Bind(_internalSignals.Launch)
+    .ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)   // the loading screens, into the pool
+    .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)            // opens one of them - from the pool, this frame
+    .ToParallel<PreloadScreensCommand>();                                // everything else, drawn on it
+```
+
+`LoadScreensByTagCommand` holds the sequence until the last screen of the tag is in. That is
+what makes the open that follows a *pooled* open: no load, on stage the same frame. A loading
+screen cannot show its own load, so it is loaded before the set it shows begins, and every
+load after that one is what the bar reports.
+
+A screen an `Open` is loading when a preload reaches its entry — or the other way round — is
+loaded once. The two callers await the one load; the instance goes to whoever is showing it,
+and the pool takes it only if nobody is.
+
 ---
 
 ## Managers, Layers and Tags

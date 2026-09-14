@@ -365,26 +365,26 @@ can be and `100` is as late.
 
 | Order | Who sits there | Why |
 |---|---|---|
-| -100 | A module that must finish before anything reads its data | `PostConstruct` runs during the binding pass, and each Root finishes its own before the next begins - so being first is what puts data in place before anything reads it. Restoring saved data is the case this exists for. |
-| negative | Services | A Service depends on nothing else, so it comes up first and is ready for everyone. |
-| 0 – 97 | The game's own modules and Systems | Gameplay, input, camera - whatever this game is made of. |
+| -100, -90 | The modules that put data in place before anything reads it | `PostConstruct` runs during the binding pass, and each Root finishes its own before the next begins - so being first is what puts data in place before anything reads it. Saved data is restored at `-100`; config is rewritten from an A/B assignment at `-90`. A service whose `PostConstruct` reads config sits after `-90`. |
+| -80 … -10 | The other Services, on the tens, in the order the boot reads | A Service depends on nothing else, so it comes up early and is ready for everyone. `-80` the asset service, the door every Addressables load goes through; `-70` the screen service and `-60` the pool service, which load through it; then the helpers - `-50` haptics, `-30` world pointers, `-10` the loading service, last because it opens a screen. |
+| 0 – 97 | The game's own modules and Systems | Gameplay, camera - whatever this game is made of. |
 | 98 | `ConnectorRoot` | After every module it wires, so the scene reads as modules first and wiring after them. |
 | 99 | `ScreenRoot` | The screen manager owns the screen prefabs, so it is up before the flow that opens the first screen. |
 | 100 | `MainRoot` | The entry point. Its `Launch()` dispatches the first signal, last of all. |
 
-The shipped Roots use `-99` for the screen service, `-2` for the pool service, `-1` for
-the loading and asset services, `0` for gameplay and input, `1` for the camera system. Inside a
-band the exact number rarely matters - two modules that never touch can both sit at `0`.
+A game's own service takes a free ten, or a unit below the ten it leans on - `-69` for one
+that wants the screen service bound first. Inside the `0 – 97` band the exact number rarely
+matters - two modules that never touch can both sit at `0`.
 
 `MainScene` is authored in the same order, with separators between the bands, so the
 Hierarchy shows the boot order without opening an inspector:
 
 ```
 MainScene
-├── ScreenServiceRoot          -99
-├── PoolServiceRoot             -2
-├── LoadingServiceRoot          -1
-├── AssetServiceRoot            -1
+├── AssetServiceRoot           -80
+├── ScreenServiceRoot          -70
+├── PoolServiceRoot            -60
+├── LoadingServiceRoot         -10
 ├── ------------------------
 ├── GameplayRoot                 0
 ├── ------------------------
@@ -427,9 +427,10 @@ when every step it lists has completed, skipped or failed.
 
 ```csharp
 CommandBinder.Bind(_internalSignals.Launch)
-    .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)                // the screen goes up
+    .ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)      // the loading screens into the pool - nothing is up to show this on
+    .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)                // the screen goes up, from the pool, this frame
     .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.BootStarted)   // beside the boot: SDKs, a profile fetch
-    .ToParallel<PreloadScreensCommand>()                                    // reports Screens
+    .ToParallel<PreloadScreensCommand>()                                    // reports Screens, drawn on the loading screen
     .ToSequence<FillPoolsCommand>()                                         // reports Pools - Skip when there are no groups
     .ToSequence<AwaitLoadingCommand>(MainConstants.BOOT_SET)                // waits for the whole set
     .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.Started);      // after the player is in: the main screen, heavy preloads

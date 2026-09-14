@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SubContextTypes: []
-  initializeOrder: -99
+  initializeOrder: -70
   AutoBindInjections: 1
   AutoBindMediations: 1
   AutoInitialize: 1

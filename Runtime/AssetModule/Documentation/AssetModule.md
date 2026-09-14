@@ -24,9 +24,10 @@ gives you the prefab — you call `Instantiate` yourself, or hand the prefab to 
 ## Setting Up
 
 `AssetServiceRoot` binds `IAssetService` cross-context. It carries an
-`initializeOrder` of `-1`, which is the last seat in the Services band, so it starts
-before every module that might ask it for an asset — keep it negative if you move the
-Root.
+`initializeOrder` of `-80`: the services sit on the tens of the negative band in the
+order the boot reads, and the asset service comes right after the two seats that put
+data in place (`-100`, `-90`) and before the screen and pool services that load through
+it (`-70`, `-60`). Keep it negative if you move the Root.
 
 ```csharp
 [Inject] private IAssetService _assetService { get; set; }
@@ -323,7 +324,7 @@ intend to manage as a unit.
 
 ### The service is not ready yet
 
-`AssetServiceRoot` uses `initializeOrder = -1` so it binds ahead of the game's own
+`AssetServiceRoot` uses `initializeOrder = -80` so it binds ahead of the game's own
 modules. If you raised that value above a consumer's, or put the Root in a scene loaded
 after its consumers, a context can reach `Setup()` with no asset service bound. Keep the
 Root in the bootstrap scene with its default order.

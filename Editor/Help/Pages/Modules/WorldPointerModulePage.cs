@@ -152,7 +152,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("1. The Root");
             painter.Paragraph(
                 "Drop WorldPointerServiceRoot from the module's Prefabs folder into the scene. It "
-                + "ships at Initialize Order -5, in the Service band; nothing depends on where it "
+                + "ships at Initialize Order -30, in the Service band; nothing depends on where it "
                 + "sits, because it has no Setup work and reaches no other module.");
 
             painter.SubHeading("2. The camera");
