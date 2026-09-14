@@ -39,8 +39,7 @@ namespace FlowIoC.Tests
         public void The_snippet_binds_the_incoming_signal_named_after_the_command_to_a_sequence()
         {
             Assert.AreEqual(
-                "CommandBinder.Bind(_signals.Incoming.DecreaseCurrency)\n"
-                + "    .ToSequence<DecreaseCurrencyCommand>();",
+                "CommandBinder.Bind(_signals.Incoming.DecreaseCurrency).ToSequence<DecreaseCurrencyCommand>();",
                 new CommandBindingSnippet().For("DecreaseCurrency", "_signals"));
         }
 

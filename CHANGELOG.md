@@ -5,6 +5,15 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **A signal bound to one step is bound on one line.** `CommandBinder.Bind(x).ToSequence<X>();`; only a
+  chain of two or more steps breaks, one step per line. The shipped Contexts, the Help pages, the
+  README, the controllers skill and Create Command's binding snippet all say it that way now, and the
+  rule is in the Code style section of the agent rules.
+
 ## [1.15.2] - 2026-09-15
 
 ### Added

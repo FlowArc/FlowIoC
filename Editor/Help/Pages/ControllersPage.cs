@@ -135,8 +135,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "This is how a decision stays out of the Context: the Context declares which "
                 + "signals are in play, the Command picks which one fires.");
             painter.Code(
-                "CommandBinder.Bind(_signals.Incoming.StartTutorial)\n"
-                + "    .ToSequence<BranchCommand>(true, _internalSignals.PathA, _internalSignals.PathB);\n"
+                "CommandBinder.Bind(_signals.Incoming.StartTutorial).ToSequence<BranchCommand>(true, _internalSignals.PathA, _internalSignals.PathB);\n"
                 + "\n"
                 + "public class BranchCommand : Command<bool, Signal, Signal>\n"
                 + "{\n"

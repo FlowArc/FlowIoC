@@ -9,7 +9,7 @@ namespace FlowIoC.Editor.CodeGenerator
     /// command rather than written for you. Where a command sits in a sequence is a decision
     /// about the flow, and the window used to take it - appending to whatever block bound the
     /// signal, or opening a new one - from two names typed as text that nothing checked. It now
-    /// hands over the two lines, spelled against the holder field the Context declares, and the
+    /// hands over the line, spelled against the holder field the Context declares, and the
     /// author pastes them where the flow reads right.
     /// </summary>
     internal class CommandBindingSnippet
@@ -21,14 +21,13 @@ namespace FlowIoC.Editor.CodeGenerator
         private const string CONVENTIONAL_FIELD = "_signals";
 
         /// <summary>
-        /// The two lines. The signal is the one named after the command on the holder's
+        /// One line, because a signal bound to one step is written on one line. The signal is the one named after the command on the holder's
         /// Incoming, which is the name a command answers to when the module follows the
         /// convention; a command bound to something else is edited after the paste.
         /// </summary>
         internal string For(string commandName, string holderField)
         {
-            return "CommandBinder.Bind(" + holderField + ".Incoming." + commandName + ")\n"
-                   + "    .ToSequence<" + commandName + "Command>();";
+            return "CommandBinder.Bind(" + holderField + ".Incoming." + commandName + ").ToSequence<" + commandName + "Command>();";
         }
 
         /// <summary>

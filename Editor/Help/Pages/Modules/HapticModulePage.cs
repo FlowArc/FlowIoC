@@ -242,8 +242,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "The choice is stored at once in PlayerPrefs and applies from the next Play; "
                 + "turning haptics off also stops whatever is vibrating.");
             painter.Code(
-                "CommandBinder.Bind(_signals.HapticsToggled)\n"
-                + "    .ToSequence<IHapticService.Commands.SetEnabled>();");
+                "CommandBinder.Bind(_signals.HapticsToggled).ToSequence<IHapticService.Commands.SetEnabled>();");
 
             painter.SubHeading("Reading the flow");
             painter.Paragraph(

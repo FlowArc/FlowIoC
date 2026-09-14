@@ -120,8 +120,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "binding is what shows up in the Flow Console; a listener is what a Mediator uses "
                 + "to write a new value into its View.");
             painter.Code(
-                "CommandBinder.Bind(_signals.Incoming.AddCurrency)\n"
-                + "    .ToSequence<AddCurrencyCommand>();");
+                "CommandBinder.Bind(_signals.Incoming.AddCurrency).ToSequence<AddCurrencyCommand>();");
             painter.Code(
                 "_signals.Outgoing.CurrencyChanged.AddListener(OnCurrencyChanged);\n"
                 + "_signals.Outgoing.CurrencyChanged.AddListenerOnce(OnFirstChangeOnly);\n"

@@ -596,8 +596,7 @@ namespace Modules.PlayerModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_signals.Incoming.InitializePlayer)
-                .ToSequence<InitializePlayerCommand>();
+            CommandBinder.Bind(_signals.Incoming.InitializePlayer).ToSequence<InitializePlayerCommand>();
 
             CommandBinder.Bind(_signals.Incoming.AddCurrency)
                 .ToSequence<AddCurrencyCommand>()
@@ -839,8 +838,7 @@ CommandBinder.Bind(_signals.Incoming.StartGroupTest)
     .ToGroupAsSequence(_internalSignals.TriggerGroupA)
     .ToSequence<BCommand>();
 
-CommandBinder.Bind(_internalSignals.TriggerGroupA)
-    .ToSequence<GroupCommandA>();
+CommandBinder.Bind(_internalSignals.TriggerGroupA).ToSequence<GroupCommandA>();
 ```
 
 Constructor-style parameters can be passed at bind time:

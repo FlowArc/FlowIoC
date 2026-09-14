@@ -64,11 +64,9 @@ namespace Modules.CounterModule.RootsContexts
                 .ToSequence<AddCallbacksCommand>()
                 .ToSequence<TickProcessForNewDataCommand>();
 
-            CommandBinder.Bind(_internalSignals.RemoveCallbacks)
-                .ToSequence<RemoveCallbacksCommand>();
+            CommandBinder.Bind(_internalSignals.RemoveCallbacks).ToSequence<RemoveCallbacksCommand>();
 
-            CommandBinder.Bind(_internalSignals.StopCounter)
-                .ToSequence<StopCounterCommand>();
+            CommandBinder.Bind(_internalSignals.StopCounter).ToSequence<StopCounterCommand>();
         }
 
         public override void Setup()
