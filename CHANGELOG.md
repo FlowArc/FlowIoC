@@ -5,6 +5,16 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.1] - 2026-09-14
+
+### Fixed
+
+- **`1.15.0` does not compile in the Editor; take this one instead.** The Controllers Help page's
+  Ready-made tab gained a code sample whose string literals were split across lines, so
+  `FlowIoC.Editor` failed to build - and with it the Help window, the setup installer, the
+  scanners and the generators. The runtime assembly was untouched. Found the moment the template
+  project took `1.15.0`.
+
 ## [1.15.0] - 2026-09-14
 
 ### Added
