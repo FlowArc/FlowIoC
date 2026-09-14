@@ -81,12 +81,16 @@ to paint them.
 
    ```csharp
    CommandBinder.Bind(_signals.Incoming.CelebrateWin)
-       .ToSequence<HapticTriggerCommand>()
+       .ToSequence<HapticServicePlayCommand>(HapticPreset.Success)
        .ToSequence<PlayWinAnimationCommand>();
    ```
 
-   A generic `ToSequence<DispatchSignalCommand>` would start the same work, but the sequence
+   A generic `ToSequence<SignalDispatchCommand>` would start the same work, but the sequence
    carries on without waiting for it. A Command of the Service's own is what holds the line.
+   A Command a Service ships is named service-first - `HapticServicePlayCommand`, never
+   `PlayHapticCommand` - so typing the Service's name offers every step it ships. The module's
+   own steps stay verb-first: the prefix is what marks a Command as meant to be bound from
+   outside.
 
 Exceptions aside, those two are the whole list.
 

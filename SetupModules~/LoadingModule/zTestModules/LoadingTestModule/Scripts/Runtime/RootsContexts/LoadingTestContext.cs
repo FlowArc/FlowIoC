@@ -30,13 +30,13 @@ namespace Modules.LoadingModule.LoadingTestModule.RootsContexts
             base.CommandBindings();
 
             CommandBinder.Bind(_internalSignals.Launch)
-                .ToSequence<BeginLoadingCommand>("TestBoot")
-                .ToSequence<DispatchSignalCommand>(_internalSignals.RunBackground)
+                .ToSequence<LoadingServiceBeginCommand>("TestBoot")
+                .ToSequence<SignalDispatchCommand>(_internalSignals.RunBackground)
                 .ToParallel<FakeLoadingStepCommand>("TestScreens", 3f, false)
                 .ToParallel<FakeLoadingStepCommand>("TestPools", 5f, false)
                 .ToGroupAsSequence(_internalSignals.RunDownload)
                 .ToSequence<FakeLoadingStepCommand>("TestProfile", 2f, true) // fails the first time; the retry re-runs it alone
-                .ToSequence<AwaitLoadingCommand>("TestBoot");
+                .ToSequence<LoadingServiceAwaitCommand>("TestBoot");
 
             // The child set: two steps on the second bar.
             CommandBinder.Bind(_internalSignals.RunDownload)

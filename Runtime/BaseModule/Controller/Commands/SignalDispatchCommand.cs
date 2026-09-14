@@ -2,7 +2,7 @@ using FlowIoC.BaseModule.Signals;
 
 namespace FlowIoC.BaseModule.Controller.Commands
 {
-    public class DispatchSignalCommand : Command<Signal>
+    public class SignalDispatchCommand : Command<Signal>
     {
         public override void Execute(Signal signal)
         {
@@ -11,7 +11,7 @@ namespace FlowIoC.BaseModule.Controller.Commands
             Release();
         }
     }
-    public class DispatchSignalCommand<T1> : Command<Signal<T1>, T1>
+    public class SignalDispatchCommand<T1> : Command<Signal<T1>, T1>
     {
         public override void Execute(Signal<T1> signal, T1 param)
         {
@@ -20,7 +20,7 @@ namespace FlowIoC.BaseModule.Controller.Commands
             Release();
         }
     }
-    public class DispatchSignalCommand<T1, T2> : Command<Signal<T1, T2>, T1, T2>
+    public class SignalDispatchCommand<T1, T2> : Command<Signal<T1, T2>, T1, T2>
     {
         public override void Execute(Signal<T1,T2> signal, T1 param1, T2 param2)
         {
@@ -29,7 +29,7 @@ namespace FlowIoC.BaseModule.Controller.Commands
             Release();
         }
     }
-    public class DispatchSignalCommand<T1, T2, T3> : Command<Signal<T1, T2, T3>, T1, T2, T3>
+    public class SignalDispatchCommand<T1, T2, T3> : Command<Signal<T1, T2, T3>, T1, T2, T3>
     {
         public override void Execute(Signal<T1,T2, T3> signal, T1 param1, T2 param2, T3 param3)
         {

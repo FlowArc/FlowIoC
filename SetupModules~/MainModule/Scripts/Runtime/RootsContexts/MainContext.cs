@@ -41,17 +41,17 @@ namespace Modules.MainModule.RootsContexts
             // the fan-out for what may run beside the boot without slowing it; Started is the
             // fan-out for what waits until the player is in.
             CommandBinder.Bind(_internalSignals.Launch)
-                .ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)
-                .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)
-                .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.BootStarted)
+                .ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)
+                .ToSequence<LoadingServiceBeginCommand>(MainConstants.BOOT_SET)
+                .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.BootStarted)
                 .ToParallel<PreloadScreensCommand>()
                 .ToSequence<FillPoolsCommand>()
-                .ToSequence<AwaitLoadingCommand>(MainConstants.BOOT_SET)
-                .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.Started);
+                .ToSequence<LoadingServiceAwaitCommand>(MainConstants.BOOT_SET)
+                .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.Started);
 
             // A retry from the loading screen runs the boot again.
             CommandBinder.Bind(_mainSignals.Incoming.RetryBoot)
-                .ToSequence<DispatchSignalCommand>(_internalSignals.Launch);
+                .ToSequence<SignalDispatchCommand>(_internalSignals.Launch);
         }
 
         public override void Setup()

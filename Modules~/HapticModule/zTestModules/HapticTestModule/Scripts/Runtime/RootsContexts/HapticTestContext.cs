@@ -34,7 +34,7 @@ namespace Modules.HapticModule.HapticTestModule.RootsContexts
                 .ToSequence<PlayTestHapticCommand>();
 
             CommandBinder.Bind(_signals.EnabledChangeRequested)
-                .ToSequence<SetHapticsEnabledCommand>()
+                .ToSequence<HapticServiceSetEnabledCommand>()
                 .ToSequence<ReportHapticStateCommand>();
 
             CommandBinder.Bind(_signals.ReportState)

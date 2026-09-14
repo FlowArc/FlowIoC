@@ -27,7 +27,7 @@ namespace FlowIoC.Tests
     /// them. What it promises the sequence is the retain: held until the last screen of the tag is
     /// in, and not a screen of any other tag.
     /// </summary>
-    public class LoadScreensByTagCommandTests
+    public class ScreenServiceLoadByTagCommandTests
     {
         private class TaggedScreen : ScreenBody
         {
@@ -38,7 +38,7 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>Counts the release instead of handing it to a group this test does not run.</summary>
-        private class RecordingCommand : LoadScreensByTagCommand
+        private class RecordingCommand : ScreenServiceLoadByTagCommand
         {
             public int Released;
 

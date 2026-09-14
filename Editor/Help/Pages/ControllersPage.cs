@@ -151,13 +151,13 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Space();
             painter.Rule("Dispatching a signal is a step, not a Command you write");
             painter.Paragraph(
-                "A Command whose only job is to dispatch is not written. Bind DispatchSignalCommand "
+                "A Command whose only job is to dispatch is not written. Bind SignalDispatchCommand "
                 + "with the signal and its payload, and the signal leaving is a line in the Context "
                 + "rather than a class to open.");
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.GameOver)\n"
                 + "    .ToSequence<SaveScoreCommand>()\n"
-                + "    .ToSequence<DispatchSignalCommand<int>>(_signals.Outgoing.ScoreSubmitted, _score);");
+                + "    .ToSequence<SignalDispatchCommand<int>>(_signals.Outgoing.ScoreSubmitted, _score);");
 
             painter.Space();
             painter.Rule("Group - another signal's whole chain, spliced into this one");
@@ -370,7 +370,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "without opening a Command or crossing to the Connector. Two habits keep that "
                 + "true.");
             painter.Paragraph(
-                "A Command whose only job is to dispatch is not written. Bind DispatchSignalCommand "
+                "A Command whose only job is to dispatch is not written. Bind SignalDispatchCommand "
                 + "with the signal and its payload, and the signal leaving becomes a line in the "
                 + "Context rather than something a reader finds by opening a class.");
             painter.Paragraph(
@@ -381,11 +381,11 @@ namespace FlowIoC.Editor.Help.Pages
                 "CommandBinder.Bind(_mapSignals.Incoming.PlayRequest)\n"
                 + "    .ToSequence<ClaimPlayRequestCommand>()\n"
                 + "    .ToSequence<PrepareMatchDataCommand>()\n"
-                + "    .ToSequence<DispatchSignalCommand<string>>(_signals.Outgoing.SwitchCamera, \"Match\")\n"
-                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.HideNavBar)\n"
-                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.HideTopBar)\n"
+                + "    .ToSequence<SignalDispatchCommand<string>>(_signals.Outgoing.SwitchCamera, \"Match\")\n"
+                + "    .ToSequence<SignalDispatchCommand>(_signals.Outgoing.HideNavBar)\n"
+                + "    .ToSequence<SignalDispatchCommand>(_signals.Outgoing.HideTopBar)\n"
                 + "    .ToSequence<BakeNavmeshCommand>()\n"
-                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.LoadGameScene);",
+                + "    .ToSequence<SignalDispatchCommand>(_signals.Outgoing.LoadGameScene);",
                 "Starting a match, read without leaving the Context");
 
             painter.Space();
@@ -611,7 +611,7 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawReadyMade(HelpPainter painter)
         {
-            painter.SubHeading("DispatchSignalCommand - a step that only dispatches");
+            painter.SubHeading("SignalDispatchCommand - a step that only dispatches");
             painter.Paragraph(
                 "A Command whose only job is to dispatch is not written. Bind this one and hand it "
                 + "the signal, and the flow is read from the Context rather than from four "
@@ -619,9 +619,9 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.SubmitScore)\n"
                 + "    .ToSequence<SubmitScoreCommand>()\n"
-                + "    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.ScoreSubmitted)\n"
-                + "    .ToSequence<DispatchSignalCommand<int>>(_signals.Outgoing.ScoreChanged, _score)\n"
-                + "    .ToSequence<DispatchSignalCommand<string, int>>(_signals.Outgoing.RankChanged, \"solo\", 3);");
+                + "    .ToSequence<SignalDispatchCommand>(_signals.Outgoing.ScoreSubmitted)\n"
+                + "    .ToSequence<SignalDispatchCommand<int>>(_signals.Outgoing.ScoreChanged, _score)\n"
+                + "    .ToSequence<SignalDispatchCommand<string, int>>(_signals.Outgoing.RankChanged, \"solo\", 3);");
 
             painter.Space();
             painter.Paragraph(
@@ -695,7 +695,7 @@ namespace FlowIoC.Editor.Help.Pages
         private void DrawRules(HelpPainter painter)
         {
             painter.Bullet("A decision belongs in a Command, wherever it would otherwise be taken - a Context, a View, a Mediator, a System.");
-            painter.Bullet("A flow is read from one Context. A Command whose only job is to dispatch is not written - bind DispatchSignalCommand.");
+            painter.Bullet("A flow is read from one Context. A Command whose only job is to dispatch is not written - bind SignalDispatchCommand.");
             painter.Bullet("A list of consequences hung off one announcement belongs in the sequence, not in the Connector.");
             painter.Bullet("What needs no decision is not one. A close button that always closes is the Mediator calling _view.Hide().");
             painter.Bullet("A Command does one unit of work, holds no state between runs, and returns no value.");
@@ -708,7 +708,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Command and a Function both live in Scripts/Runtime/Controllers. Both are controllers.");
             painter.Bullet("A Function derives from a shipped arity - FunctionVoid, FunctionReturn or AsyncFunction - never from FunctionBody.");
             painter.Bullet("Create Command and Create Function write the file for you. Prefer them over writing either by hand.");
-            painter.Bullet("The package ships RetryCommand and DispatchSignalCommand already written. The Ready-made tab is what a Context may bind without a file of its own.");
+            painter.Bullet("The package ships RetryCommand and SignalDispatchCommand already written. The Ready-made tab is what a Context may bind without a file of its own.");
         }
 
         /// <summary>

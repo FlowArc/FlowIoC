@@ -5,11 +5,11 @@ using Modules.LoadingModule.Services;
 namespace Modules.LoadingModule.Controllers
 {
     /// <summary>
-    /// The step a chain binds to begin a set: <c>.ToSequence&lt;BeginLoadingCommand&gt;("Boot")</c>.
+    /// The step a chain binds to begin a set: <c>.ToSequence&lt;LoadingServiceBeginCommand&gt;("Boot")</c>.
     /// Synchronous - the screen opens on its own signal, and the chain carries on to the steps it
     /// will report.
     /// </summary>
-    public class BeginLoadingCommand : Command<string>
+    public class LoadingServiceBeginCommand : Command<string>
     {
         [Inject] private ILoadingService _loadingService { get; set; }
 

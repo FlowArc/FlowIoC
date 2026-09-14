@@ -51,7 +51,7 @@ what is true whatever you are about to do.
   nobody asked.
 - **A flow is read from one Context.** Somebody should see what an operation does by reading the
   sequence it is bound to, without opening a Command or crossing to the Connector. So a Command
-  whose only job is to dispatch is not written - bind `DispatchSignalCommand<T>` - and a step that
+  whose only job is to dispatch is not written - bind `SignalDispatchCommand<T>` - and a step that
   orders another module about is dispatched from the sequence.
 - **The Connector translates, it does not decide.** One module's announcement joined to another
   module's order is a crossing. A list of consequences hung off one announcement is not: what
@@ -286,7 +286,7 @@ prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`.
 | Thing | Name |
 |---|---|
 | Signal container | `PlayerSignals`, with nested `PlayerSignalsIncoming` and `PlayerSignalsOutgoing` |
-| Command | `AddCurrencyCommand` |
+| Command | `AddCurrencyCommand`; a step another module binds is service-first, `HapticServicePlayCommand` |
 | Model | `IPlayerModel` and `PlayerModel` |
 | Service | `ICounterService` and `CounterService` |
 | System | `IMapSystem` and `MapSystem` |

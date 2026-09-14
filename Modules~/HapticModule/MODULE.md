@@ -31,15 +31,16 @@ HapticPreset
 - **The interface is the surface.** `IHapticService.Play(preset)` is called from the game's own
   Command at the point where it decided something happened, which is where the choice of preset
   belongs. No `Scripts/Signals`: nothing for a Connector to hang a preset off.
-- **A step a game binds, beside the interface.** `PlayHapticCommand` is `Command<HapticPreset>`,
-  so a game's Context binds `.ToSequence<PlayHapticCommand>(HapticPreset.Success)` and the flow
-  reads there - which preset, after which step - the way `DispatchSignalCommand` is bound with the
-  signal it dispatches; `SetHapticsEnabledCommand` reads a settings toggle's bool off the signal.
+- **A step a game binds, beside the interface.** `HapticServicePlayCommand` is `Command<HapticPreset>`,
+  so a game's Context binds `.ToSequence<HapticServicePlayCommand>(HapticPreset.Success)` and the flow
+  reads there - which preset, after which step - the way `SignalDispatchCommand` is bound with the
+  signal it dispatches; `HapticServiceSetEnabledCommand` reads a settings toggle's bool off the signal.
   The owner asked for this shape (2026-09-14) because a game Command whose whole body is one
   `Play` call has to be opened to be read. Both are public in this assembly, which a game already
-  references to inject the interface - Shared holds data, never a Command. The module's own steps
-  are `PlayPresetCommand` and `ApplyHapticsEnabledCommand`, so the game-facing names stay the
-  natural ones.
+  references to inject the interface - Shared holds data, never a Command. The names are
+  service-first because the prefix is the sign of a step meant to be bound from outside (owner,
+  2026-09-14): typing `HapticService` offers both. The module's own steps, `PlayPresetCommand`
+  and `ApplyHapticsEnabledCommand`, stay verb-first and read as local.
 - **The on/off choice is the module's**, in PlayerPrefs under `flowioc.haptic.enabled`, default on.
   Installed, it works; a settings screen reads `IsEnabled()` and dispatches to a Command that calls
   `SetEnabled`.
