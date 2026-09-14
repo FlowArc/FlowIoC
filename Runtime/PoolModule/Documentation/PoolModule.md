@@ -200,6 +200,22 @@ Creating a group at runtime is possible when the config is not known ahead of ti
 _poolService.Create.Group("boss_phase_2", poolGroupCVO);
 ```
 
+Warming a group is also a step a sequence binds, the group named where the step is bound.
+The two steps sit under `IPoolService.Commands`, a file each, and hold the sequence until
+the fill is done - a fill that throws stops it, so nothing runs on an empty pool:
+
+```csharp
+CommandBinder.Bind(_signals.Incoming.EnterMatch)
+    .ToSequence<IPoolService.Commands.InitializeGroup>("combat_core")
+    .ToSequence<SignalDispatchCommand>(_signals.Outgoing.MatchReady);
+
+// or every configured group at once, on a boot without a bar
+.ToSequence<IPoolService.Commands.InitializeAll>()
+```
+
+Both wait on `InitializeGroupAsync` and `InitializeAllAsync`; `InitializeAll()` and
+`InitializeGroup(key)` start a fill and do not wait, for a caller that has nothing to hold.
+
 ---
 
 ## Addressable Items

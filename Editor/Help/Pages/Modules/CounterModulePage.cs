@@ -182,7 +182,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Space();
             painter.Note(
                 "Stop(id) ends a counter early. Its stop callbacks run and its complete callbacks "
-                + "do not, because it never completed.");
+                + "do not, because it never completed. As a step of a sequence it is "
+                + "ICounterService.Commands.Stop, the id given at the binding: "
+                + ".ToSequence<ICounterService.Commands.Stop>(\"MatchTimer\"). Starting a counter is "
+                + "not a step - it takes a start time and the callbacks the caller keeps.");
         }
 
         private void DrawTimeSource(HelpPainter painter)

@@ -242,9 +242,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("Clearing everything");
             painter.Paragraph(
                 "UnregisterAll stops every pointer and tells each indicator Hidden - the end of a "
-                + "run, or a scene about to unload. Bind it into the sequence that ends the run "
-                + "through a one-line Command of your own; the module has no signal for it because "
-                + "nothing outside it needs telling.");
+                + "run, or a scene about to unload. The sequence that ends the run binds the step "
+                + "the module ships, .ToSequence<IWorldPointerService.Commands.UnregisterAll>(); the "
+                + "module has no signal for it because nothing outside it needs telling.");
         }
 
         private void DrawModes(HelpPainter painter)

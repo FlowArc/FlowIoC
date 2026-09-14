@@ -365,6 +365,18 @@ A screen an `Open` is loading when a preload reaches its entry — or the other 
 loaded once. The two callers await the one load; the instance goes to whoever is showing it,
 and the pool takes it only if nobody is.
 
+The service ships six such steps, each a file of its own under `IScreenService.Commands`, so
+typing the interface and pressing `.` lists them: `LoadAll` and `LoadByTag(tag)` hold the
+sequence until the screens are in; `HideAll`, `HideByTag(tag)`, `UnloadAll` and
+`UnloadByTag(tag)` act and return. A flow that leaves a phase reads as its steps:
+
+```csharp
+CommandBinder.Bind(_signals.Incoming.LeaveMatch)
+    .ToSequence<IScreenService.Commands.HideByTag>(ScreenTag.GroupB)
+    .ToSequence<IScreenService.Commands.UnloadByTag>(ScreenTag.GroupB)
+    .ToSequence<IPoolService.Commands.InitializeGroup>("menu_fx");
+```
+
 ---
 
 ## Managers, Layers and Tags

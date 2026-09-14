@@ -9,7 +9,7 @@ namespace Modules.WorldPointerModule.Services
     /// when the object leaves the frame - hide, clamp to the edge, or ignore. The whole surface
     /// of the module: there are no signals, because nothing outside it needs telling.
     /// </summary>
-    public interface IWorldPointerService
+    public partial interface IWorldPointerService
     {
         /// <summary>
         /// The camera pointers are projected through. Camera.main until a game sets it, and read
@@ -43,5 +43,16 @@ namespace Modules.WorldPointerModule.Services
         /// False when there is no camera or the position is behind it; the out value is then unusable.
         /// </summary>
         bool TryProject(Vector3 worldPosition, RectTransform parent, out Vector3 pointOnCanvas);
+
+        /// <summary>
+        /// The steps a game binds in a sequence of its own. They sit inside the interface so that
+        /// the one name a game knows - the Service it injects - is also where its steps are found.
+        /// Each step is a file of its own, <c>IWorldPointerService.Commands.&lt;Step&gt;.cs</c>.
+        /// Registering a pointer is not a step: it takes a Transform and an indicator that exist at
+        /// runtime, so it is a call from the game's own Command.
+        /// </summary>
+        public static partial class Commands
+        {
+        }
     }
 }

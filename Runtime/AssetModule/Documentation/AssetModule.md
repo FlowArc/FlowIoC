@@ -169,6 +169,22 @@ A download is not a claim. It brings the bundles into Addressables' cache and ho
 nothing afterwards; the loads that follow find them there. A download that fails
 answers `false` and dispatches `AssetLoadFailed` with the key.
 
+A group load, a group release and a download are also steps a sequence binds, the label,
+group or key given where the step is bound. They sit under `IAssetService.Commands`, a file
+each: `LoadGroupByLabel<T>(label, groupId)` and `DownloadDependencies(keyOrLabel)` hold the
+sequence until the work is done - a download that answers `false` stops it, and so does a
+throw - and `ReleaseGroup(groupId)` acts and returns:
+
+```csharp
+CommandBinder.Bind(_signals.Incoming.EnterLevel)
+    .ToSequence<IAssetService.Commands.DownloadDependencies>("level30")
+    .ToSequence<IAssetService.Commands.LoadGroupByLabel<GameObject>>("level30", "Preload/Level30")
+    .ToSequence<OpenLevelCommand>();
+
+CommandBinder.Bind(_signals.Incoming.LeaveLevel)
+    .ToSequence<IAssetService.Commands.ReleaseGroup>("Preload/Level30");
+```
+
 ---
 
 ## Signals

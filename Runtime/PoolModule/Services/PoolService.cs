@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
@@ -35,6 +36,20 @@ namespace FlowIoC.PoolModule.Services
             {
                 InitializeGroup(groupKeyValue.Key);
             }
+        }
+
+        /// <summary>
+        /// Every group's fill, started together and waited on as one - the step a boot binds when
+        /// the pools have to be in before the player is.
+        /// </summary>
+        public Task InitializeAllAsync()
+        {
+            var fills = new List<Task>();
+
+            foreach (var groupKeyValue in _configModel.GetGroupConfigMap())
+                fills.Add(InitializeGroupAsync(groupKeyValue.Key));
+
+            return Task.WhenAll(fills);
         }
 
         /// <summary>

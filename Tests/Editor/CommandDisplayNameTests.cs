@@ -1,6 +1,7 @@
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Controller.Commands;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace FlowIoC.Tests
 {
@@ -34,6 +35,25 @@ namespace FlowIoC.Tests
         {
             Assert.AreEqual("CommandDisplayNameTests.IProbeService.Commands.Play",
                 _name.Of(typeof(IProbeService.Commands.Play)));
+        }
+
+        private interface IProbeAssets
+        {
+            public static class Commands
+            {
+                public class LoadGroupByLabel<T> : Command<string, string>
+                {
+                    public override void Execute(string label, string groupId) { }
+                }
+            }
+        }
+
+        [Test]
+        public void A_generic_step_reads_with_its_arguments_rather_than_the_compilers_arity()
+        {
+            Assert.AreEqual("CommandDisplayNameTests.IProbeAssets.Commands.LoadGroupByLabel<Sprite>",
+                _name.Of(typeof(IProbeAssets.Commands.LoadGroupByLabel<Sprite>)));
+            Assert.AreEqual("SignalDispatchCommand<Int32, String>", _name.Of(typeof(SignalDispatchCommand<int, string>)));
         }
 
         [Test]

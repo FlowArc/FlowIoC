@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Every Service ships its fixed steps under `Commands`.** Twelve more, a partial file each
+  beside the interface, so typing the interface and pressing `.` lists them. Screen:
+  `LoadAll`, `HideAll`, `HideByTag(tag)`, `UnloadAll`, `UnloadByTag(tag)`. Pool:
+  `InitializeAll`, `InitializeGroup(group)` - both wait on the fill, through the new
+  `IPoolService.InitializeAllAsync()`, and stop the sequence when it throws. Asset:
+  `LoadGroupByLabel<T>(label, groupId)`, `ReleaseGroup(groupId)`,
+  `DownloadDependencies(keyOrLabel)` - a download that answers `false` stops the sequence.
+  Counter: `Stop(id)`. World Pointer: `UnregisterAll`. What did not become a step, and why,
+  is on each interface's `Commands` doc: a call that takes a runtime object or the callbacks
+  the caller keeps (`Register`, `CountDownFrom`), one that answers a question (`GetGroup`,
+  `LoadAsset<T>`), and `ITimeSource.Prepare`, whose service is bound inside its module.
+  `CommandDisplayName` prints a generic step with its arguments -
+  `IAssetService.Commands.LoadGroupByLabel<Sprite>` - rather than the compiler's arity.
 - **`IScreenService.Commands.LoadByTag`, a step a game binds with the tag given at the binding.**
   `.ToSequence<IScreenService.Commands.LoadByTag>(ScreenTag.GroupA)` loads every screen registered
   under the tag into the pool and holds the sequence until the last of them is in, so the step

@@ -14,7 +14,7 @@ namespace Modules.CounterModule.Services
     /// and starts together the moment a time source answers - which is what the checkActive
     /// callback is for.
     /// </summary>
-    public interface ICounterService
+    public partial interface ICounterService
     {
         /// <summary>True once a time source has answered and counters are ticking.</summary>
         bool IsActive();
@@ -85,5 +85,16 @@ namespace Modules.CounterModule.Services
         /// Ends a counter now. Its stop callbacks run, its complete callbacks do not.
         /// </summary>
         void Stop(string id);
+
+        /// <summary>
+        /// The steps a game binds in a sequence of its own. They sit inside the interface so that
+        /// the one name a game knows - the Service it injects - is also where its steps are found.
+        /// Each step is a file of its own, <c>ICounterService.Commands.&lt;Step&gt;.cs</c>. Starting a
+        /// counter is not a step: it takes a start time and the callbacks the caller keeps, so it
+        /// is a call from the game's own Command.
+        /// </summary>
+        public static partial class Commands
+        {
+        }
     }
 }
