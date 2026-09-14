@@ -76,6 +76,13 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 "The project itself - the module index against the folder tree, the module "
                 + "directory and its ignore rule, orphaned settings files, the Flow Console log "
                 + "types, and the solution code style.");
+            painter.Bullet(
+                "Project files - a .csproj left on a package folder the Package Manager has "
+                + "swept, or a solution listing a project file that is gone. Unity compiles from "
+                + "neither, so the project builds while the IDE reports every type in the package. "
+                + "Fix regenerates them all, the way Regenerate project files in Preferences does; "
+                + "FlowIoC also does that on its own the first time a version of it runs in a "
+                + "project, so the row is red only when that did not happen.");
 
             painter.SubHeading("Reading a row");
             painter.Paragraph(

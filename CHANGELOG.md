@@ -5,6 +5,24 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **The IDE's project files follow a package update on their own.** The Package Manager puts an
+  updated package in a new folder under `Library/PackageCache`, and the Rider integration's
+  incremental sync does not count that as a change: the solution and the modules' projects are
+  rewritten, the package's own `.csproj` keeps the old folder, and Rider reports every FlowIoC
+  type unresolved while Unity compiles fine - 614 errors on the template project the evening
+  `1.15.0` landed. Now the first time a version of FlowIoC runs in a project on a machine,
+  `ProjectFilesStartupSync` calls the code editor's `SyncAll` - the Regenerate project files
+  button in Preferences - once, and records the version in EditorPrefs per project. Rider, Visual
+  Studio and VS Code all implement it; a batch run and an Editor with no external editor do nothing.
+- **The Module Scanner reports stale project files.** `project-files`: a `.csproj` at the root
+  whose sources sit in a `PackageCache` folder that is gone, or a `.sln` listing a `.csproj` that
+  is gone, is reported by name, and Fix regenerates the project files. The row is where the state
+  shows when the startup sync could not run.
+
 ## [1.15.1] - 2026-09-14
 
 ### Fixed

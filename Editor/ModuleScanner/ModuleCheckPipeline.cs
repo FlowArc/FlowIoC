@@ -49,6 +49,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 new ModuleIndexCheck(),
                 new ModuleDirectoryCheck(),
                 new OrphanFilesCheck(),
+                new ProjectFilesCheck(),
                 new SolutionCodeStyleCheck()
             })
         {
