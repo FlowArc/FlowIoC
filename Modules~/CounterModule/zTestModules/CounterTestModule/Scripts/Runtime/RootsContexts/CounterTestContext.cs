@@ -36,11 +36,9 @@ namespace Modules.CounterModule.CounterTestModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_signals.Incoming.StartTestCounter)
-                .ToSequence<StartTestCounterCommand>();
+            CommandBinder.Bind(_signals.Incoming.StartTestCounter).ToSequence<StartTestCounterCommand>();
 
-            CommandBinder.Bind(_signals.Incoming.StopTestCounter)
-                .ToSequence<StopTestCounterCommand>();
+            CommandBinder.Bind(_signals.Incoming.StopTestCounter).ToSequence<StopTestCounterCommand>();
         }
     }
 }
