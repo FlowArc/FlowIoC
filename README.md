@@ -244,7 +244,7 @@ The module name has no such job, so it says what the module counts, parses or st
 
 **A flow is read from one Context.** Somebody should see what an operation does by reading the
 sequence it is bound to, without opening a Command or crossing to the Connector. So a Command whose
-only job is to dispatch is not written — `DispatchSignalCommand<T>` is bound with the signal and its
+only job is to dispatch is not written — `SignalDispatchCommand<T>` is bound with the signal and its
 payload, and the signal leaving becomes a line in the Context — and a step that orders another
 module about is dispatched from the sequence, where it says what the operation manages.
 
@@ -427,13 +427,13 @@ when every step it lists has completed, skipped or failed.
 
 ```csharp
 CommandBinder.Bind(_internalSignals.Launch)
-    .ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)      // the loading screens into the pool - nothing is up to show this on
-    .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)                // the screen goes up, from the pool, this frame
-    .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.BootStarted)   // beside the boot: SDKs, a profile fetch
+    .ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)      // the loading screens into the pool - nothing is up to show this on
+    .ToSequence<LoadingServiceBeginCommand>(MainConstants.BOOT_SET)                // the screen goes up, from the pool, this frame
+    .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.BootStarted)   // beside the boot: SDKs, a profile fetch
     .ToParallel<PreloadScreensCommand>()                                    // reports Screens, drawn on the loading screen
     .ToSequence<FillPoolsCommand>()                                         // reports Pools - Skip when there are no groups
-    .ToSequence<AwaitLoadingCommand>(MainConstants.BOOT_SET)                // waits for the whole set
-    .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.Started);      // after the player is in: the main screen, heavy preloads
+    .ToSequence<LoadingServiceAwaitCommand>(MainConstants.BOOT_SET)                // waits for the whole set
+    .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.Started);      // after the player is in: the main screen, heavy preloads
 ```
 
 A Command reports by step name and nothing else:
@@ -1272,7 +1272,7 @@ you do not want.
 |---|---|---|
 | **CounterModule** | `ICounterService` | Named counters with once-a-second callbacks: `CountDownFrom` towards zero or `CountUpFrom` measuring elapsed time, seconds left or 0..1, several listeners per id, and a pluggable time source so a server clock can replace the device one. |
 | **WorldPointerModule** | `IWorldPointerService` | A UI element that follows a 3D object on screen every frame - a health bar, a name, a "wave incoming" notice - and, outside the frame, hides, clamps to the edge with an arrow aimed at the target, or carries on. The frame is the camera's pixel rect inset by margins, so a HUD bar is a margin; a destroyed target drops itself; `TryProject` places something once. |
-| **HapticModule** | `IHapticService` | The nine haptic presets iOS names - Selection, Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - played through UIKit's feedback generators on iOS and as a waveform through the Vibrator on Android, with no native library and no vendor asset. `Play(preset)` from the Command that decided the event, or `PlayHapticCommand` bound as a step of a sequence with the preset given at the binding - `.ToSequence<PlayHapticCommand>(HapticPreset.Success)` - so the flow reads from the Context; `IsEnabled` and `SetEnabled` keep the player's choice in PlayerPrefs, and `SetHapticsEnabledCommand` binds to a settings toggle's `Signal<bool>`; the `VIBRATE` permission is written into the Gradle project by the module. |
+| **HapticModule** | `IHapticService` | The nine haptic presets iOS names - Selection, Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - played through UIKit's feedback generators on iOS and as a waveform through the Vibrator on Android, with no native library and no vendor asset. `Play(preset)` from the Command that decided the event, or `HapticServicePlayCommand` bound as a step of a sequence with the preset given at the binding - `.ToSequence<HapticServicePlayCommand>(HapticPreset.Success)` - so the flow reads from the Context; `IsEnabled` and `SetEnabled` keep the player's choice in PlayerPrefs, and `HapticServiceSetEnabledCommand` binds to a settings toggle's `Signal<bool>`; the `VIBRATE` permission is written into the Gradle project by the module. |
 
 Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its
 page. Copying the files is only part of it — the installer also registers the module in the module

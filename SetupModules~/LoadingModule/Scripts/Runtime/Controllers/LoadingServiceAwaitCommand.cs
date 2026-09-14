@@ -7,12 +7,12 @@ using Modules.LoadingModule.Services;
 namespace Modules.LoadingModule.Controllers
 {
     /// <summary>
-    /// The step a chain binds where it wants to wait for a set: <c>.ToSequence&lt;AwaitLoadingCommand&gt;("Boot")</c>.
+    /// The step a chain binds where it wants to wait for a set: <c>.ToSequence&lt;LoadingServiceAwaitCommand&gt;("Boot")</c>.
     /// The chain's own steps are already waited on by the group; this is for the steps other modules
     /// report on their own, and it is what holds the chain behind a failed boot. Three ways out, and
     /// every one resolves the retain: completed releases, failed stops, and a throw stops.
     /// </summary>
-    public class AwaitLoadingCommand : Command<string>
+    public class LoadingServiceAwaitCommand : Command<string>
     {
         [Inject] private ILoadingService _loadingService { get; set; }
 
@@ -27,7 +27,7 @@ namespace Modules.LoadingModule.Controllers
                 if (!completed)
                 {
                     // The failure itself was logged where it happened; this line only says the chain stopped.
-                    FlowLogger.Log($"AwaitLoadingCommand - '{set}' did not complete, so the sequence stops here.");
+                    FlowLogger.Log($"LoadingServiceAwaitCommand - '{set}' did not complete, so the sequence stops here.");
                     Stop();
                     return;
                 }
@@ -36,7 +36,7 @@ namespace Modules.LoadingModule.Controllers
             }
             catch (Exception exception)
             {
-                FlowLogger.LogError($"AwaitLoadingCommand threw while waiting for '{set}': {exception}");
+                FlowLogger.LogError($"LoadingServiceAwaitCommand threw while waiting for '{set}': {exception}");
                 Stop();
             }
         }

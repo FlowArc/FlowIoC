@@ -498,7 +498,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 // channel is the game's own flow, read top to bottom.
                 //
                 // Whether it opens anything: whose class is running. A game binds
-                // DispatchSignalCommand as a step of its own, and that step belongs in its flow -
+                // SignalDispatchCommand as a step of its own, and that step belongs in its flow -
                 // but the class is the framework's, and taking a reader there tells them nothing.
                 if (Origin.IsFrameworkType(_commandBinder?.Context?.GetType()))
                 {

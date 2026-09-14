@@ -111,13 +111,18 @@ namespace FlowIoC.Editor.Help.Pages
                 + "sequence with the next step waiting on it.");
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.CelebrateWin)\n"
-                + "    .ToSequence<HapticTriggerCommand>()\n"
+                + "    .ToSequence<HapticServicePlayCommand>(HapticPreset.Success)\n"
                 + "    .ToSequence<PlayWinAnimationCommand>();",
                 "A Command the Service ships, used in a sequence");
             painter.Paragraph(
-                "A generic ToSequence<DispatchSignalCommand> would start the same work, but the "
+                "A generic ToSequence<SignalDispatchCommand> would start the same work, but the "
                 + "sequence carries on without waiting for it. A Command of the Service's own is "
                 + "what holds the line, and it is what puts the step in the Flow Console.");
+            painter.Paragraph(
+                "A Command a Service ships is named service-first - HapticServicePlayCommand, never "
+                + "PlayHapticCommand - so typing the Service's name offers every step it ships. The "
+                + "module's own steps stay verb-first: the prefix is what marks a Command as meant "
+                + "to be bound from outside.");
 
             painter.Separator();
             painter.SubHeading("The two ways out");

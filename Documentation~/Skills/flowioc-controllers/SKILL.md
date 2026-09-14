@@ -103,7 +103,7 @@ did not happen.
 Somebody should see what an operation does by reading the sequence it is bound to, without opening a
 Command. Two habits keep that true.
 
-**A Command whose only job is to dispatch is not written.** Bind `DispatchSignalCommand` with the
+**A Command whose only job is to dispatch is not written.** Bind `SignalDispatchCommand` with the
 signal and its payload, so the signal leaving is a line in the Context rather than a class to open.
 
 **A step that orders another module about is dispatched from the sequence**, so the sequence says
@@ -113,10 +113,10 @@ what the operation manages:
 CommandBinder.Bind(_mapSignals.Incoming.PlayRequest)
     .ToSequence<ClaimPlayRequestCommand>()
     .ToSequence<PrepareMatchDataCommand>()
-    .ToSequence<DispatchSignalCommand<string>>(_signals.Outgoing.SwitchCamera, "Match")
-    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.HideNavBar)
+    .ToSequence<SignalDispatchCommand<string>>(_signals.Outgoing.SwitchCamera, "Match")
+    .ToSequence<SignalDispatchCommand>(_signals.Outgoing.HideNavBar)
     .ToSequence<BakeNavmeshCommand>()
-    .ToSequence<DispatchSignalCommand>(_signals.Outgoing.LoadGameScene);
+    .ToSequence<SignalDispatchCommand>(_signals.Outgoing.LoadGameScene);
 ```
 
 ## Holding the sequence open
@@ -252,7 +252,7 @@ the whole set.
 
 Bind these rather than writing your own.
 
-- **`DispatchSignalCommand`** and its generic arities - a step that dispatches a signal with a
+- **`SignalDispatchCommand`** and its generic arities - a step that dispatches a signal with a
   payload fixed at bind time. This is the one that keeps a flow readable from the Context.
 - **`RetryCommand`** - `Command<int, float>`. It retains in `Execute`, calls the abstract `Try()`,
   and waits for you to call `TryFailed()`; it then retries up to the limit with a real-time pause on
@@ -266,7 +266,7 @@ Bind these rather than writing your own.
   without a word; null at runtime.
 - **Expecting the signal's payload in `Execute`.** It arrives through `[SignalParam]`; a
   `Command<int>` bound to `Signal<int>` reports `Execute signature mismatch` and does not run.
-- **A Command written only to dispatch a signal.** Bind `DispatchSignalCommand` instead.
+- **A Command written only to dispatch a signal.** Bind `SignalDispatchCommand` instead.
 - **A Function where a Command belonged.** If it is a step somebody should read in the sequence, it
   is a Command - a Function does not appear in the Flow Console.
 - **Deriving from `FunctionBody`.** The constructor is internal; take one of the shipped arities.

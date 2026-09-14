@@ -50,10 +50,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "iOS file ships inside it. The Editor never vibrates; a device build is where a "
                 + "preset is felt."),
             new HelpTab("Usage", DrawUsage,
-                "Bind PlayHapticCommand as a step with its preset, or inject the service and call Play.",
-                "A fixed haptic is a step read from the Context - ToSequence<PlayHapticCommand>"
+                "Bind HapticServicePlayCommand as a step with its preset, or inject the service and call Play.",
+                "A fixed haptic is a step read from the Context - ToSequence<HapticServicePlayCommand>"
                 + "(HapticPreset.Success). A preset that depends on a decision is a Play call in the "
-                + "Command that made it. A settings toggle binds SetHapticsEnabledCommand."),
+                + "Command that made it. A settings toggle binds HapticServiceSetEnabledCommand."),
             new HelpTab("Presets", DrawPresets,
                 "What each preset sends, and why two of them feel alike on some Android phones.",
                 "iOS plays the system haptic of the same name. Android plays an envelope through "
@@ -201,16 +201,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("A step in a sequence");
             painter.Paragraph(
-                "Where a haptic is one fixed step of a flow, bind the module's own PlayHapticCommand "
+                "Where a haptic is one fixed step of a flow, bind the module's own HapticServicePlayCommand "
                 + "and give it the preset where the step is bound. The flow then reads from the "
                 + "Context - which preset, after which step - without opening a Command to find the "
-                + "Play call. It is the same shape as DispatchSignalCommand bound with its signal.");
+                + "Play call. It is the same shape as SignalDispatchCommand bound with its signal.");
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.LevelCompleted)\n"
                 + "    .ToSequence<GrantRewardCommand>()\n"
-                + "    .ToSequence<PlayHapticCommand>(HapticPreset.Success);");
+                + "    .ToSequence<HapticServicePlayCommand>(HapticPreset.Success);");
             painter.Paragraph(
-                "PlayHapticCommand is a Command<HapticPreset>: the value in the binding reaches its "
+                "HapticServicePlayCommand is a Command<HapticPreset>: the value in the binding reaches its "
                 + "Execute(HapticPreset). A step before it may also choose the preset at runtime and "
                 + "hand it on with Release(preset) instead.");
 
@@ -237,13 +237,13 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("The on/off choice");
             painter.Paragraph(
                 "A settings screen reads IsEnabled to draw its toggle and dispatches the new value "
-                + "on a Signal<bool>. The module's SetHapticsEnabledCommand reads that bool off the "
+                + "on a Signal<bool>. The module's HapticServiceSetEnabledCommand reads that bool off the "
                 + "signal and calls SetEnabled, so the sequence needs no Command of the game's own. "
                 + "The choice is stored at once in PlayerPrefs and applies from the next Play; "
                 + "turning haptics off also stops whatever is vibrating.");
             painter.Code(
                 "CommandBinder.Bind(_signals.HapticsToggled)\n"
-                + "    .ToSequence<SetHapticsEnabledCommand>();");
+                + "    .ToSequence<HapticServiceSetEnabledCommand>();");
 
             painter.SubHeading("Reading the flow");
             painter.Paragraph(

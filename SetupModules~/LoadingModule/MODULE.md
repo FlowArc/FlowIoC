@@ -7,8 +7,8 @@ reports its step by name, and a set ends when every step it lists has completed,
 
 ## Concepts
 loading, progress bar, boot, splash, set, step, preload, stall, retry, overlay, spinner,
-ILoadingService, ILoadingStep, CD_LoadingSets, LoadingSetStatusRVO, BeginLoadingCommand,
-AwaitLoadingCommand
+ILoadingService, ILoadingStep, CD_LoadingSets, LoadingSetStatusRVO, LoadingServiceBeginCommand,
+LoadingServiceAwaitCommand
 
 ## Decisions
 - **A reporting Command names only its step.** Which set the step belongs to - and so whether the
@@ -23,7 +23,7 @@ AwaitLoadingCommand
   here would mean knowing the game's group names and labels - Connector-shaped knowledge - and the
   module would become the one everything depends on. The Command that does the work reports.
 - **A set completes itself** when every configured step has ended; a chain waits at
-  `AwaitLoadingCommand`. Nobody counts and nobody declares it done. A running set that hears
+  `LoadingServiceAwaitCommand`. Nobody counts and nobody declares it done. A running set that hears
   nothing for its `StallWarningSeconds` is reported once, naming the steps it waits for - the
   silent hang both reference projects had.
 - **One signal per presentation.** `FullscreenBegan` and `OverlayBegan` let the Connector open the
@@ -36,7 +36,7 @@ AwaitLoadingCommand
   each Command is unit-tested by calling `Execute()`.
 - **The two screens carry one tag, `LoadingConstants.SCREEN_TAG`, published in Shared.** A
   loading screen cannot show its own load, so the boot loads the tag into the pool as its first
-  step - `.ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)` - before the set it
+  step - `.ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)` - before the set it
   shows begins; `Begin` then opens the screen from the pool, on stage the same frame, and every
   load after it is drawn on the bar. The constant is here rather than in `MainConstants` because
   the screen contexts read it too and a screen module reaches only its parent's Shared. It is
