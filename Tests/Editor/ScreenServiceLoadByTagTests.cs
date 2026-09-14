@@ -44,6 +44,13 @@ namespace FlowIoC.Tests
             public override void Release(params object[] commandGroupData) => Released++;
         }
 
+        private class RecordingLoadAll : IScreenService.Commands.LoadAll
+        {
+            public int Released;
+
+            public override void Release(params object[] commandGroupData) => Released++;
+        }
+
         /// <summary>The service as the command sees it: the load sub service and nothing else.</summary>
         private class LoadOnlyScreenService : IScreenService
         {
@@ -60,6 +67,7 @@ namespace FlowIoC.Tests
         private ScreenRegistryModel _registry;
         private ScreenRuntimeModel _runtime;
         private RecordingCommand _command;
+        private RecordingLoadAll _loadAll;
 
         [SetUp]
         public void SetUp()
@@ -93,6 +101,8 @@ namespace FlowIoC.Tests
             context.InjectionBinder.BindInstance<IScreenService>(new LoadOnlyScreenService {Load = load});
             _command = new RecordingCommand();
             context.TryToInjectObject(_command);
+            _loadAll = new RecordingLoadAll();
+            context.TryToInjectObject(_loadAll);
         }
 
         [TearDown]
@@ -151,6 +161,18 @@ namespace FlowIoC.Tests
             yield return Until(() => _command.Released == 1);
 
             Assert.AreEqual(0, _registry.GetAllLoadedScreens().Count);
+        }
+
+        /// <summary>The step for a boot without a bar: every registered screen, held until the last is in.</summary>
+        [UnityTest]
+        public IEnumerator LoadAll_holds_the_sequence_until_every_registered_screen_is_in_the_pool()
+        {
+            _loadAll.Execute();
+            Assert.IsTrue(_loadAll.HasRetain, "the step retains before the load is out");
+
+            yield return Until(() => _loadAll.Released == 1);
+
+            Assert.AreEqual(2, _registry.GetAllLoadedScreens().Count);
         }
 
         private static IEnumerator Until(System.Func<bool> condition, int frames = 50)

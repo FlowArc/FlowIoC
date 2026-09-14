@@ -13,7 +13,7 @@ namespace FlowIoC.AssetModule.Service
     /// their prefabs through it, each under an owner of its own, so a prefab both touch is loaded
     /// once and released when the last of them lets go.
     /// </summary>
-    public interface IAssetService
+    public partial interface IAssetService
     {
         Task<T> LoadAssetAsync<T>(object key, string groupId = null);
         T LoadAsset<T>(object key, string groupId = null);
@@ -32,5 +32,16 @@ namespace FlowIoC.AssetModule.Service
 
         /// <summary>Fetches the bundles a key or label needs. Not a claim: nothing is held afterwards.</summary>
         Task<bool> DownloadDependenciesAsync(object keyOrLabel, AssetLoadOptions options = default);
+
+        /// <summary>
+        /// The steps a game binds in a sequence of its own. They sit inside the interface so that
+        /// the one name a game knows - the Service it injects - is also where its steps are found.
+        /// Each step is a file of its own, <c>IAssetService.Commands.&lt;Step&gt;.cs</c>:
+        /// LoadGroupByLabel and DownloadDependencies hold the sequence until the work is done;
+        /// ReleaseGroup acts and returns.
+        /// </summary>
+        public static partial class Commands
+        {
+        }
     }
 }

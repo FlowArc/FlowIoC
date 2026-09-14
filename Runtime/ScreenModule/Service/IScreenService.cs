@@ -28,7 +28,9 @@ namespace FlowIoC.ScreenModule.Service
         /// The steps a game binds in a sequence of its own. They sit inside the interface so that
         /// the one name a game knows - the Service it injects - is also where its steps are found:
         /// <c>.ToSequence&lt;IScreenService.Commands.LoadByTag&gt;(ScreenTag.GroupA)</c>. Each step is
-        /// a file of its own, <c>IScreenService.Commands.&lt;Step&gt;.cs</c>.
+        /// a file of its own, <c>IScreenService.Commands.&lt;Step&gt;.cs</c>: LoadAll and LoadByTag
+        /// hold the sequence until the screens are in; HideAll, HideByTag, UnloadAll and
+        /// UnloadByTag act and return.
         /// </summary>
         public static partial class Commands
         {

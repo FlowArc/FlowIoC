@@ -9,6 +9,11 @@ world pointer, off-screen indicator, world to screen, HUD marker, health bar ove
 arrow, IWorldPointerService, WorldPointerIndicator
 
 ## Decisions
+- **One step shipped, `IWorldPointerService.Commands.UnregisterAll`.** Registering a pointer takes
+  a Transform and an indicator that exist at runtime, so it stays a call from the game's own
+  Command; clearing every pointer is a fixed step of the flow that leaves the scene.
+
+## Decisions
 The whole surface is `IWorldPointerService`; there are no signals, because nothing outside the module
 needs telling. The canvas is read from the indicator itself at `Register`, so the Root carries
 nothing and putting it in the scene is the whole installation. A pointer is placed by world point on
