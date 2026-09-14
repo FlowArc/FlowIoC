@@ -50,8 +50,7 @@ namespace Modules.MainModule.RootsContexts
                 .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.Started);
 
             // A retry from the loading screen runs the boot again.
-            CommandBinder.Bind(_mainSignals.Incoming.RetryBoot)
-                .ToSequence<SignalDispatchCommand>(_internalSignals.Launch);
+            CommandBinder.Bind(_mainSignals.Incoming.RetryBoot).ToSequence<SignalDispatchCommand>(_internalSignals.Launch);
         }
 
         public override void Setup()
