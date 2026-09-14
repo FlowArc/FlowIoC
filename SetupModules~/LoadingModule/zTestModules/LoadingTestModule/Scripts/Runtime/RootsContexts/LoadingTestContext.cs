@@ -2,7 +2,7 @@
 using FlowIoC.BaseModule.Connectors;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.Commands;
-using Modules.LoadingModule.Controllers;
+using Modules.LoadingModule.Services;
 using Modules.LoadingModule.LoadingScreenModule.Signals;
 using Modules.LoadingModule.LoadingTestModule.Controllers;
 using Modules.LoadingModule.LoadingTestModule.Signals;
@@ -30,13 +30,13 @@ namespace Modules.LoadingModule.LoadingTestModule.RootsContexts
             base.CommandBindings();
 
             CommandBinder.Bind(_internalSignals.Launch)
-                .ToSequence<LoadingServiceBeginCommand>("TestBoot")
+                .ToSequence<ILoadingService.Commands.Begin>("TestBoot")
                 .ToSequence<SignalDispatchCommand>(_internalSignals.RunBackground)
                 .ToParallel<FakeLoadingStepCommand>("TestScreens", 3f, false)
                 .ToParallel<FakeLoadingStepCommand>("TestPools", 5f, false)
                 .ToGroupAsSequence(_internalSignals.RunDownload)
                 .ToSequence<FakeLoadingStepCommand>("TestProfile", 2f, true) // fails the first time; the retry re-runs it alone
-                .ToSequence<LoadingServiceAwaitCommand>("TestBoot");
+                .ToSequence<ILoadingService.Commands.Await>("TestBoot");
 
             // The child set: two steps on the second bar.
             CommandBinder.Bind(_internalSignals.RunDownload)

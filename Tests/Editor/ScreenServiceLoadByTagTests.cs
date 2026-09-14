@@ -5,7 +5,6 @@ using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.Injectable.CrossContext;
 using FlowIoC.BaseModule.Injectable.Utils;
 using FlowIoC.BaseModule.ViewsMediators.Utils;
-using FlowIoC.ScreenModule.Commands;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.Model.Registry;
@@ -27,7 +26,7 @@ namespace FlowIoC.Tests
     /// them. What it promises the sequence is the retain: held until the last screen of the tag is
     /// in, and not a screen of any other tag.
     /// </summary>
-    public class ScreenServiceLoadByTagCommandTests
+    public class ScreenServiceLoadByTagTests
     {
         private class TaggedScreen : ScreenBody
         {
@@ -38,7 +37,7 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>Counts the release instead of handing it to a group this test does not run.</summary>
-        private class RecordingCommand : ScreenServiceLoadByTagCommand
+        private class RecordingCommand : IScreenService.Commands.LoadByTag
         {
             public int Released;
 

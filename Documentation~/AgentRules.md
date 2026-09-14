@@ -75,7 +75,11 @@ what is true whatever you are about to do.
 - **A Command is a step in a flow; a Function is called from inside one**, and both live in
   `Controllers/`. A sequence is read in order, and that reading is what a Command is for; a
   Function does its work without depending on where it sits. A Function is not a step in the Flow
-  Console, so a step you want to see there is a Command.
+  Console, so a step you want to see there is a Command. The one Command that does not live in
+  `Controllers/` is a step a Service ships for other modules to bind: it is nested in the
+  Service's interface under a static class `Commands` - `IHapticService.Commands.Play`, bound as
+  `.ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)` - so the one name a game knows
+  is also where its steps are found.
 - A Model owns the module's state and its data, and the rules that keep both valid. It knows
   nothing about Views, Commands, or any other module.
 - A Model never subscribes to a signal. Nothing reaches in and changes its state: an
@@ -110,7 +114,8 @@ what is true whatever you are about to do.
   what stays.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
   what it announces. A module's signals are its public surface - together with the
-  interface of a Service, which is the one thing another module may reference directly.
+  interface of a Service, which is the one thing another module may reference directly, and
+  which carries the steps the Service ships under its nested `Commands`.
 - The public signal holder lives in `Scripts/Signals/`, an assembly of its own -
   `Modules.Player.Signals` beside `Modules.Player` and `Modules.Player.Shared`. **Only a Connector
   references another module's `.Signals` assembly**, and a test module, which may reference
@@ -286,7 +291,7 @@ prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`.
 | Thing | Name |
 |---|---|
 | Signal container | `PlayerSignals`, with nested `PlayerSignalsIncoming` and `PlayerSignalsOutgoing` |
-| Command | `AddCurrencyCommand`; a step another module binds is service-first, `HapticServicePlayCommand` |
+| Command | `AddCurrencyCommand`; a step a Service ships is nested in its interface, `IHapticService.Commands.Play` |
 | Model | `IPlayerModel` and `PlayerModel` |
 | Service | `ICounterService` and `CounterService` |
 | System | `IMapSystem` and `MapSystem` |

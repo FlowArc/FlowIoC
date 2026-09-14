@@ -34,6 +34,21 @@ namespace FlowIoC.Tests
             Assert.AreEqual(0, attempts[0].LineNumber);
         }
 
+        /// <summary>
+        /// A step a Service ships is nested in the Service's interface, and reflection spells that
+        /// chain with '+'. The file to open is the interface's, so the search is for the outermost
+        /// type alone.
+        /// </summary>
+        [Test]
+        public void A_nested_type_is_searched_for_by_its_outermost_type()
+        {
+            List<ScriptSearchAttempt> attempts =
+                _plan.Build("Modules.HapticModule.Services.IHapticService+Commands+Play", null, 0);
+
+            Assert.AreEqual(ScriptSearchKind.BlameTypeName, attempts[0].Kind);
+            Assert.AreEqual("Modules.HapticModule.Services.IHapticService", attempts[0].Value);
+        }
+
         [Test]
         public void An_absolute_path_is_also_tried_as_a_project_relative_one()
         {

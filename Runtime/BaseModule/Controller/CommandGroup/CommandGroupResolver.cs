@@ -93,6 +93,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private int _declarationLine;
 
         private static readonly FlowFrameworkOrigin Origin = new();
+        private readonly CommandDisplayName _displayName = new();
 
         #endregion
 
@@ -211,7 +212,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!command.IsRetain)
             {
                 FlowLogger.LogError(SystemLogType.CommandOperation,
-                    $"Command must be retained to call manual RELEASE! Command: {command.GetType().Name}", command.GetType());
+                    $"Command must be retained to call manual RELEASE! Command: {_displayName.Of(command.GetType())}", command.GetType());
                 return;
             }
 
@@ -223,7 +224,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 // and Dispose already handed it back. Returning it a second time would put the same
                 // instance in the pool twice and hand it to two dispatches at once.
                 FlowLogger.LogWarning(SystemLogType.CommandOperation,
-                    $"RELEASE arrived after the group ended. Command: {command.GetType().Name}", command.GetType());
+                    $"RELEASE arrived after the group ended. Command: {_displayName.Of(command.GetType())}", command.GetType());
                 return;
             }
 
@@ -258,7 +259,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         {
             if (!command.IsRetain)
             {
-                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {command.GetType().Name}",
+                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {_displayName.Of(command.GetType())}",
                     command.GetType());
                 return;
             }
@@ -268,7 +269,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!_retainedCommands.Remove(command, out CommandStepVO step))
             {
                 FlowLogger.LogWarning(SystemLogType.CommandOperation,
-                    $"STOP arrived after the group ended. Command: {command.GetType().Name}", command.GetType());
+                    $"STOP arrived after the group ended. Command: {_displayName.Of(command.GetType())}", command.GetType());
                 return;
             }
 
@@ -503,13 +504,13 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 if (Origin.IsFrameworkType(_commandBinder?.Context?.GetType()))
                 {
                     FlowLogger.LogPlumbing(SystemLogType.CommandOperation,
-                        step.CommandType.Name, " executed as ", step.ExecutionType.ToString());
+                        _displayName.Of(step.CommandType), " executed as ", step.ExecutionType.ToString());
                 }
                 else
                 {
                     FlowLogger.LogAbout(SystemLogType.Command,
                         Origin.IsFrameworkType(step.CommandType) ? null : step.CommandType,
-                        step.CommandType.Name, " executed as ", step.ExecutionType.ToString());
+                        _displayName.Of(step.CommandType), " executed as ", step.ExecutionType.ToString());
                 }
 
             command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());

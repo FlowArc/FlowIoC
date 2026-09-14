@@ -95,7 +95,8 @@ namespace FlowIoC.Editor.Console
                     {
                         string content = File.ReadAllText(assetPath);
                         bool declaresType = content.Contains("class " + simpleName)
-                                            || content.Contains("struct " + simpleName);
+                                            || content.Contains("struct " + simpleName)
+                                            || content.Contains("interface " + simpleName);
 
                         if (declaresType && content.Contains("namespace " + namespaceName))
                             return OpenAtPath(assetPath, lineNumber);

@@ -16,6 +16,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
     {
         private readonly Dictionary<Type, bool> _hideCommandLogCache = new();
         private readonly TypePool<CommandBody> _commandPool = new();
+        private readonly CommandDisplayName _displayName = new();
         private readonly Stack<CommandGroup.CommandGroupResolver> _commandGroupPool = new();
 
         /// <summary>
@@ -255,7 +256,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             // ever sees back what GetCommand handed out.
             _commandPool.Return(commandType, (CommandBody) commandBody);
             if (!HasHideCommandLog(commandType))
-                FlowLogger.LogPlumbing(SystemLogType.CommandOperation, commandType.Name, " returned to pool");
+                FlowLogger.LogPlumbing(SystemLogType.CommandOperation, _displayName.Of(commandType), " returned to pool");
         }
 
         public bool HasHideCommandLog(Type type)

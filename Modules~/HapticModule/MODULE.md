@@ -31,16 +31,18 @@ HapticPreset
 - **The interface is the surface.** `IHapticService.Play(preset)` is called from the game's own
   Command at the point where it decided something happened, which is where the choice of preset
   belongs. No `Scripts/Signals`: nothing for a Connector to hang a preset off.
-- **A step a game binds, beside the interface.** `HapticServicePlayCommand` is `Command<HapticPreset>`,
-  so a game's Context binds `.ToSequence<HapticServicePlayCommand>(HapticPreset.Success)` and the flow
-  reads there - which preset, after which step - the way `SignalDispatchCommand` is bound with the
-  signal it dispatches; `HapticServiceSetEnabledCommand` reads a settings toggle's bool off the signal.
+- **A step a game binds, inside the interface.** `IHapticService.Commands.Play` is
+  `Command<HapticPreset>`, so a game's Context binds
+  `.ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)` and the flow reads there -
+  which preset, after which step - the way `SignalDispatchCommand` is bound with the signal it
+  dispatches; `IHapticService.Commands.SetEnabled` reads a settings toggle's bool off the signal.
   The owner asked for this shape (2026-09-14) because a game Command whose whole body is one
-  `Play` call has to be opened to be read. Both are public in this assembly, which a game already
-  references to inject the interface - Shared holds data, never a Command. The names are
-  service-first because the prefix is the sign of a step meant to be bound from outside (owner,
-  2026-09-14): typing `HapticService` offers both. The module's own steps, `PlayPresetCommand`
-  and `ApplyHapticsEnabledCommand`, stay verb-first and read as local.
+  `Play` call has to be opened to be read. The two steps are nested in the interface under
+  `Commands` rather than filed in `Controllers/` (owner, 2026-09-14): the one name a game knows,
+  the interface it injects, is then also where its steps are found - type `IHapticService`, press
+  `.`, and `Commands` lists them and nothing else - and a module rename never touches a consumer,
+  because the path carries no module name. The module's own steps, `PlayPresetCommand` and
+  `ApplyHapticsEnabledCommand`, stay top-level in `Controllers/`, internal and verb-first.
 - **The on/off choice is the module's**, in PlayerPrefs under `flowioc.haptic.enabled`, default on.
   Installed, it works; a settings screen reads `IsEnabled()` and dispatches to a Command that calls
   `SetEnabled`.

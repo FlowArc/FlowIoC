@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 
 using FlowIoC.BaseModule.Contexts;
-using Modules.HapticModule.Controllers;
+using Modules.HapticModule.Services;
 using Modules.HapticModule.HapticTestModule.Controllers;
 using Modules.HapticModule.HapticTestModule.Signals;
 using Modules.HapticModule.HapticTestModule.ViewsMediators;
@@ -34,7 +34,7 @@ namespace Modules.HapticModule.HapticTestModule.RootsContexts
                 .ToSequence<PlayTestHapticCommand>();
 
             CommandBinder.Bind(_signals.EnabledChangeRequested)
-                .ToSequence<HapticServiceSetEnabledCommand>()
+                .ToSequence<IHapticService.Commands.SetEnabled>()
                 .ToSequence<ReportHapticStateCommand>();
 
             CommandBinder.Bind(_signals.ReportState)
