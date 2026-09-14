@@ -200,12 +200,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "stage the same frame, so every load after it is drawn on the bar.");
             painter.Code(
                 "CommandBinder.Bind(_internalSignals.Launch)\n"
-                + "    .ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)\n"
-                + "    .ToSequence<LoadingServiceBeginCommand>(MainConstants.BOOT_SET)\n"
+                + "    .ToSequence<IScreenService.Commands.LoadByTag>(LoadingConstants.SCREEN_TAG)\n"
+                + "    .ToSequence<ILoadingService.Commands.Begin>(MainConstants.BOOT_SET)\n"
                 + "    .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.BootStarted)\n"
                 + "    .ToParallel<PreloadScreensCommand>()\n"
                 + "    .ToSequence<FillPoolsCommand>()\n"
-                + "    .ToSequence<LoadingServiceAwaitCommand>(MainConstants.BOOT_SET)\n"
+                + "    .ToSequence<ILoadingService.Commands.Await>(MainConstants.BOOT_SET)\n"
                 + "    .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.Started);");
             painter.Paragraph(
                 "BootStarted and Started are the two fan-out points. What may run beside the boot "
@@ -232,14 +232,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("Beginning and waiting");
             painter.Paragraph(
-                "The chain that owns the moment binds the two shipped Commands: LoadingServiceBeginCommand "
-                + "opens the presentation, LoadingServiceAwaitCommand holds the chain until the set has "
+                "The chain that owns the moment binds the two shipped Commands: ILoadingService.Commands.Begin "
+                + "opens the presentation, ILoadingService.Commands.Await holds the chain until the set has "
                 + "ended - its own steps are already waited on by the group; the wait is for the "
                 + "steps other modules report on their own. A failed set stops the chain there.");
             painter.Code(
-                ".ToSequence<LoadingServiceBeginCommand>(\"EnterMatch\")\n"
+                ".ToSequence<ILoadingService.Commands.Begin>(\"EnterMatch\")\n"
                 + "...\n"
-                + ".ToSequence<LoadingServiceAwaitCommand>(\"EnterMatch\")");
+                + ".ToSequence<ILoadingService.Commands.Await>(\"EnterMatch\")");
             painter.Paragraph(
                 "A feature that waits for its own data waits in its own module: the first Command of "
                 + "the clan panel's open flow retains until its Model is ready, and begins an Overlay "

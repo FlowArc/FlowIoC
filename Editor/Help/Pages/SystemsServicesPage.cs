@@ -111,7 +111,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "sequence with the next step waiting on it.");
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.CelebrateWin)\n"
-                + "    .ToSequence<HapticServicePlayCommand>(HapticPreset.Success)\n"
+                + "    .ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)\n"
                 + "    .ToSequence<PlayWinAnimationCommand>();",
                 "A Command the Service ships, used in a sequence");
             painter.Paragraph(
@@ -119,10 +119,11 @@ namespace FlowIoC.Editor.Help.Pages
                 + "sequence carries on without waiting for it. A Command of the Service's own is "
                 + "what holds the line, and it is what puts the step in the Flow Console.");
             painter.Paragraph(
-                "A Command a Service ships is named service-first - HapticServicePlayCommand, never "
-                + "PlayHapticCommand - so typing the Service's name offers every step it ships. The "
-                + "module's own steps stay verb-first: the prefix is what marks a Command as meant "
-                + "to be bound from outside.");
+                "A Command a Service ships is nested in the Service's interface, under a static class "
+                + "named Commands - IHapticService.Commands.Play, never a top-level PlayHapticCommand. The "
+                + "one name a game knows, the interface it injects, is then also where its steps are found: "
+                + "type the interface, press dot, and Commands lists every step it ships and nothing else. "
+                + "The module's own steps stay top-level in Controllers/, internal, verb-first.");
 
             painter.Separator();
             painter.SubHeading("The two ways out");

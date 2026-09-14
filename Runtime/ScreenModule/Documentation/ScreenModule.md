@@ -351,12 +351,12 @@ A preload is also a step a sequence binds, with the tag given where the step is 
 
 ```csharp
 CommandBinder.Bind(_internalSignals.Launch)
-    .ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)   // the loading screens, into the pool
-    .ToSequence<LoadingServiceBeginCommand>(MainConstants.BOOT_SET)            // opens one of them - from the pool, this frame
+    .ToSequence<IScreenService.Commands.LoadByTag>(LoadingConstants.SCREEN_TAG)   // the loading screens, into the pool
+    .ToSequence<ILoadingService.Commands.Begin>(MainConstants.BOOT_SET)            // opens one of them - from the pool, this frame
     .ToParallel<PreloadScreensCommand>();                                // everything else, drawn on it
 ```
 
-`ScreenServiceLoadByTagCommand` holds the sequence until the last screen of the tag is in. That is
+`IScreenService.Commands.LoadByTag` holds the sequence until the last screen of the tag is in. That is
 what makes the open that follows a *pooled* open: no load, on stage the same frame. A loading
 screen cannot show its own load, so it is loaded before the set it shows begins, and every
 load after that one is what the bar reports.

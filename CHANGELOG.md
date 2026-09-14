@@ -9,31 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`ScreenServiceLoadByTagCommand`, a step a game binds with the tag given at the binding.**
-  `.ToSequence<ScreenServiceLoadByTagCommand>(ScreenTag.GroupA)` loads every screen registered
+- **`IScreenService.Commands.LoadByTag`, a step a game binds with the tag given at the binding.**
+  `.ToSequence<IScreenService.Commands.LoadByTag>(ScreenTag.GroupA)` loads every screen registered
   under the tag into the pool and holds the sequence until the last of them is in, so the step
   after it can open one of those screens as a pooled open - no load, on stage the same frame. It
   is `Load.ByTag` as a sequence step, the way `SignalDispatchCommand` is a dispatch as one.
 
 ### Changed
 
-- **A Command another module binds is named service-first; a Command bound only by its own
-  module stays verb-first.** `DispatchSignalCommand` is `SignalDispatchCommand`, the Haptic
-  module's two steps are `HapticServicePlayCommand` and `HapticServiceSetEnabledCommand`, and the
-  Loading module's are `LoadingServiceBeginCommand` and `LoadingServiceAwaitCommand`. A developer
-  who wants a Service's step types the Service's name and autocomplete offers every step it ships,
-  instead of guessing the verb first; and the prefix is the sign that a Command is meant to be
-  bound from outside, so the module-internal steps - `PlayPresetCommand`, `BeginSetCommand` - keep
-  the plain name and read as local. `RetryCommand` is a base class a game derives from, not a
-  step it binds, and keeps its name. A project on the old names gets a compile error at each
-  binding that uses one.
+- **A step a Service ships is nested in the Service's interface, under `Commands`.**
+  `PlayHapticCommand` is `IHapticService.Commands.Play`, `SetHapticsEnabledCommand` is
+  `IHapticService.Commands.SetEnabled`, `BeginLoadingCommand` and `AwaitLoadingCommand` are
+  `ILoadingService.Commands.Begin` and `.Await`, and the ScreenModule's new `LoadByTag` step is
+  `IScreenService.Commands.LoadByTag`. The one name a game knows - the interface it injects - is
+  now also where its steps are found: type the interface, press `.`, and `Commands` lists every
+  step it ships and nothing else. The path carries no module name, so a Rename Module never
+  touches a consumer's Context, and a module with two interfaces splits its steps by itself. The
+  step is a normal class written inside the interface file; the module's own steps -
+  `PlayPresetCommand`, `BeginSetCommand` - stay top-level in `Controllers/`, internal, verb-first.
+  A diagnostic prints the nested path (`IHapticService.Commands.Play executed as Sequence`),
+  through `CommandDisplayName`, and the Flow Console opens the interface's file for it.
+  `DispatchSignalCommand` is `SignalDispatchCommand`; `RetryCommand` is a base class a game
+  derives from, not a step it binds, and keeps its name. A project on the old names gets a
+  compile error at each binding that uses one.
 - **A Command a module binds only for itself is `internal`.** `RegisterPoolConfigCommand` and
   `UnregisterPoolConfigCommand` in the Pool module, and the Camera, A/B test and test-module
   Commands in the ready-made modules, were `public` while nothing outside their module was meant
   to bind them - they answer a signal the module owns, or a step of its own boot. Now the
   compiler says so, and `public` on a Command means what the naming rule above says it means.
 - **The setup set's boot loads the loading screens before the Boot set begins.** `MainContext`'s
-  chain starts with `.ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)`, so the
+  chain starts with `.ToSequence<IScreenService.Commands.LoadByTag>(LoadingConstants.SCREEN_TAG)`, so the
   `Begin` that follows opens the loading screen from the pool and every later load - the screen
   preload, the pools - is drawn on the bar. Before, `Begin` started the loading screen's own
   addressable load and the preload ran beside it, off screen. The Loading module's two screens

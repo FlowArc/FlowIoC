@@ -1,7 +1,7 @@
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.Commands;
-using FlowIoC.ScreenModule.Commands;
-using Modules.LoadingModule.Controllers;
+using FlowIoC.ScreenModule.Service;
+using Modules.LoadingModule.Services;
 using Modules.LoadingModule.Shared.Constants;
 using Modules.MainModule.Constants;
 using Modules.MainModule.Controllers;
@@ -41,12 +41,12 @@ namespace Modules.MainModule.RootsContexts
             // the fan-out for what may run beside the boot without slowing it; Started is the
             // fan-out for what waits until the player is in.
             CommandBinder.Bind(_internalSignals.Launch)
-                .ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)
-                .ToSequence<LoadingServiceBeginCommand>(MainConstants.BOOT_SET)
+                .ToSequence<IScreenService.Commands.LoadByTag>(LoadingConstants.SCREEN_TAG)
+                .ToSequence<ILoadingService.Commands.Begin>(MainConstants.BOOT_SET)
                 .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.BootStarted)
                 .ToParallel<PreloadScreensCommand>()
                 .ToSequence<FillPoolsCommand>()
-                .ToSequence<LoadingServiceAwaitCommand>(MainConstants.BOOT_SET)
+                .ToSequence<ILoadingService.Commands.Await>(MainConstants.BOOT_SET)
                 .ToSequence<SignalDispatchCommand>(_mainSignals.Outgoing.Started);
 
             // A retry from the loading screen runs the boot again.

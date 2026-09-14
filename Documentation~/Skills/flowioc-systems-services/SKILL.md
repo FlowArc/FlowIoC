@@ -81,16 +81,18 @@ to paint them.
 
    ```csharp
    CommandBinder.Bind(_signals.Incoming.CelebrateWin)
-       .ToSequence<HapticServicePlayCommand>(HapticPreset.Success)
+       .ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)
        .ToSequence<PlayWinAnimationCommand>();
    ```
 
    A generic `ToSequence<SignalDispatchCommand>` would start the same work, but the sequence
    carries on without waiting for it. A Command of the Service's own is what holds the line.
-   A Command a Service ships is named service-first - `HapticServicePlayCommand`, never
-   `PlayHapticCommand` - so typing the Service's name offers every step it ships. The module's
-   own steps stay verb-first: the prefix is what marks a Command as meant to be bound from
-   outside.
+   A Command a Service ships is nested in the Service's interface, under a static class named
+   `Commands` - `IHapticService.Commands.Play`, never a top-level `PlayHapticCommand`. The one name
+   a game knows, the interface it injects, is then also where its steps are found: type the
+   interface, press `.`, and `Commands` lists every step it ships and nothing else. The step is a
+   normal class - `Command<HapticPreset>` with `[Inject] IHapticService` - written inside the
+   interface file. The module's own steps stay top-level in `Controllers/`, internal, verb-first.
 
 Exceptions aside, those two are the whole list.
 

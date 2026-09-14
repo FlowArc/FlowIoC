@@ -58,7 +58,7 @@ namespace FlowIoC.Editor.Console
             {
                 attempts.Add(new ScriptSearchAttempt
                 {
-                    Kind = ScriptSearchKind.BlameTypeName, Value = blameTypeName, LineNumber = 0
+                    Kind = ScriptSearchKind.BlameTypeName, Value = OutermostTypeOf(blameTypeName), LineNumber = 0
                 });
             }
 
@@ -77,6 +77,17 @@ namespace FlowIoC.Editor.Console
             }
 
             return attempts;
+        }
+
+        /// <summary>
+        /// A nested type is declared in its outermost type's file. Reflection spells the chain with
+        /// '+' - <c>Modules.HapticModule.Services.IHapticService+Commands+Play</c> - and the file to
+        /// open is <c>IHapticService.cs</c>, so everything from the first '+' on is dropped.
+        /// </summary>
+        private string OutermostTypeOf(string typeName)
+        {
+            int nested = typeName.IndexOf('+');
+            return nested < 0 ? typeName : typeName.Substring(0, nested);
         }
 
         private static string ToProjectRelative(string normalized)
