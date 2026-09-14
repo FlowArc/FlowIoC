@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the plain name and read as local. `RetryCommand` is a base class a game derives from, not a
   step it binds, and keeps its name. A project on the old names gets a compile error at each
   binding that uses one.
+- **A Command a module binds only for itself is `internal`.** `RegisterPoolConfigCommand` and
+  `UnregisterPoolConfigCommand` in the Pool module, and the Camera, A/B test and test-module
+  Commands in the ready-made modules, were `public` while nothing outside their module was meant
+  to bind them - they answer a signal the module owns, or a step of its own boot. Now the
+  compiler says so, and `public` on a Command means what the naming rule above says it means.
 - **The setup set's boot loads the loading screens before the Boot set begins.** `MainContext`'s
   chain starts with `.ToSequence<ScreenServiceLoadByTagCommand>(LoadingConstants.SCREEN_TAG)`, so the
   `Begin` that follows opens the loading screen from the pool and every later load - the screen

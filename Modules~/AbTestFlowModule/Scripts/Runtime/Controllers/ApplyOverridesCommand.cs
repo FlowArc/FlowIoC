@@ -20,7 +20,7 @@ namespace Modules.AbTestFlowModule.Controllers
     /// carries those references across as instance ids. It also deep-copies nested lists, so the
     /// original never ends up sharing the variant asset's own collections.
     /// </summary>
-    public class ApplyOverridesCommand : Command
+    internal class ApplyOverridesCommand : Command
     {
         [Inject] private IAbTestFlowModel _model { get; set; }
 

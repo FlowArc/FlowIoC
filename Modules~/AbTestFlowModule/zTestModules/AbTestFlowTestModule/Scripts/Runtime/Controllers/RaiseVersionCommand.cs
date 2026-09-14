@@ -6,7 +6,7 @@ using Modules.AbTestFlowModule.AbTestFlowTestModule.Models;
 
 namespace Modules.AbTestFlowModule.AbTestFlowTestModule.Controllers
 {
-    public class RaiseVersionCommand : Command
+    internal class RaiseVersionCommand : Command
     {
         [Inject] private IAbTestFlowTestModel _model { get; set; }
 

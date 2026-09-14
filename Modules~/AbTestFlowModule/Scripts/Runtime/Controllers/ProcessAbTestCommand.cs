@@ -16,7 +16,7 @@ namespace Modules.AbTestFlowModule.Controllers
     /// is the only way to land here again, and it rolls for everybody - including the players the
     /// rollout left outside, who are otherwise outside for good.
     /// </summary>
-    public class ProcessAbTestCommand : Command
+    internal class ProcessAbTestCommand : Command
     {
         [Inject] private IAbTestFlowModel _model { get; set; }
 

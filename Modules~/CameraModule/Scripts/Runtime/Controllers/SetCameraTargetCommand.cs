@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Modules.CameraModule.Controllers
 {
-    public class SetCameraTargetCommand : Command
+    internal class SetCameraTargetCommand : Command
     {
         [SignalParam] private Transform _target { get; set; }
         [Inject] private ICameraModel _cameraModel { get; set; }

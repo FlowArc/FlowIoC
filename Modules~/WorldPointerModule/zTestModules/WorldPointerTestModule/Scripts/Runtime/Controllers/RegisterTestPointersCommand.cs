@@ -12,7 +12,7 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
     /// Pairs each cube with the indicator at the same index and hands the pairs to the service,
     /// after clearing whatever it was following. Each indicator brings its own preset.
     /// </summary>
-    public class RegisterTestPointersCommand : Command
+    internal class RegisterTestPointersCommand : Command
     {
         [Inject] private IWorldPointerService _worldPointerService { get; set; }
         [InjectSignal] private WorldPointerTestInternalSignals _signals { get; set; }

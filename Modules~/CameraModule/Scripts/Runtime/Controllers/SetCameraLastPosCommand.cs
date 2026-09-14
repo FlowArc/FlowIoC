@@ -5,7 +5,7 @@ using Modules.CameraModule.Shared.Enums;
 
 namespace Modules.CameraModule.Controllers
 {
-    public class SetCameraLastPosCommand : Command
+    internal class SetCameraLastPosCommand : Command
     {
         [SignalParam] private CameraName _type { get; set; }
         [Inject] private ICameraModel _cameraModel { get; set; }

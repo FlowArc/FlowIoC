@@ -5,7 +5,7 @@ using Modules.CameraModule.Shared.Enums;
 
 namespace Modules.CameraModule.Controllers
 {
-    public class SwitchCameraCommand : Command
+    internal class SwitchCameraCommand : Command
     {
         [SignalParam] private CameraName _cameraId { get; set; }
         [Inject] private ICameraModel _cameraModel { get; set; }
