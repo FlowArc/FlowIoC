@@ -638,18 +638,12 @@ namespace FlowIoC.Editor.Help.Pages
                 + "it ships and nothing else. The argument is given at the binding, and a step that waits "
                 + "on its work holds the sequence until it is done.");
             painter.Code(
-                "CommandBinder.Bind(_signals.Incoming.LeaveMatch)
-"
-                + "    .ToSequence<IScreenService.Commands.HideByTag>(ScreenTag.GroupB)
-"
-                + "    .ToSequence<IScreenService.Commands.UnloadByTag>(ScreenTag.GroupB)
-"
-                + "    .ToSequence<IAssetService.Commands.ReleaseGroup>(\"match\")
-"
-                + "    .ToSequence<ICounterService.Commands.Stop>(\"MatchTimer\")
-"
-                + "    .ToSequence<IWorldPointerService.Commands.UnregisterAll>()
-"
+                "CommandBinder.Bind(_signals.Incoming.LeaveMatch)\n"
+                + "    .ToSequence<IScreenService.Commands.HideByTag>(ScreenTag.GroupB)\n"
+                + "    .ToSequence<IScreenService.Commands.UnloadByTag>(ScreenTag.GroupB)\n"
+                + "    .ToSequence<IAssetService.Commands.ReleaseGroup>(\"match\")\n"
+                + "    .ToSequence<ICounterService.Commands.Stop>(\"MatchTimer\")\n"
+                + "    .ToSequence<IWorldPointerService.Commands.UnregisterAll>()\n"
                 + "    .ToSequence<IHapticService.Commands.Play>(HapticPreset.Success);");
             painter.Paragraph(
                 "Screen: LoadAll, LoadByTag, HideAll, HideByTag, UnloadAll, UnloadByTag. Pool: InitializeAll, "
@@ -737,7 +731,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Command and a Function both live in Scripts/Runtime/Controllers. Both are controllers.");
             painter.Bullet("A Function derives from a shipped arity - FunctionVoid, FunctionReturn or AsyncFunction - never from FunctionBody.");
             painter.Bullet("Create Command and Create Function write the file for you. Prefer them over writing either by hand.");
-            painter.Bullet("The package ships RetryCommand and SignalDispatchCommand already written, and every Service ships its steps under I<Service>.Commands. The Ready-made tab is what a Context may bind without a file of its own.");
+            painter.Bullet(
+                "The package ships RetryCommand and SignalDispatchCommand already written, and every Service ships its steps under I<Service>.Commands. The Ready-made tab is what a Context may bind without a file of its own.");
         }
 
         /// <summary>
