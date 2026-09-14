@@ -1210,6 +1210,20 @@ provider runs its coroutine to the end before it pools anything.
 | **ConsoleModule** | `FlowLogger.Log("…")` | A filterable in-editor console, wired into the framework itself. → [docs](Runtime/ConsoleModule/Documentation/FlowConsole.md) |
 | **ExtensionModule** | `transform.position.WithY(0f)` | Extension methods that carry no framework of their own: vector and float maths, enum flags, list conversion and UTC time formatting. |
 
+Every Service among them ships the calls that are fixed steps of a flow as Commands nested in its
+interface, under `Commands` — type the interface, press `.`, and the list is every step it ships:
+`IScreenService.Commands.LoadAll`, `LoadByTag`, `HideAll`, `HideByTag`, `UnloadAll`, `UnloadByTag`;
+`IPoolService.Commands.InitializeAll`, `InitializeGroup`; `IAssetService.Commands.LoadGroupByLabel<T>`,
+`ReleaseGroup`, `DownloadDependencies`. The argument is given at the binding, a step that waits on its
+work holds the sequence, and the flow reads from the Context:
+
+```csharp
+CommandBinder.Bind(_signals.Incoming.LeaveMatch)
+    .ToSequence<IScreenService.Commands.HideByTag>(ScreenTag.GroupB)
+    .ToSequence<IScreenService.Commands.UnloadByTag>(ScreenTag.GroupB)
+    .ToSequence<IAssetService.Commands.ReleaseGroup>("match");
+```
+
 The framework logs its own activity on the built-in channels `Context`,
 `Injection`, `Signal`, `SignalOperation`, `Command`, `CommandOperation`, `Function`,
 `Screen`, `Pool` and `Asset`, each of which can be toggled in the Flow Console window — so
@@ -1272,8 +1286,8 @@ you do not want.
 
 | Module | Injected as | What it does |
 |---|---|---|
-| **CounterModule** | `ICounterService` | Named counters with once-a-second callbacks: `CountDownFrom` towards zero or `CountUpFrom` measuring elapsed time, seconds left or 0..1, several listeners per id, and a pluggable time source so a server clock can replace the device one. |
-| **WorldPointerModule** | `IWorldPointerService` | A UI element that follows a 3D object on screen every frame - a health bar, a name, a "wave incoming" notice - and, outside the frame, hides, clamps to the edge with an arrow aimed at the target, or carries on. The frame is the camera's pixel rect inset by margins, so a HUD bar is a margin; a destroyed target drops itself; `TryProject` places something once. |
+| **CounterModule** | `ICounterService` | Named counters with once-a-second callbacks: `CountDownFrom` towards zero or `CountUpFrom` measuring elapsed time, seconds left or 0..1, several listeners per id, and a pluggable time source so a server clock can replace the device one. `ICounterService.Commands.Stop(id)` is the one step it ships - a sequence ends a counter with the id given at the binding. |
+| **WorldPointerModule** | `IWorldPointerService` | A UI element that follows a 3D object on screen every frame - a health bar, a name, a "wave incoming" notice - and, outside the frame, hides, clamps to the edge with an arrow aimed at the target, or carries on. The frame is the camera's pixel rect inset by margins, so a HUD bar is a margin; a destroyed target drops itself; `TryProject` places something once. `IWorldPointerService.Commands.UnregisterAll` is the one step it ships - the flow that leaves the scene clears every pointer. |
 | **HapticModule** | `IHapticService` | The nine haptic presets iOS names - Selection, Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - played through UIKit's feedback generators on iOS and as a waveform through the Vibrator on Android, with no native library and no vendor asset. `Play(preset)` from the Command that decided the event, or `IHapticService.Commands.Play` bound as a step of a sequence with the preset given at the binding - `.ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)` - so the flow reads from the Context; `IsEnabled` and `SetEnabled` keep the player's choice in PlayerPrefs, and `IHapticService.Commands.SetEnabled` binds to a settings toggle's `Signal<bool>`; the `VIBRATE` permission is written into the Gradle project by the module. |
 
 Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its

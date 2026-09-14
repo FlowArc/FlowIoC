@@ -37,8 +37,8 @@ namespace FlowIoC.Editor.Help.Pages
             new HelpTab("Ready-made", DrawReadyMade,
                 "Some commands are already written. Bind them rather than writing them again.",
                 "The package ships two of them, and a module binds either straight from its "
-                + "Context. A module that ships commands for its own signals documents them on its "
-                + "own page; what is here is what any module may bind."),
+                + "Context. Every Service ships its own under I<Service>.Commands - type the interface, "
+                + "press dot - and documents them on its page; what is here is what any module may bind."),
             new HelpTab("Rules", DrawRules,
                 "The rules, in one list.",
                 "What a Command may hold, where a Function belongs, and what the Context is left saying.")
@@ -631,6 +631,35 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Command of your own.");
 
             painter.Separator();
+            painter.SubHeading("A Service's own steps - I<Service>.Commands");
+            painter.Paragraph(
+                "Every Service ships the calls that are fixed steps of a flow as Commands nested in its "
+                + "interface, under Commands - type the interface, press dot, and the list is every step "
+                + "it ships and nothing else. The argument is given at the binding, and a step that waits "
+                + "on its work holds the sequence until it is done.");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.LeaveMatch)
+"
+                + "    .ToSequence<IScreenService.Commands.HideByTag>(ScreenTag.GroupB)
+"
+                + "    .ToSequence<IScreenService.Commands.UnloadByTag>(ScreenTag.GroupB)
+"
+                + "    .ToSequence<IAssetService.Commands.ReleaseGroup>(\"match\")
+"
+                + "    .ToSequence<ICounterService.Commands.Stop>(\"MatchTimer\")
+"
+                + "    .ToSequence<IWorldPointerService.Commands.UnregisterAll>()
+"
+                + "    .ToSequence<IHapticService.Commands.Play>(HapticPreset.Success);");
+            painter.Paragraph(
+                "Screen: LoadAll, LoadByTag, HideAll, HideByTag, UnloadAll, UnloadByTag. Pool: InitializeAll, "
+                + "InitializeGroup. Asset: LoadGroupByLabel<T>, ReleaseGroup, DownloadDependencies. Loading: "
+                + "Begin, Await. Haptic: Play, SetEnabled. Counter: Stop. World Pointer: UnregisterAll. "
+                + "LocalSave: Save, SaveAll. What is not a step is a call that takes a runtime object or the "
+                + "callbacks the caller keeps, or one that answers a question - those stay calls from a "
+                + "Command of your own.");
+
+            painter.Separator();
             painter.SubHeading("RetryCommand - a step that tries again");
             painter.Paragraph(
                 "An abstract Command<int, float> for work that can fail and is worth attempting "
@@ -708,7 +737,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Bullet("A Command and a Function both live in Scripts/Runtime/Controllers. Both are controllers.");
             painter.Bullet("A Function derives from a shipped arity - FunctionVoid, FunctionReturn or AsyncFunction - never from FunctionBody.");
             painter.Bullet("Create Command and Create Function write the file for you. Prefer them over writing either by hand.");
-            painter.Bullet("The package ships RetryCommand and SignalDispatchCommand already written. The Ready-made tab is what a Context may bind without a file of its own.");
+            painter.Bullet("The package ships RetryCommand and SignalDispatchCommand already written, and every Service ships its steps under I<Service>.Commands. The Ready-made tab is what a Context may bind without a file of its own.");
         }
 
         /// <summary>
