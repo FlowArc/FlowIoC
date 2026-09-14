@@ -18,7 +18,7 @@ namespace Modules.AbTestFlowModule.AbTestFlowTestModule.Controllers
     /// pairs them with what the probe holds right now. The two should agree; the scene shows both
     /// so that a disagreement is seen.
     /// </summary>
-    public class ReportStateCommand : Command
+    internal class ReportStateCommand : Command
     {
         [Inject] private IAbTestFlowService _abTests { get; set; }
         [Inject] private IAbTestFlowTestModel _model { get; set; }

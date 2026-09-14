@@ -14,7 +14,7 @@ namespace Modules.AbTestFlowModule.Controllers
     /// was written under the experiment's current version. Anything else - nothing stored, an
     /// older version, a group the config no longer has - is left for the roll that follows.
     /// </summary>
-    public class ReadStoredAbTestsCommand : Command
+    internal class ReadStoredAbTestsCommand : Command
     {
         [Inject] private IAbTestFlowModel _model { get; set; }
 

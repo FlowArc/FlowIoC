@@ -7,7 +7,7 @@ using Modules.WorldPointerModule.WorldPointerTestModule.Signals;
 namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 {
     /// <summary>Stops every pointer; each indicator is told Hidden by the service.</summary>
-    public class UnregisterTestPointersCommand : Command
+    internal class UnregisterTestPointersCommand : Command
     {
         [Inject] private IWorldPointerService _worldPointerService { get; set; }
         [InjectSignal] private WorldPointerTestInternalSignals _signals { get; set; }

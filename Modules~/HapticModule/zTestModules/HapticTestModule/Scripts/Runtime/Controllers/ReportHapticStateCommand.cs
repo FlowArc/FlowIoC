@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Modules.HapticModule.HapticTestModule.Controllers
 {
-    public class ReportHapticStateCommand : Command
+    internal class ReportHapticStateCommand : Command
     {
         [Inject] private IHapticService _haptics { get; set; }
 

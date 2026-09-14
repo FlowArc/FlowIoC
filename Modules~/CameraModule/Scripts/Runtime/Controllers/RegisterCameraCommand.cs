@@ -6,7 +6,7 @@ using Modules.CameraModule.Shared.Enums;
 
 namespace Modules.CameraModule.Controllers
 {
-    public class RegisterCameraCommand : Command
+    internal class RegisterCameraCommand : Command
     {
         [SignalParam] private CameraName _cameraId { get; set; }
         [SignalParam] private CameraCVO _config { get; set; }

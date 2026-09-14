@@ -16,7 +16,7 @@ namespace Modules.AbTestFlowModule.AbTestFlowTestModule.Controllers
     /// A test module may reference anything, which is what lets it reach the module's signals
     /// directly rather than through a Connector; an ordinary module never would.
     /// </summary>
-    public class RerollCommand : Command
+    internal class RerollCommand : Command
     {
         [Inject] private IAbTestFlowService _abTests { get; set; }
 

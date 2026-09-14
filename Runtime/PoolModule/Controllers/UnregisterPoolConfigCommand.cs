@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace FlowIoC.PoolModule.Controllers
 {
-    public sealed class UnregisterPoolConfigCommand : Command
+    internal sealed class UnregisterPoolConfigCommand : Command
     {
         [SignalParam] private SerializedDictionary<string, PoolGroupCVO> _configs { get; set; }
         [Inject] private IPoolConfigModel _poolConfigModel { get; set; }

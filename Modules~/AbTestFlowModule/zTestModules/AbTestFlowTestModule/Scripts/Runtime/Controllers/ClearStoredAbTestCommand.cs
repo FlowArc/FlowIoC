@@ -12,7 +12,7 @@ namespace Modules.AbTestFlowModule.AbTestFlowTestModule.Controllers
     /// Forgets this player's assignment. The key is the one the module writes, built from the
     /// prefix it publishes, so the next roll - Reroll here, or the next launch - is a fresh one.
     /// </summary>
-    public class ClearStoredAbTestCommand : Command
+    internal class ClearStoredAbTestCommand : Command
     {
         [Inject] private IAbTestFlowTestModel _model { get; set; }
 

@@ -8,7 +8,7 @@ using Modules.HapticModule.Services;
 namespace Modules.HapticModule.HapticTestModule.Controllers
 {
     /// <summary>What a game module's Command does at the moment it decided something happened.</summary>
-    public class PlayTestHapticCommand : Command
+    internal class PlayTestHapticCommand : Command
     {
         [SignalParam] private HapticPreset _preset { get; set; }
 
