@@ -49,8 +49,7 @@ namespace Modules.LoadingModule.LoadingTestModule.RootsContexts
                 .ToSequence<FakeLoadingStepCommand>("TestClan", 6f, false);
 
             // The retry: the failed step alone; the set reopens and completes on its own.
-            CommandBinder.Bind(_internalSignals.Retry)
-                .ToSequence<FakeLoadingStepCommand>("TestProfile", 2f, false);
+            CommandBinder.Bind(_internalSignals.Retry).ToSequence<FakeLoadingStepCommand>("TestProfile", 2f, false);
         }
 
         public override void Setup()

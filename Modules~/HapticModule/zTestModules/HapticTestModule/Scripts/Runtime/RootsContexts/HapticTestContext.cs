@@ -30,15 +30,13 @@ namespace Modules.HapticModule.HapticTestModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_signals.PlayRequested)
-                .ToSequence<PlayTestHapticCommand>();
+            CommandBinder.Bind(_signals.PlayRequested).ToSequence<PlayTestHapticCommand>();
 
             CommandBinder.Bind(_signals.EnabledChangeRequested)
                 .ToSequence<IHapticService.Commands.SetEnabled>()
                 .ToSequence<ReportHapticStateCommand>();
 
-            CommandBinder.Bind(_signals.ReportState)
-                .ToSequence<ReportHapticStateCommand>();
+            CommandBinder.Bind(_signals.ReportState).ToSequence<ReportHapticStateCommand>();
         }
 
         public override void Launch()

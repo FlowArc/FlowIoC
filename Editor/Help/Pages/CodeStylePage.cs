@@ -53,6 +53,19 @@ namespace FlowIoC.Editor.Help.Pages
                 + "keeps siblings adjacent in it.");
 
             painter.Separator();
+            painter.SubHeading("A signal bound to one step is bound on one line");
+            painter.Code(
+                "CommandBinder.Bind(_signals.Incoming.Save).ToSequence<SaveCommand>();\n"
+                + "\n"
+                + "CommandBinder.Bind(_signals.Incoming.AddCurrency)\n"
+                + "    .ToSequence<AddCurrencyCommand>()\n"
+                + "    .ToSequence<SavePlayerCommand>();",
+                "One step, one line; two or more, one per line");
+            painter.Paragraph(
+                "Only a chain of two or more steps breaks, one step per line under the Bind, which is "
+                + "what makes a flow read top to bottom. The same for ToParallel.");
+
+            painter.Separator();
             painter.SubHeading("Keep static to what the engine forces");
             painter.Paragraph(
                 "Static state cannot be reset between domain reloads, cannot be substituted in a "

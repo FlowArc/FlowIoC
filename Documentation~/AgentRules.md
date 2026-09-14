@@ -434,6 +434,11 @@ the documentation. The function provider's three terminators are the worked exam
 discoverability above the prettiest individual name whenever a caller has to choose between the
 members of a set.
 
+**A signal bound to one step is bound on one line.**
+`CommandBinder.Bind(_signals.Incoming.Save).ToSequence<SaveCommand>();` - only a chain of two or more
+steps breaks, one step per line under the `Bind`, which is what makes a flow read top to bottom.
+The same for `ToParallel`.
+
 **Keep `static` to what the engine forces.** Static state cannot be reset between domain reloads,
 cannot be substituted in a test, and hides the lifetime of whatever it caches. Write an ordinary
 class with instance members and give it an owner that holds the instance. Unity forces a few entry

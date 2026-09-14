@@ -73,6 +73,8 @@ hands the step - fixed at bind time, or passed forward by the previous step's `R
 
 They combine freely in one binding. What you are choosing between is when a step starts and what it
 is handed.
+A signal bound to one step is bound on one line - `CommandBinder.Bind(_signals.Incoming.Save).ToSequence<SaveCommand>();` -
+and only a chain of two or more steps breaks, one step per line under the `Bind`.
 
 ```csharp
 // Sequence - each step waits for the one before it.
@@ -88,8 +90,7 @@ CommandBinder.Bind(_signals.Incoming.LoadAssets)
     .ToSequence<HideLoadingScreenCommand>();
 
 // Parameters fixed at bind time, handed to that step's typed Execute.
-CommandBinder.Bind(_signals.Incoming.StartTutorial)
-    .ToSequence<BranchCommand>(true, _internalSignals.PathA, _internalSignals.PathB);
+CommandBinder.Bind(_signals.Incoming.StartTutorial).ToSequence<BranchCommand>(true, _internalSignals.PathA, _internalSignals.PathB);
 
 // Another signal's whole chain, spliced in as one step.
 CommandBinder.Bind(_signals.Incoming.AddCurrency)

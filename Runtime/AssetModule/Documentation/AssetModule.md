@@ -181,8 +181,7 @@ CommandBinder.Bind(_signals.Incoming.EnterLevel)
     .ToSequence<IAssetService.Commands.LoadGroupByLabel<GameObject>>("level30", "Preload/Level30")
     .ToSequence<OpenLevelCommand>();
 
-CommandBinder.Bind(_signals.Incoming.LeaveLevel)
-    .ToSequence<IAssetService.Commands.ReleaseGroup>("Preload/Level30");
+CommandBinder.Bind(_signals.Incoming.LeaveLevel).ToSequence<IAssetService.Commands.ReleaseGroup>("Preload/Level30");
 ```
 
 ---
