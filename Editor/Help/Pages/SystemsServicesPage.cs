@@ -123,7 +123,9 @@ namespace FlowIoC.Editor.Help.Pages
                 + "named Commands - IHapticService.Commands.Play, never a top-level PlayHapticCommand. The "
                 + "one name a game knows, the interface it injects, is then also where its steps are found: "
                 + "type the interface, press dot, and Commands lists every step it ships and nothing else. "
-                + "The module's own steps stay top-level in Controllers/, internal, verb-first.");
+                + "Each step is a file of its own beside the interface - IHapticService.Commands.Play.cs, the "
+                + "interface and Commands marked partial - so the contract stays readable alone. The "
+                + "module's own steps stay top-level in Controllers/, internal, verb-first.");
 
             painter.Separator();
             painter.SubHeading("The two ways out");

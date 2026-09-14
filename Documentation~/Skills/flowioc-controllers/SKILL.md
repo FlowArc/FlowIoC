@@ -24,8 +24,9 @@ so a module has one folder for its controllers. A `Functions/` folder is the old
 where new work goes. *Tools ▸ FlowIoC ▸ Create Command* and *Create Function* place the file
 correctly on their own; prefer them over writing it by hand. The one exception is a step a Service
 ships for other modules to bind: it is nested in the Service's interface under a static class
-`Commands` - `IHapticService.Commands.Play` - and written in the interface file, so the one name a
-game knows is also where its steps are found (the systems-services skill has the shape).
+`Commands` - `IHapticService.Commands.Play` - in a file of its own beside the interface,
+`IHapticService.Commands.Play.cs`, with the interface and `Commands` marked `partial`; the one name
+a game knows is then also where its steps are found (the systems-services skill has the shape).
 
 ## Which of the two something is
 

@@ -38,7 +38,8 @@ HapticPreset
   dispatches; `IHapticService.Commands.SetEnabled` reads a settings toggle's bool off the signal.
   The owner asked for this shape (2026-09-14) because a game Command whose whole body is one
   `Play` call has to be opened to be read. The two steps are nested in the interface under
-  `Commands` rather than filed in `Controllers/` (owner, 2026-09-14): the one name a game knows,
+  `Commands`, a file each beside it - `IHapticService.Commands.Play.cs` - rather than filed in
+  `Controllers/` (owner, 2026-09-14): the one name a game knows,
   the interface it injects, is then also where its steps are found - type `IHapticService`, press
   `.`, and `Commands` lists them and nothing else - and a module rename never touches a consumer,
   because the path carries no module name. The module's own steps, `PlayPresetCommand` and

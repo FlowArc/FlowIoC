@@ -35,18 +35,21 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// A step a Service ships is nested in the Service's interface, and reflection spells that
-        /// chain with '+'. The file to open is the interface's, so the search is for the outermost
-        /// type alone.
+        /// A step a Service ships is nested in the Service's interface and written in a file named
+        /// the way its binding reads - IHapticService.Commands.Play.cs - so that file is tried first,
+        /// and the interface's own file, the outermost type, is the fallback.
         /// </summary>
         [Test]
-        public void A_nested_type_is_searched_for_by_its_outermost_type()
+        public void A_nested_type_is_searched_for_by_its_own_file_then_its_outermost_type()
         {
             List<ScriptSearchAttempt> attempts =
                 _plan.Build("Modules.HapticModule.Services.IHapticService+Commands+Play", null, 0);
 
-            Assert.AreEqual(ScriptSearchKind.BlameTypeName, attempts[0].Kind);
-            Assert.AreEqual("Modules.HapticModule.Services.IHapticService", attempts[0].Value);
+            Assert.AreEqual(ScriptSearchKind.FileName, attempts[0].Kind);
+            Assert.AreEqual("IHapticService.Commands.Play", attempts[0].Value);
+            Assert.AreEqual(ScriptSearchKind.BlameTypeName, attempts[1].Kind);
+            Assert.AreEqual("Modules.HapticModule.Services.IHapticService", attempts[1].Value);
+            Assert.AreEqual(2, attempts.Count);
         }
 
         [Test]
