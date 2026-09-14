@@ -1,10 +1,10 @@
 using FlowIoC.ScreenModule.Data;
-using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.RootsContexts;
 using Modules.LoadingModule.LoadingScreenModule.Controllers;
 using Modules.LoadingModule.LoadingScreenModule.Models;
 using Modules.LoadingModule.LoadingScreenModule.Signals;
 using Modules.LoadingModule.LoadingScreenModule.ViewsMediators;
+using Modules.LoadingModule.Shared.Constants;
 
 namespace Modules.LoadingModule.LoadingScreenModule.RootsContexts
 {
@@ -17,7 +17,7 @@ namespace Modules.LoadingModule.LoadingScreenModule.RootsContexts
         {
             ManagerId = 0,
             Layer = 9,
-            Tag = ScreenTag.Default,
+            Tag = LoadingConstants.SCREEN_TAG,
             Load = ScreenLoadCVO.Addressable("LoadingScreen"),
             HasShowAnimation = false,
             HasHideAnimation = false,

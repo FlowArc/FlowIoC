@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
@@ -19,5 +20,13 @@ namespace FlowIoC.ScreenModule.Model.Registry
 
         /// <summary>Null until the screen is loaded; cleared again when it is unloaded.</summary>
         public IScreenBody Loaded;
+
+        /// <summary>
+        /// The load out for this entry, while one is. Two callers can reach an entry before its
+        /// screen exists - an Open, and a preload that arrives while the Open's load is still out,
+        /// or the other way round - and they await this one load rather than each instantiating a
+        /// copy. A completed task left here is stale and ignored.
+        /// </summary>
+        public Task<IScreenBody> Loading;
     }
 }

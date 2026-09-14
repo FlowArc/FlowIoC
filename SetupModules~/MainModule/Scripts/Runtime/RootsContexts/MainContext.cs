@@ -1,6 +1,8 @@
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.Commands;
+using FlowIoC.ScreenModule.Commands;
 using Modules.LoadingModule.Controllers;
+using Modules.LoadingModule.Shared.Constants;
 using Modules.MainModule.Constants;
 using Modules.MainModule.Controllers;
 using Modules.MainModule.Signals;
@@ -33,9 +35,13 @@ namespace Modules.MainModule.RootsContexts
         {
             base.CommandBindings();
 
-            // The boot, read top to bottom. BootStarted is the fan-out for what may run beside the
-            // boot without slowing it; Started is the fan-out for what waits until the player is in.
+            // The boot, read top to bottom. The loading screens go into the pool first - nothing is
+            // on stage to show that load on - so that Begin opens the loading screen from the pool,
+            // on stage the same frame, and every load after it is drawn on the bar. BootStarted is
+            // the fan-out for what may run beside the boot without slowing it; Started is the
+            // fan-out for what waits until the player is in.
             CommandBinder.Bind(_internalSignals.Launch)
+                .ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)
                 .ToSequence<BeginLoadingCommand>(MainConstants.BOOT_SET)
                 .ToSequence<DispatchSignalCommand>(_mainSignals.Outgoing.BootStarted)
                 .ToParallel<PreloadScreensCommand>()

@@ -6,6 +6,7 @@ using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
+using FlowIoC.ScreenModule.Extensions;
 using FlowIoC.ScreenModule.Model.Registry;
 using FlowIoC.ScreenModule.Model.Runtime;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
@@ -74,6 +75,18 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
                 IScreenBody screen = await LoadScreen(entry);
                 if (screen == null) continue;
 
+                // The load was out for frames, and an Open may have joined it - or started it, before
+                // this pass reached the entry - and landed first: the instance is on stage now, and a
+                // screen on stage is loaded already and not the pool's. Parking it re-parented the
+                // very screen the loading bar was being drawn on. A screen a second pass parked
+                // meanwhile is left where it is for the same reason.
+                if (screen.Data.HasState(ScreenState.InUse) || screen.Data.HasState(ScreenState.InPool))
+                {
+                    FlowLogger.Log(SystemLogType.Screen, $"[ScreenService.Load.LoadEntries][screen({entry.ViewType.Name})][state(loadedMeanwhile)]");
+                    loadingProgressCallback?.Invoke(index, entries.Count);
+                    continue;
+                }
+
                 screen.Data.ScreenType = screen.GetType();
                 screen.Data.ManagerId = entry.Screen.ManagerId;
                 _registry.CopyDataFromConfig(screen.Data, entry.Screen);
@@ -91,12 +104,28 @@ namespace FlowIoC.ScreenModule.Service.Sub.Load
         }
 
         /// <summary>
+        /// One load per entry at a time. A caller that reaches an entry whose load is already out -
+        /// the preload arriving at a screen an Open is loading, or an Open asking for a screen the
+        /// preload is on - awaits that load instead of starting a second, which used to instantiate
+        /// a second copy for a Resource screen and, for an addressable one, hand the second caller
+        /// the first caller's instance to do the wrong thing with.
+        /// </summary>
+        private Task<IScreenBody> LoadScreen(ScreenEntry entry)
+        {
+            if (entry.Loading != null && !entry.Loading.IsCompleted)
+                return entry.Loading;
+
+            entry.Loading = LoadScreenOnce(entry);
+            return entry.Loading;
+        }
+
+        /// <summary>
         /// Loads by whichever kind the declaration names, then tells the instance's ViewInjector
         /// which context owns it. The instance is parented under a ScreenRoot layer later, and
         /// bubbling up from there would find ScreenRoot's context, which knows nothing about this
         /// view; the owner is the context that bound its mediator.
         /// </summary>
-        private async Task<IScreenBody> LoadScreen(ScreenEntry entry)
+        private async Task<IScreenBody> LoadScreenOnce(ScreenEntry entry)
         {
             IScreenBody screen;
 

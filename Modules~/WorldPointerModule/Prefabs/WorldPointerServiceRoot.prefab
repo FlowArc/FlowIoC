@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Modules.WorldPointer::Modules.WorldPointerModule.RootsContexts.WorldPointerServiceRoot
   SubContextTypes: []
-  initializeOrder: -5
+  initializeOrder: -30
   AutoBindInjections: 1
   AutoBindMediations: 1
   AutoInitialize: 1

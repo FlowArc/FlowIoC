@@ -31,6 +31,13 @@ namespace FlowIoC.ScreenModule.Service.Sub
             T screenBody = (T) await _load.Screen(screenData);
             if (screenBody == null) return default;
 
+            // A preload that reached the same entry while this load was out may have landed first
+            // and parked the instance. It is this open's now, so it leaves the pool before it goes
+            // on stage - or the pool keeps a screen that is on stage and hands it to the next open
+            // as a second copy of itself.
+            if (screenBody.Data.HasState(ScreenState.InPool))
+                _runtimeModel.RemoveFromPassivePool(screenBody);
+
             screenBody.Data = screenData;
 
             AfterShowScreen(screenBody);

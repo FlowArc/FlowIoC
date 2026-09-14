@@ -7,8 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`LoadScreensByTagCommand`, a step a game binds with the tag given at the binding.**
+  `.ToSequence<LoadScreensByTagCommand>(ScreenTag.GroupA)` loads every screen registered under the
+  tag into the pool and holds the sequence until the last of them is in, so the step after it can
+  open one of those screens as a pooled open - no load, on stage the same frame. It is
+  `Load.ByTag` as a sequence step, the way `DispatchSignalCommand` is a dispatch as one.
+
+### Changed
+
+- **The setup set's boot loads the loading screens before the Boot set begins.** `MainContext`'s
+  chain starts with `.ToSequence<LoadScreensByTagCommand>(LoadingConstants.SCREEN_TAG)`, so the
+  `Begin` that follows opens the loading screen from the pool and every later load - the screen
+  preload, the pools - is drawn on the bar. Before, `Begin` started the loading screen's own
+  addressable load and the preload ran beside it, off screen. The Loading module's two screens
+  carry the tag from `LoadingConstants.SCREEN_TAG` in its Shared assembly, `ScreenTag.GroupA`,
+  and `Modules.Main` references `Modules.Loading.Shared` to bind it.
+- **The services sit on the tens of the Initialize Order band, in the order the boot reads.**
+  `-100` and `-90` stay the seats of the two modules that put data in place in `PostConstruct` -
+  `LocalSaveRoot` and `AbTestFlowServiceRoot` - and every other shipped service moves onto a ten
+  after them: `AssetServiceRoot` `-80`, the door every Addressables load goes through;
+  `ScreenServiceRoot` `-70` and `PoolServiceRoot` `-60`, which load through it;
+  `HapticServiceRoot` `-50` as before; `WorldPointerServiceRoot` `-30`; `LoadingServiceRoot` `-10`,
+  last because it opens a screen. The seats the numbers replace were an accretion - `-99`, `-98`,
+  `-2`, `-1` and `-1` again, the asset service at `-1` or `-100` depending on the prefab, the pool
+  service at `-2` in the package and `-98` in the setup set - and the setup set's `-98` sat the
+  pool service above the A/B module, so `PoolConfigModel.PostConstruct` read `CD_PoolGroup` before
+  the variant was written over it. A game's own service takes a free ten, or a unit below the ten
+  it leans on. The Ordering Roots page, the README, the root-order skill and `AssetConstants`
+  say the same numbers, and `OrderingRootsPageTests` now checks every shipped service's prefab
+  against the page: on a ten, negative, and the config readers after `-90`.
+
 ### Fixed
 
+- **A screen an `Open` is loading when a preload reaches its entry is loaded once, and stays on
+  stage.** `LoadSubService` shares one load per entry: a second caller that arrives while the
+  first's load is out awaits the same task instead of starting another. After the await the
+  preload passes over an instance that is in use or already parked, and an `Open` whose instance
+  a preload parked first takes it out of the pool before showing it. Before, the setup set's boot
+  hit this on every run: `Begin` started the loading screen's load, `Load.All` reached the same
+  entry two milliseconds later, and when the shared asset landed the preload's continuation
+  parked the very screen the `Open` had just put on `Layer_9` - re-parented into `[Screen_Pool]`,
+  which has no Canvas, so the loading screen was never drawn during the preload, and the hide at
+  the end logged `LoadingScreenView is already pooled at manager 0`. A Resource screen in the same
+  race was instantiated twice. `ScreenLoadInFlightTests` drives both orders through the real
+  models with the asset service held open.
 - **The generator no longer writes a part into a module that is gone.** The module index can be a
   scan behind the disk - a module folder deleted outside the tools is still listed, and
   `GUIDToAssetPath` still answers with the folder it used to be at - and the generator wrote the
