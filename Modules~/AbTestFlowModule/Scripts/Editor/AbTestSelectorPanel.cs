@@ -19,14 +19,14 @@ namespace Modules.AbTestFlowModule.Editor
     /// scene's Root carries, because the question is which group this machine is in for a test,
     /// and that is answered by the test's id whichever asset declares it.
     /// </summary>
-    internal class AbTestStatusPanel : ModulePanel
+    internal class AbTestSelectorPanel : ModulePanel
     {
         /// <summary>
         /// "AB Test" rather than the module's "A/B Test": a slash in a menu path opens a submenu.
         /// The priority is the one every module panel uses, which keeps FlowIoC-Modules second
         /// under Tools.
         /// </summary>
-        private const string MENU_PATH = "Tools/FlowIoC-Modules/AB Test/Status";
+        private const string MENU_PATH = "Tools/FlowIoC-Modules/AB Test/Selector";
 
         private const int MENU_PRIORITY = -1080;
 
@@ -37,13 +37,13 @@ namespace Modules.AbTestFlowModule.Editor
         private readonly AbTestPrefsTools _prefs = new AbTestPrefsTools();
 
         [MenuItem(MENU_PATH, false, MENU_PRIORITY)]
-        private static void Open() => ModulePanelWindow.Open<AbTestStatusPanel>();
+        private static void Open() => ModulePanelWindow.Open<AbTestSelectorPanel>();
 
-        public override string Title => "AB Test Status";
+        public override string Title => "AB Test Selector";
 
         public override string Module => "AbTestFlowModule";
 
-        public override string Subtitle => "Which group this machine's player is in";
+        public override string Subtitle => "Pick the group this machine plays, before pressing Play";
 
         public override FlowRole Role => FlowRole.Service;
 

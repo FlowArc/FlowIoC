@@ -257,6 +257,12 @@ from a panel skips the rules the Model keeps, and the file is the Model's. Readi
 deleting it, clearing PlayerPrefs, writing a pref in the module's own format so the next run
 reads it - all inside the line. A text field that writes into a loaded Model is not.
 
+A panel that authors an asset - the A/B Test Editor over `CD_AbTests` - draws the asset's own
+`SerializedProperty`s through `painter.Property(property, label)` and `painter.Properties(label,
+a, b)`, so undo, dirtying and saving are Unity's; it edits what the Inspector would edit, which
+is inside the line. Defer a change to a list's shape - an element added or removed - until the
+rows are drawn, because the rows are walked by index.
+
 Put the file operations in a class of their own beside the panel (`LocalSaveFileTools`) so the
 workspace's tests reach them without a window; the panel only draws.
 

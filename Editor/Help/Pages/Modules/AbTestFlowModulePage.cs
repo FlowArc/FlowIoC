@@ -123,9 +123,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("2. A test");
             painter.Paragraph(
-                "Select Scriptables/CD_AbTests and add a test. The Inspector runs the same "
-                + "validation the module does, so an empty id, a single group, an override on the "
-                + "control group or a variant of another type is reported while you type it.");
+                "Open Tools > FlowIoC-Modules > AB Test > Editor and press Add test - it lists every "
+                + "CD_AbTests in the project, so there is no asset to hunt for. A new test comes "
+                + "active, rolled out to everybody, with the control group and one variant; give it an "
+                + "id, name the groups, and add each variant group's override pairs. The validator's "
+                + "word - an empty id, a single group, an override on the control group, a variant of "
+                + "another type - sits under the test it is about. Every field is the asset's own, so "
+                + "undo and save are Unity's, and the Inspector shows the same test with the same "
+                + "validation if you would rather edit it there.");
             painter.Image(_images.Get("AbTestsInspector.png"),
                 "The test the module ships with: two groups, the control empty, one pair on B.");
 
@@ -162,12 +167,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("4. Seeing a variant on this machine");
             painter.Paragraph(
-                "Tools > FlowIoC-Modules > AB Test > Status lists every test of every CD_AbTests "
-                + "in the project with the group this machine's player is in. Force a group and "
-                + "the next run reads it as the player's own - the panel writes the same "
-                + "PlayerPrefs key a roll writes, under the test's current version - or Reset the "
-                + "assignment and the next run rolls again. Nothing changes in a running game: the "
-                + "module reads its assignments once, at boot.");
+                "Tools > FlowIoC-Modules > AB Test > Selector lists every test with the group this "
+                + "machine's player is in. Force a group before pressing Play and the run reads it as "
+                + "the player's own - the panel writes the same PlayerPrefs key a roll writes, under "
+                + "the test's current version - or Reset the assignment and the next run rolls "
+                + "again. Nothing changes in a running game: the module reads its assignments once, "
+                + "at boot.");
         }
 
         private void DrawUsage(HelpPainter painter)

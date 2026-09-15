@@ -150,6 +150,43 @@ namespace FlowIoC.Editor.ModulePanels
             }
         }
 
+        /// <summary>
+        /// One serialized field to edit, drawn the way the Inspector draws it - a slider for a
+        /// [Range], an object picker for a reference - so undo, dirtying and saving are Unity's.
+        /// The label is the property's own unless the panel says otherwise. This is the mark a
+        /// panel that authors an asset is made of: it edits what the Inspector would edit, not a
+        /// Model's values.
+        /// </summary>
+        public void Property(SerializedProperty property, string label = null)
+        {
+            Properties(label ?? property.displayName, property);
+        }
+
+        /// <summary>
+        /// Several fields on one row under one label, sharing the value column - an override's
+        /// original and its variant side by side. Each field draws without a label of its own.
+        /// </summary>
+        public void Properties(string label, params SerializedProperty[] properties)
+        {
+            Rect rect = _rows.Row(ACTION_HEIGHT);
+            _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
+
+            Rect content = Content(rect);
+            GUI.Label(new Rect(content.x, content.y, LABEL_WIDTH, content.height), label, _rows.Name(false));
+
+            Rect value = ValueRect(content);
+            value.y += (content.height - EditorGUIUtility.singleLineHeight) / 2f;
+            value.height = EditorGUIUtility.singleLineHeight;
+
+            float width = (value.width - BUTTON_GAP * (properties.Length - 1)) / properties.Length;
+
+            for (int index = 0; index < properties.Length; index++)
+            {
+                var field = new Rect(value.x + index * (width + BUTTON_GAP), value.y, width, value.height);
+                EditorGUI.PropertyField(field, properties[index], GUIContent.none);
+            }
+        }
+
         public void Space() => GUILayout.Space(6f);
 
         private Rect Content(Rect row) =>

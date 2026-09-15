@@ -34,11 +34,21 @@ IAbTestFlowService, CD_AbTests, RD_AbTestStatus, AbTestStatusRVO, AbTestId
   one serialises for a file and drops every field pointing at another Object, and a variant that
   swaps a prefab or a sprite is a normal experiment. Lists are deep-copied, so an original never
   shares the variant asset's collections.
-- **A panel, `AB Test Status`, under `Tools/FlowIoC-Modules/AB Test/Status`.** Every test of every `CD_AbTests` in
+- **Two panels, because they are used at different moments** (owner, 2026-09-15): `AB Test Editor`
+  while the tests are being shaped, `AB Test Selector` before pressing Play to see one variant.
+- **`AB Test Editor`, under `Tools/FlowIoC-Modules/AB Test/Editor`.** Every `CD_AbTests` in the
+  project, each test's fields, groups and override pairs drawn from the asset's own
+  `SerializedProperty`s through the panel painter's `Property` marks - undo, dirtying and saving
+  are Unity's, and the panel edits what the Inspector edits, never a Model. *Add test* seeds an
+  active, 100% test with `control` and `variant`; *Raise version*, *Add group*, *Add override*,
+  the removes with a confirm on the test. The validator's messages sit under the test they name
+  (`AbTestAuthoringTools.Messages`), a message about an unnamed test at the asset. Structural
+  changes are deferred to the end of the draw, because the rows are walked by index.
+- **A panel, `AB Test Selector`, under `Tools/FlowIoC-Modules/AB Test/Selector`.** Every test of every `CD_AbTests` in
   the project with the group this machine's player is in, read from PlayerPrefs; *Force <group>*
   and *Force outside* write the key in the module's own `<version>|<group>` shape so the next
   boot reads a forced group as a rolled one, and *Reset* forgets it. `AbTestPrefsTools` does the
-  prefs without a window so the tests reach it; `AbTestStatusPanel` only draws. The menu entry says
+  prefs without a window so the tests reach it; `AbTestSelectorPanel` only draws. The menu entry says
   `AB Test` because a slash in a menu path opens a submenu. The asmdef references `FlowIoC.Editor`
   for the two, under `#if UNITY_EDITOR`; Unity drops the reference for a player build (owner,
   2026-09-15, opening panels to every module).
@@ -49,7 +59,7 @@ IAbTestFlowService, CD_AbTests, RD_AbTestStatus, AbTestStatusRVO, AbTestId
 - JsonUtility does not copy `[SerializeReference]` fields. Validation warns; the copy omits them.
 - Decisions are local. A backend-driven test would replace the two dice in `ProcessAbTestCommand`.
 - Two active tests that override the same asset are not detected.
-- The group cannot be picked by hand in game yet - the panel does it in the Editor. The
+- The group cannot be picked by hand in game yet - the Selector panel does it in the Editor. The
   PlayerPrefs format above is what an SRDebugger module would write; a change takes effect on the
   next launch.
 - The test scene's Raise button lasts one session: `CD_AbTests` is put back on quit, so the next
