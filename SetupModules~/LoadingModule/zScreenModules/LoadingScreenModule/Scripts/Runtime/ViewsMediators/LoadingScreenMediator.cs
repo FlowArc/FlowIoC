@@ -5,6 +5,7 @@ using FlowIoC.ScreenModule.Extensions;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 using Modules.LoadingModule.LoadingScreenModule.Signals;
 using Modules.LoadingModule.Shared.Data.ValueObjects;
+using UnityEngine;
 
 namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
 {
@@ -17,6 +18,7 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
     {
         [Inject] private LoadingScreenView _view { get; set; }
         [InjectSignal] private LoadingScreenSignals _signals { get; set; }
+        [InjectSignal] private LoadingScreenInternalSignals _internalSignals { get; set; }
 
         public void OnRegister()
         {
@@ -26,6 +28,7 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
             _signals.Incoming.Apply.AddListener(OnApply);
             _signals.Incoming.Close.AddListener(OnClose);
             _signals.Incoming.ShowFailed.AddListener(OnShowFailed);
+            _internalSignals.BackgroundLoaded.AddListener(OnBackgroundLoaded);
         }
 
         public void OnRemove()
@@ -36,6 +39,7 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
             _signals.Incoming.Apply.RemoveListener(OnApply);
             _signals.Incoming.Close.RemoveListener(OnClose);
             _signals.Incoming.ShowFailed.RemoveListener(OnShowFailed);
+            _internalSignals.BackgroundLoaded.RemoveListener(OnBackgroundLoaded);
         }
 
         private void OnScreenShown(IScreenBody screen) => _view.Retry += OnRetry;
@@ -62,6 +66,10 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
             if (!IsShowing(set)) return;
             _view.ShowFailed(step);
         }
+
+        // Not guarded: no set and no decision is involved, and art landing during a show animation
+        // would otherwise be missed until the next opening.
+        private void OnBackgroundLoaded(Sprite background) => _view.ShowBackground(background);
 
         private void OnRetry()
         {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Modules.LoadingModule.Shared.Data.ValueObjects;
 using Modules.LoadingModule.Shared.Enums;
+using UnityEngine;
 
 namespace Modules.LoadingModule.LoadingScreenModule.Models
 {
@@ -14,6 +15,8 @@ namespace Modules.LoadingModule.LoadingScreenModule.Models
         }
 
         private readonly Dictionary<string, Entry> _entries = new();
+
+        public Sprite Background { get; private set; }
 
         private Entry EntryOf(string set)
         {
@@ -38,6 +41,8 @@ namespace Modules.LoadingModule.LoadingScreenModule.Models
         public void RememberClosed(string set) => EntryOf(set).Closed = true;
 
         public void RememberFailed(string set, string step) => EntryOf(set).FailedStep = step;
+
+        public void RememberBackground(Sprite background) => Background = background;
 
         public bool TryGetLatest(string set, out LoadingSetStatusRVO status)
         {

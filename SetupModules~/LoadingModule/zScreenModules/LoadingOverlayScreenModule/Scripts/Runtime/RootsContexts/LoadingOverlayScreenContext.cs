@@ -12,13 +12,18 @@ namespace Modules.LoadingModule.LoadingOverlayScreenModule.RootsContexts
     {
         private LoadingOverlayScreenSignals _signals;
 
-        /// <summary>Layer 8: under the fullscreen bar on 9, over everything a feature opens below.</summary>
+        /// <summary>
+        /// Layer 8: under the fullscreen bar on 9, over everything a feature opens below. Resources
+        /// like the fullscreen screen: both carry the tag the boot loads before its first set, and
+        /// one addressable screen in that pair would hold the boot on Addressables' own initialisation
+        /// with nothing on stage.
+        /// </summary>
         protected override ScreenCVO Screen => new()
         {
             ManagerId = 0,
             Layer = 8,
             Tag = LoadingConstants.SCREEN_TAG,
-            Load = ScreenLoadCVO.Addressable("LoadingOverlayScreen"),
+            Load = ScreenLoadCVO.Resource("LoadingOverlayScreen"),
             HasShowAnimation = false,
             HasHideAnimation = false
         };

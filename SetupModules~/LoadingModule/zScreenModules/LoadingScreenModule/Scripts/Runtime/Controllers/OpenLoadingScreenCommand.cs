@@ -60,6 +60,11 @@ namespace Modules.LoadingModule.LoadingScreenModule.Controllers
         {
             string set = _status.Set;
 
+            // The art may have landed before the instance existed; the Mediator applies the arrival
+            // itself once it is registered, so this is the other order.
+            if (_model.Background != null)
+                screen.ShowBackground(_model.Background);
+
             if (_model.TryGetLatest(set, out LoadingSetStatusRVO latest))
                 screen.Apply(latest);
 

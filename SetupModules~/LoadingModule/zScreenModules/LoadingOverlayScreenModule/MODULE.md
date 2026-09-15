@@ -12,6 +12,9 @@ overlay, spinner, blocker, waiting, LoadingOverlayScreenView
   while the prefab was loading closes the overlay the moment it opens.
 - **Layer 8**, under the fullscreen bar and over everything a feature opens below.
 - **No cancel.** Whoever began the Overlay set decides when it ends; the overlay only shows and closes.
+- **The prefab comes from Resources**, like the fullscreen screen's: both carry the tag the boot
+  loads before its first set, and one addressable screen in that pair would hold the boot on
+  Addressables' own initialisation with nothing on stage.
 
 ## Known gaps
 - No fade; a game adds one in the prefab it owns after install.

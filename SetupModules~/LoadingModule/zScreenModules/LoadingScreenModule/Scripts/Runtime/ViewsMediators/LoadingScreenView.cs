@@ -10,13 +10,16 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
 {
     /// <summary>
     /// The big bar. It draws whatever snapshot it is handed and remembers only which set that was;
-    /// the smoothing towards the target is the one piece of motion it owns.
+    /// the smoothing towards the target is the one piece of motion it owns. The art behind it is
+    /// the one thing not reset between openings: what the addressable load brought is the same for
+    /// every set, so it stays on the pooled instance.
     /// </summary>
     [RequireComponent(typeof(ViewInjector))]
     public class LoadingScreenView : ScreenView
     {
         private const float SMOOTH_SPEED = 8f;
 
+        [SerializeField] private Image _background;
         [SerializeField] private Image _fill;
         [SerializeField] private Text _percent;
         [SerializeField] private Text _message;
@@ -89,6 +92,9 @@ namespace Modules.LoadingModule.LoadingScreenModule.ViewsMediators
         }
 
         public void HideFailed() => _failedGroup.SetActive(false);
+
+        /// <summary>The addressable art, over the sprite the prefab bundles.</summary>
+        public void ShowBackground(Sprite background) => _background.sprite = background;
 
         private void Update()
         {
