@@ -19,7 +19,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override FlowIcon Icon => FlowIcon.Stopwatch;
 
-        public override IReadOnlyList<string> RequiredPackages => new[] { "com.unity.mobile.notifications" };
+        public override IReadOnlyList<string> RequiredPackages => new[] {"com.unity.mobile.notifications"};
 
         public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
@@ -94,6 +94,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Note(
                 "iOS > Request Authorization on App Launch: off. The ask is the module's step, bound "
                 + "where the game wants it; the package's own ask would pre-empt it at the first frame.");
+
+            painter.Space();
+            painter.SubHeading("The panel");
+            painter.Paragraph(
+                "Tools > FlowIoC-Modules > Mobile Notification > Panel edits the catalogue, previews each "
+                + "template as the Android and iOS trays draw it - sample arguments filling its "
+                + "placeholders - flags the three settings above when they are wrong, and, while the game "
+                + "runs, lists what the service has scheduled with the card each one will show.");
         }
 
         private void DrawUsage(HelpPainter painter)
