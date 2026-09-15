@@ -1,0 +1,19 @@
+{
+  "name": "Modules.MobileNotification",
+  "references": [
+    "FlowIoC",
+    "FlowIoC.Editor",
+    "Unity.Notifications",
+    "Unity.Notifications.Android",
+    "Unity.Notifications.iOS"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
