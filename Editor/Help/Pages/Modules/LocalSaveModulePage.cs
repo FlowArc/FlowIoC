@@ -124,6 +124,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "zTestModules, press Play, click Increment a few times, leave play mode and come "
                 + "back - the counter is where you left it, and the probe asset is untouched in "
                 + "source control.");
+            painter.Space();
+
+            painter.SubHeading("The panel");
+            painter.Paragraph(
+                "Tools > FlowIoC-Modules > Local Save > Panel shows the file on this machine: where "
+                + "it is, whether it is plain or encrypted, what it says - read with the password the "
+                + "LocalSaveRoot in the open scene carries, or one you type - and the two things a "
+                + "developer does to it between sessions: Reset deletes it so the next run starts "
+                + "from the authored values, and Rewrite writes it again under another password for "
+                + "the day the one on the Root changes. Clear PlayerPrefs is there too, for what any "
+                + "module keeps in PlayerPrefs. It reads and never edits: the file is the Model's.");
         }
 
         private void DrawUsage(HelpPainter painter)

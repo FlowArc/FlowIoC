@@ -2,6 +2,7 @@
   "name": "Modules.LocalSave",
   "references": [
     "FlowIoC",
+    "FlowIoC.Editor",
     "Unity.RenderPipelines.Core.Runtime"
   ],
   "includePlatforms": [],
