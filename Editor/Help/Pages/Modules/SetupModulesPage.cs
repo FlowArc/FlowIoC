@@ -212,6 +212,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "without slowing it - an SDK initialising, a profile fetch - hangs off BootStarted "
                 + "and reports into whichever set the asset puts it in. Heavy preloads that would "
                 + "share bandwidth with the critical path hang off Started, after the player is in.");
+            painter.Paragraph(
+                "Content the stores deliver - a fast-follow pack that has not landed on an early open "
+                + "- is the Asset Delivery module's step, IAssetDeliveryService.Commands.EnsurePromised, "
+                + "bound right after Begin; its page has the line and the Content row the set needs.");
+            painter.PageLink("Asset Delivery");
 
             painter.SubHeading("The screens come from Resources, the art from Addressables");
             painter.Paragraph(

@@ -1,0 +1,22 @@
+{
+  "name": "Modules.AssetDelivery",
+  "references": [
+    "FlowIoC",
+    "FlowIoC.Editor",
+    "Modules.Loading",
+    "Unity.Addressables",
+    "Unity.ResourceManager",
+    "Unity.Addressables.Editor",
+    "Unity.Addressables.Android",
+    "Unity.Addressables.Android.Editor"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

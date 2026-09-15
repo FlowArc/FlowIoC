@@ -5,6 +5,43 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Asset Delivery is a ready-made module.** Store-delivered content lands on the device before the
+  boot needs it - Play Asset Delivery on Android, Apple-hosted managed Background Assets on iOS,
+  which begin at iOS 26 - and the boot draws what is still missing on the loading bar instead of
+  loading into a bundle that is not there. One setting per Addressables group, Unity's own Play
+  Asset Delivery schema, is read by both platforms: Install Time is Apple's essential, Fast Follow
+  its prefetch, On Demand its onDemand. `IAssetDeliveryService.Commands.EnsurePromised`, bound
+  after `Begin`, asks the store for every pack it promised - all but the on-demand ones - and
+  reports the `Content` step in megabytes, skipping it when nothing is missing and failing it, with
+  the sequence stopped, when a pack will not come; `Commands.Ensure("Pack")` holds a flow until
+  one on-demand pack is there. The service - `GetPacksAsync`, `GetPendingSizeAsync`,
+  `EnsureAsync` with a progress, `RemoveAsync` - sits over a gateway per platform:
+  `AndroidAssetPacks` on Android, an Objective-C++ bridge to `BAAssetPackManager` on iOS, a
+  stand-in in the Editor that answers that everything is on the device. The Addressables build
+  hook writes `FlowAssetPacks.json` beside the catalog with the pack names the Android build gave
+  the groups, and on iOS moves each pack's bundles out of the app into
+  `ServerData/iOS/AssetPacks/<Pack>/` with a `Manifest.json` each, running `xcrun ba-package`
+  on a Mac and writing `package-asset-packs.sh` on Windows; it reports Play Asset Delivery not
+  initialised, App Bundle off, Split Application Binary off and an iOS pack-id collision as errors.
+  The iOS player build adds an ExtensionKit downloader extension with one Swift file, the App Group
+  and the three Background Assets keys, idempotently; `ED_AssetPackInitialization` is listed under
+  Addressables' Initialization Objects so that the runtime transform points every bundle in a pack
+  at the file Background Assets holds it in. `Tools/FlowIoC-Modules/Asset Delivery/Panel` shows what
+  the next build sends. The module requires `com.unity.addressables.android`; the iOS half is
+  written against Apple's reference and unverified on a device, and the Help page says which parts
+  to check first.
+
+### Changed
+
+- **A ready-made module may reference the setup set's Loading module for its Service.** The
+  delivery module's boot step injects `ILoadingService` to draw the bar itself rather than handing
+  the game a Command to paste; `Modules.AssetDelivery` references `Modules.Loading` the way
+  `Modules.Main` does. The first ready-made module to do so.
+
 ## [1.17.0] - 2026-09-15
 
 ### Added
