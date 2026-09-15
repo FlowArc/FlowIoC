@@ -242,10 +242,11 @@ namespace FlowIoC.Editor.Help
         public float PageHeadingInset => 8f;
 
         /// <summary>
-        /// What a table's header row sits on: the band a heading wears, so the two read as one
-        /// kind of mark - a title over what follows it.
+        /// What a table's header row sits on: the dark grey of a separator bar's body, a step under
+        /// the page. Not the violet a heading wears - a header names columns, a heading names a
+        /// topic, and painted alike the table read as a section starting inside a section.
         /// </summary>
-        public Color TableHeaderFill => PageHeadingFill;
+        public Color TableHeaderFill => PageSeparatorFill;
 
         /// <summary>
         /// The hairline under every row of a table: the light line a separator bar ends with,
