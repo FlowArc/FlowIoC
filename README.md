@@ -109,10 +109,10 @@ Either way the package shows up in the Package Manager under **My Registries**, 
 with every release from 1.1.0 onwards, so an upgrade is a version number rather than a new
 URL.
 
-Releases from 1.17.0 are signed for the FlowArc organization. Unity 6.3 and later show the
+Releases from 1.17.1 are signed for the FlowArc organization. Unity 6.3 and later show the
 signature as **Limited** - the tarball is verified unchanged and its signer is named, and only a
 package signed by Unity or by your own organization reads as *Full* - so that label is the
-expected one, not a warning about the package. Releases up to 1.16.0 predate signing and show
+expected one, not a warning about the package. Releases up to 1.17.0 predate signing and show
 **Missing**.
 
 ### From a Git URL
