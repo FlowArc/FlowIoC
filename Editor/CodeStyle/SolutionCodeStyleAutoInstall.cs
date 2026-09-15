@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using System;
 using System.IO;
 using FlowIoC.Editor.AgentRules;
 using UnityEditor;
@@ -32,6 +33,11 @@ namespace FlowIoC.Editor.CodeStyle
     ///
     /// Only the keys FlowIoC ships are touched, so a team's own settings survive, and a session
     /// that finds the file already correct writes nothing and says nothing.
+    ///
+    /// A settings file named after a solution that is not there is swept on the same run. A project
+    /// folder renamed once - a game cloned from a template repository is the common case - leaves
+    /// the old solution's file beside the new one, and Rider goes on reading whichever it opens.
+    /// The Module Scanner reports and sweeps the same file; this is the sweep nobody has to ask for.
     /// </summary>
     internal class SolutionCodeStyleStartup
     {
@@ -59,6 +65,9 @@ namespace FlowIoC.Editor.CodeStyle
                 return;
             }
 
+            foreach (string removed in report.RemovedPaths)
+                Debug.Log($"[FlowIoC] Orphaned solution code style deleted: {Path.GetFileName(removed)}");
+
             if (report.WrittenPath != null)
                 Debug.Log($"[FlowIoC] Solution code style written: {Path.GetFileName(report.WrittenPath)}");
         }
@@ -66,24 +75,27 @@ namespace FlowIoC.Editor.CodeStyle
 
     /// <summary>
     /// What one automatic run did. <see cref="WrittenPath"/> is null when the file already matched
-    /// what the package ships, which is every session after the first.
+    /// what the package ships, which is every session after the first; <see cref="RemovedPaths"/>
+    /// is empty unless a settings file was left behind by a solution that is gone.
     /// </summary>
     internal readonly struct SolutionCodeStyleReport
     {
         internal string WrittenPath { get; }
+        internal string[] RemovedPaths { get; }
         internal string Error { get; }
 
-        internal SolutionCodeStyleReport(string writtenPath, string error)
+        internal SolutionCodeStyleReport(string writtenPath, string[] removedPaths, string error)
         {
             WrittenPath = writtenPath;
+            RemovedPaths = removedPaths ?? Array.Empty<string>();
             Error = error;
         }
     }
 
     /// <summary>
-    /// Decides whether the solution code style needs writing and writes it. Separate from the
-    /// startup hook so the decision can be tested against a temporary directory instead of an
-    /// Editor session.
+    /// Sweeps the settings of any solution that is gone, then decides whether the solution code
+    /// style needs writing and writes it. Separate from the startup hook so both can be tested
+    /// against a temporary directory instead of an Editor session.
     /// </summary>
     internal class SolutionCodeStyleAutoInstall
     {
@@ -100,10 +112,15 @@ namespace FlowIoC.Editor.CodeStyle
         {
             var writer = new SolutionDotSettingsWriter(_projectRoot, _templatePath);
 
-            if (!writer.TryWrite(out string path, out string error, out bool changed))
-                return new SolutionCodeStyleReport(null, error);
+            // Swept before the write, and only against a solution that exists: with no .sln at the
+            // root there is nothing to compare a settings file against, and the writer leaves every
+            // one of them alone rather than guess.
+            string[] removed = writer.CleanupOrphaned();
 
-            return new SolutionCodeStyleReport(changed ? path : null, null);
+            if (!writer.TryWrite(out string path, out string error, out bool changed))
+                return new SolutionCodeStyleReport(null, removed, error);
+
+            return new SolutionCodeStyleReport(changed ? path : null, removed, null);
         }
     }
 }
