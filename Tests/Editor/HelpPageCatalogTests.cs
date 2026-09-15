@@ -140,7 +140,7 @@ namespace FlowIoC.Tests
                 new[]
                 {
                     "A/B Test", "Asset Delivery", "Camera", "Counter", "Haptic", "Local Save",
-                    "World Pointer"
+                    "Mobile Notification", "World Pointer"
                 },
                 ChildTitles("FlowModules"));
         }
