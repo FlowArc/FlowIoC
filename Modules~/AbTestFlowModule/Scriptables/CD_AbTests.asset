@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b769f9da6f547fc4d913c70b41aab338, type: 3}
   m_Name: CD_AbTests
   m_EditorClassIdentifier: Modules.AbTestFlow::Modules.AbTestFlowModule.Data.UnityObjects.CD_AbTests
-  _activeTestId: Probe
+  _activeTestId: Level
   _tests:
-  - Id: Probe
-    Version: 1
-    TestUserPercent: 80
+  - Id: Level
+    Version: 0
+    TestUserPercent: 20
     Groups:
     - Name: A
       Assets:
@@ -24,3 +24,13 @@ MonoBehaviour:
     - Name: B
       Assets:
       - {fileID: 11400000, guid: d145a33a3d859024c8882776447cfadb, type: 2}
+  - Id: Theme
+    Version: 1
+    TestUserPercent: 100
+    Groups:
+    - Name: ThemeA
+      Assets: []
+    - Name: ThemeB
+      Assets: []
+    - Name: ThemeC
+      Assets: []
