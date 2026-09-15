@@ -5,10 +5,33 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.18.0] - 2026-09-16
 
 ### Added
 
+- **Mobile Notification is a ready-made module.** Local notifications on iOS and Android through
+  `com.unity.mobile.notifications`, a Service in the Haptic shape: the texts, channels, icons and
+  come-back reminders in one `CD_MobileNotifications` catalogue asset rather than in code. The
+  permission ask is a step - `IMobileNotificationService.Commands.RequestPermission` holds the
+  sequence until the OS answers, bound wherever the game decides to ask - and `Commands.Schedule`,
+  `Cancel` and `CancelAll` are steps too, a template key at binding time; a computed time is a
+  call, `Schedule("ChestReady", chest.Remaining, slot, chest.Name)`, with `{0}` placeholders in
+  the template filled from the arguments. A scheduled notification is a template key and an
+  optional tag, `Return#1440`, and the same identity scheduled again replaces. The return
+  reminders in the catalogue go out by themselves when the app is left and are taken back when
+  it returns; which notification the player tapped to open the app is read from the interface,
+  never announced, because a listener would come up too late. A template may name a picture
+  under `Assets/StreamingAssets` - Android's `BigPictureStyle` under the text, iOS's attachment
+  as the thumbnail - copied to the device once at initialize. `AndroidNotificationGateway` and
+  `IosNotificationGateway` speak to the two centers directly, so a channel and an icon per
+  notification survive, and the Editor's gateway logs every call and an arrival when a time
+  passes. `Tools/FlowIoC-Modules/Mobile Notification/Panel` edits the catalogue with the tests
+  down its sidebar, previews each template as the Android and iOS trays draw it - sample
+  arguments in the placeholders, the picture included - flags the three Mobile Notifications
+  settings that fail silently, and lists what the service scheduled while the game runs. Proved
+  on a phone: the permission dialog, delivery, tap-to-open, the tray cleared on resume, the three
+  reminders set and taken back, the picture in the expanded card. The iOS half is written against
+  the package source and awaits its first Xcode build.
 - **A module panel can carry a list down its left side.** `ModulePanel.HasSidebar` and
   `DrawSidebar(ModulePanelSidebarPainter)` split the window under the bar: the list on the left -
   a heading drawn like the bar's strip, with an optional square `+` at its edge, items that
@@ -67,6 +90,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **An A/B test is a matrix, and one test runs at a time.** In `CD_AbTests` a group is a name and
+  a list of assets: the first group is the control and its list names the game's own assets, the
+  originals themselves, and every other group lists at the same index the asset that replaces
+  each - no original/variant pair repeated per group, and a column shorter than the control's is
+  a validation error. `TestUserPercent` replaces `RolloutPercent`, saying which side of the split
+  the number is; `CD_AbTests.ActiveTestId` names the one test that runs, where a switch per test
+  used to let two write over the same asset, and an empty name runs none. `OnValidate` no longer
+  logs. The `AB Test Editor` lists every test down the panel window's sidebar, the active one
+  marked, opens the clicked one and says each validator message under the row it is about, the
+  cell washed red; its Help page follows.
 - **The Help window's three entries sit directly under `Tools > FlowIoC`.** `Welcome`, `Wiki` and
   `Module Library` - the third renamed from `Modules`, on the menu and on the sidebar - where a
   `Help` submenu used to fold them away and the module library was the entry nobody found. Each
