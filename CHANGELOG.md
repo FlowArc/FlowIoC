@@ -5,6 +5,17 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.1] - 2026-09-15
+
+### Fixed
+
+- **The tarball on OpenUPM is the signed one.** OpenUPM published `1.17.0` through its git tracker
+  three minutes after the switch to release tracking merged - packed from the tag, unsigned - and a
+  published version is never replaced, so the first signed release is this one. The release
+  workflow also fetched the UPM CLI installer into the checkout, where `upm pack` took it along as
+  an `install.sh` with no `.meta`; it is fetched outside the package now, and a tarball with any
+  untracked file fails the run instead of shipping.
+
 ## [1.17.0] - 2026-09-15
 
 ### Added
