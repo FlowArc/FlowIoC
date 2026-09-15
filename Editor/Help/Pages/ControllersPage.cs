@@ -206,9 +206,10 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "Three doors, and each value uses exactly one of them. Knowing which door a value "
                 + "arrives through is most of knowing how to write the class.");
-            painter.Bullet("The signal's payload arrives in [SignalParam] properties.");
-            painter.Bullet("Execute's parameters come from the binding, or from the previous command's Release.");
-            painter.Bullet("Models, services and signal holders arrive in [Inject] and [InjectSignal] properties.");
+            painter.Table(new[] {"What", "Arrives through"},
+                new[] {"The signal's payload", "[SignalParam] properties."},
+                new[] {"Execute's parameters", "The binding, or the previous command's Release."},
+                new[] {"Models, services and signal holders", "[Inject] and [InjectSignal] properties."});
             painter.Paragraph(
                 "Execute has exactly those two sources and the signal is neither of them. When a "
                 + "step has both, the binding wins: arguments written at bind time are what that "

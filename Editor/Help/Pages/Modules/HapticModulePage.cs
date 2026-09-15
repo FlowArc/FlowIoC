@@ -201,15 +201,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "What each one is on iOS, and what Android plays for it: a pulse of so many "
                 + "milliseconds at an amplitude of 0..1 of the device's range, or a ramp - the "
                 + "envelope interpolated every 25 ms.");
-            painter.Bullet("Selection: UISelectionFeedbackGenerator on iOS; 40 ms at 0.471 on Android.");
-            painter.Bullet("LightImpact: UIImpactFeedbackStyleLight; 40 ms at 0.156.");
-            painter.Bullet("MediumImpact: UIImpactFeedbackStyleMedium; 120 ms at 0.471.");
-            painter.Bullet("RigidImpact: UIImpactFeedbackStyleRigid, iOS 13 and up, Heavy below it; 40 ms at 1.0.");
-            painter.Bullet("HeavyImpact: UIImpactFeedbackStyleHeavy; 160 ms at 1.0.");
-            painter.Bullet("SoftImpact: UIImpactFeedbackStyleSoft, iOS 13 and up, Light below it; 160 ms at 0.156.");
-            painter.Bullet("Success: UINotificationFeedbackTypeSuccess; a 240 ms ramp in 8 steps.");
-            painter.Bullet("Warning: UINotificationFeedbackTypeWarning; a 280 ms ramp in 9 steps.");
-            painter.Bullet("Failure: UINotificationFeedbackTypeError; a 480 ms ramp in 16 steps.");
+            painter.Table(new[] {"Preset", "iOS", "Android"},
+                new[] {"Selection", "UISelectionFeedbackGenerator", "40 ms at 0.471"},
+                new[] {"LightImpact", "UIImpactFeedbackStyleLight", "40 ms at 0.156"},
+                new[] {"MediumImpact", "UIImpactFeedbackStyleMedium", "120 ms at 0.471"},
+                new[] {"RigidImpact", "UIImpactFeedbackStyleRigid, iOS 13 and up, Heavy below it", "40 ms at 1.0"},
+                new[] {"HeavyImpact", "UIImpactFeedbackStyleHeavy", "160 ms at 1.0"},
+                new[] {"SoftImpact", "UIImpactFeedbackStyleSoft, iOS 13 and up, Light below it", "160 ms at 0.156"},
+                new[] {"Success", "UINotificationFeedbackTypeSuccess", "a 240 ms ramp in 8 steps"},
+                new[] {"Warning", "UINotificationFeedbackTypeWarning", "a 280 ms ramp in 9 steps"},
+                new[] {"Failure", "UINotificationFeedbackTypeError", "a 480 ms ramp in 16 steps"});
             painter.Space();
 
             painter.SubHeading("What Android actually plays");

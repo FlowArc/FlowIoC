@@ -82,14 +82,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the install deliberately does not write for you. The Wiring tab has it.");
 
             painter.SubHeading("What lands in the project");
-            painter.Bullet("Modules.Camera - the model, the commands, the adapters.");
-            painter.Bullet(
-                "Modules.Camera.Shared - the CameraName enum and CameraCVO on their own, so a "
-                + "module that names a camera references the data and not the module.");
-            painter.Bullet(
-                "Modules.Camera.Signals - CameraSignals, which only a Connector references.");
-            painter.Bullet("Prefabs/CameraRoot - the module's presence in the scene.");
-            painter.Bullet("Scriptables/CD_CameraCustomBlends - the blend table.");
+            painter.Table(new[] {"What", "Holds"},
+                new[] {"Modules.Camera", "The model, the commands, the adapters."},
+                new[]
+                {
+                    "Modules.Camera.Shared",
+                    "The CameraName enum and CameraCVO on their own, so a module that names a camera "
+                    + "references the data and not the module."
+                },
+                new[] {"Modules.Camera.Signals", "CameraSignals, which only a Connector references."},
+                new[] {"Prefabs/CameraRoot", "The module's presence in the scene."},
+                new[] {"Scriptables/CD_CameraCustomBlends", "The blend table."});
 
             painter.SubHeading("What it needs");
             painter.Paragraph(

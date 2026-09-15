@@ -226,12 +226,17 @@ namespace FlowIoC.Editor.Help.Pages
                 + "InjectionBinderCrossContext is not its own: RootsManager makes one for the whole "
                 + "scene and hands that same instance to every Context in it. The two have the same "
                 + "methods, and differ only in who can see what they hold.");
-            painter.Bullet(
-                "InjectionBinder - this Context. Models, sub-services, and whichever implementation "
-                + "the module picked for itself.");
-            painter.Bullet(
-                "InjectionBinderCrossContext - every Context in the scene. The signal holder, and "
-                + "the Service interface other modules inject.");
+            painter.Table(new[] {"Binder", "Who sees it", "What goes in it"},
+                new[]
+                {
+                    "InjectionBinder", "This Context.",
+                    "Models, sub-services, and whichever implementation the module picked for itself."
+                },
+                new[]
+                {
+                    "InjectionBinderCrossContext", "Every Context in the scene.",
+                    "The signal holder, and the Service interface other modules inject."
+                });
             painter.Paragraph(
                 "Bind across when something outside this Context has to see the object, and locally "
                 + "when it must not. A Model is local: Create Model writes InjectionBinder.Bind, and "

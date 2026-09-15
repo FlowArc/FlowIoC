@@ -47,43 +47,64 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
             painter.Separator();
             painter.SubHeading("What the toggles decide");
-            painter.Bullet(
-                "Create Root and Create Context write the pair that gives the module its presence in "
-                + "the scene and its bindings. Leave both on unless the module is one another Root "
-                + "hosts as a sub-context.");
-            painter.Bullet(
-                "Role names the pair for what the Root roots, which is what the inspector reads to "
-                + "colour it. System writes PlayerSystemRoot and PlayerSystemContext, Service writes "
-                + "CounterServiceRoot and CounterServiceContext, and Core writes the plain PlayerRoot "
-                + "and PlayerContext with FlowHeader(FlowRole.Core) above the Root, a Core module "
-                + "carrying no suffix for the colour to be read from. It starts on System, because a "
-                + "module written for the game at hand is one.");
-            painter.Bullet(
-                "Allow As Sub Context writes AllowAsSubContext on the context. A context with a Root "
-                + "of its own is kept out of a Root's Add Sub Context list, since adding it elsewhere "
-                + "would build it a second time; this puts it back. Off by default.");
-            painter.Bullet(
-                "Create Public Signals writes the public holder into Scripts/Signals and binds it "
-                + "in the Context. On by default, forced on for a Screen module - which generates no "
-                + "Context of its own, so the holder is the only way in - and not offered for a Test "
-                + "module, whose holder stays inside its own assembly. Untick it for a module that "
-                + "announces nothing: a Service that answers the caller it was given, or a Connector, "
-                + "which wires other modules' signals and owns none.");
-            painter.Bullet(
+            painter.Table(new[] {"Toggle", "What it decides"},
+                new[]
+                {
+                    "Create Root, Create Context",
+                    "The pair that gives the module its presence in the scene and its bindings. Leave "
+                    + "both on unless the module is one another Root hosts as a sub-context."
+                },
+                new[]
+                {
+                    "Role",
+                    "Names the pair for what the Root roots, which is what the inspector reads to "
+                    + "colour it. System writes PlayerSystemRoot and PlayerSystemContext, Service "
+                    + "writes CounterServiceRoot and CounterServiceContext, and Core writes the plain "
+                    + "PlayerRoot and PlayerContext with FlowHeader(FlowRole.Core) above the Root, a "
+                    + "Core module carrying no suffix for the colour to be read from. It starts on "
+                    + "System, because a module written for the game at hand is one."
+                },
+                new[]
+                {
+                    "Allow As Sub Context",
+                    "Writes AllowAsSubContext on the context. A context with a Root of its own is "
+                    + "kept out of a Root's Add Sub Context list, since adding it elsewhere would "
+                    + "build it a second time; this puts it back. Off by default."
+                },
+                new[]
+                {
+                    "Create Public Signals",
+                    "Writes the public holder into Scripts/Signals and binds it in the Context. On "
+                    + "by default, forced on for a Screen module - which generates no Context of its "
+                    + "own, so the holder is the only way in - and not offered for a Test module, "
+                    + "whose holder stays inside its own assembly. Untick it for a module that "
+                    + "announces nothing: a Service that answers the caller it was given, or a "
+                    + "Connector, which wires other modules' signals and owns none."
+                },
+                new[]
+                {
+                    "Create Shared",
+                    "Adds the assembly a module publishes its data through. Off by default: a "
+                    + "module that hands no data to anyone has no use for it."
+                },
+                new[]
+                {
+                    "Create Scene",
+                    "Adds a scene of the module's own, so the module can be opened and played on "
+                    + "its own."
+                },
+                new[]
+                {
+                    "Resources, Editor, Scenes, Prefabs",
+                    "The optional folders. The Folder Structure Preview beside them shows exactly "
+                    + "what will be written."
+                });
+            painter.Paragraph(
                 "\"Public\" is in the label because a module has two signal holders and only this "
                 + "one crosses a boundary. The other is written whether or not anything is ticked, "
                 + "and the two folders are both called Signals on purpose: the namespace segment is "
                 + "the folder name, so sharing it is what lets one using reach both holders. The "
                 + "Folder Structure Preview says which row is which.");
-            painter.Bullet(
-                "Create Shared adds the assembly a module publishes its data through. Off by "
-                + "default: a module that hands no data to anyone has no use for it.");
-            painter.Bullet(
-                "Create Scene adds a scene of the module's own, so the module can be opened and "
-                + "played on its own.");
-            painter.Bullet(
-                "The optional folders are the rest - Resources, Editor, Scenes, Prefabs. The Folder "
-                + "Structure Preview beside them shows exactly what will be written.");
 
             painter.Note(
                 "Important: Create Public Signals and Create Shared are offered on the day the module is "

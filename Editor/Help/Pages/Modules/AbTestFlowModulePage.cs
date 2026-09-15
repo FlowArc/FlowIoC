@@ -109,11 +109,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "scene loads, so a scene change neither decides again nor writes an override "
                 + "twice. Its RootAdapter already carries the two assets the module reads, filed "
                 + "under their type names:");
-            painter.Bullet("CD_AbTests - the tests, authored by you. In the adapter's own map.");
-            painter.Bullet(
-                "RD_AbTestStatus - where the player stands, filled at boot. In the Shared Scriptables, "
-                + "so any module reads it through ISharedDataModel.GetScriptable<RD_AbTestStatus>() once "
-                + "it is ready - nothing is announced, because the decision is made before anyone listens.");
+            painter.Table(new[] {"Asset", "What it holds", "Where it is filed"},
+                new[] {"CD_AbTests", "The tests, authored by you.", "In the adapter's own map."},
+                new[]
+                {
+                    "RD_AbTestStatus", "Where the player stands, filled at boot.",
+                    "In the Shared Scriptables, so any module reads it through "
+                    + "ISharedDataModel.GetScriptable<RD_AbTestStatus>() once it is ready - nothing is "
+                    + "announced, because the decision is made before anyone listens."
+                });
 
             painter.Space();
             painter.Note(

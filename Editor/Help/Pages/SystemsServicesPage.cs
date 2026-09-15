@@ -49,9 +49,10 @@ namespace FlowIoC.Editor.Help.Pages
         protected override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("Which of the three a module is, is something you can see");
-            painter.Bullet("A Service has files under Scripts/Runtime/Services/.");
-            painter.Bullet("A screen module has a context deriving from ScreenSubContext<TView, TMediator>.");
-            painter.Bullet("Everything else is a System.");
+            painter.Table(new[] {"Kind", "How you see it"},
+                new[] {"A Service", "It has files under Scripts/Runtime/Services/."},
+                new[] {"A screen module", "It has a context deriving from ScreenSubContext<TView, TMediator>."},
+                new[] {"A System", "Everything else."});
             painter.Paragraph(
                 "There is no fourth question to ask. A module written for the game at hand is a "
                 + "System, which is why Role in Create Module starts there.");
@@ -199,13 +200,18 @@ namespace FlowIoC.Editor.Help.Pages
                 + "what other modules publish. MapGridModel owning a dictionary it mutates is a "
                 + "Model; MapLevelSubSystem reading two config lists and deriving an index from them "
                 + "is a sub system.");
-            painter.Bullet(
-                "The sub system itself holds its own working data - the config it reads, the values "
-                + "it derives.");
-            painter.Bullet("A Model holds the module's state.");
-            painter.Bullet(
-                "A module of its own holds data that is large, or whose scope reaches past this "
-                + "module.");
+            painter.Table(new[] {"Where", "What it holds"},
+                new[]
+                {
+                    "The sub system itself",
+                    "Its own working data - the config it reads, the values it derives."
+                },
+                new[] {"A Model", "The module's state."},
+                new[]
+                {
+                    "A module of its own",
+                    "Data that is large, or whose scope reaches past this module."
+                });
         }
 
         /// <summary>

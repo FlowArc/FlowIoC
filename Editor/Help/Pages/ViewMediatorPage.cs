@@ -96,9 +96,10 @@ namespace FlowIoC.Editor.Help.Pages
                 "The ViewInjector component lists one entry per IView on the object, and each entry "
                 + "says where its Context comes from. A View authored under its module's Root wants "
                 + "Bubble Up, which is the default.");
-            painter.Bullet("Bubble Up - the first Root above the View in the hierarchy.");
-            painter.Bullet("Selected Root - the Root named on the entry, wherever it sits in the scene.");
-            painter.Bullet("Root Name - the Root whose GameObject carries that name, resolved at startup.");
+            painter.Table(new[] {"Context Source", "Which Root"},
+                new[] {"Bubble Up", "The first Root above the View in the hierarchy."},
+                new[] {"Selected Root", "The Root named on the entry, wherever it sits in the scene."},
+                new[] {"Root Name", "The Root whose GameObject carries that name, resolved at startup."});
             painter.Paragraph(
                 "A screen is the one case that answers none of the three: the screen service "
                 + "instantiates it and parents it under a layer, so it names the owning Context on "

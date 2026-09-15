@@ -29,60 +29,87 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "and the one red row is a card whose purpose nobody has written yet.");
 
             painter.SubHeading("What it checks");
-            painter.Bullet(
-                "Mandatory folders - the folders this module type's layout says must exist.");
-            painter.Bullet(
-                "Shared assembly - a module with a Scripts/Shared folder must have the assembly "
-                + "that folder is for, or the data it means to publish stays inside its own.");
-            painter.Bullet(
-                "Signals assembly - a module whose Scripts/Signals folder holds a signal holder "
-                + "must have the assembly that folder is for, or nothing outside the module can "
-                + "reach its public surface. An empty folder is left alone: a Connector announces "
-                + "nothing, so it owes no assembly.");
-            painter.Bullet(
-                "Assembly definition - one asmdef at the module root, named to the module "
-                + "convention.");
-            painter.Bullet(
-                "References - its own Shared and Signals assemblies, the Shared assembly of the "
-                + "module it lives in, and for a test module that module's Signals and its own "
-                + "assembly.");
-            painter.Bullet(
-                "Signals-to-Shared reference - a module's Signals assembly names the module's own "
-                + "Shared assembly, because a public signal is often generic over a type the "
-                + "module publishes and the two are separate assemblies. Without it the holder "
-                + "does not compile and the compiler reports CS0012.");
-            painter.Bullet(
-                "Signal references - no module but a Connector names another module's .Signals "
-                + "assembly. Reading a neighbour's Shared data is ordinary; reaching its signals "
-                + "is the crossing a Connector exists for. The row reports and does not repair: "
-                + "what to do instead is a decision about the game.");
-            painter.Bullet(
-                "Namespace settings - the .csproj.DotSettings at the project root that tells "
-                + "Rider which folders produce a namespace.");
-            painter.Bullet(
-                "Log channels - a log names no channel, because the module is read off the file "
-                + "the call sits in. A FlowLogger call whose first argument is a string typed by "
-                + "hand, FlowModule.Default, or the constant of the very module it sits in is "
-                + "reported with its file and line. Fix cuts the channel where only the message "
-                + "follows, and writes the module's constant where a profile or a context follows; "
-                + "a literal that is exactly another module's name becomes that module's constant. "
-                + "A Connector naming the module it wires is left alone.");
-            painter.Bullet(
-                "Module card - every module but a test module carries a MODULE.md, and its "
-                + "generated block still describes the module. A card whose purpose nobody has "
-                + "written is reported but not written for you: saying what a module is for is "
-                + "the one part of the card nothing can generate.");
-            painter.Bullet(
-                "The project itself - the module index against the folder tree, the module "
-                + "directory and its ignore rule, orphaned settings files, the Flow Console log "
-                + "types, and the solution code style.");
-            painter.Bullet(
-                "Project files - a .csproj left on a package folder the Package Manager has "
-                + "swept, or a solution listing a project file that is gone. Unity compiles from "
-                + "neither, so the project builds while the IDE reports every type in the package. "
-                + "Fix regenerates them all, the way Regenerate project files in Preferences does; "
-                + "FlowIoC also does that on its own the first time a version of it runs in a "
-                + "project, so the row is red only when that did not happen.");
+            painter.Table(new[] {"Check", "What it looks at"},
+                new[] {"Mandatory folders", "The folders this module type's layout says must exist."},
+                new[]
+                {
+                    "Shared assembly",
+                    "A module with a Scripts/Shared folder must have the assembly that folder is for, "
+                    + "or the data it means to publish stays inside its own."
+                },
+                new[]
+                {
+                    "Signals assembly",
+                    "A module whose Scripts/Signals folder holds a signal holder must have the "
+                    + "assembly that folder is for, or nothing outside the module can reach its public "
+                    + "surface. An empty folder is left alone: a Connector announces nothing, so it "
+                    + "owes no assembly."
+                },
+                new[] {"Assembly definition", "One asmdef at the module root, named to the module convention."},
+                new[]
+                {
+                    "References",
+                    "Its own Shared and Signals assemblies, the Shared assembly of the module it lives "
+                    + "in, and for a test module that module's Signals and its own assembly."
+                },
+                new[]
+                {
+                    "Signals-to-Shared reference",
+                    "A module's Signals assembly names the module's own Shared assembly, because a "
+                    + "public signal is often generic over a type the module publishes and the two are "
+                    + "separate assemblies. Without it the holder does not compile and the compiler "
+                    + "reports CS0012."
+                },
+                new[]
+                {
+                    "Signal references",
+                    "No module but a Connector names another module's .Signals assembly. Reading a "
+                    + "neighbour's Shared data is ordinary; reaching its signals is the crossing a "
+                    + "Connector exists for. The row reports and does not repair: what to do instead "
+                    + "is a decision about the game."
+                },
+                new[]
+                {
+                    "Namespace settings",
+                    "The .csproj.DotSettings at the project root that tells Rider which folders "
+                    + "produce a namespace."
+                },
+                new[]
+                {
+                    "Log channels",
+                    "A log names no channel, because the module is read off the file the call sits "
+                    + "in. A FlowLogger call whose first argument is a string typed by hand, "
+                    + "FlowModule.Default, or the constant of the very module it sits in is reported "
+                    + "with its file and line. Fix cuts the channel where only the message follows, "
+                    + "and writes the module's constant where a profile or a context follows; a "
+                    + "literal that is exactly another module's name becomes that module's constant. "
+                    + "A Connector naming the module it wires is left alone."
+                },
+                new[]
+                {
+                    "Module card",
+                    "Every module but a test module carries a MODULE.md, and its generated block "
+                    + "still describes the module. A card whose purpose nobody has written is "
+                    + "reported but not written for you: saying what a module is for is the one part "
+                    + "of the card nothing can generate."
+                },
+                new[]
+                {
+                    "The project itself",
+                    "The module index against the folder tree, the module directory and its ignore "
+                    + "rule, orphaned settings files, the Flow Console log types, and the solution "
+                    + "code style."
+                },
+                new[]
+                {
+                    "Project files",
+                    "A .csproj left on a package folder the Package Manager has swept, or a solution "
+                    + "listing a project file that is gone. Unity compiles from neither, so the "
+                    + "project builds while the IDE reports every type in the package. Fix "
+                    + "regenerates them all, the way Regenerate project files in Preferences does; "
+                    + "FlowIoC also does that on its own the first time a version of it runs in a "
+                    + "project, so the row is red only when that did not happen."
+                });
 
             painter.SubHeading("Reading a row");
             painter.Paragraph(

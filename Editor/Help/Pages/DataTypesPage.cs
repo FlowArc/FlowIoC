@@ -62,11 +62,20 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Tree(Root);
 
             painter.SubHeading("The five kinds");
-            painter.Bullet("CD_ is config data. A designer types it in and the game only ever reads it.");
-            painter.Bullet("RD_ is runtime data. Play produces it, and nothing keeps it once play stops.");
-            painter.Bullet("PD_ is player data. It is loaded at startup and written back to the save system whenever it changes.");
-            painter.Bullet("ED_ is editor data. Settings and caches that only editor tooling reads; nothing in a build touches it.");
-            painter.Bullet("DD_ is database data. A local copy of something a backend owns, filled by a download.");
+            painter.Table(new[] {"Prefix", "Kind", "Where it comes from"},
+                new[] {"CD_", "config data", "A designer types it in and the game only ever reads it."},
+                new[] {"RD_", "runtime data", "Play produces it, and nothing keeps it once play stops."},
+                new[]
+                {
+                    "PD_", "player data",
+                    "It is loaded at startup and written back to the save system whenever it changes."
+                },
+                new[]
+                {
+                    "ED_", "editor data",
+                    "Settings and caches that only editor tooling reads; nothing in a build touches it."
+                },
+                new[] {"DD_", "database data", "A local copy of something a backend owns, filled by a download."});
 
             painter.Space();
             painter.Note(
@@ -209,12 +218,28 @@ namespace FlowIoC.Editor.Help.Pages
 
             painter.Separator();
             painter.SubHeading("What goes wrong");
-            painter.Bullet(
-                "Nothing filed under the name: an error naming it and the slot to fix, and the caller gets null. The adapter says the same for its own slots.");
-            painter.Bullet("The same asset filed as shared on two Roots: a warning naming both; the first filing answers. Remove the second.");
-            painter.Bullet("Two different assets shared under one name: an error naming both Roots and both assets; the first answers. Rename one.");
-            painter.Bullet(
-                "A shared asset read off the reader's own adapter: works until the producer is missing, then reads empty data in silence.");
+            painter.Table(new[] {"What happened", "What you get"},
+                new[]
+                {
+                    "Nothing filed under the name",
+                    "An error naming it and the slot to fix, and the caller gets null. The adapter says "
+                    + "the same for its own slots."
+                },
+                new[]
+                {
+                    "The same asset filed as shared on two Roots",
+                    "A warning naming both; the first filing answers. Remove the second."
+                },
+                new[]
+                {
+                    "Two different assets shared under one name",
+                    "An error naming both Roots and both assets; the first answers. Rename one."
+                },
+                new[]
+                {
+                    "A shared asset read off the reader's own adapter",
+                    "Works until the producer is missing, then reads empty data in silence."
+                });
             painter.Image(_images.Get("SharedAssetNotFiledError.png"),
                 "The report for an asset nobody filed. Double-clicking it opens the reader that asked.");
         }

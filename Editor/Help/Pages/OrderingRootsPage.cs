@@ -63,21 +63,43 @@ namespace FlowIoC.Editor.Help.Pages
         protected override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("The bands");
-            painter.Bullet("The whole range is -100 to 100. Nothing needs to sit outside it.");
-            painter.Bullet(
-                "Negative - Services, on the tens, in the order the boot reads. -100 and -90 are the two "
-                + "that put data in place before anything reads it: saved data restored at -100, config "
-                + "rewritten from an A/B assignment at -90. PostConstruct runs during the binding pass, so "
-                + "these go first, and a service whose PostConstruct reads config sits after -90.");
-            painter.Bullet(
-                "-80 - the asset service, the door every Addressables load goes through. -70 the screen "
-                + "service and -60 the pool service, which load through it. Then the helpers: -50 haptics, "
-                + "-30 world pointers, -10 the loading service - last of the services, because it opens a screen.");
-            painter.Bullet("0 to 97 - the game's own modules and Systems. Gameplay, camera, whatever this game is made of.");
-            painter.Bullet("98 - ConnectorRoot. After every module it wires, so the scene reads as modules first and wiring after them.");
-            painter.Bullet(
-                "99 - ScreenRoot. The screen manager owns the layers the screens open in, so it is up before the flow that opens the first screen.");
-            painter.Bullet("100 - MainRoot. The entry point. Its Launch dispatches the first signal, last of all.");
+            painter.Paragraph("The whole range is -100 to 100. Nothing needs to sit outside it.");
+            painter.Table(new[] {"Order", "Who sits there"},
+                new[]
+                {
+                    "-100 to -90",
+                    "Services, on the tens, in the order the boot reads. -100 and -90 are the two that "
+                    + "put data in place before anything reads it: saved data restored at -100, config "
+                    + "rewritten from an A/B assignment at -90. PostConstruct runs during the binding "
+                    + "pass, so these go first, and a service whose PostConstruct reads config sits "
+                    + "after -90."
+                },
+                new[]
+                {
+                    "-80 to -10",
+                    "-80 the asset service, the door every Addressables load goes through. -70 the "
+                    + "screen service and -60 the pool service, which load through it. Then the "
+                    + "helpers: -50 haptics, -30 world pointers, -10 the loading service - last of the "
+                    + "services, because it opens a screen."
+                },
+                new[]
+                {
+                    "0 to 97",
+                    "The game's own modules and Systems. Gameplay, camera, whatever this game is made of."
+                },
+                new[]
+                {
+                    "98",
+                    "ConnectorRoot. After every module it wires, so the scene reads as modules first "
+                    + "and wiring after them."
+                },
+                new[]
+                {
+                    "99",
+                    "ScreenRoot. The screen manager owns the layers the screens open in, so it is up "
+                    + "before the flow that opens the first screen."
+                },
+                new[] {"100", "MainRoot. The entry point. Its Launch dispatches the first signal, last of all."});
 
             painter.Space();
             painter.Note(
