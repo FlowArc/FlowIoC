@@ -38,6 +38,9 @@ namespace FlowIoC.Editor.ModulePanels
         private const float HELP_GUTTER = 16f;
         private const float ASIDE_FIELD_WIDTH = 56f;
         private const float ASIDE_GAP = 12f;
+        private const float SQUARE = 18f;
+        private const float FLAG_ALPHA = 0.28f;
+        private const float HEADING_HEIGHT = FlowRowPainter.ROW_HEIGHT * 2f;
         private const float QUESTION_SIZE = 13f;
 
         private readonly FlowRowPainter _rows;
@@ -48,6 +51,15 @@ namespace FlowIoC.Editor.ModulePanels
 
         private GUIStyle _question;
 
+        /// <summary>
+        /// The width of the last row painted, learnt on repaint. A wrapped text's height has to be
+        /// computed before its row exists, and the window's width is the wrong number when the rows
+        /// sit beside a sidebar or a scrollbar: a text wrapped at the real width but given the
+        /// height of a wider one runs past its row.
+        /// </summary>
+        private float _rowWidth;
+        private GUIStyle _square;
+
         internal ModulePanelPainter(FlowRowPainter rows, FlowPalette palette, Color accent, Type panel)
         {
             _rows = rows;
@@ -57,45 +69,61 @@ namespace FlowIoC.Editor.ModulePanels
             _state = new FlowHelpState();
         }
 
-        /// <summary>A section's name, on a row tinted in the panel's colour.</summary>
+        /// <summary>
+        /// A section's name, drawn the way the bar's strip names the module and the sidebar names
+        /// its list: a band taken down a step, the words in the panel's colour and in capitals. It
+        /// is nothing like a row, so a section is read as a title over rows rather than as one more
+        /// row that happens to be lit.
+        /// </summary>
         public void Heading(string text)
         {
-            Rect rect = _rows.Row();
-            _rows.Paint(rect, _accent, FlowRowPainter.HEADING_ALPHA);
+            Rect rect = Row(HEADING_HEIGHT);
+            PaintHeading(rect);
 
-            GUI.Label(Content(rect), text, _rows.Strong(false));
+            GUI.Label(Content(rect), text.ToUpperInvariant(), _rows.Heading(_accent));
         }
 
         /// <summary>
         /// A section's name with its own buttons on the same row, pressed against the right edge in
-        /// the order given - the one or two things done to the section as a whole, such as selecting
-        /// the asset it is read from, so they sit beside its name rather than in a row below it.
+        /// the order given - the one or two things done to the section as a whole, such as making
+        /// it the active one or deleting it, so they sit beside its name rather than in a row below
+        /// it. A label that is one glyph - "-", "+" - is drawn as a small square rather than a word.
         /// </summary>
         public void Heading(string text, params ModulePanelAction[] actions)
         {
-            Rect rect = _rows.Row();
-            _rows.Paint(rect, _accent, FlowRowPainter.HEADING_ALPHA);
+            Rect rect = Row(HEADING_HEIGHT);
+            PaintHeading(rect);
 
             Rect content = Content(rect);
-            float y = rect.y + (rect.height - BUTTON_HEIGHT) / 2f;
             float x = content.xMax;
 
             for (int index = actions.Length - 1; index >= 0; index--)
             {
-                float width = ButtonWidth(actions[index]);
+                ModulePanelAction action = actions[index];
+                bool glyph = action.Label != null && action.Label.Length == 1;
+                float width = glyph ? SQUARE : ButtonWidth(action);
+                float height = glyph ? SQUARE : BUTTON_HEIGHT;
+
                 x -= width;
-                Button(new Rect(x, y, width, BUTTON_HEIGHT), actions[index]);
+                Button(new Rect(x, rect.y + (rect.height - height) / 2f, width, height), action, glyph ? SquareStyle() : null);
                 x -= BUTTON_GAP;
             }
 
             content.width = Mathf.Max(0f, x - content.x);
-            GUI.Label(content, text, _rows.Strong(false));
+            GUI.Label(content, text.ToUpperInvariant(), _rows.Heading(_accent));
+        }
+
+        /// <summary>The quiet tint of a row taken down a step, the way the bar's strip sits under its title.</summary>
+        private void PaintHeading(Rect rect)
+        {
+            _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
+            _rows.Darken(rect);
         }
 
         /// <summary>A value the reader looks at: its name on the left, the value beside it.</summary>
         public void Field(string label, string value, string help = null)
         {
-            Rect rect = _rows.Row();
+            Rect rect = Row();
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Labelled(rect, label, help);
@@ -109,20 +137,25 @@ namespace FlowIoC.Editor.ModulePanels
         public void Note(string text)
         {
             GUIStyle style = _rows.MutedWrapped();
-            Rect rect = _rows.Row(HeightOf(style, text, 0f));
+            Rect rect = Row(HeightOf(style, text, 0f));
             _rows.PaintShaded(rect, _rows.Guide);
 
-            GUI.Label(Content(rect), text, style);
+            GUI.Label(Centred(Content(rect), style, text), text, style);
         }
 
         /// <summary>Something that stops the reader - the buttons are off while the game plays, say.</summary>
-        public void Warning(string text)
+        public void Warning(string text) => Message(text, _rows.Warn);
+
+        /// <summary>Something that is wrong - a slot left empty, a name used twice - in the red an error row wears.</summary>
+        public void Error(string text) => Message(text, _rows.Error);
+
+        private void Message(string text, Color tint)
         {
             GUIStyle style = _rows.NameWrapped(false);
-            Rect rect = _rows.Row(HeightOf(style, text, 0f));
-            _rows.Paint(rect, _rows.Warn);
+            Rect rect = Row(HeightOf(style, text, 0f));
+            _rows.Paint(rect, tint);
 
-            GUI.Label(Content(rect), text, style);
+            GUI.Label(Centred(Content(rect), style, text), text, style);
         }
 
         /// <summary>
@@ -131,7 +164,7 @@ namespace FlowIoC.Editor.ModulePanels
         /// </summary>
         public string TextField(string label, string value, bool secret = false, string help = null)
         {
-            Rect rect = _rows.Row(ACTION_HEIGHT);
+            Rect rect = Row(ACTION_HEIGHT);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Labelled(rect, label, help);
@@ -154,7 +187,7 @@ namespace FlowIoC.Editor.ModulePanels
         /// </summary>
         public int Popup(string label, int selected, string[] options, string help = null)
         {
-            Rect rect = _rows.Row(ACTION_HEIGHT);
+            Rect rect = Row(ACTION_HEIGHT);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Labelled(rect, label, help);
@@ -179,7 +212,7 @@ namespace FlowIoC.Editor.ModulePanels
         public void Text(string text)
         {
             GUIStyle style = _rows.NameWrapped(false);
-            Rect rect = _rows.Row(HeightOf(style, text, 0f) + TEXT_PADDING * 2f);
+            Rect rect = Row(HeightOf(style, text, 0f) + TEXT_PADDING * 2f);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Content(rect);
@@ -203,7 +236,7 @@ namespace FlowIoC.Editor.ModulePanels
         /// <summary>The same row of buttons, with help on what they do behind its "?".</summary>
         public void Actions(string help, params ModulePanelAction[] actions)
         {
-            Rect rect = _rows.Row(ACTION_HEIGHT);
+            Rect rect = Row(ACTION_HEIGHT);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             string key = actions.Length > 0 ? actions[0].Label : string.Empty;
@@ -265,7 +298,7 @@ namespace FlowIoC.Editor.ModulePanels
         public void PropertyWithAside(SerializedProperty property, string label, SerializedProperty aside,
             string asideLabel, string help = null)
         {
-            Rect rect = _rows.Row(ACTION_HEIGHT);
+            Rect rect = Row(ACTION_HEIGHT);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Labelled(rect, label, help);
@@ -296,9 +329,28 @@ namespace FlowIoC.Editor.ModulePanels
             Properties(label, null, properties);
 
         /// <summary>The same row of fields, with help on what they hold behind its "?".</summary>
-        public void Properties(string label, string help, params SerializedProperty[] properties)
+        public void Properties(string label, string help, params SerializedProperty[] properties) =>
+            Properties(label, help, null, properties);
+
+        /// <summary>
+        /// The same row of fields with small square buttons at its right edge, in the order given -
+        /// the "+" and "-" that add and take a column of the matrix the row heads, each tinted by
+        /// its kind and its label a single glyph. A null entry draws nothing but keeps its square,
+        /// so the rows of a matrix with fewer buttons than their heading keep their columns in line.
+        /// Null or empty for none.
+        /// </summary>
+        public void Properties(string label, string help, ModulePanelAction?[] trailing, params SerializedProperty[] properties) =>
+            Properties(label, help, trailing, null, properties);
+
+        /// <summary>
+        /// The same row with some of its fields flagged: a flagged field is washed and framed in the
+        /// red an error row wears, so the eye lands on the empty slot rather than on the sentence
+        /// about it. One flag per field, or null for none.
+        /// </summary>
+        public void Properties(string label, string help, ModulePanelAction?[] trailing, bool[] flagged,
+            params SerializedProperty[] properties)
         {
-            Rect rect = _rows.Row(ACTION_HEIGHT);
+            Rect rect = Row(ACTION_HEIGHT);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Labelled(rect, label, help);
@@ -308,15 +360,47 @@ namespace FlowIoC.Editor.ModulePanels
             value.y += (content.height - EditorGUIUtility.singleLineHeight) / 2f;
             value.height = EditorGUIUtility.singleLineHeight;
 
+            if (trailing != null && trailing.Length > 0)
+            {
+                float x = value.xMax;
+
+                for (int index = trailing.Length - 1; index >= 0; index--)
+                {
+                    x -= SQUARE;
+
+                    if (trailing[index].HasValue)
+                        Button(new Rect(x, rect.y + (rect.height - SQUARE) / 2f, SQUARE, SQUARE), trailing[index].Value, SquareStyle());
+
+                    x -= BUTTON_GAP;
+                }
+
+                value.width = x + BUTTON_GAP - ASIDE_GAP - value.x;
+            }
+
             float width = (value.width - BUTTON_GAP * (properties.Length - 1)) / properties.Length;
 
             for (int index = 0; index < properties.Length; index++)
             {
                 var field = new Rect(value.x + index * (width + BUTTON_GAP), value.y, width, value.height);
                 EditorGUI.PropertyField(field, properties[index], GUIContent.none);
+
+                if (flagged != null && index < flagged.Length && flagged[index])
+                    Flag(field);
             }
 
             Help(label, help);
+        }
+
+        /// <summary>A red wash over a field and a hairline around it, drawn after the field so both show.</summary>
+        private void Flag(Rect field)
+        {
+            Color red = _rows.Error;
+
+            EditorGUI.DrawRect(field, new Color(red.r, red.g, red.b, FLAG_ALPHA));
+            EditorGUI.DrawRect(new Rect(field.x, field.y, field.width, 1f), red);
+            EditorGUI.DrawRect(new Rect(field.x, field.yMax - 1f, field.width, 1f), red);
+            EditorGUI.DrawRect(new Rect(field.x, field.y, 1f, field.height), red);
+            EditorGUI.DrawRect(new Rect(field.xMax - 1f, field.y, 1f, field.height), red);
         }
 
         public void Space() => GUILayout.Space(6f);
@@ -330,7 +414,7 @@ namespace FlowIoC.Editor.ModulePanels
         /// </summary>
         public void Custom(float height, Action<Rect> draw)
         {
-            Rect rect = _rows.Row(height);
+            Rect rect = Row(height);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             draw?.Invoke(Content(rect));
@@ -407,11 +491,30 @@ namespace FlowIoC.Editor.ModulePanels
                 return;
 
             GUIStyle style = _rows.MutedWrapped();
-            Rect rect = _rows.Row(HeightOf(style, help, HELP_GUTTER));
+            Rect rect = Row(HeightOf(style, help, HELP_GUTTER));
             _rows.PaintShaded(rect, _rows.Guide);
 
             Rect content = Content(rect);
-            GUI.Label(new Rect(content.x + HELP_GUTTER, content.y, content.width - HELP_GUTTER, content.height), help, style);
+            var indented = new Rect(content.x + HELP_GUTTER, content.y, content.width - HELP_GUTTER, content.height);
+            GUI.Label(Centred(indented, style, help), help, style);
+        }
+
+        /// <summary>
+        /// A mini button that is exactly the rect it is given: the skin's mini button carries a fixed
+        /// height and an overflow that would stretch a square into a low rectangle, so both are
+        /// cleared, and the padding with them, so a single glyph sits centred.
+        /// </summary>
+        private GUIStyle SquareStyle()
+        {
+            return _square ??= new GUIStyle(EditorStyles.miniButton)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                padding = new RectOffset(0, 0, 0, 0),
+                overflow = new RectOffset(0, 0, 0, 0),
+                fixedHeight = 0f,
+                fixedWidth = 0f,
+                fontStyle = FontStyle.Bold
+            };
         }
 
         private GUIStyle QuestionStyle()
@@ -424,6 +527,17 @@ namespace FlowIoC.Editor.ModulePanels
             };
         }
 
+        /// <summary>One row, its width remembered for the next wrapped text; on layout the rect is a stand-in and is not learnt from.</summary>
+        private Rect Row(float height = FlowRowPainter.ROW_HEIGHT)
+        {
+            Rect rect = _rows.Row(height);
+
+            if (Event.current.type == EventType.Repaint && rect.width > 1f)
+                _rowWidth = rect.width;
+
+            return rect;
+        }
+
         private Rect Content(Rect row) =>
             new Rect(row.x + _rows.ContentX, row.y, row.width - _rows.ContentX - RIGHT_MARGIN, row.height);
 
@@ -431,12 +545,25 @@ namespace FlowIoC.Editor.ModulePanels
             new Rect(content.x + LABEL_WIDTH, content.y, content.width - LABEL_WIDTH, content.height);
 
         /// <summary>
+        /// The rect a wrapped text is drawn in, its height the text's own and centred in the row: a
+        /// wrapped style anchors at the top so a long text reads from its first line down, and a
+        /// one-line message would otherwise sit high in its row.
+        /// </summary>
+        private static Rect Centred(Rect content, GUIStyle style, string text)
+        {
+            float height = Mathf.Min(content.height, style.CalcHeight(new GUIContent(text), content.width));
+
+            return new Rect(content.x, content.y + (content.height - height) / 2f, content.width, height);
+        }
+
+        /// <summary>
         /// The height a wrapped text needs at the window's width less an indent, and never less
         /// than a row, so a one-line note sits on the same grid as the rows around it.
         /// </summary>
         private float HeightOf(GUIStyle style, string text, float indent)
         {
-            float width = EditorGUIUtility.currentViewWidth - _rows.ContentX - RIGHT_MARGIN - indent;
+            float total = _rowWidth > 0f ? _rowWidth : EditorGUIUtility.currentViewWidth;
+            float width = total - _rows.ContentX - RIGHT_MARGIN - indent;
 
             return Mathf.Max(FlowRowPainter.ROW_HEIGHT, style.CalcHeight(new GUIContent(text), width) + 2f);
         }

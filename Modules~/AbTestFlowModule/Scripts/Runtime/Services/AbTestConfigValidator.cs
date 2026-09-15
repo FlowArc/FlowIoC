@@ -10,12 +10,12 @@ namespace Modules.AbTestFlowModule.Services
 {
     /// <summary>
     /// Reads a config the way a reviewer would and says what is wrong with it. Kept apart from the
-    /// asset so the rules can be tested without an Editor, and called from OnValidate so a designer
-    /// hears about a mistake while making it rather than at boot.
+    /// asset so the rules can be tested without an Editor; the AB Test Editor shows its word under
+    /// the test it is about, so a designer hears about a mistake while making it rather than at boot.
     /// </summary>
     public class AbTestConfigValidator
     {
-        public List<AbTestValidationVO> Validate(List<AbTestCVO> tests)
+        public List<AbTestValidationVO> Validate(List<AbTestCVO> tests, string activeTestId)
         {
             var messages = new List<AbTestValidationVO>();
             var seen = new HashSet<string>();
@@ -23,7 +23,21 @@ namespace Modules.AbTestFlowModule.Services
             foreach (AbTestCVO test in tests)
                 ValidateOne(test, seen, messages);
 
+            ValidateActive(activeTestId, seen, messages);
+
             return messages;
+        }
+
+        /// <summary>
+        /// One test runs at a time, and the asset names it. A name no test carries is the one
+        /// mistake that runs nothing without a word at boot, so it is an error here.
+        /// </summary>
+        private void ValidateActive(string activeTestId, HashSet<string> ids, List<AbTestValidationVO> messages)
+        {
+            if (string.IsNullOrEmpty(activeTestId))
+                Add(messages, AbTestValidationSeverity.Information, "No test is active.");
+            else if (!ids.Contains(activeTestId))
+                Add(messages, AbTestValidationSeverity.Error, $"The active test '{activeTestId}' is not defined.");
         }
 
         private void ValidateOne(AbTestCVO test, HashSet<string> seen, List<AbTestValidationVO> messages)
@@ -38,66 +52,112 @@ namespace Modules.AbTestFlowModule.Services
             if (test.Groups.Count < 2)
                 Add(messages, AbTestValidationSeverity.Error, $"{label} needs at least two groups.");
 
-            if (test.Groups.Count > 0 && test.Groups[0].Overrides.Count > 0)
-                Add(messages, AbTestValidationSeverity.Error,
-                    $"The first group of {label} is the control group and carries no overrides.");
+            if (test.TestUserPercent <= 0f)
+                Add(messages, AbTestValidationSeverity.Information, $"{label} puts nobody in the test.");
 
-            if (!test.IsActive)
-                Add(messages, AbTestValidationSeverity.Information, $"{label} is switched off.");
-            else if (test.RolloutPercent <= 0f)
-                Add(messages, AbTestValidationSeverity.Information, $"{label} rolls out to nobody.");
-
-            ValidateOverrides(test, label, messages);
+            ValidateGroupNames(test, label, messages);
+            ValidateAssets(test, label, messages);
         }
 
-        private void ValidateOverrides(AbTestCVO test, string label, List<AbTestValidationVO> messages)
+        private void ValidateGroupNames(AbTestCVO test, string label, List<AbTestValidationVO> messages)
         {
-            var counts = new Dictionary<ScriptableObject, int>();
+            var names = new HashSet<string>();
 
-            for (var i = 1; i < test.Groups.Count; i++)
+            for (var i = 0; i < test.Groups.Count; i++)
             {
                 AbTestGroupCVO group = test.Groups[i];
 
-                foreach (AbTestOverrideCVO pair in group.Overrides)
+                if (string.IsNullOrEmpty(group.Name))
+                    Add(messages, AbTestValidationSeverity.Error, $"A group of {label} has no name.", i);
+                else if (!names.Add(group.Name))
+                    Add(messages, AbTestValidationSeverity.Error,
+                        $"The group name '{group.Name}' is used more than once in {label}.", i);
+            }
+        }
+
+        /// <summary>
+        /// The control group's list says which assets the experiment changes, and every other
+        /// group replaces them row by row - so a group's list is as long as the control's, and a
+        /// row pairs the control's asset with each group's at the same index.
+        /// </summary>
+        private void ValidateAssets(AbTestCVO test, string label, List<AbTestValidationVO> messages)
+        {
+            if (test.Groups.Count == 0)
+                return;
+
+            AbTestGroupCVO control = test.Groups[0];
+            var listed = new HashSet<ScriptableObject>();
+
+            if (control.Assets.Count == 0)
+                messages.Add(new AbTestValidationVO
                 {
-                    if (pair.Original == null || pair.Variant == null)
-                    {
-                        Add(messages, AbTestValidationSeverity.Error,
-                            $"Group '{group.Name}' of {label} has an override with an empty slot.");
-                        continue;
-                    }
+                    Severity = AbTestValidationSeverity.Warning,
+                    Message = $"{label} changes no asset; the game reads the player's group from RD_AbTestStatus.",
+                    Scope = AbTestValidationScope.Rows
+                });
 
-                    counts.TryGetValue(pair.Original, out int count);
-                    counts[pair.Original] = count + 1;
+            for (var row = 0; row < control.Assets.Count; row++)
+            {
+                ScriptableObject original = control.Assets[row];
 
-                    if (pair.Original.GetType() != pair.Variant.GetType())
-                    {
-                        Add(messages, AbTestValidationSeverity.Error,
-                            $"Group '{group.Name}' of {label} overrides '{pair.Original.name}' with "
-                            + $"'{pair.Variant.name}', which is another type.");
-                        continue;
-                    }
-
-                    if (JsonUtility.ToJson(pair.Original) == JsonUtility.ToJson(pair.Variant))
-                        Add(messages, AbTestValidationSeverity.Warning,
-                            $"Group '{group.Name}' of {label} overrides '{pair.Original.name}' with "
-                            + "a variant that changes nothing.");
-
-                    if (CarriesSerializeReference(pair.Original.GetType()))
-                        Add(messages, AbTestValidationSeverity.Warning,
-                            $"'{pair.Original.name}' carries a [SerializeReference] field, which the "
-                            + $"override of group '{group.Name}' of {label} will not copy.");
+                if (original == null)
+                {
+                    Add(messages, AbTestValidationSeverity.Error,
+                        $"The control group of {label} has an empty slot at asset {row + 1}.", 0, row);
+                    continue;
                 }
+
+                if (!listed.Add(original))
+                    Add(messages, AbTestValidationSeverity.Error,
+                        $"'{original.name}' is listed twice in the control group of {label}.", 0, row);
+
+                if (CarriesSerializeReference(original.GetType()))
+                    Add(messages, AbTestValidationSeverity.Warning,
+                        $"'{original.name}' carries a [SerializeReference] field, which the variants of "
+                        + $"{label} will not copy.", 0, row);
             }
 
-            int arms = test.Groups.Count - 1;
+            for (var i = 1; i < test.Groups.Count; i++)
+                ValidateGroup(test.Groups[i], i, control, label, messages);
+        }
 
-            foreach (KeyValuePair<ScriptableObject, int> entry in counts)
+        private void ValidateGroup(AbTestGroupCVO group, int column, AbTestGroupCVO control, string label,
+            List<AbTestValidationVO> messages)
+        {
+            if (group.Assets.Count != control.Assets.Count)
+                Add(messages, AbTestValidationSeverity.Error,
+                    $"Group '{group.Name}' of {label} lists {group.Assets.Count} assets where the control "
+                    + $"lists {control.Assets.Count}.", column);
+
+            int rows = Math.Min(group.Assets.Count, control.Assets.Count);
+
+            for (var row = 0; row < rows; row++)
             {
-                if (entry.Value < arms)
+                ScriptableObject original = control.Assets[row];
+                ScriptableObject variant = group.Assets[row];
+
+                if (variant == null)
+                {
+                    Add(messages, AbTestValidationSeverity.Error,
+                        $"Group '{group.Name}' of {label} has an empty slot at asset {row + 1}.", column, row);
+                    continue;
+                }
+
+                if (original == null)
+                    continue;
+
+                if (original.GetType() != variant.GetType())
+                {
+                    Add(messages, AbTestValidationSeverity.Error,
+                        $"Group '{group.Name}' of {label} replaces '{original.name}' with '{variant.name}', "
+                        + "which is another type.", column, row);
+                    continue;
+                }
+
+                if (JsonUtility.ToJson(original) == JsonUtility.ToJson(variant))
                     Add(messages, AbTestValidationSeverity.Warning,
-                        $"'{entry.Key.name}' is overridden in {entry.Value} of {arms} groups of "
-                        + $"{label}, so it is not in every group.");
+                        $"Group '{group.Name}' of {label} replaces '{original.name}' with a variant that "
+                        + "changes nothing.", column, row);
             }
         }
 
@@ -152,7 +212,15 @@ namespace Modules.AbTestFlowModule.Services
             return fieldType;
         }
 
-        private void Add(List<AbTestValidationVO> messages, AbTestValidationSeverity severity, string message) =>
-            messages.Add(new AbTestValidationVO {Severity = severity, Message = message});
+        private void Add(List<AbTestValidationVO> messages, AbTestValidationSeverity severity, string message,
+            int group = -1, int row = -1)
+        {
+            AbTestValidationScope scope = row >= 0 ? AbTestValidationScope.Cell
+                : group >= 0 ? AbTestValidationScope.Group
+                : AbTestValidationScope.Test;
+
+            messages.Add(new AbTestValidationVO
+                {Severity = severity, Message = message, Scope = scope, Group = group, Row = row});
+        }
     }
 }

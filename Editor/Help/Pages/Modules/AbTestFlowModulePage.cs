@@ -11,8 +11,6 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class AbTestFlowModulePage : ModulePage
     {
-        private readonly HelpImages _images = new HelpImages();
-
         public override string ModuleFolderName => "AbTestFlowModule";
 
         public override string Title => "A/B Test";
@@ -25,8 +23,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             new HelpTab("Setup", DrawSetup,
                 "Put the Root in the scene and author one test.",
-                "The Root ships with its two assets already filed. A test is a few fields on "
-                + "CD_AbTests, and the Inspector reports a mistake while you make it."),
+                "The Root ships with its two assets already filed. A test is a few fields and a matrix "
+                + "in the AB Test Editor, which reports a mistake beside the cell while you make it."),
             new HelpTab("Usage", DrawUsage,
                 "Ask the service, or read the status asset.",
                 "A module that branches on the group injects IAbTestFlowService. A module that "
@@ -42,7 +40,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             + "tab has the steps.";
 
         public override string BodyHeadline =>
-            "A player lands in one group of each test, and that group's config is what the game reads.";
+            "A player lands in one group of the active test, and that group's config is what the game reads.";
 
         public override string BodyTagline =>
             "Harder levels for half the players, a cheaper shop for a third - each is a test with "
@@ -52,12 +50,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(
-                "A test is an id, a version, a rollout percentage and its groups. The first group "
-                + "is the control and carries nothing: it is the original configuration, not a copy.");
+                "A test is an id, a version, the share of players who enter it and its groups, laid "
+                + "out as a matrix: a row per config asset the test changes, a column per group. The "
+                + "first column is the control and holds the game's own assets - the originals "
+                + "themselves, not copies.");
             painter.Bullet(
-                "Every other group carries pairs - a config asset another module owns, and the "
-                + "variant to write over it. A group's pairs are applied as a set, so a player never "
-                + "gets group B's levels next to group A's economy.");
+                "Every other column holds, row by row, the asset that replaces the original for that "
+                + "group. A column is applied as a set, so a player never gets group B's levels next "
+                + "to group A's economy - and the shape keeps every group the length of the control.");
+            painter.Bullet(
+                "One test runs at a time: CD_AbTests names it, and the rest wait their turn without "
+                + "losing what their players were assigned.");
             painter.Bullet(
                 "The decision is made once, during boot, and kept in PlayerPrefs. The same player "
                 + "lands in the same group on every launch until the test's version is raised.");
@@ -87,7 +90,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("Its signal");
             painter.Paragraph(
-                "Incoming.ResolveAbTests decides every active test for this player and writes the "
+                "Incoming.ResolveAbTests decides the active test for this player and writes the "
                 + "overrides. The service dispatches it at boot; a game dispatches it again only to "
                 + "decide again, which changes nothing while the version stands. There is no "
                 + "Outgoing: the result is in RD_AbTestStatus.");
@@ -127,46 +130,46 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("2. A test");
             painter.Paragraph(
-                "Open Tools > FlowIoC-Modules > AB Test > Editor and press Add test - it lists every "
-                + "CD_AbTests in the project, so there is no asset to hunt for. A new test comes "
-                + "active, rolled out to everybody, with the control group and one variant; give it an "
-                + "id, name the groups, and add each variant group's override pairs. The validator's "
-                + "word - an empty id, a single group, an override on the control group, a variant of "
-                + "another type - sits under the test it is about. Every field is the asset's own, so "
-                + "undo and save are Unity's, and the Inspector shows the same test with the same "
-                + "validation if you would rather edit it there.");
-            painter.Image(_images.Get("AbTestsInspector.png"),
-                "The test the module ships with: two groups, the control empty, one pair on B.");
+                "Open Tools > FlowIoC-Modules > AB Test > Editor. The tests of every CD_AbTests in the "
+                + "project are listed down the left, the active one marked, so there is no asset to "
+                + "hunt for; the + on the list adds one, and the clicked one opens on the right. A new "
+                + "test comes with every player in it, the control group and one variant, and is not "
+                + "active until you press Activate on its heading. Give it an id, name the groups, add "
+                + "a row per asset the test changes and fill the matrix: the game's own asset in the "
+                + "control column, the replacement for each group beside it. The validator's word - an "
+                + "empty slot, a name used twice, a replacement of another type - sits under the row it "
+                + "is about, the slot washed red. Every field is the asset's own, so undo and save are "
+                + "Unity's, and the Inspector shows the same test if you would rather edit it there.");
 
             painter.Paragraph(
-                "Id is also the PlayerPrefs key. Version is what you raise to restart the test. "
-                + "RolloutPercent is how many players are in the test at all; the rest keep the "
-                + "original config and are reported as outside. A real test usually moves more than "
-                + "one asset, and each group then carries every pair that has to change together:");
-            painter.Tree(new HelpTreeNode("LevelDifficulty", "Version 1 · active · 50 % rollout",
-                new HelpTreeNode("A", "control - Overrides stays empty"),
-                new HelpTreeNode("B", "CD_Level -> CD_Level_B · CD_Currency -> CD_Currency_B"),
-                new HelpTreeNode("C", "CD_Level -> CD_Level_C · CD_Currency -> CD_Currency_C")));
+                "Id is also the PlayerPrefs key. Version is what you raise to restart the test. Test "
+                + "users / all users is the share of players who enter the test at all - 80 puts 80 of "
+                + "every 100 into one of the groups, split evenly - and the rest keep the original "
+                + "config and are reported as outside. A real test usually moves more than one asset, "
+                + "and each row of the matrix then names one:");
+            painter.Table(new[] {"", "A (control)", "B", "C"},
+                new[] {"Asset 1", "CD_Level", "CD_Level_B", "CD_Level_C"},
+                new[] {"Asset 2", "CD_Currency", "CD_Currency_B", "CD_Currency_C"});
 
             painter.Space();
             painter.Paragraph(
-                "Original and Variant are typed ScriptableObject on purpose: you drag another "
-                + "module's CD_ asset onto the field, and this module still references no other "
-                + "module's assembly. A variant is an asset of the same type as its original - "
-                + "make one per group and keep them beside the test, in this module's Scriptables.");
+                "Every cell is typed ScriptableObject on purpose: you drag another module's CD_ asset "
+                + "onto it, and this module still references no other module's assembly. A replacement "
+                + "is an asset of the same type as the control's - make one per group and keep them "
+                + "beside the test, in this module's Scriptables.");
 
             painter.Space();
             painter.Note(
-                "Important: an original left out of one group is a warning, not an error, and it is "
-                + "the mistake this shape invites. If group B changes the currency, group C changes "
-                + "it too - or group C's players get group B's levels with the control's economy.");
+                "Important: the shape keeps every column the length of the control's, so a group "
+                + "cannot forget an asset - but it can leave a cell empty, and an empty cell is an "
+                + "error at boot that skips that row alone. Fill every cell before the test goes out.");
 
             painter.SubHeading("3. Restarting a test");
             painter.Paragraph(
                 "Raise Version. Every player decides again on their next launch, including the ones "
-                + "the rollout had left outside - a test is restarted, not amended. Switching "
-                + "IsActive off leaves the stored decisions untouched, so switching it back on "
-                + "returns every player to the group they had.");
+                + "left outside the test - a test is restarted, not amended. Activating another test "
+                + "leaves the stored decisions untouched, so activating this one again returns every "
+                + "player to the group they had.");
             painter.Space();
 
             painter.SubHeading("4. Seeing a variant on this machine");

@@ -18,12 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   icon, for what is done to the panel as a whole. In the row painter every labelled mark takes a
   `help` text that hides behind the `?` a Root's inspector gives its fields and opens under the
   row when pressed; `Popup` picks one of a list, `PropertyWithAside` draws a narrow second field
-  at the end of a row, `Custom` hands a row's rect to a panel that has to draw something no mark
-  describes, and a heading can carry buttons at its right edge. A `ModulePanelAction` has a kind:
-  the plain ones stay in line, `Confirm` green and `Caution` amber stay in line too, `Add` stands
-  apart at the right edge larger and green, `Remove` beside it mini and red -
-  `ModulePanelAction.Add("+", …)` for the one that makes more. `FlowPalette.ActionCaution` is the
-  amber.
+  at the end of a row, `Properties` can carry square `+`/`-` buttons at its end and flag a cell
+  red, `Error` is the red row beside `Warning`'s amber, `Custom` hands a row's rect to a panel
+  that has to draw something no mark describes, and a heading - drawn like the bar's strip, two
+  rows tall - can carry buttons at its right edge, a one-glyph label as a square. A
+  `ModulePanelAction` has a kind: the plain ones stay in line, `Confirm` green and `Caution` amber
+  stay in line too, `Add` stands apart at the right edge larger and green, `Remove` beside it mini
+  and red - `ModulePanelAction.Add("+", …)` for the one that makes more. `FlowPalette.ActionCaution`
+  is the amber. A wrapped text is measured at the row's real width and centred in its row.
 - **`HelpPainter.Table`.** A Help page draws a table - `painter.Table(headers, rows...)` - with the
   header row on the band a heading wears, a hairline under every row, each column as wide as its
   widest cell and the last taking what is left. Four listings that were tables typed into a code

@@ -10,9 +10,9 @@ using UnityEngine;
 namespace Modules.AbTestFlowModule.Controllers
 {
     /// <summary>
-    /// Files the assignments that still stand: what PlayerPrefs holds for an experiment, when it
-    /// was written under the experiment's current version. Anything else - nothing stored, an
-    /// older version, a group the config no longer has - is left for the roll that follows.
+    /// Files the assignment that still stands: what PlayerPrefs holds for the active experiment,
+    /// when it was written under the experiment's current version. Anything else - nothing stored,
+    /// an older version, a group the config no longer has - is left for the roll that follows.
     /// </summary>
     internal class ReadStoredAbTestsCommand : Command
     {
@@ -24,17 +24,16 @@ namespace Modules.AbTestFlowModule.Controllers
 
             _model.ClearStatuses();
 
-            foreach (AbTestCVO test in _model.ActiveTests)
-            {
-                if (!TryReadStored(test, out string group))
-                    continue;
+            AbTestCVO test = _model.ActiveTest;
 
-                AbTestStatusRVO status = Status(test, group);
-                _model.SetStatus(status);
+            if (test == null || !TryReadStored(test, out string group))
+                return;
 
-                FlowLogger.Log($"Execute - ReadStoredAbTestsCommand - '{test.Id}' v{test.Version}: the player "
-                               + (status.IsInTest ? $"is in group '{status.Group}'." : "is outside the test."));
-            }
+            AbTestStatusRVO status = Status(test, group);
+            _model.SetStatus(status);
+
+            FlowLogger.Log($"Execute - ReadStoredAbTestsCommand - '{test.Id}' v{test.Version}: the player "
+                           + (status.IsInTest ? $"is in group '{status.Group}'." : "is outside the test."));
         }
 
         /// <summary>

@@ -22,7 +22,7 @@ namespace Modules.AbTestFlowModule.Models
         [Inject(nameof(AbTestFlowServiceContext))]
         private GameObject _root { get; set; }
 
-        private readonly List<AbTestCVO> _activeTests = new();
+        private AbTestCVO _activeTest;
         private readonly List<AbTestStatusRVO> _statuses = new();
 
         private RD_AbTestStatus _published;
@@ -34,24 +34,25 @@ namespace Modules.AbTestFlowModule.Models
         public bool IsPostConstructed { get; set; }
         public bool IsDeconstructed { get; set; }
 
-        public IReadOnlyList<AbTestCVO> ActiveTests => _activeTests;
+        public AbTestCVO ActiveTest => _activeTest;
 
         public IReadOnlyList<AbTestStatusRVO> Statuses => _statuses;
 
         public void PostConstruct()
         {
-            _activeTests.Clear();
+            _activeTest = null;
             _statuses.Clear();
 
             if (!TryReadAdapter(out CD_AbTests config, out _published))
                 return;
 
-            _activeTests.AddRange(config.ActiveTests());
+            _activeTest = config.ActiveTest();
 
 #if UNITY_EDITOR
-            // Before anything is written: every original of every group, because which group this
-            // player lands in is not known yet, and the published asset, which is filled at boot.
-            _snapshots.Capture(AssetsAboutToChange(_activeTests, _published));
+            // Before anything is written: every asset of the active test's control group, because
+            // which group this player lands in is not known yet, and the published asset, which is
+            // filled at boot.
+            _snapshots.Capture(AssetsAboutToChange(_activeTest, _published));
 #endif
 
             _published.Clear();
@@ -59,7 +60,7 @@ namespace Modules.AbTestFlowModule.Models
 
         public void Deconstruct()
         {
-            _activeTests.Clear();
+            _activeTest = null;
             _statuses.Clear();
         }
 
@@ -142,20 +143,17 @@ namespace Modules.AbTestFlowModule.Models
         }
 
 #if UNITY_EDITOR
-        private List<ScriptableObject> AssetsAboutToChange(List<AbTestCVO> tests, RD_AbTestStatus published)
+        private List<ScriptableObject> AssetsAboutToChange(AbTestCVO test, RD_AbTestStatus published)
         {
             var assets = new List<ScriptableObject> {published};
 
-            foreach (AbTestCVO test in tests)
+            if (test == null || test.Groups.Count == 0)
+                return assets;
+
+            foreach (ScriptableObject original in test.Groups[0].Assets)
             {
-                foreach (AbTestGroupCVO group in test.Groups)
-                {
-                    foreach (AbTestOverrideCVO pair in group.Overrides)
-                    {
-                        if (pair.Original != null)
-                            assets.Add(pair.Original);
-                    }
-                }
+                if (original != null)
+                    assets.Add(original);
             }
 
             return assets;

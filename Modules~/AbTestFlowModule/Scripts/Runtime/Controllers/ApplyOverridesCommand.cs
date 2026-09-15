@@ -9,9 +9,10 @@ using UnityEngine;
 namespace Modules.AbTestFlowModule.Controllers
 {
     /// <summary>
-    /// Writes the assigned group's variants over the originals, for every experiment this player
-    /// is inside. The control group carries no overrides, so a player who landed there changes
-    /// nothing - the original configuration is the control configuration.
+    /// Writes the assigned group's assets over the control group's, when this player is inside
+    /// the active experiment. The control group's list is the game's own configuration, so a player
+    /// who landed there changes nothing; a player in any other group gets that group's asset
+    /// written over the control's at the same index, row by row.
     ///
     /// The copy is JsonUtility rather than the Newtonsoft stack the save module uses, and
     /// deliberately. That one serialises for a file, so it drops every field that points at
@@ -28,24 +29,31 @@ namespace Modules.AbTestFlowModule.Controllers
         {
             FlowLogger.Log("Execute - ApplyOverridesCommand");
 
-            foreach (AbTestStatusRVO status in _model.Statuses)
+            AbTestCVO test = _model.ActiveTest;
+            if (test == null || test.Groups.Count == 0)
+                return;
+
+            AbTestStatusRVO status = _model.GetStatus(test.Id);
+            if (status == null || !status.IsInTest)
+                return;
+
+            AbTestGroupCVO control = test.Groups[0];
+            AbTestGroupCVO group = FindGroup(test, status.Group);
+
+            if (group == null || group == control)
+                return;
+
+            for (var row = 0; row < control.Assets.Count; row++)
             {
-                if (!status.IsInTest)
+                ScriptableObject original = control.Assets[row];
+                ScriptableObject variant = row < group.Assets.Count ? group.Assets[row] : null;
+
+                if (Apply(original, variant))
                     continue;
 
-                AbTestGroupCVO group = FindGroup(status.AbTestId, status.Group);
-                if (group == null)
-                    continue;
-
-                foreach (AbTestOverrideCVO pair in group.Overrides)
-                {
-                    if (Apply(pair.Original, pair.Variant))
-                        continue;
-
-                    FlowLogger.LogError($"Execute - ApplyOverridesCommand - '{status.AbTestId}' group '{group.Name}' "
-                                        + "could not write its variant over the original. The two are a different type, or "
-                                        + "a slot is empty.", pair.Original);
-                }
+                FlowLogger.LogError($"Execute - ApplyOverridesCommand - '{test.Id}' group '{group.Name}' could not "
+                                    + $"write its variant over asset {row + 1} of the control group. The two are a "
+                                    + "different type, or a slot is empty.", original);
             }
         }
 
@@ -62,18 +70,12 @@ namespace Modules.AbTestFlowModule.Controllers
             return true;
         }
 
-        private AbTestGroupCVO FindGroup(string abTestId, string groupName)
+        private static AbTestGroupCVO FindGroup(AbTestCVO test, string groupName)
         {
-            foreach (AbTestCVO test in _model.ActiveTests)
+            foreach (AbTestGroupCVO group in test.Groups)
             {
-                if (test.Id != abTestId)
-                    continue;
-
-                foreach (AbTestGroupCVO group in test.Groups)
-                {
-                    if (group.Name == groupName)
-                        return group;
-                }
+                if (group.Name == groupName)
+                    return group;
             }
 
             return null;

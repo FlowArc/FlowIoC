@@ -1,12 +1,12 @@
 # AbTestFlow
 
 ## Purpose
-Puts a player into one group of each active A/B test once, writes that group's config assets over
+Puts a player into one group of the active A/B test once, writes that group's config assets over
 the game's own before any other module reads them, and publishes where the player stands.
 
 ## Concepts
 ab test, a/b test, split test, experiment, variant, control group, rollout, bucketing, override,
-IAbTestFlowService, CD_AbTests, RD_AbTestStatus, AbTestStatusRVO, AbTestId
+IAbTestFlowService, CD_AbTests, RD_AbTestStatus, AbTestStatusRVO, AbTestId, TestUserPercent, matrix
 
 ## Decisions
 - **The service starts the module, a Command sequence decides.** `AbTestFlowService.PostConstruct`
@@ -28,21 +28,43 @@ IAbTestFlowService, CD_AbTests, RD_AbTestStatus, AbTestStatusRVO, AbTestId
   player the rollout left out. Raising a test's `Version` is the only way to decide again, and it
   decides for everybody - a test is restarted, not amended. A stored group the config no longer has
   is decided again rather than kept.
-- **The control group carries no overrides.** The first group is the original configuration, not
-  a copy of it, so nothing can drift out of sync. Validation reports an override filed there.
-- **Overrides are copied with JsonUtility**, not the Newtonsoft stack the save module uses: that
+- **One test runs at a time, named by `CD_AbTests.ActiveTestId`** (owner, 2026-09-15). There is no
+  per-test switch: the asset names the active test by id, an empty name runs none, and the
+  Editor panel picks it from a dropdown at the top. One at a time keeps two tests from writing
+  over the same asset and keeps the result readable; a name no test carries is a validation
+  error, because at boot it would run nothing without a word. Switching tests leaves the stored
+  decisions alone, so a test switched back on carries on where it was.
+- **The groups are a matrix, and the control column is the game's own assets** (owner, 2026-09-15).
+  A group is a name and a list of assets. The first group is the control, and its list names the
+  assets the test changes - the originals themselves, not copies, so nothing can drift out of
+  sync. Every other group lists, at the same index, the asset that replaces each. There is no
+  original/variant pair repeated per group: which assets a test touches is the test's property,
+  so every column is as long as the control's and validation reports one that is not.
+- **`TestUserPercent`, not `RolloutPercent`.** The share of players who enter the test at all -
+  80 puts 80 of every 100 into one of the groups and leaves 20 outside - and the old name said
+  nothing about which side of the split the number was (owner, 2026-09-15).
+- **Variants are copied with JsonUtility**, not the Newtonsoft stack the save module uses: that
   one serialises for a file and drops every field pointing at another Object, and a variant that
   swaps a prefab or a sprite is a normal experiment. Lists are deep-copied, so an original never
   shares the variant asset's collections.
 - **Two panels, because they are used at different moments** (owner, 2026-09-15): `AB Test Editor`
   while the tests are being shaped, `AB Test Selector` before pressing Play to see one variant.
-- **`AB Test Editor`, under `Tools/FlowIoC-Modules/AB Test/Editor`.** Every `CD_AbTests` in the
-  project, each test's fields, groups and override pairs drawn from the asset's own
-  `SerializedProperty`s through the panel painter's `Property` marks - undo, dirtying and saving
-  are Unity's, and the panel edits what the Inspector edits, never a Model. *Add test* seeds an
-  active, 100% test with `control` and `variant`; *Raise version*, *Add group*, *Add override*,
-  the removes with a confirm on the test. The validator's messages sit under the test they name
-  (`AbTestAuthoringTools.Messages`), a message about an unnamed test at the asset. Structural
+- **`AB Test Editor`, under `Tools/FlowIoC-Modules/AB Test/Editor`.** The tests of every
+  `CD_AbTests` in the project listed down the left - the panel window's sidebar, the active one
+  marked, a `+` on the list heading - and the clicked one open on the right, remembered in
+  SessionState; *Select asset* sits on the window bar. Its fields and groups are drawn from the
+  asset's own `SerializedProperty`s through the panel painter's `Property` marks - undo,
+  dirtying and saving are Unity's, and the panel edits what the Inspector edits, never a Model.
+  The open test's heading carries *Activate* or *Deactivate* and a red `-` that deletes it with a
+  confirm; `+` on the list seeds a 100% test with `control` and `variant` and opens it, without
+  activating it. The groups are a matrix: the group names across the top with a green `+` and a
+  red `-` at the end - the `-` off while only the two a test needs are there - a row per asset
+  with a red `-` that takes the row out of every group, and *Add asset* under the rows. What a
+  row means sits behind its `?`, the way a Root's inspector explains its fields, never as a note
+  under it. The validator's messages carry a scope (`AbTestValidationScope`) and sit under the
+  part they are about - a group message under the Groups row, a cell message under its asset row
+  with the cell washed red, the no-asset warning under *Add asset*, the rest under the fields -
+  and a message about an unnamed test at the asset (`AbTestAuthoringTools.Messages`). Structural
   changes are deferred to the end of the draw, because the rows are walked by index.
 - **A panel, `AB Test Selector`, under `Tools/FlowIoC-Modules/AB Test/Selector`.** Every test of every `CD_AbTests` in
   the project with the group this machine's player is in, read from PlayerPrefs; *Force <group>*
@@ -58,7 +80,6 @@ IAbTestFlowService, CD_AbTests, RD_AbTestStatus, AbTestStatusRVO, AbTestId
 ## Known gaps
 - JsonUtility does not copy `[SerializeReference]` fields. Validation warns; the copy omits them.
 - Decisions are local. A backend-driven test would replace the two dice in `ProcessAbTestCommand`.
-- Two active tests that override the same asset are not detected.
 - The group cannot be picked by hand in game yet - the Selector panel does it in the Editor. The
   PlayerPrefs format above is what an SRDebugger module would write; a change takes effect on the
   next launch.

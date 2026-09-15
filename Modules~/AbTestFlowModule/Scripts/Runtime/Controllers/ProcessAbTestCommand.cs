@@ -10,11 +10,11 @@ using UnityEngine;
 namespace Modules.AbTestFlowModule.Controllers
 {
     /// <summary>
-    /// Processes the tests nothing stood for: two dice, in or out of the rollout and then which
-    /// group, with an equal split across the groups whatever their number. Each answer is written
-    /// to PlayerPrefs at once and the file is saved once at the end. Raising an experiment's version
+    /// Processes the active test when nothing stood for it: two dice, in or out of the test and
+    /// then which group, with an equal split across the groups whatever their number. The answer
+    /// is written to PlayerPrefs and saved at once. Raising an experiment's version
     /// is the only way to land here again, and it rolls for everybody - including the players the
-    /// rollout left outside, who are otherwise outside for good.
+    /// share left outside, who are otherwise outside for good.
     /// </summary>
     internal class ProcessAbTestCommand : Command
     {
@@ -24,32 +24,26 @@ namespace Modules.AbTestFlowModule.Controllers
         {
             FlowLogger.Log("Execute - ProcessAbTestCommand");
 
-            var processed = false;
+            AbTestCVO test = _model.ActiveTest;
 
-            foreach (AbTestCVO test in _model.ActiveTests)
-            {
-                if (_model.GetStatus(test.Id) != null)
-                    continue;
+            if (test == null || _model.GetStatus(test.Id) != null)
+                return;
 
-                string group = Roll(test);
+            string group = Roll(test);
 
-                PlayerPrefs.SetString(AbTestConstants.PrefsPrefix + test.Id, $"{test.Version}|{group}");
-                processed = true;
+            PlayerPrefs.SetString(AbTestConstants.PrefsPrefix + test.Id, $"{test.Version}|{group}");
+            PlayerPrefs.Save();
 
-                AbTestStatusRVO status = Status(test, group);
-                _model.SetStatus(status);
+            AbTestStatusRVO status = Status(test, group);
+            _model.SetStatus(status);
 
-                FlowLogger.Log($"Execute - ProcessAbTestCommand - '{test.Id}' v{test.Version} processed: the player "
-                               + (status.IsInTest ? $"is in group '{status.Group}'." : "is outside the test."));
-            }
-
-            if (processed)
-                PlayerPrefs.Save();
+            FlowLogger.Log($"Execute - ProcessAbTestCommand - '{test.Id}' v{test.Version} processed: the player "
+                           + (status.IsInTest ? $"is in group '{status.Group}'." : "is outside the test."));
         }
 
         private string Roll(AbTestCVO test)
         {
-            if (test.Groups.Count == 0 || Die() * 100f >= test.RolloutPercent)
+            if (test.Groups.Count == 0 || Die() * 100f >= test.TestUserPercent)
                 return AbTestConstants.OutOfTestMarker;
 
             var index = (int) (Die() * test.Groups.Count);

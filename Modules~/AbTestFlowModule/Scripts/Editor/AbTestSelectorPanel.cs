@@ -73,22 +73,17 @@ namespace Modules.AbTestFlowModule.Editor
                     painter.Note("No tests declared.");
 
                 foreach (AbTestCVO test in asset.Tests)
-                    DrawTest(painter, test, playing);
+                    DrawTest(painter, test, test.Id == asset.ActiveTestId, playing);
 
                 painter.Space();
             }
-
-            painter.Note(
-                "Force writes the assignment the way a roll would, under the test's current version, "
-                + "so the next run reads it as the player's own. Reset forgets it and the next run "
-                + "rolls the test again. Neither touches a running game.");
         }
 
-        private void DrawTest(ModulePanelPainter painter, AbTestCVO test, bool playing)
+        private void DrawTest(ModulePanelPainter painter, AbTestCVO test, bool isActive, bool playing)
         {
             AbTestPrefsTools.StoredAssignment stored = _prefs.Read(test);
 
-            painter.Field(test.Id + " v" + test.Version, Describe(test, stored));
+            painter.Field(test.Id + " v" + test.Version, Describe(test, isActive, stored));
 
             var actions = new List<ModulePanelAction>();
 
@@ -111,12 +106,16 @@ namespace Modules.AbTestFlowModule.Editor
                 !playing && stored.Standing != AbTestPrefsTools.Standing.NotAssigned,
                 true));
 
-            painter.Actions(actions.ToArray());
+            painter.Actions(
+                "Force writes the assignment the way a roll would, under the test's current version, "
+                + "so the next run reads it as the player's own. Reset forgets it and the next run "
+                + "rolls the test again. Neither touches a running game.",
+                actions.ToArray());
         }
 
-        private static string Describe(AbTestCVO test, AbTestPrefsTools.StoredAssignment stored)
+        private static string Describe(AbTestCVO test, bool isActive, AbTestPrefsTools.StoredAssignment stored)
         {
-            string activity = test.IsActive ? "active, " + test.RolloutPercent + "% rollout" : "inactive";
+            string activity = isActive ? "active, " + test.TestUserPercent + "% of players in the test" : "not the active test";
 
             switch (stored.Standing)
             {

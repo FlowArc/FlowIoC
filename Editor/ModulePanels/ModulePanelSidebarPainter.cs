@@ -27,6 +27,7 @@ namespace FlowIoC.Editor.ModulePanels
         private const float RIGHT_MARGIN = 8f;
         private const float MARKER_GAP = 6f;
         private const float SQUARE = 18f;
+        private const float HEADING_HEIGHT = FlowRowPainter.ROW_HEIGHT * 2f;
 
         private readonly FlowRowPainter _rows;
         private readonly FlowPalette _palette;
@@ -49,7 +50,7 @@ namespace FlowIoC.Editor.ModulePanels
         /// </summary>
         public void Heading(string text)
         {
-            Rect rect = _rows.Row();
+            Rect rect = _rows.Row(HEADING_HEIGHT);
             PaintHeading(rect);
 
             GUI.Label(Content(rect), text.ToUpperInvariant(), _rows.Heading(_accent));
@@ -62,7 +63,7 @@ namespace FlowIoC.Editor.ModulePanels
         /// </summary>
         public void Heading(string text, ModulePanelAction action)
         {
-            Rect rect = _rows.Row();
+            Rect rect = _rows.Row(HEADING_HEIGHT);
             PaintHeading(rect);
 
             Rect content = Content(rect);
