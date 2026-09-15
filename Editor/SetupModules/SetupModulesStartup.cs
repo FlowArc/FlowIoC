@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using System;
 using System.IO;
 using System.Linq;
 using FlowIoC.Editor.Addressables;
@@ -121,9 +122,12 @@ namespace FlowIoC.Editor.SetupModules
         }
 
         /// <summary>
-        /// Every screen the set brought, made addressable the way Create Module makes one it wrote.
-        /// The prefabs are found by convention rather than from a list in the payload: a list would
-        /// be one more file to keep in step with the modules beside it.
+        /// Every screen the set brought, made addressable the way Create Module makes one it wrote,
+        /// and every file in a screen module's Art folder beside it, under its own name in the
+        /// screen's group - the loading screen's background is one. The assets are found by
+        /// convention rather than from a list in the payload: a list would be one more file to keep
+        /// in step with the modules beside it. A screen prefab under Resources is passed over: its
+        /// context loads it by path, and an entry would ship the prefab a second time.
         ///
         /// Only the folders this run wrote are walked. The automatic install happens in a project
         /// with no modules at all, but the Help window's button does not, and a game's own screens
@@ -144,11 +148,31 @@ namespace FlowIoC.Editor.SetupModules
 
                 foreach (string prefab in Directory.GetFiles(module, "*Screen.prefab", SearchOption.AllDirectories))
                 {
+                    if (!entries.IsAddressable(prefab))
+                        continue;
+
                     ScreenAddressableEntry entry = entries.For(Path.GetFileNameWithoutExtension(prefab));
                     entry.AssetPath = AssetPath(prefab);
 
                     addressables.Register(entry);
                     registered = true;
+                }
+
+                foreach (string artFolder in Directory.GetDirectories(module, "Art", SearchOption.AllDirectories))
+                {
+                    string screen = entries.ScreenOfArtFolder(artFolder);
+
+                    if (screen == null)
+                        continue;
+
+                    foreach (string art in Directory.GetFiles(artFolder))
+                    {
+                        if (art.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        addressables.Register(entries.ForArt(screen, AssetPath(art)));
+                        registered = true;
+                    }
                 }
             }
 

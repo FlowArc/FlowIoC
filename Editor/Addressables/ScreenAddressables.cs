@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 
+using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -100,6 +102,53 @@ namespace FlowIoC.Editor.Addressables
             if (removed) EditorUtility.SetDirty(settings);
 
             return removed;
+        }
+
+        /// <summary>
+        /// Every entry whose asset sits under the folder, taken out, and each group that empties
+        /// with it removed: the art a screen module keeps in Art/ goes with the module the way its
+        /// prefab does, and a group that only held that art would otherwise stay behind. Called
+        /// before the folder is deleted, while the entries still have assets to be found by. One
+        /// line per thing removed, for the report.
+        /// </summary>
+        internal IReadOnlyList<string> UnregisterUnder(string assetFolder)
+        {
+            var lines = new List<string>();
+
+            if (string.IsNullOrEmpty(assetFolder)) return lines;
+
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(false);
+            if (settings == null) return lines;
+
+            string prefix = assetFolder.Replace('\\', '/').TrimEnd('/') + "/";
+
+            foreach (AddressableAssetGroup group in new List<AddressableAssetGroup>(settings.groups))
+            {
+                if (group == null) continue;
+
+                var emptied = false;
+
+                foreach (AddressableAssetEntry entry in new List<AddressableAssetEntry>(group.entries))
+                {
+                    string path = entry.AssetPath;
+
+                    if (string.IsNullOrEmpty(path)
+                        || !path.Replace('\\', '/').StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+
+                    settings.RemoveAssetEntry(entry.guid, false);
+                    lines.Add("Addressable entry removed: " + entry.address);
+                    emptied = group.entries.Count == 0;
+                }
+
+                if (!emptied) continue;
+
+                lines.Add("Addressable group removed: " + group.Name);
+                settings.RemoveGroup(group);
+            }
+
+            if (lines.Count > 0) EditorUtility.SetDirty(settings);
+
+            return lines;
         }
 
         /// <summary>

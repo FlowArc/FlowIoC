@@ -334,7 +334,8 @@ The barrier matters: `Setup()` does not run until **every** Root in the scene ha
 finished binding, and `Launch()` does not run until every Root has finished
 `Setup()`. So `Setup()` is the only safe place to reach across modules — which is
 exactly what Connector contexts do — and `Launch()` is where you dispatch the first
-signal.
+signal. A sub-context listed on a Root - a screen context, a Connector's - goes through
+every pass with the Root that lists it, after the Root's own context, `Launch()` included.
 
 That gives each phase a job. The binding phases **declare**: they say what the module
 is made of and decide nothing. `Setup()` **initialises**: everything in the scene is

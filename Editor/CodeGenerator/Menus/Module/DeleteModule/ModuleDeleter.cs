@@ -153,11 +153,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
         /// holds screen modules and each of those was registered under a group named after itself.
         /// Asking about a module that is not a screen finds no group and reports nothing, which is
         /// cheaper than working out beforehand which of them to ask.
+        ///
+        /// Then everything else under the folder that is addressable - the art a screen keeps in
+        /// its Art folder - so that a group holding only that does not stay behind either.
         /// </summary>
         private static void RemoveScreenAddressables(string moduleName, string modulePath, List<string> deletedItems)
         {
             foreach (string name in new ModuleNames().Of(modulePath, moduleName))
                 RemoveScreenAddressable(name, deletedItems);
+
+            foreach (string line in new ScreenAddressables().UnregisterUnder(GetUnityAssetPath(modulePath)))
+                Log(line, deletedItems);
         }
 
         private static void RemoveScreenAddressable(string moduleName, List<string> deletedItems)

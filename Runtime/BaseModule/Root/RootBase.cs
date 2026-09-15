@@ -265,6 +265,17 @@ namespace FlowIoC.BaseModule.Root
             FlowLogger.Log(SystemLogType.Context, GetType().Name + " | Context Launch!");
             Context.Launch();
             hasLaunched = true;
+
+            // A sub-context that was set up is launched too, after the context that lists it: its
+            // Launch is where it dispatches its own first signal - a screen context asking for the
+            // art it loads for itself - and a phase every context has but only a Root's ran was
+            // one nobody could rely on.
+            foreach (KeyValuePair<IContext, SubContextData> subContext in _subContexts)
+            {
+                if (!subContext.Value.AutoSetup) continue;
+                FlowLogger.Log(SystemLogType.Context, "Sub | " + subContext.Value.ContextName + " | launch");
+                subContext.Key.Launch();
+            }
         }
     }
 }

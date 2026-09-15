@@ -255,6 +255,33 @@ changed.
 between the maps on a match board is the screen's own business and never crosses a Connector;
 playing one of them leaves.
 
+## A screen that must be up before Addressables is
+
+`ScreenLoadCVO.Addressable` waits on Addressables' own initialisation - seconds on a remote
+catalogue over a bad connection - and a screen that shows the loads cannot wait on that with
+nothing on stage. That screen declares `ScreenLoadCVO.Resource("LoadingScreen")` and its prefab
+sits in the module's `Resources/` folder: on stage on frame 2, whatever Addressables is doing. The
+installer and the tooling know a Resources prefab is not addressable and leave it out of the groups.
+
+What a game wants to change between releases - the splash behind the bar - stays addressable. The
+prefab bundles the same art as its fallback, in the module's `Art/` folder, where the installer
+registers it under its own name in the screen's group; the screen context's `Launch` dispatches an
+internal signal, and a Command loads the addressable copy through `IAssetService` and announces it:
+
+```csharp
+public override void Launch()
+{
+    base.Launch();
+    _internalSignals.LoadBackground.Dispatch();
+}
+```
+
+The Command remembers the sprite in the Model and dispatches `BackgroundLoaded`; the Mediator
+applies it to the View, and the opening Command applies it from the Model in the other order - the
+art may land before the instance exists, or the instance may be pooled before the art lands. The
+View does not reset it in `BeforeScreenActivation`: the art is the same for every opening. A load
+that brings nothing leaves the bundled art on stage; a game replaces the asset and keeps the address.
+
 ## Testing one
 
 A screen's test Root lists the **production** screen context as a sub-context rather than declaring

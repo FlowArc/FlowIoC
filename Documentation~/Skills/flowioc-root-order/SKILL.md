@@ -75,6 +75,10 @@ a trap for the next reader.
 2. **One frame passes.**
 3. `Setup()` on every Root, in the same order. Then `Launch()` on every Root, in the same order.
 
+A sub-context listed on a Root - a screen context, a Connector's - goes through every pass with
+the Root that lists it, after the Root's own context: it binds, it is set up, and it is launched,
+so a screen context's `Launch` is where it dispatches what it loads for itself.
+
 So the order decides who *binds* first, and who is called first within the `Setup()` and
 `Launch()` passes. It does not decide whether cross-module access is safe: the frame barrier
 already guarantees that every signal holder in the scene exists before any `Setup()` runs. That

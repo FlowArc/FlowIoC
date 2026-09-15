@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System;
+using System.IO;
 
 namespace FlowIoC.Editor.Addressables
 {
@@ -29,6 +30,10 @@ namespace FlowIoC.Editor.Addressables
         private const string GroupPrefix = "Local_Screen-";
         private const string ScreenSuffix = "Screen";
 
+        private const string ArtFolder = "Art";
+        private const string ModuleSuffix = "Module";
+        private const string ResourcesSegment = "/Resources/";
+
         internal ScreenAddressableEntry For(string screenName)
         {
             return new ScreenAddressableEntry
@@ -37,6 +42,54 @@ namespace FlowIoC.Editor.Addressables
                 GroupName = GroupPrefix + WithoutScreenSuffix(screenName),
                 Label = PrefabLabel
             };
+        }
+
+        /// <summary>
+        /// Whether a screen prefab at this path is loaded by address. One under a Resources folder
+        /// is loaded by path - ScreenLoadCVO.Resource - and marking it addressable as well would
+        /// ship it twice, once in resources.assets and once in a bundle nothing asks for.
+        /// </summary>
+        internal bool IsAddressable(string prefabPath)
+        {
+            return string.IsNullOrEmpty(prefabPath)
+                   || !prefabPath.Replace('\\', '/').Contains(ResourcesSegment, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// A file in a screen module's Art folder: addressed by its own name, in the screen's group,
+        /// with no label - the label marks the prefabs the screen service loads, and this is what
+        /// one of those screens loads for itself, the way the loading screen brings in the art
+        /// behind its bar once Addressables is up.
+        /// </summary>
+        internal ScreenAddressableEntry ForArt(string screenName, string artPath)
+        {
+            return new ScreenAddressableEntry
+            {
+                AssetPath = artPath,
+                Address = Path.GetFileNameWithoutExtension(artPath),
+                GroupName = GroupPrefix + WithoutScreenSuffix(screenName),
+                Label = null
+            };
+        }
+
+        /// <summary>
+        /// The screen an Art folder belongs to, read off the module folder directly above it:
+        /// LoadingScreenModule/Art is LoadingScreen's. A folder that is not called Art, or one under
+        /// a module that is not a screen module, has no screen group to go to and answers null.
+        /// </summary>
+        internal string ScreenOfArtFolder(string folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath)) return null;
+
+            string normalized = folderPath.Replace('\\', '/').TrimEnd('/');
+
+            if (!string.Equals(Path.GetFileName(normalized), ArtFolder, StringComparison.Ordinal)) return null;
+
+            string module = Path.GetFileName(Path.GetDirectoryName(normalized) ?? string.Empty);
+
+            if (!module.EndsWith(ScreenSuffix + ModuleSuffix, StringComparison.Ordinal)) return null;
+
+            return module.Substring(0, module.Length - ModuleSuffix.Length);
         }
 
         /// <summary>

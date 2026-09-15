@@ -36,7 +36,8 @@ namespace FlowIoC.Tests
                 [COUNTER + "/Scripts/Signals/Modules.Counter.Signals.asmdef"] = "{\"name\": \"Modules.Counter.Signals\"}",
                 [COUNTER + "/Scripts/Signals/CounterServiceSignals.cs"] =
                     "public class CounterServiceSignals {} public class CounterServiceSignalsIncoming {} public class CounterServiceSignalsOutgoing {}",
-                [COUNTER + "/Scripts/Runtime/RootsContexts/CounterServiceRoot.cs"] = "public class CounterServiceRoot : Root<CounterServiceContext> {}",
+                [COUNTER + "/Scripts/Runtime/RootsContexts/CounterServiceRoot.cs"] =
+                    "public class CounterServiceRoot : Root<CounterServiceContext> {}",
                 [COUNTER + "/Scripts/Runtime/RootsContexts/CounterServiceContext.cs"] = "public class CounterServiceContext : Context {}",
                 [COUNTER + "/Scripts/Runtime/Signals/CounterServiceInternalSignals.cs"] = "internal class CounterServiceInternalSignals {}",
                 [COUNTER + "/Scripts/Runtime/Models/CounterModel.cs"] = "public class CounterModel {}",
@@ -310,6 +311,28 @@ namespace FlowIoC.Tests
 
             Assert.IsEmpty(plan.ScreenAddresses);
             Assert.IsTrue(plan.Kept.Any(line => line.Contains("GameplayScreen.prefab")));
+        }
+
+        [Test]
+        public void A_screen_whose_prefab_comes_from_Resources_plans_its_address_from_there()
+        {
+            const string gameplay = ROOT + "/GameplayModule";
+            const string screen = gameplay + "/zScreenModules/GameplayScreenModule";
+            _files[gameplay + "/Modules.Gameplay.asmdef"] = "{}";
+            _files[screen + "/Modules.Gameplay.Screen.asmdef"] = "{}";
+            _files[screen + "/Resources/GameplayScreen.prefab"] = "";
+
+            ModuleTreeRowEVO<ModulePickEVO> picked = Picked("GameplayScreenModule",
+                Pick("GameplayModule", ModuleKind.Main, null, gameplay),
+                Pick("GameplayScreenModule", ModuleKind.Screen, "GameplayModule", screen));
+
+            ModuleRenamePlanEVO plan = new ModuleRenamePlan(Lookups()).Build(picked, "Hud", _ => true);
+
+            ScreenAddressRenameEVO address = plan.ScreenAddresses.Single();
+            Assert.AreEqual("GameplayScreen", address.OldAddress);
+            Assert.AreEqual("HudScreen", address.NewAddress);
+            Assert.IsTrue(address.NewPrefabPath.Replace('\\', '/').EndsWith("/Resources/HudScreen.prefab"));
+            Assert.IsFalse(plan.Kept.Any(line => line.Contains("GameplayScreen.prefab")));
         }
     }
 }
