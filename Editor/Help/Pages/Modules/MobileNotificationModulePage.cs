@@ -146,9 +146,19 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Space();
             painter.SubHeading("Notifications");
             painter.Paragraph(
-                "Key, Channel, Title, Body, SmallIcon, LargeIcon, ShowInForeground, Repeats, "
+                "Key, Channel, Title, Body, SmallIcon, LargeIcon, Picture, ShowInForeground, Repeats, "
                 + "DefaultAfterMinutes. Title and Body may carry {0}, {1} placeholders. Repeats means at "
                 + "the interval it was scheduled with - scheduled at a time, daily at that time.");
+
+            painter.Space();
+            painter.SubHeading("Picture");
+            painter.Paragraph(
+                "An image under Assets/StreamingAssets, named by its relative path - Notifications/chest.png. "
+                + "Android shows it under the text when the notification is expanded, iOS as the thumbnail "
+                + "at the right of the banner, and the panel's preview draws both. At initialize the module "
+                + "copies every picture the catalogue names to the device once, because both trays read a "
+                + "file path; a notification scheduled before its copy is there goes out without it, and "
+                + "says so in the log.");
 
             painter.Space();
             painter.SubHeading("Return reminders");
