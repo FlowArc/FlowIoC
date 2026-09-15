@@ -96,5 +96,46 @@ namespace FlowIoC.Tests
             Assert.IsTrue(created.WasCalled);
             Assert.IsFalse(created.Received.OverrideScreen);
         }
+
+        internal class LaunchRecordingContext : Context
+        {
+            internal bool Launched;
+
+            public override void Launch()
+            {
+                base.Launch();
+                Launched = true;
+            }
+        }
+
+        /// <summary>
+        /// Launch reaches a sub-context the way Setup does - it is where a screen context asks for
+        /// what it loads for itself - and skips one whose entry has Auto Setup off, the way Setup
+        /// skips it.
+        /// </summary>
+        [Test]
+        public void Launch_reaches_the_sub_contexts_that_were_set_up_and_skips_the_rest()
+        {
+            _host = new GameObject("ProbeRoot");
+            ProbeRoot root = _host.AddComponent<ProbeRoot>();
+            root.UseSharedRootsManager();
+            root.SubContextTypes = new List<SubContextData>
+            {
+                new() {ContextFullName = typeof(LaunchRecordingContext).FullName, ContextName = "launched", AutoSetup = true},
+                new() {ContextFullName = typeof(LaunchRecordingContext).FullName, ContextName = "skipped", AutoSetup = false}
+            };
+
+            root.InitializeSubContexts();
+            root.Context = new Context();
+            root.hasInitialized = true;
+
+            root.Launch(true);
+
+            var launched = new List<bool>();
+            foreach (IContext context in root.GetSubContexts())
+                launched.Add(((LaunchRecordingContext) context).Launched);
+
+            CollectionAssert.AreEquivalent(new[] {true, false}, launched);
+        }
     }
 }

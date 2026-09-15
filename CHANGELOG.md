@@ -39,6 +39,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The startup that writes `<Solution>.sln.DotSettings` now sweeps every `.sln.DotSettings` at the
   root that matches no `.sln` there, once per Editor session, and logs each file it deleted. The
   Module Scanner's `code-style` check reported and swept the same file on Fix; it still does.
+- **A sub-context is launched.** A screen context or a Connector listed on a Root went through
+  the binding phases and `Setup` with it, and `Launch` stopped at the Root's own context; now the
+  Root launches each sub-context whose entry has Auto Setup on, after its own, so a screen
+  context's `Launch` is where it dispatches what it loads for itself.
+- **The setup set's loading screens come from Resources.** `LoadingScreen` and
+  `LoadingOverlayScreen` declare `ScreenLoadCVO.Resource`, their prefabs sit in their modules'
+  `Resources/` folders, and neither is addressable: both carry the tag the boot loads before its
+  first set, and a screen that shows the loads cannot wait on Addressables' own initialisation -
+  seconds on a remote catalogue, with nothing on stage. The art behind the bar is what stays
+  addressable: `T_LoadingBackground`, bundled on the prefab as the fallback and loaded again
+  through `IAssetService` from the screen context's `Launch`, so a remote catalogue changes it
+  between releases without a build. A game replaces the asset and keeps the address.
+- **The setup installer registers a screen module's `Art/` folder.** Every file in it is
+  addressable under its own name in the screen's group, with no label, and a screen prefab under
+  `Resources/` is passed over. Delete Module takes every entry under the module's folder out and
+  removes a group that empties with it; Rename Module finds a screen's prefab under `Resources/`
+  as well as `Prefabs/`, so the path in `ScreenLoadCVO.Resource` is rewritten with the file.
 
 ## [1.15.3] - 2026-09-15
 

@@ -240,24 +240,22 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         }
 
         /// <summary>
-        /// A screen's prefab is Prefabs/&lt;stem&gt;.prefab and its address is the stem, both written
-        /// by the generator. Whether the address is still that is Addressables' answer and is read
-        /// at run time; here the entry is planned when the prefab is where the generator put it.
+        /// A screen's prefab is &lt;stem&gt;.prefab under Prefabs/ when the context loads it by address,
+        /// or under Resources/ when it loads it by path - the address is the stem either way, both
+        /// written by the generator. Whether the address is still that is Addressables' answer and
+        /// is read at run time; here the entry is planned when the prefab is in one of those two
+        /// places, so the path in ScreenLoadCVO.Resource is rewritten with the file it names.
         /// </summary>
         private void AddScreenAddress(ModuleRenamePlanEVO plan, ModuleRenameEVO module)
         {
             if (module.Kind != ModuleKind.Screen) return;
 
-            string prefabs = Folder(module, FolderEVO.FolderType.Prefabs);
-            string expected = prefabs == null ? null : Normalize(Path.Combine(prefabs, module.OldStem + PREFAB));
-
-            AssetRenameEVO prefab = expected == null
-                ? null
-                : plan.Assets.FirstOrDefault(asset => string.Equals(Normalize(asset.Path), expected, StringComparison.OrdinalIgnoreCase));
+            AssetRenameEVO prefab = PlannedPrefab(plan, module, FolderEVO.FolderType.Prefabs)
+                                    ?? PlannedPrefab(plan, module, FolderEVO.FolderType.Resources);
 
             if (prefab == null)
             {
-                plan.Kept.Add("No Prefabs/" + module.OldStem + PREFAB + " in " + module.OldName
+                plan.Kept.Add("No Prefabs/ or Resources/" + module.OldStem + PREFAB + " in " + module.OldName
                               + ": the screen's prefab and its address keep their names.");
 
                 return;
@@ -272,6 +270,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
                 OldGroup = _addresses.For(module.OldStem).GroupName,
                 NewGroup = _addresses.For(module.NewStem).GroupName
             });
+        }
+
+        private AssetRenameEVO PlannedPrefab(ModuleRenamePlanEVO plan, ModuleRenameEVO module, FolderEVO.FolderType folder)
+        {
+            string path = Folder(module, folder);
+
+            if (path == null) return null;
+
+            string expected = Normalize(Path.Combine(path, module.OldStem + PREFAB));
+
+            return plan.Assets.FirstOrDefault(asset => string.Equals(Normalize(asset.Path), expected, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>A channel is named after the module folder; a test module has none.</summary>
