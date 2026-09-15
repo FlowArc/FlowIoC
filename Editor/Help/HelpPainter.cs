@@ -148,6 +148,140 @@ namespace FlowIoC.Editor.Help
         public void Space() => EditorGUILayout.Space();
 
         /// <summary>
+        /// A table: a header row on the band a heading wears, then a row per entry, each parted
+        /// from the next by a hairline. Every column but the last is as wide as its widest cell,
+        /// up to a share of the page, and the last takes what is left and wraps - so a table of
+        /// names and their meanings reads down the names and across to the meaning. A row shorter
+        /// than the header is padded with empty cells, and a null header draws no header row.
+        ///
+        /// Like a row of cards, the height has to be known before the row is reserved, so the
+        /// columns are first measured against the width the view says is left after the sidebar -
+        /// never wider than the truth, so never too short - and measured again across the
+        /// rectangle the layout hands back before anything is drawn.
+        /// </summary>
+        public void Table(string[] headers, params string[][] rows)
+        {
+            if (rows == null || rows.Length == 0)
+                return;
+
+            int columns = headers?.Length ?? 0;
+
+            foreach (string[] row in rows)
+                columns = Mathf.Max(columns, row?.Length ?? 0);
+
+            if (columns == 0)
+                return;
+
+            float measured = Mathf.Max(_theme.CardMinWidth,
+                EditorGUIUtility.currentViewWidth - _theme.ContentMargin);
+
+            float height = TableHeight(headers, rows, ColumnWidths(headers, rows, columns, measured));
+
+            Rect table = GUILayoutUtility.GetRect(_theme.CardMinWidth, height, GUILayout.ExpandWidth(true));
+
+            Space();
+
+            if (Event.current.type != EventType.Repaint)
+                return;
+
+            float[] widths = ColumnWidths(headers, rows, columns, table.width);
+            float y = table.y;
+
+            if (headers != null)
+            {
+                float rowHeight = RowHeight(headers, widths, _theme.TableHeader);
+
+                EditorGUI.DrawRect(new Rect(table.x, y, table.width, rowHeight), _theme.TableHeaderFill);
+                DrawCells(headers, widths, table.x, y, rowHeight, _theme.TableHeader);
+                EditorGUI.DrawRect(new Rect(table.x, y + rowHeight - 1f, table.width, 1f), _theme.TableRowLine);
+
+                y += rowHeight;
+            }
+
+            foreach (string[] row in rows)
+            {
+                float rowHeight = RowHeight(row, widths, _theme.TableCell);
+
+                DrawCells(row, widths, table.x, y, rowHeight, _theme.TableCell);
+                EditorGUI.DrawRect(new Rect(table.x, y + rowHeight - 1f, table.width, 1f), _theme.TableRowLine);
+
+                y += rowHeight;
+            }
+        }
+
+        /// <summary>
+        /// The width of every column across <paramref name="total"/>. A column other than the
+        /// last is its widest cell on one line, capped at the theme's share of the table; the
+        /// last is whatever those leave.
+        /// </summary>
+        private float[] ColumnWidths(string[] headers, string[][] rows, int columns, float total)
+        {
+            var widths = new float[columns];
+            float cap = total * _theme.TableColumnShare;
+            float used = 0f;
+
+            for (int column = 0; column < columns - 1; column++)
+            {
+                float widest = CellWidth(headers, column, _theme.TableHeader);
+
+                foreach (string[] row in rows)
+                    widest = Mathf.Max(widest, CellWidth(row, column, _theme.TableCell));
+
+                widths[column] = Mathf.Min(Mathf.Ceil(widest), cap);
+                used += widths[column];
+            }
+
+            widths[columns - 1] = Mathf.Max(_theme.CardMinWidth, total - used);
+
+            return widths;
+        }
+
+        private float CellWidth(string[] cells, int column, GUIStyle style) =>
+            cells != null && column < cells.Length && !string.IsNullOrEmpty(cells[column])
+                ? style.CalcSize(new GUIContent(cells[column])).x
+                : 0f;
+
+        private float TableHeight(string[] headers, string[][] rows, float[] widths)
+        {
+            float height = headers != null ? RowHeight(headers, widths, _theme.TableHeader) : 0f;
+
+            foreach (string[] row in rows)
+                height += RowHeight(row, widths, _theme.TableCell);
+
+            return height;
+        }
+
+        /// <summary>
+        /// The height of one row: its tallest cell once wrapped to its column, and never less
+        /// than a line, so an empty row still reads as a row.
+        /// </summary>
+        private float RowHeight(string[] cells, float[] widths, GUIStyle style)
+        {
+            float height = style.CalcHeight(new GUIContent(" "), widths[0]);
+
+            for (int column = 0; column < widths.Length; column++)
+            {
+                if (cells == null || column >= cells.Length || string.IsNullOrEmpty(cells[column]))
+                    continue;
+
+                height = Mathf.Max(height, style.CalcHeight(new GUIContent(cells[column]), widths[column]));
+            }
+
+            return Mathf.Ceil(height) + 1f;
+        }
+
+        private void DrawCells(string[] cells, float[] widths, float x, float y, float height, GUIStyle style)
+        {
+            for (int column = 0; column < widths.Length; column++)
+            {
+                if (cells != null && column < cells.Length && !string.IsNullOrEmpty(cells[column]))
+                    GUI.Label(new Rect(x, y, widths[column], height - 1f), cells[column], style);
+
+                x += widths[column];
+            }
+        }
+
+        /// <summary>
         /// A button that opens another page of this window. A topic explained in full elsewhere is
         /// pointed at rather than repeated, and the reader arrives on the page rather than being
         /// told which entry of the sidebar to go and find.

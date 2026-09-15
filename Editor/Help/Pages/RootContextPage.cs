@@ -258,15 +258,13 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "The injector asks the local binders first and the shared one last, so a local "
                 + "binding of a type hides a cross-context binding of the same type.");
-            painter.Code(
-                "// A Context asks, in this order:\n"
-                + "//   1. its own InjectionBinder\n"
-                + "//   2. the InjectionBinder of each of its sub-contexts\n"
-                + "//   3. InjectionBinderCrossContext\n"
-                + "//\n"
-                + "// A sub-context asks, in this order:\n"
-                + "//   1. its own InjectionBinder\n"
-                + "//   2. InjectionBinderCrossContext");
+            painter.Table(new[] {"Who asks", "First", "Then", "Last"},
+                new[]
+                {
+                    "A Context", "its own InjectionBinder", "the InjectionBinder of each of its sub-contexts",
+                    "InjectionBinderCrossContext"
+                },
+                new[] {"A sub-context", "its own InjectionBinder", "InjectionBinderCrossContext", ""});
             painter.Note(
                 "Important: the list is not symmetrical. A Context reaches into its sub-contexts, "
                 + "and a sub-context does not reach back. A screen sub-context that injects its "

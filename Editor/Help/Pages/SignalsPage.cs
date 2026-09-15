@@ -13,6 +13,16 @@ namespace FlowIoC.Editor.Help.Pages
     /// </summary>
     internal class SignalsPage : HelpPage
     {
+        /// <summary>
+        /// The two holders in the folders that decide their assemblies, drawn the way the folder
+        /// layout page draws a module.
+        /// </summary>
+        private readonly HelpTreeNode _holders = new HelpTreeNode("Scripts", "",
+            new HelpTreeNode("Runtime", "",
+                new HelpTreeNode("Signals", "PlayerInternalSignals - Modules.Player")),
+            new HelpTreeNode("Shared", "published data only - Modules.Player.Shared"),
+            new HelpTreeNode("Signals", "PlayerSignals - Modules.Player.Signals"));
+
         public SignalsPage() : base(Build())
         {
         }
@@ -181,12 +191,9 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "The folder a holder sits in is what decides which assembly it compiles into, and "
                 + "that is the whole of the difference between the two.");
-            painter.Code(
-                "Scripts/\n"
-                + "├── Runtime/\n"
-                + "│   └── Signals/          PlayerInternalSignals - Modules.Player\n"
-                + "├── Shared/               published data only   - Modules.Player.Shared\n"
-                + "└── Signals/              PlayerSignals         - Modules.Player.Signals");
+            painter.Space();
+            painter.Tree(_holders);
+            painter.Space();
             painter.Paragraph(
                 "A Connector references Modules.Player.Signals and nothing else of the module. "
                 + "Shared is kept separate so that reading a module's published data does not hand "

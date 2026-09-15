@@ -115,12 +115,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "an optional CanvasGroup, and an optional CD_WorldPointerOptions preset. Hidden "
                 + "fades the CanvasGroup to nothing when there is one and deactivates the object "
                 + "when there is not; the arrow shows only on the edge.");
-            painter.Code(
-                "WorldPointerIndicator\n"
-                + "  Rect          the element itself, unless another RectTransform is named\n"
-                + "  Arrow Pivot   an empty RectTransform at the element's centre; the arrow image is its child\n"
-                + "  Canvas Group  fade instead of SetActive\n"
-                + "  Options       a CD_WorldPointerOptions preset - Create > FlowIoC > WorldPointerModule > Data");
+            painter.Table(new[] {"WorldPointerIndicator field", "What it takes"},
+                new[] {"Rect", "the element itself, unless another RectTransform is named"},
+                new[] {"Arrow Pivot", "an empty RectTransform at the element's centre; the arrow image is its child"},
+                new[] {"Canvas Group", "fade instead of SetActive"},
+                new[] {"Options", "a CD_WorldPointerOptions preset - Create > FlowIoC > WorldPointerModule > Data"});
             painter.Note(
                 "Important: the arrow image is authored pointing up. The pivot's local up is aimed "
                 + "at the target, so an arrow drawn any other way points the wrong way, and nothing "

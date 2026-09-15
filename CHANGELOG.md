@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`HelpPainter.Table`.** A Help page draws a table - `painter.Table(headers, rows...)` - with the
+  header row on the band a heading wears, a hairline under every row, each column as wide as its
+  widest cell and the last taking what is left. Four listings that were tables typed into a code
+  block now are one: the loading sets on the Setup Modules page, the indicator's fields on World
+  Pointer, the injection order on Root & Context, the stored entries on A/B Test. The folder
+  sketch on the Signals page is drawn as a tree, the way Folder Layout draws one.
 - **Asset Delivery is a ready-made module.** Store-delivered content lands on the device before the
   boot needs it - Play Asset Delivery on Android, Apple-hosted managed Background Assets on iOS,
   which begin at iOS 26 - and the boot draws what is still missing on the loading bar instead of

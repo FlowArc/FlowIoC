@@ -270,18 +270,18 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "is in - the clan module knows, and tells its neighbours with an Outgoing.");
 
             painter.SubHeading("Sets");
-            painter.Code(
-                "CD_LoadingSets\n"
-                + "  Boot        Fullscreen   StallWarningSeconds 10\n"
-                + "    Screens   Weight 2   \"Preparing screens\"\n"
-                + "    Pools     Weight 1   \"Warming up\"\n"
-                + "    Assets    Weight 3   \"Fetching assets\"   ChildSet: Download\n"
-                + "  Download    Silent\n"
-                + "    Catalog   Weight 1\n"
-                + "    Bundles   Weight 4   \"Downloading\"\n"
-                + "  PostBoot    Silent\n"
-                + "    Ads       Weight 1\n"
-                + "    ClanData  Weight 1");
+            painter.Paragraph("What a CD_LoadingSets asset might hold - three sets, and the steps of each:");
+            painter.Table(new[] {"Set", "Step", "Weight", "Label", "Notes"},
+                new[] {"<b>Boot</b>", "", "", "", "Fullscreen, StallWarningSeconds 10"},
+                new[] {"", "Screens", "2", "Preparing screens", ""},
+                new[] {"", "Pools", "1", "Warming up", ""},
+                new[] {"", "Assets", "3", "Fetching assets", "ChildSet: Download"},
+                new[] {"<b>Download</b>", "", "", "", "Silent"},
+                new[] {"", "Catalog", "1", "", ""},
+                new[] {"", "Bundles", "4", "Downloading", ""},
+                new[] {"<b>PostBoot</b>", "", "", "", "Silent"},
+                new[] {"", "Ads", "1", "", ""},
+                new[] {"", "ClanData", "1", "", ""});
             painter.Paragraph(
                 "Progress is the weighted sum of the steps: an ended step counts its full weight, a "
                 + "running one what it last reported, a pending one nothing. A step with a ChildSet "

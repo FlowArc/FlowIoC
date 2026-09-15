@@ -207,9 +207,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("What is stored");
             painter.Paragraph(
                 "One PlayerPrefs entry per test, under the prefix AbTestConstants.PrefsPrefix:");
-            painter.Code(
-                "flowioc.abtest.LevelDifficulty = \"1|B\"    // version 1, group B\n"
-                + "flowioc.abtest.LevelDifficulty = \"1|-\"    // version 1, outside the test");
+            painter.Table(new[] {"Entry", "Value", "Meaning"},
+                new[] {"flowioc.abtest.LevelDifficulty", "1|B", "version 1, group B"},
+                new[] {"flowioc.abtest.LevelDifficulty", "1|-", "version 1, outside the test"});
             painter.Paragraph(
                 "A tester who wants a particular group writes that entry and relaunches; the "
                 + "decision is read at boot, so a change takes effect on the next launch. A stored "

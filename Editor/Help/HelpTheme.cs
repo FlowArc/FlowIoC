@@ -46,6 +46,8 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _codeCaption;
         private GUIStyle _codeCopy;
         private GUIStyle _pageLink;
+        private GUIStyle _tableHeader;
+        private GUIStyle _tableCell;
 
         public Color NodeFill => _pro ? new Color(0.24f, 0.24f, 0.26f) : new Color(0.90f, 0.90f, 0.92f);
         public Color NodeFillActive => _pro ? new Color(0.18f, 0.31f, 0.43f) : new Color(0.76f, 0.87f, 0.98f);
@@ -240,6 +242,25 @@ namespace FlowIoC.Editor.Help
         public float PageHeadingInset => 8f;
 
         /// <summary>
+        /// What a table's header row sits on: the band a heading wears, so the two read as one
+        /// kind of mark - a title over what follows it.
+        /// </summary>
+        public Color TableHeaderFill => PageHeadingFill;
+
+        /// <summary>
+        /// The hairline under every row of a table: the light line a separator bar ends with,
+        /// because the table sits on the page, and the page is the sidebar's dark hairline already.
+        /// </summary>
+        public Color TableRowLine => PageSeparatorLight;
+
+        /// <summary>
+        /// How much of a table's width a column other than the last may take before its text
+        /// wraps. The last column takes what is left, so a column of names that ran away with the
+        /// page would leave the meanings beside it a sliver.
+        /// </summary>
+        public float TableColumnShare => 0.4f;
+
+        /// <summary>
         /// A colour laid over the panel thinly enough to read as a tint of it. The alpha is what
         /// separates a row that is marked out from the row the reader is actually on: the selected
         /// row carries the violet whole, and a featured one carries this much of it.
@@ -396,6 +417,32 @@ namespace FlowIoC.Editor.Help
             fontSize = 11,
             padding = new RectOffset(10, 10, 3, 3),
             margin = new RectOffset(0, 0, 2, 8)
+        };
+
+        /// <summary>
+        /// A cell of a table's header row. Padded exactly like the cells under it, so a column's
+        /// title starts where its values start.
+        /// </summary>
+        public GUIStyle TableHeader => _tableHeader ??= new GUIStyle(EditorStyles.boldLabel)
+        {
+            alignment = TextAnchor.MiddleLeft,
+            wordWrap = true,
+            richText = true,
+            padding = new RectOffset(8, 8, 4, 4),
+            margin = new RectOffset(0, 0, 0, 0)
+        };
+
+        /// <summary>
+        /// A table cell. Rich text, so a page sets a name in bold or a value in colour without the
+        /// table growing a second style for it.
+        /// </summary>
+        public GUIStyle TableCell => _tableCell ??= new GUIStyle(EditorStyles.label)
+        {
+            alignment = TextAnchor.UpperLeft,
+            wordWrap = true,
+            richText = true,
+            padding = new RectOffset(8, 8, 4, 4),
+            margin = new RectOffset(0, 0, 0, 0)
         };
 
         public GUIStyle NodeTitle => _nodeTitle ??= new GUIStyle(EditorStyles.boldLabel)
