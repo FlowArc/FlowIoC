@@ -5,6 +5,20 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The package declares URP and the Input System.** The setup set's `MainScene` carries
+  `UniversalAdditionalCameraData`, `UniversalAdditionalLightData` and `InputSystemUIInputModule`, so
+  a project without `com.unity.render-pipelines.universal` and `com.unity.inputsystem` opened it to
+  three "The referenced script (Unknown) on this Behaviour is missing!" warnings - found on a bare
+  consumer of `1.16.0`. Both are dependencies now, at `17.0.0` and `1.11.0`, the way the render
+  pipeline core already was.
+- **Two empty-folder metas gone.** `Runtime/PoolModule/Enums.meta` and `Extensions.meta` stood for
+  folders git does not store, so every fresh install logged "A meta data file (.meta) exists but
+  its folder ... can't be found" twice and created the folders.
+
 ## [1.16.0] - 2026-09-15
 
 ### Added
