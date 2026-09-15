@@ -2,6 +2,7 @@
   "name": "Modules.AbTestFlow",
   "references": [
     "FlowIoC",
+    "FlowIoC.Editor",
     "Modules.AbTestFlow.Shared",
     "Modules.AbTestFlow.Signals"
   ],

@@ -158,6 +158,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the rollout had left outside - a test is restarted, not amended. Switching "
                 + "IsActive off leaves the stored decisions untouched, so switching it back on "
                 + "returns every player to the group they had.");
+            painter.Space();
+
+            painter.SubHeading("4. Seeing a variant on this machine");
+            painter.Paragraph(
+                "Tools > FlowIoC-Modules > AB Test > Status lists every test of every CD_AbTests "
+                + "in the project with the group this machine's player is in. Force a group and "
+                + "the next run reads it as the player's own - the panel writes the same "
+                + "PlayerPrefs key a roll writes, under the test's current version - or Reset the "
+                + "assignment and the next run rolls again. Nothing changes in a running game: the "
+                + "module reads its assignments once, at boot.");
         }
 
         private void DrawUsage(HelpPainter painter)

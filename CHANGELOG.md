@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still adds nothing to. Local Save's panel shows the file, reads it with the password off the
   `LocalSaveRoot` in the open scene, resets it, clears PlayerPrefs and rewrites it under another
   password; it never edits the contents.
+- **A/B Test ships a panel too, **AB Test Status****, `Tools ▸ FlowIoC-Modules ▸ AB Test ▸ Status`: every test of every
+  `CD_AbTests` with the group this machine's player is in, *Force <group>* and *Force outside* writing
+  the assignment the way a roll does, *Reset* forgetting it. The agent rules, the scaffolding skill
+  and the Creating a Module page say where a panel goes and what it may do: it reads files and prefs
+  and resets them, never a Model's values.
 
 ### Changed
 

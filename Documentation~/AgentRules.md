@@ -146,7 +146,11 @@ what is true whatever you are about to do.
 - A module adds nothing to the `Tools/FlowIoC` menu. Whatever it hands the reader ships
   inside the module instead: a test module brings the scene it runs in, already built, so
   installing the module is the only step there is. That holds for the modules FlowIoC ships
-  and for the ones a game writes.
+  and for the ones a game writes. **A panel a module ships goes under
+  `Tools/FlowIoC-Modules/<Module>/`** - a class deriving from `ModulePanel`, drawn by the framework,
+  opened by a `[MenuItem]` in the module's own `Scripts/Editor/` under `#if UNITY_EDITOR`, the way
+  `LocalSavePanel` shows the save file. A panel reads files and prefs and resets them; it never
+  edits a Model's values, because a value changed from a panel skips the rules the Model keeps.
 - **A diagnostic points at the code that caused it, never at the guard that noticed.** A warning or
   an error is read by double-clicking it, and what has to open is the Command that released without
   retaining or the View with no Context above it - not the framework's `if`.
@@ -206,7 +210,7 @@ Modules/
     ├── Resources/
     ├── Scenes/
     └── Scripts/
-        ├── Editor/
+        ├── Editor/             # a panel and its [MenuItem], under #if UNITY_EDITOR
         ├── Runtime/
         │   ├── Constants/
         │   ├── Controllers/        # commands and functions
@@ -303,6 +307,7 @@ prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`.
 | View and Mediator | `HudView` and `HudMediator` |
 | Function | `CalculateDamageFunction` |
 | Connector sub-context | `HeroConnectorSubContext` |
+| Module panel | `LocalSavePanel`, deriving from `ModulePanel`, under `Tools/FlowIoC-Modules/Local Save/` |
 | Screen context | `SettingsScreenContext`, deriving from `ScreenSubContext<SettingsScreenView, SettingsScreenMediator>` |
 | Assembly definition | `Modules.Player.asmdef` |
 

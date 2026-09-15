@@ -87,6 +87,20 @@ namespace FlowIoC.Editor.Help.Pages
                 + "compile error that follows never mentions the module you removed.");
             painter.PageLink("Delete Module", "Read: Delete Module");
             painter.PageLink("Rename Module", "Read: Rename Module");
+
+            painter.Separator();
+            painter.SubHeading("A panel of the module's own");
+            painter.Paragraph(
+                "A module that wants a window for the developer - the save module shows the save "
+                + "file on this machine and resets it - ships a panel: one class under "
+                + "Scripts/Editor, wrapped in UNITY_EDITOR, deriving from ModulePanel, with a "
+                + "[MenuItem] under Tools > FlowIoC-Modules > <Module>. FlowIoC draws the window in "
+                + "the house style; the module declares what is on it. The framework's own menu, "
+                + "Tools > FlowIoC, takes nothing from a module.");
+            painter.Paragraph(
+                "A panel reads files and prefs and resets them. It never edits a Model's values: a "
+                + "value changed from a panel skips the rules the Model keeps.");
+            painter.PageLink("Local Save", "Read: the Local Save panel");
         }
     }
 }

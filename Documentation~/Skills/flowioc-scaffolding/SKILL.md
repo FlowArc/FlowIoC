@@ -216,6 +216,50 @@ asm.GetType("FlowIoC.Editor.Console.FlowModuleGenerator")
 to call this way too. Anything else that ends in `EditorUtility.DisplayDialog` is not: a modal
 blocks the Editor and the connection with it until somebody clicks.
 
+## A panel a module ships
+
+A module that wants a window for the developer - the save module shows the save file on this
+machine and resets it - ships a panel. It is one class in `Scripts/Editor/`, wrapped in
+`#if UNITY_EDITOR`, deriving from `ModulePanel` in `FlowIoC.Editor.ModulePanels`, and the module's
+asmdef references `FlowIoC.Editor` for it; Unity drops that reference when it builds a player, so
+the runtime assembly is unchanged. The framework draws the window - the bar in the module's role
+colour, the rows through `ModulePanelPainter`'s marks - and the module declares what is on it:
+
+```csharp
+#if UNITY_EDITOR
+internal class LocalSavePanel : ModulePanel
+{
+    [MenuItem("Tools/FlowIoC-Modules/Local Save/Panel", false, -1080)]
+    private static void Open() => ModulePanelWindow.Open<LocalSavePanel>();
+
+    public override string Title => "Local Save";
+    public override string Module => "LocalSaveModule";
+    public override FlowRole Role => FlowRole.Service;
+    public override string HelpPage => "Local Save";
+
+    public override void Draw(ModulePanelPainter painter)
+    {
+        painter.Heading("File");
+        painter.Field("Path", _tools.Path);
+        painter.Actions(new ModulePanelAction("Reset save", ResetSave, enabled: !EditorApplication.isPlaying, destructive: true));
+    }
+}
+#endif
+```
+
+The menu root is `Tools/FlowIoC-Modules/<Module>/`, never `Tools/FlowIoC` - the framework's menu
+is the framework's. Priority `-1080` is what keeps that root second under Tools, between
+FlowIoC and FlowIoC-dev. A menu path cannot carry a slash, so a module called A/B Test names its
+entry `AB Test`. There is no generator for a panel: it is one file.
+
+A panel reads files and prefs and resets them; it never edits a Model's values. A value changed
+from a panel skips the rules the Model keeps, and the file is the Model's. Reading the save file,
+deleting it, clearing PlayerPrefs, writing a pref in the module's own format so the next run
+reads it - all inside the line. A text field that writes into a loaded Model is not.
+
+Put the file operations in a class of their own beside the panel (`LocalSaveFileTools`) so the
+workspace's tests reach them without a window; the panel only draws.
+
 ## After the module exists
 
 `Create Command`, `Create Function`, `Create Model` and `Create View` place their files in the right folder and
