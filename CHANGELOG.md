@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`PrivateModulePage` is `ModulePage`**, and a package's modules ship under `Modules~`, the same
   folder FlowIoC uses, rather than `PrivateModules~`. The page gained `BodyHeadline`, `BodyTagline`
   and `InstalledHint` - the sentence the install dialog adds after the generic one.
+- **The settings file of a solution that is gone is deleted when the Editor opens.** A project
+  folder renamed once - a game cloned from a template repository under its own name - leaves the
+  old `<Old>.sln.DotSettings` beside the new one, and Rider goes on reading whichever it opens.
+  The startup that writes `<Solution>.sln.DotSettings` now sweeps every `.sln.DotSettings` at the
+  root that matches no `.sln` there, once per Editor session, and logs each file it deleted. The
+  Module Scanner's `code-style` check reported and swept the same file on Fix; it still does.
 
 ## [1.15.3] - 2026-09-15
 

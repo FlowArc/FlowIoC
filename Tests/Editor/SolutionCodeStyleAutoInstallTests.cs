@@ -63,6 +63,45 @@ namespace FlowIoC.Tests
             StringAssert.Contains("absent.DotSettings", report.Error);
         }
 
+        [Test]
+        public void Run_sweeps_the_settings_of_a_solution_that_is_gone()
+        {
+            File.WriteAllText(Path.Combine(_root, "MyGame.sln"), string.Empty);
+            string orphan = Path.Combine(_root, "OldName.sln.DotSettings");
+            File.WriteAllText(orphan, string.Empty);
+
+            SolutionCodeStyleReport report = AutoInstall().Run();
+
+            Assert.IsNull(report.Error);
+            Assert.IsFalse(File.Exists(orphan));
+            CollectionAssert.AreEqual(new[] {orphan}, report.RemovedPaths);
+            Assert.AreEqual("MyGame.sln.DotSettings", Path.GetFileName(report.WrittenPath));
+        }
+
+        [Test]
+        public void Run_sweeps_nothing_while_no_solution_exists_to_compare_against()
+        {
+            string settings = Path.Combine(_root, "OldName.sln.DotSettings");
+            File.WriteAllText(settings, string.Empty);
+
+            SolutionCodeStyleReport report = AutoInstall().Run();
+
+            Assert.IsTrue(File.Exists(settings));
+            Assert.IsEmpty(report.RemovedPaths);
+        }
+
+        [Test]
+        public void Run_removes_nothing_the_second_time_around()
+        {
+            File.WriteAllText(Path.Combine(_root, "MyGame.sln"), string.Empty);
+            File.WriteAllText(Path.Combine(_root, "OldName.sln.DotSettings"), string.Empty);
+            AutoInstall().Run();
+
+            SolutionCodeStyleReport report = AutoInstall().Run();
+
+            Assert.IsEmpty(report.RemovedPaths);
+        }
+
         private SolutionCodeStyleAutoInstall AutoInstall() => new SolutionCodeStyleAutoInstall(_root, _templatePath);
 
         private static string Document(params string[] entries) =>
