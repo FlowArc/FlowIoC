@@ -122,20 +122,21 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// The modules FlowIoC ships, in reading order. A project with a private package adds a
-        /// Private Modules category after them, so what is asserted is that the three are first
-        /// and that anything following them is that one category.
+        /// The setup modules first, then the modules FlowIoC ships as one category. A project
+        /// with another package that ships modules adds that package's category after it, so
+        /// what is asserted is that the two are first and that the FlowModules category holds
+        /// the shipped modules by title.
         /// </summary>
         [Test]
         public void The_modules_category_lists_the_modules_that_ship()
         {
             List<string> titles = ChildTitles("Modules");
 
-            CollectionAssert.AreEqual(
-                new[] {"Setup Modules", "Counter", "Camera", "A/B Test", "World Pointer", "Haptic"},
-                titles.Take(6).ToList());
+            CollectionAssert.AreEqual(new[] {"Setup Modules", "FlowModules"}, titles.Take(2).ToList());
 
-            CollectionAssert.IsSubsetOf(titles.Skip(6).ToList(), new[] {"Private Modules"});
+            CollectionAssert.AreEqual(
+                new[] {"A/B Test", "Camera", "Counter", "Haptic", "Local Save", "World Pointer"},
+                ChildTitles("FlowModules"));
         }
 
         /// <summary>

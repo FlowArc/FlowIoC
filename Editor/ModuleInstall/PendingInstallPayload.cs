@@ -4,33 +4,29 @@ namespace FlowIoC.Editor.ModuleInstall
 {
     /// <summary>
     /// Which package a deferred install is to copy from. Adding a package reloads the domain, so
-    /// the intent has to survive as strings in SessionState and be read back afterwards - and a
-    /// private module lives in a package that is not FlowIoC, so where is part of the intent
-    /// rather than a constant.
+    /// the intent has to survive as a string in SessionState and be read back afterwards - and a
+    /// module may live in a package that is not FlowIoC, so where is part of the intent rather
+    /// than a constant. Every package ships its modules under the same Modules~, so the package
+    /// root is the whole of it.
     ///
-    /// A payload that names neither half is what every intent written before private modules
-    /// existed looks like, and it resumes against the modules FlowIoC ships, as it always did.
+    /// A payload that names no package is what every intent written before other packages could
+    /// ship modules looks like, and it resumes against the modules FlowIoC ships, as it always did.
     /// </summary>
     internal class PendingInstallPayload
     {
         private readonly string _packageRoot;
-        private readonly string _folder;
 
-        internal PendingInstallPayload(string packageRoot, string folder)
+        internal PendingInstallPayload(string packageRoot)
         {
             _packageRoot = packageRoot;
-            _folder = folder;
         }
 
         internal string PackageRoot => _packageRoot ?? string.Empty;
 
-        internal string Folder => _folder ?? string.Empty;
-
-        internal bool IsComplete =>
-            !string.IsNullOrEmpty(_packageRoot) && !string.IsNullOrEmpty(_folder);
+        internal bool IsComplete => !string.IsNullOrEmpty(_packageRoot);
 
         internal ModulesSource Source() =>
-            IsComplete ? new ModulesSource(_packageRoot, _folder) : new ModulesSource();
+            IsComplete ? new ModulesSource(_packageRoot) : new ModulesSource();
     }
 }
 

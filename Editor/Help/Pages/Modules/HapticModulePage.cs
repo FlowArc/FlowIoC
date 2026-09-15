@@ -1,10 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
-using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Icons;
-using FlowIoC.Editor.ModuleInstall;
-using UnityEditor;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
@@ -12,27 +9,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// The haptic module: the nine presets, what each one sends on each platform, where the
     /// on/off choice lives, and the button that puts it in the project.
     /// </summary>
-    internal class HapticModulePage : HelpPage
+    internal class HapticModulePage : ModulePage
     {
-        private const string ModuleFolderName = "HapticModule";
-
-        private readonly ModuleInstaller _installer =
-            new ModuleInstaller(new ProjectRoot().Resolve(), new ModulesSource());
-
-        private readonly HelpAction _install;
-
-        private bool _isInstalled;
-        private double _checkedAt = double.NegativeInfinity;
-
-        public HapticModulePage() : base(null)
-        {
-            // The label and the enabled state are read every repaint rather than fixed here, so
-            // the button turns itself off the moment the module lands in the project.
-            _install = new HelpAction(
-                () => IsInstalled() ? "Installed" : "Install",
-                () => !IsInstalled(),
-                Install);
-        }
+        public override string ModuleFolderName => "HapticModule";
 
         public override string Title => "Haptic";
 
@@ -40,9 +19,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override FlowIcon Icon => FlowIcon.Broadcast;
 
-        public override HelpAction Action => _install;
-
-        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Setup", DrawSetup,
                 "Put the Root in the scene. Android and iOS need nothing added by hand.",
@@ -60,52 +37,18 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the Vibrator, and a firmware may replace a short one with its own click.")
         };
 
-        /// <summary>
-        /// Whether the module is in the project, answered from a cache that goes stale after a
-        /// second. The underlying check walks every asmdef under Assets, and the banner asks twice
-        /// per repaint - often enough that doing the walk each time would cost real frames.
-        /// </summary>
-        private bool IsInstalled()
-        {
-            if (EditorApplication.timeSinceStartup - _checkedAt < 1d)
-                return _isInstalled;
+        public override string InstalledHint =>
+            "Drop HapticServiceRoot into your scene and call IHapticService.Play from a Command; the "
+            + "Setup tab has the steps.";
 
-            _isInstalled = _installer.IsInstalled(ModuleFolderName);
-            _checkedAt = EditorApplication.timeSinceStartup;
-
-            return _isInstalled;
-        }
-
-        private void Install()
-        {
-            // Whatever happened, what the cache holds is now a guess about a project that has
-            // changed underneath it.
-            _checkedAt = double.NegativeInfinity;
-
-            if (_installer.TryInstall(ModuleFolderName, out string error))
-            {
-                EditorUtility.DisplayDialog(
-                    "Haptic installed",
-                    $"The module is now at {ModuleInstaller.TargetFolder}/{ModuleFolderName}.\n\n"
-                    + "It is yours to edit from here - the copy in the package is only the one "
-                    + "installs are made from. Drop HapticServiceRoot into your scene and call "
-                    + "IHapticService.Play from a Command; the Setup tab has the steps.",
-                    "OK");
-
-                return;
-            }
-
-            EditorUtility.DisplayDialog("Haptic", error, "OK");
-        }
-
-        protected override string BodyHeadline =>
+        public override string BodyHeadline =>
             "One call plays a preset on the platform's own haptics.";
 
-        protected override string BodyTagline =>
+        public override string BodyTagline =>
             "A tap on a button, a coin landing, a wave cleared, a run lost - each is one Play call "
             + "with a preset, and the module knows what that preset is on iOS and on Android.";
 
-        protected override void DrawBody(HelpPainter painter)
+        public override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(

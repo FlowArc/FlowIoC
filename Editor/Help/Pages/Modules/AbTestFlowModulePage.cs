@@ -1,10 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
-using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Icons;
-using FlowIoC.Editor.ModuleInstall;
-using UnityEditor;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
@@ -12,29 +9,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// The A/B test module: what a test is, how a group's config lands over the game's own, where
     /// a player's status is read from, and the button that puts it in the project.
     /// </summary>
-    internal class AbTestFlowModulePage : HelpPage
+    internal class AbTestFlowModulePage : ModulePage
     {
-        private const string ModuleFolderName = "AbTestFlowModule";
-
-        private readonly ModuleInstaller _installer =
-            new ModuleInstaller(new ProjectRoot().Resolve(), new ModulesSource());
-
         private readonly HelpImages _images = new HelpImages();
 
-        private readonly HelpAction _install;
-
-        private bool _isInstalled;
-        private double _checkedAt = double.NegativeInfinity;
-
-        public AbTestFlowModulePage() : base(null)
-        {
-            // The label and the enabled state are read every repaint rather than fixed here, so
-            // the button turns itself off the moment the module lands in the project.
-            _install = new HelpAction(
-                () => IsInstalled() ? "Installed" : "Install",
-                () => !IsInstalled(),
-                Install);
-        }
+        public override string ModuleFolderName => "AbTestFlowModule";
 
         public override string Title => "A/B Test";
 
@@ -42,9 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override FlowIcon Icon => FlowIcon.Diagram;
 
-        public override HelpAction Action => _install;
-
-        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Setup", DrawSetup,
                 "Put the Root in the scene and author one test.",
@@ -60,52 +37,18 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "originals are put back when play mode ends, so the Editor stays clean.")
         };
 
-        /// <summary>
-        /// Whether the module is in the project, answered from a cache that goes stale after a
-        /// second. The underlying check walks every asmdef under Assets, and the banner asks twice
-        /// per repaint - often enough that doing the walk each time would cost real frames.
-        /// </summary>
-        private bool IsInstalled()
-        {
-            if (EditorApplication.timeSinceStartup - _checkedAt < 1d)
-                return _isInstalled;
+        public override string InstalledHint =>
+            "Drop AbTestFlowServiceRoot into your scene and author a test in CD_AbTests; the Setup "
+            + "tab has the steps.";
 
-            _isInstalled = _installer.IsInstalled(ModuleFolderName);
-            _checkedAt = EditorApplication.timeSinceStartup;
-
-            return _isInstalled;
-        }
-
-        private void Install()
-        {
-            // Whatever happened, what the cache holds is now a guess about a project that has
-            // changed underneath it.
-            _checkedAt = double.NegativeInfinity;
-
-            if (_installer.TryInstall(ModuleFolderName, out string error))
-            {
-                EditorUtility.DisplayDialog(
-                    "A/B Test installed",
-                    $"The module is now at {ModuleInstaller.TargetFolder}/{ModuleFolderName}.\n\n"
-                    + "It is yours to edit from here - the copy in the package is only the one "
-                    + "installs are made from. Drop AbTestFlowServiceRoot into your scene and author "
-                    + "a test in CD_AbTests; the Setup tab has the steps.",
-                    "OK");
-
-                return;
-            }
-
-            EditorUtility.DisplayDialog("A/B Test", error, "OK");
-        }
-
-        protected override string BodyHeadline =>
+        public override string BodyHeadline =>
             "A player lands in one group of each test, and that group's config is what the game reads.";
 
-        protected override string BodyTagline =>
+        public override string BodyTagline =>
             "Harder levels for half the players, a cheaper shop for a third - each is a test with "
             + "groups, and each group is a set of config assets written over the game's own.";
 
-        protected override void DrawBody(HelpPainter painter)
+        public override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(

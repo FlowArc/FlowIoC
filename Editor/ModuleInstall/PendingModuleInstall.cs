@@ -29,7 +29,6 @@ namespace FlowIoC.Editor.ModuleInstall
         private const string MODULE_KEY = "FlowIoC.PendingModuleInstall.Module";
         private const string PACKAGES_KEY = "FlowIoC.PendingModuleInstall.Packages";
         private const string PAYLOAD_ROOT_KEY = "FlowIoC.PendingModuleInstall.PayloadRoot";
-        private const string PAYLOAD_FOLDER_KEY = "FlowIoC.PendingModuleInstall.PayloadFolder";
         private const char SEPARATOR = ';';
 
         [InitializeOnLoadMethod]
@@ -46,12 +45,11 @@ namespace FlowIoC.Editor.ModuleInstall
         /// when they arrive.
         /// </summary>
         internal void Begin(string moduleFolderName, IReadOnlyList<string> packageIds) =>
-            Begin(moduleFolderName, packageIds, new PendingInstallPayload(null, null));
+            Begin(moduleFolderName, packageIds, new PendingInstallPayload(null));
 
         /// <summary>
-        /// The same, from a named payload. A private module ships in a package that is not
-        /// FlowIoC, so where to copy it from has to survive the domain reload alongside what to
-        /// copy.
+        /// The same, from a named payload. A module may ship in a package that is not FlowIoC, so
+        /// where to copy it from has to survive the domain reload alongside what to copy.
         /// </summary>
         internal void Begin(
             string moduleFolderName, IReadOnlyList<string> packageIds, PendingInstallPayload payload)
@@ -59,7 +57,6 @@ namespace FlowIoC.Editor.ModuleInstall
             SessionState.SetString(MODULE_KEY, moduleFolderName);
             SessionState.SetString(PACKAGES_KEY, string.Join(SEPARATOR.ToString(), packageIds));
             SessionState.SetString(PAYLOAD_ROOT_KEY, payload.PackageRoot);
-            SessionState.SetString(PAYLOAD_FOLDER_KEY, payload.Folder);
 
             var toAdd = new string[packageIds.Count];
 
@@ -107,9 +104,7 @@ namespace FlowIoC.Editor.ModuleInstall
 
             // Read before Forget erases it: where the module is copied from is as much a part of
             // the intent as which module it is.
-            var payload = new PendingInstallPayload(
-                SessionState.GetString(PAYLOAD_ROOT_KEY, string.Empty),
-                SessionState.GetString(PAYLOAD_FOLDER_KEY, string.Empty));
+            var payload = new PendingInstallPayload(SessionState.GetString(PAYLOAD_ROOT_KEY, string.Empty));
 
             IReadOnlyList<string> stillMissing =
                 new MissingPackages().In(new InstalledPackages().Ids(), required);
@@ -133,7 +128,6 @@ namespace FlowIoC.Editor.ModuleInstall
         private static void Forget()
         {
             SessionState.EraseString(PAYLOAD_ROOT_KEY);
-            SessionState.EraseString(PAYLOAD_FOLDER_KEY);
             SessionState.EraseString(MODULE_KEY);
             SessionState.EraseString(PACKAGES_KEY);
         }

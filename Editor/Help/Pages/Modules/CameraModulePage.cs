@@ -1,9 +1,6 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
-using FlowIoC.Editor.AgentRules;
-using FlowIoC.Editor.ModuleInstall;
-using UnityEditor;
 using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
@@ -13,38 +10,22 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// cameras over, what it does not wire up for you, and the button that puts it in the project.
     ///
     /// Unlike the counter module this module has packages behind it, so installing it may have
-    /// to add them first. PendingModuleInstall carries the install across that.
+    /// to add them first - RequiredPackages is what the adapter asks about before it copies.
     /// </summary>
-    internal class CameraModulePage : HelpPage
+    internal class CameraModulePage : ModulePage
     {
-        private const string ModuleFolderName = "CameraModule";
-
-        private readonly ModuleInstaller _installer =
-            new ModuleInstaller(new ProjectRoot().Resolve(), new ModulesSource());
+        public override string ModuleFolderName => "CameraModule";
 
         /// <summary>
         /// What the module's two assemblies reference. Cinemachine is the module's subject;
         /// the render pipeline core is where SerializedDictionary comes from, which is how a
         /// camera adapter maps a name to its configuration in the Inspector.
         /// </summary>
-        private readonly string[] _requiredPackages =
+        public override IReadOnlyList<string> RequiredPackages => new[]
         {
             "com.unity.cinemachine",
             "com.unity.render-pipelines.core"
         };
-
-        private readonly HelpAction _install;
-
-        private bool _isInstalled;
-        private double _checkedAt = double.NegativeInfinity;
-
-        public CameraModulePage() : base(null)
-        {
-            _install = new HelpAction(
-                () => IsInstalled() ? "Installed" : "Install",
-                () => !IsInstalled(),
-                Install);
-        }
 
         public override string Title => "Camera";
 
@@ -52,9 +33,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override FlowIcon Icon => FlowIcon.Camera;
 
-        public override HelpAction Action => _install;
-
-        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Usage", DrawUsage,
                 "Put CameraRoot in the scene, then say which cameras it has.",
@@ -68,72 +47,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "trust than the two minutes this takes.")
         };
 
-        /// <summary>
-        /// Whether the module is in the project, from a cache that goes stale after a second. The
-        /// check underneath walks every asmdef under Assets and the banner asks twice a repaint.
-        /// </summary>
-        private bool IsInstalled()
-        {
-            if (EditorApplication.timeSinceStartup - _checkedAt < 1d)
-                return _isInstalled;
+        public override string InstalledHint =>
+            "Nothing else in the project was touched - see the Wiring tab for the one thing "
+            + "left to do.";
 
-            _isInstalled = _installer.IsInstalled(ModuleFolderName);
-            _checkedAt = EditorApplication.timeSinceStartup;
+        public override string BodyHeadline => "Cinemachine cameras get names, and switching is one signal.";
 
-            return _isInstalled;
-        }
-
-        /// <summary>
-        /// Packages first. Copying a module whose asmdef references an assembly the project does
-        /// not have stops the whole project compiling, so a missing package is asked about rather
-        /// than discovered afterwards.
-        /// </summary>
-        private void Install()
-        {
-            _checkedAt = double.NegativeInfinity;
-
-            IReadOnlyList<string> missing =
-                new MissingPackages().In(new InstalledPackages().Ids(), _requiredPackages);
-
-            if (missing.Count > 0)
-            {
-                bool add = EditorUtility.DisplayDialog(
-                    "Camera",
-                    $"The module references {string.Join(" and ", missing)}, which this project "
-                    + "does not have.\n\n"
-                    + "Adding them writes to Packages/manifest.json and reimports the project. The "
-                    + "module installs itself once that has finished.",
-                    "Add and install",
-                    "Cancel");
-
-                if (add)
-                    new PendingModuleInstall().Begin(ModuleFolderName, missing);
-
-                return;
-            }
-
-            if (_installer.TryInstall(ModuleFolderName, out string error))
-            {
-                EditorUtility.DisplayDialog(
-                    "Camera installed",
-                    $"The module is now at {ModuleInstaller.TargetFolder}/{ModuleFolderName}.\n\n"
-                    + "Nothing else in the project was touched - see the Wiring tab for the one "
-                    + "thing left to do.",
-                    "OK");
-
-                return;
-            }
-
-            EditorUtility.DisplayDialog("Camera", error, "OK");
-        }
-
-        protected override string BodyHeadline => "Cinemachine cameras get names, and switching is one signal.";
-
-        protected override string BodyTagline =>
+        public override string BodyTagline =>
             "A menu camera and a gameplay camera come with the module; a game that needs more adds "
             + "them to one enum.";
 
-        protected override void DrawBody(HelpPainter painter)
+        public override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(

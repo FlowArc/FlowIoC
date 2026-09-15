@@ -1287,6 +1287,7 @@ you do not want.
 | **CounterModule** | `ICounterService` | Named counters with once-a-second callbacks: `CountDownFrom` towards zero or `CountUpFrom` measuring elapsed time, seconds left or 0..1, several listeners per id, and a pluggable time source so a server clock can replace the device one. `ICounterService.Commands.Stop(id)` is the one step it ships - a sequence ends a counter with the id given at the binding. |
 | **WorldPointerModule** | `IWorldPointerService` | A UI element that follows a 3D object on screen every frame - a health bar, a name, a "wave incoming" notice - and, outside the frame, hides, clamps to the edge with an arrow aimed at the target, or carries on. The frame is the camera's pixel rect inset by margins, so a HUD bar is a margin; a destroyed target drops itself; `TryProject` places something once. `IWorldPointerService.Commands.UnregisterAll` is the one step it ships - the flow that leaves the scene clears every pointer. |
 | **HapticModule** | `IHapticService` | The nine haptic presets iOS names - Selection, Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - played through UIKit's feedback generators on iOS and as a waveform through the Vibrator on Android, with no native library and no vendor asset. `Play(preset)` from the Command that decided the event, or `IHapticService.Commands.Play` bound as a step of a sequence with the preset given at the binding - `.ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)` - so the flow reads from the Context; `IsEnabled` and `SetEnabled` keep the player's choice in PlayerPrefs, and `IHapticService.Commands.SetEnabled` binds to a settings toggle's `Signal<bool>`; the `VIBRATE` permission is written into the Gradle project by the module. |
+| **LocalSaveModule** | `ILocalSaveService` | The ScriptableObjects filed on `LocalSaveRoot`'s adapter written to a file of the module's own - `SaveFile.flowsave` under `Application.persistentDataPath`, one JSON object with a member per asset - and read back in the module's `PostConstruct`, before any other module wakes up. A game binds `ILocalSaveService.Commands.Save` as the step after the one that changed the data, with the asset's name given at the binding - `.ToSequence<ILocalSaveService.Commands.Save>(nameof(PD_Profile))` - and `.SaveAll` where a session ends; the module saves everything on pause and on quit by itself. Newtonsoft does the serializing, narrowed to what Unity would save, so Dictionary members and `[SerializeReference]` fields survive. A password on the adapter encrypts the file with AES; empty, the file is one a developer reads. In the Editor the assets are put back when play mode ends, so a session leaves no diff. |
 
 Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its
 page. Copying the files is only part of it — the installer also registers the module in the module
@@ -1299,6 +1300,14 @@ want the shipped version back.
 
 The payload lives in `Modules~/` inside the package. Unity does not import a folder whose name ends
 in a tilde, so the modules carry their own asmdefs without compiling until they are installed.
+
+A package of your own can ship modules the same way: a `Modules~/` folder beside a page that
+derives from `ModulePage` for each module in it, and the Help window lists them under **Modules** in
+a category named after the package - or after the title an `[assembly: ModuleGroup("...")]` gives
+it, which is how FlowIoC's own appear under **FlowModules**. Nothing in FlowIoC names the package:
+the page is found through `TypeCache`, and the folder is read from the package the page compiles
+from. A studio keeps the modules its games share in a package like that, and installs them from
+the same window.
 
 A ready-made module adds no branch to the **Tools > FlowIoC** menu. Everything it offers arrives
 with it, its test scene included: open the scene under the test module's `Scenes` folder and press

@@ -1,10 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
-using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Icons;
-using FlowIoC.Editor.ModuleInstall;
-using UnityEditor;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
@@ -12,27 +9,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// The world pointer module: what it moves, how a game registers a pointer, what happens at
     /// the edge of the frame, and the button that puts it in the project.
     /// </summary>
-    internal class WorldPointerModulePage : HelpPage
+    internal class WorldPointerModulePage : ModulePage
     {
-        private const string ModuleFolderName = "WorldPointerModule";
-
-        private readonly ModuleInstaller _installer =
-            new ModuleInstaller(new ProjectRoot().Resolve(), new ModulesSource());
-
-        private readonly HelpAction _install;
-
-        private bool _isInstalled;
-        private double _checkedAt = double.NegativeInfinity;
-
-        public WorldPointerModulePage() : base(null)
-        {
-            // The label and the enabled state are read every repaint rather than fixed here, so
-            // the button turns itself off the moment the module lands in the project.
-            _install = new HelpAction(
-                () => IsInstalled() ? "Installed" : "Install",
-                () => !IsInstalled(),
-                Install);
-        }
+        public override string ModuleFolderName => "WorldPointerModule";
 
         public override string Title => "World Pointer";
 
@@ -40,9 +19,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override FlowIcon Icon => FlowIcon.Eye;
 
-        public override HelpAction Action => _install;
-
-        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Setup", DrawSetup,
                 "Put the Root in the scene and give your prefab the component.",
@@ -58,53 +35,19 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the top is a margin rather than a special case.")
         };
 
-        /// <summary>
-        /// Whether the module is in the project, answered from a cache that goes stale after a
-        /// second. The underlying check walks every asmdef under Assets, and the banner asks twice
-        /// per repaint - often enough that doing the walk each time would cost real frames.
-        /// </summary>
-        private bool IsInstalled()
-        {
-            if (EditorApplication.timeSinceStartup - _checkedAt < 1d)
-                return _isInstalled;
+        public override string InstalledHint =>
+            "Drop WorldPointerServiceRoot into your scene and put WorldPointerIndicator on the "
+            + "element that should follow; the Setup tab has the steps.";
 
-            _isInstalled = _installer.IsInstalled(ModuleFolderName);
-            _checkedAt = EditorApplication.timeSinceStartup;
-
-            return _isInstalled;
-        }
-
-        private void Install()
-        {
-            // Whatever happened, what the cache holds is now a guess about a project that has
-            // changed underneath it.
-            _checkedAt = double.NegativeInfinity;
-
-            if (_installer.TryInstall(ModuleFolderName, out string error))
-            {
-                EditorUtility.DisplayDialog(
-                    "World Pointer installed",
-                    $"The module is now at {ModuleInstaller.TargetFolder}/{ModuleFolderName}.\n\n"
-                    + "It is yours to edit from here - the copy in the package is only the one "
-                    + "installs are made from. Drop WorldPointerServiceRoot into your scene and put "
-                    + "WorldPointerIndicator on the element that should follow; the Setup tab has the steps.",
-                    "OK");
-
-                return;
-            }
-
-            EditorUtility.DisplayDialog("World Pointer", error, "OK");
-        }
-
-        protected override string BodyHeadline =>
+        public override string BodyHeadline =>
             "A UI element sits where a 3D object is on screen, every frame.";
 
-        protected override string BodyTagline =>
+        public override string BodyTagline =>
             "A health bar over a unit, a name over a player, a \"wave incoming\" notice over a gate, "
             + "a marker on a quest target - each is one Register call, and the module decides what "
             + "happens when the object leaves the frame.";
 
-        protected override void DrawBody(HelpPainter painter)
+        public override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(

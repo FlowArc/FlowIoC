@@ -35,11 +35,11 @@ namespace FlowIoC.Tests
             var roots = new ModuleScannerRoots(
                 folderExists: path => true,
                 directoriesIn: path => new[] {"C:/proj/Packages/FlowIoC-addons"},
-                directoriesNamed: (path, name) => new[] {"C:/proj/Packages/FlowIoC-addons/PrivateModules~/Modules"});
+                directoriesNamed: (path, name) => new[] {"C:/proj/Packages/FlowIoC-addons/Runtime/Modules"});
 
             List<string> result = roots.All("C:/proj").Select(path => path.Replace('\\', '/')).ToList();
 
-            CollectionAssert.Contains(result, "C:/proj/Packages/FlowIoC-addons/PrivateModules~/Modules");
+            CollectionAssert.Contains(result, "C:/proj/Packages/FlowIoC-addons/Runtime/Modules");
         }
 
         [Test]
