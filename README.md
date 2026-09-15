@@ -1310,6 +1310,11 @@ the page is found through `TypeCache`, and the folder is read from the package t
 from. A studio keeps the modules its games share in a package like that, and installs them from
 the same window.
 
+A module may also ship a panel - a window for the developer, the way Local Save's shows the save
+file and resets it. It derives from `ModulePanel`, and a `[MenuItem]` inside the module opens it with
+`ModulePanelWindow.Open<T>()` under **Tools > FlowIoC-Modules > <Module>**: a root of its own, so
+the framework's menu stays the framework's.
+
 A ready-made module adds no branch to the **Tools > FlowIoC** menu. Everything it offers arrives
 with it, its test scene included: open the scene under the test module's `Scenes` folder and press
 Play. The scene is an ordinary asset in the payload, and the `.meta` of every script it references

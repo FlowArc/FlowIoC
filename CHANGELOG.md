@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an error and an empty session. Install it from **Help ▸ Modules ▸ FlowModules ▸ Local Save**.
 - **`com.unity.nuget.newtonsoft-json` is a dependency of the package**, for the save module's
   serializer.
+- **A module can ship a panel, and Local Save does.** `ModulePanel` in `FlowIoC.Editor.ModulePanels`
+  declares a window - title, module, role colour, Help page, rows drawn through
+  `ModulePanelPainter`'s marks - and `ModulePanelWindow.Open<T>()` draws it in the house style, one
+  window per panel; the module ships the class and a `[MenuItem]` under
+  **Tools ▸ FlowIoC-Modules ▸ <Module>**, a root of its own beside `Tools ▸ FlowIoC`, which a module
+  still adds nothing to. Local Save's panel shows the file, reads it with the password off the
+  `LocalSaveRoot` in the open scene, resets it, clears PlayerPrefs and rewrites it under another
+  password; it never edits the contents.
 
 ### Changed
 

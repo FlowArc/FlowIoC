@@ -38,6 +38,16 @@ ILocalSaveService, LocalSaveRootAdapter
   until `Flush`. The two steps a game binds, `ILocalSaveService.Commands.Save` and `.SaveAll`,
   flush at the end; the Context saves everything on pause and the Root on quit, because a
   backgrounded mobile app is often killed without quitting.
+- **A panel, under `Tools/FlowIoC-Modules/Local Save/Panel`.** The developer's view of the file on this
+  machine: path and state, its contents read with the password off the `LocalSaveRoot` in the open
+  scene or one typed, *Reset* (the file and a stray `.tmp`), *Clear PlayerPrefs*, and *Rewrite* under
+  another password for the day the Root's changes. It reads and never edits - the file is the
+  Model's - and its buttons are off in play mode, where the game holds the save in memory. The
+  window is FlowIoC's (`ModulePanel` drawn by `ModulePanelWindow`); the module ships only
+  `LocalSavePanel` and its `[MenuItem]`, under `Scripts/Editor` in `#if UNITY_EDITOR`, which is why
+  the asmdef references `FlowIoC.Editor` - a reference Unity drops for a player build. The owner
+  put the root beside `Tools/FlowIoC` rather than inside it (2026-09-15): a module adds nothing to
+  FlowIoC's own menu, and `FlowIoC-Modules` sits second under Tools, ahead of `FlowIoC-dev`.
 - **Errors through `Debug.LogError`.** A save that silently does nothing looks exactly like success
   until the player restarts, so the failure has to reach a release build's log.
 
