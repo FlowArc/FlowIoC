@@ -34,7 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Scanner checks, the Initialize Order bands, a View's Context Source, the two binders, the
   five data prefixes and the shared-asset reports, the two adapter assets of A/B Test, what the
   Camera module lands, the three kinds of module and where data lives, a command's three doors,
-  and the Create Module toggles.
+  and the Create Module toggles. A table's header row is grey, not the heading violet, and the
+  table keeps a margin above and below. A screenshot sits in a dark well five pixels wider than
+  itself, sunk into the page - shadow along the top and left, light along the bottom and right.
 - **Asset Delivery is a ready-made module.** Store-delivered content lands on the device before the
   boot needs it - Play Asset Delivery on Android, Apple-hosted managed Background Assets on iOS,
   which begin at iOS 26 - and the boot draws what is still missing on the loading bar instead of

@@ -539,35 +539,41 @@ namespace FlowIoC.Editor.Help
         /// <summary>
         /// A screenshot, scaled down to the page width when it is wider and left at its own size
         /// when it is not - an editor window blown up past its pixels reads as a blurred mistake.
-        /// A picture the project no longer ships draws nothing rather than a magenta rectangle:
-        /// the page is still worth reading without it.
+        /// It sits in a dark well a few pixels wider than itself, sunk into the page, so the
+        /// picture stands out from the grey around it. A picture the project no longer ships
+        /// draws nothing rather than a magenta rectangle: the page is still worth reading
+        /// without it.
         /// </summary>
         public void Image(Texture2D image, string caption = null)
         {
             if (image == null)
                 return;
 
-            float available = EditorGUIUtility.currentViewWidth - _theme.ImageMargin;
+            float padding = _theme.ImageWellPadding;
+            float available = EditorGUIUtility.currentViewWidth - _theme.ImageMargin - padding * 2f;
             float width = Mathf.Min(image.width, available);
             float height = width * image.height / image.width;
 
-            Rect rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false));
+            Rect well = GUILayoutUtility.GetRect(width + padding * 2f, height + padding * 2f,
+                GUILayout.ExpandWidth(false));
 
             if (Event.current.type == EventType.Repaint)
             {
-                GUI.DrawTexture(rect, image, ScaleMode.ScaleToFit);
+                EditorGUI.DrawRect(well, _theme.ImageWellFill);
 
-                Handles.BeginGUI();
-                Handles.color = _theme.ImageBorder;
-                Handles.DrawAAPolyLine(1.5f,
-                    new Vector3(rect.xMin, rect.yMin), new Vector3(rect.xMax, rect.yMin),
-                    new Vector3(rect.xMax, rect.yMax), new Vector3(rect.xMin, rect.yMax),
-                    new Vector3(rect.xMin, rect.yMin));
-                Handles.EndGUI();
+                // Sunk, not raised: the shadow along the top and the left, the light along the
+                // bottom and the right.
+                EditorGUI.DrawRect(new Rect(well.x, well.y, well.width, 1f), _theme.ImageWellShadow);
+                EditorGUI.DrawRect(new Rect(well.x, well.y, 1f, well.height), _theme.ImageWellShadow);
+                EditorGUI.DrawRect(new Rect(well.x, well.yMax - 1f, well.width, 1f), _theme.ImageWellLight);
+                EditorGUI.DrawRect(new Rect(well.xMax - 1f, well.y, 1f, well.height), _theme.ImageWellLight);
+
+                GUI.DrawTexture(new Rect(well.x + padding, well.y + padding, width, height), image,
+                    ScaleMode.ScaleToFit);
             }
 
             if (!string.IsNullOrEmpty(caption))
-                EditorGUILayout.LabelField(caption, _theme.Caption, GUILayout.Width(width));
+                EditorGUILayout.LabelField(caption, _theme.Caption, GUILayout.Width(well.width));
 
             Space();
         }

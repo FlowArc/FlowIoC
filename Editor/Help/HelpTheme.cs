@@ -495,8 +495,21 @@ namespace FlowIoC.Editor.Help
             margin = new RectOffset(0, 0, 2, 8)
         };
 
-        /// <summary>The hairline drawn around a screenshot, so it reads as a picture and not as page.</summary>
-        public Color ImageBorder => _pro ? new Color(0.35f, 0.35f, 0.38f) : new Color(0.68f, 0.68f, 0.72f);
+        /// <summary>
+        /// The well a screenshot sits in: a very dark ground a few pixels wider than the picture on
+        /// every side, so a window grey does not melt into the page grey it is shown on. It is sunk
+        /// rather than raised - the shadow runs along the top and the left, the light along the
+        /// bottom and the right - which is how a pressed panel reads, and a picture set into the
+        /// page is what a screenshot is.
+        /// </summary>
+        public Color ImageWellFill => _pro ? Hex(0x1C1C1C) : Hex(0x9E9E9E);
+
+        public Color ImageWellShadow => _pro ? Hex(0x101010) : Hex(0x7A7A7A);
+
+        public Color ImageWellLight => _pro ? Hex(0x4A4A4A) : Hex(0xDADADA);
+
+        /// <summary>What the well keeps clear between its edge and the picture, on every side.</summary>
+        public float ImageWellPadding => 5f;
 
         /// <summary>
         /// What the page around a mark leaves to it: the sidebar the window draws beside the
