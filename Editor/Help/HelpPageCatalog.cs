@@ -67,26 +67,16 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
-        /// The modules the package ships, and after them the ones a private package brings. The
-        /// private category is absent rather than empty when there is no private package, so a
-        /// project without one sees the sidebar it has always seen.
+        /// The setup modules, then one category per package that ships modules: FlowModules
+        /// first, and after it whatever other packages the project has. A package's category is
+        /// found from the pages it declares rather than listed here, so a module page is one
+        /// class and no line in this file.
         /// </summary>
         private HelpSection[] ModuleSections()
         {
-            var sections = new List<HelpSection>
-            {
-                new HelpSection(new SetupModulesPage()),
-                new HelpSection(new CounterModulePage()),
-                new HelpSection(new CameraModulePage()),
-                new HelpSection(new AbTestFlowModulePage()),
-                new HelpSection(new WorldPointerModulePage()),
-                new HelpSection(new HapticModulePage())
-            };
+            var sections = new List<HelpSection> {new HelpSection(new SetupModulesPage())};
 
-            HelpSection privateModules = new PrivateModuleSections().Category();
-
-            if (privateModules != null)
-                sections.Add(privateModules);
+            sections.AddRange(new PackageModuleSections().Categories());
 
             return sections.ToArray();
         }

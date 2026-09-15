@@ -5,6 +5,35 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Local Save is a ready-made module of the core package.** It used to sit in the private addons
+  package because it was built on Easy Save 3, a paid asset. It now keeps a file of its own -
+  `SaveFile.flowsave` under `Application.persistentDataPath`, one JSON object with a member per
+  asset, written to a temporary file and moved over the old one - and Easy Save is gone with the
+  setup step it needed and the `ES3Defaults` asset that rewrote itself on every assembly change.
+  `ILocalSaveService.BeginSession(password)`: a password on `LocalSaveRoot`'s adapter encrypts the
+  file with AES-256, the key derived from it over a fresh salt and IV; empty, the file is plain. A
+  plain file is read whatever the password says and the next write encrypts it, so turning
+  encryption on later loses nothing; an encrypted file read with no password or the wrong one is
+  an error and an empty session. Install it from **Help ▸ Modules ▸ FlowModules ▸ Local Save**.
+- **`com.unity.nuget.newtonsoft-json` is a dependency of the package**, for the save module's
+  serializer.
+
+### Changed
+
+- **The Help window lists modules by the package that ships them.** *Private Modules* is gone.
+  FlowIoC's own ready-made modules sit under **FlowModules**, and every other package that ships
+  modules gets a category of its own, named after the package - `FlowIoC-addons Modules` - or
+  after the title its editor assembly declares with `[assembly: ModuleGroup("...")]`. The pages
+  are found through `TypeCache`, FlowIoC's included: the five hand-listed pages are gone from the
+  catalogue and the installer block each of them carried is written once, in the adapter.
+- **`PrivateModulePage` is `ModulePage`**, and a package's modules ship under `Modules~`, the same
+  folder FlowIoC uses, rather than `PrivateModules~`. The page gained `BodyHeadline`, `BodyTagline`
+  and `InstalledHint` - the sentence the install dialog adds after the generic one.
+
 ## [1.15.3] - 2026-09-15
 
 ### Changed

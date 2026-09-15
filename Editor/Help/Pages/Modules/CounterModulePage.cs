@@ -1,9 +1,6 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
-using FlowIoC.Editor.AgentRules;
-using FlowIoC.Editor.ModuleInstall;
-using UnityEditor;
 using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
@@ -12,27 +9,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// The counter module: what it does, how a game calls it, where the time it counts
     /// with comes from, and the button that puts it in the project.
     /// </summary>
-    internal class CounterModulePage : HelpPage
+    internal class CounterModulePage : ModulePage
     {
-        private const string ModuleFolderName = "CounterModule";
-
-        private readonly ModuleInstaller _installer =
-            new ModuleInstaller(new ProjectRoot().Resolve(), new ModulesSource());
-
-        private readonly HelpAction _install;
-
-        private bool _isInstalled;
-        private double _checkedAt = double.NegativeInfinity;
-
-        public CounterModulePage() : base(null)
-        {
-            // The label and the enabled state are read every repaint rather than fixed here, so
-            // the button turns itself off the moment the module lands in the project.
-            _install = new HelpAction(
-                () => IsInstalled() ? "Installed" : "Install",
-                () => !IsInstalled(),
-                Install);
-        }
+        public override string ModuleFolderName => "CounterModule";
 
         public override string Title => "Counter";
 
@@ -40,9 +19,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override FlowIcon Icon => FlowIcon.Stopwatch;
 
-        public override HelpAction Action => _install;
-
-        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
+        public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Usage", DrawUsage,
                 "Inject the service and start a countdown.",
@@ -54,51 +31,13 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "moment it is asked - that is what lets the module work as soon as it is installed.")
         };
 
-        /// <summary>
-        /// Whether the module is in the project, answered from a cache that goes stale after a
-        /// second. The underlying check walks every asmdef under Assets, and the banner asks twice
-        /// per repaint - often enough that doing the walk each time would cost real frames. A
-        /// second is far below noticing, and installing clears the cache outright.
-        /// </summary>
-        private bool IsInstalled()
-        {
-            if (EditorApplication.timeSinceStartup - _checkedAt < 1d)
-                return _isInstalled;
+        public override string BodyHeadline => "Named counters that call back once a second.";
 
-            _isInstalled = _installer.IsInstalled(ModuleFolderName);
-            _checkedAt = EditorApplication.timeSinceStartup;
-
-            return _isInstalled;
-        }
-
-        private void Install()
-        {
-            // Whatever happened, what the cache holds is now a guess about a project that has
-            // changed underneath it.
-            _checkedAt = double.NegativeInfinity;
-
-            if (_installer.TryInstall(ModuleFolderName, out string error))
-            {
-                EditorUtility.DisplayDialog(
-                    "Counter installed",
-                    $"The module is now at {ModuleInstaller.TargetFolder}/{ModuleFolderName}.\n\n"
-                    + "It is yours to edit from here - the copy in the package is only the one "
-                    + "installs are made from.",
-                    "OK");
-
-                return;
-            }
-
-            EditorUtility.DisplayDialog("Counter", error, "OK");
-        }
-
-        protected override string BodyHeadline => "Named counters that call back once a second.";
-
-        protected override string BodyTagline =>
+        public override string BodyTagline =>
             "A chest that opens in an hour, an energy bar that refills, a round timer - all of them "
             + "are one call and a callback rather than a coroutine of their own.";
 
-        protected override void DrawBody(HelpPainter painter)
+        public override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(

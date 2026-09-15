@@ -1,0 +1,84 @@
+#if UNITY_EDITOR
+
+using System;
+using System.Collections.Generic;
+using FlowIoC.Editor.Icons;
+
+namespace FlowIoC.Editor.Help
+{
+    /// <summary>
+    /// A module a package ships for the Help window to install - one of FlowIoC's own, or one
+    /// from any other package. A package writes a page like this for each module it ships under
+    /// its Modules~ folder, and the Help window collects the pages into one category per package,
+    /// titled after the package or after the <see cref="ModuleGroupAttribute"/> its assembly
+    /// declares.
+    ///
+    /// This class declares and does not act. Resolving where the module's files are, checking
+    /// whether it is already installed, adding packages it needs, copying it in and reporting the
+    /// result are all done by the adapter FlowIoC wraps this in. Keeping the declaration inert is
+    /// what lets the machinery behind it change without breaking a page written years ago.
+    ///
+    /// Every member is public rather than protected: the adapter lives in another assembly and
+    /// cannot read protected members, and a protected override paired with a public accessor for
+    /// each one would double the surface to hide nothing.
+    /// </summary>
+    public abstract class ModulePage
+    {
+        /// <summary>What the sidebar calls this module.</summary>
+        public abstract string Title { get; }
+
+        /// <summary>A second line under the title, for a name that does not say enough alone.</summary>
+        public virtual string Subtitle => string.Empty;
+
+        /// <summary>
+        /// The drawing beside the topic in the sidebar, one of FlowIoC's own. The cube unless the
+        /// page says otherwise.
+        /// </summary>
+        public virtual FlowIcon Icon => FlowIcon.Cube;
+
+        /// <summary>
+        /// The folder under Modules~ this page installs, inside the package the page itself ships
+        /// in. The package is not named anywhere: it is read from this class's own assembly, so a
+        /// page and the module it installs always travel together.
+        /// </summary>
+        public abstract string ModuleFolderName { get; }
+
+        /// <summary>
+        /// Assemblies the module's asmdefs reference that no package brings - a paid asset
+        /// imported into Assets. The Install button stays disabled until they are all here,
+        /// because copying the module in without them stops the project compiling.
+        /// </summary>
+        public virtual IReadOnlyList<string> RequiredAssemblies => Array.Empty<string>();
+
+        /// <summary>
+        /// Package Manager ids the module needs. Missing ones are offered for adding before the
+        /// module is copied, the way the camera module's Cinemachine requirement is.
+        /// </summary>
+        public virtual IReadOnlyList<string> RequiredPackages => Array.Empty<string>();
+
+        /// <summary>What the first reading of the page is called.</summary>
+        public virtual string BodyTabTitle => "Introduction";
+
+        /// <summary>
+        /// The line the body opens with, drawn in the band under the banner. Null falls back to
+        /// the title, so every reading has a heading whether or not it has a sentence to lead with.
+        /// </summary>
+        public virtual string BodyHeadline => null;
+
+        public virtual string BodyTagline => null;
+
+        /// <summary>
+        /// One sentence for the dialog that reports the install, after the generic one - where to
+        /// drop the Root, which tab has the steps. Empty for a module that needs no pointer.
+        /// </summary>
+        public virtual string InstalledHint => string.Empty;
+
+        /// <summary>Readings beside the body. Empty for a page that is one reading only.</summary>
+        public virtual IReadOnlyList<HelpTab> MoreTabs => Array.Empty<HelpTab>();
+
+        /// <summary>The body of the page, drawn with the same marks every other page uses.</summary>
+        public abstract void DrawBody(HelpPainter painter);
+    }
+}
+
+#endif

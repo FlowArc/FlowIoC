@@ -15,9 +15,9 @@ namespace FlowIoC.Editor.ModuleCards
     /// correct as it stands. They still deserve a card, because an agent routes into ScreenModule
     /// the same way it routes into a game module.
     ///
-    /// A Modules~ or PrivateModules~ folder is not here on purpose. Unity does not import a ~
-    /// folder, so those modules are not part of the open project; listing them would route an
-    /// agent at code that is not installed.
+    /// A Modules~ folder - FlowIoC's or another package's - is not here on purpose. Unity does
+    /// not import a ~ folder, so those modules are not part of the open project; listing them
+    /// would route an agent at code that is not installed.
     /// </summary>
     internal class ModuleCardRoots
     {
