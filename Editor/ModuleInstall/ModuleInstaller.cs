@@ -217,16 +217,7 @@ namespace FlowIoC.Editor.ModuleInstall
             new ModuleScannerStartupReport().Report();
         }
 
-        private static void CopyTree(string source, string target)
-        {
-            Directory.CreateDirectory(target);
-
-            foreach (string file in Directory.GetFiles(source))
-                File.Copy(file, Path.Combine(target, Path.GetFileName(file)), false);
-
-            foreach (string directory in Directory.GetDirectories(source))
-                CopyTree(directory, Path.Combine(target, Path.GetFileName(directory)));
-        }
+        private static void CopyTree(string source, string target) => new PayloadCopier().CopyTree(source, target);
     }
 }
 

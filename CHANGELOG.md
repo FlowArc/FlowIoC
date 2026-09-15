@@ -42,6 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the game a Command to paste; `Modules.AssetDelivery` references `Modules.Loading` the way
   `Modules.Main` does. The first ready-made module to do so.
 
+### Fixed
+
+- **A module installs without a warning per empty folder.** A module's skeleton travels as the metas of
+  folders git never stores, and Unity recreated each with "A meta data file (.meta) exists but its
+  folder ... can't be found, and has been created" - 109 of them after the setup set landed on a
+  fresh `1.17.1` consumer. `PayloadCopier` creates the folder for every `folderAsset` meta it copies,
+  before the import sees it; both installers copy through it.
+
 ## [1.17.1] - 2026-09-15
 
 ### Fixed
