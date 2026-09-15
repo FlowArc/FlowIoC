@@ -261,6 +261,13 @@ namespace FlowIoC.Editor.Help
         public float TableColumnShare => 0.4f;
 
         /// <summary>
+        /// What a table keeps clear above and below itself. More than a paragraph's own margin,
+        /// because a table is a block with edges and the text either side of it should not touch
+        /// them.
+        /// </summary>
+        public float TableMargin => 10f;
+
+        /// <summary>
         /// A colour laid over the panel thinly enough to read as a tint of it. The alpha is what
         /// separates a row that is marked out from the row the reader is actually on: the selected
         /// row carries the violet whole, and a featured one carries this much of it.

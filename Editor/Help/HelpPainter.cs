@@ -177,9 +177,11 @@ namespace FlowIoC.Editor.Help
 
             float height = TableHeight(headers, rows, ColumnWidths(headers, rows, columns, measured));
 
+            GUILayout.Space(_theme.TableMargin);
+
             Rect table = GUILayoutUtility.GetRect(_theme.CardMinWidth, height, GUILayout.ExpandWidth(true));
 
-            Space();
+            GUILayout.Space(_theme.TableMargin);
 
             if (Event.current.type != EventType.Repaint)
                 return;
