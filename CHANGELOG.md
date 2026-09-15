@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A module panel can carry a list down its left side.** `ModulePanel.HasSidebar` and
+  `DrawSidebar(ModulePanelSidebarPainter)` split the window under the bar: the list on the left -
+  a heading drawn like the bar's strip, with an optional square `+` at its edge, items that
+  light up under the pointer and wear the panel's colour when selected, a marker word at the
+  right of an item, a button under a group - and the panel's rows on the right, each in a
+  scroll view of its own. `ModulePanel.BarAction` puts one button on the bar beside the help
+  icon, for what is done to the panel as a whole. In the row painter every labelled mark takes a
+  `help` text that hides behind the `?` a Root's inspector gives its fields and opens under the
+  row when pressed; `Popup` picks one of a list, `PropertyWithAside` draws a narrow second field
+  at the end of a row, `Custom` hands a row's rect to a panel that has to draw something no mark
+  describes, and a heading can carry buttons at its right edge. A `ModulePanelAction` has a kind:
+  the plain ones stay in line, `Confirm` green and `Caution` amber stay in line too, `Add` stands
+  apart at the right edge larger and green, `Remove` beside it mini and red -
+  `ModulePanelAction.Add("+", …)` for the one that makes more. `FlowPalette.ActionCaution` is the
+  amber.
 - **`HelpPainter.Table`.** A Help page draws a table - `painter.Table(headers, rows...)` - with the
   header row on the band a heading wears, a hairline under every row, each column as wide as its
   widest cell and the last taking what is left. Four listings that were tables typed into a code

@@ -39,6 +39,26 @@ namespace FlowIoC.Editor.ModulePanels
         /// <summary>The title of the Help page the bar's help icon opens, or null for no icon.</summary>
         public virtual string HelpPage => null;
 
+        /// <summary>
+        /// The one button the bar carries beside its help icon - Select asset, say: what is done to
+        /// the panel as a whole rather than to a row of it. Null for none. Read every repaint, so
+        /// a panel may offer it only while it applies.
+        /// </summary>
+        public virtual ModulePanelAction? BarAction => null;
+
+        /// <summary>
+        /// True for a panel that lists things down its left side and opens one of them on the
+        /// right - the tests of an experiment set, one of which is being shaped. The window then
+        /// splits under the bar: the list from <see cref="DrawSidebar"/> on the left, the rows from
+        /// <see cref="Draw"/> beside it.
+        /// </summary>
+        public virtual bool HasSidebar => false;
+
+        /// <summary>The list down the left side, in the sidebar's marks; drawn only while <see cref="HasSidebar"/>.</summary>
+        public virtual void DrawSidebar(ModulePanelSidebarPainter sidebar)
+        {
+        }
+
         /// <summary>The rows of the panel, drawn every repaint with the marks the painter offers.</summary>
         public abstract void Draw(ModulePanelPainter painter);
     }

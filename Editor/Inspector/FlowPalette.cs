@@ -100,6 +100,14 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public Color ActionRemove => new Color(1.7f, 0.42f, 0.38f);
 
+        /// <summary>
+        /// What a button that changes the shape or the state of the thing it sits on is tinted with -
+        /// raising a test's version, adding a column to its matrix. Not green, because it makes
+        /// nothing new, and not red, because it destroys nothing; the amber of a warning row, lifted
+        /// past 1 the way <see cref="ActionRemove"/> is so the button lights rather than muddies.
+        /// </summary>
+        public Color ActionCaution => new Color(1.5f, 1.25f, 0.45f);
+
         public Color Title => Color.white;
 
         private void Add(FlowRole role, string deep, string vivid)
