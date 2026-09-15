@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class AbTestFlowModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "AbTestFlowModule";
 
         public override string Title => "A/B Test";
@@ -140,6 +142,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "empty slot, a name used twice, a replacement of another type - sits under the row it "
                 + "is about, the slot washed red. Every field is the asset's own, so undo and save are "
                 + "Unity's, and the Inspector shows the same test if you would rather edit it there.");
+            painter.Image(_images.Get("AbTestEditor.png"),
+                "Two tests down the left, Theme the active one; Level open, its matrix one row by two groups.");
 
             painter.Paragraph(
                 "Id is also the PlayerPrefs key. Version is what you raise to restart the test. Test "
