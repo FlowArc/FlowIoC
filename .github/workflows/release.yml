@@ -1,0 +1,94 @@
+name: Sign and release
+
+# A pushed version tag packs the package with Unity's UPM CLI, which signs the tarball
+# for the FlowArc organization (package/.attestation.p7m inside it), and attaches the
+# signed .tgz to a GitHub Release of the same tag. OpenUPM tracks the release asset
+# (trackingMode: githubRelease), so the tarball a consumer installs is the one signed here.
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: write
+
+jobs:
+  sign:
+    name: Sign UPM package
+    runs-on: ubuntu-latest
+    env:
+      UPM_SERVICE_ACCOUNT_KEY_ID: ${{ secrets.UPM_SERVICE_ACCOUNT_KEY_ID }}
+      UPM_SERVICE_ACCOUNT_KEY_SECRET: ${{ secrets.UPM_SERVICE_ACCOUNT_KEY_SECRET }}
+      UPM_ORG_ID: ${{ secrets.UPM_ORG_ID }}
+      DIST_DIR: /tmp/signed-upm-dist
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check that package.json carries the tag's version
+        run: |
+          package_name="$(jq -r '.name' package.json)"
+          package_version="$(jq -r '.version' package.json)"
+
+          if [ "$package_version" != "$GITHUB_REF_NAME" ]; then
+            printf 'package.json says %s but the tag is %s\n' "$package_version" "$GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          echo "PACKAGE_NAME=$package_name" >> "$GITHUB_ENV"
+          echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
+          printf 'Packing %s@%s\n' "$package_name" "$package_version"
+
+      - name: Install Unity UPM CLI
+        run: |
+          curl -fsSL https://cdn.packages.unity.com/upm-cli/install.sh -o install.sh
+          bash install.sh
+          echo "$HOME/.upm/bin" >> "$GITHUB_PATH"
+
+      - name: Pack and sign
+        run: |
+          mkdir -p "$DIST_DIR"
+          upm pack . --organization-id "$UPM_ORG_ID" --destination "$DIST_DIR"
+
+      - name: Verify the signed tarball
+        run: |
+          shopt -s nullglob
+          archives=("$DIST_DIR"/*.tgz "$DIST_DIR"/*.tar.gz)
+          if [ "${#archives[@]}" -ne 1 ]; then
+            printf 'Expected exactly one archive, found %s\n' "${#archives[@]}" >&2
+            exit 1
+          fi
+          archive="${archives[0]}"
+
+          tar -tzf "$archive" | grep -qx 'package/package.json'
+          tar -tzf "$archive" | grep -qx 'package/.attestation.p7m'
+          tar -xOzf "$archive" package/package.json | jq -e --arg v "$PACKAGE_VERSION" '.version == $v' > /dev/null
+
+          # Every file git tracks must be in the tarball, apart from the repository's own
+          # dotfiles. Anything extra is only reported: it is noise, not a broken package.
+          tar -tzf "$archive" | sed 's#^package/##' | grep -v '/$' | sort > /tmp/tarball.txt
+          git ls-files | grep -v -E '^(\.github/|\.gitignore$|\.npmignore$)' | sort > /tmp/tracked.txt
+          missing="$(comm -23 /tmp/tracked.txt /tmp/tarball.txt)"
+          if [ -n "$missing" ]; then
+            printf 'Tracked files missing from the tarball:\n%s\n' "$missing" >&2
+            exit 1
+          fi
+          extra="$(comm -13 /tmp/tracked.txt /tmp/tarball.txt | grep -v '^\.attestation\.p7m$' || true)"
+          if [ -n "$extra" ]; then
+            printf '::warning::Untracked files in the tarball: %s\n' "$(printf '%s' "$extra" | tr '\n' ' ')"
+          fi
+
+          echo "PACKAGE_ARCHIVE=$archive" >> "$GITHUB_ENV"
+          printf 'Signed %s (%s files)\n' "$(basename "$archive")" "$(wc -l < /tmp/tarball.txt)"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.PACKAGE_VERSION }}
+          body: |
+            Signed UPM tarball of `${{ env.PACKAGE_NAME }}@${{ env.PACKAGE_VERSION }}`.
+            What changed is in [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ env.PACKAGE_VERSION }}/CHANGELOG.md).
+          files: ${{ env.PACKAGE_ARCHIVE }}

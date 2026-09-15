@@ -1,0 +1,2 @@
+# Kept out of the tarball upm pack builds: the release workflow is the repository's, not the package's.
+.github/

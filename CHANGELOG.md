@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Releases are signed.** A pushed version tag runs `.github/workflows/release.yml`, which packs
+  the package with Unity's UPM CLI - signed for the FlowArc organization, the signature at
+  `package/.attestation.p7m` inside the tarball - and attaches the `.tgz` to a GitHub Release of
+  the same tag. OpenUPM publishes that asset rather than packing the tag itself, so the tarball a
+  consumer installs is the signed one. Unity 6.3's Package Manager reads it as *Limited signature*
+  for anyone outside the organization - the package is verified unchanged and its signer named,
+  which is as far as a third-party signature goes - where every release up to 1.16.0 reads
+  *Missing*.
+
 ### Fixed
 
 - **The package declares URP and the Input System.** The setup set's `MainScene` carries
