@@ -16,42 +16,42 @@ namespace FlowIoC.Editor.CodeGenerator
         /// </summary>
         private static readonly Vector2 GENERATOR_WINDOW_SIZE = new Vector2(520, 640);
 
-        [MenuItem("Tools/FlowIoC/Create Module", false, -1301)]
+        [MenuItem("Tools/FlowIoC/Create New Module", false, -1301)]
         private static void CreateModule()
         {
             var window = EditorWindow.GetWindow<CreateModuleMenu>("Create Module");
             window.minSize = new Vector2(820, 800);
         }
 
-        [MenuItem("Tools/FlowIoC/Delete Module", false, -1300)]
+        [MenuItem("Tools/FlowIoC/Edit Module/Delete Module", false, -1300)]
         private static void DeleteModule()
         {
             var window = EditorWindow.GetWindow<DeleteModuleMenu>("Delete Module");
             window.minSize = new Vector2(500, 400);
         }
 
-        [MenuItem("Tools/FlowIoC/Create View", false, -1298)]
+        [MenuItem("Tools/FlowIoC/Edit Module/Create View", false, -1287)]
         private static void CreateViewV2()
         {
             var window = EditorWindow.GetWindow<CreateViewMenu>("Create View");
             window.minSize = GENERATOR_WINDOW_SIZE;
         }
 
-        [MenuItem("Tools/FlowIoC/Create Model", false, -1297)]
+        [MenuItem("Tools/FlowIoC/Edit Module/Create Model", false, -1286)]
         private static void CreateModelV2()
         {
             var window = EditorWindow.GetWindow<CreateModelMenu>("Create Model");
             window.minSize = GENERATOR_WINDOW_SIZE;
         }
 
-        [MenuItem("Tools/FlowIoC/Create Command", false, -1296)]
+        [MenuItem("Tools/FlowIoC/Edit Module/Create Command", false, -1285)]
         private static void CreateCommandV2()
         {
             var window = EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
             window.minSize = GENERATOR_WINDOW_SIZE;
         }
 
-        [MenuItem("Tools/FlowIoC/Create Function", false, -1295)]
+        [MenuItem("Tools/FlowIoC/Edit Module/Create Function", false, -1284)]
         private static void CreateFunction()
         {
             var window = EditorWindow.GetWindow<CreateFunctionMenu>("Create Function");

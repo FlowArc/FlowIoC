@@ -22,7 +22,7 @@ asset delivery, play asset delivery, PAD, background assets, asset pack, fast fo
    Connect; the player build adds the extension and keys itself. iOS 26 on the device.
 7. An on-demand pack in a flow: `.ToSequence<IAssetDeliveryService.Commands.Ensure>("Pack")`.
 
-The detail, with images, is the Help page: Tools > FlowIoC > Help > Modules > Asset Delivery
+The detail, with images, is the Help page: Tools > FlowIoC > Module Library > Asset Delivery
 (`Editor/Help/Pages/Modules/AssetDeliveryModulePage.cs`); `Tools/FlowIoC-Modules/Asset Delivery/Panel`
 shows what the next build sends. The device check lives in
 `Assets/Modules/DeviceCheckModule/zSubModules/AssetDeliveryCheckModule` (host only).

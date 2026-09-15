@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.Pencil;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Rename Module.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Edit Module > Rename Module.";
 
         protected override string BodyTagline =>
             "A module's name reaches its assemblies, its namespaces, its settings files, its log channel, "

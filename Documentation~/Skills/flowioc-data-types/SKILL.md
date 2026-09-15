@@ -132,7 +132,7 @@ Command reads it.
 
 The module's own two slots - Scriptable Map and Mono Map - are read by its Model off the adapter
 in `PostConstruct`, and a Command asks the Model; a Command never reaches for the adapter.
-*Tools ▸ FlowIoC ▸ Help ▸ Data Types ▸ Root Adapter* shows all four slots with the Model and the
+*Tools ▸ FlowIoC ▸ Wiki ▸ Data Types ▸ Root Adapter* shows all four slots with the Model and the
 Command that read each.
 
 ## Common Mistakes

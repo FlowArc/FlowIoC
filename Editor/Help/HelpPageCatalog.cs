@@ -15,7 +15,8 @@ namespace FlowIoC.Editor.Help
     /// Wiki is where the reference lives, so the architecture topics and the Editor's own tools
     /// fold out inside it rather than competing with it at the top level.
     ///
-    /// Adding a topic is one class and one line here. Adding a module is a page under Modules.
+    /// Adding a topic is one class and one line here. Adding a module is a page under Module
+    /// Library.
     /// </summary>
     internal class HelpPageCatalog
     {
@@ -39,22 +40,24 @@ namespace FlowIoC.Editor.Help
                         new ViewMediatorPage(),
                         new ConnectorsPage()),
                     new HelpSection("Editor Tools", FlowIcon.Wrench,
+                        // In the order the Tools/FlowIoC menu lists the panels, so a reader who
+                        // found one there finds its page at the same place here.
                         new HelpSection("Code Generators", FlowIcon.Wand,
                             new CreateModulePage(),
+                            new DeleteModulePage(),
+                            new RenameModulePage(),
+                            new CreateViewPage(),
+                            new CreateModelPage(),
                             new CreateCommandPage(),
                             new CreateFunctionPage(),
-                            new CreateModelPage(),
-                            new CreateViewPage(),
-                            new AddSharedOrSignalsPage(),
-                            new DeleteModulePage(),
-                            new RenameModulePage()),
+                            new AddSharedOrSignalsPage()),
                         new HelpSection(new ScreenScannerPage()),
                         new HelpSection(new ModuleScannerPage()),
                         new HelpSection(new AgentScannerPage()),
                         new HelpSection(new FlowConsolePage()),
                         new HelpSection(new ModelViewerPage()),
                         new HelpSection(new FolderPainterPage()))),
-                new HelpSection("Modules", FlowIcon.Puzzle, ModuleSections())
+                new HelpSection("Module Library", FlowIcon.Puzzle, ModuleSections())
             };
 
             var pages = new List<IHelpPage>();
@@ -94,7 +97,7 @@ namespace FlowIoC.Editor.Help
 
         /// <summary>
         /// Where the window opens when a reader asks for one of the top level sections by name -
-        /// the Tools/FlowIoC/Help menu has an entry per section and each has to land somewhere.
+        /// the Tools/FlowIoC menu has an entry per section and each has to land somewhere.
         /// A category answers with the first topic inside it, however deep that topic sits; a
         /// section that is a topic answers with itself.
         ///

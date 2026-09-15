@@ -100,7 +100,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         private GUIStyle _mark;
         private GUIStyle _barTitle;
 
-        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1299)]
+        [MenuItem("Tools/FlowIoC/Edit Module/" + TITLE, false, -1299)]
         private static void Open()
         {
             var window = GetWindow<RenameModuleMenu>(TITLE);

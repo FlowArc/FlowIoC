@@ -37,6 +37,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The Help window's three entries sit directly under `Tools > FlowIoC`.** `Welcome`, `Wiki` and
+  `Module Library` - the third renamed from `Modules`, on the menu and on the sidebar - where a
+  `Help` submenu used to fold them away and the module library was the entry nobody found. Each
+  still opens the window on its section, and `Module Library` is also the first entry of
+  `Tools > FlowIoC-Modules`, above a line and the panels the installed modules add there. Inside the window the sidebar is brighter at the top and
+  each level under a category is a wider step darker than before: the deepest rows had reached the
+  page's own grey, and now the range has room. A heading inside a page sits on a band of the
+  window's violet, the tint the sidebar gives a featured topic, where bold alone left it in the
+  paragraph's grey; and a row or a tab under the pointer lights up violet rather than grey, the
+  colour the selection it promises will be. The Code Generators pages sit in the order the
+  `Tools > FlowIoC` menu lists the panels.
+- **The generators are two entries on the `Tools > FlowIoC` menu.** `Create New Module`, and
+  `Edit Module` folding everything done to a module that exists: `Delete Module` and `Rename
+  Module`, then `Create View`, `Create Model`, `Create Command` and `Create Function`, then `Add
+  Shared or Signals`, a separator between each three. The panels keep their names - only the
+  menu paths moved, and every page and document that spelt one out now spells the new one.
 - **A ready-made module may reference the setup set's Loading module for its Service.** The
   delivery module's boot step injects `ILoadingService` to draw the bar itself rather than handing
   the game a Command to paste; `Modules.AssetDelivery` references `Modules.Loading` the way

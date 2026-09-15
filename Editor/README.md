@@ -7,11 +7,11 @@ The tools keep those conventions correct so you do not have to.
 
 | Menu | Use it to |
 |---|---|
-| `Tools/FlowIoC/Create Module` | Scaffold a whole module — folders, assembly definition, Root and Context |
-| `Tools/FlowIoC/Create Command` | Add a command in the right folder and namespace |
-| `Tools/FlowIoC/Create Model` | Add an `IXModel` / `XModel` pair |
-| `Tools/FlowIoC/Create View` | Add a View, its Mediator and its prefab |
-| `Tools/FlowIoC/Delete Module` | Remove a module and its registrations |
+| `Tools/FlowIoC/Create New Module` | Scaffold a whole module — folders, assembly definition, Root and Context |
+| `Tools/FlowIoC/Edit Module/Create Command` | Add a command in the right folder and namespace |
+| `Tools/FlowIoC/Edit Module/Create Model` | Add an `IXModel` / `XModel` pair |
+| `Tools/FlowIoC/Edit Module/Create View` | Add a View, its Mediator and its prefab |
+| `Tools/FlowIoC/Edit Module/Delete Module` | Remove a module and its registrations |
 | `Tools/FlowIoC/Flow Console` | Watch signals, commands and contexts at runtime |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state while playing |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |

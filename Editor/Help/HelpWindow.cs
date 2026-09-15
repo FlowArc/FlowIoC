@@ -91,19 +91,26 @@ namespace FlowIoC.Editor.Help
         private const float SidebarIndent = 12f;
 
         /// <summary>
-        /// One menu entry per top level section, so a reader picks what they are here for before
-        /// the window is even up. There is deliberately no plain Help entry: Unity draws a
-        /// submenu or an item at a path, never both, and three named ways in beat one that always
-        /// lands on the introduction.
+        /// One menu entry per top level section, directly under Tools/FlowIoC, so a reader picks
+        /// what they are here for before the window is even up. There is deliberately no Help
+        /// entry above them: folded under one, the module library was the entry nobody found,
+        /// and three named ways in beat one that always lands on the introduction.
         /// </summary>
-        [MenuItem("Tools/FlowIoC/Help/Welcome", false, -1100)]
+        [MenuItem("Tools/FlowIoC/Welcome", false, -1100)]
         private static void OpenWelcome() => Open("Welcome");
 
-        [MenuItem("Tools/FlowIoC/Help/Wiki", false, -1099)]
+        [MenuItem("Tools/FlowIoC/Wiki", false, -1099)]
         private static void OpenWiki() => Open("Wiki");
 
-        [MenuItem("Tools/FlowIoC/Help/Modules", false, -1098)]
-        private static void OpenModules() => Open("Modules");
+        /// <summary>
+        /// The library is also the first entry of Tools/FlowIoC-Modules, above a line and the
+        /// panels the installed modules add there: the menu that lists what a module brought is
+        /// where somebody looks for the next one. Its priority sits a gap above the panels', which
+        /// is what draws the line, and with no module installed the menu holds the library alone.
+        /// </summary>
+        [MenuItem("Tools/FlowIoC/Module Library", false, -1098)]
+        [MenuItem("Tools/FlowIoC-Modules/Module Library", false, -1100)]
+        private static void OpenModuleLibrary() => Open("Module Library");
 
         internal static void Open() => Open(null);
 

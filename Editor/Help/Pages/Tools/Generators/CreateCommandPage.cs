@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.Bolt;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Create Command.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Edit Module > Create Command.";
 
         protected override string BodyTagline =>
             "One file in the module's Controllers folder, with the right namespace - and the two "

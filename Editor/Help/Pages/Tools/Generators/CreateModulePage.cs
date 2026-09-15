@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.Plus;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Create Module.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Create New Module.";
 
         protected override string BodyTagline =>
             "The folder tree, the assembly definition, the namespace settings, the Root and Context "

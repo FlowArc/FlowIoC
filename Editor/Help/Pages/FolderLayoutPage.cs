@@ -60,7 +60,7 @@ namespace FlowIoC.Editor.Help.Pages
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Paragraph(
-                "Do not create the folders by hand. Tools > FlowIoC > Create Module writes them, and "
+                "Do not create the folders by hand. Tools > FlowIoC > Create New Module writes them, and "
                 + "both the code generators and the namespace tools depend on the exact shape it produces.");
 
             painter.Space();

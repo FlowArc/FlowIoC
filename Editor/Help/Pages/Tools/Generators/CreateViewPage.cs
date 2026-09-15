@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.Window;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Create View.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Edit Module > Create View.";
 
         protected override string BodyTagline =>
             "A View and the Mediator that drives it, written into the module's ViewsMediators "

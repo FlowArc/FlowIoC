@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.ArrowReturn;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Create Function.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Edit Module > Create Function.";
 
         protected override string BodyTagline =>
             "One file in the same Controllers folder the Commands are in, deriving from the shipped "

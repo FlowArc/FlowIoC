@@ -23,7 +23,7 @@ refuses the resulting duplicate assembly name — see Pitfalls, below.
 
 ## Create Module
 
-**Tools ▸ FlowIoC ▸ Create Module**
+**Tools ▸ FlowIoC ▸ Create New Module**
 
 Name the module, pick a type, and choose which optional folders you want.
 
@@ -69,7 +69,7 @@ Naming a Screen module: give it the screen's name (`Settings`, `DailyReward`), n
 
 ## Create View
 
-**Tools ▸ FlowIoC ▸ Create View**
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create View**
 
 Pick the module and sub-module, name the view, and the generator writes the `View` class
 and the `Mediator` class, with the actions you listed already on both.
@@ -98,7 +98,7 @@ public override void MediationBindings()
 
 ## Create Command
 
-**Tools ▸ FlowIoC ▸ Create Command**
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create Command**
 
 Writes a command into the module's `Controllers` folder with the right namespace. Tick
 `Bind` and name the signal holder and the signal, and it writes the binding into the
@@ -119,7 +119,7 @@ Name commands after what they do to the world — `GrantItemCommand`,
 
 ## Create Function
 
-**Tools ▸ FlowIoC ▸ Create Function**
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create Function**
 
 Writes a function into the same `Controllers` folder the Commands are in. A Command and a
 Function are both controllers — neither holds state, and both do the module's work — so the
@@ -148,7 +148,7 @@ object instead, which is what the fifth parameter was going to be anyway.
 
 ## Create Model
 
-**Tools ▸ FlowIoC ▸ Create Model**
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Create Model**
 
 Writes the `IXModel` / `XModel` pair into the module's `Models` folder and binds it in
 the module's Context, through the module's own binder:
@@ -203,7 +203,7 @@ folder, or a Root whose sub-context list has gone empty after a move.
 
 ## Delete Module
 
-**Tools ▸ FlowIoC ▸ Delete Module**
+**Tools ▸ FlowIoC ▸ Edit Module ▸ Delete Module**
 
 Removes the folder, its assembly definition and its module metadata together.
 
@@ -223,7 +223,7 @@ when the project compiles.
 ### Generate, do not copy
 
 ```
-✅ Tools ▸ FlowIoC ▸ Create Module → "Inventory", type Main.
+✅ Tools ▸ FlowIoC ▸ Create New Module → "Inventory", type Main.
    Correct namespace, correct asmdef name, registered as its own module.
 ```
 

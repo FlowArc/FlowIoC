@@ -198,7 +198,7 @@ bound to a `Signal<int>` reports `Execute signature mismatch` and does not run.
 
 ### Where code goes
 
-Do not create module folders by hand. Use `Tools/FlowIoC/Create Module`; the code
+Do not create module folders by hand. Use `Tools/FlowIoC/Create New Module`; the code
 generators and the namespace tools both depend on the exact shape it produces:
 
 ```
@@ -235,7 +235,7 @@ Modules/
             PlayerSignals            # the module's public surface
 ```
 
-Do not rename a module in the Project window either. `Tools/FlowIoC/Rename Module` carries the name
+Do not rename a module in the Project window either. `Tools/FlowIoC/Edit Module/Rename Module` carries the name
 to everything it reaches - the assemblies and their references, the namespaces, the settings files,
 the log channel, the Root, Context and signal holders named after it, and the Roots in scenes that
 list its contexts - and a folder renamed by hand leaves every one of those pointing at the old name.
@@ -271,7 +271,7 @@ all, both leave the tick off and never have a `Scripts/Signals/`. No tool asks a
 is not there and nothing puts it back. Where the folder is there, the assembly, the namespace
 settings and the references that follow from it are checked like everything else.
 
-For a module that already exists, use `Tools/FlowIoC/Add Shared or Signals` rather than making the
+For a module that already exists, use `Tools/FlowIoC/Edit Module/Add Shared or Signals` rather than making the
 folders by hand.
 
 ### Data types
@@ -522,7 +522,7 @@ and the reasons this block leaves out. Read the one that covers the work in fron
 | Where a Root sits, its Initialize Order, making it persistent, what its context takes back | `flowioc-root-order` |
 | Naming a ScriptableObject or a value object, and which prefix it takes | `flowioc-data-types` |
 
-The editor tooling explains itself in **Tools ▸ FlowIoC ▸ Help**: what each panel decides on your
+The editor tooling explains itself in **Tools ▸ FlowIoC ▸ Wiki ▸ Editor Tools**: what each panel decides on your
 behalf, and the setup steps that fail silently when skipped.
 
 ### Deeper documentation

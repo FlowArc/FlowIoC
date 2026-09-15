@@ -45,7 +45,7 @@ namespace FlowIoC.Tests
         {
             List<string> titles = _catalog.Sections.Select(section => section.Title).ToList();
 
-            CollectionAssert.AreEqual(new[] {"Welcome", "Wiki", "Modules"}, titles);
+            CollectionAssert.AreEqual(new[] {"Welcome", "Wiki", "Module Library"}, titles);
 
             Assert.IsFalse(_catalog.Sections[0].IsCategory);
             Assert.IsTrue(_catalog.Sections[1].IsCategory);
@@ -104,20 +104,22 @@ namespace FlowIoC.Tests
         /// <summary>
         /// The eight generator panels sit in a category of their own inside Editor Tools. They are
         /// one tool at eight scales, and listed flat they would bury the six scanners beside them.
+        /// They sit in the order the Tools/FlowIoC menu lists them, so a reader who found a panel
+        /// in the menu finds its page at the same place in the list.
         /// </summary>
         [Test]
-        public void The_code_generators_category_covers_every_generator_panel()
+        public void The_code_generators_category_covers_every_generator_panel_in_menu_order()
         {
             CollectionAssert.AreEqual(new[]
             {
                 "Create Module",
+                "Delete Module",
+                "Rename Module",
+                "Create View",
+                "Create Model",
                 "Create Command",
                 "Create Function",
-                "Create Model",
-                "Create View",
-                "Add Shared or Signals",
-                "Delete Module",
-                "Rename Module"
+                "Add Shared or Signals"
             }, ChildTitles("Code Generators"));
         }
 
@@ -130,12 +132,16 @@ namespace FlowIoC.Tests
         [Test]
         public void The_modules_category_lists_the_modules_that_ship()
         {
-            List<string> titles = ChildTitles("Modules");
+            List<string> titles = ChildTitles("Module Library");
 
             CollectionAssert.AreEqual(new[] {"Setup Modules", "FlowModules"}, titles.Take(2).ToList());
 
             CollectionAssert.AreEqual(
-                new[] {"A/B Test", "Camera", "Counter", "Haptic", "Local Save", "World Pointer"},
+                new[]
+                {
+                    "A/B Test", "Asset Delivery", "Camera", "Counter", "Haptic", "Local Save",
+                    "World Pointer"
+                },
                 ChildTitles("FlowModules"));
         }
 
@@ -190,7 +196,7 @@ namespace FlowIoC.Tests
         }
 
         /// <summary>
-        /// The Tools/FlowIoC/Help menu has an entry per top level section, and each opens the
+        /// The Tools/FlowIoC menu has an entry per top level section, and each opens the
         /// window somewhere a reader can start from. A category opens on the first topic inside
         /// it, however deep that topic sits.
         /// </summary>
@@ -198,7 +204,7 @@ namespace FlowIoC.Tests
         public void A_category_starts_at_the_first_topic_inside_it()
         {
             Assert.AreEqual("Creating a Module", _catalog.FirstPageOf("Wiki")?.Title);
-            Assert.AreEqual("Setup Modules", _catalog.FirstPageOf("Modules")?.Title);
+            Assert.AreEqual("Setup Modules", _catalog.FirstPageOf("Module Library")?.Title);
         }
 
         [Test]

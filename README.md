@@ -479,7 +479,7 @@ We will build a small `PlayerModule` that holds currency and reacts to a signal.
 
 ### 1. Generate the module
 
-> **Tools ▸ FlowIoC ▸ Create Module**
+> **Tools ▸ FlowIoC ▸ Create New Module**
 
 The generator lays out the folder structure, writes the assembly definition, and
 creates the `Root` / `Context` pair. The rest of this section shows what goes
@@ -904,7 +904,7 @@ A View is the `MonoBehaviour` in the scene; it holds references and raises
 callbacks, and contains no logic. A Mediator is a plain injected class that drives
 it.
 
-> **Tools ▸ FlowIoC ▸ Create View** generates both and places them in the right
+> **Tools ▸ FlowIoC ▸ Edit Module ▸ Create View** generates both and places them in the right
 > module folder.
 
 ```csharp
@@ -1128,7 +1128,7 @@ directly instead of being dispatched.
 A Function's file lives in the module's `Controllers` folder, beside the Commands: a Command is a
 step somebody reads in a sequence and a Function is what a Command calls from inside one, but
 neither holds state and both do the module's work, so they are one kind of thing in one folder.
-*Tools ▸ FlowIoC ▸ Create Function* writes it there for you.
+*Tools ▸ FlowIoC ▸ Edit Module ▸ Create Function* writes it there for you.
 
 Every Function derives from one of the arities below, never from `FunctionBody` itself —
 `FunctionBody`'s constructor is internal, so this is the compiler's rule rather than a convention.
@@ -1297,7 +1297,7 @@ you do not want.
 | **LocalSaveModule** | `ILocalSaveService` | The ScriptableObjects filed on `LocalSaveRoot`'s adapter written to a file of the module's own - `SaveFile.flowsave` under `Application.persistentDataPath`, one JSON object with a member per asset - and read back in the module's `PostConstruct`, before any other module wakes up. A game binds `ILocalSaveService.Commands.Save` as the step after the one that changed the data, with the asset's name given at the binding - `.ToSequence<ILocalSaveService.Commands.Save>(nameof(PD_Profile))` - and `.SaveAll` where a session ends; the module saves everything on pause and on quit by itself. Newtonsoft does the serializing, narrowed to what Unity would save, so Dictionary members and `[SerializeReference]` fields survive. A password on the adapter encrypts the file with AES; empty, the file is one a developer reads. In the Editor the assets are put back when play mode ends, so a session leaves no diff. |
 | **AssetDeliveryModule** | `IAssetDeliveryService` | Store-delivered content on the device before the boot needs it: Play Asset Delivery on Android, Apple-hosted managed Background Assets on iOS (iOS 26). One setting per Addressables group - Unity's own Play Asset Delivery schema, Install Time / Fast Follow / On Demand - read by both platforms. `IAssetDeliveryService.Commands.EnsurePromised`, bound after `Begin` in the boot, asks the store for every pack it promised and draws what is still missing on the `Content` step of the loading bar; `.Ensure("Chapter2")` holds a flow until an on-demand pack is there. The Addressables build writes the packs' manifest beside the catalog and, for iOS, folds each pack out of the app with its `Manifest.json`; the player build adds the Xcode downloader extension and the Background Assets keys. Requires `com.unity.addressables.android`. The iOS half is unverified on a device. |
 
-Install one from **Tools > FlowIoC > Help > Modules**: pick the module and press **Install** on its
+Install one from **Tools > FlowIoC > Module Library**: pick the module and press **Install** on its
 page. Copying the files is only part of it — the installer also registers the module in the module
 index, gives it its `FlowModule` channel, and writes the `.csproj.DotSettings` its namespaces
 need, which is exactly what copying the folder by hand would miss.
@@ -1310,7 +1310,7 @@ The payload lives in `Modules~/` inside the package. Unity does not import a fol
 in a tilde, so the modules carry their own asmdefs without compiling until they are installed.
 
 A package of your own can ship modules the same way: a `Modules~/` folder beside a page that
-derives from `ModulePage` for each module in it, and the Help window lists them under **Modules** in
+derives from `ModulePage` for each module in it, and the Help window lists them under **Module Library** in
 a category named after the package - or after the title an `[assembly: ModuleGroup("...")]` gives
 it, which is how FlowIoC's own appear under **FlowModules**. Nothing in FlowIoC names the package:
 the page is found through `TypeCache`, and the folder is read from the package the page compiles
@@ -1333,20 +1333,22 @@ ships beside it, so the GUIDs resolve in your project exactly as they do in ours
 
 | Menu | Purpose |
 |---|---|
-| `Tools/FlowIoC/Create Module` | Scaffold a module: folders, assembly definition, Root and Context |
-| `Tools/FlowIoC/Create Command` | Generate a command |
-| `Tools/FlowIoC/Create Model` | Generate an `IXModel` / `XModel` pair |
-| `Tools/FlowIoC/Create View` | Generate a View, a Mediator, and the prefab |
-| `Tools/FlowIoC/Add Shared or Signals` | Give an existing module a `Scripts/Shared` assembly and wire the references to it, or the public signal holder it was created without |
-| `Tools/FlowIoC/Delete Module` | Remove a module and its references |
-| `Tools/FlowIoC/Rename Module` | Rename a module and carry the name to its assemblies, namespaces, settings files, channel, generated classes, screen prefab and the Roots that list its contexts |
+| `Tools/FlowIoC/Create New Module` | Scaffold a module: folders, assembly definition, Root and Context |
+| `Tools/FlowIoC/Edit Module/Create Command` | Generate a command |
+| `Tools/FlowIoC/Edit Module/Create Model` | Generate an `IXModel` / `XModel` pair |
+| `Tools/FlowIoC/Edit Module/Create View` | Generate a View, a Mediator, and the prefab |
+| `Tools/FlowIoC/Edit Module/Add Shared or Signals` | Give an existing module a `Scripts/Shared` assembly and wire the references to it, or the public signal holder it was created without |
+| `Tools/FlowIoC/Edit Module/Delete Module` | Remove a module and its references |
+| `Tools/FlowIoC/Edit Module/Rename Module` | Rename a module and carry the name to its assemblies, namespaces, settings files, channel, generated classes, screen prefab and the Roots that list its contexts |
 | `Tools/FlowIoC/Flow Console` | The filterable runtime log window |
 | `Tools/FlowIoC/Model Viewer` | Inspect live model state at runtime |
 | `Tools/FlowIoC/Folder Painter` | Colour Project window folders by path or by folder |
 | `Tools/FlowIoC/Screen Scanner` | Every screen context on a Root in the open scenes, with its manager, layer, tag and animation flags editable in place |
 | `Tools/FlowIoC/Module Scanner` | Report every module's folders, assemblies, references and namespace settings, and repair what is safe to repair - including a `.csproj` left on a package folder the Package Manager has swept, which the IDE reads while Unity compiles from the new one |
 | `Tools/FlowIoC/Agent Scanner` | Report the rule block in `AGENTS.md` and the skills under `.claude/skills`, and write whatever is missing or out of date |
-| `Tools/FlowIoC/Help` | An introduction to the architecture, one topic at a time, inside the Editor. Its Welcome page has a **What's New** tab, read out of the package's `CHANGELOG.md`, and the window opens itself there once after FlowIoC has been updated |
+| `Tools/FlowIoC/Welcome` | The Help window on its introduction. The page has a **What's New** tab, read out of the package's `CHANGELOG.md`, and the window opens itself there once after FlowIoC has been updated |
+| `Tools/FlowIoC/Wiki` | The Help window on the reference: the architecture one topic at a time, and a page per editor tool |
+| `Tools/FlowIoC/Module Library` | The Help window on the modules that ship with FlowIoC, each with an **Install** button on its page. Also the first entry of `Tools/FlowIoC-Modules`, above the panels the installed modules add there |
 
 `Module Scanner` also writes `<Solution>.sln.DotSettings`, the ReSharper and Rider
 code style FlowIoC ships: naming rules, the `_` prefix on private members, the `VO` suffix
@@ -1594,7 +1596,7 @@ Scene components go the same way. The adapter's **Mono Map** holds the MonoBehav
 module drives — a spawner, a marker, a rig under its Root — read by its Model with
 `GetMonoBehaviour<T>()`; the **Shared Mono Map** holds the ones other modules read, through
 `ISharedDataModel.GetMonoBehaviour<T>()`: a Canvas every module parents its overlays to, the
-one Camera a pointer projects through. *Tools ▸ FlowIoC ▸ Help ▸ Data Types* has a **Root
+one Camera a pointer projects through. *Tools ▸ FlowIoC ▸ Wiki ▸ Data Types* has a **Root
 Adapter** tab that walks through the four slots with the Model and the Command that read each.
 
 Namespaces follow the folder, as they already do for a module: a value object under
@@ -1690,7 +1692,7 @@ An entry with no script says which of two things it is. Where the context still 
 *Resolve* links it in one press. Where nothing compiles to the name, the module is gone and
 the entry is a decision rather than a repair.
 
-`Tools/FlowIoC/Delete Module` takes the module's sub-contexts out of the Roots that list them,
+`Tools/FlowIoC/Edit Module/Delete Module` takes the module's sub-contexts out of the Roots that list them,
 and asks first. Three answers: remove them from every Root, go through them one at a time, or
 remove none, see where they are and keep the module. The question comes **before** anything is
 deleted, so cancelling leaves the module whole.
@@ -1702,7 +1704,7 @@ entry removed, skipped or left is named on the console with its Root and its ass
 
 ### Renaming a module
 
-`Tools/FlowIoC/Rename Module` renames a module the way the tools built it. Pick the module in the
+`Tools/FlowIoC/Edit Module/Rename Module` renames a module the way the tools built it. Pick the module in the
 tree, type the new name without its suffix, and read the preview: the folder, the assemblies and
 every asmdef that references them, the namespaces, the `.csproj.DotSettings` files, the Flow Console
 channel, the Root, Context and signal holders Create Module named after the module, a screen's

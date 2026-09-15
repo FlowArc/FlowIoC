@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.Layers;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Add Shared or Signals.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Edit Module > Add Shared or Signals.";
 
         protected override string BodyTagline =>
             "Both are ticks in Create Module, so a module is offered them once - and the need "

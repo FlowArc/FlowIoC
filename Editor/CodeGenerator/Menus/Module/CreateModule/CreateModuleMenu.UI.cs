@@ -440,8 +440,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// It starts unticked. A module that publishes no data does not need the assembly, and it
         /// no longer holds the module's public surface either - the signal holder moved to
         /// Scripts/Signals, which every module gets. Shared is paid for on the day a module
-        /// actually publishes something, and Tools > FlowIoC > Add Shared or Signals gives it to a
-        /// module that already exists.
+        /// actually publishes something, and Tools > FlowIoC > Edit Module > Add Shared or Signals
+        /// gives it to a module that already exists.
         /// </summary>
         private void CreateSharedToggle() =>
             OptionalFolderToggle(FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL, withheldFrom: null);

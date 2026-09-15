@@ -112,7 +112,22 @@ namespace FlowIoC.Editor.Help
             GUI.backgroundColor = previous;
         }
 
-        public void SubHeading(string text) => EditorGUILayout.LabelField(text, _theme.SubHeading);
+        /// <summary>
+        /// A heading inside the page, on a band of the window's violet. Bold alone did not part a
+        /// heading from the paragraph under it, so the heading takes the tint the sidebar gives a
+        /// featured topic. The band reaches a little past the text on both sides, and the text
+        /// itself stays where a paragraph starts.
+        /// </summary>
+        public void SubHeading(string text)
+        {
+            Rect row = EditorGUILayout.GetControlRect(false, _theme.PageHeadingHeight, _theme.SubHeading);
+
+            var band = new Rect(row.x - _theme.PageHeadingInset, row.y,
+                row.width + _theme.PageHeadingInset * 2f, row.height);
+
+            EditorGUI.DrawRect(band, _theme.PageHeadingFill);
+            GUI.Label(row, text, _theme.SubHeading);
+        }
 
         public void Paragraph(string text) => EditorGUILayout.LabelField(text, _theme.Body);
 

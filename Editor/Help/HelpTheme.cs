@@ -112,11 +112,13 @@ namespace FlowIoC.Editor.Help
         /// menu reads as a panel of its own rather than as the left edge of the page - which is
         /// what a help box, drawn in the page's own grey, left it looking like.
         ///
-        /// Fourteen levels of grey above the page beside it, which is the distance Odin's own menu
-        /// keeps from the panel next to it: enough to be seen as a second surface and little enough
-        /// that the menu is still the quieter half of the window.
+        /// Twenty-six levels of grey above the page beside it. Odin's own menu keeps fourteen from
+        /// the panel next to it, and that was the distance here too, until the rows that fold open
+        /// under a category - each a step darker than the one above - ran out of room and the
+        /// deepest of them sat on the page's own grey. The top of the range went up so that the
+        /// steps under it stay steps.
         /// </summary>
-        public Color SidebarFill => _pro ? Hex(0x3F3F3F) : Hex(0xC9C9C9);
+        public Color SidebarFill => _pro ? Hex(0x4B4B4B) : Hex(0xD2D2D2);
 
         /// <summary>
         /// The line that closes the panel off from the page. Darker than anything inside the menu,
@@ -173,28 +175,33 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         public Color SidebarSeparator => _pro ? Hex(0x313131) : Hex(0xBBBBBB);
 
-        public Color SidebarSeparatorLight => _pro ? Hex(0x494949) : Hex(0xD3D3D3);
+        public Color SidebarSeparatorLight => _pro ? Hex(0x565656) : Hex(0xDCDCDC);
 
         /// <summary>
         /// What a row is filled with at the depth it sits. The panel's own colour at the top level,
         /// and a shade darker for every category above it, so a fold that opens reads as a step
-        /// down into the panel rather than as more rows of the same surface. It is deliberately
-        /// slight: two levels apart should be a difference you feel rather than one you look at.
+        /// down into the panel rather than as more rows of the same surface. The top level is the
+        /// brightest thing in the menu and the range runs down from there; it is the top that was
+        /// lifted to give the range its room, so the deepest row still sits about where it did.
         /// </summary>
         public Color SidebarRowFill(int depth) =>
             depth <= 0 ? SidebarFill : Color.Lerp(SidebarFill, Color.black, depth * DepthShade);
 
-        /// <summary>How much of a row's fill one level of depth takes away.</summary>
-        private float DepthShade => 0.12f;
+        /// <summary>
+        /// How much of a row's fill one level of depth takes away. The dark skin's share is the
+        /// larger one because its fill is the closer to black: the same share there moves fewer
+        /// levels of grey, and a step is meant to be seen rather than felt.
+        /// </summary>
+        private float DepthShade => _pro ? 0.15f : 0.12f;
 
         /// <summary>
         /// What a row lights up with under the pointer. Every row in the sidebar either goes
         /// somewhere or folds something open, so the highlight only ever promises what a click
-        /// will actually do.
+        /// will actually do. It is a wash of the window's own violet rather than a lift in grey:
+        /// the selection is violet, and the pointer promising a selection should speak the same
+        /// colour. Stronger than the tint a featured row wears, so the two do not read as one.
         /// </summary>
-        public Color SidebarRowHover => _pro
-            ? new Color(1f, 1f, 1f, 0.06f)
-            : new Color(0f, 0f, 0f, 0.06f);
+        public Color SidebarRowHover => Tint(_palette.ChromeDeep, 0.22f);
 
         /// <summary>
         /// The row the reader is on, filled edge to edge. FlowIoC's own violet, which is what the
@@ -216,6 +223,21 @@ namespace FlowIoC.Editor.Help
         /// the introduction is marked out without being read as where the reader already is.
         /// </summary>
         public Color SidebarRowFeatured => Tint(_palette.ChromeDeep, 0.12f);
+
+        /// <summary>
+        /// What a heading inside the page sits on. The tint a featured row wears in the sidebar,
+        /// so a heading is found on the page the way the introduction is found in the menu: bold
+        /// alone did not part it from the paragraph under it, because the page is all one grey.
+        /// </summary>
+        public Color PageHeadingFill => SidebarRowFeatured;
+
+        public float PageHeadingHeight => 24f;
+
+        /// <summary>
+        /// How far the band behind a heading reaches past the text on either side, so the band is
+        /// a mark of its own while the text stays in line with the paragraphs under it.
+        /// </summary>
+        public float PageHeadingInset => 8f;
 
         /// <summary>
         /// A colour laid over the panel thinly enough to read as a tint of it. The alpha is what
@@ -301,8 +323,13 @@ namespace FlowIoC.Editor.Help
             richText = true
         };
 
+        /// <summary>
+        /// A heading inside the page. Centred on its line because the painter draws it into a band
+        /// taller than the text, and the band is what the reader's eye lands on.
+        /// </summary>
         public GUIStyle SubHeading => _subHeading ??= new GUIStyle(EditorStyles.boldLabel)
         {
+            alignment = TextAnchor.MiddleLeft,
             fontSize = 12,
             margin = new RectOffset(0, 0, 8, 4)
         };

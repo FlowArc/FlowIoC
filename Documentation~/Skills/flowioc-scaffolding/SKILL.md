@@ -24,15 +24,15 @@ code generators and namespace tools depend on the exact shape they produce.
 
 | Menu item | What it does |
 |---|---|
-| `Tools/FlowIoC/Create Module` | A whole module: folders, asmdef, Root, Context, Signals, DotSettings, index entry, log channel |
-| `Tools/FlowIoC/Add Shared or Signals` | Adds the `Scripts/Shared/` assembly to a module that already exists and points its screen, sub and test modules at it, or writes the public signal holder a module was created without |
-| `Tools/FlowIoC/Create Command` | One Command, in `Controllers/`, in the module's namespace |
-| `Tools/FlowIoC/Create Function` | One Function, in `Controllers/` beside the Commands, on the arity its parameters and return type imply |
-| `Tools/FlowIoC/Create Model` | An interface and an implementation, in `Models/` |
-| `Tools/FlowIoC/Create View` | A View and its Mediator, in `ViewsMediators/` |
+| `Tools/FlowIoC/Create New Module` | A whole module: folders, asmdef, Root, Context, Signals, DotSettings, index entry, log channel |
+| `Tools/FlowIoC/Edit Module/Add Shared or Signals` | Adds the `Scripts/Shared/` assembly to a module that already exists and points its screen, sub and test modules at it, or writes the public signal holder a module was created without |
+| `Tools/FlowIoC/Edit Module/Create Command` | One Command, in `Controllers/`, in the module's namespace |
+| `Tools/FlowIoC/Edit Module/Create Function` | One Function, in `Controllers/` beside the Commands, on the arity its parameters and return type imply |
+| `Tools/FlowIoC/Edit Module/Create Model` | An interface and an implementation, in `Models/` |
+| `Tools/FlowIoC/Edit Module/Create View` | A View and its Mediator, in `ViewsMediators/` |
 | `Tools/FlowIoC/Module Scanner` | Reports every module's folders, assemblies, references and namespace settings, and repairs what is safe to repair |
-| `Tools/FlowIoC/Delete Module` | Removes the folder, asmdef, DotSettings, csproj, index entry and log channel together |
-| `Tools/FlowIoC/Rename Module` | Renames a module and carries the name to its assemblies and their references, namespaces, DotSettings, log channel, the Root, Context and signal holders named after it, a screen's prefab and address, and the Roots that list its contexts. Never rename a module folder in the Project window |
+| `Tools/FlowIoC/Edit Module/Delete Module` | Removes the folder, asmdef, DotSettings, csproj, index entry and log channel together |
+| `Tools/FlowIoC/Edit Module/Rename Module` | Renames a module and carries the name to its assemblies and their references, namespaces, DotSettings, log channel, the Root, Context and signal holders named after it, a screen's prefab and address, and the Roots that list its contexts. Never rename a module folder in the Project window |
 
 ## Create Module: what to fill in
 
@@ -90,7 +90,7 @@ the folders that are missing, and untick **Create Root**, **Create Context** and
 Signals**. Existing files are left alone; the missing folders appear and the module index is
 refreshed so the other generators can find them.
 
-For `Shared` specifically, prefer `Tools/FlowIoC/Add Shared or Signals` - it also adds the reference
+For `Shared` specifically, prefer `Tools/FlowIoC/Edit Module/Add Shared or Signals` - it also adds the reference
 to every screen, sub and test module already under the module, and the same window writes a public
 signal holder for a module created without one.
 
@@ -133,7 +133,7 @@ its own commands. So it is a flat list. It is `internal` as well, so nothing out
 assembly can dispatch it, which is what the two folders are really buying: the compiler decides
 which signals are public rather than the reader's memory.
 
-*Tools ▸ FlowIoC ▸ Add Shared or Signals* writes the public holder for a module created without one.
+*Tools ▸ FlowIoC ▸ Edit Module ▸ Add Shared or Signals* writes the public holder for a module created without one.
 The internal holder is an ordinary file you add when the module first needs to talk to itself.
 
 ## Where the DotSettings go

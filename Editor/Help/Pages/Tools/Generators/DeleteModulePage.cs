@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.Trash;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Delete Module.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Edit Module > Delete Module.";
 
         protected override string BodyTagline =>
             "A module is more than its folder, so removing one is more than deleting it. The panel "

@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
 
         public override FlowIcon Icon => FlowIcon.Database;
 
-        protected override string BodyHeadline => "Tools > FlowIoC > Create Model.";
+        protected override string BodyHeadline => "Tools > FlowIoC > Edit Module > Create Model.";
 
         protected override string BodyTagline =>
             "The IPlayerModel interface and the PlayerModel behind it, in the module's Models "
