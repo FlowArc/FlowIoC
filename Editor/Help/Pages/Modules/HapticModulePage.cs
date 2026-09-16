@@ -17,7 +17,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string Subtitle => "Nine presets through the platforms' own haptics, and the player's on/off choice";
 
-        public override FlowIcon Icon => FlowIcon.Broadcast;
+        public override FlowIcon Icon => FlowIcon.Vibrate;
 
         public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {

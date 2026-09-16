@@ -52,7 +52,8 @@ namespace FlowIoC.Editor.Icons
         Window = 30,
         Windows = 31,
         Wrench = 32,
-        Chart = 33
+        Chart = 33,
+        Vibrate = 34
     }
 }
 
