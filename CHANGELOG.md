@@ -87,8 +87,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the next build sends. The module requires `com.unity.addressables.android`; the iOS half is
   written against Apple's reference and unverified on a device, and the Help page says which parts
   to check first.
+- **What's New says whether a newer release is out.** One line above the notes names the newest
+  release a registry has - asked of the registry the package was installed from, or of OpenUPM for
+  a Git, local or embedded install, at most once a day and only while the tab is drawn, never on
+  Editor start - and how this install is updated: the Package Manager offers an update for a
+  registry install and for nothing else, so a Git install is told to change the tag on its URL and
+  an embedded copy that the folder under `Packages/` wins over the manifest and is replaced or
+  removed by hand. On the latest release the line is quiet; a checkout ahead of it says so. It is a
+  line and not a button: taking an update is the developer's call, made in the Package Manager. The
+  answer lives in EditorPrefs, a failed ask counts as the day's, and a copy the Package Manager does
+  not resolve draws nothing.
 
 ### Changed
+
+- **A row's tag sits on its source line, and every module's lines carry its name.** `[Signal]`,
+  `[Command]`, `[Player]` are still written at the front of the message when the line is logged -
+  search, copy and the detail panel see them there - but the Flow Console draws them on the second
+  line, before the file and line, so the first line is the message alone; a one-line row keeps the
+  tag where it was written. A framework row carries its tag on a faint plate of the channel's colour
+  with the stripe down its edge, a module's row carries the tag bare with no stripe, which is what
+  tells `[Screen]` the framework wrote from `[Screen]` a module of that name wrote. Every module's
+  lines carry its name as a tag from the day it is made, in the module's colour; a `Profile:` line
+  on its card replaces the tag, `Profile: none` takes it away, and **Reset** in the style window
+  drops both lines. A framework error carries its tag as a warning does while the message that
+  reaches Unity's console stays as written. Unity's own channels keep their icon and no colour, and
+  Asset shares Pool's.
 
 - **An A/B test is a matrix, and one test runs at a time.** In `CD_AbTests` a group is a name and
   a list of assets: the first group is the control and its list names the game's own assets, the
