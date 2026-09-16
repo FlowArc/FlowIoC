@@ -232,9 +232,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "where the line came from. Log, Warn and Error toggle each kind and show its count; "
                 + "Filters folds out the channel switches, the game's modules first and the framework's "
                 + "after; the search matches the message or the channel; a tapped row opens its detail "
-                + "over the list, with the time, the source and the stack trace, and Back returns; Copy "
-                + "puts the whole ring on the clipboard, which is the one export a phone has. The "
-                + "panel's own traffic is logged too - a tap on an option reads as its dispatch under it.");
+                + "over the list, with the time, the source and the stack trace, its own Copy for that one "
+                + "row, and Back returns; the Copy beside Clear puts the rows on screen - through the same "
+                + "filters - on the clipboard, which is the one export a phone has. The panel's own "
+                + "traffic is logged too - a tap on an option reads as its dispatch under it.");
 
             painter.SubHeading("Options");
             painter.Paragraph(
