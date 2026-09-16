@@ -8,13 +8,14 @@ namespace FlowIoC.BaseModule.Attributes
     /// <c>Signal</c>, a toggle for a <c>Signal&lt;bool&gt;</c>, a number for an int, float or double,
     /// a text field for a string, a choice for an enum - and an <c>Outgoing</c> signal becomes a
     /// value row showing the last payload it carried. On a class deriving from <c>Command</c>: a
-    /// button that runs the step, with <see cref="Argument"/> as its bound parameter.
+    /// button that runs the step, with <see cref="Argument"/> as its bound parameter. A step may
+    /// carry the attribute more than once, one row per argument: Play Success, Play Failure.
     ///
     /// It lives in the package rather than in the debugger module so a holder compiles whether or
     /// not the debugger is installed, and so a ready-made module can annotate a step it ships
     /// without referencing anything.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = true)]
     public class DebugOptionAttribute : Attribute
     {
         /// <summary>The group the row sits in. Empty: the module the holder or the step belongs to.</summary>
