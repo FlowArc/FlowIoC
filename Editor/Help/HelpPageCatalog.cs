@@ -70,14 +70,24 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
-        /// The setup modules, then one category per package that ships modules: FlowModules
-        /// first, and after it whatever other packages the project has. A package's category is
-        /// found from the pages it declares rather than listed here, so a module page is one
-        /// class and no line in this file.
+        /// The setup set as a category - its overview first, then a page per module in the order
+        /// the set boots - then one category per package that ships modules: FlowModules first,
+        /// and after it whatever other packages the project has. A package's category is found
+        /// from the pages it declares rather than listed here, so a module page is one class and
+        /// no line in this file; the setup pages are FlowIoC's own and are listed for their order.
         /// </summary>
         private HelpSection[] ModuleSections()
         {
-            var sections = new List<HelpSection> {new HelpSection(new SetupModulesPage())};
+            var sections = new List<HelpSection>
+            {
+                new HelpSection("Setup Modules", FlowIcon.Grid,
+                    new SetupOverviewPage(),
+                    new ModulePageAdapter(new MainSetupPage()),
+                    new ModulePageAdapter(new LoadingSetupPage()),
+                    new ModulePageAdapter(new ScreenSetupPage()),
+                    new ModulePageAdapter(new GameplaySetupPage()),
+                    new ModulePageAdapter(new ConnectorSetupPage()))
+            };
 
             sections.AddRange(new PackageModuleSections().Categories());
 

@@ -1,181 +1,38 @@
 #if UNITY_EDITOR
 
-using System.Collections.Generic;
-using FlowIoC.Editor.ModuleInstall;
-using FlowIoC.Editor.SetupModules;
-using UnityEditor;
-using UnityEditor.PackageManager;
 using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
     /// <summary>
-    /// What arrived in a new project, and why. The set installs itself, so the reader meets these
-    /// nine modules before they ever open this window - the page is here to explain what they are
-    /// looking at, and to offer the set to a project that was skipped because it already had
-    /// modules of its own. A module of the set with more to say than a paragraph gets a tab
-    /// beside the introduction rather than a page of its own.
+    /// The loading module: what a set is, how a Command reports into one, the two fan-out points
+    /// of the shipped boot, and the three setup mistakes that show up as nothing on screen. The
+    /// one module of the setup set that carries a version: it is a service, and its improvements
+    /// reach a game through the Module Library like any other service's.
     /// </summary>
-    internal class SetupModulesPage : HelpPage
+    internal class LoadingSetupPage : ModulePage
     {
-        private const string InputSystemPackage = "com.unity.inputsystem";
-
-        private readonly SetupModulesStartup _setup = new SetupModulesStartup();
         private readonly HelpImages _images = new HelpImages();
-        private readonly HelpAction _install;
 
-        private bool _isInstalled;
-        private double _checkedAt = double.NegativeInfinity;
+        public override string Title => "Loading";
 
-        public SetupModulesPage() : base(null)
-        {
-            _install = new HelpAction(
-                () => IsInstalled() ? "Installed" : "Install",
-                () => !IsInstalled(),
-                Install);
-        }
+        public override string Subtitle => "Sets, steps and the bar that shows them";
 
-        public override string Title => "Setup Modules";
+        public override FlowIcon Icon => FlowIcon.Stopwatch;
 
-        public override string Subtitle => "What a new FlowIoC project starts with";
+        public override string ModuleFolderName => "LoadingModule";
 
-        public override FlowIcon Icon => FlowIcon.Grid;
+        public override bool InSetupSet => true;
 
-        public override HelpAction Action => _install;
+        public override string BodyHeadline => "It shows, waits and times. It loads nothing.";
 
-        /// <summary>
-        /// Whether the set is in the project, answered from a cache that goes stale after a second.
-        /// The underlying check walks every asmdef under Assets once per module of the set, and the
-        /// banner asks twice per repaint - often enough that doing the walk each time would cost
-        /// real frames. A second is far below noticing, and installing clears the cache outright.
-        /// </summary>
-        private bool IsInstalled()
-        {
-            if (EditorApplication.timeSinceStartup - _checkedAt < 1d)
-                return _isInstalled;
+        public override string BodyTagline =>
+            "The pool service fills its groups, the screen service preloads its screens, a game "
+            + "module fetches its data - and the Command doing each of those reports its step to "
+            + "ILoadingService. The service draws the bar, ends the set when every step it lists "
+            + "has ended, and says so when a set goes quiet.";
 
-            _isInstalled = _setup.IsInstalled();
-            _checkedAt = EditorApplication.timeSinceStartup;
-
-            return _isInstalled;
-        }
-
-        /// <summary>
-        /// The package is offered before the copy rather than demanded instead of it. Nothing in
-        /// the set references the Input System from C# - the dependency is the input module
-        /// component on the EventSystem authored in MainScene - so a project without the package
-        /// still compiles, and the only thing missing is the script on that component. Order does
-        /// not matter either way, so asking first keeps the question away from the reimport the
-        /// copy sets off.
-        /// </summary>
-        private void Install()
-        {
-            // Whatever happened, what the cache holds is now a guess about a project that has
-            // changed underneath it.
-            _checkedAt = double.NegativeInfinity;
-
-            OfferInputSystem();
-
-            _setup.InstallNow();
-        }
-
-        private void OfferInputSystem()
-        {
-            IReadOnlyList<string> missing = new MissingPackages()
-                .In(new InstalledPackages().Ids(), new[] {InputSystemPackage});
-
-            if (missing.Count == 0)
-                return;
-
-            bool add = EditorUtility.DisplayDialog(
-                "Setup Modules",
-                $"MainScene carries an EventSystem that reads through {InputSystemPackage}, which "
-                + "this project does not have. Without it the buttons in MainScene answer nothing."
-                + "\n\nAdding it writes to Packages/manifest.json and reimports the project.",
-                "Add it",
-                "Not now");
-
-            if (add)
-                Client.Add(InputSystemPackage);
-        }
-
-        protected override string BodyHeadline => "A new project starts on a flow that already runs.";
-
-        protected override string BodyTagline =>
-            "A project with no modules of its own gets these nine the first time the Editor opens on "
-            + "it. There is no button to press and no dialog to answer, so the wiring is something "
-            + "to read rather than something to be told.";
-
-        protected override IReadOnlyList<HelpTab> MoreTabs => new[]
-        {
-            new HelpTab("Loading", DrawLoading,
-                "It shows, waits and times. It loads nothing.",
-                "The pool service fills its groups, the screen service preloads its screens, a game "
-                + "module fetches its data - and the Command doing each of those reports its step to "
-                + "ILoadingService. The service draws the bar, ends the set when every step it lists "
-                + "has ended, and says so when a set goes quiet.")
-        };
-
-        protected override void DrawBody(HelpPainter painter)
-        {
-            painter.Space();
-            painter.SubHeading("What is here");
-            painter.Paragraph(
-                "MainModule launches the game and owns MainScene. ScreenModule holds the "
-                + "ScreenManager and the layers every screen opens into. ConnectorModule is where "
-                + "the modules meet - one sub-context wiring MainModule to the main screen, and the "
-                + "main screen to the gameplay screen. GameplayModule is the game itself. Above them "
-                + "MainScene carries the package's own ScreenServiceRoot, PoolServiceRoot and "
-                + "AssetServiceRoot - the screens are addressable, and AssetServiceRoot is what loads them.");
-            painter.Paragraph(
-                "MainScreenModule and GameplayScreenModule sit inside their parents, under "
-                + "zScreenModules. Together they make the flow: the game launches, the main screen "
-                + "opens, picking Easy, Medium or Hard closes it and opens the gameplay screen with "
-                + "the difficulty carried as a signal parameter.");
-            painter.Paragraph(
-                "LoadingModule owns the boot's bar: MainContext begins the Boot set, "
-                + "PreloadScreensCommand and FillPoolsCommand report into it, and the main screen "
-                + "opens when the set completes. LoadingScreenModule and LoadingOverlayScreenModule "
-                + "under it are the two presentations, and LoadingConnectorSubContext in "
-                + "ConnectorModule joins them to the service. The Loading tab has the rest.");
-
-            painter.Space();
-            painter.SubHeading("Installed once, and only once");
-            painter.Paragraph(
-                "The set is recorded in ProjectSettings/FlowIoCSetup.json, which belongs in source "
-                + "control. Delete one of the modules and it stays deleted: the file says the "
-                + "question has been asked and answered. A project that already had modules when "
-                + "FlowIoC arrived was skipped for the same reason, and can take the set from the "
-                + "button above.");
-
-            painter.Note(
-                "These modules are yours once they land. Rename them, gut them, delete what the "
-                + "game does not need - nothing here is reinstalled or repaired behind your back.");
-
-            painter.Space();
-            painter.SubHeading("Updating a ready-made module");
-            painter.Paragraph(
-                "Every module under Modules~ carries a version, the Version: line on its card, and "
-                + "a record of what shipped beside it. When the package ships a newer version the "
-                + "module's page reads Update to X, its sidebar row reads UPDATE, and one console "
-                + "line at startup says so. The set on this page is not versioned: it is yours from "
-                + "the day it lands.");
-            painter.Paragraph(
-                "An update keeps what you changed. A file only the package changed is overwritten, "
-                + "a file only you changed stays, and a file both of you changed is listed before "
-                + "anything is written - keep yours, or take the package's, for all of them at once.");
-            painter.Note(
-                "A module installed before it kept a record lists every file that differs from the "
-                + "shipped one as a conflict, because nobody can say who changed it. Commit before "
-                + "updating, and read the list.");
-        }
-
-        /// <summary>
-        /// The loading module: what a set is, how a Command reports into one, the two fan-out
-        /// points of the shipped boot, and the three setup mistakes that show up as nothing on
-        /// screen.
-        /// </summary>
-        private void DrawLoading(HelpPainter painter)
+        public override void DrawBody(HelpPainter painter)
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(

@@ -58,7 +58,7 @@ namespace FlowIoC.Editor.ModuleInstall
                 if (!payload.IsResolved)
                     continue;
 
-                var installer = new ModuleInstaller(projectRoot, payload.Source());
+                var installer = new ModuleInstaller(projectRoot, payload.SourceOf(page));
                 string installed = installer.InstalledVersionOf(page.ModuleFolderName);
 
                 if (installed == null)

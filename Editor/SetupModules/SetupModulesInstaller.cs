@@ -65,6 +65,30 @@ namespace FlowIoC.Editor.SetupModules
             return true;
         }
 
+        /// <summary>
+        /// True when every module of the set but the named one is in the project - the state in
+        /// which that one module can come back on its own, its cross-module references finding
+        /// the rest of the set where they expect it.
+        /// </summary>
+        internal bool OthersInstalled(string moduleFolderName)
+        {
+            if (!_source.TryList(out string[] payload, out _) || payload.Length == 0)
+                return false;
+
+            foreach (string folder in payload)
+            {
+                string name = Path.GetFileName(folder);
+
+                if (name == moduleFolderName)
+                    continue;
+
+                if (AssemblyAt(name) == null)
+                    return false;
+            }
+
+            return true;
+        }
+
         internal SetupInstallReport Install()
         {
             var report = new SetupInstallReport();

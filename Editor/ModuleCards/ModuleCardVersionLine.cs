@@ -32,7 +32,7 @@ namespace FlowIoC.Editor.ModuleCards
         // The other lines a tool reads off the card. A version written directly under one of
         // them keeps the three together, which is where the next reader looks for them.
         private static readonly Regex ToolLine = new Regex(
-            @"^\s*(Colou?r|Profile|Publish):", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            @"^\s*(Colou?r|Profile|Publish|Update):", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         internal static bool IsLine(string line) => Line.IsMatch(line ?? string.Empty);
 
@@ -99,6 +99,39 @@ namespace FlowIoC.Editor.ModuleCards
                 authored.AddRange(rest);
 
             return string.Join(newLine, authored);
+        }
+
+        /// <summary>
+        /// The card without any version line above the block. A blank line the removal leaves
+        /// doubled is folded back to one, so a card that had the line between two blanks does not
+        /// keep an empty gap. What the author wrote and the block stay as they were.
+        /// </summary>
+        internal string Remove(string cardText)
+        {
+            string text = cardText ?? string.Empty;
+            string newLine = text.IndexOf("\r\n", StringComparison.Ordinal) >= 0 ? "\r\n" : "\n";
+            string[] all = text.Replace("\r\n", "\n").Split('\n');
+
+            int blockAt = IndexOfBlock(all);
+            var kept = new List<string>();
+
+            for (int index = 0; index < all.Length; index++)
+            {
+                bool inAuthored = blockAt < 0 || index < blockAt;
+
+                if (inAuthored && Line.IsMatch(all[index]))
+                    continue;
+
+                bool blank = all[index].Trim().Length == 0;
+                bool afterBlank = kept.Count > 0 && kept[kept.Count - 1].Trim().Length == 0;
+
+                if (inAuthored && blank && afterBlank)
+                    continue;
+
+                kept.Add(all[index]);
+            }
+
+            return string.Join(newLine, kept);
         }
 
         private static IEnumerable<string> AuthoredLines(string cardText)

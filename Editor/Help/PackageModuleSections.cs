@@ -83,6 +83,10 @@ namespace FlowIoC.Editor.Help
 
             foreach (ModulePage page in _pages)
             {
+                // The setup set has a category of its own, listed by the catalogue in reading order.
+                if (page.InSetupSet)
+                    continue;
+
                 ModuleGroup group = _groupOf(page);
 
                 if (!pagesOf.TryGetValue(group.Key, out List<ModulePage> pages))

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Icons;
 using FlowIoC.Editor.ModuleInstall;
+using FlowIoC.Editor.SetupModules;
 using UnityEditor;
 
 namespace FlowIoC.Editor.Help
@@ -24,6 +25,7 @@ namespace FlowIoC.Editor.Help
         private readonly HelpAction _action;
         private readonly InstalledModuleRegistrar _registrar = new InstalledModuleRegistrar();
         private readonly ModuleLibraryArrivals _arrivals;
+        private readonly SetupModulesStartup _setup;
 
         private ReadingsEVO _readings;
         private double _readAt = double.NegativeInfinity;
@@ -39,6 +41,7 @@ namespace FlowIoC.Editor.Help
             internal string InstalledVersion;
             internal string ShippedVersion;
             internal bool IsNew;
+            internal bool OthersPresent;
         }
 
         internal ModulePageAdapter(ModulePage page)
@@ -53,14 +56,20 @@ namespace FlowIoC.Editor.Help
             _payload = payload;
 
             _installer = payload.IsResolved
-                ? new ModuleInstaller(projectRoot, payload.Source())
+                ? new ModuleInstaller(projectRoot, payload.SourceOf(page))
+                : null;
+
+            // A setup page needs the set's own reading - is the rest of the set here - and the
+            // set's registration for the screens its module carries.
+            _setup = page.InSetupSet && payload.IsResolved
+                ? new SetupModulesStartup(projectRoot, payload.PackageRoot)
                 : null;
 
             _arrivals = new ModuleLibraryArrivals(payload.PackageName, payload.PackageVersion, projectRoot);
 
             // The label and the enabled state are read every repaint rather than fixed here, so
             // the button turns itself off the moment the module lands in the project.
-            _action = new HelpAction(() => State().Label, () => State().Enabled, Act);
+            _action = new HelpAction(Label, Enabled, Act);
         }
 
         public override string Title => _page.Title;
@@ -120,6 +129,7 @@ namespace FlowIoC.Editor.Help
                 readings.InstalledVersion = _installer.InstalledVersionOf(_page.ModuleFolderName);
                 readings.ShippedVersion = _installer.ShippedVersionOf(_page.ModuleFolderName);
                 readings.IsNew = !readings.Installed && IsNew();
+                readings.OthersPresent = _setup != null && _setup.OthersInstalled(_page.ModuleFolderName);
             }
 
             _readings = readings;
@@ -134,7 +144,7 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         private bool IsNew()
         {
-            if (string.IsNullOrEmpty(_payload.PackageName))
+            if (_page.InSetupSet || string.IsNullOrEmpty(_payload.PackageName))
                 return false;
 
             if (!_payload.Source().TryList(out string[] folders, out _))
@@ -170,8 +180,30 @@ namespace FlowIoC.Editor.Help
                 : message + " " + _page.InstalledHint;
         }
 
+        /// <summary>
+        /// A setup module missing from a project that has none of the set: half a set does not
+        /// work, so the page offers the whole set rather than its one module.
+        /// </summary>
+        private bool NeedsWholeSet => _setup != null && !Readings().Installed && !Readings().OthersPresent;
+
+        private const string WHOLE_SET_NOTE =
+            "This module is part of the setup set, which installs as one on a project without it. "
+            + "Install All Setup brings the whole set; a single module comes back on its own only "
+            + "while the others are here.";
+
+        private string Label() => NeedsWholeSet ? "Install All Setup" : State().Label;
+
+        private bool Enabled() => NeedsWholeSet || State().Enabled;
+
         private void Act()
         {
+            if (NeedsWholeSet)
+            {
+                _readAt = double.NegativeInfinity;
+                new SetupSetInstallAction(_setup).Run();
+                return;
+            }
+
             if (State().UpdateAvailable)
                 Update();
             else
@@ -220,6 +252,9 @@ namespace FlowIoC.Editor.Help
 
             if (_installer.TryInstall(_page.ModuleFolderName, out string error))
             {
+                // A setup module's screens are addressable the way the set's install made them.
+                _setup?.RegisterAddressablesOf(_page.ModuleFolderName);
+
                 EditorUtility.DisplayDialog($"{_page.Title} installed", InstalledMessage(), "OK");
 
                 return;
@@ -290,7 +325,7 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         protected override void DrawBody(HelpPainter painter)
         {
-            string note = State().Note;
+            string note = NeedsWholeSet ? WHOLE_SET_NOTE : State().Note;
 
             if (!string.IsNullOrEmpty(note))
             {

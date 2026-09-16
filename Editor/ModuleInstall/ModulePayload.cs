@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Reflection;
+using FlowIoC.Editor.Help;
 using UnityEditor.PackageManager;
 
 namespace FlowIoC.Editor.ModuleInstall
@@ -56,6 +57,13 @@ namespace FlowIoC.Editor.ModuleInstall
         /// </summary>
         internal ModulesSource Source() =>
             IsResolved ? new ModulesSource(PackageRoot) : null;
+
+        /// <summary>The folder this page's module ships under: SetupModules~ for a setup page, Modules~ otherwise.</summary>
+        internal ModulesSource SourceOf(ModulePage page) =>
+            IsResolved
+                ? new ModulesSource(PackageRoot,
+                    page.InSetupSet ? ModulesSource.SetupModulesFolder : ModulesSource.ModulesFolder)
+                : null;
     }
 }
 

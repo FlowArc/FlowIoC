@@ -43,12 +43,17 @@ namespace FlowIoC.Editor.SetupModules
         private readonly SetupState _state;
         private readonly SetupModulesInstaller _installer;
 
-        internal SetupModulesStartup()
+        internal SetupModulesStartup() : this(new ProjectRoot().Resolve(), PackageRoot())
         {
-            _projectRoot = new ProjectRoot().Resolve();
-            _state = new SetupState(_projectRoot);
+        }
+
+        /// <summary>The same startup over a project and a package handed in, which a test does.</summary>
+        internal SetupModulesStartup(string projectRoot, string packageRoot)
+        {
+            _projectRoot = projectRoot;
+            _state = new SetupState(projectRoot);
             _installer = new SetupModulesInstaller(
-                _projectRoot, new ModulesSource(PackageRoot(), ModulesSource.SetupModulesFolder));
+                projectRoot, new ModulesSource(packageRoot, ModulesSource.SetupModulesFolder));
         }
 
         internal void Run()
@@ -229,6 +234,11 @@ namespace FlowIoC.Editor.SetupModules
         }
 
         internal bool IsInstalled() => _installer.IsInstalled();
+
+        internal bool OthersInstalled(string moduleFolderName) => _installer.OthersInstalled(moduleFolderName);
+
+        /// <summary>The Addressables registration for one module put back on its own.</summary>
+        internal void RegisterAddressablesOf(string moduleFolderName) => RegisterAddressables(new[] {moduleFolderName});
 
         private static string PackageRoot()
         {

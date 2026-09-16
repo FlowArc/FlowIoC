@@ -44,6 +44,14 @@ namespace FlowIoC.Editor.Help
         public abstract string ModuleFolderName { get; }
 
         /// <summary>
+        /// True for a module of the setup set, which ships under SetupModules~ rather than
+        /// Modules~ and installs as one set on a fresh project. Such a page sits under Setup
+        /// Modules in the sidebar, and its module comes back on its own only while the rest of
+        /// the set is present.
+        /// </summary>
+        public virtual bool InSetupSet => false;
+
+        /// <summary>
         /// Assemblies the module's asmdefs reference that no package brings - a paid asset
         /// imported into Assets. The Install button stays disabled until they are all here,
         /// because copying the module in without them stops the project compiling.
