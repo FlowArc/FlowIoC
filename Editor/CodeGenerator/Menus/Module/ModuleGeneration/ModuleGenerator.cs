@@ -7,33 +7,24 @@ using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.ModuleCards;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 {
+    /// <summary>
+    /// A run has two halves. The first, below, writes the folders, the assemblies and the
+    /// scripts, and makes the scene when one is asked for; the scripts trigger a domain reload.
+    /// The second, in the PostProcess part, runs after that reload and puts the compiled Root
+    /// into the scene. The two talk through one <see cref="ModuleGenerationHandoffEVO"/>,
+    /// written whole at the end of the first half and consumed at the start of the second.
+    /// </summary>
     internal partial class ModuleGenerator
     {
-        private const string MODULE_GENERATION_WORKING = "module_generation_working";
-
         private const string ROOTS_CONTEXTS_WARNING = "Roots&Contexts folder not found!";
         private const string SIGNALS_WARNING = "Signals folder not found!";
         private const string PARENT_MODULE_REQUIRED_TITLE = "Parent Module Required";
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
-
-        private const string SELECTED_MODULE_TYPE = "SELECTED_MODULE_TYPE";
-        private const string KEY_FILE_NAME = "file-name";
-        private const string KEY_MODULE_NAME = "file-name";
-        private const string KEY_ROOT_NAME = "root-name";
-        private const string KEY_PARENT_FOLDER_PATH = "parent-folder-path";
-        private const string SCREEN_PREFAB_PATH = "screen-prefab-path";
-        private const string KEY_VIEW_NAMESPACE = "view-namespace";
-        private const string KEY_CONTEXT_NAMESPACE = "context-namespace";
-        private const string KEY_SCREEN_NAME = "screen-scene-name";
-        private const string KEY_SCENE_PATH = "scene-path";
-        private const string BOOL_CREATE_SCREEN = "create-screen";
-        private const string KEY_SCREEN_CONTEXT_FULL_NAME = "screen-context-full-name";
-
-        private static ModuleType _selectedModuleType;
 
         public static void CreateModuleStructure(
             string moduleName,
@@ -52,10 +43,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             ModuleCardDraftEVO card = null
         )
         {
-            EditorPrefs.SetBool(MODULE_GENERATION_WORKING, true);
-            _selectedModuleType = selectedModuleType;
-            EditorPrefs.SetInt(SELECTED_MODULE_TYPE, (int) selectedModuleType);
-
             if (string.IsNullOrEmpty(parentModulePath))
             {
                 EditorUtility.DisplayDialog(PARENT_MODULE_REQUIRED_TITLE, PARENT_MODULE_REQUIRED_MESSAGE, "OK");
@@ -68,6 +55,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 Debug.LogError($"ED_CodeGenerator asset not found. Please ensure it exists at {CodeGeneratorStrings.CONFIG_PATH}.");
                 return;
             }
+
+            // The scene is made with NewScene in Single mode, which closes whatever is open
+            // without asking - and what is open is somebody's, with whatever they had not saved
+            // yet. So they are asked here, before the first folder is written: a run they cancel
+            // is a run that never started, not a module missing its scene.
+            if (createScreen && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                return;
 
             string subModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules];
             string testModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules];
@@ -196,6 +190,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 codeGenSettings.DirectoryStructureConfigMap.Keys
             );
 
+            var handoff = new ModuleGenerationHandoffEVO {ModuleType = selectedModuleType, ModuleName = moduleName};
+
             if (selectedModuleType == ModuleType.Screen)
             {
                 HandleScreenModuleCreation(
@@ -209,7 +205,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     actionNames,
                     createScreen,
                     screenSettings,
-                    parentSharedAssemblyName
+                    parentSharedAssemblyName,
+                    handoff
                 );
             }
             else
@@ -224,7 +221,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     createSignals,
                     createScreen,
                     allowAsSubContext,
-                    moduleRole
+                    moduleRole,
+                    handoff
                 );
             }
 
@@ -236,6 +234,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 // rather than on the next load - the module's own code compiles against it.
                 FlowModuleGenerator.Generate();
             }
+
+            // Written last, and whole: the record is this run's answers and nothing else, and a
+            // run that stopped before this line left nothing for the reload to act on.
+            new ModuleGenerationHandoffStore().Write(handoff);
         }
 
         /// <summary>
@@ -249,22 +251,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         private static void WriteModuleCard(string moduleName, string modulePath, ModuleCardDraftEVO card)
         {
             new ModuleCardFile().Write(modulePath, new ModuleCardStub().For(moduleName, card));
-        }
-
-        private static void ClearPrefs()
-        {
-            EditorPrefs.DeleteKey(KEY_FILE_NAME);
-            EditorPrefs.DeleteKey(KEY_ROOT_NAME);
-            EditorPrefs.DeleteKey(KEY_PARENT_FOLDER_PATH);
-            EditorPrefs.DeleteKey(KEY_VIEW_NAMESPACE);
-            EditorPrefs.DeleteKey(KEY_CONTEXT_NAMESPACE);
-            EditorPrefs.DeleteKey(KEY_SCREEN_NAME);
-            EditorPrefs.DeleteKey(KEY_SCENE_PATH);
-            EditorPrefs.DeleteKey(SCREEN_PREFAB_PATH);
-            EditorPrefs.DeleteKey(BOOL_CREATE_SCREEN);
-            EditorPrefs.DeleteKey(KEY_MODULE_NAME);
-            EditorPrefs.DeleteKey(KEY_SCREEN_CONTEXT_FULL_NAME);
-            EditorPrefs.DeleteKey(MODULE_GENERATION_WORKING);
         }
     }
 }

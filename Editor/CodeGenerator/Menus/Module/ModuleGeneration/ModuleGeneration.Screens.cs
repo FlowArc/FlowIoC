@@ -28,7 +28,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             List<string> actionNames,
             bool createScreen,
             ScreenModuleSettings screenSettings,
-            string parentSharedAssemblyName
+            string parentSharedAssemblyName,
+            ModuleGenerationHandoffEVO handoff
         )
         {
             string testModulePath = Path.Combine(modulePath, testModulesFolderName, $"{moduleName}TestModule");
@@ -120,7 +121,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     CodeGeneratorStrings.TempInternalSignalsPath, false, false, out _);
             }
 
-            CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames, false, signalsName, signalsNamespace);
+            handoff.ViewNamespace = CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames,
+                false, signalsName, signalsNamespace);
 
             string contextFullName = CreateScreenContext(rootsAndContextsPath, modulePath, moduleName,
                 screenSettings ?? new ScreenModuleSettings {AddressableKey = moduleName}, signalsName, signalsNamespace,
@@ -129,16 +131,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             RegisterScreenContextOnParentRoot(parentModulePath, directoryConfigMap[ModuleType.Main],
                 contextFullName, moduleName + "Context", contextScriptPath);
 
-            EditorPrefs.SetString(KEY_SCREEN_CONTEXT_FULL_NAME, contextFullName);
+            handoff.ScreenContextFullName = contextFullName;
 
             if (createScreen)
             {
-                CreateTestScene(scenePath, moduleName);
-                CreateScreenPrefab(moduleName, screenPrefabPath);
-                EditorPrefs.SetBool(BOOL_CREATE_SCREEN, true);
+                handoff.ScenePath = CreateScene(scenePath, moduleName + "TestScene");
+                handoff.ScreenPrefabPath = CreateScreenPrefab(moduleName, screenPrefabPath);
             }
 
-            CreateScreenRootAndContext(testRootsAndContextsPath, testModulePath, moduleName, true);
+            handoff.RootName = moduleName + "TestRoot";
+            handoff.ContextNamespace = CreateScreenRootAndContext(testRootsAndContextsPath, testModulePath, moduleName, true);
             ShowScreenInLaunch(testRootsAndContextsPath, moduleName + "TestContext", moduleName, modulePath);
         }
 
@@ -244,7 +246,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             Debug.Log($"<color=cyan>[FlowIoC]</color> {contextName} added to the sub-contexts of '{prefabAssetPath}'.");
         }
 
-        private static void CreateScreenViewAndMediator(
+        /// <summary>
+        /// Writes the View and the Mediator and returns their namespace, which is how the scene
+        /// half finds the View type again after the reload.
+        /// </summary>
+        private static string CreateScreenViewAndMediator(
             string path,
             string modulePath,
             string moduleName,
@@ -288,13 +294,14 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             EnsureNamespaceImport(mediatorName, path, "ViewsMediators");
             EnsureNamespaceImport(viewName, path, "ViewsMediators");
 
-            EditorPrefs.SetString(KEY_FILE_NAME, viewName);
-            EditorPrefs.SetString(KEY_MODULE_NAME, moduleName);
-            EditorPrefs.SetString(KEY_PARENT_FOLDER_PATH, moduleName);
-            EditorPrefs.SetString(KEY_VIEW_NAMESPACE, viewNamespace);
+            return viewNamespace;
         }
 
-        private static void CreateScreenRootAndContext(string path, string testModulePath, string moduleName, bool isTest)
+        /// <summary>
+        /// Writes the test module's Root and Context and returns their namespace, which is how
+        /// the scene half finds the Root type again after the reload.
+        /// </summary>
+        private static string CreateScreenRootAndContext(string path, string testModulePath, string moduleName, bool isTest)
         {
             string suffix = isTest ? "Test" : "";
             string rootName = moduleName + suffix + "Root";
@@ -323,7 +330,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 isTest
             );
 
-            EditorPrefs.SetString(KEY_CONTEXT_NAMESPACE, rootsAndContextsNamespace);
+            return rootsAndContextsNamespace;
         }
 
         private static void ShowScreenInLaunch(string contextPath, string contextName, string screenName, string modulePath)
@@ -335,37 +342,33 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             );
         }
 
-        private static void CreateScene(string scenePath, string moduleName)
+        /// <summary>
+        /// Makes the module's scene and saves it at once, under <paramref name="scenesFolder"/>,
+        /// and returns its asset path. Saved now rather than after the reload so that the scene
+        /// half has a path to find it by: what it edits and saves is the scene at this path, never
+        /// whichever scene is active when the scripts come back. The caller asked the user about
+        /// the scene NewScene closes before the run began.
+        /// </summary>
+        private static string CreateScene(string scenesFolder, string sceneName)
         {
-            if (!Directory.Exists(scenePath))
-                Directory.CreateDirectory(scenePath);
+            if (!Directory.Exists(scenesFolder))
+                Directory.CreateDirectory(scenesFolder);
 
-            string sceneName = moduleName + "Scene";
-            EditorPrefs.SetString(KEY_MODULE_NAME, moduleName);
-            EditorPrefs.SetString(KEY_SCREEN_NAME, sceneName);
-            EditorPrefs.SetString(KEY_SCENE_PATH, scenePath);
+            string scenePath = NamespaceUtility.GetUnityAssetPath(Path.Combine(scenesFolder, sceneName + ".unity"));
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
-            scene.name = sceneName;
+            EditorSceneManager.SaveScene(scene, scenePath);
+
+            return scenePath;
         }
 
-        private static void CreateTestScene(string scenePath, string moduleName)
+        /// <summary>
+        /// The screen's prefab, empty for now: the scene half rebuilds it from the compiled View
+        /// under the ScreenManager's first layer and saves it over this one, connected. Returns
+        /// the folder it went to, which is where that save goes.
+        /// </summary>
+        private static string CreateScreenPrefab(string moduleName, string screenPrefabPath)
         {
-            if (!Directory.Exists(scenePath))
-                Directory.CreateDirectory(scenePath);
-
-            string sceneName = moduleName + "TestScene";
-            EditorPrefs.SetString(KEY_SCREEN_NAME, sceneName);
-            EditorPrefs.SetString(KEY_SCENE_PATH, scenePath);
-
-            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
-            scene.name = sceneName;
-        }
-
-        private static void CreateScreenPrefab(string moduleName, string screenPrefabPath)
-        {
-            EditorPrefs.SetString(SCREEN_PREFAB_PATH, screenPrefabPath);
-
             if (!Directory.Exists(screenPrefabPath))
             {
                 Directory.CreateDirectory(screenPrefabPath);
@@ -375,6 +378,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             GameObject screenObj = new GameObject($"{moduleName}ScreenView", typeof(RectTransform));
             PrefabUtility.SaveAsPrefabAsset(screenObj, finalPrefabPath);
             Object.DestroyImmediate(screenObj);
+
+            return screenPrefabPath;
         }
     }
 }

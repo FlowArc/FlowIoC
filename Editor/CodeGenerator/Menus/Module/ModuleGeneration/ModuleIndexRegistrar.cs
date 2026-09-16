@@ -59,8 +59,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             if (!recorded) return;
 
+            // The index and only the index. SaveAssets writes every dirty asset in the Editor -
+            // ProjectSettings, somebody's half-edited data asset - to disk as a side effect of
+            // creating a module, and a generator saves what it made.
             EditorUtility.SetDirty(index);
-            AssetDatabase.SaveAssets();
+            AssetDatabase.SaveAssetIfDirty(index);
         }
 
         /// <summary>

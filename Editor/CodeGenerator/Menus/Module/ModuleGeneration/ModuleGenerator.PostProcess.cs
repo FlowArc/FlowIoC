@@ -9,45 +9,43 @@ using FlowIoC.Editor.Root;
 using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 {
     internal partial class ModuleGenerator
     {
+        /// <summary>
+        /// The second half of a run: the scripts the first half wrote have compiled, so the Root
+        /// can be put into the scene the first half made. It runs whenever a handoff is pending,
+        /// whether or not the Create Module window is open or focused - the record is the
+        /// instruction, and a run whose second half waited on a window that had lost focus was a
+        /// run that never cleared its record.
+        /// </summary>
         [DidReloadScripts]
         private static void CodeGenerationCompleted()
         {
-            if (!EditorWindow.HasOpenInstances<CreateModule.CreateModuleMenu>())
+            var store = new ModuleGenerationHandoffStore();
+            ModuleGenerationHandoffEVO handoff = store.Read();
+
+            if (handoff == null)
                 return;
 
-            var createModuleWindow = EditorWindow.GetWindow<CreateModule.CreateModuleMenu>();
-            createModuleWindow.Focus();
-
-            if (EditorWindow.focusedWindow == null || EditorWindow.focusedWindow.GetType() != typeof(CreateModule.CreateModuleMenu))
-                return;
-
-            if (!EditorPrefs.HasKey(MODULE_GENERATION_WORKING))
-                return;
-
-            int storedValue = EditorPrefs.GetInt(SELECTED_MODULE_TYPE, 0);
-            _selectedModuleType = (ModuleType) storedValue;
+            // Consumed before anything runs, so that a throw below cannot leave the record for the
+            // next reload to act on with whatever scene is open by then.
+            store.Clear();
 
             try
             {
-                switch (_selectedModuleType)
+                switch (handoff.ModuleType)
                 {
                     case ModuleType.Main:
-                        ModuleTypeMainGenerationComplete();
-                        break;
                     case ModuleType.Test:
-                        ModuleTypeTestGenerationComplete();
+                        PlaceRootInScene(handoff);
                         break;
                     case ModuleType.Screen:
-                        ModuleTypeScreenGenerationComplete();
+                        BuildScreenTestScene(handoff);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -55,203 +53,179 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             }
             catch (Exception e)
             {
-                ClearPrefs();
-                Debug.LogError(e);
+                Debug.LogException(e);
             }
         }
 
-        private static void ModuleTypeTestGenerationComplete()
+        /// <summary>
+        /// A main or a test module's scene: the Root, as a GameObject carrying the compiled Root
+        /// component. A run that asked for no scene has nothing to do here.
+        /// </summary>
+        private static void PlaceRootInScene(ModuleGenerationHandoffEVO handoff)
         {
-            string moduleName = EditorPrefs.GetString(KEY_MODULE_NAME);
-            string rootPrefixName = moduleName.Replace("TestView", "");
-            string rootClassName = rootPrefixName + "Root";
-            string rootNamespace = EditorPrefs.GetString(KEY_CONTEXT_NAMESPACE);
-            string sceneName = EditorPrefs.GetString(KEY_SCREEN_NAME);
-            string scenePath = EditorPrefs.GetString(KEY_SCENE_PATH);
-            bool createScene = EditorPrefs.GetBool(BOOL_CREATE_SCREEN);
-
-            List<Type> possibleAssemblyFiles = AssemblyHelper.GetAllTypesFromAssemblies(moduleName);
-
-            Type rootType = possibleAssemblyFiles.FirstOrDefault(x => x.Name == rootClassName && x.Namespace == rootNamespace);
-
-            if (createScene)
-            {
-                GameObject rootGameObject = new GameObject(rootPrefixName + "Root");
-                if (rootType != null)
-                {
-                    rootGameObject.AddComponent(rootType);
-                }
-                else
-                {
-                    Debug.LogWarning($"Root script '{rootClassName}' not found in namespace '{rootNamespace}'.");
-                }
-
-                string relativeScenePath = scenePath.Replace(Application.dataPath, "Assets") + "/" + sceneName + ".unity";
-                EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), relativeScenePath);
-            }
-
-            ClearPrefs();
-            AssetDatabase.Refresh();
-        }
-
-        private static void ModuleTypeMainGenerationComplete()
-        {
-            string moduleName = EditorPrefs.GetString(KEY_MODULE_NAME);
-            string rootPrefixName = moduleName.Replace("View", "");
+            if (string.IsNullOrEmpty(handoff.ScenePath))
+                return;
 
             // The Root is named for what it roots, so a System module's is PlayerSystemRoot rather
-            // than PlayerRoot. The generator left the name it wrote behind for this; a module made
-            // before that was recorded still resolves the way it always did.
-            string recordedRootName = EditorPrefs.GetString(KEY_ROOT_NAME);
-            string rootClassName = string.IsNullOrEmpty(recordedRootName) ? rootPrefixName + "Root" : recordedRootName;
-            string rootNamespace = EditorPrefs.GetString(KEY_CONTEXT_NAMESPACE);
-            string sceneName = EditorPrefs.GetString(KEY_SCREEN_NAME);
-            string scenePath = EditorPrefs.GetString(KEY_SCENE_PATH);
-            bool createScene = EditorPrefs.GetBool(BOOL_CREATE_SCREEN);
+            // than PlayerRoot. The generator recorded the name it wrote; a run that wrote no Root
+            // falls back to the plain name, the way it always resolved.
+            string rootClassName = string.IsNullOrEmpty(handoff.RootName)
+                ? handoff.ModuleName + "Root"
+                : handoff.RootName;
 
-            List<Type> possibleAssemblyFiles = AssemblyHelper.GetAllTypesFromAssemblies(moduleName);
+            Type rootType = AssemblyHelper.GetAllTypesFromAssemblies(handoff.ModuleName)
+                .FirstOrDefault(x => x.Name == rootClassName && x.Namespace == handoff.ContextNamespace);
 
-            if (createScene)
+            new GeneratedScene(handoff.ScenePath).Edit(scene =>
             {
-                Type rootType = possibleAssemblyFiles.FirstOrDefault(x => x.Name == rootClassName && x.Namespace == rootNamespace);
-
                 GameObject rootGameObject = new GameObject(rootClassName);
+
                 if (rootType != null)
                 {
                     rootGameObject.AddComponent(rootType);
-                    Debug.LogWarning($"Root gameObject created with script '{rootClassName}' in namespace '{rootNamespace}'.");
+                    Debug.Log($"<color=cyan>[FlowIoC]</color> '{rootClassName}' placed in '{scene.path}'.");
                 }
                 else
                 {
-                    Debug.LogWarning($"Root script '{rootClassName}' not found in namespace '{rootNamespace}'.");
+                    Debug.LogWarning($"<color=cyan>[FlowIoC]</color> Root script '{rootClassName}' was not found in "
+                                     + $"namespace '{handoff.ContextNamespace}', so '{rootGameObject.name}' in '{scene.path}' "
+                                     + "carries no Root component yet. Add it by hand once the script compiles.");
                 }
+            });
 
-                string relativeScenePath = scenePath.Replace(Application.dataPath, "Assets") + "/" + sceneName + ".unity";
-                EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), relativeScenePath);
-            }
-
-            ClearPrefs();
             AssetDatabase.Refresh();
         }
 
-        private static void ModuleTypeScreenGenerationComplete()
+        /// <summary>
+        /// A screen module's test scene: the two service Roots the screen needs, the test Root
+        /// hosting the screen's context, the ScreenManager under it, and the screen itself as a
+        /// connected prefab on the first layer. A run that asked for no scene made no prefab
+        /// folder either, and has nothing to do here.
+        /// </summary>
+        private static void BuildScreenTestScene(ModuleGenerationHandoffEVO handoff)
         {
-            string screenName = EditorPrefs.GetString(KEY_FILE_NAME) + "View";
-            string moduleName = EditorPrefs.GetString(KEY_MODULE_NAME);
-            string testModuleName = EditorPrefs.GetString(KEY_MODULE_NAME) + "Test";
-            string screenNamespace = EditorPrefs.GetString(KEY_VIEW_NAMESPACE);
-            string rootPrefixName = screenName.Replace("ScreenView", "");
-            string rootPrefixClassName = screenName.Replace("View", "");
-            string rootClassName = rootPrefixClassName + "TestRoot";
-            string rootNamespace = EditorPrefs.GetString(KEY_CONTEXT_NAMESPACE);
-            string prefabName = screenName.Replace("View", "");
-            string sceneName = EditorPrefs.GetString(KEY_SCREEN_NAME);
-            string scenePath = EditorPrefs.GetString(KEY_SCENE_PATH);
-            string parentFolderName = EditorPrefs.GetString(KEY_PARENT_FOLDER_PATH);
-            string screenPrefabPath = EditorPrefs.GetString(SCREEN_PREFAB_PATH);
-            string screenContextFullName = EditorPrefs.GetString(KEY_SCREEN_CONTEXT_FULL_NAME);
+            if (string.IsNullOrEmpty(handoff.ScenePath))
+                return;
 
-            ClearPrefs();
+            string screenName = handoff.ModuleName + "View";
+            string prefabName = handoff.ModuleName;
+            string rootObjectName = TrimScreen(handoff.ModuleName) + "TestRoot";
 
-            List<Type> possibleAssemblyFiles = AssemblyHelper.GetAllTypesFromAssemblies(moduleName);
-            List<Type> possibleAssemblyFilesForTest = AssemblyHelper.GetAllTypesFromAssemblies(testModuleName);
+            List<Type> possibleAssemblyFiles = AssemblyHelper.GetAllTypesFromAssemblies(handoff.ModuleName);
+            List<Type> possibleAssemblyFilesForTest = AssemblyHelper.GetAllTypesFromAssemblies(handoff.ModuleName + "Test");
 
-            Type screenType = possibleAssemblyFiles.FirstOrDefault(x => x.Name == screenName && x.Namespace == screenNamespace);
-            Type rootType = possibleAssemblyFilesForTest.FirstOrDefault(x => x.Name == rootClassName && x.Namespace == rootNamespace);
+            Type screenType = possibleAssemblyFiles.FirstOrDefault(x => x.Name == screenName && x.Namespace == handoff.ViewNamespace);
+            Type rootType = possibleAssemblyFilesForTest.FirstOrDefault(x => x.Name == handoff.RootName && x.Namespace == handoff.ContextNamespace);
 
-            GameObject screenServiceRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.SCREEN_SERVICE_ROOT_PATH);
-            if (screenServiceRootPrefab != null)
+            GameObject screenGameObject = null;
+
+            new GeneratedScene(handoff.ScenePath).Edit(scene =>
             {
-                PrefabUtility.InstantiatePrefab(screenServiceRootPrefab, SceneManager.GetActiveScene());
-            }
-            else
-            {
-                Debug.LogError($"ScreenServiceRoot prefab not found at: {CodeGeneratorStrings.SCREEN_SERVICE_ROOT_PATH}");
-            }
-
-            // The screen is addressable, and an addressable screen loads through the asset service,
-            // so the scene that runs it carries AssetServiceRoot beside ScreenServiceRoot.
-            GameObject assetServiceRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH);
-            if (assetServiceRootPrefab != null)
-            {
-                PrefabUtility.InstantiatePrefab(assetServiceRootPrefab, SceneManager.GetActiveScene());
-            }
-            else
-            {
-                Debug.LogError($"AssetServiceRoot prefab not found at: {CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH}");
-            }
-
-            GameObject rootGameObject = new GameObject(rootPrefixName + "TestRoot");
-            if (rootType != null)
-            {
-                RootBase testRoot = (RootBase) rootGameObject.AddComponent(rootType);
-
-                // The test Root hosts the screen's real context rather than a copy of its bindings,
-                // so the screen is declared once and the test scene exercises that declaration.
-                if (!string.IsNullOrEmpty(screenContextFullName))
+                GameObject screenServiceRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.SCREEN_SERVICE_ROOT_PATH);
+                if (screenServiceRootPrefab != null)
                 {
-                    testRoot.SubContextTypes = new List<SubContextData>
-                    {
-                        new SubContextData
-                        {
-                            // This runs after the domain reload the generated code triggered - the
-                            // Root type above was just found in a compiled assembly - so the screen
-                            // context resolves from its name here, which it could not at the moment
-                            // the file was written.
-                            ContextScript = new ContextScriptResolver().ForName(screenContextFullName),
-                            ContextFullName = screenContextFullName,
-                            ContextName = screenContextFullName.Substring(screenContextFullName.LastIndexOf('.') + 1),
-                            AutoSetup = true,
-                            IsTest = false
-                        }
-                    };
+                    PrefabUtility.InstantiatePrefab(screenServiceRootPrefab, scene);
                 }
-            }
-            else
-            {
-                Debug.LogWarning($"Root script '{rootClassName}' not found in namespace '{rootNamespace}'.");
-            }
+                else
+                {
+                    Debug.LogError($"ScreenServiceRoot prefab not found at: {CodeGeneratorStrings.SCREEN_SERVICE_ROOT_PATH}");
+                }
 
-            string screenManagerPrefabPath = CodeGeneratorStrings.GetPath(CodeGeneratorStrings.SCREEN_MANAGER_PREFAB_PATH, parentFolderName);
-            ScreenManager screenManagerPrefab = AssetDatabase.LoadAssetAtPath<ScreenManager>(screenManagerPrefabPath);
-            ScreenManager screenManager = (ScreenManager) PrefabUtility.InstantiatePrefab(screenManagerPrefab, rootGameObject.transform);
+                // The screen is addressable, and an addressable screen loads through the asset
+                // service, so the scene that runs it carries AssetServiceRoot beside
+                // ScreenServiceRoot.
+                GameObject assetServiceRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH);
+                if (assetServiceRootPrefab != null)
+                {
+                    PrefabUtility.InstantiatePrefab(assetServiceRootPrefab, scene);
+                }
+                else
+                {
+                    Debug.LogError($"AssetServiceRoot prefab not found at: {CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH}");
+                }
 
-            GameObject screenGameObject = new GameObject(prefabName, typeof(RectTransform));
-            screenGameObject.transform.SetParent(screenManager.ManagerData.ScreenLayerList[0].transform);
+                GameObject rootGameObject = new GameObject(rootObjectName);
+                if (rootType != null)
+                {
+                    RootBase testRoot = (RootBase) rootGameObject.AddComponent(rootType);
 
-            GameObject eventSystem = new GameObject("EventSystem");
-            eventSystem.AddComponent<EventSystem>();
-            eventSystem.AddComponent(new UiInputModuleType().Resolve());
+                    // The test Root hosts the screen's real context rather than a copy of its
+                    // bindings, so the screen is declared once and the test scene exercises that
+                    // declaration.
+                    if (!string.IsNullOrEmpty(handoff.ScreenContextFullName))
+                    {
+                        testRoot.SubContextTypes = new List<SubContextData>
+                        {
+                            new SubContextData
+                            {
+                                // This runs after the domain reload the generated code triggered -
+                                // the Root type above was just found in a compiled assembly - so
+                                // the screen context resolves from its name here, which it could
+                                // not at the moment the file was written.
+                                ContextScript = new ContextScriptResolver().ForName(handoff.ScreenContextFullName),
+                                ContextFullName = handoff.ScreenContextFullName,
+                                ContextName = handoff.ScreenContextFullName.Substring(handoff.ScreenContextFullName.LastIndexOf('.') + 1),
+                                AutoSetup = true,
+                                IsTest = false
+                            }
+                        };
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"Root script '{handoff.RootName}' not found in namespace '{handoff.ContextNamespace}'.");
+                }
 
-            ViewInjector viewInjector = screenGameObject.AddComponent<ViewInjector>();
-            screenGameObject.AddComponent(screenType);
+                ScreenManager screenManagerPrefab = AssetDatabase.LoadAssetAtPath<ScreenManager>(CodeGeneratorStrings.SCREEN_MANAGER_PREFAB_PATH);
+                ScreenManager screenManager = (ScreenManager) PrefabUtility.InstantiatePrefab(screenManagerPrefab, rootGameObject.transform);
 
-            if (screenGameObject.transform is RectTransform rectTransform)
-            {
-                rectTransform.localScale = Vector3.one;
-                rectTransform.anchorMax = Vector2.one;
-                rectTransform.anchorMin = Vector2.zero;
-                rectTransform.offsetMin = Vector2.zero;
-                rectTransform.offsetMax = Vector2.zero;
-            }
+                screenGameObject = new GameObject(prefabName, typeof(RectTransform));
+                screenGameObject.transform.SetParent(screenManager.ManagerData.ScreenLayerList[0].transform);
 
-            viewInjector.InitializeForEditor();
+                GameObject eventSystem = new GameObject("EventSystem");
+                eventSystem.AddComponent<EventSystem>();
+                eventSystem.AddComponent(new UiInputModuleType().Resolve());
 
-            if (!Directory.Exists(screenPrefabPath))
-                Directory.CreateDirectory(screenPrefabPath);
+                ViewInjector viewInjector = screenGameObject.AddComponent<ViewInjector>();
+                screenGameObject.AddComponent(screenType);
 
-            string finalPrefabPath = screenPrefabPath + "/" + prefabName + ".prefab";
-            PrefabUtility.SaveAsPrefabAssetAndConnect(screenGameObject, finalPrefabPath, InteractionMode.UserAction);
+                if (screenGameObject.transform is RectTransform rectTransform)
+                {
+                    rectTransform.localScale = Vector3.one;
+                    rectTransform.anchorMax = Vector2.one;
+                    rectTransform.anchorMin = Vector2.zero;
+                    rectTransform.offsetMin = Vector2.zero;
+                    rectTransform.offsetMax = Vector2.zero;
+                }
 
-            MakePrefabAddressable(finalPrefabPath, prefabName);
+                viewInjector.InitializeForEditor();
 
-            string relativeScenePath = scenePath.Replace(Application.dataPath, "Assets") + "/" + sceneName + ".unity";
-            EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), relativeScenePath);
+                if (!Directory.Exists(handoff.ScreenPrefabPath))
+                    Directory.CreateDirectory(handoff.ScreenPrefabPath);
+
+                string finalPrefabPath = handoff.ScreenPrefabPath + "/" + prefabName + ".prefab";
+                PrefabUtility.SaveAsPrefabAssetAndConnect(screenGameObject, finalPrefabPath, InteractionMode.UserAction);
+
+                MakePrefabAddressable(finalPrefabPath, prefabName);
+            });
 
             AssetDatabase.Refresh();
             Selection.activeGameObject = screenGameObject;
 
-            Debug.Log($"Screen prefab '{prefabName}' has been created and marked as Addressable. Scene saved at: {relativeScenePath}");
+            Debug.Log($"Screen prefab '{prefabName}' has been created and marked as Addressable. Scene saved at: {handoff.ScenePath}");
+        }
+
+        /// <summary>
+        /// The test Root's GameObject is named for the screen without its suffix -
+        /// SettingsTestRoot for SettingsScreen - the way it always was.
+        /// </summary>
+        private static string TrimScreen(string moduleName)
+        {
+            const string suffix = "Screen";
+
+            return moduleName.EndsWith(suffix, StringComparison.Ordinal)
+                ? moduleName.Substring(0, moduleName.Length - suffix.Length)
+                : moduleName;
         }
     }
 }

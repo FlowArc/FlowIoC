@@ -5,6 +5,24 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Create Module never writes to somebody's open scene.** A main module created with *Create
+  Scene* unticked, after a run whose second half never ran, was read after the reload as one that
+  wanted a scene: the generator put an empty Root into whatever scene was open and saved that
+  scene to disk, under the path an earlier run had left in EditorPrefs. The two halves of a run now
+  talk through one record - `ModuleGenerationHandoffEVO` in `SessionState`, written whole at the
+  end of the first half and consumed first thing in the second - so nothing an earlier run wrote is
+  read as this run's answer, and a scene is saved before the reload and edited after it by its
+  path: the second half never saves the active scene, and when something else is active it opens
+  the generated scene beside it, edits, saves and closes it. The second half runs on the record
+  alone, not on the Create Module window being open and focused, which was what left the record
+  behind. Before a scene is made, the user is asked about whatever is open and unsaved, and a
+  cancelled ask is a run that never started. `ModuleIndexRegistrar` and the addressable step save
+  the assets they changed rather than every dirty asset in the Editor.
+
 ## [1.18.0] - 2026-09-16
 
 ### Added
