@@ -5,7 +5,61 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.20.0] - 2026-09-16
+
+### Added
+
+- **Device Debugger is a ready-made module.** An on-device debug panel in the shape of SRDebugger,
+  for a development build - in a release build the Root stays, `IsAvailable` is false and every
+  call is a no-op. Five tabs behind a corner trigger (a pill, three taps in a zone, or the red
+  badge that comes up after an error): a Console drawn as the Flow Console's two-line row - the
+  severity icon, the message, the channel tag in its colour and the source - with kind filters,
+  a search, the Flow Console's channel switches behind Filters, a detail sheet a third of the
+  screen high with the stack trace and its own Copy, and Copy all logs; Options found by
+  reflection, never registered by code - `[DebugOption("Gameplay", "Win level")]` on a public
+  signal field is a button, `Signal<bool>` a toggle, a number a field or a slider with `Min`/`Max`,
+  `Signal<string>` a text field, an enum a dropdown, `Argument` a button carrying a constant,
+  the same attribute on an `Outgoing` field a value row that feeds the control sharing its
+  label, and on a shipped step a button running it; Signals, every public signal of every holder
+  in the scene with a typed payload field and Fire; Stats, a frame-time graph against the 60 fps
+  line with fps, the worst frame, allocated and reserved memory, the Mono heap and GC runs; Info,
+  the device's facts with Copy. `IDeviceDebuggerService` with `Show`,
+  `Hide`, `Toggle`, and `Commands.Show(DebugTab)` / `Commands.Hide` as steps for a settings
+  screen's hidden button. UI Toolkit over a `PanelSettings` scaled by physical size, so a panel
+  unit is a density-independent pixel on every phone; the safe area and a bottom inset keep the
+  content off a notch and a rounded corner; a press on any control answers under the finger
+  even inside a scrolling page, where UI Toolkit's own `:active` is taken off at once. Proved on a
+  phone. `CD_DeviceDebugger` on the Root's adapter sets the trigger, the corner, the log capacity,
+  the badge and the fps on the pill.
+- **`[DebugOption]`.** The attribute the panel reads, in the package so a holder or a Service's
+  shipped step can carry it without referencing the module: `Category`, `Label`, `Order`,
+  `Argument`, `Min`/`Max`/`Step`, more than one on a step when the argument differs -
+  `IHapticService.Commands.Play` carries Play Success, Play Failure and Play Heavy impact,
+  `ILocalSaveService.Commands.SaveAll`, `IMobileNotificationService.Commands.RequestPermission`
+  and `CancelAll`, and `IScreenService.Commands.HideAll` carry theirs; a step whose Service is
+  not bound in the scene is left off the panel.
+- **Analytics is a ready-made module.** A Service with a socket: an event - a name and its
+  parameters, `AnalyticsEventVO` - reaches `IAnalyticsService` from the module that decided it,
+  and the service hands it to every SDK plugged in, queueing for one still coming up until it
+  reports ready and dropping the queue for one that fails; the game never learns which SDKs those
+  are and nothing about analytics sits in a Connector. `Log`, `SetUserProperty`, `SetUserId`,
+  `SetConsent` on the interface, `Commands.Log` / `SetUserProperty` / `SetConsent` as steps -
+  `.ToSequence<IAnalyticsService.Commands.Log>(new AnalyticsEventVO("settings_opened"))` for a
+  fixed event, a game Command injecting the service for one with a value. A plug is an
+  `IAnalyticsProvider` behind a hosted `[AllowAsSubContext]` context listed on
+  `AnalyticsServiceRoot`'s Sub Context Types; `FirebaseAnalyticsModule` and
+  `FacebookAnalyticsModule` ship under `zSubModules/`, compiling only under their SDK's define.
+  Consent is handed on, never resolved here. Initialize Order -85.
+- **Four doors in the package for a panel like the Device Debugger.** `FlowLogger.OnLogRecorded`
+  raised for every recorded row - a development player records while it is set, attached to the
+  Flow Console or not; untyped access on `ISignalBody` - `Name`, `PayloadTypes`, `DispatchUntyped`
+  and untyped listeners - for a signal found by reflection; and
+  `ICommandBinding.ToSequence(Type, params object[])` for a step whose type is known only at
+  runtime, refusing anything that is not a concrete Command.
+- **Help pages for the two modules, and two icons for the set.** *Device Debugger* with Setup,
+  Options and Tabs; *Analytics* with two screenshots on its Setup tab - the Root in the Hierarchy
+  and its inspector with a plug listed - wearing a new `Chart` icon; the Haptic page wears a
+  `Vibrate` icon, a phone between two motion bars, instead of the broadcast rings.
 
 ### Changed
 
@@ -14,6 +68,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was a tab to hand out never got it. It now goes with What's New as well, focused, once per
   project and reader - `FlowConsoleDockRecord` in EditorPrefs - so a tab that was closed stays
   closed and the menu item is the door after that.
+- **No Debug rule in the Folder Painter's defaults.** The rule painted every folder whose path
+  contains "Debug" red, which now includes the Device Debugger module. A fresh install gets the
+  list without it; a project's own `ED_FolderPainter` asset is its own to edit.
 
 ### Fixed
 
@@ -21,6 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   registered" from `PlayerLogBridge`: the player-connection handlers were taken off before they went
   on, and on the first launch there was nothing to take off. The domain that registers them now
   takes them off just before it unloads, so the next one registers onto a clean connection.
+- **Add Sub Context ticks AutoSetup on a new entry.** A Root runs a hosted context's Setup and
+  Launch only when its entry says so, and the window left the flag off, so a context added by
+  hand never ran until someone found the tick; `RootPrefabSubContexts` already wrote it on.
 
 ## [1.19.0] - 2026-09-16
 
