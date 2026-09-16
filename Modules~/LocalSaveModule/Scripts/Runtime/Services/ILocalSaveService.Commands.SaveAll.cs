@@ -1,3 +1,4 @@
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using Modules.LocalSaveModule.Models;
@@ -9,6 +10,7 @@ namespace Modules.LocalSaveModule.Services
         public static partial class Commands
         {
             /// <summary>Writes every persisted asset, flushing once at the end.</summary>
+            [DebugOption("Local Save", "Save all")]
             public class SaveAll : Command
             {
                 [Inject] private ILocalSaveModel _model { get; set; }

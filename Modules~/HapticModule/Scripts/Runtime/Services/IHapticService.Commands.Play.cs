@@ -1,3 +1,4 @@
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using Modules.HapticModule.Enums;
@@ -14,6 +15,9 @@ namespace Modules.HapticModule.Services
             /// whose preset is decided at runtime is a game Command injecting IHapticService; a
             /// previous step may also hand the preset on with Release(preset).
             /// </summary>
+            [DebugOption("Haptic", "Play Success", Argument = HapticPreset.Success)]
+            [DebugOption("Haptic", "Play Failure", Argument = HapticPreset.Failure)]
+            [DebugOption("Haptic", "Play Heavy impact", Argument = HapticPreset.HeavyImpact)]
             public class Play : Command<HapticPreset>
             {
                 [Inject] private IHapticService _haptics { get; set; }

@@ -1,3 +1,4 @@
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 
@@ -14,6 +15,7 @@ namespace Modules.MobileNotificationModule.Services
             /// Bind it where the ask belongs - after the first level, on a settings toggle - never
             /// at boot.
             /// </summary>
+            [DebugOption("Mobile Notification", "Request permission")]
             public class RequestPermission : Command
             {
                 [Inject] private IMobileNotificationService _notifications { get; set; }

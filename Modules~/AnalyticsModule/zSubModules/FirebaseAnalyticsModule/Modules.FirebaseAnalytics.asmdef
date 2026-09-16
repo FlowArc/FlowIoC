@@ -1,0 +1,24 @@
+{
+  "name": "Modules.FirebaseAnalytics",
+  "references": [
+    "FlowIoC",
+    "Modules.Analytics"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "FLOWIOC_FIREBASE_ANALYTICS"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.google.firebase.analytics",
+      "expression": "",
+      "define": "FLOWIOC_FIREBASE_ANALYTICS"
+    }
+  ],
+  "noEngineReferences": false
+}
