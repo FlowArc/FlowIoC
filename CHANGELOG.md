@@ -14,8 +14,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and Export, the choice in force ticked - the way Unity's Console keeps its line count there. A
   right-click on the list below the last row shows the same menu. A menu has no width, so a
   control the bar dropped for want of room is still one click away.
+- **Rider's namespace inspection is quiet inside the package.** Rider derives the namespace it
+  expects from the folders above a file, and a registry install sits under
+  `Library/PackageCache/com.flowarc.flowioc.core@<hash>/`, so every file in the package was told
+  to move to a namespace with the cache folder's name in it. On every Editor start FlowIoC writes
+  `FlowIoC.csproj.DotSettings` and `FlowIoC.Editor.csproj.DotSettings` at the project root, the
+  folders above each assembly marked as no namespace provider, from wherever the package resolved
+  - the hash changes with every version, so the files are written rather than shipped, and an
+  earlier version's keys are dropped as the new ones go in. Whatever else the files hold is kept.
+  Written on an update tick rather than a delayCall, which does not fire with the Editor unfocused.
 
 ### Fixed
+
+- **A skipped folder is spelt the way Rider reads it.** Rider matches the invariant lowercase of a
+  folder's path, and the `.csproj.DotSettings` a module got carried the path as typed plus a Turkish
+  lowercase - so a module with a capital I in its name was never matched on the machine that wrote
+  it. Every spelling goes in now, and the Module Scanner's check wants all of them before it calls a
+  file current.
 
 - **Create Module never writes to somebody's open scene.** A main module created with *Create
   Scene* unticked, after a run whose second half never ran, was read after the reload as one that
