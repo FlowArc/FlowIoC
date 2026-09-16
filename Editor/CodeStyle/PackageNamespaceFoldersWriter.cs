@@ -15,11 +15,11 @@ namespace FlowIoC.Editor.CodeStyle
     /// installed from a registry sits under <c>Library/PackageCache/com.flowarc.flowioc.core@hash</c>
     /// - so every file in it is told to move to a namespace with the cache folder's name in it.
     /// The folders down to the assembly's own are marked as no namespace provider in
-    /// <c>FlowIoC.csproj.DotSettings</c>, <c>FlowIoC.Editor.csproj.DotSettings</c> and
-    /// <c>FlowIoC.Tests.csproj.DotSettings</c> at the project root, which is where Rider reads a
-    /// project's settings from. The hash changes with every version, so this is written on
-    /// startup from where the package actually resolved rather than shipped, and the keys of an
-    /// earlier hash are dropped as the new ones go in. Whatever else a file holds is kept.
+    /// <c>FlowIoC.csproj.DotSettings</c> and <c>FlowIoC.Editor.csproj.DotSettings</c> at the
+    /// project root, which is where Rider reads a project's settings from. The hash changes with
+    /// every version, so this is written on startup from where the package actually resolved
+    /// rather than shipped, and the keys of an earlier hash are dropped as the new ones go in.
+    /// Whatever else a file holds is kept.
     ///
     /// A folder named <c>Editor</c> inside an assembly is marked as a provider, because Rider
     /// treats one as Unity's special folder otherwise and drops it from the namespace, and the

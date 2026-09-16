@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cancelled ask is a run that never started. `ModuleIndexRegistrar` and the addressable step save
   the assets they changed rather than every dirty asset in the Editor.
 
+### Removed
+
+- **The package ships no tests.** `Tests/Editor` and the `FlowIoC.Tests` assembly are gone from the
+  package, so a project that installs it from the registry no longer sees 261 test files under
+  `Library/PackageCache`. The tests live on in the framework's own workspace, and the internals the
+  Runtime and Editor assemblies expose for testing are granted to `FlowIoC.Dev.Editor.CoreTests`.
+
 ## [1.18.0] - 2026-09-16
 
 ### Added

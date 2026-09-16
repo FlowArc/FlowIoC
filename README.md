@@ -1357,8 +1357,8 @@ project, so the file is generated rather than shipped. Only the keys FlowIoC own
 anything else in the file survives - and the result belongs in version control, unlike the
 `.sln.DotSettings.user` file beside it.
 
-On every Editor start FlowIoC also writes `FlowIoC.csproj.DotSettings`,
-`FlowIoC.Editor.csproj.DotSettings` and `FlowIoC.Tests.csproj.DotSettings` at the project root:
+On every Editor start FlowIoC also writes `FlowIoC.csproj.DotSettings` and
+`FlowIoC.Editor.csproj.DotSettings` at the project root:
 the folders above the package's own sources marked as no namespace provider, so that Rider does
 not ask every file in `Library/PackageCache/com.flowarc.flowioc.core@<hash>/` to move to a
 namespace with the cache folder's name in it. The hash changes with every version, which is why

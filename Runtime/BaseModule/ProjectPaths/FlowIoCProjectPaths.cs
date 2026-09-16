@@ -11,7 +11,7 @@ namespace FlowIoC.BaseModule.ProjectPaths
     /// loaded a settings asset by one of these paths; nothing in Runtime reads it now, and it
     /// stays here because moving it buys nothing. The whole file is editor-only because Assets
     /// paths mean nothing in a player build, and internal because Runtime/AssemblyInfo.cs already
-    /// grants FlowIoC.Editor and FlowIoC.Tests access.
+    /// grants FlowIoC.Editor and FlowIoC.Dev.Editor.CoreTests access.
     /// </summary>
     internal class FlowIoCProjectPaths
     {
