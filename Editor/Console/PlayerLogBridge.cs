@@ -18,6 +18,11 @@ namespace FlowIoC.Editor.Console
     /// a recompile empties every static while the player stays connected and never says hello
     /// again - and without it the rows after the reload carried the connection's name and Unity's
     /// echo of them was no longer dropped.
+    ///
+    /// The handlers are taken off the connection just before the domain unloads, not just before
+    /// they go on: EditorConnection logs "MessageHandler not registered" for an Unregister with
+    /// nothing to take off, and the first launch of a session has nothing - so the old order put
+    /// one red line in every fresh project's console before it had written a line of its own.
     /// </summary>
     [InitializeOnLoad]
     internal static class PlayerLogBridge
@@ -32,13 +37,24 @@ namespace FlowIoC.Editor.Console
         {
             EditorConnection.instance.Initialize();
 
-            EditorConnection.instance.Unregister(PlayerLogEnvelope.MessageId, OnMessage);
             EditorConnection.instance.Register(PlayerLogEnvelope.MessageId, OnMessage);
-
-            EditorConnection.instance.UnregisterDisconnection(OnDisconnected);
             EditorConnection.instance.RegisterDisconnection(OnDisconnected);
 
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+
             Intake.Restore(SessionState.GetString(INTAKE_KEY, null), ConnectedPlayerIds());
+        }
+
+        /// <summary>
+        /// The domain that registered the handlers is the one that takes them off, so the next
+        /// domain registers onto a clean connection and never has to guess whether the last one
+        /// left anything behind.
+        /// </summary>
+        private static void OnBeforeAssemblyReload()
+        {
+            EditorConnection.instance.Unregister(PlayerLogEnvelope.MessageId, OnMessage);
+            EditorConnection.instance.UnregisterDisconnection(OnDisconnected);
         }
 
         private static void OnMessage(MessageEventArgs args)
