@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The Flow Console docks itself on an update too.** The tab beside Unity's Console went only to
+  a project meeting FlowIoC for the first time, so every project that was on FlowIoC before there
+  was a tab to hand out never got it. It now goes with What's New as well, focused, once per
+  project and reader - `FlowConsoleDockRecord` in EditorPrefs - so a tab that was closed stays
+  closed and the menu item is the door after that.
+
 ### Fixed
 
 - **No red line on the first launch.** Every fresh Editor session opened with "MessageHandler not

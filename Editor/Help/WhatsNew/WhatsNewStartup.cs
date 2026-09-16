@@ -38,19 +38,23 @@ namespace FlowIoC.Editor.Help.WhatsNew
         private readonly WhatsNewSource _source;
         private readonly LastSeenVersion _lastSeen;
         private readonly SetupState _setup;
+        private readonly FlowConsoleDockRecord _docked;
 
         internal WhatsNewStartup() : this(
             new WhatsNewSource(),
             new LastSeenVersion(),
-            new SetupState(new ProjectRoot().Resolve()))
+            new SetupState(new ProjectRoot().Resolve()),
+            new FlowConsoleDockRecord())
         {
         }
 
-        internal WhatsNewStartup(WhatsNewSource source, LastSeenVersion lastSeen, SetupState setup)
+        internal WhatsNewStartup(WhatsNewSource source, LastSeenVersion lastSeen, SetupState setup,
+            FlowConsoleDockRecord docked)
         {
             _source = source;
             _lastSeen = lastSeen;
             _setup = setup;
+            _docked = docked;
         }
 
         internal void Run()
@@ -78,12 +82,16 @@ namespace FlowIoC.Editor.Help.WhatsNew
             if (decision == WhatsNewDecision.Stop)
                 return;
 
-            // A project meeting FlowIoC is also handed the Flow Console, as a tab beside Unity's
-            // Console: the framework narrates itself into it, and a reader who never opens it
-            // reads the framework's lines in Unity's console instead, tags and all, and never
-            // learns why. Before the Help window, so that Welcome ends up on top.
-            if (decision == WhatsNewDecision.Introduce)
+            // A project meeting FlowIoC, or updating it, is also handed the Flow Console once, as
+            // a tab beside Unity's Console: the framework narrates itself into it, and a reader
+            // who never opens it reads the framework's lines in Unity's console instead, tags and
+            // all, and never learns why. Before the Help window, so that Welcome ends up on top
+            // while the console stays the tab in front of its own area.
+            if (new FlowConsoleDockRule().For(decision, _docked.Read()))
+            {
                 FlowConsoleEditor.OpenBesideUnityConsole();
+                _docked.Write();
+            }
 
             HelpWindow.OpenPage(WelcomePage.PAGE_TITLE, TabFor(decision));
 

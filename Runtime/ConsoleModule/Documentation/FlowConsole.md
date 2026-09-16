@@ -6,10 +6,11 @@ command step, every context phase, every screen state change is on a channel you
 toggle — so most of the time you diagnose a flow by *watching* it rather than by
 adding logs.
 
-Open it at **Tools ▸ FlowIoC ▸ Flow Console**. The first time a project meets FlowIoC it opens
-itself, as a tab beside Unity's Console — beside the Project window when the Console is not open,
-floating when neither is — and the layout keeps the tab from then on. That happens once: a
-reader who closes the tab has decided, and the menu item is the door after that.
+Open it at **Tools ▸ FlowIoC ▸ Flow Console**. The first time a project meets FlowIoC - or the
+first time it updates to a FlowIoC that has the tab to hand out - it opens itself, focused, as a
+tab beside Unity's Console — beside the Project window when the Console is not open, floating
+when neither is — and the layout keeps the tab from then on. That happens once per project and
+reader: somebody who closes the tab has decided, and the menu item is the door after that.
 
 - [The Two Kinds of Channel](#the-two-kinds-of-channel)
 - [The Window](#the-window)

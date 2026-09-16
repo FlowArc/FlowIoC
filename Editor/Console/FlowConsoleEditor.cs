@@ -27,10 +27,13 @@ namespace FlowIoC.Editor.Console
         /// the package finds it without being told - the framework narrates itself into it, and
         /// nothing else in the Editor says so. Beside the Project window when the Console is not
         /// open, which is the same area in Unity's default layout, and floating when neither is.
-        /// The layout keeps the tab from then on, so this is called once, on the project's first
-        /// meeting with FlowIoC; the menu item above is the door after that, and a reader who
-        /// closed the tab decided. No minimum size: a docked tab takes its area's size, and a
-        /// minimum larger than the area would push the layout around.
+        /// The layout keeps the tab from then on, so this is called once per reader and project -
+        /// on the project's first meeting with FlowIoC, or on the first update that brings the tab
+        /// to a project that was on FlowIoC before there was one, which <c>FlowConsoleDockRecord</c>
+        /// remembers; the menu item above is the door after that, and a reader who closed the tab
+        /// decided. Focused, so that the tab sits in front of its area. No minimum size: a docked
+        /// tab takes its area's size, and a minimum larger than the area would push the layout
+        /// around.
         /// </summary>
         internal static void OpenBesideUnityConsole()
         {
