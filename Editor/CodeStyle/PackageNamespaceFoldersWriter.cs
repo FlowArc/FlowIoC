@@ -34,7 +34,7 @@ namespace FlowIoC.Editor.CodeStyle
         private readonly string _projectRoot;
         private readonly string _packageRoot;
         private readonly NamespaceSkipKey _key = new NamespaceSkipKey();
-        private readonly DotSettingsFile _file = new DotSettingsFile();
+        private readonly DotSettingsDocument _file = new DotSettingsDocument();
 
         internal PackageNamespaceFoldersWriter(string projectRoot, string packageRoot)
         {

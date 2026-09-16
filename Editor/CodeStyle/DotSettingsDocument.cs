@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.CodeStyle
     /// diff. Both writers FlowIoC keeps, the solution's code style and the package's own
     /// namespace folders, go through here so that they never disagree on the format.
     /// </summary>
-    internal class DotSettingsFile
+    internal class DotSettingsDocument
     {
         internal const string XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
 

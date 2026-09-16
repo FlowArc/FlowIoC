@@ -34,7 +34,7 @@ namespace FlowIoC.Editor.CodeStyle
 
         private readonly string _projectRoot;
         private readonly string _templatePath;
-        private readonly DotSettingsFile _file = new DotSettingsFile();
+        private readonly DotSettingsDocument _file = new DotSettingsDocument();
 
         internal SolutionDotSettingsWriter(string projectRoot, string templatePath)
         {

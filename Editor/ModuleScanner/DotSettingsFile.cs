@@ -22,9 +22,15 @@ namespace FlowIoC.Editor.ModuleScanner
 
             string content = File.ReadAllText(path);
 
+            // Every spelling, not the first alone: a file written before the invariant lowercase
+            // was added carries the folder and still leaves Rider's inspection on, and the check
+            // is what sends the scanner to write it again.
             foreach (string folder in skipFolders)
             {
-                if (!content.Contains(NamespaceUtility.EncodeAssetPath(folder))) return false;
+                foreach (string spelling in NamespaceUtility.EncodeSpellings(folder))
+                {
+                    if (!content.Contains(spelling)) return false;
+                }
             }
 
             return true;

@@ -58,10 +58,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             nsManager.AddNamespace("x", XAML_NAMESPACE);
             nsManager.AddNamespace("s", XAML_ASSEMBLY);
 
-            string relativePath = EncodeAssetPath(assetFolderPath);
-            string lowercasePath = EncodeLowercaseAssetPath(assetFolderPath);
+            IReadOnlyList<string> spellings = EncodeSpellings(assetFolderPath);
 
-            if (string.IsNullOrWhiteSpace(relativePath))
+            if (string.IsNullOrWhiteSpace(spellings[0]))
             {
                 Debug.LogError($"Relative path for '{assetFolderPath}' is empty. Skipping.");
                 return;
@@ -69,17 +68,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
             XmlElement codeGeneratedSection = GetOrCreateCodeGeneratedSection(doc);
 
-            if (isNamespaceProvider)
+            foreach (string spelling in spellings)
             {
-                RemoveSkipEntry(codeGeneratedSection, nsManager, relativePath);
-                if (lowercasePath != relativePath)
-                    RemoveSkipEntry(codeGeneratedSection, nsManager, lowercasePath);
-            }
-            else
-            {
-                AddOrUpdateSkipEntry(doc, codeGeneratedSection, nsManager, relativePath);
-                if (lowercasePath != relativePath)
-                    AddOrUpdateSkipEntry(doc, codeGeneratedSection, nsManager, lowercasePath);
+                if (isNamespaceProvider)
+                    RemoveSkipEntry(codeGeneratedSection, nsManager, spelling);
+                else
+                    AddOrUpdateSkipEntry(doc, codeGeneratedSection, nsManager, spelling);
             }
 
             try
@@ -99,10 +93,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         public static void AddNamespaceFolderToSkip(XmlDocument doc, string assetFolderPath)
         {
-            string relativePath = EncodeAssetPath(assetFolderPath);
-            string lowercasePath = EncodeLowercaseAssetPath(assetFolderPath);
+            IReadOnlyList<string> spellings = EncodeSpellings(assetFolderPath);
 
-            if (string.IsNullOrWhiteSpace(relativePath))
+            if (string.IsNullOrWhiteSpace(spellings[0]))
             {
                 Debug.LogError($"Relative path for '{assetFolderPath}' is empty. Skipping.");
                 return;
@@ -114,17 +107,36 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
             XmlElement codeGeneratedSection = GetOrCreateCodeGeneratedSection(doc);
 
-            AddOrUpdateSkipEntry(doc, codeGeneratedSection, nsManager, relativePath);
-
-            if (lowercasePath != relativePath)
-            {
-                AddOrUpdateSkipEntry(doc, codeGeneratedSection, nsManager, lowercasePath);
-            }
+            foreach (string spelling in spellings)
+                AddOrUpdateSkipEntry(doc, codeGeneratedSection, nsManager, spelling);
         }
 
         private static string NormalizePath(string path)
         {
             return path.Replace('\\', '/');
+        }
+
+        /// <summary>
+        /// Every spelling of the folder a Rider might look it up under. Rider lowercases the path
+        /// before it compares, and which lowercase depends on the machine: the invariant one
+        /// nearly everywhere, and on a Turkish machine a capital I has come down as a dotless ı in
+        /// files written before. The path as written is kept first, because the files already on
+        /// disk carry it and the scanner's check reads it. A folder with no capital I spells the
+        /// same three ways and gets two entries; one with it gets three.
+        /// </summary>
+        internal static IReadOnlyList<string> EncodeSpellings(string assetFolderPath)
+        {
+            var spellings = new List<string> {EncodeAssetPath(assetFolderPath)};
+
+            foreach (CultureInfo culture in new[] {CultureInfo.InvariantCulture, CultureInfo.CurrentCulture, TurkishCulture})
+            {
+                string spelling = EncodeLowercaseAssetPath(assetFolderPath, culture);
+
+                if (!spellings.Contains(spelling))
+                    spellings.Add(spelling);
+            }
+
+            return spellings;
         }
 
         internal static string EncodeAssetPath(string assetFolderPath)
@@ -134,12 +146,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
                 .Replace("/", "_005C");
         }
 
-        internal static string EncodeLowercaseAssetPath(string assetFolderPath)
+        internal static string EncodeLowercaseAssetPath(string assetFolderPath) =>
+            EncodeLowercaseAssetPath(assetFolderPath, CultureInfo.InvariantCulture);
+
+        internal static string EncodeLowercaseAssetPath(string assetFolderPath, CultureInfo culture)
         {
             string relativePath = NormalizePath(assetFolderPath)
                 .Replace(NormalizePath(Application.dataPath), "Assets");
 
-            string lowered = relativePath.ToLower(TurkishCulture);
+            string lowered = relativePath.ToLower(culture);
 
             var sb = new StringBuilder();
             foreach (char c in lowered)
