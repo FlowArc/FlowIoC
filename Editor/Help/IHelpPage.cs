@@ -35,6 +35,13 @@ namespace FlowIoC.Editor.Help
         /// <summary>The flag on the page's sidebar row, or null - which is every page but a module's.</summary>
         SidebarFlagEVO SidebarFlag { get; }
 
+        /// <summary>
+        /// The version the banner shows beside the page's action, or null - which is every page
+        /// but a module's. A module page shows the installed version, or the shipped one while
+        /// the module is not here, so the number is read where the button that acts on it sits.
+        /// </summary>
+        string Version { get; }
+
         /// <summary>Null for a page that has no diagram.</summary>
         HelpGraph Graph { get; }
 

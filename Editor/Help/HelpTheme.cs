@@ -29,6 +29,7 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _treeComment;
         private GUIStyle _edgeLabel;
         private GUIStyle _caption;
+        private GUIStyle _bannerVersion;
         private GUIStyle _sidebarRow;
         private GUIStyle _sidebarLabel;
         private GUIStyle _sidebarLabelActive;
@@ -360,6 +361,20 @@ namespace FlowIoC.Editor.Help
             fontSize = 14,
             fontStyle = FontStyle.Bold,
             richText = true
+        };
+
+        /// <summary>
+        /// The version beside the banner's button: the heading's white taken down a step, so the
+        /// number reads as a fact about the module rather than as a second title.
+        /// </summary>
+        public GUIStyle BannerVersion => _bannerVersion ??= new GUIStyle(EditorStyles.label)
+        {
+            alignment = TextAnchor.MiddleRight,
+            fontSize = 12,
+            normal = {textColor = new Color(1f, 1f, 1f, 0.78f)},
+            hover = {textColor = new Color(1f, 1f, 1f, 0.78f)},
+            active = {textColor = new Color(1f, 1f, 1f, 0.78f)},
+            focused = {textColor = new Color(1f, 1f, 1f, 0.78f)}
         };
 
         /// <summary>

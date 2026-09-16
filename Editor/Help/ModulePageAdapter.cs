@@ -80,6 +80,8 @@ namespace FlowIoC.Editor.Help
 
         public override HelpAction Action => _action;
 
+        public override string Version => State().Version;
+
         public override SidebarFlagEVO SidebarFlag
         {
             get

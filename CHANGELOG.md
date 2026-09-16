@@ -11,13 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A ready-made module updates from the Module Library.** Every module under `Modules~` carries a
   version - the `Version:` line on its card - and a record of what shipped, `.flowioc-shipped.json`
-  beside the card. An installed module whose package ships a newer version reads **Update to X** on
-  its page and `UPDATE` on its sidebar row, and a module that arrived with this package version
-  reads `NEW`; one console line at startup names the modules with updates. The update keeps what the
-  game changed: a file only the package changed is overwritten, a file only the game changed stays,
-  and a file both changed is listed before anything is written and resolved one way for all of them
-  - keep mine, or take the package's. A module installed before it kept a record lists every
-  differing file as a conflict, because nobody can say who changed it.
+  beside the card. The version sits in the banner beside the button; an installed module whose
+  package ships a newer version reads **Update to X** on its page and `UPDATE` on its sidebar
+  row, and a module that arrived with this package version reads `NEW`; one console line at
+  startup names the modules with updates. The update keeps what the game changed: a file only the
+  package changed is overwritten, a file only the game changed stays, and a file both changed is
+  listed before anything is written and resolved one way for all of them - keep mine, or take the
+  package's. A module installed before it kept a record lists every differing file as a conflict,
+  because nobody can say who changed it.
 - **The setup set has a page per module.** `Module Library` → `Setup Modules` holds an Overview with
   **Install All Setup** and a page each for Main, Loading, Screen, Gameplay and Connector. A module the
   game removed comes back on its own from its page while the rest of the set is here; Loading carries a

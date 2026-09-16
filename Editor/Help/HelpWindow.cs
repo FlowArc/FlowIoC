@@ -538,7 +538,7 @@ namespace FlowIoC.Editor.Help
                 // The banner and the band under it are drawn outside the scroll view, so the title,
                 // what the page is about and the readings it offers all stay put while the body
                 // scrolls under them.
-                _painter.Banner(_selected.Title, _selected.Action);
+                _painter.Banner(_selected.Title, _selected.Action, _selected.Version);
 
                 int previous = _selected.SelectedTab;
                 int chosen = DrawHeader();

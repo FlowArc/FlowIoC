@@ -60,10 +60,11 @@ namespace FlowIoC.Editor.Help
 
         /// <summary>
         /// The purple bar every page wears: its title on the left, and whatever the page can do on
-        /// the right. The readings it offers are not here - they are a strip along the foot of the
-        /// band below, where a tab sits directly on top of the page it opens.
+        /// the right, with the module's version beside it when the page has one. The readings it
+        /// offers are not here - they are a strip along the foot of the band below, where a tab
+        /// sits directly on top of the page it opens.
         /// </summary>
-        internal void Banner(string title, HelpAction action = null)
+        internal void Banner(string title, HelpAction action = null, string version = null)
         {
             Color previous = GUI.backgroundColor;
             GUI.backgroundColor = _theme.Banner;
@@ -78,6 +79,11 @@ namespace FlowIoC.Editor.Help
                     GUILayout.Height(_theme.BannerHeight), GUILayout.ExpandWidth(false));
 
                 GUILayout.FlexibleSpace();
+
+                // The number sits against the button that acts on it: what is here, and beside it
+                // what pressing the button does about it.
+                if (!string.IsNullOrEmpty(version))
+                    GUILayout.Label(version, _theme.BannerVersion, GUILayout.Height(_theme.BannerHeight));
 
                 DrawAction(action);
             }

@@ -73,8 +73,8 @@ namespace FlowIoC.Editor.ModuleInstall
         /// What the page says above its body, or null when there is nothing to say. For a module
         /// that is not here it names the assemblies rather than the products they come from: the
         /// assembly name is what the module's asmdef references and what the reader has to end up
-        /// with. For a module that is here it says which version, and which is shipped when that
-        /// is a different one.
+        /// with. For a module that is here it speaks only where the banner's number and the button
+        /// do not explain themselves.
         /// </summary>
         internal string Note
         {
@@ -98,29 +98,44 @@ namespace FlowIoC.Editor.ModuleInstall
             }
         }
 
+        /// <summary>
+        /// The number the banner shows beside the button: the installed version, or the shipped
+        /// one while the module is not here, so a reader sees what they have or what they would
+        /// get. Null when neither card carries a version.
+        /// </summary>
+        internal string Version
+        {
+            get
+            {
+                if (_installed)
+                    return HasInstalledVersion ? _installedVersion : null;
+
+                return HasShippedVersion ? _shippedVersion : null;
+            }
+        }
+
+        /// <summary>
+        /// The banner already says which version is here and the button which one is offered,
+        /// so the note speaks only where the two numbers do not explain themselves: a copy
+        /// installed before it carried a version, and a copy ahead of what the package ships.
+        /// </summary>
         private string InstalledNote
         {
             get
             {
-                if (UpdateAvailable)
-                    return InstalledPhrase + " · " + _shippedVersion + " shipped";
-
                 if (!HasInstalledVersion)
-                    return null;
+                    return UpdateAvailable ? "Installed before the module carried a version." : null;
 
                 if (HasShippedVersion && _order.IsNewer(_installedVersion, _shippedVersion))
                     return "Installed " + _installedVersion + ", ahead of the shipped " + _shippedVersion;
 
-                return "Installed " + _installedVersion;
+                return null;
             }
         }
 
         private bool HasInstalledVersion => _installedVersion != ModuleCardVersionLine.NONE;
 
         private bool HasShippedVersion => _shippedVersion != ModuleCardVersionLine.NONE;
-
-        private string InstalledPhrase =>
-            HasInstalledVersion ? "Installed " + _installedVersion : "Installed, version unknown";
     }
 }
 
