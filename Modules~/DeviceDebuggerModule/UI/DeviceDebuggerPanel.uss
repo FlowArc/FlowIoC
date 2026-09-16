@@ -1,0 +1,615 @@
+/* The on-device debug panel. Sizes are panel units: PanelSettings scales by physical size, so
+   a panel unit is a density-independent pixel, so 14px reads as 14dp on every phone. */
+
+.dd-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    font-size: 14px;
+    color: rgb(230, 232, 236);
+}
+
+/* ---- trigger ---- */
+
+.dd-trigger {
+    position: absolute;
+    flex-direction: row;
+    align-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 6px 12px;
+    border-radius: 22px;
+    background-color: rgba(16, 18, 22, 0.75);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.dd-trigger-tap {
+    min-width: 96px;
+    min-height: 96px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.dd-trigger-label {
+    color: rgb(230, 232, 236);
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.dd-badge {
+    margin-left: 8px;
+    padding: 2px 8px;
+    min-width: 24px;
+    border-radius: 12px;
+    background-color: rgb(224, 82, 79);
+    color: white;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.dd-badge-on {
+    border-color: rgb(224, 82, 79);
+}
+
+.dd-corner-topleft { left: 8px; top: 8px; }
+.dd-corner-topright { right: 8px; top: 8px; }
+.dd-corner-bottomleft { left: 8px; bottom: 8px; }
+.dd-corner-bottomright { right: 8px; bottom: 8px; }
+
+/* ---- panel ---- */
+
+.dd-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(16, 18, 22);
+    flex-direction: column;
+}
+
+.dd-bar {
+    flex-direction: row;
+    align-items: stretch;
+    height: 48px;
+    flex-shrink: 0;
+    background-color: rgb(28, 31, 38);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.dd-tab {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0 4px;
+    font-size: 13px;
+    overflow: hidden;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(160, 166, 178);
+    -unity-font-style: bold;
+    border-bottom-width: 3px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.dd-tab:active {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.dd-tab-on {
+    color: rgb(230, 232, 236);
+    border-bottom-color: rgb(94, 156, 255);
+}
+
+.dd-spacer {
+    width: 8px;
+}
+
+.dd-close {
+    width: 48px;
+    margin: 0;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(230, 232, 236);
+    font-size: 18px;
+}
+
+.dd-page {
+    flex-grow: 1;
+    min-height: 0;
+    display: none;
+    flex-direction: column;
+}
+
+.dd-scroll {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* ---- console ---- */
+
+.dd-filter-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 6px 8px;
+    background-color: rgb(22, 25, 30);
+}
+
+.dd-filter, .dd-action {
+    margin: 4px 4px 0 0;
+    padding: 3px 7px;
+    min-height: 26px;
+    font-size: 12px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: rgb(160, 166, 178);
+}
+
+.dd-filter-on {
+    color: rgb(230, 232, 236);
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dd-filter-warning.dd-filter-on { color: rgb(229, 180, 83); }
+.dd-filter-error.dd-filter-on { color: rgb(224, 82, 79); }
+
+.dd-search-row {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 8px 6px 8px;
+    background-color: rgb(22, 25, 30);
+}
+
+/* The field keeps its share of the row whatever is typed: a basis of zero and no minimum, so a
+   long search never pushes the button beside it off the screen. Dark like the panel, light text,
+   because the runtime theme paints a field white and the panel's light text vanished on it. */
+
+.dd-search {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin: 4px 6px 0 0;
+    min-height: 32px;
+}
+
+/* Every text field in the panel: the search, an option's value, a slider's number, a signal's
+   payload. The runtime theme paints them white, and the panel's light text vanished on them. */
+
+.dd-root .unity-text-field__input {
+    min-width: 0;
+    overflow: hidden;
+    background-color: rgb(34, 38, 46);
+    border-color: rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    color: rgb(230, 232, 236);
+    --unity-cursor-color: rgb(230, 232, 236);
+    --unity-selection-color: rgba(94, 156, 255, 0.4);
+}
+
+.dd-root .unity-text-element--inner-input-field-component {
+    color: rgb(230, 232, 236);
+}
+
+.dd-root .unity-base-popup-field__input {
+    background-color: rgb(34, 38, 46);
+    border-color: rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    color: rgb(230, 232, 236);
+}
+
+.dd-root .unity-base-popup-field__text {
+    color: rgb(230, 232, 236);
+}
+
+.dd-root .unity-base-popup-field__arrow {
+    -unity-background-image-tint-color: rgb(230, 232, 236);
+}
+
+.dd-search-row > .dd-filter {
+    margin: 4px 0 0 0;
+}
+
+.dd-list-holder {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.dd-list {
+    flex-grow: 1;
+    min-height: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* A row the way the Flow Console draws one: the kind on the left, the message, and under it the
+   channel tag in its colour with where the line came from. */
+
+.dd-log-row {
+    flex-direction: row;
+    align-items: center;
+    height: 40px;
+    padding: 0 6px 0 4px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.dd-log-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.dd-log-lines {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.dd-log-message {
+    font-size: 12px;
+    color: rgb(230, 232, 236);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    padding: 0;
+}
+
+.dd-log-second {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 1px;
+}
+
+.dd-log-tag {
+    font-size: 10px;
+    margin: 0 6px 0 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.dd-log-source {
+    font-size: 10px;
+    color: rgb(150, 156, 168);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 1;
+}
+
+/* The channel switches, folded out by the Filters button. */
+
+.dd-channel-panel {
+    max-height: 45%;
+    flex-shrink: 0;
+    background-color: rgb(22, 25, 30);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    padding: 4px 8px 8px 8px;
+}
+
+.dd-channel-actions {
+    flex-direction: row;
+}
+
+.dd-channel-heading {
+    margin: 8px 0 2px 0;
+    font-size: 11px;
+    color: rgb(150, 156, 168);
+    -unity-font-style: bold;
+}
+
+.dd-channel-wrap {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.dd-channel {
+    margin: 2px 4px 2px 0;
+    padding: 4px 8px;
+    min-height: 28px;
+    font-size: 12px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.03);
+    opacity: 0.45;
+}
+
+.dd-channel-on {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* The detail: a sheet in the lower third, and the list shrinks above it rather than being
+   covered, so every row stays reachable while it is open. */
+
+.dd-list-holder {
+    flex-direction: column;
+}
+
+.dd-detail {
+    flex-shrink: 0;
+    height: 34%;
+    background-color: rgb(20, 23, 28);
+    border-top-width: 2px;
+    border-top-color: rgb(94, 156, 255);
+    flex-direction: column;
+}
+
+.dd-detail-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 6px 8px;
+    background-color: rgb(22, 25, 30);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.dd-detail-heading {
+    flex-shrink: 1;
+    min-width: 0;
+    margin-left: 8px;
+    font-size: 11px;
+    white-space: normal;
+}
+
+.dd-detail-scroll {
+    flex-grow: 1;
+    min-height: 0;
+    padding: 8px;
+}
+
+.dd-detail-text {
+    white-space: normal;
+    font-size: 12px;
+}
+
+/* ---- rows shared by options, signals, info ---- */
+
+.dd-group {
+    margin: 4px 8px 0 8px;
+}
+
+.dd-group > .unity-foldout__content {
+    margin-left: 0;
+}
+
+.dd-group-framework {
+    opacity: 0.8;
+}
+
+.dd-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 44px;
+    padding: 4px 8px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.dd-row-label {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 30%;
+    white-space: normal;
+}
+
+.dd-row-value, .dd-row-reason {
+    flex-grow: 1;
+    flex-shrink: 1;
+    -unity-text-align: middle-right;
+    color: rgb(160, 166, 178);
+    white-space: normal;
+}
+
+.dd-row-reason {
+    font-size: 12px;
+}
+
+.dd-row-button {
+    min-width: 72px;
+    min-height: 36px;
+    margin: 0 0 0 8px;
+    border-radius: 6px;
+    background-color: rgb(94, 156, 255);
+    border-width: 0;
+    color: white;
+    -unity-font-style: bold;
+}
+
+.dd-row-toggle {
+    margin: 0 0 0 8px;
+}
+
+.dd-row-field {
+    width: 40%;
+    margin: 0 0 0 8px;
+    min-height: 36px;
+}
+
+.dd-row-inline {
+    flex-direction: row;
+    align-items: center;
+    width: 50%;
+    justify-content: flex-end;
+}
+
+.dd-row-inline > .dd-row-field {
+    flex-grow: 1;
+    width: auto;
+}
+
+.dd-row-slider {
+    width: 55%;
+    margin: 0 0 0 8px;
+}
+
+.dd-row-dropdown {
+    width: 45%;
+    margin: 0 0 0 8px;
+    min-height: 36px;
+}
+
+.dd-note {
+    margin: 16px;
+    color: rgb(160, 166, 178);
+    white-space: normal;
+}
+
+/* ---- stats ---- */
+
+.dd-graph {
+    height: 120px;
+    margin: 12px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+}
+
+.dd-stats-rows {
+    margin: 0 12px 12px 12px;
+    white-space: normal;
+    font-size: 15px;
+}
+
+/* ---- info ---- */
+
+.dd-copy-info {
+    margin: 8px;
+    align-self: flex-end;
+}
+
+/* ---- scrollers: a thin bar, no arrow buttons, the way a phone draws one ---- */
+
+.dd-root .unity-scroller--vertical {
+    width: 8px;
+    min-width: 8px;
+    margin: 2px 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.dd-root .unity-scroller--horizontal {
+    height: 8px;
+    min-height: 8px;
+    margin: 0 2px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.dd-root .unity-scroller__low-button,
+.dd-root .unity-scroller__high-button {
+    display: none;
+}
+
+.dd-root .unity-scroller--vertical > .unity-scroller__slider,
+.dd-root .unity-scroller--horizontal > .unity-scroller__slider {
+    margin: 0;
+    min-width: 0;
+    min-height: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.dd-root .unity-base-slider__tracker {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-width: 0;
+    border-radius: 4px;
+}
+
+.dd-root .unity-base-slider__dragger {
+    width: 6px;
+    min-width: 6px;
+    left: 1px;
+    background-color: rgba(255, 255, 255, 0.32);
+    border-width: 0;
+    border-radius: 3px;
+}
+
+.dd-root .unity-scroller--horizontal .unity-base-slider__dragger {
+    width: auto;
+    min-width: 0;
+    height: 6px;
+    min-height: 6px;
+    left: 0;
+    top: 1px;
+}
+
+.dd-root .unity-base-slider__dragger-border {
+    display: none;
+}
+
+.dd-root .unity-base-slider--vertical .unity-base-slider__drag-container {
+    margin: 0;
+}
+
+/* ---- press feedback: every button answers a finger, the way the tabs already did ---- */
+
+.dd-action, .dd-filter, .dd-channel, .dd-row-button, .dd-close, .dd-trigger {
+    transition-property: background-color, scale;
+    transition-duration: 0.08s;
+}
+
+.dd-action:active, .dd-filter:active, .dd-channel:active {
+    background-color: rgba(255, 255, 255, 0.28);
+    scale: 0.96 0.96;
+}
+
+.dd-row-button:active {
+    background-color: rgb(60, 118, 214);
+    scale: 0.94 0.94;
+}
+
+.dd-close:active {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dd-trigger:active {
+    background-color: rgba(60, 66, 78, 0.9);
+    scale: 0.96 0.96;
+}
+
+.dd-root .unity-toggle:active .unity-toggle__checkmark,
+.dd-root .unity-base-popup-field__input:active {
+    background-color: rgb(52, 58, 70);
+}
+
+/* The same pressed look put on by PressFeedback, for the controls a ScrollView takes :active from. */
+.dd-action.dd-pressed, .dd-filter.dd-pressed, .dd-channel.dd-pressed {
+    background-color: rgba(255, 255, 255, 0.28);
+    scale: 0.96 0.96;
+}
+
+.dd-row-button.dd-pressed {
+    background-color: rgb(60, 118, 214);
+    scale: 0.94 0.94;
+}
+
+.dd-close.dd-pressed {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.dd-root .unity-toggle.dd-pressed .unity-toggle__checkmark, .dd-root .unity-base-popup-field.dd-pressed .unity-base-popup-field__input {
+    background-color: rgb(52, 58, 70);
+}

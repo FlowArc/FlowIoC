@@ -1,0 +1,63 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="DeviceDebuggerPanel.uss" />
+    <ui:VisualElement name="root" class="dd-root" picking-mode="Ignore">
+        <ui:VisualElement name="trigger" class="dd-trigger dd-corner-bottomright">
+            <ui:Label name="trigger-label" text="FlowIoC" class="dd-trigger-label" picking-mode="Ignore" />
+            <ui:Label name="error-badge" text="0" class="dd-badge" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="panel" class="dd-panel">
+            <ui:VisualElement name="bar" class="dd-bar">
+                <ui:Button name="tab-console" text="Console" class="dd-tab" />
+                <ui:Button name="tab-options" text="Options" class="dd-tab" />
+                <ui:Button name="tab-signals" text="Signals" class="dd-tab" />
+                <ui:Button name="tab-stats" text="Stats" class="dd-tab" />
+                <ui:Button name="tab-info" text="Info" class="dd-tab" />
+                <ui:VisualElement class="dd-spacer" picking-mode="Ignore" />
+                <ui:Button name="close" text="✕" class="dd-close" />
+            </ui:VisualElement>
+            <ui:VisualElement name="page-console" class="dd-page">
+                <ui:VisualElement class="dd-filter-row">
+                    <ui:Button name="clear" text="Clear" class="dd-action" />
+                    <ui:Button name="copy-logs" text="Copy all logs" class="dd-action" />
+                    <ui:Button name="filter-logs" text="Log" class="dd-filter dd-filter-on dd-filter-log" />
+                    <ui:Button name="filter-warnings" text="Warn" class="dd-filter dd-filter-on dd-filter-warning" />
+                    <ui:Button name="filter-errors" text="Error" class="dd-filter dd-filter-on dd-filter-error" />
+                </ui:VisualElement>
+                <ui:VisualElement class="dd-search-row">
+                    <ui:TextField name="search" class="dd-search" placeholder-text="Search" />
+                    <ui:Button name="filter-channels" text="Filters" class="dd-filter" />
+                </ui:VisualElement>
+                <ui:ScrollView name="channel-panel" class="dd-channel-panel">
+                    <ui:VisualElement class="dd-channel-actions">
+                        <ui:Button name="channels-all" text="All" class="dd-action" />
+                        <ui:Button name="channels-none" text="None" class="dd-action" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="channel-rows" />
+                </ui:ScrollView>
+                <ui:VisualElement class="dd-list-holder">
+                    <ui:ListView name="log-list" class="dd-list" fixed-item-height="40" virtualization-method="FixedHeight" selection-type="Single" />
+                    <ui:VisualElement name="detail" class="dd-detail">
+                        <ui:VisualElement class="dd-detail-bar">
+                            <ui:Button name="detail-back" text="Close" class="dd-action" />
+                            <ui:Button name="detail-copy" text="Copy" class="dd-action" />
+                            <ui:Label name="detail-heading" class="dd-detail-heading" />
+                        </ui:VisualElement>
+                        <ui:ScrollView class="dd-detail-scroll">
+                            <ui:Label name="detail-text" class="dd-detail-text" />
+                        </ui:ScrollView>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:ScrollView name="page-options" class="dd-page dd-scroll" />
+            <ui:ScrollView name="page-signals" class="dd-page dd-scroll" />
+            <ui:VisualElement name="page-stats" class="dd-page">
+                <ui:VisualElement name="stats-graph" class="dd-graph" picking-mode="Ignore" />
+                <ui:Label name="stats-rows" class="dd-stats-rows" />
+            </ui:VisualElement>
+            <ui:VisualElement name="page-info" class="dd-page">
+                <ui:ScrollView name="info-rows" class="dd-scroll" />
+                <ui:Button name="copy-info" text="Copy" class="dd-action dd-copy-info" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
