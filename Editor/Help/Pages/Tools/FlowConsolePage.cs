@@ -19,10 +19,11 @@ namespace FlowIoC.Editor.Help.Pages.Tools
         protected override string BodyHeadline => "The framework logs itself into one window.";
 
         protected override string BodyTagline =>
-            "Tools > FlowIoC > Flow Console. Every signal dispatch, command step, context phase, "
-            + "screen transition and pool operation, on channels you switch on and off "
-            + "independently - which is where most debugging in FlowIoC starts rather than at a "
-            + "breakpoint.";
+            "Tools > FlowIoC > Flow Console - and a tab beside Unity's Console from the day the "
+            + "project meets FlowIoC, kept by the layout. Every signal dispatch, command step, "
+            + "context phase, screen transition and pool operation, on channels you switch on and "
+            + "off independently - which is where most debugging in FlowIoC starts rather than at "
+            + "a breakpoint.";
 
         protected override void DrawBody(HelpPainter painter)
         {

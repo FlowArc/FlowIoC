@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using FlowIoC.ConsoleModule;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -19,6 +20,40 @@ namespace FlowIoC.Editor.Console
             var window = GetWindow<FlowConsoleEditor>("Flow Console");
             // window.position = new Rect(window.position.position, new Vector2(800, 600));
             window.minSize = new Vector2(800, 600);
+        }
+
+        /// <summary>
+        /// The console as a tab beside Unity's own Console, where somebody who has just installed
+        /// the package finds it without being told - the framework narrates itself into it, and
+        /// nothing else in the Editor says so. Beside the Project window when the Console is not
+        /// open, which is the same area in Unity's default layout, and floating when neither is.
+        /// The layout keeps the tab from then on, so this is called once, on the project's first
+        /// meeting with FlowIoC; the menu item above is the door after that, and a reader who
+        /// closed the tab decided. No minimum size: a docked tab takes its area's size, and a
+        /// minimum larger than the area would push the layout around.
+        /// </summary>
+        internal static void OpenBesideUnityConsole()
+        {
+            GetWindow<FlowConsoleEditor>("Flow Console", true, DockNeighbours());
+        }
+
+        /// <summary>
+        /// The windows the console docks beside, in order of preference. Both are internal to
+        /// Unity and reached by name; a name that stops resolving on a Unity upgrade drops out of
+        /// the list rather than failing, and the test on this method is what says so.
+        /// </summary>
+        internal static Type[] DockNeighbours()
+        {
+            Assembly editor = typeof(EditorWindow).Assembly;
+            var neighbours = new List<Type>();
+
+            foreach (string name in new[] {"UnityEditor.ConsoleWindow", "UnityEditor.ProjectBrowser"})
+            {
+                Type type = editor.GetType(name);
+                if (type != null) neighbours.Add(type);
+            }
+
+            return neighbours.ToArray();
         }
 
 //======================================================================================================================

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using FlowIoC.Editor.AgentRules;
+using FlowIoC.Editor.Console;
 using FlowIoC.Editor.Help.Pages;
 using FlowIoC.Editor.SetupModules;
 using UnityEditor;
@@ -76,6 +77,13 @@ namespace FlowIoC.Editor.Help.WhatsNew
 
             if (decision == WhatsNewDecision.Stop)
                 return;
+
+            // A project meeting FlowIoC is also handed the Flow Console, as a tab beside Unity's
+            // Console: the framework narrates itself into it, and a reader who never opens it
+            // reads the framework's lines in Unity's console instead, tags and all, and never
+            // learns why. Before the Help window, so that Welcome ends up on top.
+            if (decision == WhatsNewDecision.Introduce)
+                FlowConsoleEditor.OpenBesideUnityConsole();
 
             HelpWindow.OpenPage(WelcomePage.PAGE_TITLE, TabFor(decision));
 
