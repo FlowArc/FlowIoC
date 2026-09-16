@@ -1,13 +1,16 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.Help.WhatsNew;
+using FlowIoC.Editor.ModuleCards;
 
 namespace FlowIoC.Editor.ModuleInstall
 {
     /// <summary>
-    /// What a module page's Install button reads and whether it can be pressed, worked out
-    /// from three readings taken every repaint: whether the page has a package behind it, whether
-    /// the module is already in the project, and which of the assemblies it needs are absent.
+    /// What a module page's button reads and whether it can be pressed, worked out from readings
+    /// taken every repaint: whether the page has a package behind it, whether the module is
+    /// already in the project, which of the assemblies it needs are absent, and the two versions
+    /// - the installed card's and the shipped card's.
     ///
     /// Missing packages are not among them. A package can be added, and the install carries on
     /// once it arrives; a paid asset cannot, so it is the only requirement that stops the button.
@@ -17,21 +20,44 @@ namespace FlowIoC.Editor.ModuleInstall
         private readonly bool _payloadResolved;
         private readonly bool _installed;
         private readonly IReadOnlyList<string> _missingAssemblies;
+        private readonly string _installedVersion;
+        private readonly string _shippedVersion;
+        private readonly VersionOrder _order = new VersionOrder();
 
         internal ModuleInstallState(
             bool payloadResolved, bool installed, IReadOnlyList<string> missingAssemblies)
+            : this(payloadResolved, installed, missingAssemblies, null, null)
+        {
+        }
+
+        internal ModuleInstallState(
+            bool payloadResolved, bool installed, IReadOnlyList<string> missingAssemblies,
+            string installedVersion, string shippedVersion)
         {
             _payloadResolved = payloadResolved;
             _installed = installed;
             _missingAssemblies = missingAssemblies ?? new string[0];
+            _installedVersion = installedVersion ?? ModuleCardVersionLine.NONE;
+            _shippedVersion = shippedVersion ?? ModuleCardVersionLine.NONE;
         }
+
+        internal bool Installed => _installed;
+
+        internal string ShippedVersion => _shippedVersion;
+
+        /// <summary>
+        /// Installed, and the package ships a newer version. A shipped copy with no version at all
+        /// offers nothing: 0.0.0 is newer than nothing else.
+        /// </summary>
+        internal bool UpdateAvailable =>
+            _installed && HasShippedVersion && _order.IsNewer(_shippedVersion, _installedVersion);
 
         internal string Label
         {
             get
             {
                 if (_installed)
-                    return "Installed";
+                    return UpdateAvailable ? "Update to " + _shippedVersion : "Installed";
 
                 if (!_payloadResolved)
                     return "Unavailable";
@@ -41,19 +67,21 @@ namespace FlowIoC.Editor.ModuleInstall
         }
 
         internal bool Enabled =>
-            !_installed && _payloadResolved && _missingAssemblies.Count == 0;
+            UpdateAvailable || (!_installed && _payloadResolved && _missingAssemblies.Count == 0);
 
         /// <summary>
-        /// What the page says above its body, or null when there is nothing to say. It names the
-        /// assemblies rather than the products they come from: the assembly name is what the
-        /// module's asmdef references and what the reader has to end up with.
+        /// What the page says above its body, or null when there is nothing to say. For a module
+        /// that is not here it names the assemblies rather than the products they come from: the
+        /// assembly name is what the module's asmdef references and what the reader has to end up
+        /// with. For a module that is here it says which version, and which is shipped when that
+        /// is a different one.
         /// </summary>
         internal string Note
         {
             get
             {
                 if (_installed)
-                    return null;
+                    return InstalledNote;
 
                 if (!_payloadResolved)
                     return "This page is not compiled from a package, so the module it installs "
@@ -69,6 +97,30 @@ namespace FlowIoC.Editor.ModuleInstall
                        + "before installing the module.";
             }
         }
+
+        private string InstalledNote
+        {
+            get
+            {
+                if (UpdateAvailable)
+                    return InstalledPhrase + " · " + _shippedVersion + " shipped";
+
+                if (!HasInstalledVersion)
+                    return null;
+
+                if (HasShippedVersion && _order.IsNewer(_installedVersion, _shippedVersion))
+                    return "Installed " + _installedVersion + ", ahead of the shipped " + _shippedVersion;
+
+                return "Installed " + _installedVersion;
+            }
+        }
+
+        private bool HasInstalledVersion => _installedVersion != ModuleCardVersionLine.NONE;
+
+        private bool HasShippedVersion => _shippedVersion != ModuleCardVersionLine.NONE;
+
+        private string InstalledPhrase =>
+            HasInstalledVersion ? "Installed " + _installedVersion : "Installed, version unknown";
     }
 }
 

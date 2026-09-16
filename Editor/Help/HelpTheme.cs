@@ -32,6 +32,7 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _sidebarRow;
         private GUIStyle _sidebarLabel;
         private GUIStyle _sidebarLabelActive;
+        private GUIStyle _sidebarFlag;
         private GUIStyle _header;
         private GUIStyle _tabLabel;
         private GUIStyle _tabLabelActive;
@@ -178,6 +179,15 @@ namespace FlowIoC.Editor.Help
         public Color SidebarSeparator => _pro ? Hex(0x313131) : Hex(0xBBBBBB);
 
         public Color SidebarSeparatorLight => _pro ? Hex(0x565656) : Hex(0xDCDCDC);
+
+        /// <summary>
+        /// The two fills a sidebar flag sits on. Green for an update the reader can take, red for
+        /// a module that is new to this package version. Muted a step in the light skin, where a
+        /// saturated fill beside grey rows shouts.
+        /// </summary>
+        public Color FlagUpdate => _pro ? Hex(0x2F9E5B) : Hex(0x2C8A50);
+
+        public Color FlagNew => _pro ? Hex(0xC94A3F) : Hex(0xB84136);
 
         /// <summary>
         /// What a row is filled with at the depth it sits. The panel's own colour at the top level,
@@ -630,6 +640,19 @@ namespace FlowIoC.Editor.Help
             hover = {textColor = _palette.Title},
             focused = {textColor = _palette.Title},
             active = {textColor = _palette.Title}
+        };
+
+        /// <summary>The word on a flag: small, bold, white on its fill, centred in the pill.</summary>
+        public GUIStyle SidebarFlag => _sidebarFlag ??= new GUIStyle(EditorStyles.miniBoldLabel)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 9,
+            padding = new RectOffset(0, 0, 0, 0),
+            margin = new RectOffset(0, 0, 0, 0),
+            normal = {textColor = Color.white},
+            hover = {textColor = Color.white},
+            active = {textColor = Color.white},
+            focused = {textColor = Color.white}
         };
 
         /// <summary>

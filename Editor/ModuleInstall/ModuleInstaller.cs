@@ -2,9 +2,7 @@
 
 using System;
 using System.IO;
-using FlowIoC.Editor.CodeGenerator.Detector;
-using FlowIoC.Editor.ModuleScanner;
-using UnityEditor;
+using FlowIoC.Editor.ModuleCards;
 using UnityEngine;
 
 namespace FlowIoC.Editor.ModuleInstall
@@ -25,6 +23,8 @@ namespace FlowIoC.Editor.ModuleInstall
         private readonly string _projectRoot;
         private readonly ModulesSource _source;
         private readonly Action<string> _register;
+        private readonly ModuleCardVersionLine _version = new ModuleCardVersionLine();
+        private readonly ModuleCardFile _card = new ModuleCardFile();
 
         internal ModuleInstaller(string projectRoot, ModulesSource source)
             : this(projectRoot, source, null)
@@ -80,6 +80,20 @@ namespace FlowIoC.Editor.ModuleInstall
             return null;
         }
 
+        internal string ShippedPathOf(string moduleFolderName) => _source.PathOf(moduleFolderName);
+
+        /// <summary>The installed card's version, 0.0.0 when it has none, null when the module is not here.</summary>
+        internal string InstalledVersionOf(string moduleFolderName)
+        {
+            string folder = InstalledAt(moduleFolderName);
+
+            return folder == null ? null : _version.Read(_card.Read(folder));
+        }
+
+        /// <summary>The shipped card's version, or 0.0.0 when it has none.</summary>
+        internal string ShippedVersionOf(string moduleFolderName) =>
+            _version.Read(_card.Read(ShippedPathOf(moduleFolderName)));
+
         /// <summary>
         /// The assembly the shipped module declares. A module folder holds exactly one asmdef at
         /// its top - the ones for its Shared, Signals and test assemblies sit deeper - so anything else is
@@ -128,7 +142,7 @@ namespace FlowIoC.Editor.ModuleInstall
         }
 
         /// <summary>A path written from the project root, for a message a reader has to act on.</summary>
-        private string ProjectRelative(string fullPath)
+        internal string ProjectRelative(string fullPath)
         {
             string root = _projectRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
@@ -194,28 +208,9 @@ namespace FlowIoC.Editor.ModuleInstall
             return true;
         }
 
-        /// <summary>
-        /// What turns the copied folder into a module the rest of the Editor knows about. The
-        /// order matters: the index has to know the module before the namespace settings can be
-        /// written from it.
-        /// </summary>
-        private void Register(string moduleFolderName)
-        {
-            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
-
-            // The index, and with it the module's own FlowModule part - written now rather than on
-            // the next load, so the module's own code compiles against the channel it just gained.
-            ModuleAutoDetector.RescanModules();
-
-            // <Assembly>.csproj.DotSettings at the project root, for this module and every other.
-            new ModuleRepair().FixAll();
-
-            Debug.Log($"<color=cyan>[FlowIoC]</color> Module installed: {TargetFolder}/{moduleFolderName}");
-
-            // After the repair above, for the reason the startup pass has: a scan taken before it
-            // reports the settings files that FixAll has just written.
-            new ModuleScannerStartupReport().Report();
-        }
+        /// <summary>What turns the copied folder into a module the rest of the Editor knows about.</summary>
+        private void Register(string moduleFolderName) =>
+            new InstalledModuleRegistrar().Register(TargetFolder + "/" + moduleFolderName, "installed");
 
         private static void CopyTree(string source, string target) => new PayloadCopier().CopyTree(source, target);
     }

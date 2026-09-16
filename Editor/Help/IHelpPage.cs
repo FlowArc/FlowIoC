@@ -32,6 +32,9 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         bool Featured { get; }
 
+        /// <summary>The flag on the page's sidebar row, or null - which is every page but a module's.</summary>
+        SidebarFlagEVO SidebarFlag { get; }
+
         /// <summary>Null for a page that has no diagram.</summary>
         HelpGraph Graph { get; }
 

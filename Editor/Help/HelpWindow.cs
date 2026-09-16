@@ -41,6 +41,11 @@ namespace FlowIoC.Editor.Help
 
         private const float SidebarPadding = 8f;
 
+        /// <summary>The pill a sidebar flag is drawn in: its height, and the room around the word.</summary>
+        private const float SidebarFlagHeight = 14f;
+
+        private const float SidebarFlagPadding = 5f;
+
         /// <summary>
         /// What the groove between two rows takes off the bottom of the upper one: a dark hairline
         /// and a light one under it.
@@ -345,7 +350,7 @@ namespace FlowIoC.Editor.Help
                 string label = depth == 0 ? Label(section.Title, section.Subtitle) : section.Title;
 
                 if (DrawRow(label, section.Icon, section.Featured,
-                        _selected == section.Page, height, depth, null))
+                        _selected == section.Page, height, depth, null, section.Page.SidebarFlag))
                 {
                     Select(section.Page);
                 }
@@ -356,7 +361,7 @@ namespace FlowIoC.Editor.Help
             string key = KeyOf(parentPath, section);
             bool open = _openCategories.Contains(key);
 
-            if (DrawRow(section.Title, section.Icon, false, false, height, depth, open))
+            if (DrawRow(section.Title, section.Icon, false, false, height, depth, open, null))
             {
                 if (open)
                     _openCategories.Remove(key);
@@ -392,7 +397,7 @@ namespace FlowIoC.Editor.Help
         /// deep is still highlighted the full width of the menu.
         /// </summary>
         private bool DrawRow(string label, FlowIcon icon, bool featured, bool active, float height,
-            int depth, bool? expanded)
+            int depth, bool? expanded, SidebarFlagEVO flag)
         {
             bool pressed = GUILayout.Toggle(active, GUIContent.none, _theme.SidebarRow,
                 GUILayout.Height(height), GUILayout.ExpandWidth(true));
@@ -422,6 +427,21 @@ namespace FlowIoC.Editor.Help
             float textX = row.x + indent + SidebarPadding + SidebarIconSize + SidebarPadding;
             Rect textRect = new Rect(textX, row.y,
                 row.xMax - SidebarPadding - arrowWidth - textX, row.height);
+
+            // The flag sits at the right edge, where a category keeps its arrow, and the name
+            // gives up that much width rather than running under it.
+            if (flag != null)
+            {
+                Vector2 size = _theme.SidebarFlag.CalcSize(new GUIContent(flag.Text));
+                float width = Mathf.Ceil(size.x) + SidebarFlagPadding * 2f;
+                var pill = new Rect(row.xMax - SidebarPadding - width,
+                    Mathf.Round(row.y + (row.height - SidebarFlagHeight) * 0.5f), width, SidebarFlagHeight);
+
+                EditorGUI.DrawRect(pill, flag.Tone == SidebarFlagTone.Update ? _theme.FlagUpdate : _theme.FlagNew);
+                GUI.Label(pill, flag.Text, _theme.SidebarFlag);
+
+                textRect.width -= width + SidebarPadding;
+            }
 
             GUI.Label(textRect, label, text);
 

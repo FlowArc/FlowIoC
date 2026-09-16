@@ -30,6 +30,8 @@ namespace FlowIoC.Editor.Help
 
         public virtual bool Featured => false;
 
+        public virtual SidebarFlagEVO SidebarFlag => null;
+
         public HelpGraph Graph { get; }
 
         /// <summary>A page offers nothing to do unless it says otherwise.</summary>

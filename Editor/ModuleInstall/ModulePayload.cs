@@ -19,17 +19,33 @@ namespace FlowIoC.Editor.ModuleInstall
     internal class ModulePayload
     {
         internal ModulePayload(Assembly assembly)
-            : this(PackageInfo.FindForAssembly(assembly)?.resolvedPath)
+            : this(PackageInfo.FindForAssembly(assembly))
         {
         }
 
-        internal ModulePayload(string packageRoot)
+        private ModulePayload(PackageInfo info)
+            : this(info?.resolvedPath, info?.name, info?.version)
+        {
+        }
+
+        internal ModulePayload(string packageRoot) : this(packageRoot, string.Empty, string.Empty)
+        {
+        }
+
+        internal ModulePayload(string packageRoot, string packageName, string packageVersion)
         {
             PackageRoot = packageRoot;
+            PackageName = packageName ?? string.Empty;
+            PackageVersion = packageVersion ?? string.Empty;
         }
 
         /// <summary>The package the page came from, or null when it came from none.</summary>
         internal string PackageRoot { get; }
+
+        /// <summary>The package's id and version, empty when the page came from no package.</summary>
+        internal string PackageName { get; }
+
+        internal string PackageVersion { get; }
 
         internal bool IsResolved => !string.IsNullOrEmpty(PackageRoot);
 

@@ -44,9 +44,10 @@ namespace FlowIoC.Editor.Help
         /// than a module. One with no parameterless constructor cannot be built without knowing
         /// what to hand it. And a nested one is a test double: a page is a class of its own, and
         /// picking up the doubles would put them in the help window of every project that has a
-        /// test assembly loaded.
+        /// test assembly loaded. The startup notice reads the same list to say which installed
+        /// modules have updates.
         /// </summary>
-        private static IReadOnlyList<ModulePage> Found()
+        internal static IReadOnlyList<ModulePage> Found()
         {
             var pages = new List<ModulePage>();
 
