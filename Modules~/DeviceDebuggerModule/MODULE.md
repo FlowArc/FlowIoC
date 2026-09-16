@@ -96,7 +96,9 @@ IDeviceDebuggerService, error badge, error overlay, stats, fps, signals tab, UI 
   so Run, Set and Fire looked untouched under a finger. `PressFeedback` listens on the panel root
   in the trickle-down phase, finds the control under the press by class, and keeps `dd-pressed`
   on it while the finger is down and for 180 ms at least, so a quick tap is seen too. The release
-  is read at the root as well, because after a capture it never reaches the button.
+  is listened for on the control itself, not the root: a captured pointer's events go to the
+  capturing element alone, so a root listener never saw the up and the button stayed pressed.
+  Up, cancel, capture-out (the ScrollView taking the pointer to scroll) and leave all end it.
 - **Proved on a phone, 2026-09-16.** OnePlus CPH2747, Android 16, 1272x2772 at 560 dpi,
   `DeviceDebuggerCheckScene` as a development APK: the pill and the badge, touch on every tab,
   the God mode toggle answered by its Outgoing row, `+1000 coins` read back as `Coins now 1000`,
