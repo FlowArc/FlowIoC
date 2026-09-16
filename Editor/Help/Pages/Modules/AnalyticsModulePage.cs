@@ -87,8 +87,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Space();
             painter.SubHeading("The plugs");
             painter.Image(_images.Get("AnalyticsRootInspector.png"),
-                "The Root inspector: Initialize Order -85, and under Sub Contexts one plug listed with AutoSetup ticked - "
-                + "here the test scene's recording plug; a Firebase or Facebook entry looks the same.");
+                "The Root inspector: Initialize Order -85, and under Sub Contexts the two shipped plugs listed, "
+                + "AutoSetup ticked on each.");
             painter.Note(
                 "A plug is an entry on AnalyticsServiceRoot's Sub Context Types: Add Sub Context > "
                 + "FirebaseAnalyticsServiceContext, FacebookAnalyticsServiceContext, or your own, with "
