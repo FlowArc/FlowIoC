@@ -69,6 +69,15 @@ The signal's payload arrives through `[SignalParam]` and **not** through `Execut
 `Execute signature mismatch` and does not run. `Command<T1..T4>`'s parameters are what the *binding*
 hands the step - fixed at bind time, or passed forward by the previous step's `Release`.
 
+**A payload of several values is matched by type, not by position.** A plain `[SignalParam]` takes
+the next value of the property's own type that no other property has claimed, so a
+`Signal<AdFormat, string, Action<AdResultVO>>` is read with three plain `[SignalParam]`s. The index
+form `[SignalParam(n)]` is for two values *of the same type*: it takes the n-th value of that type,
+counting from zero, so a `Signal<string, string>` is `[SignalParam(0)] string _name` and
+`[SignalParam(1)] string _value`. An index on a type the payload carries once is a mistake the
+Editor reports at dispatch - `[SignalParam(1)] needs at least 2 String values in the payload because
+the index counts from zero, but the signal carried 1` - and the property stays null.
+
 ## The shapes a binding takes
 
 They combine freely in one binding. What you are choosing between is when a step starts and what it
@@ -271,6 +280,10 @@ Bind these rather than writing your own.
   without a word; null at runtime.
 - **Expecting the signal's payload in `Execute`.** It arrives through `[SignalParam]`; a
   `Command<int>` bound to `Signal<int>` reports `Execute signature mismatch` and does not run.
+- **`[SignalParam(1)]` on a type the payload carries once.** The index counts values of the
+  property's own type, not positions: `[SignalParam(1)] string` on a `Signal<AdFormat, string>`
+  reports `needs at least 2 String values` and leaves the property null. Plain `[SignalParam]` on
+  each property when the types differ; the index only for two values of one type.
 - **A Command written only to dispatch a signal.** Bind `SignalDispatchCommand` instead.
 - **A Function where a Command belonged.** If it is a step somebody should read in the sequence, it
   is a Command - a Function does not appear in the Flow Console.
