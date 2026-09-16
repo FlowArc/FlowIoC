@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Xml;
 
 namespace FlowIoC.Editor.CodeStyle
 {
@@ -33,13 +31,10 @@ namespace FlowIoC.Editor.CodeStyle
         internal const string SolutionExtension = ".sln";
         internal const string SettingsExtension = ".sln.DotSettings";
 
-        private const string XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
-        private const string SystemNamespace = "clr-namespace:System;assembly=mscorlib";
-        private const string SettingsStorageNamespace = "urn:shemas-jetbrains-com:settings-storage-xaml";
-        private const string PresentationNamespace = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
 
         private readonly string _projectRoot;
         private readonly string _templatePath;
+        private readonly DotSettingsFile _file = new DotSettingsFile();
 
         internal SolutionDotSettingsWriter(string projectRoot, string templatePath)
         {
@@ -102,14 +97,14 @@ namespace FlowIoC.Editor.CodeStyle
                 path = Path.Combine(_projectRoot, ResolveSolutionName() + SettingsExtension);
 
                 Dictionary<string, SettingsEntry> entries =
-                    File.Exists(path) ? ReadEntries(path) : new Dictionary<string, SettingsEntry>(StringComparer.Ordinal);
+                    File.Exists(path) ? _file.Read(path) : new Dictionary<string, SettingsEntry>(StringComparer.Ordinal);
 
-                foreach (KeyValuePair<string, SettingsEntry> shipped in ReadEntries(_templatePath))
+                foreach (KeyValuePair<string, SettingsEntry> shipped in _file.Read(_templatePath))
                 {
                     entries[shipped.Key] = shipped.Value;
                 }
 
-                content = Compose(entries);
+                content = _file.Compose(entries);
 
                 changed = !File.Exists(path)
                           || !string.Equals(File.ReadAllText(path), content, StringComparison.Ordinal);
@@ -210,70 +205,6 @@ namespace FlowIoC.Editor.CodeStyle
             }
 
             return solutions.ToArray();
-        }
-
-        private Dictionary<string, SettingsEntry> ReadEntries(string filePath)
-        {
-            var entries = new Dictionary<string, SettingsEntry>(StringComparer.Ordinal);
-
-            var document = new XmlDocument();
-            document.Load(filePath);
-
-            if (document.DocumentElement == null)
-                return entries;
-
-            foreach (XmlNode node in document.DocumentElement.ChildNodes)
-            {
-                if (!(node is XmlElement element))
-                    continue;
-
-                string key = element.GetAttribute("Key", XamlNamespace);
-                if (string.IsNullOrEmpty(key))
-                    continue;
-
-                entries[key] = new SettingsEntry(element.LocalName, element.InnerText);
-            }
-
-            return entries;
-        }
-
-        private string Compose(IDictionary<string, SettingsEntry> entries)
-        {
-            var builder = new StringBuilder();
-
-            builder.Append("<wpf:ResourceDictionary xml:space=\"preserve\"");
-            builder.Append(" xmlns:x=\"").Append(XamlNamespace).Append("\"");
-            builder.Append(" xmlns:s=\"").Append(SystemNamespace).Append("\"");
-            builder.Append(" xmlns:ss=\"").Append(SettingsStorageNamespace).Append("\"");
-            builder.Append(" xmlns:wpf=\"").Append(PresentationNamespace).Append("\"");
-            builder.Append(">\n");
-
-            // ReSharper keeps the file sorted by key, so a rewrite stays a small diff.
-            var sorted = new SortedDictionary<string, SettingsEntry>(StringComparer.Ordinal);
-            foreach (KeyValuePair<string, SettingsEntry> entry in entries)
-            {
-                sorted[entry.Key] = entry.Value;
-            }
-
-            foreach (KeyValuePair<string, SettingsEntry> entry in sorted)
-            {
-                builder.Append("\t<s:").Append(entry.Value.ElementName);
-                builder.Append(" x:Key=\"").Append(entry.Key).Append("\">");
-                builder.Append(Escape(entry.Value.Value));
-                builder.Append("</s:").Append(entry.Value.ElementName).Append(">\n");
-            }
-
-            builder.Append("</wpf:ResourceDictionary>\n");
-
-            return builder.ToString();
-        }
-
-        private string Escape(string value)
-        {
-            return value
-                .Replace("&", "&amp;")
-                .Replace("<", "&lt;")
-                .Replace(">", "&gt;");
         }
     }
 }
