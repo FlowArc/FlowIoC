@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Ads",
+  "references": [
+    "FlowIoC",
+    "Modules.Ads.Shared",
+    "Modules.Ads.Signals"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

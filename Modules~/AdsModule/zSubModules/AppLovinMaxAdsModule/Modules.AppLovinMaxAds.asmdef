@@ -1,0 +1,26 @@
+{
+  "name": "Modules.AppLovinMaxAds",
+  "references": [
+    "FlowIoC",
+    "Modules.Ads",
+    "Modules.Ads.Shared",
+    "MaxSdk.Scripts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "FLOWIOC_APPLOVIN_MAX"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.applovin.mediation.ads",
+      "expression": "",
+      "define": "FLOWIOC_APPLOVIN_MAX"
+    }
+  ],
+  "noEngineReferences": false
+}
