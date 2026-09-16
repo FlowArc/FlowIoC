@@ -259,7 +259,8 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         {
             if (!command.IsRetain)
             {
-                FlowLogger.LogError(SystemLogType.CommandOperation, $"Command must be retained to call STOP! Command: {_displayName.Of(command.GetType())}",
+                FlowLogger.LogError(SystemLogType.CommandOperation,
+                    $"Command must be retained to call STOP! Command: {_displayName.Of(command.GetType())}",
                     command.GetType());
                 return;
             }
@@ -328,7 +329,19 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                     _pendingParameters = null;
 
                     while (!_isDisposed && !_isStopped && _executionIndex < _steps.Count && CanStartNextStep())
+                    {
                         StartStep(_executionIndex++, commandParameters);
+
+                        // A step that released with data inside its own Execute - a Service step
+                        // whose callback answered at once - has just left it here, and the step
+                        // behind it takes that, not what this turn started with. Without data the
+                        // turn's own array carries on, as it did before.
+                        if (_pendingParameters == null)
+                            continue;
+
+                        commandParameters = _pendingParameters;
+                        _pendingParameters = null;
+                    }
                 } while (_advanceRequested && !_isDisposed);
             }
             finally
