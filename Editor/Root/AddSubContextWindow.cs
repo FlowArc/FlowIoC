@@ -170,7 +170,14 @@ namespace FlowIoC.Editor.Root
                         // its module, instead of holding a name that quietly stops resolving.
                         ContextScript = new ContextScriptResolver().For(type),
                         ContextFullName = type.FullName,
-                        ContextName = type.Name
+                        ContextName = type.Name,
+
+                        // On, the way RootPrefabSubContexts writes an entry: a sub-context is listed
+                        // to run, and a Root runs its Setup and Launch only when the entry says so.
+                        // Off, a hosted context - an analytics plug, a screen - was added and never
+                        // ran, with nothing logged, until someone found the tick.
+                        AutoSetup = true,
+                        IsTest = false
                     });
 
                     MarkDirty();

@@ -91,9 +91,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "AutoSetup ticked on each.");
             painter.Note(
                 "A plug is an entry on AnalyticsServiceRoot's Sub Context Types: Add Sub Context > "
-                + "FirebaseAnalyticsServiceContext, FacebookAnalyticsServiceContext, or your own, with "
-                + "AutoSetup ticked on the entry - a Root runs a sub-context's Setup only when the entry "
-                + "says so, and an unticked plug never plugs. With no entry, or an unticked one, nothing "
+                + "FirebaseAnalyticsServiceContext, FacebookAnalyticsServiceContext, or your own. Add Sub "
+                + "Context ticks AutoSetup on the entry; leave it on - a Root runs a sub-context's Setup only "
+                + "when the entry says so, and an unticked plug never plugs. With no entry, or an unticked one, nothing "
                 + "is plugged; the first event logs 'no provider plugged' and nothing else complains.");
             painter.Note(
                 "The Firebase plug compiles only when com.google.firebase.analytics is in the manifest "
