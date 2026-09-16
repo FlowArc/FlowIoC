@@ -51,7 +51,8 @@ namespace FlowIoC.Editor.Icons
         Wand = 29,
         Window = 30,
         Windows = 31,
-        Wrench = 32
+        Wrench = 32,
+        Chart = 33
     }
 }
 

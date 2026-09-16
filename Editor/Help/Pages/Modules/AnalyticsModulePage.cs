@@ -11,13 +11,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class AnalyticsModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "AnalyticsModule";
 
         public override string Title => "Analytics";
 
         public override string Subtitle => "One Log call from anywhere, every plugged SDK behind it - Firebase, Facebook, or your own";
 
-        public override FlowIcon Icon => FlowIcon.Broadcast;
+        public override FlowIcon Icon => FlowIcon.Chart;
 
         public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
@@ -79,9 +81,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("The Root");
             painter.Bullet("AnalyticsServiceRoot into the scene the game boots from, Initialize Order -85. No adapter, no asset.");
+            painter.Image(_images.Get("AnalyticsRootHierarchy.png"),
+                "The Root in the scene, beside the other Roots; the test scene shown.");
 
             painter.Space();
             painter.SubHeading("The plugs");
+            painter.Image(_images.Get("AnalyticsRootInspector.png"),
+                "The Root inspector: Initialize Order -85, and under Sub Contexts one plug listed with AutoSetup ticked - "
+                + "here the test scene's recording plug; a Firebase or Facebook entry looks the same.");
             painter.Note(
                 "A plug is an entry on AnalyticsServiceRoot's Sub Context Types: Add Sub Context > "
                 + "FirebaseAnalyticsServiceContext, FacebookAnalyticsServiceContext, or your own, with "
