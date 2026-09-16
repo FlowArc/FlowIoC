@@ -477,11 +477,20 @@ namespace FlowIoC.ConsoleModule
 
         // ======================== LogError ========================
 
+        /// <summary>
+        /// A framework error carries its channel's tag on its row the way its logs and warnings
+        /// do, so the row says which part of the framework raised it before the message is read.
+        /// What reaches Unity's console - and a player's log file - stays the message as written:
+        /// an error is the one line that survives into a release build, and a colour tag there is
+        /// noise.
+        /// </summary>
         [HideInCallstack]
         internal static void LogError(SystemLogType systemLogType, string message, string unityMessage = "",
             UnityEngine.Object context = null)
         {
-            WriteError(SystemChannelName(systemLogType), systemLogType, message, unityMessage, context);
+            string channel = SystemChannelName(systemLogType);
+            WriteError(channel, systemLogType, ResolveMessage(channel, message),
+                string.IsNullOrEmpty(unityMessage) ? message : unityMessage, context);
         }
 
         /// <summary>
@@ -492,7 +501,9 @@ namespace FlowIoC.ConsoleModule
         internal static void LogError(SystemLogType systemLogType, string message, Type blame,
             string unityMessage = "", UnityEngine.Object context = null)
         {
-            WriteError(SystemChannelName(systemLogType), systemLogType, message, unityMessage, context, blame);
+            string channel = SystemChannelName(systemLogType);
+            WriteError(channel, systemLogType, ResolveMessage(channel, message),
+                string.IsNullOrEmpty(unityMessage) ? message : unityMessage, context, blame);
         }
 
         /// <summary>
@@ -629,9 +640,7 @@ namespace FlowIoC.ConsoleModule
 
                 if (profile != null)
                 {
-                    string prefix = (i == 0 && !string.IsNullOrEmpty(profile.Prefix))
-                        ? FormatPart(profile.Prefix, profile.PrefixStyle, profile.PrefixColor) + " "
-                        : "";
+                    string prefix = i == 0 && FormatPrefix(profile) is string tag ? tag + " " : "";
 
                     string postfix = (i == chunkCount - 1 && !string.IsNullOrEmpty(profile.Postfix))
                         ? " " + FormatPart(profile.Postfix, profile.PostfixStyle, profile.PostfixColor)
@@ -1003,9 +1012,7 @@ namespace FlowIoC.ConsoleModule
 
         private static string FormatWithProfile(string message, FlowLogProfile profile)
         {
-            string prefix = !string.IsNullOrEmpty(profile.Prefix)
-                ? FormatPart(profile.Prefix, profile.PrefixStyle, profile.PrefixColor) + " "
-                : "";
+            string prefix = FormatPrefix(profile) is string tag ? tag + " " : "";
 
             string body = FormatPart(message, profile.MessageStyle, profile.MessageColor);
 
@@ -1014,6 +1021,18 @@ namespace FlowIoC.ConsoleModule
                 : "";
 
             return prefix + body + postfix;
+        }
+
+        /// <summary>
+        /// The tag as it sits at the front of a line on the channel, style and colour tags and all
+        /// - "[Signal]" wrapped in its colour - or null for a profile that has none. The console
+        /// measures this to know how far along a row the tag reaches.
+        /// </summary>
+        internal static string FormatPrefix(FlowLogProfile profile)
+        {
+            return !string.IsNullOrEmpty(profile.Prefix)
+                ? FormatPart(profile.Prefix, profile.PrefixStyle, profile.PrefixColor)
+                : null;
         }
 
         private static string FormatPart(string text, FlowTextStyle style, Color color)

@@ -88,11 +88,23 @@ namespace FlowIoC.Tests
             Assert.AreEqual(ColorUtility.ToHtmlStringRGB(profile.PostfixColor), ColorUtility.ToHtmlStringRGB(back.PostfixColor));
         }
 
+        /// <summary>
+        /// No profile is no line, which leaves the module on its default tag; a profile that
+        /// decorates nothing is the line that takes the tag away, and it reads back as one.
+        /// </summary>
         [Test]
-        public void A_profile_that_decorates_nothing_formats_to_no_line()
+        public void No_profile_is_no_line_and_an_undecorated_one_is_none()
         {
             Assert.IsNull(_line.Format(null));
-            Assert.IsNull(_line.Format(new FlowLogProfile()));
+            Assert.AreEqual("none", _line.Format(new FlowLogProfile()));
+
+            FlowLogProfile back = _line.Parse("none");
+            Assert.IsNotNull(back);
+            Assert.IsNull(back.Prefix);
+            Assert.IsNull(back.Postfix);
+            Assert.AreEqual(FlowTextStyle.None, back.MessageStyle);
+
+            Assert.IsNotNull(_line.Parse("  None "));
         }
 
         [Test]

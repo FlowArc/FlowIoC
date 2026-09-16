@@ -159,12 +159,43 @@ namespace FlowIoC.ConsoleModule
                 if (profileField != null && profileField.FieldType == typeof(FlowLogProfile))
                     profile = profileField.GetValue(null) as FlowLogProfile;
 
+                // A part with no profile field is a card with no Profile line, and that means the
+                // default tag. A card that says "Profile: none" generates a field holding an
+                // undecorated profile, which is the one way a module's lines carry no tag at all.
+                if (profile == null)
+                    profile = DefaultProfileFor(name, color);
+
                 declared.Add(new FlowLogChannel(name, null, color, true, profile));
             }
 
             declared.Sort(CompareDeclared);
 
             return declared;
+        }
+
+        /// <summary>
+        /// What a module's lines carry when its card says nothing: the module's name as a tag,
+        /// "[Player]" for PlayerModule, in the module's colour, the way a framework channel's
+        /// lines carry "[Signal]". Null for Default, which is no module and carries no tag.
+        /// </summary>
+        internal static FlowLogProfile DefaultProfileFor(string channelName, Color color)
+        {
+            if (string.Equals(channelName, DefaultChannelName, StringComparison.OrdinalIgnoreCase)) return null;
+
+            return new FlowLogProfile().SetPrefix("[" + TagNameOf(channelName) + "]", FlowTextStyle.None, color);
+        }
+
+        /// <summary>
+        /// The module's name without its Module suffix: the tag reads "[Player]", the way the
+        /// framework's read "[Signal]", and the suffix says nothing the Modules group does not.
+        /// </summary>
+        private static string TagNameOf(string moduleName)
+        {
+            const string suffix = "Module";
+
+            return moduleName.Length > suffix.Length && moduleName.EndsWith(suffix, StringComparison.Ordinal)
+                ? moduleName.Substring(0, moduleName.Length - suffix.Length)
+                : moduleName;
         }
 
         /// <summary>Default leads, because it belongs to no module; the modules follow by name.</summary>

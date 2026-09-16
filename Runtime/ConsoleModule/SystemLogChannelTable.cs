@@ -45,10 +45,14 @@ namespace FlowIoC.ConsoleModule
                 case SystemLogType.Function: return new Color(0.231f, 0.765f, 1f);
                 case SystemLogType.Screen: return new Color(0.953f, 0.912f, 0.211f);
                 case SystemLogType.Pool: return new Color(0.629f, 0.533f, 1f);
-                case SystemLogType.Asset: return new Color(0.922f, 0.902f, 0.808f);
-                case SystemLogType.Unity: return new Color(0.962f, 0.937f, 0.84f);
-                case SystemLogType.Compiler: return new Color(0.887f, 0.762f, 0.757f);
-                case SystemLogType.Shader: return new Color(0.949f, 0.741f, 0.518f);
+                case SystemLogType.Asset: return new Color(0.629f, 0.533f, 1f);
+                // A channel Unity writes has no colour of its own. Its rows carry an icon - the Unity
+                // logo, the script icon, the shader icon - which says whose line it is better than a
+                // stripe could, so the stripe and the swatch in the Filters panel draw nothing.
+                case SystemLogType.Unity:
+                case SystemLogType.Compiler:
+                case SystemLogType.Shader:
+                    return Color.clear;
                 default: return Color.white;
             }
         }

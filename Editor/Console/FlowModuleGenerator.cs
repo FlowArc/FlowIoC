@@ -219,11 +219,14 @@ namespace FlowIoC.Editor.Console
             sb.AppendLine($"        /// <summary>The colour {name}'s rows are drawn in. A \"Colour: #RRGGBB\" line above the block in the module's MODULE.md sets it.</summary>");
             sb.AppendLine($"        public static readonly Color {identifier}Color = new Color32({channel.Color.r}, {channel.Color.g}, {channel.Color.b}, {channel.Color.a});");
 
+            // No field means no Profile line, and the console gives the module its default tag.
+            // A field holding an undecorated profile - "Profile: none" - is a module whose lines
+            // carry no tag at all.
             if (channel.Profile != null)
             {
                 sb.AppendLine();
                 sb.AppendLine($"        /// <summary>What decorates a {name} line: the \"Profile:\" line above the block in the module's MODULE.md.</summary>");
-                sb.AppendLine($"        public static readonly FlowLogProfile {identifier}Profile = new FlowLogProfile()");
+                sb.Append($"        public static readonly FlowLogProfile {identifier}Profile = new FlowLogProfile()");
                 AppendProfileCalls(sb, channel.Profile);
             }
 
@@ -253,6 +256,14 @@ namespace FlowIoC.Editor.Console
 
             if (!string.IsNullOrEmpty(profile.Postfix))
                 calls.Add($".SetPostfix({Literal(profile.Postfix)}, {StyleLiteral(profile.PostfixStyle)}, \"#{FlowLogProfileLine.HexOf(profile.PostfixColor)}\")");
+
+            if (calls.Count == 0)
+            {
+                sb.AppendLine(";");
+                return;
+            }
+
+            sb.AppendLine();
 
             for (int index = 0; index < calls.Count; index++)
                 sb.AppendLine("            " + calls[index] + (index == calls.Count - 1 ? ";" : ""));

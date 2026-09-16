@@ -65,6 +65,7 @@ namespace FlowIoC.Editor.Console
         private readonly FlowConsoleKeyboard _keyboard = new FlowConsoleKeyboard();
         private readonly FlowConsoleSearch _search = new FlowConsoleSearch();
         private readonly FlowConsoleHighlight _highlight = new FlowConsoleHighlight();
+        private readonly FlowConsoleChannelTag _channelTag = new FlowConsoleChannelTag();
         private readonly FlowConsoleTiming _timing = new FlowConsoleTiming();
         private FlowConsoleTimeFormat _timeFormat;
 
@@ -184,6 +185,16 @@ namespace FlowIoC.Editor.Console
         /// <summary>Translucent, so the text keeps reading through it.</summary>
         private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
 
+        /// <summary>Between the channel tag on a source line and the file name after it.</summary>
+        private const float SecondLineTagGap = 4f;
+
+        /// <summary>
+        /// How faint the plate behind a channel tag is. The tag is written in the same colour, so
+        /// the plate has to sit well under it for the letters to keep reading - the way selected
+        /// text does.
+        /// </summary>
+        private const float TagPlateAlpha = 0.15f;
+
         private const string DimHex = "#A0A0A0";
 
         /// <summary>
@@ -257,6 +268,7 @@ namespace FlowIoC.Editor.Console
         private GUIStyle _detailPanelStyle;
         private GUIStyle _linkStyle;
         private GUIStyle _secondLineStyle;
+        private GUIStyle _secondLineTagStyle;
         private GUIStyle _toolbarLabelStyle;
 
         private Rect _toolbarRect;
@@ -423,6 +435,11 @@ namespace FlowIoC.Editor.Console
             _secondLineStyle.clipping = TextClipping.Clip;
             _secondLineStyle.fontSize = 10;
             _secondLineStyle.normal.textColor = new Color(0.65f, 0.65f, 0.65f);
+
+            // The source line with rich text on, for the channel tag that leads it: the tag carries
+            // its colour inside the text, and the dim grey stays for the file and line after it.
+            _secondLineTagStyle = new GUIStyle(_secondLineStyle);
+            _secondLineTagStyle.richText = true;
 
             _infoIcon = EditorGUIUtility.IconContent("console.infoicon").image;
             _warningIcon = EditorGUIUtility.IconContent("console.warnicon").image;
@@ -1849,9 +1866,14 @@ namespace FlowIoC.Editor.Console
             if (_selectedLog == consoleLog)
                 EditorGUI.DrawRect(rect, new Color(0.17f, 0.36f, 0.53f, 1f));
 
-            // The one piece of information Unity's console has no equivalent for: which channel
-            // wrote this. It keeps the colour the settings give the channel.
-            EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), consoleLog.LogColor);
+            // The stripe at the edge marks a framework row and nothing else, in the channel's
+            // colour: what the framework did stands apart from what the game wrote, which carries
+            // its module's name on its source line and no stripe.
+            bool framework = Channels.TryGet(consoleLog.Channel, out FlowLogChannel rowChannel)
+                             && rowChannel.IsFrameworkOwned;
+
+            if (framework)
+                EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), consoleLog.LogColor);
 
             bool small = _rowLineCount < 2;
             Texture icon = IconFor(consoleLog.LogType, small);
@@ -1946,6 +1968,13 @@ namespace FlowIoC.Editor.Console
             float blockHeight = (drawnLines + (small ? 0 : 1)) * LogEntryLineHeight;
             float textTop = rect.y + (rect.height - blockHeight) * 0.5f;
 
+            // The channel tag - "[Signal]", "[Player]" - moves off the message and onto the source
+            // line, where it reads as what it is - where the line came from - and leaves the first
+            // line to the message alone. The tag stays in the text: search, copy and the detail
+            // panel still see it. A one-line row has no source line, so there the tag stays put.
+            string channelTag = null;
+            Color channelTagColor = default;
+
             for (int line = 0; line < drawnLines; line++)
             {
                 string text = LineOf(consoleLog.Message, line) ?? string.Empty;
@@ -1957,6 +1986,12 @@ namespace FlowIoC.Editor.Console
                     DrawSearchHighlight(lineRect, text);
                     GUI.Label(lineRect, text, _richTextStyle);
                     continue;
+                }
+
+                if (!small && rowChannel != null
+                           && _channelTag.TryFind(rowChannel, text, out channelTag, out channelTagColor))
+                {
+                    text = text.Substring(channelTag.Length).TrimStart();
                 }
 
                 // The prefix is its own label so the message can keep being measured as plain
@@ -2021,6 +2056,28 @@ namespace FlowIoC.Editor.Console
             {
                 Rect sourceRect = new Rect(textLeft, textTop + drawnLines * LogEntryLineHeight,
                     textWidth, LogEntryLineHeight);
+
+                if (channelTag != null)
+                {
+                    float tagWidth = _secondLineTagStyle.CalcSize(new GUIContent(channelTag)).x;
+                    var tagRect = new Rect(sourceRect.x, sourceRect.y, tagWidth, sourceRect.height);
+
+                    // A plate of the tag's own colour, faint, behind a framework tag - the small
+                    // type carries too little of the colour on its own, and the plate is what tells
+                    // "[Screen]" the framework wrote from "[Screen]" a module of that name wrote.
+                    if (framework && Event.current.type == EventType.Repaint)
+                    {
+                        channelTagColor.a = TagPlateAlpha;
+                        EditorGUI.DrawRect(new Rect(tagRect.x, tagRect.y + 1f, tagRect.width, tagRect.height - 4f),
+                            channelTagColor);
+                    }
+
+                    GUI.Label(tagRect, channelTag, _secondLineTagStyle);
+
+                    sourceRect.x += tagWidth + SecondLineTagGap;
+                    sourceRect.width = Mathf.Max(0f, sourceRect.width - tagWidth - SecondLineTagGap);
+                }
+
                 GUI.Label(sourceRect, SecondLineFor(consoleLog), _secondLineStyle);
             }
 

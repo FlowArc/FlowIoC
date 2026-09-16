@@ -36,8 +36,10 @@ namespace FlowIoC.Editor.Console
     /// part, so what the console shows follows on the next compile.
     ///
     /// A colour left on the palette's pick writes no Colour line, so a card says something only
-    /// when somebody chose; a profile that decorates nothing writes no Profile line for the same
-    /// reason. Cancel writes nothing.
+    /// when somebody chose; a profile left on the default tag - "[Player]" in the module's colour
+    /// - writes no Profile line for the same reason. A prefix cleared out writes
+    /// <c>Profile: none</c>, because a card with no line would put the default tag back, and
+    /// Reset takes both lines off the card. Cancel writes nothing.
     /// </summary>
     internal class FlowChannelStyleWindow : EditorWindow
     {
@@ -61,6 +63,12 @@ namespace FlowIoC.Editor.Console
         private string _postfix = "";
         private FlowTextStyle _postfixStyle;
         private Color _postfixColour = Color.white;
+
+        /// <summary>
+        /// Whether the prefix is still the default tag, whose colour is the module's: then a new
+        /// module colour carries the tag's colour with it, until the tag's own colour is touched.
+        /// </summary>
+        private bool _prefixFollowsColour;
 
         internal static void Open(FlowLogChannel channel)
         {
@@ -88,6 +96,8 @@ namespace FlowIoC.Editor.Console
             _postfix = profile.Postfix ?? "";
             _postfixStyle = profile.PostfixStyle;
             _postfixColour = profile.PostfixColor;
+
+            _prefixFollowsColour = IsSame(profile, FlowLogChannels.DefaultProfileFor(channel.Name, channel.Color));
         }
 
         private void OnGUI()
@@ -107,6 +117,8 @@ namespace FlowIoC.Editor.Console
             if (GUILayout.Button("Palette", EditorStyles.miniButton, GUILayout.Width(60f)))
                 _colour = _palette.Pick(_channelName);
 
+            if (_prefixFollowsColour) _prefixColour = _colour;
+
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(8f);
@@ -123,7 +135,11 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.LabelField("Prefix", GUILayout.Width(LabelWidth));
             _prefix = EditorGUILayout.TextField(_prefix, GUILayout.Width(TextWidth));
             _prefixStyle = (FlowTextStyle) EditorGUILayout.EnumFlagsField(_prefixStyle, GUILayout.Width(StyleWidth));
+
+            Color prefixColourBefore = _prefixColour;
             _prefixColour = EditorGUILayout.ColorField(GUIContent.none, _prefixColour, true, false, false, GUILayout.Width(ColourWidth));
+            if (_prefixColour != prefixColourBefore) _prefixFollowsColour = false;
+
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
@@ -145,6 +161,15 @@ namespace FlowIoC.Editor.Console
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
 
+            if (GUILayout.Button(new GUIContent("Reset", "Back to the palette's colour and the default tag."),
+                    GUILayout.Width(80f)))
+            {
+                Write(null, null);
+                Close();
+            }
+
+            GUILayout.Space(8f);
+
             if (GUILayout.Button("Cancel", GUILayout.Width(80f)))
                 Close();
 
@@ -160,6 +185,20 @@ namespace FlowIoC.Editor.Console
 
         private void Apply()
         {
+            Color32 chosen = _colour;
+            Color32 pick = _palette.Pick(_channelName);
+            bool onPalette = chosen.r == pick.r && chosen.g == pick.g && chosen.b == pick.b && chosen.a == pick.a;
+
+            FlowLogProfile profile = BuildProfile();
+            bool onDefault = IsSame(profile, FlowLogChannels.DefaultProfileFor(_channelName, _colour));
+
+            Write(onPalette ? null : "#" + FlowLogProfileLine.HexOf(_colour),
+                onDefault ? null : _profileLine.Format(profile));
+        }
+
+        /// <summary>The card with these two lines - null for neither - and the part regenerated from it.</summary>
+        private void Write(string colourLine, string profileLine)
+        {
             if (!new ChannelModuleLocator().TryFolderOf(_channelName, out string moduleFolder))
             {
                 Debug.LogWarning($"<color=cyan>FlowConsole:</color> no module owns the {_channelName} channel, so there is no card to write.");
@@ -168,17 +207,29 @@ namespace FlowIoC.Editor.Console
 
             string card = _cards.Read(moduleFolder) ?? new ModuleCardStub().For(_channelName);
 
-            Color32 chosen = _colour;
-            Color32 pick = _palette.Pick(_channelName);
-            bool onPalette = chosen.r == pick.r && chosen.g == pick.g && chosen.b == pick.b && chosen.a == pick.a;
-
-            string colourLine = onPalette ? null : "#" + FlowLogProfileLine.HexOf(_colour);
-            string profileLine = _profileLine.Format(BuildProfile());
-
             _cards.Write(moduleFolder, _lines.Write(card, colourLine, profileLine));
             AssetDatabase.ImportAsset(AssetPathOf(_cards.PathFor(moduleFolder)));
 
             FlowModuleGenerator.Generate();
+        }
+
+        /// <summary>
+        /// Whether two profiles decorate a line the same way. Colours are compared as the card
+        /// writes them, to the byte, so a colour that went through the field and came back is
+        /// still the same colour.
+        /// </summary>
+        private static bool IsSame(FlowLogProfile left, FlowLogProfile right)
+        {
+            if (left == null || right == null) return left == right;
+
+            return left.Prefix == right.Prefix
+                   && left.PrefixStyle == right.PrefixStyle
+                   && FlowLogProfileLine.HexOf(left.PrefixColor) == FlowLogProfileLine.HexOf(right.PrefixColor)
+                   && left.MessageStyle == right.MessageStyle
+                   && FlowLogProfileLine.HexOf(left.MessageColor) == FlowLogProfileLine.HexOf(right.MessageColor)
+                   && left.Postfix == right.Postfix
+                   && left.PostfixStyle == right.PostfixStyle
+                   && FlowLogProfileLine.HexOf(left.PostfixColor) == FlowLogProfileLine.HexOf(right.PostfixColor);
         }
 
         private FlowLogProfile BuildProfile()

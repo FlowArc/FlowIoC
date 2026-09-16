@@ -51,6 +51,23 @@ namespace FlowIoC.Tests
             StringAssert.Contains(".SetPostfix(\"!\", FlowTextStyle.None, \"#9E2FDD\");", content);
         }
 
+        /// <summary>
+        /// "Profile: none" is a profile with no calls, and the field still has to compile: the
+        /// console reads a field that is there but decorates nothing as a module with no tag.
+        /// </summary>
+        [Test]
+        public void A_profile_that_decorates_nothing_is_written_as_a_bare_field()
+        {
+            string content = FlowModuleGenerator.GeneratePartContent(new ChannelPartEVO
+            {
+                Name = "PlayerModule",
+                Color = new Color32(229, 165, 10, 255),
+                Profile = new FlowLogProfile()
+            });
+
+            StringAssert.Contains("public static readonly FlowLogProfile PlayerModuleProfile = new FlowLogProfile();", content);
+        }
+
         [Test]
         public void A_prefix_with_a_quote_in_it_is_escaped()
         {

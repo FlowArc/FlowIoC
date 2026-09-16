@@ -20,17 +20,28 @@ namespace FlowIoC.Editor.Console
     /// bracket; a colour is a hex string and a style is a comma-joined list of bold, italic and
     /// underline. Both spellings of colour are read; the British one is written, to match the
     /// Colour line beside it.
+    ///
+    /// A card with no Profile line leaves the module on its default tag - "[Player]" in the
+    /// module's colour. <c>Profile: none</c> is the line that takes the tag away: it reads as a
+    /// profile that decorates nothing, which the generator writes into the part and the console
+    /// then draws as no tag at all.
     /// </summary>
     internal class FlowLogProfileLine
     {
+        private const string NoProfile = "none";
+
         private static readonly Regex Pair = new Regex(
             "(?<key>[A-Za-z][A-Za-z-]*)=(?:\"(?<quoted>(?:[^\"\\\\]|\\\\.)*)\"|(?<bare>\\S+))",
             RegexOptions.Compiled);
 
-        /// <summary>The profile the line describes, or null when it sets nothing.</summary>
+        /// <summary>
+        /// The profile the line describes: null when it sets nothing, and an undecorated profile
+        /// for <c>none</c>.
+        /// </summary>
         internal FlowLogProfile Parse(string line)
         {
             if (string.IsNullOrWhiteSpace(line)) return null;
+            if (string.Equals(line.Trim(), NoProfile, StringComparison.OrdinalIgnoreCase)) return new FlowLogProfile();
 
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -71,7 +82,10 @@ namespace FlowIoC.Editor.Console
             return profile;
         }
 
-        /// <summary>The line for a profile, or null for one that decorates nothing.</summary>
+        /// <summary>
+        /// The line for a profile: null for no profile, which leaves the module on its default
+        /// tag, and <c>none</c> for one that decorates nothing.
+        /// </summary>
         internal string Format(FlowLogProfile profile)
         {
             if (profile == null) return null;
@@ -95,7 +109,7 @@ namespace FlowIoC.Editor.Console
                 AppendColour(parts, "postfix-colour", profile.PostfixColor);
             }
 
-            return parts.Count == 0 ? null : string.Join(" ", parts);
+            return parts.Count == 0 ? NoProfile : string.Join(" ", parts);
         }
 
         private static string Text(Dictionary<string, string> values, string key)

@@ -50,10 +50,19 @@ three are recorded whether or not logging is switched on: turning it off is a st
 *your* logging, and a console that then showed no compile errors would be useless at the
 moment it is most needed.
 
-Their rows carry an icon where the other channels carry their `[Name]` tag — the Unity
-logo the Hierarchy draws beside a scene, the C# script icon, the shader icon — so a line
-that is not the framework's is told apart at a glance, and the message is exactly what
-Unity wrote: searched, collapsed and copied as it came.
+Their rows carry an icon where every other channel carries its `[Name]` tag — the Unity
+logo the Hierarchy draws beside a scene, the C# script icon, the shader icon — and no
+stripe, so a line that is not the framework's is told apart at a glance, and the message
+is exactly what Unity wrote: searched, collapsed and copied as it came.
+
+**A row's tag sits on its source line.** `[Signal]`, `[Command]`, `[Player]` are written at
+the front of the message when the line is logged — search, copy and the detail panel see
+them there — but the list draws them on the second line, before the file and line, so the
+first line is the message alone. The framework's rows carry their tag on a faint plate of
+the channel's colour, with a stripe of the same colour down the row's edge; a module's rows
+carry theirs bare, and no stripe. That is what tells `[Screen]` the framework wrote from
+`[Screen]` a module of that name wrote. A one-line row has no source line and keeps the
+tag where it was written.
 
 `Shader` is a channel of its own rather than part of `Compiler`, because the two answer
 different questions. A C# error stops the domain reloading and nothing runs at all; a
@@ -101,11 +110,12 @@ index, the generator writes the part from the index, and the console reads every
 `FlowModule` back - so a module that exists has a channel, a module that is gone has none, and
 nothing falls out of step with the modules.
 
-**A module's colour is the module's own.** Every module is coloured from the day it is created,
-picked from a palette of twelve tones by the module's name, so the same module is the same colour
-on every machine. A module that wants a colour of its own says so in its card, as a line directly
-above the generated block of `MODULE.md`, and may declare a profile - the tag on the front of its
-lines - the same way:
+**A module's colour and tag are the module's own.** Every module is coloured from the day it is
+created, picked from a palette of twelve tones by the module's name, so the same module is the same
+colour on every machine, and its lines carry its name as a tag from the same day — `[Player]` for
+PlayerModule, in the module's colour. A module that wants a colour of its own says so in its card,
+as a line directly above the generated block of `MODULE.md`, and may declare a profile - a tag of
+its own, and how the message after it is drawn - the same way:
 
 ```
 Colour: #E5A50A
@@ -115,11 +125,12 @@ Profile: prefix="[Analytics]" prefix-style=bold prefix-colour=#39FF00
 Both lines are read and written by the console: right-click the module's channel in the Filters
 panel and choose **Colour and profile...** to edit them in a window, which writes the card and
 regenerates the part. The console follows on the next compile. A colour left on the palette's pick
-writes no line, and a profile that decorates nothing writes none either, so a card says something
-only when somebody chose. The Profile line's keys are `prefix`, `prefix-style`, `prefix-colour`,
-`message-style`, `message-colour`, `postfix`, `postfix-style` and `postfix-colour`; text is quoted,
-a colour is hex, a style is `bold`, `italic`, `underline` or a comma-joined list of them, and every
-key is optional.
+writes no line, and a profile left on the default tag writes none either, so a card says something
+only when somebody chose; a prefix cleared out writes `Profile: none`, which is how a module's lines
+carry no tag at all, and **Reset** takes both lines off the card. The Profile line's keys are
+`prefix`, `prefix-style`, `prefix-colour`, `message-style`, `message-colour`, `postfix`,
+`postfix-style` and `postfix-colour`; text is quoted, a colour is hex, a style is `bold`, `italic`,
+`underline` or a comma-joined list of them, and every key is optional.
 
 **A channel is a name, not a number.** It used to be an `int`, handed out in order and reassigned
 whenever the list was sorted - so a module whose name sorted early moved every channel after it onto

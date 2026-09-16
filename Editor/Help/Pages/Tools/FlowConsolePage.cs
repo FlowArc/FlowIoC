@@ -72,23 +72,32 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "switches and puts you back on it. How much the logger does - logging on or off, "
                 + "the Source capture, the mirror into Unity's console, how many rows are kept - is "
                 + "yours too, under Edit > Preferences > FlowIoC > Flow Console.");
-            painter.SubHeading("A module's colour is the module's own");
+            painter.SubHeading("A module's colour and tag are the module's own");
             painter.Image(_images.Get("ChannelContextMenu.png"),
                 "The Filters panel's Modules group, and the right-click on a module's channel. Every "
-                + "module has a colour from the day it is created - the swatch, and the stripe down "
-                + "the left of its rows.");
+                + "module has a colour from the day it is created - the swatch, and the tag on the "
+                + "source line of its rows, [Player] for PlayerModule, in that colour.");
             painter.Paragraph(
                 "The colour is picked from twelve tones by the module's name, so the same module is "
                 + "the same colour on every machine, and it is written beside the channel in the "
                 + "module's generated FlowModule part. A module that wants a colour of its own says so "
                 + "in its MODULE.md, as a Colour line directly above the generated block, and may "
-                + "declare a profile - the tag on the front of its lines - the same way. Right-click "
-                + "the channel in the Filters panel and choose Colour and profile... to edit both.");
+                + "declare a profile - a tag of its own, and how the message after it is drawn - the "
+                + "same way. Right-click the channel in the Filters panel and choose Colour and "
+                + "profile... to edit both.");
+            painter.Paragraph(
+                "A framework row carries its tag on a faint plate of the channel's colour, with a "
+                + "stripe of the same colour down the row's edge; a module's rows carry theirs bare, "
+                + "and no stripe. That is what tells [Screen] the framework wrote from [Screen] a "
+                + "module of that name wrote.");
             painter.Image(_images.Get("ChannelStyleWindow.png"),
                 "Right-click a module's channel > Colour and profile... The window opens on the "
                 + "colour and profile the module has; Palette puts the colour back on the pick for "
                 + "its name. Apply writes the two lines into the module's MODULE.md and regenerates "
-                + "the part, and the console follows on the next compile. Cancel writes nothing.");
+                + "the part, and the console follows on the next compile. A colour on the palette's "
+                + "pick and a profile on the default tag write no line; a prefix cleared out writes "
+                + "Profile: none, for a module whose lines carry no tag. Reset takes both lines off "
+                + "the card. Cancel writes nothing.");
             painter.Code(
                 "Colour: #E5A50A\n"
                 + "Profile: prefix=\"[Analytics]\" prefix-style=bold prefix-colour=#39FF00",

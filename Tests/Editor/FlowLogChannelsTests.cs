@@ -25,6 +25,10 @@ namespace FlowIoC.Tests
 
             public const string AbTestModule = "AbTestModule";
 
+            /// <summary>A card that says "Profile: none": the part holds a profile that decorates nothing.</summary>
+            public const string QuietModule = "QuietModule";
+            public static readonly FlowLogProfile QuietModuleProfile = new FlowLogProfile();
+
             /// <summary>Not a channel: a const that is not a string, and a field that is not a const.</summary>
             public const int NotAChannel = 3;
 
@@ -55,8 +59,7 @@ namespace FlowIoC.Tests
 
         /// <summary>
         /// The colour and the profile hang off the identifier: PlayerModule, PlayerModuleColor,
-        /// PlayerModuleProfile. A part written before colours were - or one with no profile - is
-        /// white and undecorated rather than missing.
+        /// PlayerModuleProfile. A part written before colours were is white rather than missing.
         /// </summary>
         [Test]
         public void The_colour_and_the_profile_beside_a_channel_are_read_with_it()
@@ -69,7 +72,38 @@ namespace FlowIoC.Tests
 
             Assert.IsTrue(_channels.TryGet("AbTestModule", out FlowLogChannel abTest));
             Assert.AreEqual(Color.white, abTest.Color);
-            Assert.IsNull(abTest.Profile);
+        }
+
+        /// <summary>
+        /// A module whose card says nothing about its profile carries its name as a tag, the way a
+        /// framework channel carries "[Signal]": "[AbTest]" for AbTestModule, in the module's colour.
+        /// Default is no module and carries none, and a card that says "Profile: none" is the one
+        /// way a module's lines carry no tag.
+        /// </summary>
+        [Test]
+        public void A_module_with_no_profile_line_carries_its_name_as_a_tag()
+        {
+            Assert.IsTrue(_channels.TryGet("AbTestModule", out FlowLogChannel abTest));
+            Assert.AreEqual("[AbTest]", abTest.Profile.Prefix);
+            Assert.AreEqual(FlowTextStyle.None, abTest.Profile.PrefixStyle);
+            Assert.AreEqual(abTest.Color, abTest.Profile.PrefixColor);
+
+            Assert.IsTrue(_channels.TryGet("Default", out FlowLogChannel byDefault));
+            Assert.IsNull(byDefault.Profile);
+
+            Assert.IsTrue(_channels.TryGet("QuietModule", out FlowLogChannel quiet));
+            Assert.IsNotNull(quiet.Profile);
+            Assert.IsNull(quiet.Profile.Prefix);
+        }
+
+        [Test]
+        public void The_default_tag_is_the_module_name_without_its_suffix()
+        {
+            Assert.AreEqual("[Player]", FlowLogChannels.DefaultProfileFor("PlayerModule", Color.red).Prefix);
+            Assert.AreEqual("[Module]", FlowLogChannels.DefaultProfileFor("Module", Color.red).Prefix);
+            Assert.AreEqual("[Hud]", FlowLogChannels.DefaultProfileFor("Hud", Color.red).Prefix);
+            Assert.AreEqual(Color.red, FlowLogChannels.DefaultProfileFor("PlayerModule", Color.red).PrefixColor);
+            Assert.IsNull(FlowLogChannels.DefaultProfileFor("Default", Color.red));
         }
 
         [Test]
@@ -100,7 +134,8 @@ namespace FlowIoC.Tests
             Assert.Less(lastFramework, defaultAt);
             Assert.AreEqual(defaultAt + 1, names.IndexOf("AbTestModule"));
             Assert.AreEqual(defaultAt + 2, names.IndexOf("PlayerModule"));
-            Assert.AreEqual(defaultAt + 3, names.Count);
+            Assert.AreEqual(defaultAt + 3, names.IndexOf("QuietModule"));
+            Assert.AreEqual(defaultAt + 4, names.Count);
         }
 
         [Test]
