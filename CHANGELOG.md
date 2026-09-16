@@ -5,6 +5,33 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.0] - 2026-09-17
+
+### Added
+
+- **Ads is a ready-made module.** A rewarded or an interstitial ad shown on request from any
+  module, the answer - rewarded, dismissed, not ready, failed, skipped - handed to whoever asked,
+  and the game never knowing which SDK did the showing. The mediation SDK is a plug on
+  `AdsServiceRoot`, one at a time: AppLovin MAX ships as `AppLovinMaxAdsServiceContext` in its
+  own assembly behind the `FLOWIOC_APPLOVIN_MAX` version define, with `CD_AppLovinMaxAds` for the
+  four ad unit ids; another SDK fits behind `IAdsProvider`. The module owns the policy the SDK
+  leaves to the app - one ad of each format kept loaded, a failed load retried with backoff, the
+  next ad loaded after every close, interstitials paced and skipped once ads are removed, a show
+  nobody answers failed after `ShowTimeoutSeconds`. Five steps a game binds in its own sequences:
+  `IAdsService.Commands.ShowRewarded` releases only when the reward was earned,
+  `ShowInterstitial` releases on every outcome with the result handed on, `SetConsent`,
+  `SetAdsRemoved` and `Initialize`. Outgoing `ReadyChanged`, `Opened`, `Closed`, `Failed` and
+  `RevenuePaid` for the audio and analytics modules to follow. A Help page with the setup steps
+  that fail silently when skipped, and an Ad icon.
+
+### Fixed
+
+- **A value released inside a step's own `Execute` reaches the next step.** A Service step whose
+  callback answered at once - a refused show - called `Release(result)` while its `Execute` was
+  still on the stack, and the driver started the next step in the same turn with the parameters
+  the turn began with, so the released value was lost and the next typed step reported a
+  signature mismatch. The pump now re-reads the pending parameters after each step.
+
 ## [1.21.0] - 2026-09-17
 
 ### Added
