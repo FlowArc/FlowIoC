@@ -55,6 +55,23 @@ namespace FlowIoC.BaseModule.Controller.Binders
             return this;
         }
 
+        /// <inheritdoc cref="ICommandBinding.ToSequence(System.Type, object[])"/>
+        public ICommandBinding ToSequence(Type commandType, params object[] parameters)
+        {
+            if (commandType == null || !typeof(CommandBody).IsAssignableFrom(commandType) || commandType.IsAbstract)
+                throw new ArgumentException(
+                    "ToSequence needs a concrete Command type; '" + (commandType == null ? "null" : commandType.FullName) + "' is not one.",
+                    nameof(commandType));
+
+            _steps.Add(new CommandStepVO
+            {
+                CommandType = commandType,
+                ExecutionType = CommandExecutionType.Sequence,
+                CommandParameters = parameters != null && parameters.Length > 0 ? parameters : null
+            });
+            return this;
+        }
+
         public ICommandBinding ToParallel<T>() where T : CommandBody, new()
         {
             _steps.Add(new CommandStepVO

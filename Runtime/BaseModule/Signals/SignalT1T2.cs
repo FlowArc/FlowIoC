@@ -45,6 +45,15 @@ namespace FlowIoC.BaseModule.Signals
         {
             _callbackOnce = null;
             _callback = null;
+            ClearUntypedListeners();
+        }
+
+        public override Type[] PayloadTypes => new[] {typeof(T1), typeof(T2)};
+
+        public override void DispatchUntyped(params object[] args)
+        {
+            RequireArgumentCount(args, 2);
+            Dispatch((T1) args[0], (T2) args[1]);
         }
 
         public void Dispatch(T1 param1, T2 param2)
@@ -60,11 +69,9 @@ namespace FlowIoC.BaseModule.Signals
 
             // The array is allocated per dispatch on purpose - see the note in SignalT1.Dispatch,
             // which is where the reason for not pooling it is written out.
-            _internalCallback?.Invoke(this, new[]
-            {
-                param1 as object,
-                param2 as object
-            });
+            object[] payload = {param1, param2};
+            _internalCallback?.Invoke(this, payload);
+            InvokeUntyped(payload);
             _callback?.Invoke(param1, param2);
         }
     }

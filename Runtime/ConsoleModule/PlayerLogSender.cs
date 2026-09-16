@@ -67,7 +67,8 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         private void OnUnityLog(string condition, string stackTrace, LogType type, bool isEcho)
         {
-            if (!IsConnected) return;
+            // Nobody to hand the line to: no editor attached and no on-device listener.
+            if (!IsConnected && FlowLogger.OnLogRecorded == null) return;
             if (_echoPolicy.IsEcho(isEcho)) return;
 
             FlowLogger.AddExternalLog(LogSource.Unity, type, condition, stackTrace, null, 0);

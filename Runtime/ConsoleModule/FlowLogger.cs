@@ -33,6 +33,14 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         public static Action OnLogsCleared;
 
+        /// <summary>
+        /// Raised for every row that is recorded, in the editor and in a development player alike,
+        /// after the row went where it goes - the editor's list, or the attached editor. The
+        /// on-device debug panel listens here to fill its own ring; while a listener is set, a
+        /// development player builds rows whether or not an editor is attached.
+        /// </summary>
+        public static Action<ConsoleLog> OnLogRecorded;
+
         private const int MaxMessageLength = 15000;
         private const int LogTrimChunk = 256;
 
@@ -792,8 +800,9 @@ namespace FlowIoC.ConsoleModule
 
         /// <summary>
         /// Whether a row built now goes anywhere. In the editor it always does; in a development
-        /// player only while an editor is attached, so an unattached device does not pay to build
-        /// entries nobody reads; a release player never does.
+        /// player only while an editor is attached or something on the device listens on
+        /// OnLogRecorded, so an unattached device with no panel does not pay to build entries
+        /// nobody reads; a release player never does.
         /// </summary>
         private static bool IsRecording
         {
@@ -802,21 +811,26 @@ namespace FlowIoC.ConsoleModule
 #if UNITY_EDITOR
                 return true;
 #elif DEVELOPMENT_BUILD
-                return Sender.IsConnected;
+                return Sender.IsConnected || OnLogRecorded != null;
 #else
                 return false;
 #endif
             }
         }
 
-        /// <summary>The one place a finished row goes: the editor's list, or the attached editor.</summary>
+        /// <summary>
+        /// The one place a finished row goes: the editor's list, or the attached editor, and then
+        /// whoever listens on OnLogRecorded. A player sends only while an editor is attached, so a
+        /// row built for the panel alone does not knock on a connection that is not there.
+        /// </summary>
         private static void Record(ConsoleLog log)
         {
 #if UNITY_EDITOR
             AppendLog(log);
 #elif DEVELOPMENT_BUILD
-            Sender.Send(log);
+            if (Sender.IsConnected) Sender.Send(log);
 #endif
+            OnLogRecorded?.Invoke(log);
         }
 
         // ======================== Internal ========================

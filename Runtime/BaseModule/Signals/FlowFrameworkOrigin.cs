@@ -62,7 +62,7 @@ namespace FlowIoC.BaseModule.Signals
 
                     // Composed from the field rather than appended to what the signal already
                     // carries, so a holder stamped twice is named the same both times.
-                    signal.Name = path + "." + fields[i].Name;
+                    signal.SetName(path + "." + fields[i].Name);
                     continue;
                 }
 

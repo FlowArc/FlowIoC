@@ -45,6 +45,15 @@ namespace FlowIoC.BaseModule.Signals
         {
             _callbackOnce = null;
             _callback = null;
+            ClearUntypedListeners();
+        }
+
+        public override Type[] PayloadTypes => new[] {typeof(T1)};
+
+        public override void DispatchUntyped(params object[] args)
+        {
+            RequireArgumentCount(args, 1);
+            Dispatch((T1) args[0]);
         }
 
         public void Dispatch(T1 param)
@@ -67,10 +76,9 @@ namespace FlowIoC.BaseModule.Signals
             // count across every resolver that took it, and getting that wrong hands a live payload
             // to somebody else's dispatch. That is a worse bug than one small array is a cost, and
             // nothing has measured the array as one.
-            _internalCallback?.Invoke(this, new[]
-            {
-                param as object
-            });
+            object[] payload = {param};
+            _internalCallback?.Invoke(this, payload);
+            InvokeUntyped(payload);
             _callback?.Invoke(param);
         }
     }

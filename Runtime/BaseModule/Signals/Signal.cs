@@ -45,6 +45,15 @@ namespace FlowIoC.BaseModule.Signals
         {
             _callbackOnce = null;
             _callback = null;
+            ClearUntypedListeners();
+        }
+
+        public override Type[] PayloadTypes => Type.EmptyTypes;
+
+        public override void DispatchUntyped(params object[] args)
+        {
+            RequireArgumentCount(args, 0);
+            Dispatch();
         }
 
         public void Dispatch()
@@ -59,6 +68,7 @@ namespace FlowIoC.BaseModule.Signals
             once?.Invoke();
 
             _internalCallback?.Invoke(this, null);
+            InvokeUntyped(Array.Empty<object>());
             _callback?.Invoke();
         }
     }
