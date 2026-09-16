@@ -1302,9 +1302,15 @@ page. Copying the files is only part of it — the installer also registers the 
 index, gives it its `FlowModule` channel, and writes the `.csproj.DotSettings` its namespaces
 need, which is exactly what copying the folder by hand would miss.
 
-A module already in `Assets/Modules/` is never overwritten. The copy in your project is the one you
-have been editing, so the button reads *Installed* and does nothing; delete the folder first if you
-want the shipped version back.
+A module already in `Assets/Modules/` is never overwritten by **Install**. The copy in your project
+is the one you have been editing, so the button reads *Installed* - or **Update to 1.3.0** when the
+package ships a newer version, which every module under `Modules~` carries as the `Version:` line on
+its card. An update keeps what you changed: a file only the package changed is overwritten, a file
+only you changed stays, and a file both of you changed is listed before anything is written and
+resolved one way for all of them - keep yours, or take the package's. What the package shipped is
+remembered in `.flowioc-shipped.json` beside the card; a module installed before that record
+existed lists every differing file as a conflict, because nobody can say who changed it. Commit
+before you update.
 
 The payload lives in `Modules~/` inside the package. Unity does not import a folder whose name ends
 in a tilde, so the modules carry their own asmdefs without compiling until they are installed.

@@ -151,6 +151,23 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Note(
                 "These modules are yours once they land. Rename them, gut them, delete what the "
                 + "game does not need - nothing here is reinstalled or repaired behind your back.");
+
+            painter.Space();
+            painter.SubHeading("Updating a ready-made module");
+            painter.Paragraph(
+                "Every module under Modules~ carries a version, the Version: line on its card, and "
+                + "a record of what shipped beside it. When the package ships a newer version the "
+                + "module's page reads Update to X, its sidebar row reads UPDATE, and one console "
+                + "line at startup says so. The set on this page is not versioned: it is yours from "
+                + "the day it lands.");
+            painter.Paragraph(
+                "An update keeps what you changed. A file only the package changed is overwritten, "
+                + "a file only you changed stays, and a file both of you changed is listed before "
+                + "anything is written - keep yours, or take the package's, for all of them at once.");
+            painter.Note(
+                "A module installed before it kept a record lists every file that differs from the "
+                + "shipped one as a conflict, because nobody can say who changed it. Commit before "
+                + "updating, and read the list.");
         }
 
         /// <summary>
