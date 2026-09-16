@@ -194,12 +194,19 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("On a shipped step");
             painter.Paragraph(
                 "A Service's step - a Command nested under its interface - carries the attribute on "
-                + "the class, and Argument is the parameter the step is bound with. The debugger binds "
-                + "it in its own binder with a signal of its own, so a tap runs the step through the "
-                + "ordinary pipeline and shows in the Flow Console like any other step.");
+                + "the class, and Argument is the parameter the step is bound with; a step may carry it "
+                + "more than once, one row per argument. The debugger binds each in its own binder with "
+                + "a signal of its own, so a tap runs the step through the ordinary pipeline and shows in "
+                + "the Flow Console like any other step. A step whose Service is not bound in the scene "
+                + "is left off the panel, because it would inject nothing and throw on the tap.");
             painter.Code(
                 "[DebugOption(\"Haptic\", \"Play Success\", Argument = HapticPreset.Success)]\n"
+                + "[DebugOption(\"Haptic\", \"Play Failure\", Argument = HapticPreset.Failure)]\n"
                 + "public class Play : Command<HapticPreset> { ... }");
+            painter.Paragraph(
+                "The shipped modules already carry theirs: Haptic's Play (Success, Failure, Heavy "
+                + "impact), Local Save's SaveAll, Mobile Notification's RequestPermission and CancelAll, "
+                + "and the screen service's HideAll.");
             painter.Note(
                 "The scan for annotated steps walks the loaded assemblies once per run, when the "
                 + "panel first opens; the holders are walked again on every open, because a scene "
@@ -220,11 +227,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("Console");
             painter.Paragraph(
                 "The rows FlowLogger recorded, in a ring the config sizes - a thousand by default, "
-                + "the oldest going first. Log, Warn and Error toggle each kind and show its count; "
-                + "the search matches the message or the channel; a tapped row opens the detail pane "
-                + "with the source and the stack trace; Copy puts the whole ring on the clipboard, "
-                + "which is the one export a phone has. The panel's own traffic is logged too - a "
-                + "tap on an option reads as its dispatch under it.");
+                + "the oldest going first - laid out the way the Flow Console lays out a two-line row: "
+                + "the kind as an icon, the message, and under it the channel tag in its colour with "
+                + "where the line came from. Log, Warn and Error toggle each kind and show its count; "
+                + "Filters folds out the channel switches, the game's modules first and the framework's "
+                + "after; the search matches the message or the channel; a tapped row opens its detail "
+                + "over the list, with the time, the source and the stack trace, and Back returns; Copy "
+                + "puts the whole ring on the clipboard, which is the one export a phone has. The "
+                + "panel's own traffic is logged too - a tap on an option reads as its dispatch under it.");
 
             painter.SubHeading("Options");
             painter.Paragraph(
