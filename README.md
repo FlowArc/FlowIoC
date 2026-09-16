@@ -1312,6 +1312,13 @@ remembered in `.flowioc-shipped.json` beside the card; a module installed before
 existed lists every differing file as a conflict, because nobody can say who changed it. Commit
 before you update.
 
+A module whose card says `Update: never` is installed once. The setup set's Main, Screen, Gameplay
+and Connector say it, and so will a starter module you are meant to rewrite: the package keeps
+publishing it, a new install gets the latest copy, and nothing ever offers to update yours. Loading
+is the exception in the set - a service, versioned, updated from its own page under **Module
+Library → Setup Modules**, where every module of the set has a page and the Overview offers
+**Install All Setup** to a project without it.
+
 The payload lives in `Modules~/` inside the package. Unity does not import a folder whose name ends
 in a tilde, so the modules carry their own asmdefs without compiling until they are installed.
 

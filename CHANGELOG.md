@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and a file both changed is listed before anything is written and resolved one way for all of them
   - keep mine, or take the package's. A module installed before it kept a record lists every
   differing file as a conflict, because nobody can say who changed it.
+- **The setup set has a page per module.** `Module Library` → `Setup Modules` holds an Overview with
+  **Install All Setup** and a page each for Main, Loading, Screen, Gameplay and Connector. A module the
+  game removed comes back on its own from its page while the rest of the set is here; Loading carries a
+  version and updates like any service. A module whose card says `Update: never` - the rest of the set,
+  and a starter module a game takes over - is published on every change but never versioned: one
+  installation, no update, and a new install always gets the latest copy.
 
 ### Fixed
 
