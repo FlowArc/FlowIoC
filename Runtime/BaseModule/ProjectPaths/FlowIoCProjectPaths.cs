@@ -15,7 +15,20 @@ namespace FlowIoC.BaseModule.ProjectPaths
     /// </summary>
     internal class FlowIoCProjectPaths
     {
-        public string Root { get; } = "Assets/Plugins/FlowIoC";
+        public string Root { get; }
+
+        public FlowIoCProjectPaths() : this("Assets/Plugins/FlowIoC")
+        {
+        }
+
+        /// <summary>
+        /// The same paths under another root, for a test that writes the assets FlowIoC writes
+        /// without touching the project running it.
+        /// </summary>
+        internal FlowIoCProjectPaths(string root)
+        {
+            Root = root;
+        }
 
         public string EditorRoot => Root + "/Editor";
         public string CodeGeneratorRoot => EditorRoot + "/CodeGenerator";

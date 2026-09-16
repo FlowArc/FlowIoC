@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using FlowIoC.Editor.Addressables;
 using FlowIoC.Editor.AgentRules;
-using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.CodeGenerator.Detector;
 using FlowIoC.Editor.ModuleScanner;
 using FlowIoC.Editor.ModuleInstall;
@@ -105,13 +104,9 @@ namespace FlowIoC.Editor.SetupModules
         /// </summary>
         private void RegisterWithUnity()
         {
-            // The settings asset is what the module index is rebuilt through, and on a project this
-            // hook has never run on there is none: the generator menus create it, and nobody has
-            // opened one yet. Without it the index stays empty, FlowModule is written with no
-            // channels, and the modules that just landed - every one of them logging on its own
-            // channel - take the project down with them.
-            ED_CodeGenerator.CreateConfig();
-
+            // On a project this hook has never run on there is no settings asset for the index to
+            // be rebuilt through; the rebuild inside RescanModules makes it, the same one the
+            // generator menus would.
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
             ModuleAutoDetector.RescanModules();
             new ModuleRepair().FixAll();

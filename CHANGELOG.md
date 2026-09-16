@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - keep mine, or take the package's. A module installed before it kept a record lists every
   differing file as a conflict, because nobody can say who changed it.
 
+### Fixed
+
+- **A first open no longer warns that the code generator settings could not be loaded.** The
+  startup rebuild of the module index runs before anything has made the settings asset, and it
+  reported the asset missing twice; the rebuild now makes it, the same asset the setup install
+  made a few seconds later.
+- **The What's New tab notices a release the day-old answer never heard of.** The latest release
+  is still asked of the registry once a day, but a project updated to a version newer than the
+  cached answer asks again at once instead of reading "ahead of the latest release" until the
+  day is up. That ask is spent for the version it was made from, so a checkout ahead of every
+  release asks once and not on every repaint.
+
 ## [1.20.0] - 2026-09-16
 
 ### Added

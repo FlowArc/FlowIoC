@@ -7,9 +7,10 @@ using UnityEngine.Networking;
 namespace FlowIoC.Editor.Help.WhatsNew
 {
     /// <summary>
-    /// The newest version of FlowIoC a registry has, asked for at most once a day and only while
-    /// the What's New tab is being drawn - never on Editor start, so a project that nobody opens
-    /// the Help window in makes no request at all.
+    /// The newest version of FlowIoC a registry has, asked for once a day and only while the
+    /// What's New tab is being drawn - never on Editor start, so a project that nobody opens the
+    /// Help window in makes no request at all. <see cref="LatestReleaseAskRule"/> says when the
+    /// day is not waited out: a project updated to a release the last answer never heard of.
     ///
     /// The registry asked is the one the package was installed from, and OpenUPM, where FlowIoC
     /// is published, for a package that came in another way: a Git URL, a submodule, an embedded
@@ -27,11 +28,12 @@ namespace FlowIoC.Editor.Help.WhatsNew
 
         private const string VERSION_KEY = "FlowIoC.WhatsNew.LatestRelease";
         private const string ASKED_AT_KEY = "FlowIoC.WhatsNew.LatestReleaseAskedAt";
+        private const string ASKED_WITH_KEY = "FlowIoC.WhatsNew.LatestReleaseAskedWith";
         private const int TIMEOUT_SECONDS = 10;
 
-        private static readonly TimeSpan ASK_AGAIN_AFTER = TimeSpan.FromDays(1);
-
         private readonly string _url;
+        private readonly string _installed;
+        private readonly LatestReleaseAskRule _askRule = new LatestReleaseAskRule();
         private readonly LatestReleaseReading _reading = new LatestReleaseReading();
         private UnityWebRequest _request;
 
@@ -44,6 +46,7 @@ namespace FlowIoC.Editor.Help.WhatsNew
             string registry = string.IsNullOrEmpty(source.RegistryUrl) ? DEFAULT_REGISTRY_URL : source.RegistryUrl;
 
             _url = registry.TrimEnd('/') + "/" + source.PackageName;
+            _installed = source.Version ?? string.Empty;
         }
 
         /// <summary>Where the ask goes, so a test can see the registry and the package it names.</summary>
@@ -69,12 +72,21 @@ namespace FlowIoC.Editor.Help.WhatsNew
             if (Application.isBatchMode || _request != null)
                 return false;
 
+            return _askRule.IsOwed(
+                SinceLastAsk(),
+                _installed,
+                EditorPrefs.GetString(VERSION_KEY, string.Empty),
+                EditorPrefs.GetString(ASKED_WITH_KEY, string.Empty));
+        }
+
+        private static TimeSpan? SinceLastAsk()
+        {
             string askedAt = EditorPrefs.GetString(ASKED_AT_KEY, string.Empty);
 
             if (!long.TryParse(askedAt, out long ticks))
-                return true;
+                return null;
 
-            return DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc) >= ASK_AGAIN_AFTER;
+            return DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc);
         }
 
         private void Ask(Action onAnswered)
@@ -105,12 +117,15 @@ namespace FlowIoC.Editor.Help.WhatsNew
 
         /// <summary>
         /// The day's ask is spent whatever came back, so a registry that is down or has changed
-        /// its format is asked again tomorrow, not on every draw. Only a version that reads is
-        /// written, so a bad day never erases a good answer.
+        /// its format is asked again tomorrow, not on every draw. It is spent for the version
+        /// installed now, so an install the registry has no release for asks once and not on
+        /// every repaint. Only a version that reads is written, so a bad day never erases a good
+        /// answer.
         /// </summary>
         private void Answered(UnityWebRequest request)
         {
             EditorPrefs.SetString(ASKED_AT_KEY, DateTime.UtcNow.Ticks.ToString());
+            EditorPrefs.SetString(ASKED_WITH_KEY, _installed);
 
             if (request.result != UnityWebRequest.Result.Success)
                 return;

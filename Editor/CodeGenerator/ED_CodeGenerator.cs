@@ -118,21 +118,7 @@ namespace FlowIoC.Editor.CodeGenerator
         public static void CreateConfig()
         {
             new FlowIoCPathMigrator().MigrateIfNeeded();
-
-            string fullPath = Path.GetDirectoryName(CodeGeneratorStrings.CONFIG_PATH);
-            if (!Directory.Exists(fullPath))
-            {
-                Directory.CreateDirectory(fullPath);
-            }
-
-            ED_CodeGenerator settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
-            if (settings != null) return;
-            settings = CreateInstance<ED_CodeGenerator>();
-            AssetDatabase.CreateAsset(settings, CodeGeneratorStrings.CONFIG_PATH);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            Debug.Log($"ED_CodeGenerator asset created at: {CodeGeneratorStrings.CONFIG_PATH}");
+            new CodeGeneratorSettingsProvider().LoadOrCreate();
         }
 
         public void ApplyConfiguredFolderNames()

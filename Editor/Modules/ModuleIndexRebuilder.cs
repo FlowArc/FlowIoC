@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
-using FlowIoC.BaseModule.ProjectPaths;
 using FlowIoC.Editor.CodeGenerator;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.ModuleScanner;
@@ -12,18 +11,20 @@ namespace FlowIoC.Editor.Modules
 {
     internal class ModuleIndexRebuilder
     {
-        private readonly FlowIoCProjectPaths _paths = new FlowIoCProjectPaths();
-
         /// <summary>
         /// The rebuilt index, or null when the code generator settings could not be loaded and
         /// the index was left as it is. Returning it rather than leaving callers to load the
         /// index themselves is what keeps a failed rebuild distinguishable from a successful
         /// one: a caller that loaded it independently would get an empty index either way, and
         /// go on to write into it as though the rebuild had happened.
+        ///
+        /// A settings asset that is not there yet is made, not reported: the startup rebuild runs
+        /// on a project's first open before anything else has made it. What is reported is an
+        /// asset that still does not load once it has been made.
         /// </summary>
         public ED_ModuleIndex Rebuild()
         {
-            var settings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(_paths.CodeGeneratorSettings);
+            ED_CodeGenerator settings = new CodeGeneratorSettingsProvider().LoadOrCreate();
             if (settings == null)
             {
                 Debug.LogWarning("<color=cyan>FlowIoC:</color> the code generator settings could not be " +
