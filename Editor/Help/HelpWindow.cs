@@ -150,6 +150,17 @@ namespace FlowIoC.Editor.Help
             window.GoToPage(pageTitle, tabTitle);
         }
 
+        /// <summary>
+        /// Redraws every open Help window without opening one. A page whose content arrives
+        /// after it was drawn - the registry's answer on What's New - asks for this, because the
+        /// window repaints on its own only when the pointer moves over it.
+        /// </summary>
+        internal static void RepaintOpen()
+        {
+            foreach (HelpWindow window in Resources.FindObjectsOfTypeAll<HelpWindow>())
+                window.Repaint();
+        }
+
         private void GoToPage(string pageTitle, string tabTitle)
         {
             IHelpPage page = _catalog.FindPage(pageTitle);

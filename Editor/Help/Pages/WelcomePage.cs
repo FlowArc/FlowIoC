@@ -25,6 +25,8 @@ namespace FlowIoC.Editor.Help.Pages
         internal const string INTRODUCTION_TAB = "Introduction";
 
         private IReadOnlyList<WhatsNewVersionEVO> _releases;
+        private WhatsNewSource _source;
+        private LatestReleasedVersion _latest;
 
         public WelcomePage() : base(Build())
         {
@@ -45,7 +47,8 @@ namespace FlowIoC.Editor.Help.Pages
             new HelpTab(WHATS_NEW_TAB, DrawWhatsNew,
                 "What changed, newest first.",
                 "One block a release, read from the package's own CHANGELOG.md - so what the "
-                + "window says the version brought is what the file says.")
+                + "window says the version brought is what the file says. The line above them "
+                + "is the newest release the registry has, asked for once a day.")
         };
 
         /// <summary>
@@ -55,7 +58,10 @@ namespace FlowIoC.Editor.Help.Pages
         /// </summary>
         private void DrawWhatsNew(HelpPainter painter)
         {
-            _releases ??= new WhatsNewSource().Releases();
+            _source ??= new WhatsNewSource();
+            _releases ??= _source.Releases();
+
+            DrawLatestRelease(painter);
 
             if (_releases.Count == 0)
             {
@@ -66,6 +72,37 @@ namespace FlowIoC.Editor.Help.Pages
                 return;
             }
 
+            DrawReleases(painter);
+        }
+
+        /// <summary>
+        /// One line above the notes about the newest release a registry has, asked for at most
+        /// once a day and only from here. It is a line and not a button: a newer version being
+        /// out is worth knowing on the tab that says what changed, and taking it is the reader's
+        /// call, made in the Package Manager. Nothing is drawn until the registry has answered
+        /// once, and nothing at all for a copy the Package Manager does not resolve.
+        /// </summary>
+        private void DrawLatestRelease(HelpPainter painter)
+        {
+            _latest ??= new LatestReleasedVersion(_source);
+
+            UpdateNoticeEVO notice = new UpdateNoticeRule()
+                .For(_source.Version, _source.Source, _latest.Read(HelpWindow.RepaintOpen));
+
+            switch (notice.Kind)
+            {
+                case UpdateNoticeKind.Behind:
+                    painter.Note(notice.Text);
+                    break;
+
+                case UpdateNoticeKind.UpToDate:
+                    painter.Rule(notice.Text);
+                    break;
+            }
+        }
+
+        private void DrawReleases(HelpPainter painter)
+        {
             var first = true;
 
             foreach (WhatsNewVersionEVO release in _releases)

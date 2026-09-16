@@ -19,8 +19,14 @@ namespace FlowIoC.Editor.Help.WhatsNew
     {
         internal const string FileName = "CHANGELOG.md";
 
+        /// <summary>The name the package is published under, for when the Package Manager has none to give.</summary>
+        internal const string PACKAGE_NAME = "com.flowarc.flowioc.core";
+
         private readonly string _packageRootPath;
         private readonly string _version;
+        private readonly PackageSource _source;
+        private readonly string _registryUrl;
+        private readonly string _packageName;
 
         internal WhatsNewSource()
         {
@@ -31,16 +37,43 @@ namespace FlowIoC.Editor.Help.WhatsNew
                 : Path.Combine(new ProjectRoot().Resolve(), "Packages", "FlowIoC");
 
             _version = info == null ? string.Empty : info.version;
+            _source = info == null ? PackageSource.Unknown : info.source;
+            // The Package Manager names a registry for every package, Unity's own for one that
+            // never came from a registry at all - an embedded copy reads packages.unity.com. Only
+            // a package that was actually installed from a registry has one worth asking.
+            _registryUrl = info != null && info.source == PackageSource.Registry && info.registry != null
+                ? info.registry.url
+                : string.Empty;
+            _packageName = info == null || string.IsNullOrEmpty(info.name) ? PACKAGE_NAME : info.name;
         }
 
         internal WhatsNewSource(string packageRootPath, string version)
+            : this(packageRootPath, version, PackageSource.Unknown, string.Empty)
+        {
+        }
+
+        internal WhatsNewSource(string packageRootPath, string version, PackageSource source, string registryUrl)
         {
             _packageRootPath = packageRootPath;
             _version = version;
+            _source = source;
+            _registryUrl = registryUrl ?? string.Empty;
+            _packageName = PACKAGE_NAME;
         }
 
         /// <summary>The installed version, or empty when the package is not resolved through UPM.</summary>
         internal string Version => _version;
+
+        /// <summary>
+        /// How the package got into the project - a registry, a Git URL, an embedded folder - which
+        /// is what decides whether the Package Manager will ever offer an update for it.
+        /// </summary>
+        internal PackageSource Source => _source;
+
+        /// <summary>The registry the package was installed from, or empty when it came another way.</summary>
+        internal string RegistryUrl => _registryUrl;
+
+        internal string PackageName => _packageName;
 
         internal string ChangelogPath => Path.Combine(_packageRootPath, FileName);
 
