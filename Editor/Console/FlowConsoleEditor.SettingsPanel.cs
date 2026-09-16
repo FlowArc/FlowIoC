@@ -240,8 +240,15 @@ namespace FlowIoC.Editor.Console
                 "Group the rows into the flows they belong to. A flow started from inside another sits under it.");
 
             bool flowMode = GUI.Toggle(rect, _flowMode, flowLabel, EditorStyles.toolbarButton);
-            if (flowMode == _flowMode) return;
+            if (flowMode != _flowMode) SetFlowMode(flowMode);
+        }
 
+        /// <summary>
+        /// One setter behind the bar's switch and the tab menu's item, so the two cannot come to
+        /// do different things. The same for every control that follows.
+        /// </summary>
+        private void SetFlowMode(bool flowMode)
+        {
             _flowMode = flowMode;
             _state.FlowMode = flowMode;
             _logsDirty = true;
@@ -264,8 +271,11 @@ namespace FlowIoC.Editor.Console
             bool pinnedOnly = GUI.Toggle(rect, _pinnedOnly, pinnedLabel, EditorStyles.toolbarButton);
 
             GUI.backgroundColor = backgroundWas;
-            if (pinnedOnly == _pinnedOnly) return;
+            if (pinnedOnly != _pinnedOnly) SetPinnedOnly(pinnedOnly);
+        }
 
+        private void SetPinnedOnly(bool pinnedOnly)
+        {
             _pinnedOnly = pinnedOnly;
             _logsDirty = true;
             _needsRepaint = true;
@@ -288,19 +298,29 @@ namespace FlowIoC.Editor.Console
             if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
 
             var menu = new GenericMenu();
+            AddTimeFormatItems(menu, "");
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
 
+        /// <summary>
+        /// The three formats with the one in force ticked: the dropdown's list, and under a path
+        /// the tab menu's Time submenu.
+        /// </summary>
+        private void AddTimeFormatItems(GenericMenu menu, string path)
+        {
             foreach (FlowConsoleTimeFormat value in Enum.GetValues(typeof(FlowConsoleTimeFormat)))
             {
                 FlowConsoleTimeFormat chosen = value;
-                menu.AddItem(new GUIContent(TimeFormatLabel(value)), _timeFormat == value, () =>
-                {
-                    _timeFormat = chosen;
-                    _state.TimeFormat = chosen;
-                    _needsRepaint = true;
-                });
+                menu.AddItem(new GUIContent(path + TimeFormatLabel(value)), _timeFormat == value,
+                    () => SetTimeFormat(chosen));
             }
+        }
 
-            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        private void SetTimeFormat(FlowConsoleTimeFormat format)
+        {
+            _timeFormat = format;
+            _state.TimeFormat = format;
+            _needsRepaint = true;
         }
 
         /// <summary>The menu shows what each format looks like, so nobody has to try all three.</summary>
@@ -317,29 +337,42 @@ namespace FlowIoC.Editor.Console
 
         private void RowLinesSettingGUI(Rect rect)
         {
-            var content = new GUIContent(_rowLineCount + " line" + (_rowLineCount == 1 ? "" : "s"),
+            var content = new GUIContent(RowLinesLabel(_rowLineCount),
                 "How many lines a row shows. Two is Unity's shape: the message, and underneath it "
                 + "where the message came from.");
 
             if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
 
             var menu = new GenericMenu();
+            AddRowLinesItems(menu, "");
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
 
+        /// <summary>
+        /// One to three lines with the count in force ticked: the dropdown's list, and under a
+        /// path the tab menu's Row Lines submenu.
+        /// </summary>
+        private void AddRowLinesItems(GenericMenu menu, string path)
+        {
             for (int lines = 1; lines <= 3; lines++)
             {
                 int chosen = lines;
-                menu.AddItem(new GUIContent(lines + " line" + (lines == 1 ? "" : "s")),
-                    _rowLineCount == lines,
-                    () =>
-                    {
-                        _rowLineCount = chosen;
-                        _state.RowLineCount = chosen;
-                        _logsDirty = true;
-                        _needsRepaint = true;
-                    });
+                menu.AddItem(new GUIContent(path + RowLinesLabel(lines)), _rowLineCount == lines,
+                    () => SetRowLineCount(chosen));
             }
+        }
 
-            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        private static string RowLinesLabel(int lines)
+        {
+            return lines + " line" + (lines == 1 ? "" : "s");
+        }
+
+        private void SetRowLineCount(int lines)
+        {
+            _rowLineCount = lines;
+            _state.RowLineCount = lines;
+            _logsDirty = true;
+            _needsRepaint = true;
         }
 
         /// <summary>
@@ -349,26 +382,33 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private void SourceCaptureSettingGUI(Rect rect)
         {
-            FlowStackTraceCapture capture = Preferences.StackTraceCapture;
-
-            var content = new GUIContent("Source: " + capture,
+            var content = new GUIContent("Source: " + Preferences.StackTraceCapture,
                 "Which logs work out where they came from.");
 
             if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
 
             var menu = new GenericMenu();
+            AddSourceCaptureItems(menu, "");
+            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
+
+        /// <summary>
+        /// The three captures with the one in force ticked: the dropdown's list, and under a path
+        /// the tab menu's Source submenu.
+        /// </summary>
+        private void AddSourceCaptureItems(GenericMenu menu, string path)
+        {
+            FlowStackTraceCapture capture = Preferences.StackTraceCapture;
 
             foreach (FlowStackTraceCapture value in Enum.GetValues(typeof(FlowStackTraceCapture)))
             {
                 FlowStackTraceCapture chosen = value;
-                menu.AddItem(new GUIContent(CaptureLabel(value)), capture == value, () =>
+                menu.AddItem(new GUIContent(path + CaptureLabel(value)), capture == value, () =>
                 {
                     Preferences.StackTraceCapture = chosen;
                     _needsRepaint = true;
                 });
             }
-
-            menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
         }
     }
 }

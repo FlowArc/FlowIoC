@@ -1000,14 +1000,21 @@ namespace FlowIoC.Editor.Console
             if (!GUI.Button(rect, content, EditorStyles.toolbarDropDown)) return;
 
             var menu = new GenericMenu();
-
-            menu.AddItem(new GUIContent("Save shown rows..."), false, () => SaveShownLogs(false));
-            menu.AddItem(new GUIContent("Save shown rows with stack traces..."), false, () => SaveShownLogs(true));
-            menu.AddSeparator("");
-            menu.AddItem(new GUIContent("Copy shown rows"), false,
-                () => EditorGUIUtility.systemCopyBuffer = _export.ToText(_cachedVisibleLogs, false));
-
+            AddExportItems(menu, "");
             menu.DropDown(new Rect(rect.x, rect.yMax, 0f, 0f));
+        }
+
+        /// <summary>
+        /// The three ways out: the dropdown's list, and under a path the tab menu's Export
+        /// submenu.
+        /// </summary>
+        private void AddExportItems(GenericMenu menu, string path)
+        {
+            menu.AddItem(new GUIContent(path + "Save shown rows..."), false, () => SaveShownLogs(false));
+            menu.AddItem(new GUIContent(path + "Save shown rows with stack traces..."), false, () => SaveShownLogs(true));
+            menu.AddSeparator(path);
+            menu.AddItem(new GUIContent(path + "Copy shown rows"), false,
+                () => EditorGUIUtility.systemCopyBuffer = _export.ToText(_cachedVisibleLogs, false));
         }
 
         private void SaveShownLogs(bool includeStackTrace)
@@ -1287,6 +1294,9 @@ namespace FlowIoC.Editor.Console
             }
 
             EditorGUILayout.EndScrollView();
+
+            // A right-click the rows did not take: the settings menu, on the list's empty tail.
+            ListContextMenuGUI();
 
             // How tall the list actually is decides where its bottom sits, and only a repaint
             // knows - during Layout the rect is still a placeholder. Resizing the window or

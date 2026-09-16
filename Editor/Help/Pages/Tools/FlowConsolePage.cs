@@ -46,7 +46,8 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "the clock to the second as Unity shows it, the clock with its milliseconds, or "
                 + "the frame and the gap since the row above. Pinning a row keeps it through the "
                 + "filters, the trim and every automatic clear. All three sit on the bar the gear "
-                + "opens.");
+                + "opens, and on the tab's right-click menu with the rest of the bar - where "
+                + "Unity's Console keeps its line count.");
 
             painter.SubHeading("A device's rows arrive too");
             painter.Paragraph(

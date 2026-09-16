@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The Flow Console's settings are on the tab's menu.** Right-click the tab, or press the `⋮` at
+  its corner, and the bar the gear opens is there as a menu - Time, Row Lines, Flow, Pinned, Source
+  and Export, the choice in force ticked - the way Unity's Console keeps its line count there. A
+  right-click on the list below the last row shows the same menu. A menu has no width, so a
+  control the bar dropped for want of room is still one click away.
+
 ### Fixed
 
 - **Create Module never writes to somebody's open scene.** A main module created with *Create

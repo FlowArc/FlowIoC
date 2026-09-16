@@ -175,6 +175,11 @@ Pause`; `Clear`, `Collapse` and the three counts are never dropped, and neither 
 with something typed in it. On the bar `Source` goes first, then `Export`, then `Pinned`,
 `Flow`, the line count and `Time` in that order; the gear and `Filters` stay.
 
+The bar's switches are on the tab's menu as well - right-click the tab, or press the `⋮` at its
+corner - the way Unity's Console keeps its line count there, and on a right-click on the list
+below the last row. A menu has no width, so a control the bar dropped is still one click away,
+and it ticks whatever is in force.
+
 The list follows new logs down while it is resting at the bottom and leaves you alone
 once you scroll up. Arrows walk it, PageUp/PageDown move by a screen, Home and End take
 the two ends, **Enter** opens the selected row's source and **Ctrl+C** copies it with its
