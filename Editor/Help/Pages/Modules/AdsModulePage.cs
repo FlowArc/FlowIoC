@@ -17,7 +17,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string Subtitle => "Rewarded and interstitial ads from any module, the mediation SDK behind a plug";
 
-        public override FlowIcon Icon => FlowIcon.Broadcast;
+        public override FlowIcon Icon => FlowIcon.Ad;
 
         public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
