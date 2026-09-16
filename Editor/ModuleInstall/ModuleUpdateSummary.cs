@@ -18,9 +18,13 @@ namespace FlowIoC.Editor.ModuleInstall
 
             text.Append("Update ").Append(title).Append(' ').Append(Shown(from)).Append(" → ").Append(to).Append("\n\n");
 
-            text.Append(Files(plan.Count(ModuleUpdateVerdict.Overwrite))).Append(" change, ")
-                .Append(Files(plan.Count(ModuleUpdateVerdict.Copy))).Append(" is added, ")
-                .Append(Files(plan.Count(ModuleUpdateVerdict.Delete))).Append(" is removed.\n");
+            int changed = plan.Count(ModuleUpdateVerdict.Overwrite);
+            int added = plan.Count(ModuleUpdateVerdict.Copy);
+            int removed = plan.Count(ModuleUpdateVerdict.Delete);
+
+            text.Append(Files(changed)).Append(changed == 1 ? " changes, " : " change, ")
+                .Append(Files(added)).Append(added == 1 ? " is added, " : " are added, ")
+                .Append(Files(removed)).Append(removed == 1 ? " is removed.\n" : " are removed.\n");
 
             int edited = plan.Count(ModuleUpdateVerdict.KeepEdited);
 
