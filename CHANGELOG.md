@@ -5,6 +5,28 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.1] - 2026-09-17
+
+### Changed
+
+- **The module pages in the Help window are rearranged.** Every page says Module in its title,
+  wears the colour its Root wears in the inspector, names the role and the version in its banner,
+  and the setup pages explain the set: the boot, the ScreenManager, the crossings, the Root order.
+- **A/B Test, Asset Delivery, Local Save and Mobile Notification are 1.0.1**: their panels open
+  the Help pages by the new titles.
+
+### Fixed
+
+- **The Help window no longer stutters with the Module Library open.** What a page reads of the
+  project is read once and kept until the project changes.
+- **The Module Scanner opens faster and no longer rescans on focus.**
+- **Add Shared or Signals references the assembly it made**, so the module compiles at once.
+- **Create Module puts the Test or Screen suffix on the name itself** and no longer resets the
+  parent's `.csproj.DotSettings`.
+- **The Module Scanner accepts a plug behind a define** the project does not meet, instead of
+  reporting it broken.
+- **A card's Root line names the context the Root actually roots.**
+
 ## [1.22.0] - 2026-09-17
 
 ### Added
