@@ -68,13 +68,14 @@ namespace FlowIoC.Editor.ModuleCards
             if (signals != null) assemblies.Add(module.ExpectedAssemblyName + SIGNALS_SUFFIX);
 
             Type holder = HolderTypeIn(signals);
+            Type root = FirstType(own, IsRoot);
 
             return new ModuleFactsEVO
             {
                 Kind = module.Kind.ToString(),
                 Assemblies = assemblies,
-                RootType = NameOfFirst(own, IsRoot),
-                ContextType = NameOfFirst(own, IsContext),
+                RootType = root?.Name,
+                ContextType = ContextOf(root) ?? NameOfFirst(own, IsContext),
                 Incoming = SignalsOn(holder, "Incoming"),
                 Outgoing = SignalsOn(holder, "Outgoing"),
                 Publishes = Sorted(PublicTypeNames(shared)),
@@ -147,13 +148,27 @@ namespace FlowIoC.Editor.ModuleCards
             return bare + "<" + string.Join(", ", type.GetGenericArguments().Select(Friendly)) + ">";
         }
 
-        private string NameOfFirst(Assembly assembly, Func<Type, bool> predicate)
+        private string NameOfFirst(Assembly assembly, Func<Type, bool> predicate) =>
+            FirstType(assembly, predicate)?.Name;
+
+        private Type FirstType(Assembly assembly, Func<Type, bool> predicate)
         {
             return SafeTypes(assembly)
                 .Where(predicate)
                 .OrderBy(type => type.Name, StringComparer.Ordinal)
-                .Select(type => type.Name)
                 .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// The context the Root roots - Root&lt;T&gt;'s T - rather than the first context in the
+        /// assembly by name. A Connector module holds one context per counterpart beside its own,
+        /// and the first by name is usually one of those.
+        /// </summary>
+        private string ContextOf(Type root)
+        {
+            Type rooted = BaseNamed(root, "Root`1");
+
+            return rooted != null && rooted.IsGenericType ? rooted.GetGenericArguments()[0].Name : null;
         }
 
         /// <summary>
@@ -164,14 +179,16 @@ namespace FlowIoC.Editor.ModuleCards
 
         private bool IsContext(Type type) => !type.IsAbstract && HasBaseNamed(type, "Context");
 
-        private bool HasBaseNamed(Type type, string baseName)
+        private bool HasBaseNamed(Type type, string baseName) => BaseNamed(type, baseName) != null;
+
+        private Type BaseNamed(Type type, string baseName)
         {
-            for (Type walk = type.BaseType; walk != null; walk = walk.BaseType)
+            for (Type walk = type?.BaseType; walk != null; walk = walk.BaseType)
             {
-                if (walk.Name == baseName) return true;
+                if (walk.Name == baseName) return walk;
             }
 
-            return false;
+            return null;
         }
 
         private IEnumerable<string> PublicTypeNames(Assembly assembly)

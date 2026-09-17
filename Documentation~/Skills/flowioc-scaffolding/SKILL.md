@@ -180,6 +180,17 @@ var actionNames = menuType.GetField("_actionNames", flags).GetValue(win);
 var selected    = menuType.GetField("_selectedOptionalFolders", flags).GetValue(win);
 // add the FolderEVO entries you want out of configMap's RootFolders before calling
 
+// Both signal folders start ticked, as the window seeds them - the window's Signals tick IS
+// the PublicSignals folder in this list. For a module with no public surface - a Connector, or
+// a Service that answers its caller - take the two out and pass createSignals false below, or
+// the module gets an empty Modules.<Name>.Signals assembly with nothing in it:
+var folders = (System.Collections.IList) selected;
+for (int i = folders.Count - 1; i >= 0; i--)
+{
+    string kind = folders[i].GetType().GetField("Type").GetValue(folders[i]).ToString();
+    if (kind == "PublicSignals" || kind == "Signals") folders.RemoveAt(i);
+}
+
 // The card's two authored lines, written into MODULE.md as the module is made. Leave one empty
 // and the stub's placeholder goes in instead, and Module Scanner reports it until it is written.
 var card = System.Activator.CreateInstance(cardType, true);

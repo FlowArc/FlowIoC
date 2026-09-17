@@ -25,15 +25,21 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
         private readonly SignalsAssemblyDefinition _signalsAssembly;
         private readonly SharedAssemblyDefinition _sharedAssembly;
+        private readonly AssemblyDefinitionReferences _references;
 
-        internal SignalsInstaller() : this(new SignalsAssemblyDefinition(), new SharedAssemblyDefinition())
+        internal SignalsInstaller() : this(
+            new SignalsAssemblyDefinition(), new SharedAssemblyDefinition(), new AssemblyDefinitionReferences())
         {
         }
 
-        internal SignalsInstaller(SignalsAssemblyDefinition signalsAssembly, SharedAssemblyDefinition sharedAssembly)
+        internal SignalsInstaller(
+            SignalsAssemblyDefinition signalsAssembly,
+            SharedAssemblyDefinition sharedAssembly,
+            AssemblyDefinitionReferences references)
         {
             _signalsAssembly = signalsAssembly;
             _sharedAssembly = sharedAssembly;
+            _references = references;
         }
 
         internal ModuleInstallReport Install(string moduleName, string modulePath, DirectoryStructureConfig config)
@@ -74,6 +80,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             ModuleGenerator.AddSubAssemblyNamespaceExceptions(config, modulePath, signalsAssemblyName);
             report.WroteNamespaceSettings(signalsAssemblyName + ".csproj.DotSettings");
+
+            // The module has to see the holder it is about to bind. Create Module writes this
+            // reference into the asmdef it makes; a module that gains its Signals later needs it
+            // added here, or the Bind line below is a CS0246 until somebody finds the missing line.
+            AddReference(moduleAsmdefPath, moduleAssemblyName, signalsAssemblyName, report);
 
             BindInContext(modulePath, config, holderName, signalsPath, report);
 
@@ -164,6 +175,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             CodeGeneratorUtils.BindSignalsInContext(contexts[0], holderName, holderNamespace);
 
             report.BoundInContext(Path.GetFileNameWithoutExtension(contexts[0]));
+        }
+
+        private void AddReference(
+            string asmdefPath, string assemblyName, string signalsAssemblyName, ModuleInstallReport report)
+        {
+            string updated = _references.Add(File.ReadAllText(asmdefPath), signalsAssemblyName, out bool added);
+            if (!added) return;
+
+            File.WriteAllText(asmdefPath, updated);
+            report.Referenced(assemblyName);
         }
 
         private string FindAssemblyDefinition(string modulePath)
