@@ -47,7 +47,7 @@ namespace Modules.AbTestFlowModule.Editor
 
         public override FlowRole Role => FlowRole.Service;
 
-        public override string HelpPage => "A/B Test";
+        public override string HelpPage => "A/B Test Module";
 
         public override void Draw(ModulePanelPainter painter)
         {

@@ -77,7 +77,7 @@ namespace Modules.MobileNotificationModule.Editor
 
         public override FlowRole Role => FlowRole.Service;
 
-        public override string HelpPage => "Mobile Notification";
+        public override string HelpPage => "Mobile Notification Module";
 
         public override bool HasSidebar => true;
 

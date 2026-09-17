@@ -56,7 +56,7 @@ namespace Modules.LocalSaveModule.Editor
 
         public override FlowRole Role => FlowRole.Service;
 
-        public override string HelpPage => "Local Save";
+        public override string HelpPage => "Local Save Module";
 
         public override void Draw(ModulePanelPainter painter)
         {

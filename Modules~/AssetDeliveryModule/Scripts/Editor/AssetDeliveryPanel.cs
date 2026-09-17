@@ -33,7 +33,7 @@ namespace Modules.AssetDeliveryModule.Editor
 
         public override FlowRole Role => FlowRole.Service;
 
-        public override string HelpPage => "Asset Delivery";
+        public override string HelpPage => "Asset Delivery Module";
 
         public override void Draw(ModulePanelPainter painter)
         {
