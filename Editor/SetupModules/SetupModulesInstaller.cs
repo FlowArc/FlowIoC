@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.ModuleInstall;
-using UnityEngine;
 
 namespace FlowIoC.Editor.SetupModules
 {
@@ -36,11 +35,23 @@ namespace FlowIoC.Editor.SetupModules
 
         private readonly string _projectRoot;
         private readonly ModulesSource _source;
+        private readonly ProjectAsmdefs _asmdefs;
 
         internal SetupModulesInstaller(string projectRoot, ModulesSource source)
+            : this(projectRoot, source, new ProjectAsmdefs(projectRoot))
+        {
+        }
+
+        /// <summary>
+        /// The same installer sharing one walk of the project's asmdefs with everything else that
+        /// asks what is installed - the five setup pages in the Help window between them, rather
+        /// than one walk per module of the set per page.
+        /// </summary>
+        internal SetupModulesInstaller(string projectRoot, ModulesSource source, ProjectAsmdefs asmdefs)
         {
             _projectRoot = projectRoot;
             _source = source;
+            _asmdefs = asmdefs;
         }
 
         internal string TargetOf(string moduleFolderName) =>
@@ -137,6 +148,9 @@ namespace FlowIoC.Editor.SetupModules
                 return report;
             }
 
+            // The project now declares the set's assemblies, and whoever shares the walk asks next.
+            _asmdefs.Invalidate();
+
             report.Succeeded = true;
             report.Installed = written.ToArray();
 
@@ -168,53 +182,21 @@ namespace FlowIoC.Editor.SetupModules
         }
 
         /// <summary>The folder in this project declaring the assembly the named module ships, or null.</summary>
-        private string AssemblyAt(string moduleFolderName)
-        {
-            string assembly = ShippedAssemblyName(_source.PathOf(moduleFolderName));
-
-            if (string.IsNullOrEmpty(assembly))
-                return null;
-
-            string assets = Path.Combine(_projectRoot, "Assets");
-
-            if (!Directory.Exists(assets))
-                return null;
-
-            foreach (string asmdef in Directory.GetFiles(assets, "*.asmdef", SearchOption.AllDirectories))
-            {
-                if (assembly.Equals(AssemblyNameIn(asmdef), StringComparison.Ordinal))
-                    return Path.GetDirectoryName(asmdef);
-            }
-
-            return null;
-        }
+        private string AssemblyAt(string moduleFolderName) =>
+            _asmdefs.FolderOf(ShippedAssemblyName(_source.PathOf(moduleFolderName)));
 
         /// <summary>
         /// The assembly a payload folder declares. A module folder holds exactly one asmdef at its
         /// top; the ones for its Shared, Signals, screen and test assemblies sit deeper.
         /// </summary>
-        private static string ShippedAssemblyName(string moduleRoot)
+        private string ShippedAssemblyName(string moduleRoot)
         {
             if (!Directory.Exists(moduleRoot))
                 return null;
 
             string[] asmdefs = Directory.GetFiles(moduleRoot, "*.asmdef", SearchOption.TopDirectoryOnly);
 
-            return asmdefs.Length == 1 ? AssemblyNameIn(asmdefs[0]) : null;
-        }
-
-        private static string AssemblyNameIn(string asmdefPath)
-        {
-            try
-            {
-                var declaration = JsonUtility.FromJson<AssemblyDefinitionName>(File.ReadAllText(asmdefPath));
-
-                return declaration == null || string.IsNullOrEmpty(declaration.name) ? null : declaration.name;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            return asmdefs.Length == 1 ? _asmdefs.NameIn(asmdefs[0]) : null;
         }
 
         private static void TryDelete(string path)
@@ -232,13 +214,6 @@ namespace FlowIoC.Editor.SetupModules
         }
 
         private static void CopyTree(string source, string target) => new PayloadCopier().CopyTree(source, target);
-
-        /// <summary>Just enough of an asmdef to read its assembly name.</summary>
-        [Serializable]
-        private class AssemblyDefinitionName
-        {
-            public string name;
-        }
     }
 }
 

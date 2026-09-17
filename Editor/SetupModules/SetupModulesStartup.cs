@@ -49,11 +49,20 @@ namespace FlowIoC.Editor.SetupModules
 
         /// <summary>The same startup over a project and a package handed in, which a test does.</summary>
         internal SetupModulesStartup(string projectRoot, string packageRoot)
+            : this(projectRoot, packageRoot, new ProjectAsmdefs(projectRoot))
+        {
+        }
+
+        /// <summary>
+        /// The same startup sharing one walk of the project's asmdefs with whoever hands it in -
+        /// the Help window, whose five setup pages each ask what of the set is installed.
+        /// </summary>
+        internal SetupModulesStartup(string projectRoot, string packageRoot, ProjectAsmdefs asmdefs)
         {
             _projectRoot = projectRoot;
             _state = new SetupState(projectRoot);
             _installer = new SetupModulesInstaller(
-                projectRoot, new ModulesSource(packageRoot, ModulesSource.SetupModulesFolder));
+                projectRoot, new ModulesSource(packageRoot, ModulesSource.SetupModulesFolder), asmdefs);
         }
 
         internal void Run()

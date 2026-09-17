@@ -15,7 +15,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string ModuleFolderName => "AnalyticsModule";
 
-        public override string Title => "Analytics";
+        public override string Title => "Analytics Module";
 
         public override string Subtitle => "One Log call from anywhere, every plugged SDK behind it - Firebase, Facebook, or your own";
 

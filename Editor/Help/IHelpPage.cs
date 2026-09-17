@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.Help.Graph;
 using FlowIoC.Editor.Icons;
 
@@ -13,6 +14,13 @@ namespace FlowIoC.Editor.Help
     internal interface IHelpPage
     {
         string Title { get; }
+
+        /// <summary>
+        /// The role the page wears. A module page wears what its Root wears in the inspector, and
+        /// the window draws the banner and the marks inside the page in that colour. Null for a
+        /// page that is about no one module, which wears the window's own violet.
+        /// </summary>
+        FlowRole? Role { get; }
 
         /// <summary>
         /// A second line under the title in the sidebar, for a topic whose name does not say

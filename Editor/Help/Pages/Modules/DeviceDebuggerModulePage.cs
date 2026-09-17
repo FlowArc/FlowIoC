@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         public override string ModuleFolderName => "DeviceDebuggerModule";
 
-        public override string Title => "Device Debugger";
+        public override string Title => "Device Debugger Module";
 
         public override string Subtitle => "An SRDebugger-shaped panel on the phone: the log, the options, every signal, stats and the device";
 

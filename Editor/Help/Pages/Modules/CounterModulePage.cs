@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         public override string ModuleFolderName => "CounterModule";
 
-        public override string Title => "Counter";
+        public override string Title => "Counter Module";
 
         public override string Subtitle => "Named timers, up and down";
 

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.Help.Graph;
 using FlowIoC.Editor.Icons;
 using UnityEditor;
@@ -24,6 +25,7 @@ namespace FlowIoC.Editor.Help
         private const float SeparatorMargin = 10f;
 
         private readonly HelpTheme _theme;
+        private readonly HelpBannerTitle _bannerTitle = new HelpBannerTitle();
         private readonly HelpGraphPainter _graphPainter;
         private readonly HelpCodeHighlighter _highlighter;
         private readonly FlowIcons _icons;
@@ -59,63 +61,86 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
-        /// The purple bar every page wears: its title on the left, and whatever the page can do on
-        /// the right, with the module's version beside it when the page has one. The readings it
-        /// offers are not here - they are a strip along the foot of the band below, where a tab
-        /// sits directly on top of the page it opens.
+        /// The bar every page wears, in the page's colour - a module's role, or the window's violet.
+        /// Its line on the left is the title, and for a module page the role and the version after
+        /// it; whatever the page can do sits at the right. The readings it offers are not here -
+        /// they are a strip along the foot of the band below, where a tab sits directly on top of
+        /// the page it opens.
+        ///
+        /// The fill is painted over the box rather than tinted into it. A tint multiplies the skin's
+        /// own grey, and a Service's blue came out of that as slate - the bar is meant to be the
+        /// colour the module's Root wears in the inspector, and that bar paints its fill the same way.
         /// </summary>
-        internal void Banner(string title, HelpAction action = null, string version = null)
+        internal void Banner(string title, FlowRole? role = null, string version = null, HelpAction action = null)
         {
-            Color previous = GUI.backgroundColor;
-            GUI.backgroundColor = _theme.Banner;
+            Rect bar = EditorGUILayout.BeginHorizontal(EditorStyles.helpBox, GUILayout.Height(_theme.BannerHeight));
 
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox,
-                       GUILayout.Height(_theme.BannerHeight)))
+            EditorGUI.DrawRect(bar, _theme.Banner);
+
+            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"),
+                GUILayout.Width(35f), GUILayout.Height(_theme.BannerHeight));
+
+            // A plain label, sized to its own words. LabelField sizes itself like a property
+            // field, to the label width the inspector uses, and a title longer than that -
+            // "Mobile Notification Module / Service (v.1.0.0)" - was cut off at the end.
+            GUILayout.Label(_bannerTitle.Of(title, role, version), _theme.Heading,
+                GUILayout.Height(_theme.BannerHeight));
+
+            GUILayout.FlexibleSpace();
+
+            DrawAction(bar, action);
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// The page's own action, in the banner's top right corner. It is placed by hand rather
+        /// than laid out, so that it sits the same distance from the bar's right edge as from its
+        /// top and its bottom: centred on the bar's height, and inset from the right by exactly the
+        /// room that centring leaves above and below it.
+        ///
+        /// An action that cannot be taken is not drawn as a button. Installed and Missing are
+        /// states, and a disabled button on the bar read as a control the reader could not press:
+        /// they are drawn as a chip in the same corner, a word on a wash of white.
+        /// </summary>
+        private void DrawAction(Rect bar, HelpAction action)
+        {
+            if (action == null)
+                return;
+
+            float inset = (bar.height - _theme.ActionHeight) / 2f;
+
+            if (!action.Enabled)
             {
-                GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"),
-                    GUILayout.Width(35f), GUILayout.Height(_theme.BannerHeight));
-
-                EditorGUILayout.LabelField(title, _theme.Heading,
-                    GUILayout.Height(_theme.BannerHeight), GUILayout.ExpandWidth(false));
-
-                GUILayout.FlexibleSpace();
-
-                // The number sits against the button that acts on it: what is here, and beside it
-                // what pressing the button does about it.
-                if (!string.IsNullOrEmpty(version))
-                    GUILayout.Label(version, _theme.BannerVersion, GUILayout.Height(_theme.BannerHeight));
-
-                DrawAction(action);
+                DrawState(bar, action.Label, inset);
+                return;
             }
+
+            var button = new Rect(bar.xMax - inset - _theme.ActionWidth, bar.y + inset,
+                _theme.ActionWidth, _theme.ActionHeight);
+
+            Color previous = GUI.backgroundColor;
+            GUI.backgroundColor = _theme.Action;
+
+            if (GUI.Button(button, action.Label, _theme.ActionButton))
+                action.Perform();
 
             GUI.backgroundColor = previous;
         }
 
         /// <summary>
-        /// The page's own action, at the far right of the banner. It is drawn last so it sits
-        /// outside the tabs: the tabs change what you are reading, this changes the project.
+        /// The chip a state sits on: sized to its word, centred on the bar's height and inset from
+        /// the right by the room the action button leaves there, so the two occupy the same corner.
         /// </summary>
-        private void DrawAction(HelpAction action)
+        private void DrawState(Rect bar, string state, float inset)
         {
-            if (action == null)
-                return;
+            var content = new GUIContent(state);
+            float width = _theme.StateChip.CalcSize(content).x + _theme.StateChipPadding * 2f;
+            var chip = new Rect(bar.xMax - inset - width, bar.y + (bar.height - _theme.StateChipHeight) / 2f,
+                width, _theme.StateChipHeight);
 
-            GUILayout.Space(8f);
-
-            Color previous = GUI.backgroundColor;
-            GUI.backgroundColor = _theme.Action;
-
-            using (new EditorGUI.DisabledScope(!action.Enabled))
-            {
-                if (GUILayout.Button(action.Label, _theme.ActionButton,
-                        GUILayout.Width(_theme.ActionWidth),
-                        GUILayout.Height(_theme.ActionHeight)))
-                {
-                    action.Perform();
-                }
-            }
-
-            GUI.backgroundColor = previous;
+            EditorGUI.DrawRect(chip, _theme.StateChipFill);
+            GUI.Label(chip, content, _theme.StateChip);
         }
 
         /// <summary>

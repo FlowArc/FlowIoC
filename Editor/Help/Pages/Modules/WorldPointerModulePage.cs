@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         public override string ModuleFolderName => "WorldPointerModule";
 
-        public override string Title => "World Pointer";
+        public override string Title => "World Pointer Module";
 
         public override string Subtitle => "UI that follows a 3D object, and what it does at the edge of the frame";
 

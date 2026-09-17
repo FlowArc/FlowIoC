@@ -1,9 +1,11 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Icons;
 using FlowIoC.Editor.ModuleInstall;
+using FlowIoC.Editor.Modules;
 using FlowIoC.Editor.SetupModules;
 using UnityEditor;
 
@@ -27,13 +29,21 @@ namespace FlowIoC.Editor.Help
         private readonly ModuleLibraryArrivals _arrivals;
         private readonly SetupModulesStartup _setup;
 
+        private readonly ProjectAsmdefs _asmdefs;
+
         private ReadingsEVO _readings;
-        private double _readAt = double.NegativeInfinity;
+        private IReadOnlyList<string> _absent;
+
+        private readonly ModuleRootRole _rootRole = new ModuleRootRole();
+        private FlowRole? _role;
+        private bool _roleRead;
 
         /// <summary>
-        /// What the page reads off the project: taken at most once a second, because the check
-        /// underneath walks every asmdef under Assets and reads two cards, and the banner and the
-        /// sidebar ask several times a repaint.
+        /// What the page reads off the project: taken once and kept until the page is told the
+        /// project changed, because the check underneath walks the project's asmdefs and reads
+        /// two cards, and the banner and the sidebar ask several times a repaint. It used to be
+        /// re-read every second, and sixteen pages doing that together froze the window for half
+        /// a second every second.
         /// </summary>
         private class ReadingsEVO
         {
@@ -45,24 +55,39 @@ namespace FlowIoC.Editor.Help
         }
 
         internal ModulePageAdapter(ModulePage page)
-            : this(page, new ProjectRoot().Resolve(), new ModulePayload(page.GetType().Assembly))
+            : this(page, new ProjectAsmdefs(new ProjectRoot().Resolve()))
+        {
+        }
+
+        /// <summary>
+        /// A page sharing one walk of the project's asmdefs with the other pages of the window,
+        /// so what is installed is read once for all of them rather than once each.
+        /// </summary>
+        internal ModulePageAdapter(ModulePage page, ProjectAsmdefs asmdefs)
+            : this(page, asmdefs.ProjectRoot, new ModulePayload(page.GetType().Assembly), asmdefs)
         {
         }
 
         internal ModulePageAdapter(ModulePage page, string projectRoot, ModulePayload payload)
+            : this(page, projectRoot, payload, new ProjectAsmdefs(projectRoot))
+        {
+        }
+
+        internal ModulePageAdapter(ModulePage page, string projectRoot, ModulePayload payload, ProjectAsmdefs asmdefs)
             : base(null)
         {
             _page = page;
             _payload = payload;
+            _asmdefs = asmdefs;
 
             _installer = payload.IsResolved
-                ? new ModuleInstaller(projectRoot, payload.SourceOf(page))
+                ? new ModuleInstaller(projectRoot, payload.SourceOf(page), asmdefs, null)
                 : null;
 
             // A setup page needs the set's own reading - is the rest of the set here - and the
             // set's registration for the screens its module carries.
             _setup = page.InSetupSet && payload.IsResolved
-                ? new SetupModulesStartup(projectRoot, payload.PackageRoot)
+                ? new SetupModulesStartup(projectRoot, payload.PackageRoot, asmdefs)
                 : null;
 
             _arrivals = new ModuleLibraryArrivals(payload.PackageName, payload.PackageVersion, projectRoot);
@@ -73,6 +98,26 @@ namespace FlowIoC.Editor.Help
         }
 
         public override string Title => _page.Title;
+
+        /// <summary>
+        /// What the module's Root wears in the inspector, read off the shipped copy's Root file:
+        /// the module is not compiled until it is installed, so the file is the one thing that
+        /// can be asked. Read once - the shipped copy does not change while the window is open,
+        /// and a package update rebuilds the catalogue with it.
+        /// </summary>
+        public override FlowRole? Role
+        {
+            get
+            {
+                if (_roleRead)
+                    return _role;
+
+                _role = _installer == null ? null : _rootRole.Read(_installer.ShippedPathOf(_page.ModuleFolderName));
+                _roleRead = true;
+
+                return _role;
+            }
+        }
 
         public override string Subtitle => _page.Subtitle;
 
@@ -115,12 +160,29 @@ namespace FlowIoC.Editor.Help
                 readings.InstalledVersion, readings.ShippedVersion);
         }
 
+        /// <summary>
+        /// Which of the assemblies the page requires are not loaded. Read once: the loaded
+        /// assemblies change only with a domain reload, which rebuilds the window and this with
+        /// it, and asking the AppDomain for all of them on every repaint of every row was most of
+        /// what the sidebar cost.
+        /// </summary>
         private IReadOnlyList<string> AbsentAssemblies() =>
-            new MissingAssemblies().In(new LoadedAssemblies().Names(), _page.RequiredAssemblies);
+            _absent ??= new MissingAssemblies().In(new LoadedAssemblies().Names(), _page.RequiredAssemblies);
+
+        /// <summary>
+        /// The project changed underneath - a module landed, a folder went, an import ran - so
+        /// what the page read of it is read again on the next repaint. The window calls this on
+        /// the Editor's projectChanged; the page's own install and update call it themselves.
+        /// </summary>
+        internal void Refresh()
+        {
+            _asmdefs.Invalidate();
+            _readings = null;
+        }
 
         private ReadingsEVO Readings()
         {
-            if (EditorApplication.timeSinceStartup - _readAt < 1d && _readings != null)
+            if (_readings != null)
                 return _readings;
 
             var readings = new ReadingsEVO();
@@ -135,7 +197,6 @@ namespace FlowIoC.Editor.Help
             }
 
             _readings = readings;
-            _readAt = EditorApplication.timeSinceStartup;
 
             return readings;
         }
@@ -201,7 +262,7 @@ namespace FlowIoC.Editor.Help
         {
             if (NeedsWholeSet)
             {
-                _readAt = double.NegativeInfinity;
+                Refresh();
                 new SetupSetInstallAction(_setup).Run();
                 return;
             }
@@ -222,7 +283,7 @@ namespace FlowIoC.Editor.Help
         {
             // Whatever happened, what the cache holds is now a guess about a project that has
             // changed underneath it.
-            _readAt = double.NegativeInfinity;
+            Refresh();
 
             if (_installer == null)
                 return;
@@ -272,7 +333,7 @@ namespace FlowIoC.Editor.Help
         /// </summary>
         private void Update()
         {
-            _readAt = double.NegativeInfinity;
+            Refresh();
 
             if (_installer == null)
                 return;

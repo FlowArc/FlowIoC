@@ -14,7 +14,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         private readonly HelpImages _images = new HelpImages();
 
-        public override string Title => "Loading";
+        public override string Title => "Loading Module";
 
         public override string Subtitle => "Sets, steps and the bar that shows them";
 
@@ -90,7 +90,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Content the stores deliver - a fast-follow pack that has not landed on an early open "
                 + "- is the Asset Delivery module's step, IAssetDeliveryService.Commands.EnsurePromised, "
                 + "bound right after Begin; its page has the line and the Content row the set needs.");
-            painter.PageLink("Asset Delivery");
+            painter.PageLink("Asset Delivery Module");
 
             painter.SubHeading("The screens come from Resources, the art from Addressables");
             painter.Paragraph(
@@ -196,6 +196,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "LoadingTestScene under the test module's Scenes folder walks every state once: "
                 + "parallel steps, the second bar, a step that fails and the retry that succeeds, "
                 + "and a silent set running beside it all.");
+
+            painter.SubHeading("In the scene");
+            painter.Table(new[] {"Root", "Initialize Order", "Role"},
+                new[]
+                {
+                    "LoadingServiceRoot", "-10",
+                    "Service - read off the name. Last of the services, because it opens a screen: the "
+                    + "asset service at -80 and the screen service at -70 are bound by the time its screens "
+                    + "are asked for, and every game module that reports a step comes after it."
+                });
+            painter.PageLink("Ordering Roots", "Read: Ordering Roots - the bands and why -10");
         }
     }
 }

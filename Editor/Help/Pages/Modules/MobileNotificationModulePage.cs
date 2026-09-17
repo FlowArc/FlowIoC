@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         public override string ModuleFolderName => "MobileNotificationModule";
 
-        public override string Title => "Mobile Notification";
+        public override string Title => "Mobile Notification Module";
 
         public override string Subtitle => "Local notifications from a catalogue, the permission ask as a step, come-back reminders for free";
 

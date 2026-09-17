@@ -100,7 +100,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "A panel reads files and prefs and resets them. It never edits a Model's values: a "
                 + "value changed from a panel skips the rules the Model keeps.");
-            painter.PageLink("Local Save", "Read: the Local Save panel");
+            painter.PageLink("Local Save Module", "Read: the Local Save panel");
         }
     }
 }

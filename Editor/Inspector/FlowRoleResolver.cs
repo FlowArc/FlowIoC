@@ -115,11 +115,18 @@ namespace FlowIoC.Editor.Inspector
         /// scene, so LocalSaveTestRoot says in its colour that what sits under it is there to
         /// exercise a module rather than to ship with it.
         /// </summary>
-        private FlowRole RoleOfRoot(Type type)
+        private FlowRole RoleOfRoot(Type type) => RoleOfRootName(type.Name);
+
+        /// <summary>
+        /// The same answer from the type's name alone, for a Root that is a file rather than a
+        /// type - one shipped under Modules~, which the project has not compiled. Reading the
+        /// name here rather than beside the file is what keeps the two answers one rule.
+        /// </summary>
+        public FlowRole RoleOfRootName(string typeName)
         {
-            string rooted = type.Name.EndsWith("Root")
-                ? type.Name.Substring(0, type.Name.Length - "Root".Length)
-                : type.Name;
+            string rooted = typeName.EndsWith("Root")
+                ? typeName.Substring(0, typeName.Length - "Root".Length)
+                : typeName;
 
             if (rooted.EndsWith("Test"))
                 return FlowRole.Test;

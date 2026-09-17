@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         public override string ModuleFolderName => "HapticModule";
 
-        public override string Title => "Haptic";
+        public override string Title => "Haptic Module";
 
         public override string Subtitle => "Nine presets through the platforms' own haptics, and the player's on/off choice";
 

@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Icons;
+using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
 using UnityEngine;
 
@@ -25,16 +27,33 @@ namespace FlowIoC.Editor.Help
 
         private readonly IReadOnlyList<ModulePage> _pages;
         private readonly Func<ModulePage, ModuleGroup> _groupOf;
+        private readonly ProjectAsmdefs _asmdefs;
 
         internal PackageModuleSections()
-            : this(Found(), page => ModuleGroup.Of(page.GetType().Assembly))
+            : this(new ProjectAsmdefs(new ProjectRoot().Resolve()))
+        {
+        }
+
+        /// <summary>
+        /// Every package's pages over one walk of the project's asmdefs, shared with the setup
+        /// pages beside them, so the whole library reads what is installed once.
+        /// </summary>
+        internal PackageModuleSections(ProjectAsmdefs asmdefs)
+            : this(Found(), page => ModuleGroup.Of(page.GetType().Assembly), asmdefs)
         {
         }
 
         internal PackageModuleSections(IReadOnlyList<ModulePage> pages, Func<ModulePage, ModuleGroup> groupOf)
+            : this(pages, groupOf, new ProjectAsmdefs(new ProjectRoot().Resolve()))
+        {
+        }
+
+        internal PackageModuleSections(IReadOnlyList<ModulePage> pages, Func<ModulePage, ModuleGroup> groupOf,
+            ProjectAsmdefs asmdefs)
         {
             _pages = pages ?? new ModulePage[0];
             _groupOf = groupOf;
+            _asmdefs = asmdefs;
         }
 
         /// <summary>
@@ -117,14 +136,14 @@ namespace FlowIoC.Editor.Help
             return string.CompareOrdinal(left.Title, right.Title);
         }
 
-        private static HelpSection CategoryOf(ModuleGroup group, List<ModulePage> pages)
+        private HelpSection CategoryOf(ModuleGroup group, List<ModulePage> pages)
         {
             pages.Sort((left, right) => string.CompareOrdinal(left.Title, right.Title));
 
             var sections = new IHelpPage[pages.Count];
 
             for (int index = 0; index < pages.Count; index++)
-                sections[index] = new ModulePageAdapter(pages[index]);
+                sections[index] = new ModulePageAdapter(pages[index], _asmdefs);
 
             return new HelpSection(group.Title, CategoryIcon, sections);
         }

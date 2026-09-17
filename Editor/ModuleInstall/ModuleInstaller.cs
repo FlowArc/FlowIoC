@@ -3,7 +3,6 @@
 using System;
 using System.IO;
 using FlowIoC.Editor.ModuleCards;
-using UnityEngine;
 
 namespace FlowIoC.Editor.ModuleInstall
 {
@@ -22,6 +21,7 @@ namespace FlowIoC.Editor.ModuleInstall
 
         private readonly string _projectRoot;
         private readonly ModulesSource _source;
+        private readonly ProjectAsmdefs _asmdefs;
         private readonly Action<string> _register;
         private readonly ModuleCardVersionLine _version = new ModuleCardVersionLine();
         private readonly ModuleCardFile _card = new ModuleCardFile();
@@ -37,9 +37,21 @@ namespace FlowIoC.Editor.ModuleInstall
         /// module index are welded to it.
         /// </summary>
         internal ModuleInstaller(string projectRoot, ModulesSource source, Action<string> register)
+            : this(projectRoot, source, new ProjectAsmdefs(projectRoot), register)
+        {
+        }
+
+        /// <summary>
+        /// The same installer sharing one walk of the project's asmdefs with everything else that
+        /// asks what is installed. The Help window hands every module page the same one, so the
+        /// sixteen of them cost one walk between them rather than one each.
+        /// </summary>
+        internal ModuleInstaller(string projectRoot, ModulesSource source, ProjectAsmdefs asmdefs,
+            Action<string> register)
         {
             _projectRoot = projectRoot;
             _source = source;
+            _asmdefs = asmdefs;
             _register = register ?? Register;
         }
 
@@ -59,26 +71,8 @@ namespace FlowIoC.Editor.ModuleInstall
         /// claiming one assembly name, which stops the whole project compiling. The assembly name
         /// is what would collide, so it is what is compared.
         /// </summary>
-        internal string InstalledAt(string moduleFolderName)
-        {
-            string assemblyName = ShippedAssemblyName(moduleFolderName);
-
-            if (string.IsNullOrEmpty(assemblyName))
-                return null;
-
-            string assets = Path.Combine(_projectRoot, "Assets");
-
-            if (!Directory.Exists(assets))
-                return null;
-
-            foreach (string asmdef in Directory.GetFiles(assets, "*.asmdef", SearchOption.AllDirectories))
-            {
-                if (assemblyName.Equals(AssemblyNameIn(asmdef), StringComparison.Ordinal))
-                    return Path.GetDirectoryName(asmdef);
-            }
-
-            return null;
-        }
+        internal string InstalledAt(string moduleFolderName) =>
+            _asmdefs.FolderOf(ShippedAssemblyName(moduleFolderName));
 
         internal string ShippedPathOf(string moduleFolderName) => _source.PathOf(moduleFolderName);
 
@@ -108,37 +102,7 @@ namespace FlowIoC.Editor.ModuleInstall
 
             string[] asmdefs = Directory.GetFiles(root, "*.asmdef", SearchOption.TopDirectoryOnly);
 
-            return asmdefs.Length == 1 ? AssemblyNameIn(asmdefs[0]) : null;
-        }
-
-        /// <summary>
-        /// The name out of an asmdef, or null when the file cannot be read or does not declare
-        /// one. An unreadable asmdef is somebody else's problem to report: here it only means
-        /// this file is not the module being looked for.
-        /// </summary>
-        private static string AssemblyNameIn(string asmdefPath)
-        {
-            try
-            {
-                var declaration = JsonUtility.FromJson<AssemblyDefinitionName>(File.ReadAllText(asmdefPath));
-
-                return declaration == null || string.IsNullOrEmpty(declaration.name) ? null : declaration.name;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Just enough of an asmdef to read its assembly name. The field is lower case because
-        /// that is what the file says and JsonUtility matches on the field name - renaming it to
-        /// match the project's style would simply stop it reading anything.
-        /// </summary>
-        [Serializable]
-        private class AssemblyDefinitionName
-        {
-            public string name;
+            return asmdefs.Length == 1 ? _asmdefs.NameIn(asmdefs[0]) : null;
         }
 
         /// <summary>A path written from the project root, for a message a reader has to act on.</summary>
@@ -203,6 +167,8 @@ namespace FlowIoC.Editor.ModuleInstall
                 return false;
             }
 
+            // The project now declares one more assembly, and whoever shares the walk asks next.
+            _asmdefs.Invalidate();
             _register(moduleFolderName);
 
             return true;

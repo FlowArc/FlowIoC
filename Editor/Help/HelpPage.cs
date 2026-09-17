@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.Help.Graph;
 using FlowIoC.Editor.Icons;
 
@@ -23,6 +24,9 @@ namespace FlowIoC.Editor.Help
         }
 
         public abstract string Title { get; }
+
+        /// <summary>A page is about no one module unless it says otherwise, and wears the window's violet.</summary>
+        public virtual FlowRole? Role => null;
 
         public virtual string Subtitle => string.Empty;
 

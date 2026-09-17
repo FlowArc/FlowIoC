@@ -16,7 +16,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string ModuleFolderName => "AssetDeliveryModule";
 
-        public override string Title => "Asset Delivery";
+        public override string Title => "Asset Delivery Module";
 
         public override string Subtitle => "Store-delivered content on the device before the boot needs it";
 

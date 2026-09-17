@@ -27,7 +27,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             "com.unity.render-pipelines.core"
         };
 
-        public override string Title => "Camera";
+        public override string Title => "Camera Module";
 
         public override string Subtitle => "Named Cinemachine cameras";
 

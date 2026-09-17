@@ -29,7 +29,6 @@ namespace FlowIoC.Editor.Help
         private GUIStyle _treeComment;
         private GUIStyle _edgeLabel;
         private GUIStyle _caption;
-        private GUIStyle _bannerVersion;
         private GUIStyle _sidebarRow;
         private GUIStyle _sidebarLabel;
         private GUIStyle _sidebarLabelActive;
@@ -40,6 +39,7 @@ namespace FlowIoC.Editor.Help
         private readonly List<Texture2D> _fills = new List<Texture2D>();
         private GUIStyle _bannerTab;
         private GUIStyle _actionButton;
+        private GUIStyle _stateChip;
         private GUIStyle _hero;
         private GUIStyle _heroTagline;
         private GUIStyle _partTitle;
@@ -217,8 +217,9 @@ namespace FlowIoC.Editor.Help
         public Color SidebarRowHover => Tint(_palette.ChromeDeep, 0.22f);
 
         /// <summary>
-        /// The row the reader is on, filled edge to edge. FlowIoC's own violet, which is what the
-        /// banner on the page beside it wears, so the two say together where the reader has landed.
+        /// The row the reader is on, filled edge to edge. FlowIoC's own violet, whatever page is
+        /// open: the banner beside it wears the page's role, and the sidebar is the window's, so
+        /// the menu stays one colour while the pages under it change theirs.
         /// </summary>
         public Color SidebarRowSelected => _palette.ChromeDeep;
 
@@ -238,11 +239,13 @@ namespace FlowIoC.Editor.Help
         public Color SidebarRowFeatured => Tint(_palette.ChromeDeep, 0.12f);
 
         /// <summary>
-        /// What a heading inside the page sits on. The tint a featured row wears in the sidebar,
-        /// so a heading is found on the page the way the introduction is found in the menu: bold
-        /// alone did not part it from the paragraph under it, because the page is all one grey.
+        /// What a heading inside the page sits on: the banner's colour thinned to the tint a
+        /// featured row wears in the sidebar, so a heading is found on the page the way the
+        /// introduction is found in the menu - bold alone did not part it from the paragraph under
+        /// it, because the page is all one grey. It follows the banner rather than the sidebar so
+        /// that a Service page's headings are blue where its banner is, and a Connector's green.
         /// </summary>
-        public Color PageHeadingFill => SidebarRowFeatured;
+        public Color PageHeadingFill => Tint(Banner, 0.12f);
 
         public float PageHeadingHeight => 24f;
 
@@ -298,11 +301,30 @@ namespace FlowIoC.Editor.Help
         public Color SidebarArrowActive => _palette.Title;
 
         /// <summary>
-        /// The banner behind a page title. Root's colour from the inspector palette, so the help
-        /// window and the bar on top of a Root read as one tool - and dark enough that the white
-        /// title on it clears 4.5:1, which the lighter purple it used to be did not.
+        /// The role the open page wears, set by the window before the page is drawn. A module
+        /// page carries the role its Root wears in the inspector; every other page carries none.
+        /// The banner, the headings inside the page and the mark on the open tab all read this, so
+        /// the page changes colour as one thing when the reader moves from a Service to a
+        /// Connector - and the sidebar does not, because the sidebar is the window's.
         /// </summary>
-        public Color Banner => _palette.ChromeDeep;
+        public FlowRole? PageRole { get; set; }
+
+        /// <summary>
+        /// The banner behind a page title. The deep fill of the page's role - the same colour the
+        /// bar on top of the module's Root is filled with, so the page for a Service is blue where
+        /// its Root is - and the window's own violet for a page that is about no module. Every one
+        /// of those is dark enough that the white title on it clears 4.5:1.
+        /// </summary>
+        public Color Banner => PageRole.HasValue ? _palette.Deep(PageRole.Value) : _palette.ChromeDeep;
+
+        /// <summary>
+        /// The line along the top of the open tab. The banner's colour, so the tab that is open
+        /// says so in the colour the page is wearing rather than in the sidebar's violet.
+        /// </summary>
+        public Color TabAccent => Banner;
+
+        /// <summary>What a tab lights up with under the pointer: the same wash a sidebar row takes, in the page's colour.</summary>
+        public Color TabHover => Tint(Banner, 0.22f);
 
         public float BannerHeight => 38f;
 
@@ -312,13 +334,40 @@ namespace FlowIoC.Editor.Help
 
         /// <summary>
         /// The green a page's own action wears. Dark enough that white text sits on it, and far
-        /// enough from the banner's purple that the button does not read as part of the bar.
+        /// enough from the violet and from the blues and indigos the banner wears that the button
+        /// does not read as part of the bar; on the Connector's green it is the lighter of the two.
         /// </summary>
         public Color Action => new Color(.29f, .74f, .38f);
 
         public float ActionWidth => 108f;
 
         public float ActionHeight => 30f;
+
+        /// <summary>
+        /// What a page's state sits on when there is nothing to do - Installed, Missing. Not a
+        /// button: a disabled button on the bar read as a control the reader could not press,
+        /// and asked why. A wash of white over whatever colour the banner wears, so the chip is
+        /// the same chip on the violet, the blues and the Connector's green alike.
+        /// </summary>
+        public Color StateChipFill => new Color(1f, 1f, 1f, 0.18f);
+
+        public float StateChipHeight => 24f;
+
+        /// <summary>What the chip keeps clear either side of its word.</summary>
+        public float StateChipPadding => 12f;
+
+        /// <summary>The word on a state chip: bold and white, like the action's, a size down so it reads as a label.</summary>
+        public GUIStyle StateChip => _stateChip ??= new GUIStyle(EditorStyles.boldLabel)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 12,
+            padding = new RectOffset(0, 0, 0, 0),
+            margin = new RectOffset(0, 0, 0, 0),
+            normal = {textColor = Color.white},
+            hover = {textColor = Color.white},
+            active = {textColor = Color.white},
+            focused = {textColor = Color.white}
+        };
 
         /// <summary>
         /// A reading of the page, as a button on the banner. Larger than a toolbar button, because
@@ -353,7 +402,7 @@ namespace FlowIoC.Editor.Help
 
         /// <summary>
         /// The page title, drawn on the banner. It is built from whiteLabel rather than
-        /// boldLabel because the purple behind it is the same in both skins.
+        /// boldLabel because the fill behind it is the same in both skins.
         /// </summary>
         public GUIStyle Heading => _heading ??= new GUIStyle(EditorStyles.whiteLabel)
         {
@@ -361,20 +410,6 @@ namespace FlowIoC.Editor.Help
             fontSize = 14,
             fontStyle = FontStyle.Bold,
             richText = true
-        };
-
-        /// <summary>
-        /// The version beside the banner's button: the heading's white taken down a step, so the
-        /// number reads as a fact about the module rather than as a second title.
-        /// </summary>
-        public GUIStyle BannerVersion => _bannerVersion ??= new GUIStyle(EditorStyles.label)
-        {
-            alignment = TextAnchor.MiddleRight,
-            fontSize = 12,
-            normal = {textColor = new Color(1f, 1f, 1f, 0.78f)},
-            hover = {textColor = new Color(1f, 1f, 1f, 0.78f)},
-            active = {textColor = new Color(1f, 1f, 1f, 0.78f)},
-            focused = {textColor = new Color(1f, 1f, 1f, 0.78f)}
         };
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         public override string ModuleFolderName => "AdsModule";
 
-        public override string Title => "Ads";
+        public override string Title => "Ads Module";
 
         public override string Subtitle => "Rewarded and interstitial ads from any module, the mediation SDK behind a plug";
 

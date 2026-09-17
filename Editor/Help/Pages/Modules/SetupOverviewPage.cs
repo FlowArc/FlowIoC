@@ -98,6 +98,22 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "removed and wants back.");
 
             painter.Space();
+            painter.SubHeading("The Roots, in the order they run");
+            painter.Paragraph(
+                "Every module is one Root in MainScene, and its Initialize Order says when it binds, "
+                + "sets up and launches relative to the others. The set reads bottom to top of the "
+                + "scene: the service first, the game, then the frame - the Connector after every module "
+                + "it wires, the screen layers before the flow that opens the first screen, and MainRoot "
+                + "last, so its Launch dispatches the first signal into a project that is entirely ready.");
+            painter.Table(new[] {"Module", "Root", "Order", "Role"},
+                new[] {"Loading", "LoadingServiceRoot", "-10", "Service - the set's one versioned module"},
+                new[] {"Gameplay", "GameplayRoot", "0", "System - the game's own band, 0 to 97"},
+                new[] {"Connector", "ConnectorRoot", "98", "Connector - after everything it wires"},
+                new[] {"Screen", "ScreenRoot", "99", "Core - the layers, before the first screen opens"},
+                new[] {"Main", "MainRoot", "100", "Core - the entry point, last of all"});
+            painter.PageLink("Ordering Roots", "Read: Ordering Roots - the bands, and where a new Root goes");
+
+            painter.Space();
             painter.SubHeading("Installed once, and only once");
             painter.Paragraph(
                 "The set is recorded in ProjectSettings/FlowIoCSetup.json, which belongs in source "

@@ -237,6 +237,11 @@ namespace FlowIoC.Editor.Help
             // something else forces a repaint is worse than none at all.
             wantsMouseMove = true;
 
+            // What the module pages read off the project - installed, at which version - is read
+            // once and kept, so the pages have to be told when the project changes underneath
+            // them. The Editor says so after every import, which is when a module lands or goes.
+            EditorApplication.projectChanged += OnProjectChanged;
+
             // Every category above the opening topic starts folded open, or the page the window
             // opens on would not be on screen. The introduction sits at the top level and is
             // inside none of them, so the sidebar opens closed: Welcome, Wiki, Modules.
@@ -244,7 +249,17 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>The theme holds textures of its own, and they go when the window does.</summary>
-        private void OnDisable() => _theme?.Dispose();
+        private void OnDisable()
+        {
+            EditorApplication.projectChanged -= OnProjectChanged;
+            _theme?.Dispose();
+        }
+
+        private void OnProjectChanged()
+        {
+            _catalog.ProjectChanged();
+            Repaint();
+        }
 
         private void OpenCategoriesTo(IHelpPage page)
         {
@@ -535,10 +550,14 @@ namespace FlowIoC.Editor.Help
         {
             using (new EditorGUILayout.VerticalScope())
             {
+                // The page wears its role from here on: the banner, the mark on the open tab and
+                // the headings inside the body all read it off the theme.
+                _theme.PageRole = _selected.Role;
+
                 // The banner and the band under it are drawn outside the scroll view, so the title,
                 // what the page is about and the readings it offers all stay put while the body
                 // scrolls under them.
-                _painter.Banner(_selected.Title, _selected.Action, _selected.Version);
+                _painter.Banner(_selected.Title, _selected.Role, _selected.Version, _selected.Action);
 
                 int previous = _selected.SelectedTab;
                 int chosen = DrawHeader();
@@ -708,14 +727,14 @@ namespace FlowIoC.Editor.Help
             EditorGUI.DrawRect(cell, active ? _theme.PageFill : _theme.HeaderFill);
 
             if (!active && cell.Contains(Event.current.mousePosition))
-                EditorGUI.DrawRect(cell, _theme.SidebarRowHover);
+                EditorGUI.DrawRect(cell, _theme.TabHover);
 
             if (active)
             {
-                // The window's violet along the top says which reading is open, and the foot of the
+                // The page's colour along the top says which reading is open, and the foot of the
                 // tab is left bare so it runs into the page under it as one surface.
                 EditorGUI.DrawRect(new Rect(cell.x, cell.y, cell.width, TabAccentHeight),
-                    _theme.SidebarRowSelected);
+                    _theme.TabAccent);
             }
             else
             {

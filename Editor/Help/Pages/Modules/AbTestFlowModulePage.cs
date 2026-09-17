@@ -15,7 +15,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override string ModuleFolderName => "AbTestFlowModule";
 
-        public override string Title => "A/B Test";
+        public override string Title => "A/B Test Module";
 
         public override string Subtitle => "One group per player, decided before the game reads its config";
 

@@ -1,11 +1,13 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Help.Pages;
 using FlowIoC.Editor.Help.Pages.Modules;
 using FlowIoC.Editor.Help.Pages.Tools;
 using FlowIoC.Editor.Help.Pages.Tools.Generators;
 using FlowIoC.Editor.Icons;
+using FlowIoC.Editor.ModuleInstall;
 
 namespace FlowIoC.Editor.Help
 {
@@ -20,6 +22,12 @@ namespace FlowIoC.Editor.Help
     /// </summary>
     internal class HelpPageCatalog
     {
+        /// <summary>
+        /// The one walk of the project's asmdefs every module page reads what is installed from.
+        /// Sixteen pages walking Assets each, once a second, is what froze the window.
+        /// </summary>
+        private readonly ProjectAsmdefs _asmdefs = new ProjectAsmdefs(new ProjectRoot().Resolve());
+
         public HelpPageCatalog()
         {
             Sections = new List<HelpSection>
@@ -70,8 +78,9 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
-        /// The setup set as a category - its overview first, then a page per module in the order
-        /// the set boots - then one category per package that ships modules: FlowModules first,
+        /// The setup set as a category - its overview first, then a page per module: the frame
+        /// first (Main, Screen, Connector), then the service (Loading), then the game (Gameplay)
+        /// - then one category per package that ships modules: FlowModules first,
         /// and after it whatever other packages the project has. A package's category is found
         /// from the pages it declares rather than listed here, so a module page is one class and
         /// no line in this file; the setup pages are FlowIoC's own and are listed for their order.
@@ -82,14 +91,14 @@ namespace FlowIoC.Editor.Help
             {
                 new HelpSection("Setup Modules", FlowIcon.Grid,
                     new SetupOverviewPage(),
-                    new ModulePageAdapter(new MainSetupPage()),
-                    new ModulePageAdapter(new LoadingSetupPage()),
-                    new ModulePageAdapter(new ScreenSetupPage()),
-                    new ModulePageAdapter(new GameplaySetupPage()),
-                    new ModulePageAdapter(new ConnectorSetupPage()))
+                    new ModulePageAdapter(new MainSetupPage(), _asmdefs),
+                    new ModulePageAdapter(new ScreenSetupPage(), _asmdefs),
+                    new ModulePageAdapter(new ConnectorSetupPage(), _asmdefs),
+                    new ModulePageAdapter(new LoadingSetupPage(), _asmdefs),
+                    new ModulePageAdapter(new GameplaySetupPage(), _asmdefs))
             };
 
-            sections.AddRange(new PackageModuleSections().Categories());
+            sections.AddRange(new PackageModuleSections(_asmdefs).Categories());
 
             return sections.ToArray();
         }
@@ -104,6 +113,17 @@ namespace FlowIoC.Editor.Help
         /// meets what it is before meeting how its folders are arranged.
         /// </summary>
         public IHelpPage OpeningPage { get; }
+
+        /// <summary>
+        /// The project changed underneath the window - an import, a module that landed, a folder
+        /// that went - so every module page reads it again on its next repaint. Nothing is read
+        /// here: the pages that are not drawn cost nothing until they are.
+        /// </summary>
+        public void ProjectChanged()
+        {
+            foreach (IHelpPage page in Pages)
+                (page as ModulePageAdapter)?.Refresh();
+        }
 
         /// <summary>
         /// Where the window opens when a reader asks for one of the top level sections by name -

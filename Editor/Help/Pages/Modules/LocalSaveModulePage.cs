@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     {
         public override string ModuleFolderName => "LocalSaveModule";
 
-        public override string Title => "Local Save";
+        public override string Title => "Local Save Module";
 
         public override string Subtitle => "ScriptableObjects that survive a restart";
 
