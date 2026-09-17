@@ -49,6 +49,7 @@ namespace FlowIoC.Editor.ModuleScanner
         /// button rather than filling it and anything softer disappears into the strip.
         /// </summary>
         private readonly FlowRowPainter _painter = new FlowRowPainter();
+
         private readonly ModuleRoleBadge _badge = new ModuleRoleBadge();
 
         private readonly Dictionary<string, bool> _expanded = new Dictionary<string, bool>();
@@ -87,14 +88,19 @@ namespace FlowIoC.Editor.ModuleScanner
             Rescan();
         }
 
-        private void OnFocus() => Refresh();
+        // No rescan on focus. OnFocus arrives not only when the tab is clicked but every time the
+        // Editor itself regains focus with this window in front, and a scan costs most of a second
+        // in a project of forty modules - paid on every alt-tab back from the IDE, for changes that
+        // almost always went through a compile, whose domain reload re-enables this window and
+        // rescans anyway. Fix All rescans itself. A change that reaches no compile - a card
+        // edited by hand, a folder made in Explorer - is what the Refresh button is for.
 
         /// <summary>
-        /// A rescan that also drops the repair summary. The summary describes one press of Fix
-        /// All, and it outlives the domain reload that press causes - but not the next time
-        /// somebody comes back to the window, by which point the rows underneath it may say
-        /// something else entirely. Fix All rescans without this, so its own summary survives the
-        /// rescan it triggers.
+        /// The Refresh button: a rescan that also drops the repair summary. The summary describes
+        /// one press of Fix All, and it outlives the domain reload that press causes - but not a
+        /// refresh asked for by hand, by which point the rows underneath it may say something
+        /// else entirely. Fix All rescans without this, so its own summary survives the rescan it
+        /// triggers.
         /// </summary>
         private void Refresh()
         {

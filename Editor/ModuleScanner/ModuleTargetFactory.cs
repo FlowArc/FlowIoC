@@ -87,7 +87,7 @@ namespace FlowIoC.Editor.ModuleScanner
             // A layout is asked for once per kind and shared by every module of that kind. The
             // lookup behind it runs the path migrator's probe - a walk of every module root - on
             // every call, and asked per module, and twice more per nested module for its parent,
-            // that probe was two thirds of a scan that runs whenever the window is focused.
+            // that probe was two thirds of a scan that runs on every open and every reload.
             var layouts = new Dictionary<ModuleKind, DirectoryStructureConfig>();
 
             DirectoryStructureConfig LayoutFor(ModuleKind kind)

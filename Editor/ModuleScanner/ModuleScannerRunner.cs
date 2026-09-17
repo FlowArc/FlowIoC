@@ -10,7 +10,8 @@ namespace FlowIoC.Editor.ModuleScanner
     /// to be on disk and lets a test describe exactly the project it means. That is the same
     /// division ScreenScannerRunner makes with the Roots it is given.
     ///
-    /// Nothing here writes. A scan is what the window runs on focus, so it has to be free.
+    /// Nothing here writes. A scan is what the window runs on opening and after every reload, so
+    /// it has to be free.
     /// </summary>
     internal class ModuleScannerRunner
     {
