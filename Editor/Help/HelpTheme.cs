@@ -333,11 +333,14 @@ namespace FlowIoC.Editor.Help
         public float BannerTabWidth => 104f;
 
         /// <summary>
-        /// The green a page's own action wears. Dark enough that white text sits on it, and far
-        /// enough from the violet and from the blues and indigos the banner wears that the button
-        /// does not read as part of the bar; on the Connector's green it is the lighter of the two.
+        /// The green a page's own action wears - Install, Update. Lifted past 1 the way
+        /// FlowPalette.ActionAdd is: GUI.backgroundColor multiplies the skin's own button grey, so
+        /// a green written as the colour wanted came back a near-black green on the bar. Scaled up
+        /// it lights to a green white text sits on, far enough from the violet and the blues the
+        /// banner wears that the button does not read as part of the bar, and the lighter of the
+        /// two on the Connector's green.
         /// </summary>
-        public Color Action => new Color(.29f, .74f, .38f);
+        public Color Action => new Color(0.7f, 1.7f, 0.8f);
 
         public float ActionWidth => 108f;
 
