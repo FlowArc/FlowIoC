@@ -24,16 +24,17 @@ namespace FlowIoC.Editor.ModuleScanner
     /// </summary>
     internal class AssemblyBuildExclusion
     {
-        private readonly Func<string, bool> _isBuilt;
+        private readonly Func<IEnumerable<string>> _builtAssemblyNames;
         private readonly Func<ModuleTargetEVO, string> _asmdefTextOf;
+        private HashSet<string> _built;
 
-        internal AssemblyBuildExclusion() : this(DefaultIsBuilt, DefaultAsmdefTextOf)
+        internal AssemblyBuildExclusion() : this(DefaultBuiltAssemblyNames, DefaultAsmdefTextOf)
         {
         }
 
-        internal AssemblyBuildExclusion(Func<string, bool> isBuilt, Func<ModuleTargetEVO, string> asmdefTextOf)
+        internal AssemblyBuildExclusion(Func<IEnumerable<string>> builtAssemblyNames, Func<ModuleTargetEVO, string> asmdefTextOf)
         {
-            _isBuilt = isBuilt;
+            _builtAssemblyNames = builtAssemblyNames;
             _asmdefTextOf = asmdefTextOf;
         }
 
@@ -46,7 +47,7 @@ namespace FlowIoC.Editor.ModuleScanner
         {
             if (module == null || string.IsNullOrEmpty(module.ExpectedAssemblyName)) return null;
 
-            if (_isBuilt(module.ExpectedAssemblyName)) return null;
+            if (IsBuilt(module.ExpectedAssemblyName)) return null;
 
             IReadOnlyList<string> constraints = new AssemblyDefinitionDefineConstraints().Read(_asmdefTextOf(module));
 
@@ -55,14 +56,23 @@ namespace FlowIoC.Editor.ModuleScanner
             return "compiles only under " + string.Join(" and ", constraints);
         }
 
-        private static bool DefaultIsBuilt(string assemblyName)
+        /// <summary>
+        /// The pipeline's list is read the first time it is needed and kept for the life of the
+        /// instance: reading it costs about a tenth of a second, and a scan asks about every plug
+        /// whose SDK is absent. Whoever owns an instance keeps it for one scan and no longer, so
+        /// a compile in between is never read through a stale list.
+        /// </summary>
+        private bool IsBuilt(string assemblyName)
+        {
+            _built ??= new HashSet<string>(_builtAssemblyNames(), StringComparer.Ordinal);
+
+            return _built.Contains(assemblyName);
+        }
+
+        private static IEnumerable<string> DefaultBuiltAssemblyNames()
         {
             foreach (Assembly assembly in CompilationPipeline.GetAssemblies(AssembliesType.Editor))
-            {
-                if (assembly.name == assemblyName) return true;
-            }
-
-            return false;
+                yield return assembly.name;
         }
 
         /// <summary>

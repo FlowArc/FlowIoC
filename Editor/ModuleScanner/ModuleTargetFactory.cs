@@ -22,6 +22,17 @@ namespace FlowIoC.Editor.ModuleScanner
     /// </summary>
     internal class ModuleTargetFactory
     {
+        private readonly Func<ModuleKind, DirectoryStructureConfig> _layoutFor;
+
+        internal ModuleTargetFactory() : this(new DirectoryStructureConfigProvider().ConfigFor)
+        {
+        }
+
+        internal ModuleTargetFactory(Func<ModuleKind, DirectoryStructureConfig> layoutFor)
+        {
+            _layoutFor = layoutFor;
+        }
+
         internal (ProjectTargetEVO Project, List<ModuleTargetEVO> Modules) Build()
         {
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
@@ -68,11 +79,24 @@ namespace FlowIoC.Editor.ModuleScanner
 
         private List<ModuleTargetEVO> ModulesFrom(string projectRoot, List<ScannedModule> scanned)
         {
-            var configs = new DirectoryStructureConfigProvider();
             var names = new ModuleAssemblyName();
             var shared = new SharedAssemblyDefinition();
             var signals = new SignalsAssemblyDefinition();
             var paths = new ModuleAssetPathResolver();
+
+            // A layout is asked for once per kind and shared by every module of that kind. The
+            // lookup behind it runs the path migrator's probe - a walk of every module root - on
+            // every call, and asked per module, and twice more per nested module for its parent,
+            // that probe was two thirds of a scan that runs whenever the window is focused.
+            var layouts = new Dictionary<ModuleKind, DirectoryStructureConfig>();
+
+            DirectoryStructureConfig LayoutFor(ModuleKind kind)
+            {
+                if (!layouts.TryGetValue(kind, out DirectoryStructureConfig layout))
+                    layouts[kind] = layout = _layoutFor(kind);
+
+                return layout;
+            }
 
             var modules = new List<ModuleTargetEVO>();
 
@@ -86,15 +110,15 @@ namespace FlowIoC.Editor.ModuleScanner
                     Kind = module.Kind,
                     AbsolutePath = module.AbsolutePath,
                     AssetPath = paths.ToAssetPath(module.AbsolutePath),
-                    Layout = configs.ConfigFor(module.Kind),
+                    Layout = LayoutFor(module.Kind),
                     ParentAbsolutePath = parent,
                     ParentName = parent == null ? null : Path.GetFileName(parent),
                     ParentSharedAssemblyName = parent == null
                         ? null
-                        : shared.FindIn(parent, configs.ConfigFor(ModuleKind.Main)),
+                        : shared.FindIn(parent, LayoutFor(ModuleKind.Main)),
                     ParentSignalsAssemblyName = parent == null
                         ? null
-                        : signals.FindIn(parent, configs.ConfigFor(ModuleKind.Main)),
+                        : signals.FindIn(parent, LayoutFor(ModuleKind.Main)),
                     ParentAssemblyName = parent == null ? null : names.From(Path.GetFileName(parent)),
                     ExpectedAssemblyName = names.From(module.Name),
                     ProjectRoot = projectRoot

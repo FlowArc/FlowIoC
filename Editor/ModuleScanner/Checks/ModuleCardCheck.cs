@@ -54,7 +54,10 @@ namespace FlowIoC.Editor.ModuleScanner
             _writeCard = writeCard ?? ((module, text) => new ModuleCardFile().Write(module.AbsolutePath, text));
             _factsOf = factsOf ?? (module => new ModuleFactsCollector()
                 .Collect(module, new ModuleChildren().Of(module.AbsolutePath)));
-            _notBuiltReasonOf = notBuiltReasonOf ?? (module => new AssemblyBuildExclusion().ReasonFor(module));
+            // One exclusion for the life of the check, which is one scan: it reads the pipeline's
+            // assembly list once and answers every plug out of it, where one per module read the
+            // list - a tenth of a second - for each plug whose SDK is absent.
+            _notBuiltReasonOf = notBuiltReasonOf ?? new AssemblyBuildExclusion().ReasonFor;
         }
 
         public string Id => "module-card";
