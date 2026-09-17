@@ -49,6 +49,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 return;
             }
 
+            // The type's suffix goes on here, not in the window: "Ads" with type Test is
+            // AdsTestModule whoever asked. Left to the window, a call from a script that named a
+            // test module "Ads" wrote zTestModules/AdsModule, with the parent's own assembly name.
+            moduleName = new ModuleTypeSuffix().Apply(moduleName, selectedModuleType);
+
             ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {

@@ -21,25 +21,40 @@ namespace FlowIoC.Editor.ModuleScanner
         private readonly Func<ModuleTargetEVO, string> _readCard;
         private readonly Action<ModuleTargetEVO, string> _writeCard;
         private readonly Func<ModuleTargetEVO, ModuleFactsEVO> _factsOf;
+        private readonly Func<ModuleTargetEVO, string> _notBuiltReasonOf;
 
         private readonly ModuleCardStub _stub = new ModuleCardStub();
         private readonly ModuleCardReader _reader = new ModuleCardReader();
         private readonly ModuleCardWriter _writer = new ModuleCardWriter();
         private readonly ModuleCardBodyBuilder _builder = new ModuleCardBodyBuilder();
 
-        internal ModuleCardCheck() : this(null, null, null)
+        internal ModuleCardCheck() : this(null, null, null, null)
         {
         }
 
         internal ModuleCardCheck(
             Func<ModuleTargetEVO, string> readCard,
             Action<ModuleTargetEVO, string> writeCard,
-            Func<ModuleTargetEVO, ModuleFactsEVO> factsOf)
+            Func<ModuleTargetEVO, ModuleFactsEVO> factsOf) : this(readCard, writeCard, factsOf, null)
+        {
+        }
+
+        /// <summary>
+        /// The last one answers why the module's assembly is not built here - "compiles only
+        /// under FLOWIOC_APPLOVIN_MAX" - with null when it is built, or when nothing explains its
+        /// absence.
+        /// </summary>
+        internal ModuleCardCheck(
+            Func<ModuleTargetEVO, string> readCard,
+            Action<ModuleTargetEVO, string> writeCard,
+            Func<ModuleTargetEVO, ModuleFactsEVO> factsOf,
+            Func<ModuleTargetEVO, string> notBuiltReasonOf)
         {
             _readCard = readCard ?? (module => new ModuleCardFile().Read(module.AbsolutePath));
             _writeCard = writeCard ?? ((module, text) => new ModuleCardFile().Write(module.AbsolutePath, text));
             _factsOf = factsOf ?? (module => new ModuleFactsCollector()
                 .Collect(module, new ModuleChildren().Of(module.AbsolutePath)));
+            _notBuiltReasonOf = notBuiltReasonOf ?? (module => new AssemblyBuildExclusion().ReasonFor(module));
         }
 
         public string Id => "module-card";
@@ -62,10 +77,23 @@ namespace FlowIoC.Editor.ModuleScanner
             // A module whose assembly is not loaded cannot be described, and the block it already
             // carries is left exactly as it is. A card claiming a module has no signals because
             // nothing compiled is worse than one that is a day out of date.
+            //
+            // A plug whose SDK is not in the project is not loaded by its own design - its asmdef
+            // compiles only under a define - and that is not an issue with the project. Its block
+            // is kept, the row says why, and the authored half is still held to its two lines.
             if (facts == null)
-                return FindingEVO.Manual(Id,
-                    "Module card cannot be refreshed until the project compiles - "
-                    + module.ExpectedAssemblyName + " is not loaded", asset);
+            {
+                string reason = _notBuiltReasonOf(module);
+
+                if (reason == null)
+                    return FindingEVO.Manual(Id,
+                        "Module card cannot be refreshed until the project compiles - "
+                        + module.ExpectedAssemblyName + " is not loaded", asset);
+
+                return Unfilled(card, asset)
+                       ?? FindingEVO.Ok(Id,
+                           "Module card (block kept as is - " + module.ExpectedAssemblyName + " " + reason + ")", asset);
+            }
 
             string body = _builder.Build(facts);
 
@@ -77,6 +105,15 @@ namespace FlowIoC.Editor.ModuleScanner
             if (_writer.IsStale(card, body))
                 return FindingEVO.Fixable(Id, "Module card - the generated block is out of date", asset);
 
+            return Unfilled(card, asset) ?? FindingEVO.Ok(Id, "Module card", asset);
+        }
+
+        /// <summary>
+        /// The two lines nothing can generate, still at their placeholders - or null when both
+        /// are written. Read off the authored half alone, so it needs no assembly.
+        /// </summary>
+        private FindingEVO Unfilled(string card, string asset)
+        {
             ModuleCardAuthoredEVO authored = _reader.Read(card);
 
             if (authored.PurposeIsPlaceholder)
@@ -85,7 +122,7 @@ namespace FlowIoC.Editor.ModuleScanner
             if (authored.ConceptsIsPlaceholder)
                 return FindingEVO.Manual(Id, "Module card - concepts not written yet", asset);
 
-            return FindingEVO.Ok(Id, "Module card", asset);
+            return null;
         }
 
         public void Fix(ModuleTargetEVO module)

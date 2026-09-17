@@ -711,8 +711,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
                     screenSettings = _screenSettings;
                 }
 
+                // The bare name: the generator puts the type's suffix on it.
                 ModuleGeneration.ModuleGenerator.CreateModuleStructure(
-                    _moduleName + _moduleSuffix,
+                    _moduleName,
                     _parentModulePath,
                     _selectedModuleType,
                     _selectedOptionalFolders,

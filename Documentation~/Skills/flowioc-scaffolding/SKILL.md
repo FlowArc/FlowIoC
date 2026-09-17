@@ -36,9 +36,10 @@ code generators and namespace tools depend on the exact shape they produce.
 
 ## Create Module: what to fill in
 
-**Name** excludes the suffix. The window appends it: `Player` with type Main becomes
-`PlayerModule`, with type Test becomes `PlayerTestModule`, with type Screen becomes
-`PlayerScreenModule`.
+**Name** excludes the suffix. The generator appends it, so the window's preview and a call from a
+script agree: `Player` with type Main becomes `PlayerModule`, with type Test becomes
+`PlayerTestModule`, with type Screen becomes `PlayerScreenModule`. A name that already ends in
+`Test` or `Screen` is left as it is.
 
 **Module Type** decides where it lands. A Main module parented to `Assets/Modules` is a top level
 module; the same type parented to another module makes it a sub module under `zSubModules`. Test
@@ -170,6 +171,8 @@ var asm = System.Array.Find(System.AppDomain.CurrentDomain.GetAssemblies(),
 var menuType = asm.GetType("FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule.CreateModuleMenu");
 var genType  = asm.GetType("FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration.ModuleGenerator");
 var modType  = asm.GetType("FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleType");
+var roleType = asm.GetType("FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleRole");
+var cardType = asm.GetType("FlowIoC.Editor.ModuleCards.ModuleCardDraftEVO");
 
 var win = UnityEngine.ScriptableObject.CreateInstance(menuType);   // OnEnable fills the defaults
 var configMap   = menuType.GetField("_directoryConfigMap", flags).GetValue(win);
@@ -177,16 +180,36 @@ var actionNames = menuType.GetField("_actionNames", flags).GetValue(win);
 var selected    = menuType.GetField("_selectedOptionalFolders", flags).GetValue(win);
 // add the FolderEVO entries you want out of configMap's RootFolders before calling
 
+// The card's two authored lines, written into MODULE.md as the module is made. Leave one empty
+// and the stub's placeholder goes in instead, and Module Scanner reports it until it is written.
+var card = System.Activator.CreateInstance(cardType, true);
+cardType.GetProperty("Purpose",  flags).SetValue(card, "Owns the player's currency and level.");
+cardType.GetProperty("Concepts", flags).SetValue(card, "player, currency, level, IPlayerModel");
+
 genType.GetMethod("CreateModuleStructure",
         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
     .Invoke(null, new object[] {
-        "Player",                                          // name, without "Module"
-        System.IO.Path.Combine(UnityEngine.Application.dataPath, "Modules"),
-        System.Enum.Parse(modType, "Main"),
+        "Player",                                          // name, without "Module" and without the type's suffix
+        System.IO.Path.Combine(UnityEngine.Application.dataPath, "Modules"),   // Assets/Modules, or the owning module's folder
+        System.Enum.Parse(modType, "Main"),                // Main, Test or Screen
         selected, configMap, actionNames,
-        true, true, true, false, null                      // root, context, signals, screen, screenSettings
+        true, true, true, false,                           // createRoot, createContext, createSignals, createScreen
+        false,                                             // allowAsSubContext
+        System.Enum.Parse(roleType, "System"),             // System, Service or Core
+        null,                                              // screenSettings: a screen's ScreenModuleSettings, else null
+        card                                               // ModuleCardDraftEVO, or null for the placeholders
     });
 ```
+
+All fourteen arguments go in: `Invoke` fills no optional parameter on its own, and a shorter list
+is a `TargetParameterCountException` before anything runs.
+
+**The name is the bare one, for a Test or a Screen module too.** The generator appends the type's
+suffix - `"Player"` with type Test is `PlayerTestModule`, with type Screen `PlayerScreenModule` -
+and leaves a name that already carries it alone. The suffix used to be the window's to add, and a
+call from here that named a test module `"Ads"` wrote `zTestModules/AdsModule` with the parent's
+own assembly name, and its namespace settings over the parent's. Read the folder name and the
+asmdef name back after the call.
 
 Three things to know before relying on this:
 
@@ -215,6 +238,58 @@ asm.GetType("FlowIoC.Editor.Console.FlowModuleGenerator")
 `ModuleDeleter.DeleteModule` opens no dialog and returns the list of what it removed, so it is safe
 to call this way too. Anything else that ends in `EditorUtility.DisplayDialog` is not: a modal
 blocks the Editor and the connection with it until somebody clicks.
+
+## Before you say the module is done
+
+"Is anything left?" is answered by the Module Scanner, not from memory. It is the checklist -
+folders, assembly, references, namespace settings, index entry, log channel and card, for every
+module in the project - and the window and the warning the Editor prints on load (`Module Scanner
+found N issues across M modules`) both come from one runner, reachable from `eval` without opening
+anything:
+
+```csharp
+var f = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance;
+var asm = System.Array.Find(System.AppDomain.CurrentDomain.GetAssemblies(), a => a.GetName().Name == "FlowIoC.Editor");
+System.Func<object, string, object> prop = (o, n) => o.GetType().GetProperty(n, f).GetValue(o);
+
+var factory  = System.Activator.CreateInstance(asm.GetType("FlowIoC.Editor.ModuleScanner.ModuleTargetFactory"), true);
+var built    = factory.GetType().GetMethod("Build", f).Invoke(factory, null);
+var pipeline = System.Activator.CreateInstance(asm.GetType("FlowIoC.Editor.ModuleScanner.ModuleCheckPipeline"), true);
+var runner   = System.Activator.CreateInstance(asm.GetType("FlowIoC.Editor.ModuleScanner.ModuleScannerRunner"), f, null, new[] {pipeline}, null);
+var report   = runner.GetType().GetMethod("Run", f).Invoke(runner,
+    new[] {built.GetType().GetField("Item1").GetValue(built), built.GetType().GetField("Item2").GetValue(built)});
+
+var lines = new System.Text.StringBuilder("Issues=" + prop(report, "IssueCount") + "\n");
+foreach (var finding in (System.Collections.IEnumerable) prop(report, "Project"))
+    if (prop(finding, "Status").ToString() != "Ok") lines.AppendLine("  project: " + prop(finding, "Message"));
+foreach (var row in (System.Collections.IEnumerable) prop(report, "Modules"))
+foreach (var finding in (System.Collections.IEnumerable) prop(row, "Findings"))
+    if (prop(finding, "Status").ToString() != "Ok")
+        lines.AppendLine("  " + prop(row, "Name") + " [" + prop(finding, "Status") + "] " + prop(finding, "Message"));
+return lines.ToString();
+```
+
+`Fixable` is what the window's Fix All repairs: a mandatory folder missing, namespace settings
+stale, an orphaned `.csproj` at the root. `Manual` is a decision: a card with its purpose
+unwritten, a module reaching another module's Signals assembly. Report both as they stand - fix
+what the task covers, name the rest - and never answer "nothing left" without having run this.
+
+Then, for the module you just made:
+
+- **The card.** `MODULE.md` above the generated block: Purpose and Concepts written - the scanner
+  reports the placeholders - and Decisions and Known gaps where there is anything to say. Pass
+  `card` at creation or write it straight after; it is part of making the module, not a follow-up
+  for somebody to ask for.
+- **The name on disk.** `<Name>Module`, `<Name>TestModule` or `<Name>ScreenModule`, and the asmdef
+  inside it `Modules.<Name>`, `Modules.<Name>.Test` or `Modules.<Name>.Screen`. A wrong name is
+  not put right by renaming the folder: `ModuleDeleter.DeleteModule`, then create again, because a
+  folder deleted by hand leaves its `.csproj` and `.csproj.DotSettings` at the project root.
+- **The index.** `Assets/Plugins/FlowIoC/MODULES.md` lists the module with its purpose and its
+  concepts after the next compile.
+- **A screen's test scene.** `<Name>ScreenTestScene` under the screen's test module, with the
+  prefab on its layer - written by the half that runs after the reload.
+- **A test module of your own.** Made through the generator too, so it carries the mandatory
+  folders; a test module copied or written by hand is the one the scanner finds a folder short.
 
 ## A panel a module ships
 

@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.CodeGenerator.Screens;
@@ -275,13 +274,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             float leftWidth = Mathf.Max(available * LEFT_COLUMN_SHARE, COLUMN_MIN_WIDTH);
             float rightWidth = Mathf.Max(available - leftWidth, COLUMN_MIN_WIDTH);
 
-            _moduleSuffix = _selectedModuleType switch
-            {
-                ModuleType.Main => "",
-                ModuleType.Test => "Test",
-                ModuleType.Screen => "Screen",
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            // Shown in the preview only. The generator puts the suffix on the name itself, so the
+            // window hands it the bare name and the two can never disagree about it.
+            _moduleSuffix = new ModuleTypeSuffix().For(_selectedModuleType);
 
             EditorGUILayout.BeginHorizontal();
 

@@ -72,13 +72,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// </summary>
         private static void WriteNamespaceExceptions(DirectoryStructureConfig config, string modulePath, string assemblyName)
         {
-            string dotSettingsFileName = assemblyName + ".csproj.DotSettings";
-            string dotSettingsFilePath = Path.Combine(modulePath, dotSettingsFileName);
-
-            if (!File.Exists(dotSettingsFilePath))
-            {
-                NamespaceUtility.CreateDotSettingsFile(dotSettingsFilePath);
-            }
+            // Only the file's name travels from here: SetNamespaceProvider resolves it at the
+            // project root, and creates it there when it is missing. Creating it here first used
+            // to look for the file inside the module folder - where it never is - and so reset
+            // a file that already existed at the root, every time, before writing into it.
+            string dotSettingsFilePath = Path.Combine(modulePath, assemblyName + ".csproj.DotSettings");
 
             TraverseFoldersForNamespaceExceptions(config.RootFolders, modulePath, dotSettingsFilePath);
 
