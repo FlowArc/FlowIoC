@@ -1,6 +1,6 @@
 ---
 name: flowioc-connectors
-description: Use when wiring two FlowIoC modules together - writing or editing a Connector sub-context, connecting one module's Outgoing signal to another's Incoming, adapting between signal payloads, tearing connections down, or debugging a signal that is dispatched but never arrives.
+description: Use when wiring two FlowIoC modules together - writing or editing a Connector sub-context, connecting one module's Outgoing signal to another's Incoming, adapting between signal payloads, wiring a signal a module creates per config key (one edge per tab or slot, with no if), tearing connections down, or debugging a signal that is dispatched but never arrives.
 ---
 
 # FlowIoC Connectors
@@ -122,6 +122,45 @@ SignalConnector.DisconnectGroup(Group);
 
 Connections made without a group come apart with `signal.Disconnect()`, which a sub-context
 does in `DestroyContext` for what it wired.
+
+## A signal created per config key
+
+A module whose announcements are as many as an asset lists - a tab bar with five or six tabs, a
+row of slots - cannot declare one `Outgoing` field per item: it does not know the items. One
+`Signal<string> ItemSelected` would need an `if` to reach the right screen, and a Connector never
+decides. The shape that keeps the edge decision-free is a **method on the `Outgoing` half that
+returns one `Signal` per key**, created on the first ask and the same instance after:
+
+```csharp
+private readonly Dictionary<string, Signal> _selected = new();
+
+public Signal Selected(string key)
+{
+    if (!_selected.TryGetValue(key, out Signal signal))
+    {
+        signal = new Signal(name: $"BotBarSignals.Outgoing.Selected[{key}]");
+        _selected[key] = signal;
+    }
+
+    return signal;
+}
+```
+
+The Connector picks an edge by name, which is what picking a field is:
+
+```csharp
+_botBarSignals.Outgoing.Selected("shop").Connect(_shopScreenSignals.Incoming.Open, GROUP);
+_botBarSignals.Outgoing.Selected("clan").Connect(_clanScreenSignals.Incoming.Open, GROUP);
+```
+
+Three things go with it. **Name the signal by hand**: `FlowFrameworkOrigin` stamps a holder's
+fields at bind time and these are not fields, so without the name the console shows a dispatch of
+`''`. **Check the keys at `Launch`**: it runs after every `Setup`, so every Connector has asked by
+then; a key the config does not list is a typo in a Connector and a signal nobody will dispatch -
+warn with the key. **Know the cost**: the Device Debugger's signal panel reads holders by their
+fields and will not list keyed signals. Keep a plain `Signal<string, string> SelectionChanged`
+beside the keyed ones for whoever wants every selection - analytics - through a converter. The
+shipped BotBar module is the worked example.
 
 ## What goes wrong
 

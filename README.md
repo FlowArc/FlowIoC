@@ -1084,6 +1084,18 @@ _matchSignals.Outgoing.MatchEnded.Connect(_analyticsSignals.Incoming.LogEvent,
                                           summary => summary.ToAnalyticsEvent());
 ```
 
+A module whose announcements are as many as an asset lists - the BotBar module's tabs - creates
+one signal per key through a method on its `Outgoing` half, so the Connector still wires one edge
+per item and decides nothing:
+
+```csharp
+_botBarSignals.Outgoing.Selected("shop").Connect(_shopScreenSignals.Incoming.Open, Group);
+_botBarSignals.Outgoing.Selected("clan").Connect(_clanScreenSignals.Incoming.Open, Group);
+```
+
+The connectors skill carries the shape: the signal named by hand, and a `Launch` check that
+warns about a key no tab carries.
+
 Every connection can carry a `groupId` so it can be torn down as a unit:
 
 ```csharp

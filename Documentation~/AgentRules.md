@@ -117,6 +117,10 @@ what is true whatever you are about to do.
   what it announces. A module's signals are its public surface - together with the
   interface of a Service, which is the one thing another module may reference directly, and
   which carries the steps the Service ships under its nested `Commands`.
+- **A holder whose announcements are as many as an asset lists creates them by key**, through a
+  method on its `Outgoing` half - `Outgoing.Selected("shop")` - so a Connector still wires one
+  edge per item with no `if`. The connectors skill has the shape, the naming and the `Launch`
+  check; a method on an `Outgoing` half is that shape, not a breach.
 - The public signal holder lives in `Scripts/Signals/`, an assembly of its own -
   `Modules.Player.Signals` beside `Modules.Player` and `Modules.Player.Shared`. **Only a Connector
   references another module's `.Signals` assembly**, and a test module, which may reference
