@@ -38,8 +38,8 @@ namespace FlowIoC.Editor.Help.Pages
             {"HapticServiceRoot", -50},
             {"WorldPointerServiceRoot", -30},
             {"LoadingServiceRoot", -10},
-            {"GameplayRoot", 0},
-            {"CameraRoot", 1},
+            {"GameplaySystemRoot", 0},
+            {"CameraSystemRoot", 1},
             {"ScreenRoot", 99},
             {"MainRoot", 100},
             {"ConnectorRoot", 98}

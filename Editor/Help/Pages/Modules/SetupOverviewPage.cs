@@ -107,7 +107,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "last, so its Launch dispatches the first signal into a project that is entirely ready.");
             painter.Table(new[] {"Module", "Root", "Order", "Role"},
                 new[] {"Loading", "LoadingServiceRoot", "-10", "Service - the set's one versioned module"},
-                new[] {"Gameplay", "GameplayRoot", "0", "System - the game's own band, 0 to 97"},
+                new[] {"Gameplay", "GameplaySystemRoot", "0", "System - the game's own band, 0 to 97"},
                 new[] {"Connector", "ConnectorRoot", "98", "Connector - after everything it wires"},
                 new[] {"Screen", "ScreenRoot", "99", "Core - the layers, before the first screen opens"},
                 new[] {"Main", "MainRoot", "100", "Core - the entry point, last of all"});

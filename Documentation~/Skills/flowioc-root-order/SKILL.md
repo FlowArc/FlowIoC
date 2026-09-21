@@ -26,17 +26,17 @@ can be and `100` is as late.
 
 | Order | Who sits there | Why |
 |---|---|---|
-| -100, -90 | The modules that put data in place before anything reads it | `PostConstruct` runs during the binding pass, not after `Setup`, and each Root finishes its own before the next begins - so being first is what puts data in place before anything reads it. Saved data is restored at `-100` (`LocalSaveRoot`); config is rewritten from an A/B assignment at `-90` (`AbTestFlowServiceRoot`). A service whose `PostConstruct` reads config sits after `-90`, or it reads the original before the variant lands and nothing is logged. |
+| -100, -90 | The modules that put data in place before anything reads it | `PostConstruct` runs during the binding pass, not after `Setup`, and each Root finishes its own before the next begins - so being first is what puts data in place before anything reads it. Saved data is restored at `-100` (`LocalSaveServiceRoot`); config is rewritten from an A/B assignment at `-90` (`AbTestFlowServiceRoot`). A service whose `PostConstruct` reads config sits after `-90`, or it reads the original before the variant lands and nothing is logged. |
 | -80 … -10 | The other Services, on the tens, in the order the boot reads | A Service depends on nothing else, so it comes up early and is ready for everyone. `-80` the asset service, the door every Addressables load goes through; `-70` the screen service and `-60` the pool service, which load through it; then the helpers - `-50` haptics, `-30` world pointers, `-10` the loading service, last because it opens a screen. |
 | 0 - 97 | The game's own modules and systems | Gameplay, camera, the modules this game is made of. |
 | 98 | `ConnectorRoot` | After every module it wires, so the scene reads as modules first and wiring after them. A Connector binds no signal holder anyway - it gets the ones every other context bound. |
 | 99 | `ScreenRoot` | The screen manager owns the screen prefabs, so it is up before the flow that opens the first screen. |
 | 100 | `MainRoot` | The application's entry point. Its `Launch()` dispatches the first signal, last of all. |
 
-What the shipped Roots actually use: `LocalSaveRoot` `-100`, `AbTestFlowServiceRoot` `-90`,
+What the shipped Roots actually use: `LocalSaveServiceRoot` `-100`, `AbTestFlowServiceRoot` `-90`,
 `AssetServiceRoot` `-80`, `ScreenServiceRoot` `-70`, `PoolServiceRoot` `-60`, `HapticServiceRoot`
-`-50`, `WorldPointerServiceRoot` `-30`, `LoadingServiceRoot` `-10`, `GameplayRoot` `0`,
-`CameraRoot` `1`, `ConnectorRoot` `98`, `ScreenRoot` `99`, `MainRoot` `100`.
+`-50`, `WorldPointerServiceRoot` `-30`, `LoadingServiceRoot` `-10`, `GameplaySystemRoot` `0`,
+`CameraSystemRoot` `1`, `ConnectorRoot` `98`, `ScreenRoot` `99`, `MainRoot` `100`.
 
 A game's own service takes a free ten, or a unit below the ten it leans on - `-69` for one that
 wants the screen service bound first. Inside the `0 - 97` band the exact number rarely matters.
@@ -55,7 +55,7 @@ MainScene
 ├── PoolServiceRoot            -60
 ├── LoadingServiceRoot         -10
 ├── ------------------------
-├── GameplayRoot                 0
+├── GameplaySystemRoot           0
 ├── ------------------------
 ├── ConnectorRoot               98
 ├── ScreenRoot                  99

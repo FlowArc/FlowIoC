@@ -73,7 +73,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Table(new[] {"Root", "Initialize Order", "Role"},
                 new[]
                 {
-                    "GameplayRoot (GameplaySystemRoot)", "0",
+                    "GameplaySystemRoot", "0",
                     "System - read off the name. The game's own modules sit in the 0 to 97 band, after every "
                     + "service they inject and before the Connector that wires them; two systems that never "
                     + "touch can share a number."

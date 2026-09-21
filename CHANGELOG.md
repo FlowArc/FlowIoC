@@ -14,7 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Gameplay's context is `GameplaySystemContext`**, named like its Root. New installs only.
+- **Gameplay's context is `GameplaySystemContext`**, named like its Root, and its prefab is
+  `GameplaySystemRoot`. New installs only.
+- **A Root prefab is named after the Root it carries**: `CameraSystemRoot` and
+  `LocalSaveServiceRoot` with their next versions.
 
 ### Fixed
 

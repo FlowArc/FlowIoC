@@ -174,7 +174,7 @@ one a different `ManagerId`:
 | Root | Override | `ManagerId` | `Layer` |
 |---|---|---|---|
 | `MainRoot` | off | `0` (declared) | `3` (declared) |
-| `GameplayRoot` | on | `1` | `1` |
+| `GameplaySystemRoot` | on | `1` | `1` |
 
 Both register. `Open<SettingsScreenView>()` opens the one at manager 0 and
 `Open<SettingsScreenView>(1)` the one at manager 1, each with its own pooled instance, and one

@@ -36,7 +36,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Usage", DrawUsage,
-                "Put CameraRoot in the scene, then say which cameras it has.",
+                "Put CameraSystemRoot in the scene, then say which cameras it has.",
                 "A rig with several cameras carries one CameraAdapterView and a single camera "
                 + "carries SingleCameraAdapterView. Both register on their own - there is no call "
                 + "to make."),
@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                     + "references the data and not the module."
                 },
                 new[] {"Modules.Camera.Signals", "CameraSignals, which only a Connector references."},
-                new[] {"Prefabs/CameraRoot", "The module's presence in the scene."},
+                new[] {"Prefabs/CameraSystemRoot", "The module's presence in the scene."},
                 new[] {"Scriptables/CD_CameraCustomBlends", "The blend table."});
 
             painter.SubHeading("What it needs");

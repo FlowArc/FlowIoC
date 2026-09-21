@@ -22,7 +22,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Setup", DrawSetup,
-                "Put LocalSaveRoot in the scene and file the assets to keep on its adapter.",
+                "Put LocalSaveServiceRoot in the scene and file the assets to keep on its adapter.",
                 "The name an asset is filed under is the key it is stored against. A key never "
                 + "written is skipped, so the values authored in the Editor are the defaults."),
             new HelpTab("Usage", DrawUsage,
@@ -38,7 +38,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         };
 
         public override string InstalledHint =>
-            "Drop LocalSaveRoot into your scene and file the assets to keep on its adapter; the "
+            "Drop LocalSaveServiceRoot into your scene and file the assets to keep on its adapter; the "
             + "Setup tab has the steps.";
 
         public override string BodyHeadline =>
@@ -52,7 +52,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(
-                "Everything filed on LocalSaveRoot's adapter is written to disk when you ask, and "
+                "Everything filed on LocalSaveServiceRoot's adapter is written to disk when you ask, and "
                 + "read back before any other module wakes up - the restore runs in the module's "
                 + "PostConstruct, ahead of the band the game's own Roots use.");
             painter.Bullet(
@@ -88,7 +88,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("Persisting an asset");
             painter.Paragraph(
-                "Drop the ScriptableObject onto the adapter on LocalSaveRoot. That is the whole "
+                "Drop the ScriptableObject onto the adapter on LocalSaveServiceRoot. That is the whole "
                 + "step - the name you file it under is the key it is stored against, and "
                 + "restoring it needs no code in your module at all.");
             painter.Paragraph(
@@ -99,7 +99,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("Ordering");
             painter.Paragraph(
-                "LocalSaveRoot sits at Initialize Order -100, ahead of the band the game's own "
+                "LocalSaveServiceRoot sits at Initialize Order -100, ahead of the band the game's own "
                 + "modules use. PostConstruct runs during the binding pass rather than after Setup, "
                 + "and each Root finishes its own before the next begins - so sitting ahead of band "
                 + "0 is what puts the saved data in place before another module's model reads it. "
@@ -114,7 +114,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "it on quit, so the save system runs normally in the Editor and still leaves no "
                 + "diff behind.");
             painter.Paragraph(
-                "Tick IsTest on LocalSaveRoot to switch the whole thing off for a scene: nothing "
+                "Tick IsTest on LocalSaveServiceRoot to switch the whole thing off for a scene: nothing "
                 + "is read and nothing is written. A build always gets the real service.");
             painter.Space();
 
@@ -130,7 +130,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "Tools > FlowIoC-Modules > Local Save > Panel shows the file on this machine: where "
                 + "it is, whether it is plain or encrypted, what it says - read with the password the "
-                + "LocalSaveRoot in the open scene carries, or one you type - and the two things a "
+                + "LocalSaveServiceRoot in the open scene carries, or one you type - and the two things a "
                 + "developer does to it between sessions: Reset deletes it so the next run starts "
                 + "from the authored values, and Rewrite writes it again under another password for "
                 + "the day the one on the Root changes. Clear PlayerPrefs is there too, for what any "
@@ -191,7 +191,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("The password");
             painter.Paragraph(
-                "Set it on LocalSaveRoot's adapter and the file is AES-256, the key derived from "
+                "Set it on LocalSaveServiceRoot's adapter and the file is AES-256, the key derived from "
                 + "the password with a fresh salt on every write. Leave it empty and the file is "
                 + "plain.");
             painter.Paragraph(
