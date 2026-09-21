@@ -43,7 +43,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 543c504df7cafb249ba5fe30eadbe4a5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Modules.Gameplay::Modules.GameplayModule.RootsContexts.GameplayRoot
+  m_EditorClassIdentifier: Modules.Gameplay::Modules.GameplayModule.RootsContexts.GameplaySystemRoot
   SubContextTypes:
   - ContextScript: {fileID: 11500000, guid: 7e664dc3781d6de41a564dd240d87da4, type: 3}
     ContextFullName: Modules.GameplayModule.GameplayScreenModule.RootsContexts.GameplayScreenContext

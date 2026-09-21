@@ -206,9 +206,9 @@ genType.GetMethod("CreateModuleStructure",
         selected, configMap, actionNames,
         true, true, true, false,                           // createRoot, createContext, createSignals, createScreen
         false,                                             // allowAsSubContext
-        System.Enum.Parse(roleType, "System"),             // System, Service or Core
+        System.Enum.Parse(roleType, "System"),             // System, Service or Core - read only for a Main module with a Root
         null,                                              // screenSettings: a screen's ScreenModuleSettings, else null
-        card                                               // ModuleCardDraftEVO, or null for the placeholders
+        card                                               // ModuleCardDraftEVO, or null for the placeholders; a Test module gets no card
     });
 ```
 
@@ -221,6 +221,12 @@ and leaves a name that already carries it alone. The suffix used to be the windo
 call from here that named a test module `"Ads"` wrote `zTestModules/AdsModule` with the parent's
 own assembly name, and its namespace settings over the parent's. Read the folder name and the
 asmdef name back after the call.
+
+**The role counts only for a Main module with a Root.** A Test or a Screen module, and a Main
+module made without a Root, are written plain whatever role is passed - `PlayerTestRoot` and
+`PlayerTestContext`, never `PlayerTestSystemRoot` - the same way the window writes them. That
+collapse used to be the window's too, and a call from here with `System` for a test module wrote
+the role into both names.
 
 Three things to know before relying on this:
 
@@ -290,13 +296,15 @@ Then, for the module you just made:
 - **The card.** `MODULE.md` above the generated block: Purpose and Concepts written - the scanner
   reports the placeholders - and Decisions and Known gaps where there is anything to say. Pass
   `card` at creation or write it straight after; it is part of making the module, not a follow-up
-  for somebody to ask for.
+  for somebody to ask for. **A test module has no card**: the generator writes none, the scanner
+  asks for none, and writing one by hand is a file nothing reads. The module it tests carries it
+  on its Sub modules line.
 - **The name on disk.** `<Name>Module`, `<Name>TestModule` or `<Name>ScreenModule`, and the asmdef
   inside it `Modules.<Name>`, `Modules.<Name>.Test` or `Modules.<Name>.Screen`. A wrong name is
   not put right by renaming the folder: `ModuleDeleter.DeleteModule`, then create again, because a
   folder deleted by hand leaves its `.csproj` and `.csproj.DotSettings` at the project root.
 - **The index.** `Assets/Plugins/FlowIoC/MODULES.md` lists the module with its purpose and its
-  concepts after the next compile.
+  concepts after the next compile. A test module gets no line of its own there either.
 - **A screen's test scene.** `<Name>ScreenTestScene` under the screen's test module, with the
   prefab on its layer - written by the half that runs after the reload.
 - **A test module of your own.** Made through the generator too, so it carries the mandatory

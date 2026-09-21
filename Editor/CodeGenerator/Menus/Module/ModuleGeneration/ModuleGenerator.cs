@@ -54,6 +54,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             // test module "Ads" wrote zTestModules/AdsModule, with the parent's own assembly name.
             moduleName = new ModuleTypeSuffix().Apply(moduleName, selectedModuleType);
 
+            // The role for the same reason. A script that asked for a test module carrying System
+            // got GameplayTestSystemRoot, where the window would have written GameplayTestRoot.
+            moduleRole = new ModuleRoleNaming().Effective(moduleRole, selectedModuleType, createRoot);
+
             ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {

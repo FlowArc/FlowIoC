@@ -41,6 +41,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         public string RootName(string moduleName, ModuleRole role) => Apply(moduleName, role) + ROOT;
 
         public string ContextName(string moduleName, ModuleRole role) => Apply(moduleName, role) + CONTEXT;
+
+        /// <summary>
+        /// The role a module of this type is actually written with. Only a main module that gets a
+        /// Root of its own is one of the three: a test module's Root is a test Root, a screen
+        /// module has no Root, and a sub module's context hangs off its parent's. Every one of
+        /// those is written plain whatever role the caller carried - the window collapses it before
+        /// asking, and a script that calls the generator directly gets the same answer there.
+        /// </summary>
+        public ModuleRole Effective(ModuleRole role, ModuleType type, bool createRoot) =>
+            type == ModuleType.Main && createRoot ? role : ModuleRole.Core;
     }
 }
 #endif

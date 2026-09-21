@@ -425,12 +425,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         }
 
         /// <summary>
-        /// The role the generator is handed. A module that is not offered the dropdown is written
-        /// the way it always was, whatever the dropdown happens to be showing, and the choice is
-        /// kept rather than reset so switching Create Root off and on again does not lose it.
+        /// The role the preview shows and the generator is handed. A module that is not offered
+        /// the dropdown is written the way it always was, whatever the dropdown happens to be
+        /// showing, and the choice is kept rather than reset so switching Create Root off and on
+        /// again does not lose it. The generator collapses the role by the same rule on its own,
+        /// so the preview and the files agree whoever calls it.
         /// </summary>
-        private ModuleRole _effectiveRole =>
-            _selectedModuleType == ModuleType.Main && _createRoot ? _selectedModuleRole : ModuleRole.Core;
+        private ModuleRole _effectiveRole => _roleNaming.Effective(_selectedModuleRole, _selectedModuleType, _createRoot);
 
         /// <summary>
         /// The Shared assembly a module publishes its data through. The main and screen layouts

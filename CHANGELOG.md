@@ -5,6 +5,22 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **The Module Scanner checks that a Root and its Context are named alike**: `PlayerSystemRoot`
+  roots `PlayerSystemContext`. A pair that disagrees is reported for a person.
+
+### Changed
+
+- **Gameplay's context is `GameplaySystemContext`**, named like its Root. New installs only.
+
+### Fixed
+
+- **The generator writes a Test or a Screen module plain whatever role it is handed**, the way the
+  window always did. The scaffolding skill says so, and that a test module has no card.
+
 ## [1.22.1] - 2026-09-17
 
 ### Changed

@@ -4,7 +4,7 @@ using FlowIoC.BaseModule.Contexts;
 namespace Modules.GameplayModule.RootsContexts
 {
 
-    public class GameplayContext : Context
+    public class GameplaySystemContext : Context
     {
 		private GameplaySignals _signals;
 

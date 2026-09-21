@@ -39,6 +39,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 new AssemblyReferencesCheck(),
                 new SignalsSharedReferenceCheck(),
                 new SignalReferenceCheck(),
+                new RootContextRoleCheck(),
                 new DotSettingsCheck(),
                 new FlowModulePartCheck(),
                 new LogChannelCheck(),

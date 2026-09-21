@@ -70,6 +70,15 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 },
                 new[]
                 {
+                    "Root and Context",
+                    "A Root and the Context it roots carry the same name in front of the suffix - "
+                    + "CounterServiceRoot roots CounterServiceContext, PlayerSystemRoot roots "
+                    + "PlayerSystemContext - read off the Root's own declaration. A Root renamed for "
+                    + "its colour with the Context left behind is reported and not repaired: the "
+                    + "rename reaches everything that names the Context."
+                },
+                new[]
+                {
                     "Namespace settings",
                     "The .csproj.DotSettings at the project root that tells Rider which folders "
                     + "produce a namespace."

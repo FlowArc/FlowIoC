@@ -27,7 +27,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("What it owns");
             painter.Bullet(
-                "GameplayContext, which binds GameplaySignals and nothing else yet: both halves of the "
+                "GameplaySystemContext, which binds GameplaySignals and nothing else yet: both halves of the "
                 + "holder are empty, waiting for what the game announces and accepts.");
             painter.Bullet(
                 "DifficultyType in the module's Shared assembly - Easy, Medium, Hard. Shared is where "
@@ -56,7 +56,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("Writing the game here");
             painter.Bullet(
                 "Rules and state go in a Model under Models; the work a signal runs goes in a Command "
-                + "under Controllers, bound as a step in GameplayContext; what the game shows goes in "
+                + "under Controllers, bound as a step in GameplaySystemContext; what the game shows goes in "
                 + "Views and Mediators, or in a screen module of its own under zScreenModules.");
             painter.Bullet(
                 "Logic that is this game's is a System under Systems; logic the next game could use "
