@@ -347,7 +347,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// and returns its asset path. Saved now rather than after the reload so that the scene
         /// half has a path to find it by: what it edits and saves is the scene at this path, never
         /// whichever scene is active when the scripts come back. The caller asked the user about
-        /// the scene NewScene closes before the run began.
+        /// the scene NewScene closes before the run began. The camera Unity put in the scene
+        /// clears to a solid colour before the save; GeneratedSceneCamera says why.
         /// </summary>
         private static string CreateScene(string scenesFolder, string sceneName)
         {
@@ -357,6 +358,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string scenePath = NamespaceUtility.GetUnityAssetPath(Path.Combine(scenesFolder, sceneName + ".unity"));
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            new GeneratedSceneCamera(scene).ClearToSolidColour();
             EditorSceneManager.SaveScene(scene, scenePath);
 
             return scenePath;
