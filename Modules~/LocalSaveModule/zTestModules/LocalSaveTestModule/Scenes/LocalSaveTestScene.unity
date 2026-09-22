@@ -681,7 +681,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8793134620847140949, guid: cf2b259b466a56246932acc9be3b3c1e, type: 3}
       propertyPath: m_Name
-      value: LocalSaveRoot
+      value: LocalSaveServiceRoot
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

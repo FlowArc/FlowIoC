@@ -16,7 +16,7 @@ namespace Modules.LocalSaveModule.Editor
     /// away, or write it again under another password. It reads and never edits: a value changed
     /// here would skip the rules the Model exists to keep, and the file is the Model's.
     ///
-    /// The password comes off the LocalSaveRoot in the open scene when there is one, so the
+    /// The password comes off the LocalSaveServiceRoot in the open scene when there is one, so the
     /// panel reads the file the game would read without being told the password twice; a scene
     /// without the Root gets a field instead.
     /// </summary>
@@ -107,7 +107,7 @@ namespace Modules.LocalSaveModule.Editor
 
             if (adapter != null && !string.IsNullOrEmpty(adapter.Password))
             {
-                painter.Field("Source", "LocalSaveRoot in the open scene - " + adapter.gameObject.scene.name);
+                painter.Field("Source", "LocalSaveServiceRoot in the open scene - " + adapter.gameObject.scene.name);
                 painter.Note("The file is read with the password the Root carries, the way the game reads it.");
                 return;
             }
@@ -115,8 +115,8 @@ namespace Modules.LocalSaveModule.Editor
             _typedPassword = painter.TextField("Password", _typedPassword, true);
 
             painter.Note(adapter != null
-                ? "The LocalSaveRoot in the open scene carries no password. Type one only to read a file written encrypted."
-                : "No LocalSaveRoot in the open scene. Type the password the file was written with; leave it empty for a plain file.");
+                ? "The LocalSaveServiceRoot in the open scene carries no password. Type one only to read a file written encrypted."
+                : "No LocalSaveServiceRoot in the open scene. Type the password the file was written with; leave it empty for a plain file.");
         }
 
         private void DrawContents(ModulePanelPainter painter)
@@ -238,7 +238,7 @@ namespace Modules.LocalSaveModule.Editor
                 plain
                     ? "The file is written again as plain JSON."
                     : "The file is written again encrypted with the new password. Put the same password on "
-                      + "LocalSaveRoot, or the game reads an empty save.",
+                      + "LocalSaveServiceRoot, or the game reads an empty save.",
                 "Rewrite",
                 "Cancel");
 

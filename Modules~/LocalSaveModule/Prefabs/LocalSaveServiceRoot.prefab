@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7232883613273477970}
   - component: {fileID: 4797032695095035559}
   m_Layer: 0
-  m_Name: LocalSaveRoot
+  m_Name: LocalSaveServiceRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f2ba6ec0368a6a45888f85ca08438b7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Modules.LocalSave::Modules.LocalSaveModule.RootsContexts.LocalSaveRoot
+  m_EditorClassIdentifier: Modules.LocalSave::Modules.LocalSaveModule.RootsContexts.LocalSaveServiceRoot
   SubContextTypes: []
   initializeOrder: -100
   AutoBindInjections: 1

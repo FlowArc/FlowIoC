@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Modules.LocalSaveModule.RootsContexts
 {
     /// <summary>
-    /// The adapter on LocalSaveRoot is the registry: whatever is filed on it is persisted, and a
+    /// The adapter on LocalSaveServiceRoot is the registry: whatever is filed on it is persisted, and a
     /// module joins in by dropping its asset there rather than by writing any code. That is why
     /// this one, alone, hands out the whole map - an ordinary module reads its own assets by name
     /// through GetScriptable and never needs to see what else is filed.
