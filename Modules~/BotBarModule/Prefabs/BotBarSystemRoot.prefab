@@ -1,0 +1,158 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &149720727564047422
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1258001307099215581}
+  - component: {fileID: 1296815961198446363}
+  - component: {fileID: 5262669148857761943}
+  m_Layer: 0
+  m_Name: BotBarSystemRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1258001307099215581
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 149720727564047422}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5242860589109315540}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1296815961198446363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 149720727564047422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc81e72b08d10ff4ca8bb6361f8833a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.BotBar::Modules.BotBarModule.RootsContexts.BotBarSystemRoot
+  SubContextTypes:
+  - ContextScript: {fileID: 11500000, guid: 9bd4e0b84758fc14dbd2ed392862b1a5, type: 3}
+    ContextFullName: Modules.BotBarModule.BotBarScreenModule.RootsContexts.BotBarScreenContext
+    ContextName: BotBarScreenContext
+    AutoSetup: 1
+    IsTest: 0
+    OverrideScreen: 0
+    ScreenManagerId: 0
+    ScreenLayer: 0
+    ScreenTag: 0
+    ScreenHasShowAnimation: 0
+    ScreenHasHideAnimation: 0
+  initializeOrder: 2
+  AutoBindInjections: 1
+  AutoBindMediations: 1
+  AutoInitialize: 1
+  AutoSetup: 1
+  AutoLaunch: 1
+  IsTest: 0
+--- !u!114 &5262669148857761943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 149720727564047422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f39bbf08b2e417abc79bcaf1de79c9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FlowIoC::FlowIoC.BaseModule.Adapters.RootAdapter
+  _scriptableMap:
+    m_Keys: []
+    m_Values: []
+  _sharedScriptableMap:
+    m_Keys:
+    - CD_BotBar
+    - RD_BotBar
+    m_Values:
+    - {fileID: 11400000, guid: d2b734229d03daa4f96a9ce18dcbf936, type: 2}
+    - {fileID: 11400000, guid: 5e0ddd26848765b468980ac729dc3a50, type: 2}
+  _monoMap:
+    m_Keys: []
+    m_Values: []
+  _sharedMonoMap:
+    m_Keys: []
+    m_Values: []
+--- !u!1 &6889991552508954738
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5242860589109315540}
+  - component: {fileID: 2496978611165294191}
+  m_Layer: 0
+  m_Name: BotBarConnectorRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5242860589109315540
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6889991552508954738}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1258001307099215581}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2496978611165294191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6889991552508954738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f2ca2be9eb7125429c1cc9cfdf4dd9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Modules.BotBarConnector::Modules.BotBarModule.BotBarConnectorModule.RootsContexts.BotBarConnectorRoot
+  SubContextTypes:
+  - ContextScript: {fileID: 11500000, guid: aaac8553afe2200449ac18ac15caf43c, type: 3}
+    ContextFullName: Modules.BotBarModule.BotBarConnectorModule.RootsContexts.BotBarScreenConnectorSubContext
+    ContextName: BotBarScreenConnectorSubContext
+    AutoSetup: 1
+    IsTest: 0
+    OverrideScreen: 0
+    ScreenManagerId: 0
+    ScreenLayer: 0
+    ScreenTag: 0
+    ScreenHasShowAnimation: 0
+    ScreenHasHideAnimation: 0
+  initializeOrder: 3
+  AutoBindInjections: 1
+  AutoBindMediations: 1
+  AutoInitialize: 1
+  AutoSetup: 1
+  AutoLaunch: 1
+  IsTest: 0

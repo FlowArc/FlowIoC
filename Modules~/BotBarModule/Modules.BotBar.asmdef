@@ -1,0 +1,17 @@
+{
+  "name": "Modules.BotBar",
+  "references": [
+    "FlowIoC",
+    "Modules.BotBar.Shared",
+    "Modules.BotBar.Signals"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

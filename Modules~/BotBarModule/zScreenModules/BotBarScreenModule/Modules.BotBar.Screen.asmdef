@@ -1,0 +1,17 @@
+{
+  "name": "Modules.BotBar.Screen",
+  "references": [
+    "FlowIoC",
+    "Modules.BotBar.Screen.Signals",
+    "Modules.BotBar.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
