@@ -5,12 +5,14 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.22.2] - 2026-09-22
 
 ### Added
 
 - **The Module Scanner checks that a Root and its Context are named alike**: `PlayerSystemRoot`
   roots `PlayerSystemContext`. A pair that disagrees is reported for a person.
+- **A signal created per config key** is in the agent rules and the connectors skill, with the
+  BotBar Help page.
 
 ### Changed
 
@@ -18,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `GameplaySystemRoot`. New installs only.
 - **A Root prefab is named after the Root it carries**: `CameraSystemRoot` and
   `LocalSaveServiceRoot` with their next versions.
+- **The camera in a scene Create Module makes clears to a solid colour** rather than the skybox.
+- **The ready-made modules are republished with that camera**: Ads, Analytics, Camera, Counter,
+  Device Debugger, World Pointer and Loading at 1.0.1; Asset Delivery, Local Save and Mobile
+  Notification at 1.0.2.
 
 ### Fixed
 
