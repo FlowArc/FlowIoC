@@ -73,7 +73,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 ProjectRoot = projectRoot,
                 ScannedModules = scanned,
                 Index = new ModuleIndexProvider().LoadOrCreate(),
-                AllAssemblyNames = AssemblyNames(projectRoot)
+                AllAssemblyNames = new ProjectAssemblyNames().OnDisk(projectRoot)
             };
         }
 
@@ -150,29 +150,6 @@ namespace FlowIoC.Editor.ModuleScanner
             }
 
             return best;
-        }
-
-        /// <summary>
-        /// Every assembly the project defines, which is what tells an orphaned settings file from
-        /// one that is still in use.
-        /// </summary>
-        private IReadOnlyList<string> AssemblyNames(string projectRoot)
-        {
-            var names = new List<string>();
-
-            foreach (string searchPath in new[]
-                     {
-                         Path.Combine(projectRoot, "Assets"),
-                         Path.Combine(projectRoot, "Packages")
-                     })
-            {
-                if (!Directory.Exists(searchPath)) continue;
-
-                foreach (string asmdef in Directory.GetFiles(searchPath, "*.asmdef", SearchOption.AllDirectories))
-                    names.Add(Path.GetFileNameWithoutExtension(asmdef));
-            }
-
-            return names;
         }
     }
 }

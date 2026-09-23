@@ -5,6 +5,7 @@ using System.IO;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.ModuleInstall;
 using FlowIoC.Editor.Modules;
+using FlowIoC.Editor.ModuleScanner;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
@@ -26,7 +27,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
 
         internal Func<string, bool> DirectoryExists { get; set; }
 
-        /// <summary>Every assembly an asmdef under Assets or Packages declares, by file name.</summary>
+        /// <summary>Every assembly the project compiles, by file name - see ProjectAssemblyNames.</summary>
         internal Func<IReadOnlyCollection<string>> AllAssemblyNames { get; set; }
 
         /// <summary>The loaded types with this simple name, wherever they live.</summary>
@@ -82,21 +83,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
             return names;
         }
 
-        /// <summary>The same list ModuleTargetFactory hands the orphan sweep: every asmdef file under Assets and Packages.</summary>
+        /// <summary>The same list ModuleTargetFactory hands the orphan sweep.</summary>
         private static IReadOnlyCollection<string> AssemblyNamesOnDisk()
         {
-            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-            var names = new List<string>();
-
-            foreach (string searchPath in new[] {Path.Combine(projectRoot, "Assets"), Path.Combine(projectRoot, "Packages")})
-            {
-                if (!Directory.Exists(searchPath)) continue;
-
-                foreach (string asmdef in Directory.GetFiles(searchPath, "*.asmdef", SearchOption.AllDirectories))
-                    names.Add(Path.GetFileNameWithoutExtension(asmdef));
-            }
-
-            return names;
+            return new ProjectAssemblyNames().OnDisk(Path.GetFullPath(Path.Combine(Application.dataPath, "..")));
         }
     }
 }
