@@ -12,7 +12,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     /// else. The second half of the run edits this scene and saves it under its own path. It
     /// never saves whatever scene happens to be active: that was the owner's open scene once,
     /// written to disk with a stray Root in it, because a stale flag said a scene had been made
-    /// when none had.
+    /// when none had. Neither half leaves it open, and <see cref="Create"/> says why.
     /// </summary>
     internal class GeneratedScene
     {
@@ -39,11 +39,31 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         }
 
         /// <summary>
+        /// Makes the scene, saves it at this path and closes it again, beside whatever is open -
+        /// which stays open, active and untouched. It is closed because the second half of the
+        /// run saves it after the reload, and a scene that is open while it is saved there comes
+        /// back from Unity as changed on disk, behind a Reload / Ignore modal that stops the
+        /// Editor until somebody answers it - which an agent driving the Editor never does.
+        /// Unity makes no new scene beside an untitled one; the run asked
+        /// <see cref="UntitledScene"/> before it began.
+        /// </summary>
+        public void Create()
+        {
+            if (string.IsNullOrEmpty(_path))
+                return;
+
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Additive);
+            new GeneratedSceneCamera(scene).ClearToSolidColour();
+            EditorSceneManager.SaveScene(scene, _path);
+            EditorSceneManager.CloseScene(scene, true);
+        }
+
+        /// <summary>
         /// Runs <paramref name="edit"/> with this scene active, then saves this scene and only
-        /// this scene. Normally it is still the active scene - the first half made it with
-        /// NewScene and the reload kept it - and it is edited in place. When something else is
-        /// active, whatever was opened during the compile, this scene is opened beside it,
-        /// edited, saved and closed again, and the other scene is neither closed nor saved.
+        /// this scene. Nothing has it open - <see cref="Create"/> closed it - so it is opened
+        /// beside whatever is open, edited, saved and closed again, and the open scenes are
+        /// neither closed nor saved. A scene somebody opened during the compile is edited where
+        /// it is.
         /// </summary>
         public void Edit(Action<Scene> edit)
         {

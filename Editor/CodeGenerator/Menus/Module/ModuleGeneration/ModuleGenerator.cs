@@ -7,7 +7,6 @@ using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.ModuleCards;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
@@ -65,12 +64,18 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 return;
             }
 
-            // The scene is made with NewScene in Single mode, which closes whatever is open
-            // without asking - and what is open is somebody's, with whatever they had not saved
-            // yet. So they are asked here, before the first folder is written: a run they cancel
-            // is a run that never started, not a module missing its scene.
-            if (createScreen && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            // The scene is made beside the open ones and closed again, so what is open is never
+            // closed and nobody is asked about it. Unity makes no new scene beside an untitled
+            // one, though, so that run stops here, before the first folder is written - and says
+            // so in the console rather than in a modal, which stops the Editor until somebody
+            // answers it and leaves an agent driving the Editor waiting for ever.
+            if (createScreen && new UntitledScene().IsOpen)
+            {
+                Debug.LogError("<color=cyan>[FlowIoC]</color> Create Module makes its scene beside the open scenes, and "
+                               + "Unity makes no new scene beside an untitled one. Save the untitled scene or open a "
+                               + "saved one, then create the module again. Nothing was written.");
                 return;
+            }
 
             string subModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules];
             string testModulesFolderName = codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules];

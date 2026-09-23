@@ -117,8 +117,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             Type screenType = possibleAssemblyFiles.FirstOrDefault(x => x.Name == screenName && x.Namespace == handoff.ViewNamespace);
             Type rootType = possibleAssemblyFilesForTest.FirstOrDefault(x => x.Name == handoff.RootName && x.Namespace == handoff.ContextNamespace);
 
-            GameObject screenGameObject = null;
-
             new GeneratedScene(handoff.ScenePath).Edit(scene =>
             {
                 GameObject screenServiceRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.SCREEN_SERVICE_ROOT_PATH);
@@ -179,7 +177,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 ScreenManager screenManagerPrefab = AssetDatabase.LoadAssetAtPath<ScreenManager>(CodeGeneratorStrings.SCREEN_MANAGER_PREFAB_PATH);
                 ScreenManager screenManager = (ScreenManager) PrefabUtility.InstantiatePrefab(screenManagerPrefab, rootGameObject.transform);
 
-                screenGameObject = new GameObject(prefabName, typeof(RectTransform));
+                GameObject screenGameObject = new GameObject(prefabName, typeof(RectTransform));
                 screenGameObject.transform.SetParent(screenManager.ManagerData.ScreenLayerList[0].transform);
 
                 GameObject eventSystem = new GameObject("EventSystem");
@@ -210,7 +208,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             });
 
             AssetDatabase.Refresh();
-            Selection.activeGameObject = screenGameObject;
 
             Debug.Log($"Screen prefab '{prefabName}' has been created and marked as Addressable. Scene saved at: {handoff.ScenePath}");
         }
