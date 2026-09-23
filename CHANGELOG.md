@@ -5,6 +5,15 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.4] - 2026-09-23
+
+### Fixed
+
+- **Create Module no longer stops on a reload prompt.** The new module's scene is saved beside the
+  open scene and closed, and the open scene is left as it is.
+- **Module Scanner keeps FlowIoC's own `.csproj.DotSettings`** in a project that installs the
+  package from the registry.
+
 ## [1.22.3] - 2026-09-22
 
 ### Added
