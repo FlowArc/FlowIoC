@@ -5,6 +5,19 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The ScreenManager prefab is one canvas again.** A canvas of its own for `Layer_3` and
+  `Layer_4` is an override the game adds in its scene; the WorldPointer Help page shows how.
+- **WorldPointer 1.1.2:** the sample's arrow sits outside its label, in the label's colour, and
+  the Help page shows the modes in screenshots.
+
+### Fixed
+
+- **Rename Module reaches an Editor-only screen's prefab** and its Resource path.
+
 ## [1.23.0] - 2026-09-24
 
 ### Added

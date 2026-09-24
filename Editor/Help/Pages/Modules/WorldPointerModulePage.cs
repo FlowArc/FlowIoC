@@ -12,6 +12,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class WorldPointerModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "WorldPointerModule";
 
         public override string Title => "World Pointer Module";
@@ -54,6 +56,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("WorldPointerOverTarget.png"),
+                "WorldPointerTestScene in play: the sample screen's label stands over the cube it follows.");
+
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "RegisterTarget takes an id and the Transform to follow. SetContent, Show and Hide "
@@ -82,8 +87,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Note(
                 "Important: an overlay canvas exists only through the ScreenManager. The module "
                 + "that owns the targets never creates UI or parents anything under a canvas of its "
-                + "own - the indicators live in one of its screens, on the ScreenManager's "
-                + "own-canvas layers, Layer_3 and Layer_4.");
+                + "own - the indicators live in one of its screens, on a ScreenManager layer "
+                + "the game has given a canvas of its own. The Setup tab shows how.");
 
             painter.SubHeading("How it places");
             painter.Paragraph(
@@ -97,7 +102,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives "
                 + "with it. Open WorldPointerTestScene under the test module's Scenes folder and "
-                + "press Play: the camera orbits three cubes, the sample screen opens on Layer_3 and "
+                + "press Play: the camera orbits three cubes, the sample screen opens on Layer_3 - "
+                + "which the scene's ScreenManager gives a canvas of its own - and "
                 + "a screen of buttons on Layer_5, and Register points at each cube in one mode - "
                 + "hide, clamp with an arrow, ignore. Change content, Hidden and Close / open screen "
                 + "show the waiting and the replay. The scene has no canvas of its own: everything "
@@ -125,11 +131,32 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("3. The screen");
             painter.Paragraph(
                 "Create a screen module in the zScreenModules of the module that owns the objects, "
-                + "on Layer_3 or Layer_4. Those two layers sit under a canvas of their own inside "
-                + "the ScreenManager, so indicators moving every frame never rebuild the HUD's "
-                + "canvas.");
+                + "on a layer set aside for UI that moves - Layer_3 or Layer_4 in the setup below.");
 
-            painter.SubHeading("4. The layer and the indicator");
+            painter.SubHeading("4. The ScreenManager (recommended)");
+            painter.Paragraph(
+                "In the scene, select Layer_3 and Layer_4 under the ScreenManager and add a Canvas "
+                + "and a Graphic Raycaster to each. Leave Override Sorting off, so the layers still "
+                + "draw in hierarchy order.");
+            painter.Image(_images.Get("WorldPointerScreenManagerHierarchy.png"),
+                "The ScreenManager in WorldPointerTestScene: Layer_3 selected.");
+            painter.Image(_images.Get("WorldPointerLayerInspector.png"),
+                "Layer_3 with the Canvas and the Graphic Raycaster added as overrides of the scene's instance.");
+            painter.Paragraph(
+                "Why: a canvas rebuilds all of its geometry whenever anything under it moves. "
+                + "Indicators move every frame, so on the ScreenManager's one canvas they would "
+                + "rebuild the HUD and every other screen with them, every frame. A layer with a "
+                + "canvas of its own rebuilds only itself.");
+            painter.Paragraph(
+                "The shipped ScreenManager prefab is left as it is: the canvases are overrides on "
+                + "the scene's instance, and which layers get one is the game's decision - a game "
+                + "may give Layer_5 a canvas too, or use other layers entirely.");
+            painter.Note(
+                "Important: a layer's Canvas needs its own Graphic Raycaster. The ScreenManager's "
+                + "raycaster does not reach into a nested canvas, so every button on that layer "
+                + "stops taking clicks, and nothing reports it.");
+
+            painter.SubHeading("5. The layer and the indicator");
             painter.Paragraph(
                 "Derive one line of class for each: EmoteLayer : WorldPointerLayer<EmoteVO> goes on "
                 + "an object in the screen's prefab, EmoteIndicator : WorldPointerIndicator<EmoteVO> "
@@ -150,7 +177,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Important: a layer whose prefab does not show its content type is reported the "
                 + "first time it is asked for an indicator, and nothing is drawn.");
 
-            painter.SubHeading("5. The id and the content");
+            painter.SubHeading("6. The id and the content");
             painter.Paragraph(
                 "Both go in the Shared assembly of the module that owns the objects - a const "
                 + "string and a [Serializable] value object. Its screen module reads them there, "
@@ -227,15 +254,19 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawModes(HelpPainter painter)
         {
-            painter.Code(
-                "OffScreenMode.Hide          Hidden outside the frame or behind the camera; placed only while InFrame\n"
-                + "OffScreenMode.ClampToEdge   never Hidden; OnEdge outside the frame, on the ray from the frame's centre\n"
-                + "OffScreenMode.Ignore        placed wherever the projection lands; told InFrame once and never again");
+            painter.Table(new[] {"OffScreenMode", "Outside the frame", "States it is told"},
+                new[] {"Hide", "Hidden, and behind the camera too; placed only while InFrame", "Hidden, InFrame"},
+                new[] {"ClampToEdge", "pinned to the edge, on the ray from the frame's centre", "OnEdge, InFrame - never Hidden"},
+                new[] {"Ignore", "placed wherever the projection lands", "InFrame once, and never again"});
 
             painter.Paragraph(
                 "The mode and the rest of the options belong to the display, in the layer's "
                 + "CD_WorldPointerOptions preset. Two ids drawn differently are two layers with two "
                 + "presets.");
+            painter.Image(_images.Get("WorldPointerModes.png"),
+                "The three modes in WorldPointerTestScene: Cube_InFrame in Hide (green), Cube_Behind in "
+                + "Ignore (blue), and Cube_LeavesFrame in ClampToEdge (orange) - off to the lower right, "
+                + "so its label is pinned to the edge with the arrow aimed at it.");
 
             painter.SubHeading("Hide");
             painter.Paragraph(
@@ -253,6 +284,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "ray starts at the frame's own centre rather than the screen's, so uneven margins "
                 + "need no special case. Behind the camera the direction is flipped, so a target "
                 + "behind and to the right is pointed at on the right.");
+            painter.Image(_images.Get("WorldPointerClampToEdge.png"),
+                "Pinned to the right edge: the arrow sits outside the panel, in the panel's tint, turned "
+                + "towards the cube.");
+            painter.Note(
+                "Important: the frame is shrunk by the indicator's Rect, not by what is drawn. An arrow "
+                + "that reaches outside the Rect hangs off the screen at the edge, and nothing reports "
+                + "it. The sample's Rect is a square the arrow's whole turn fits in, with the panel a "
+                + "child at its centre.");
 
             painter.SubHeading("Ignore");
             painter.Paragraph(
