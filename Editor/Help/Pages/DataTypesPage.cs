@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System.Collections.Generic;
+using System.Linq;
 using FlowIoC.Editor.Icons;
 
 namespace FlowIoC.Editor.Help.Pages
@@ -34,6 +35,35 @@ namespace FlowIoC.Editor.Help.Pages
                 new HelpTreeNode("MapEVO", "what ED_MapTools holds"),
                 new HelpTreeNode("MapDVO", "what DD_Maps holds")));
 
+        /// <summary>
+        /// The asset file prefixes, one row per kind of file: what it is, its prefix, an example.
+        /// Exposed so a test can hold the table to the prefixes the agent rules name.
+        /// </summary>
+        public IReadOnlyList<string[]> AssetPrefixes { get; } = new[]
+        {
+            new[] {"Texture a material samples", "TX_", "TX_Rock_Normal"},
+            new[] {"Sprite, for UI and 2D alike", "SPR_", "SPR_Icon_Coin"},
+            new[] {"Material", "MT_", "MT_Rock"},
+            new[] {"Shader, Shader Graph, Sub Graph", "Shader_", "Shader_Water"},
+            new[] {"Prefab", "PB_", "PB_Coin"},
+            new[] {"Prefab variant", "PBV_", "PBV_Coin_Gold"},
+            new[] {"Mesh with no rig (FBX)", "SM_", "SM_Road_Straight"},
+            new[] {"Rigged, skinned mesh (FBX)", "RM_", "RM_Hero_Fox"},
+            new[] {"Animation clip, and an animation-only FBX", "Anim_", "Anim_Hero_Fox_Run"},
+            new[] {"Animator Controller", "Animator_", "Animator_Hero_Fox"},
+            new[] {"Animator Override Controller", "AnimOverride_", "AnimOverride_Hero_Fox_Skin"},
+            new[] {"Avatar Mask", "AvatarMask_", "AvatarMask_UpperBody"},
+            new[] {"Audio clip", "SND_", "SND_SFX_GunShot_01"},
+            new[] {"Audio Mixer", "Mixer_", "Mixer_Master"},
+            new[] {"VFX Graph", "VFX_", "VFX_Explosion"},
+            new[] {"Render Texture", "RT_", "RT_Minimap"},
+            new[] {"Sprite Atlas", "Atlas_", "Atlas_Shop"},
+            new[] {"Timeline", "Timeline_", "Timeline_Intro"},
+            new[] {"Physics Material", "PhysicsMat_", "PhysicsMat_Ice"},
+            new[] {"Volume Profile", "Volume_", "Volume_Night"},
+            new[] {"Font, and its TextMesh Pro asset", "Font_", "Font_Lexend_Bold_SDF"}
+        };
+
         private readonly HelpImages _images = new HelpImages();
 
         protected override IReadOnlyList<HelpTab> MoreTabs => new[]
@@ -45,7 +75,11 @@ namespace FlowIoC.Editor.Help.Pages
                 + "through ISharedDataModel."),
             new HelpTab("Rules", DrawRules,
                 "The rules, in one list.",
-                "Which prefix a type takes, and which of the two folders it belongs in.")
+                "Which prefix a type takes, and which of the two folders it belongs in."),
+            new HelpTab("Asset Files", DrawAssetFiles,
+                "Every other asset a project makes carries a prefix too.",
+                "A texture, a sprite, a material, a prefab, a mesh, a sound. The prefix says what "
+                + "the file is, never where it is used.")
         };
 
         protected override string BodyHeadline => "A name says which kind of data it is before the file is opened.";
@@ -295,6 +329,49 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Note(
                 "Which prefixes and suffixes are legal is declared in <Solution>.sln.DotSettings, "
                 + "written by Tools > FlowIoC > Module Scanner.");
+        }
+
+        private void DrawAssetFiles(HelpPainter painter)
+        {
+            painter.Rule("The prefix says what the file is, never where it is used.");
+            painter.Paragraph(
+                "A type a project holds many of takes a two or three letter abbreviation. A rare "
+                + "type, or one whose abbreviation would not read, takes the whole word. No prefix "
+                + "is a single letter.");
+
+            painter.Space();
+            painter.Table(new[] {"Asset", "Prefix", "Example"}, AssetPrefixes.ToArray());
+
+            painter.Separator();
+            painter.SubHeading("After the prefix");
+            painter.Bullet("A category is the second token: SND_Music_Combat_01, SND_SFX_GunShot_01, SND_UI_Click_01.");
+            painter.Bullet("A particle effect is a prefab, so it is PB_FX_TorchFire. FX is its category, not its prefix.");
+            painter.Bullet("A variant number has two digits: _01, _02.");
+
+            painter.Separator();
+            painter.SubHeading("What goes wrong");
+            painter.Bullet("T_, M_, S_, P_. No prefix is a single letter - TX_, MT_, Shader_, PB_.");
+            painter.Bullet(
+                "AC_ on an audio clip and on an animator controller. The two collide; an audio clip is "
+                + "SND_ and an animator controller Animator_.");
+            painter.Bullet(
+                "UI_ or IMG_ on a sprite. A sprite and a texture are told apart by their import, so a "
+                + "2D game's character art is SPR_ although it is not UI.");
+            painter.Bullet(
+                "SM_ because the mesh is static in the scene. Static is a flag in one scene; SM_ means "
+                + "the FBX has no rig and RM_ that it has one.");
+            painter.Bullet("A material named after its shader. MT_Grass is named after what it dresses.");
+            painter.Bullet("A prefab variant unpacked or made a base prefab keeps PBV_. Rename it with the change.");
+
+            painter.Separator();
+            painter.SubHeading("What keeps its own name");
+            painter.Bullet("A prefab named after the class it carries - GameplaySystemRoot, a screen's prefab.");
+            painter.Bullet("A scene, which keeps the <Name>Scene that Create Module writes.");
+
+            painter.Space();
+            painter.Note(
+                "A vendor package's assets are never renamed. The next update brings the old names "
+                + "back, and every reference to the renamed copy breaks.");
         }
     }
 }

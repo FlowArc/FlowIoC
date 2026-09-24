@@ -1,6 +1,6 @@
 ---
 name: flowioc-data-types
-description: Use when adding or naming data in a FlowIoC Unity project - a ScriptableObject data asset, a serializable value object, saved player state, downloaded backend data, editor-only settings - when unsure whether a class should be CD_/RD_/PD_/ED_/DD_ or carry a VO/CVO/RVO/PVO/EVO/DVO suffix, or when one module needs to read a ScriptableObject another module filed as shared.
+description: Use when adding or naming data in a FlowIoC Unity project - a ScriptableObject data asset, a serializable value object, saved player state, downloaded backend data, editor-only settings - when unsure whether a class should be CD_/RD_/PD_/ED_/DD_ or carry a VO/CVO/RVO/PVO/EVO/DVO suffix, or when one module needs to read a ScriptableObject another module filed as shared. Also when naming an asset file - a texture, sprite, material, shader, prefab, mesh or FBX, audio clip, animation - and choosing its prefix.
 ---
 
 # FlowIoC Data Types
@@ -135,6 +135,55 @@ in `PostConstruct`, and a Command asks the Model; a Command never reaches for th
 *Tools ▸ FlowIoC ▸ Wiki ▸ Data Types ▸ Root Adapter* shows all four slots with the Model and the
 Command that read each.
 
+## Asset files
+
+Every asset file a project makes carries a prefix that says what the file **is** - never where it
+is used, and never how a scene flags it. A mesh that is marked static in one scene and moved in
+another is still one mesh.
+
+No prefix is a single letter. A type a project holds many of takes a two or three letter
+abbreviation; a rare type, or one whose abbreviation would not read, takes the whole word.
+
+| Asset | Prefix | Example |
+|---|---|---|
+| Texture a material samples (png, tga, jpg, exr, psd) | `TX_` | `TX_Rock_Normal` |
+| Sprite - Texture Type *Sprite*, for UI and 2D alike | `SPR_` | `SPR_Icon_Coin` |
+| Material | `MT_` | `MT_Rock` |
+| Shader, Shader Graph, Sub Graph | `Shader_` | `Shader_Water` |
+| Prefab | `PB_` | `PB_Coin` |
+| Prefab variant | `PBV_` | `PBV_Coin_Gold` |
+| Mesh with no rig (FBX) | `SM_` | `SM_Road_Straight` |
+| Rigged, skinned mesh (FBX) | `RM_` | `RM_Hero_Fox` |
+| Animation clip, and an FBX that carries only animation | `Anim_` | `Anim_Hero_Fox_Run` |
+| Animator Controller | `Animator_` | `Animator_Hero_Fox` |
+| Animator Override Controller | `AnimOverride_` | `AnimOverride_Hero_Fox_Skin` |
+| Avatar Mask | `AvatarMask_` | `AvatarMask_UpperBody` |
+| Audio clip | `SND_` | `SND_SFX_GunShot_01` |
+| Audio Mixer | `Mixer_` | `Mixer_Master` |
+| VFX Graph | `VFX_` | `VFX_Explosion` |
+| Render Texture | `RT_` | `RT_Minimap` |
+| Sprite Atlas | `Atlas_` | `Atlas_Shop` |
+| Timeline | `Timeline_` | `Timeline_Intro` |
+| Physics Material | `PhysicsMat_` | `PhysicsMat_Ice` |
+| Volume Profile | `Volume_` | `Volume_Night` |
+| Font, and its TextMesh Pro asset | `Font_` | `Font_Lexend_Bold`, `Font_Lexend_Bold_SDF` |
+| ScriptableObject data | `CD_` `RD_` `PD_` `ED_` `DD_` | the table at the top of this skill |
+
+- **A category is the second token**: `SND_Music_Combat_01`, `SND_SFX_GunShot_01`, `SND_UI_Click_01`.
+  A particle effect is a prefab, so it is `PB_FX_TorchFire` - `FX` is its category, not its prefix.
+- **A variant number has two digits**: `_01`, `_02`.
+- **A material is named after what it dresses**, not after its shader: `MT_Grass`, never
+  `Shader_Grass` on a `.mat`.
+- **A sprite and a texture are told apart by the import**, not by where they are shown. A 2D
+  game's character art is a sprite even though it is not UI.
+- **A prefab variant that is unpacked or made a base prefab** loses the `V` - rename it with the
+  change.
+- **A prefab named after the class it carries keeps the class name**: `GameplaySystemRoot.prefab`,
+  a screen's prefab. The prefix is for content, not for the prefabs FlowIoC's generators write.
+- **A scene keeps `<Name>Scene`**, the name Create Module writes.
+- **A vendor package's assets are never renamed.** The next update brings the old names back and
+  every reference to the renamed copy breaks.
+
 ## Common Mistakes
 
 | Mistake | Why it is wrong |
@@ -146,6 +195,10 @@ Command that read each.
 | A new `.cs` file dropped anywhere | Data lives in `Data/UnityObjects/` or `Data/ValueObjects/`; the generators and namespace tools depend on it. |
 | The same `RD_` asset dragged onto every reader's adapter | It works while the producer is in the scene and reads an asset nobody fills when it is not, and nothing reports it. File it once, in one Root's Shared Scriptables, and read it through `ISharedDataModel`. |
 | Reading a shared asset from the reader's own `RootAdapter` | The adapter is the module's own map. Another module's asset comes through `ISharedDataModel`, which reports an asset nobody filed. |
+| `T_`, `M_`, `S_`, `P_` on an asset file | No prefix is a single letter. It is `TX_`, `MT_`, `Shader_`, `PB_`. |
+| `AC_` on an audio clip or an animator controller | The two collide on the same letters. An audio clip is `SND_`, an animator controller `Animator_`. |
+| `UI_` or `IMG_` on a sprite | The prefix says what the file is, not where it is shown. A sprite is `SPR_` in UI and in the world. |
+| `SM_` because the mesh is static in the scene | Static is a flag in one scene. `SM_` means the FBX has no rig, `RM_` that it has one. |
 
 ## Related
 

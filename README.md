@@ -1474,7 +1474,7 @@ while FlowIoC is installed, and names the check and the folder to delete if it i
 | `flowioc-connectors` | The one place two modules meet: getting the holders rather than binding them, wiring by direction, and what a Connector may not decide. |
 | `flowioc-systems-services` | Which of the three kinds a module is, when work earns a Service of its own, giving a System a surface, and where a piece of data belongs. |
 | `flowioc-root-order` | Where a Root sits in the scene, what its Initialize Order decides and what it does not, and reading a null holder or a Connector that wired nothing. |
-| `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, and which folder each kind belongs in. |
+| `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, which folder each kind belongs in, and the prefix an asset file takes. |
 
 The skills ship in `Documentation~/Skills/`.
 
@@ -1811,6 +1811,37 @@ Which prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings
 *Tools ▸ FlowIoC ▸ Module Scanner*. What each one means is the
 table above, and the agent rules carry a short version of it so an AI assistant names data the
 same way.
+
+### Asset files
+
+The same idea reaches every other asset a project makes: the prefix on a file says what the file
+**is**, never where it is used. A type a project holds many of takes a two or three letter
+abbreviation, a rare one - or one whose abbreviation would not read - takes the whole word, and no
+prefix is a single letter.
+
+| Asset | Prefix | Example |
+|---|---|---|
+| Texture a material samples | `TX_` | `TX_Rock_Normal` |
+| Sprite, for UI and 2D alike | `SPR_` | `SPR_Icon_Coin` |
+| Material | `MT_` | `MT_Rock` |
+| Shader, Shader Graph, Sub Graph | `Shader_` | `Shader_Water` |
+| Prefab / prefab variant | `PB_` / `PBV_` | `PB_Coin`, `PBV_Coin_Gold` |
+| Mesh with no rig / rigged mesh (FBX) | `SM_` / `RM_` | `SM_Road_Straight`, `RM_Hero_Fox` |
+| Animation clip, and an animation-only FBX | `Anim_` | `Anim_Hero_Fox_Run` |
+| Animator Controller / Override Controller / Avatar Mask | `Animator_` / `AnimOverride_` / `AvatarMask_` | `Animator_Hero_Fox` |
+| Audio clip / Audio Mixer | `SND_` / `Mixer_` | `SND_SFX_GunShot_01`, `Mixer_Master` |
+| VFX Graph / Render Texture / Sprite Atlas | `VFX_` / `RT_` / `Atlas_` | `VFX_Explosion`, `RT_Minimap`, `Atlas_Shop` |
+| Timeline / Physics Material / Volume Profile | `Timeline_` / `PhysicsMat_` / `Volume_` | `Timeline_Intro`, `PhysicsMat_Ice`, `Volume_Night` |
+| Font, and its TextMesh Pro asset | `Font_` | `Font_Lexend_Bold`, `Font_Lexend_Bold_SDF` |
+
+A category is the second token and a variant number has two digits - `SND_Music_Combat_01`,
+`PB_FX_TorchFire`. A material is named after what it dresses, not after its shader. A sprite and a
+texture are told apart by their import, so a 2D game's character art is `SPR_` although it is not
+UI, and a mesh is `SM_` because it has no rig, not because a scene marks it static.
+
+Three things keep their own names: a prefab named after the class it carries, such as
+`GameplaySystemRoot.prefab`; a scene, which keeps the `<Name>Scene` Create Module writes; and the
+assets of a vendor package, which the next update would bring back under the old names.
 
 ---
 

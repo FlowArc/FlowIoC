@@ -295,6 +295,15 @@ the plain `[Serializable]` classes those assets are built out of, suffixed to ma
 A plain `MapVO` is the right name when the data belongs to no one kind in particular. Which
 prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`.
 
+**An asset file carries a prefix that says what the file is**, never where it is used: `TX_` a
+texture a material samples, `SPR_` a sprite, `MT_` a material, `Shader_`, `PB_` and `PBV_` a prefab
+and its variant, `SM_` a mesh with no rig and `RM_` a rigged one, `SND_` an audio clip, `Anim_` an
+animation clip. No prefix is a single letter: a type a project holds many of takes two or three, and
+a rare one, or one whose short form does not read, takes the whole word. A category is the second
+token and a variant number has two digits - `SND_SFX_GunShot_01`, `PB_FX_TorchFire`. A prefab named
+after the class it carries keeps the class name, a scene keeps `<Name>Scene`, and a vendor package's
+assets are never renamed. The whole table is in the data types skill.
+
 ### Naming
 
 | Thing | Name |
@@ -524,7 +533,7 @@ and the reasons this block leaves out. Read the one that covers the work in fron
 | Wiring two modules - a Connector sub-context, a signal that never arrives | `flowioc-connectors` |
 | A System or a Service - which of the two, sub systems, what a Service announces | `flowioc-systems-services` |
 | Where a Root sits, its Initialize Order, making it persistent, what its context takes back | `flowioc-root-order` |
-| Naming a ScriptableObject or a value object, and which prefix it takes | `flowioc-data-types` |
+| Naming a ScriptableObject, a value object or an asset file, and which prefix it takes | `flowioc-data-types` |
 
 The editor tooling explains itself in **Tools ▸ FlowIoC ▸ Wiki ▸ Editor Tools**: what each panel decides on your
 behalf, and the setup steps that fail silently when skipped.

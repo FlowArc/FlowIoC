@@ -57,7 +57,8 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "afford to be longer. One folder per skill, under .claude/skills.");
             painter.Bullet(
                 "flowioc-data-types - the CD_, RD_, PD_, ED_ and DD_ prefixes, the VO suffix family "
-                + "that goes with them, and which folder each kind belongs in.");
+                + "that goes with them, which folder each kind belongs in, and the prefix an asset file "
+                + "takes.");
             painter.Bullet(
                 "flowioc-scaffolding - which menu item lays a module out and what to tick in it, "
                 + "why the optional folders matter, where the .csproj.DotSettings files land, and "
