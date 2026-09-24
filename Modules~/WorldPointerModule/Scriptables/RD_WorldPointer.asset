@@ -12,7 +12,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edb4b29e692d41649b99950945b3deff, type: 3}
   m_Name: RD_WorldPointer
   m_EditorClassIdentifier: Modules.WorldPointer::Modules.WorldPointerModule.Data.UnityObjects.RD_WorldPointer
-  _channels: []
+  _channels:
+  - Id: SampleHide
+    Display: SampleLabelLayer on Layer_Hide
+    Targets:
+    - {Target: {fileID: 0}, Visible: 1, Shown: 1, State: 1, ContentText: Over here, Content:
+        rid: 2186214499748675711
+}
+  - Id: SampleClamp
+    Display: SampleLabelLayer on Layer_Clamp
+    Targets:
+    - {Target: {fileID: 0}, Visible: 1, Shown: 1, State: 2, ContentText: Wave!, Content:
+        rid: 2186214499748675712
+}
+  - Id: SampleIgnore
+    Display: SampleLabelLayer on Layer_Ignore
+    Targets:
+    - {Target: {fileID: 0}, Visible: 1, Shown: 1, State: 1, ContentText: Hmm, Content:
+        rid: 2186214499748675713
+}
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2186214499748675711
+      type: {class: WorldPointerSampleVO, ns: Modules.WorldPointerModule.WorldPointerSampleScreenModule.Shared.Data.ValueObjects, asm: Modules.WorldPointerSample.Screen.Shared}
+      data:
+        Text: Over here
+        Colour:
+          r: 0.35999995
+          g: 0.5404159
+          b: 0.9
+          a: 1
+    - rid: 2186214499748675712
+      type: {class: WorldPointerSampleVO, ns: Modules.WorldPointerModule.WorldPointerSampleScreenModule.Shared.Data.ValueObjects, asm: Modules.WorldPointerSample.Screen.Shared}
+      data:
+        Text: Wave!
+        Colour:
+          r: 0.6941235
+          g: 0.9
+          b: 0.35999995
+          a: 1
+    - rid: 2186214499748675713
+      type: {class: WorldPointerSampleVO, ns: Modules.WorldPointerModule.WorldPointerSampleScreenModule.Shared.Data.ValueObjects, asm: Modules.WorldPointerSample.Screen.Shared}
+      data:
+        Text: Hmm
+        Colour:
+          r: 0.35999995
+          g: 0.9
+          b: 0.51623815
+          a: 1

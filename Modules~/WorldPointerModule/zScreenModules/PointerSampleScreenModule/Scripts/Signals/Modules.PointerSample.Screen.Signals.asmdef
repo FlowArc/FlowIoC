@@ -1,0 +1,16 @@
+{
+  "name": "Modules.PointerSample.Screen.Signals",
+  "references": [
+    "FlowIoC",
+    "Modules.PointerSample.Screen.Shared"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -120,8 +120,9 @@ namespace FlowIoC.Editor.ModuleInstall
                 File.Delete(target + META);
         }
 
+        /// <summary>Through LongPath: the shipped side is read out of the package cache, often past 260 characters.</summary>
         private static string Full(string root, string relative) =>
-            Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
+            new LongPath().Of(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
     }
 }
 

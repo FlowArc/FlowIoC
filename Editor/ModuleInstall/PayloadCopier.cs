@@ -17,7 +17,15 @@ namespace FlowIoC.Editor.ModuleInstall
         private const string META = ".meta";
         private const string FOLDER_MARK = "folderAsset: yes";
 
-        internal void CopyTree(string source, string target)
+        private readonly LongPath _longPath = new();
+
+        /// <summary>
+        /// Both ends go through LongPath first: the payload is read out of the package cache, and a
+        /// screen's test module there sits past 260 characters in an ordinary project.
+        /// </summary>
+        internal void CopyTree(string source, string target) => CopyPrefixed(_longPath.Of(source), _longPath.Of(target));
+
+        private void CopyPrefixed(string source, string target)
         {
             Directory.CreateDirectory(target);
 
@@ -31,7 +39,7 @@ namespace FlowIoC.Editor.ModuleInstall
             }
 
             foreach (string directory in Directory.GetDirectories(source))
-                CopyTree(directory, Path.Combine(target, Path.GetFileName(directory)));
+                CopyPrefixed(directory, Path.Combine(target, Path.GetFileName(directory)));
         }
 
         /// <summary>

@@ -3,8 +3,10 @@
   "references": [
     "FlowIoC",
     "Modules.WorldPointer",
-    "Modules.WorldPointerSample.Screen",
-    "Modules.WorldPointerSample.Screen.Shared"
+    "Modules.PointerSample.Screen",
+    "Modules.PointerSample.Screen.Shared",
+    "Modules.PointerControls.Screen",
+    "Modules.PointerControls.Screen.Signals"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

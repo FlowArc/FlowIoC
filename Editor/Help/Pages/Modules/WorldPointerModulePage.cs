@@ -97,9 +97,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives "
                 + "with it. Open WorldPointerTestScene under the test module's Scenes folder and "
-                + "press Play: the camera orbits three cubes, the sample screen opens on Layer_3, "
-                + "and Register points at each cube in one mode - hide, clamp with an arrow, "
-                + "ignore. Change content, Hide and Close screen show the waiting and the replay.");
+                + "press Play: the camera orbits three cubes, the sample screen opens on Layer_3 and "
+                + "a screen of buttons on Layer_5, and Register points at each cube in one mode - "
+                + "hide, clamp with an arrow, ignore. Change content, Hidden and Close / open screen "
+                + "show the waiting and the replay. The scene has no canvas of its own: everything "
+                + "it shows opens through the ScreenManager.");
         }
 
         private void DrawSetup(HelpPainter painter)
@@ -246,6 +248,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "A wave gathering at a gate the player cannot see: the indicator stays visible, "
                 + "pinned to the frame's edge where the ray from the frame's centre towards the "
                 + "target leaves it, and the arrow pivot's local up is turned along that ray. The "
+                + "frame is first shrunk by the indicator's own half size, so the whole of it stays "
+                + "on screen at the edge rather than half of it hanging off. The "
                 + "ray starts at the frame's own centre rather than the screen's, so uneven margins "
                 + "need no special case. Behind the camera the direction is flipped, so a target "
                 + "behind and to the right is pointed at on the right.");

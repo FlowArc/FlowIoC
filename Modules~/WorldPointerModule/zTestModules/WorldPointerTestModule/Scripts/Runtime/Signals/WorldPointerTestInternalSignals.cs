@@ -11,8 +11,8 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Signals
     /// </summary>
     public class WorldPointerTestInternalSignals : ISignalHolder
     {
-        /// <summary>Open the sample screen - the displays - once the scene is up.</summary>
-        public Signal OpenSampleScreen = new();
+        /// <summary>Open the sample screen - the displays - and the controls screen once the scene is up.</summary>
+        public Signal OpenScreens = new();
 
         /// <summary>Close the sample screen when it is open, open it when it is not.</summary>
         public Signal ToggleSampleScreen = new();

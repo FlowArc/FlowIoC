@@ -26,6 +26,7 @@ namespace Modules.WorldPointerModule.Services
 
         private readonly List<Target> _targets = new();
         private readonly Dictionary<string, WorldPointerDisplaySlot> _displays = new();
+        private readonly Vector3[] _corners = new Vector3[4];
         private Camera _camera;
 
         public bool IsPostConstructed { get; set; }
@@ -267,9 +268,11 @@ namespace Modules.WorldPointerModule.Services
         /// The design's frame step. Behind the camera Unity's projection is mirrored through the
         /// centre, so it is mirrored back before anything reads it; the arrow is turned with a
         /// local rotation, which is right in both canvas modes where a world-space up is not.
+        /// A clamped indicator is judged against the frame shrunk by its own half size on screen,
+        /// so the whole of it stays visible at the edge rather than half of it hanging off.
         /// True when the indicator was told a new state.
         /// </summary>
-        private static bool Step(Target entry, Camera camera, float deltaTime)
+        private bool Step(Target entry, Camera camera, float deltaTime)
         {
             WorldPointerOptionsCVO options = entry.Slot.Options;
 
@@ -278,6 +281,7 @@ namespace Modules.WorldPointerModule.Services
             Vector2 point = (Vector2) screen + options.ScreenOffset;
 
             var frame = new WorldPointerFrame(camera.pixelRect, options.ScreenMargins);
+            if (options.OffScreen == OffScreenMode.ClampToEdge) frame = frame.Inset(HalfSizeOnScreen(entry));
             if (behind) point = frame.Centre - (point - frame.Centre);
 
             bool inside = !behind && frame.Contains(point);
@@ -315,6 +319,27 @@ namespace Modules.WorldPointerModule.Services
 
             if (place) Place(entry, point, options.SmoothSpeed, deltaTime);
             return Report(entry, state);
+        }
+
+        /// <summary>
+        /// Half the indicator's width and height in screen pixels, from its corners - so a canvas
+        /// scaler, a scaled parent and both canvas modes all come out right.
+        /// </summary>
+        private Vector2 HalfSizeOnScreen(Target entry)
+        {
+            entry.Indicator.Rect.GetWorldCorners(_corners);
+
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(entry.CanvasCamera, _corners[0]);
+            Vector2 max = min;
+
+            for (int i = 1; i < _corners.Length; i++)
+            {
+                Vector2 corner = RectTransformUtility.WorldToScreenPoint(entry.CanvasCamera, _corners[i]);
+                min = Vector2.Min(min, corner);
+                max = Vector2.Max(max, corner);
+            }
+
+            return (max - min) * 0.5f;
         }
 
         /// <summary>Local up along the direction: atan2 gives the angle of +x, and up is a quarter turn on.</summary>

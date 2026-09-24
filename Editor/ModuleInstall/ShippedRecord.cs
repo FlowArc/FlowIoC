@@ -98,7 +98,7 @@ namespace FlowIoC.Editor.ModuleInstall
         /// <summary>The hash of one file under the rules above, or null when it is not there.</summary>
         internal string HashOf(string moduleFolder, string relativePath)
         {
-            string path = Path.Combine(moduleFolder, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            string path = new LongPath().Of(Path.Combine(moduleFolder, relativePath.Replace('/', Path.DirectorySeparatorChar)));
 
             if (!File.Exists(path))
                 return null;
@@ -114,6 +114,10 @@ namespace FlowIoC.Editor.ModuleInstall
         private static IReadOnlyList<string> Under(string root, Func<string, bool> keep)
         {
             var found = new List<string>();
+
+            // Prefixed, so a file past 260 characters is listed and its relative path is still
+            // the tail past the root's length.
+            root = new LongPath().Of(root);
 
             if (!Directory.Exists(root))
                 return found;

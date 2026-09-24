@@ -4,7 +4,7 @@ using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Service;
-using Modules.WorldPointerModule.WorldPointerSampleScreenModule.ViewsMediators;
+using Modules.WorldPointerModule.PointerSampleScreenModule.ViewsMediators;
 
 namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 {
@@ -19,9 +19,9 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 
         public override async void Execute()
         {
-            if (_screenService.Check.IsScreenActive<WorldPointerSampleScreenView>())
+            if (_screenService.Check.IsScreenActive<PointerSampleScreenView>())
             {
-                _screenService.Hide.Screen<WorldPointerSampleScreenView>();
+                _screenService.Hide.Screen<PointerSampleScreenView>();
                 return;
             }
 
@@ -29,7 +29,7 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 
             try
             {
-                var screen = await _screenService.Open<WorldPointerSampleScreenView>().Show<WorldPointerSampleScreenView>();
+                var screen = await _screenService.Open<PointerSampleScreenView>().Show<PointerSampleScreenView>();
 
                 if (screen == null)
                 {

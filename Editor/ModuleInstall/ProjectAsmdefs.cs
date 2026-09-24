@@ -65,7 +65,11 @@ namespace FlowIoC.Editor.ModuleInstall
         private Dictionary<string, string> Walk()
         {
             var folders = new Dictionary<string, string>(StringComparer.Ordinal);
-            string assets = Path.Combine(ProjectRoot, "Assets");
+            var longPath = new LongPath();
+
+            // Walked prefixed, so a folder past 260 characters - a screen's test module - is not
+            // skipped; the folders handed back are plain paths again.
+            string assets = longPath.Of(Path.Combine(ProjectRoot, "Assets"));
 
             if (!Directory.Exists(assets))
                 return folders;
@@ -77,7 +81,7 @@ namespace FlowIoC.Editor.ModuleInstall
                 // The first folder declaring a name answers, the way the walk answered before it
                 // was kept; a second declaration is the compile error Unity already reports.
                 if (name != null && !folders.ContainsKey(name))
-                    folders[name] = Path.GetDirectoryName(asmdef);
+                    folders[name] = longPath.Strip(Path.GetDirectoryName(asmdef));
             }
 
             return folders;

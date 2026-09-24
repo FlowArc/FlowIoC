@@ -2,7 +2,7 @@
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using Modules.WorldPointerModule.Services;
-using Modules.WorldPointerModule.WorldPointerSampleScreenModule.Shared.Constants;
+using Modules.WorldPointerModule.PointerSampleScreenModule.Shared.Constants;
 using UnityEngine;
 
 namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers

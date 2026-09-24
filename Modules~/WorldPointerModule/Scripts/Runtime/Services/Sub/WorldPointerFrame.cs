@@ -24,6 +24,21 @@ namespace Modules.WorldPointerModule.Services.Sub
                     pixelRect.yMax - margins.top);
         }
 
+        private WorldPointerFrame(Rect rect) => Rect = rect;
+
+        /// <summary>
+        /// The frame shrunk by <paramref name="halfExtents"/> on every side - where an element of
+        /// that size can sit with none of it outside. An element wider than the frame collapses
+        /// that axis onto the centre rather than turning the rect inside out.
+        /// </summary>
+        public WorldPointerFrame Inset(Vector2 halfExtents)
+        {
+            float x = Mathf.Min(Mathf.Max(0f, halfExtents.x), Rect.width * 0.5f);
+            float y = Mathf.Min(Mathf.Max(0f, halfExtents.y), Rect.height * 0.5f);
+
+            return new WorldPointerFrame(Rect.MinMaxRect(Rect.xMin + x, Rect.yMin + y, Rect.xMax - x, Rect.yMax - y));
+        }
+
         public bool Contains(Vector2 point) => Rect.Contains(point);
 
         /// <summary>

@@ -34,7 +34,9 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.RootsContexts
         {
             base.CommandBindings();
 
-            CommandBinder.Bind(_signals.OpenSampleScreen).ToSequence<ToggleSampleScreenCommand>();
+            CommandBinder.Bind(_signals.OpenScreens)
+                .ToSequence<ToggleSampleScreenCommand>()
+                .ToSequence<OpenControlsScreenCommand>();
             CommandBinder.Bind(_signals.ToggleSampleScreen).ToSequence<ToggleSampleScreenCommand>();
             CommandBinder.Bind(_signals.RegisterPointers).ToSequence<RegisterTestPointersCommand>();
             CommandBinder.Bind(_signals.ChangeContent).ToSequence<ChangeTestContentCommand>();
@@ -46,7 +48,7 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.RootsContexts
         {
             base.Launch();
 
-            _signals.OpenSampleScreen.Dispatch();
+            _signals.OpenScreens.Dispatch();
         }
     }
 }
