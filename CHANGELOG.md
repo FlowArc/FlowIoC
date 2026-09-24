@@ -5,6 +5,32 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.0] - 2026-09-24
+
+### Added
+
+- **Audio is a ready-made module.** Effects, music with crossfade and 3D sound from banks the
+  playing modules own, and the player's music and sound settings.
+- **A module panel's list can be dragged wider**, and keeps its width.
+- **An overlay canvas exists only through the ScreenManager** - a new rule in the agent rules, the
+  README and the Help window.
+- **`Layer_3` and `Layer_4` of the ScreenManager have a canvas of their own**, for UI that moves
+  every frame.
+
+### Changed
+
+- **WorldPointer 1.1.1: UI over the world is drawn by a screen.** The world side registers a
+  Transform under an id and sends requests; a screen registers as that id's display.
+  `Register(target, indicator)` is gone. `RD_WorldPointer` shows what is registered, and a clamped
+  indicator stays whole on screen.
+
+### Fixed
+
+- **Create Module no longer makes a Resource screen addressable**, and saves its prefab under
+  Resources.
+- **Installing or updating a module reaches files past Windows' 260 characters.**
+- **The data types docs no longer show `GetMonoBehaviour<Canvas>`**, which does not compile.
+
 ## [1.22.5] - 2026-09-24
 
 ### Added
