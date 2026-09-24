@@ -5,6 +5,22 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **WorldPointer 1.2.0: indicators come from the FlowIoC pool.** `WorldPointerLayer` is gone; a
+  screen registers a `WorldPointerPoolDisplay` built from the pool, an item key and a
+  RectTransform, and `WorldPointerIndicator` is a `PoolableItem`.
+- **WorldPointer's targets are found in one step** by channel and Transform, and
+  `RD_WorldPointer` is written in place instead of rebuilt on every change.
+- **WorldPointer's registers return nothing.** A refused call is an error naming its line;
+  `UnregisterDisplay` takes the channel.
+
+### Removed
+
+- **WorldPointer's two screen test scenes.** Both screens are seen in `WorldPointerTestScene`.
+
 ## [1.23.1] - 2026-09-24
 
 ### Changed

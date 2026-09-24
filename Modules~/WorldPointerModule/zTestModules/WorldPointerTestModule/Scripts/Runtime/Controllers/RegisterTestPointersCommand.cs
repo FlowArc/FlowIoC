@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 {
     /// <summary>
-    /// Registers each cube under the id at the same index and sends it a first label, after
+    /// Registers each cube on the channel at the same index and sends it a first label, after
     /// clearing whatever the service held. The world side stops there: whether the sample screen
     /// is open to draw them is not its business, and a label sent while it is closed is shown
     /// when it opens.
@@ -33,9 +33,10 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 
             for (int i = 0; i < _targets.Length && i < Ids.Length; i++)
             {
-                if (!_worldPointerService.RegisterTarget(Ids[i], _targets[i]))
+                if (_targets[i] == null)
                     continue;
 
+                _worldPointerService.RegisterTarget(Ids[i], _targets[i]);
                 _worldPointerService.SetContent(Ids[i], _targets[i], new WorldPointerSampleVO {Text = _targets[i].name, Colour = Colours[i]});
                 count++;
             }

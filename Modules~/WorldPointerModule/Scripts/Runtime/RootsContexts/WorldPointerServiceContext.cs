@@ -15,7 +15,7 @@ namespace Modules.WorldPointerModule.RootsContexts
         {
             base.InjectionBindings();
 
-            // The status asset stays inside the module; only the service crosses.
+            // The registry stays inside the module; only the service crosses.
             InjectionBinder.Bind<IWorldPointerModel, WorldPointerModel>();
 
             // The one type other modules reference directly, which is what makes this a Service.

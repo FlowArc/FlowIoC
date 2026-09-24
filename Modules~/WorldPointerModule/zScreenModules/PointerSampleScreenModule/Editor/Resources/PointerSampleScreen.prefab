@@ -9,9 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8350775197092629922}
-  - component: {fileID: 4323160718331532330}
   m_Layer: 0
-  m_Name: Layer_Ignore
+  m_Name: Pointers_Ignore
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36,21 +35,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &4323160718331532330
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 406295240062416077}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d837435fe42ef84d84f13e715fa4607, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Modules.WorldPointerSample.Screen::Modules.WorldPointerModule.WorldPointerSampleScreenModule.Entities.SampleLabelLayer
-  _prefab: {fileID: 4128684261628426407, guid: 185591ed8bc3c624081403735b463da0, type: 3}
-  _parent: {fileID: 0}
-  _options: {fileID: 11400000, guid: 122771c34573d424198c52338bb16e10, type: 2}
 --- !u!1 &436217820907510165
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,9 +107,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caac4223651b6bd499200fc6a9e65b51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Modules.WorldPointerSample.Screen::Modules.WorldPointerModule.WorldPointerSampleScreenModule.ViewsMediators.WorldPointerSampleScreenView
-  _hideLayer: {fileID: 7029002999082790278}
-  _clampLayer: {fileID: 6196107444798252756}
-  _ignoreLayer: {fileID: 4323160718331532330}
+  _hideParent: {fileID: 7558449306457509325}
+  _clampParent: {fileID: 6691104799492903517}
+  _ignoreParent: {fileID: 8350775197092629922}
+  _hideOptions: {fileID: 11400000, guid: 2f834e7da955b094795fca313d29337d, type: 2}
+  _clampOptions: {fileID: 11400000, guid: 35d127347b0b1a247b556a5df3b5d1fc, type: 2}
+  _ignoreOptions: {fileID: 11400000, guid: 122771c34573d424198c52338bb16e10, type: 2}
 --- !u!1 &3164015548639714790
 GameObject:
   m_ObjectHideFlags: 0
@@ -135,9 +122,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7558449306457509325}
-  - component: {fileID: 7029002999082790278}
   m_Layer: 0
-  m_Name: Layer_Hide
+  m_Name: Pointers_Hide
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -162,21 +148,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &7029002999082790278
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3164015548639714790}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d837435fe42ef84d84f13e715fa4607, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Modules.WorldPointerSample.Screen::Modules.WorldPointerModule.WorldPointerSampleScreenModule.Entities.SampleLabelLayer
-  _prefab: {fileID: 4128684261628426407, guid: 185591ed8bc3c624081403735b463da0, type: 3}
-  _parent: {fileID: 0}
-  _options: {fileID: 11400000, guid: 2f834e7da955b094795fca313d29337d, type: 2}
 --- !u!1 &4995931770882993403
 GameObject:
   m_ObjectHideFlags: 0
@@ -186,9 +157,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6691104799492903517}
-  - component: {fileID: 6196107444798252756}
   m_Layer: 0
-  m_Name: Layer_Clamp
+  m_Name: Pointers_Clamp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -213,18 +183,3 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &6196107444798252756
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4995931770882993403}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d837435fe42ef84d84f13e715fa4607, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Modules.WorldPointerSample.Screen::Modules.WorldPointerModule.WorldPointerSampleScreenModule.Entities.SampleLabelLayer
-  _prefab: {fileID: 4128684261628426407, guid: 185591ed8bc3c624081403735b463da0, type: 3}
-  _parent: {fileID: 0}
-  _options: {fileID: 11400000, guid: 35d127347b0b1a247b556a5df3b5d1fc, type: 2}

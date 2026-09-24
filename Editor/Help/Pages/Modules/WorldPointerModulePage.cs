@@ -6,8 +6,8 @@ using FlowIoC.Editor.Icons;
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
     /// <summary>
-    /// The world pointer module: the two sides that meet in it - a world object registered under
-    /// an id, a screen registered as that id's display - what happens at the edge of the frame,
+    /// The world pointer module: the two sides that meet in it - a world object registered on
+    /// a channel, a screen registered as that channel's display - what happens at the edge of the frame,
     /// and the button that puts it in the project.
     /// </summary>
     internal class WorldPointerModulePage : ModulePage
@@ -29,12 +29,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The Root carries one status asset and nothing to author. What is drawn lives in a "
                 + "screen of the module that owns the world objects."),
             new HelpTab("World side", DrawWorldSide,
-                "Register a Transform under an id and send it requests.",
+                "Register a Transform on a channel and send it requests.",
                 "The module that owns the object never sees a canvas. It says where and what, and "
                 + "whether a screen is up to draw it is not its business."),
             new HelpTab("Screen side", DrawScreenSide,
-                "Register the screen's layer as the id's display while the screen is open.",
-                "A Command registers the layer when the screen has shown and takes it away when "
+                "Register a pool display as the channel's display while the screen is open.",
+                "A Command registers the display when the screen has shown and takes it away when "
                 + "the screen hides, because a Mediator may inject nothing but its View."),
             new HelpTab("Modes", DrawModes,
                 "Hide, clamp to the edge, or ignore.",
@@ -43,15 +43,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         };
 
         public override string InstalledHint =>
-            "Drop WorldPointerServiceRoot into your scene, then give a screen of your own a "
-            + "WorldPointerLayer; the Setup tab has the steps.";
+            "Drop WorldPointerServiceRoot into your scene, then register a WorldPointerPoolDisplay "
+            + "from a screen of your own; the Setup tab has the steps.";
 
         public override string BodyHeadline =>
             "An object in the world, and a screen that draws something over it.";
 
         public override string BodyTagline =>
             "An emote over a head, a health bar over a unit, a marker on a quest target: the module "
-            + "that owns the object registers it under an id, a screen registers as that id's "
+            + "that owns the object registers it on a channel, a screen registers as that channel's "
             + "display, and every frame the screen's indicator sits where the object is.";
 
         public override void DrawBody(HelpPainter painter)
@@ -61,10 +61,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.SubHeading("What it gives you");
             painter.Bullet(
-                "RegisterTarget takes an id and the Transform to follow. SetContent, Show and Hide "
-                + "are requests on the same pair; UnregisterTarget ends it. No handle is kept.");
+                "RegisterTarget takes a channel - what kind of pointer this is, such as Emote - and "
+                + "the Transform to follow. SetContent, Show and Hide are requests on the same pair; "
+                + "UnregisterTarget ends it. No handle is kept, and nothing is returned: a refused "
+                + "call is an error naming its line.");
             painter.Bullet(
-                "RegisterDisplay makes a screen's layer the one display of an id. While both sides "
+                "Every lookup is one step, keyed by channel and Transform, so a thousand targets "
+                + "cost a register or a request no more than one does.");
+            painter.Bullet(
+                "RegisterDisplay makes a display the one display of a channel. While both sides "
                 + "are registered every target has an indicator from the display; with no display "
                 + "the targets wait, and their last content and last Show or Hide are replayed to "
                 + "the display that comes.");
@@ -76,7 +81,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The indicator is told its state - Hidden, InFrame, OnEdge - once when it starts "
                 + "and then only when it changes, so it can fade rather than blink.");
             painter.Bullet(
-                "RD_WorldPointer shows, during play, every id with its display and its targets - "
+                "RD_WorldPointer shows, during play, every channel with its display and its targets - "
                 + "the answer to why nothing is shown is usually a row with no display.");
 
             painter.Space();
@@ -156,15 +161,18 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "raycaster does not reach into a nested canvas, so every button on that layer "
                 + "stops taking clicks, and nothing reports it.");
 
-            painter.SubHeading("5. The layer and the indicator");
+            painter.SubHeading("5. The indicator and its pool");
             painter.Paragraph(
-                "Derive one line of class for each: EmoteLayer : WorldPointerLayer<EmoteVO> goes on "
-                + "an object in the screen's prefab, EmoteIndicator : WorldPointerIndicator<EmoteVO> "
-                + "on the indicator prefab, and fills its own Text or Image in SetContent.");
-            painter.Table(new[] {"WorldPointerLayer field", "What it takes"},
-                new[] {"Prefab", "the indicator prefab; it must show the layer's content type"},
-                new[] {"Parent", "where indicators are parented - the layer's own RectTransform unless named"},
-                new[] {"Options", "a CD_WorldPointerOptions preset - Create > FlowIoC > WorldPointerModule > Data"});
+                "Derive one line of class: EmoteIndicator : WorldPointerIndicator<EmoteVO> goes on "
+                + "the indicator prefab and fills its own Text or Image in SetContent. The indicator "
+                + "is a PoolableItem, and its prefab is an item of a CD_PoolGroup like any other "
+                + "pooled object, filed on the scene's PoolServiceRoot.");
+            painter.Paragraph(
+                "The screen's View holds where the indicators go and how they behave - a "
+                + "RectTransform in the screen's prefab and a CD_WorldPointerOptions preset "
+                + "(Create > FlowIoC > WorldPointerModule > Data). The register Command builds a "
+                + "WorldPointerPoolDisplay from the pool, the item key and those two; the Screen side "
+                + "tab shows it.");
             painter.Table(new[] {"WorldPointerIndicator field", "What it takes"},
                 new[] {"Rect", "the element itself, unless another RectTransform is named"},
                 new[] {"Arrow Pivot", "an empty RectTransform at the element's centre; the arrow image is its child"},
@@ -174,10 +182,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "at the target, so an arrow drawn any other way points the wrong way, and nothing "
                 + "reports it.");
             painter.Note(
-                "Important: a layer whose prefab does not show its content type is reported the "
-                + "first time it is asked for an indicator, and nothing is drawn.");
+                "Important: an item key no pool group lists, or a prefab that does not show the "
+                + "display's content type, is reported the first time an indicator is asked for, "
+                + "and nothing is drawn.");
+            painter.Note(
+                "Important: the display takes indicators with the pool's synchronous Get, so an "
+                + "addressable indicator prefab has to be in the pool already - warm its group at "
+                + "boot - or the Get is refused.");
 
-            painter.SubHeading("6. The id and the content");
+            painter.SubHeading("6. The channel and the content");
             painter.Paragraph(
                 "Both go in the Shared assembly of the module that owns the objects - a const "
                 + "string and a [Serializable] value object. Its screen module reads them there, "
@@ -197,8 +210,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
             painter.Paragraph(
                 "The pair is the key, so the Command that sends a request needs nothing but the "
-                + "Transform it already holds. The same Transform twice under one id is refused; "
-                + "two pointers on one object use two ids.");
+                + "Transform it already holds. Registering the same pair twice is an error and the "
+                + "second call is ignored; two pointers on one object use two channels.");
             painter.Note(
                 "Important: a target the game pools is unregistered before it goes back. A "
                 + "registration left alive keeps pointing at whatever uses that Transform next, and "
@@ -218,29 +231,35 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.Code(
                 "// the screen's Mediator: nothing decided, so it only dispatches\n"
-                + "private void OnScreenShown(IScreenBody screen) => _signals.DisplayShown.Dispatch(_view.EmoteLayer);\n"
-                + "private void OnScreenHidden(IScreenBody screen) => _signals.DisplayHidden.Dispatch(_view.EmoteLayer);\n"
+                + "private void OnScreenShown(IScreenBody screen) => _signals.DisplayShown.Dispatch(_view);\n"
+                + "private void OnScreenHidden(IScreenBody screen) => _signals.DisplayHidden.Dispatch();\n"
                 + "\n"
                 + "// RegisterEmoteDisplayCommand\n"
-                + "_worldPointer.RegisterDisplay(EmoteIds.Emote, _layer);\n"
+                + "[Inject] private IWorldPointerService _worldPointer { get; set; }\n"
+                + "[Inject] private IPoolService _pool { get; set; }\n"
+                + "\n"
+                + "var display = new WorldPointerPoolDisplay<EmoteVO>(_pool, EmotePoolKeys.Bubble,\n"
+                + "    _view.BubbleParent, _view.Options.Options);\n"
+                + "_worldPointer.RegisterDisplay(EmoteIds.Emote, display);\n"
                 + "\n"
                 + "// UnregisterEmoteDisplayCommand\n"
-                + "_worldPointer.UnregisterDisplay(_layer);");
+                + "_worldPointer.UnregisterDisplay(EmoteIds.Emote);");
 
             painter.Paragraph(
                 "A screen is pooled, so the pair runs on every opening: ShowCompleted registers, "
                 + "HideCompleted takes it away. While the screen is closed the targets wait; when it "
                 + "opens again they come back with their last content.");
             painter.Note(
-                "Important: one id has one display. A second RegisterDisplay for the same id is "
+                "Important: one channel has one display. A second RegisterDisplay for the same channel is "
                 + "refused with an error naming its line, and so is a display whose content type "
                 + "differs from content a target already holds.");
 
             painter.SubHeading("Letting an indicator go slowly");
             painter.Paragraph(
                 "The service never tells an indicator Hidden when it hands it back - the display "
-                + "decides how it goes. WorldPointerLayer.Release returns it to the pool at once; "
-                + "override it to play a fade and call ReturnToPool when the fade ends.");
+                + "decides how it goes. WorldPointerPoolDisplay hands it back through the indicator's "
+                + "own Dismiss, which returns it to the pool at once; override Dismiss to play a fade "
+                + "and call the base when the fade ends.");
 
             painter.SubHeading("Placing something once");
             painter.Paragraph(
@@ -260,8 +279,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 new[] {"Ignore", "placed wherever the projection lands", "InFrame once, and never again"});
 
             painter.Paragraph(
-                "The mode and the rest of the options belong to the display, in the layer's "
-                + "CD_WorldPointerOptions preset. Two ids drawn differently are two layers with two "
+                "The mode and the rest of the options belong to the display, in the "
+                + "CD_WorldPointerOptions preset it is built with. Two channels drawn differently are two displays with two "
                 + "presets.");
             painter.Image(_images.Get("WorldPointerModes.png"),
                 "The three modes in WorldPointerTestScene: Cube_InFrame in Hide (green), Cube_Behind in "

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f07d6b07023536a43ab751ffb8db37e0, type: 3}
+  m_Name: CD_PoolGroup_PointerSample
+  m_EditorClassIdentifier: FlowIoC::FlowIoC.PoolModule.Data.UnityObjects.CD_PoolGroup
+  _items:
+  - PoolKey: SampleLabel
+    InitialCreateCount: 3
+    IsExtendable: 1
+    LazyLoad: 0
+    IsAddressable: 0
+    Prefab: {fileID: 1587607299234063301, guid: 185591ed8bc3c624081403735b463da0, type: 3}
+    AddressablePrefab:
+      m_AssetGUID: 
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0

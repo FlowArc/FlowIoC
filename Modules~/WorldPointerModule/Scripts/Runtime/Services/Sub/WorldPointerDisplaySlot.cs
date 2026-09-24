@@ -20,10 +20,10 @@ namespace Modules.WorldPointerModule.Services.Sub
         /// <summary>A display that is a Unity object and was destroyed - a screen unloaded without unregistering.</summary>
         public bool IsDestroyed => Display is Object unityObject && unityObject == null;
 
-        /// <summary>The component and the GameObject it sits on, or the type name - for errors and RD_WorldPointer.</summary>
+        /// <summary>The component and the GameObject it sits on, or what the display says it is - for errors and RD_WorldPointer.</summary>
         public string Name => Display is UnityEngine.Component component && component != null
             ? $"{component.GetType().Name} on {component.gameObject.name}"
-            : Display.GetType().Name;
+            : Display.ToString();
 
         private readonly WorldPointerOptionsCVO _defaults = new();
 

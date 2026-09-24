@@ -4,13 +4,15 @@ using UnityEngine;
 namespace Modules.WorldPointerModule.Services
 {
     /// <summary>
-    /// Joins what stands in the world to the screen that draws it. The side that owns a world
-    /// object registers its Transform under an id and sends requests - content, show, hide -
-    /// without ever reaching a canvas. A screen registers itself as the display for that id. While
+    /// Joins what stands in the world to the screen that draws it. Both sides meet on a channel -
+    /// a name such as "Emote" that says what kind of pointer this is. The side that owns a world
+    /// object registers its Transform on a channel and sends requests - content, show, hide -
+    /// without ever reaching a canvas. A screen registers itself as the channel's display. While
     /// both are registered the service takes an indicator from the display for every target, moves
     /// it to the target's screen position every LateUpdate, and forwards the requests; with no
     /// display the targets wait, and their last requests are kept for the display that comes.
-    /// There are no signals, because nothing outside the module needs telling.
+    /// Nothing is returned and nothing is announced: a refused call is an error naming the line
+    /// that made it.
     /// </summary>
     public partial interface IWorldPointerService
     {
@@ -22,12 +24,12 @@ namespace Modules.WorldPointerModule.Services
         Camera Camera { get; set; }
 
         /// <summary>
-        /// Starts pointing at <paramref name="target"/> for the display registered under
-        /// <paramref name="id"/>, now or whenever one arrives. The pair is the target's key: the
-        /// same Transform twice under one id is refused, and two pointers on one object use two
-        /// ids. False when refused; the last two parameters name the caller in the error.
+        /// Starts pointing at <paramref name="target"/> for the display of <paramref name="channel"/>,
+        /// now or whenever one arrives. The channel and the Transform together are the target's key,
+        /// found in one step: the same pair twice is an error and the second call is ignored, and
+        /// two pointers on one object use two channels.
         /// </summary>
-        bool RegisterTarget(string id, Transform target,
+        void RegisterTarget(string channel, Transform target,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0);
 
         /// <summary>
@@ -35,22 +37,22 @@ namespace Modules.WorldPointerModule.Services
         /// display's Release. A pair that is not registered is ignored. A target that goes back to a
         /// pool is unregistered before it does - a pooled Transform is somebody else's next target.
         /// </summary>
-        void UnregisterTarget(string id, Transform target);
+        void UnregisterTarget(string channel, Transform target);
 
         /// <summary>
         /// What the pair's indicator shows. Forwarded to the indicator when there is one and kept
         /// either way, so a display that registers later starts from the last content. A type the
-        /// id's display does not take is refused with an error.
+        /// channel's display does not take is refused with an error.
         /// </summary>
-        void SetContent<TContent>(string id, Transform target, TContent content,
+        void SetContent<TContent>(string channel, Transform target, TContent content,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0);
 
         /// <summary>Lets the projection decide again after a Hide. A target starts shown.</summary>
-        void Show(string id, Transform target,
+        void Show(string channel, Transform target,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0);
 
         /// <summary>Tells the indicator Hidden and stops placing it until Show.</summary>
-        void Hide(string id, Transform target,
+        void Hide(string channel, Transform target,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0);
 
         /// <summary>
@@ -60,19 +62,20 @@ namespace Modules.WorldPointerModule.Services
         void UnregisterAll();
 
         /// <summary>
-        /// Makes <paramref name="display"/> the one that draws <paramref name="id"/>. Every target
-        /// of the id is given an indicator at once, with its last content and its last Show or
-        /// Hide. A second display for an id that has one is refused, and so is a display whose
-        /// content type differs from content a target of the id already holds. False when refused.
+        /// Makes <paramref name="display"/> the one that draws <paramref name="channel"/>. Every
+        /// target on the channel is given an indicator at once, with its last content and its last
+        /// Show or Hide. A second display for a channel that has one is an error and is ignored, and
+        /// so is a display whose content type differs from content a target already holds.
+        /// WorldPointerPoolDisplay is the ready one.
         /// </summary>
-        bool RegisterDisplay<TContent>(string id, IWorldPointerDisplay<TContent> display,
+        void RegisterDisplay<TContent>(string channel, IWorldPointerDisplay<TContent> display,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0);
 
         /// <summary>
-        /// Takes the display away. Its indicators go back to its Release, and its targets wait with
-        /// their last requests for the next display of the id. A display not registered is ignored.
+        /// Takes the channel's display away. Its indicators go back to its Release, and its targets
+        /// wait with their last requests for the next display. A channel with no display is ignored.
         /// </summary>
-        void UnregisterDisplay(IWorldPointerDisplay display);
+        void UnregisterDisplay(string channel);
 
         /// <summary>
         /// One-shot, for a screen's own placement: the world point on <paramref name="parent"/>'s

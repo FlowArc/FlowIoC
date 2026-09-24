@@ -29,7 +29,7 @@ namespace Modules.WorldPointerModule.PointerSampleScreenModule.ViewsMediators
 
         private void OnScreenShown(IScreenBody screen) => _internalSignals.DisplaysShown.Dispatch(_view);
 
-        private void OnScreenHidden(IScreenBody screen) => _internalSignals.DisplaysHidden.Dispatch(_view);
+        private void OnScreenHidden(IScreenBody screen) => _internalSignals.DisplaysHidden.Dispatch();
     }
 }
 #endif

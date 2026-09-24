@@ -3,8 +3,8 @@ using Modules.WorldPointerModule.Data.ValueObjects;
 namespace Modules.WorldPointerModule.Services
 {
     /// <summary>
-    /// What a screen registers to draw one id. The non-generic half is what UnregisterDisplay
-    /// takes, so a screen closing needs no content type to say it is going.
+    /// What a screen registers to draw one channel. The non-generic half is what the service reads
+    /// without knowing the content type.
     /// </summary>
     public interface IWorldPointerDisplay
     {
@@ -17,8 +17,9 @@ namespace Modules.WorldPointerModule.Services
     }
 
     /// <summary>
-    /// A display that hands out indicators for one content type. WorldPointerLayer is the ready
-    /// implementation: a prefab, a pool and a preset on a component in the screen's prefab.
+    /// A display that hands out indicators for one content type. WorldPointerPoolDisplay is the
+    /// ready implementation: indicators from the FlowIoC pool, parented under one of the screen's
+    /// RectTransforms.
     /// </summary>
     public interface IWorldPointerDisplay<TContent> : IWorldPointerDisplay
     {

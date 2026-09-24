@@ -13,27 +13,23 @@ using UnityEngine;
 namespace Modules.WorldPointerModule.Services
 {
     /// <summary>
-    /// The two registries and the one LateUpdate. Targets are keyed by id and Transform, displays
-    /// by id; a target is matched the moment both exist and waits otherwise, keeping its last
-    /// content and its last Show or Hide. Each frame every matched target is projected through the
-    /// camera, judged against its display's frame, placed on its indicator's parent plane and told
-    /// its state when that changed. Tick is public so a test can drive a frame by hand.
+    /// The front of the module. The registry is the Model's and one target's frame is the
+    /// stepper's; what is left here is checking a call, matching a target with its channel's
+    /// display, and the one LateUpdate. Tick is public so a test can drive a frame by hand.
     /// </summary>
     public class WorldPointerService : IWorldPointerService, IConstructable
     {
         [Inject] private IUpdateProvider _updateProvider { get; set; }
         [Inject] private IWorldPointerModel _model { get; set; }
 
-        private readonly List<Target> _targets = new();
-        private readonly Dictionary<string, WorldPointerDisplaySlot> _displays = new();
-        private readonly Vector3[] _corners = new Vector3[4];
+        private readonly WorldPointerStepper _stepper = new();
         private Camera _camera;
 
         public bool IsPostConstructed { get; set; }
         public bool IsDeconstructed { get; set; }
 
-        /// <summary>How many targets are registered, matched or waiting. For the tests and the test scene; not on the interface.</summary>
-        public int Count => _targets.Count;
+        /// <summary>How many targets are registered, matched or waiting. For the tests; not on the interface.</summary>
+        public int Count => _model.TargetCount;
 
         public Camera Camera
         {
@@ -51,148 +47,137 @@ namespace Modules.WorldPointerModule.Services
 
         // ---------------------------------------------------------------- the world side
 
-        public bool RegisterTarget(string id, Transform target,
+        public void RegisterTarget(string channel, Transform target,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
-            if (string.IsNullOrEmpty(id) || target == null)
+            if (string.IsNullOrEmpty(channel) || target == null)
             {
-                FlowLogger.LogError("RegisterTarget - a target needs an id and a Transform, and one of them is missing. "
+                FlowLogger.LogError("RegisterTarget - a target needs a channel and a Transform, and one of them is missing. "
                                     + $"Registered from {file}:{line}.");
-                return false;
+                return;
             }
 
-            if (Find(id, target) != null)
+            if (_model.TryGetTarget(channel, target, out _))
             {
-                FlowLogger.LogError($"RegisterTarget - '{target.name}' is already registered under '{id}'. Two pointers on one "
-                                    + $"object use two ids. Registered from {file}:{line}.", target);
-                return false;
+                FlowLogger.LogError($"RegisterTarget - '{target.name}' is already registered on '{channel}'. Two pointers on one "
+                                    + $"object use two channels. Registered from {file}:{line}.", target);
+                return;
             }
 
-            var entry = new Target {Id = id, Transform = target};
-            _targets.Add(entry);
+            WorldPointerTargetRVO entry = _model.AddTarget(channel, target);
 
-            if (_displays.TryGetValue(id, out WorldPointerDisplaySlot slot))
-                Match(entry, slot);
-
-            PublishStatus();
-            return true;
+            if (entry.Owner.Slot != null)
+                Match(entry);
         }
 
-        public void UnregisterTarget(string id, Transform target)
+        public void UnregisterTarget(string channel, Transform target)
         {
-            Target entry = Find(id, target);
-            if (entry == null) return;
+            if (!_model.TryGetTarget(channel, target, out WorldPointerTargetRVO entry)) return;
 
             Unmatch(entry);
-            _targets.Remove(entry);
-            PublishStatus();
+            _model.RemoveTarget(entry);
         }
 
-        public void SetContent<TContent>(string id, Transform target, TContent content,
+        public void SetContent<TContent>(string channel, Transform target, TContent content,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
-            Target entry = FindForRequest(id, target, "SetContent", file, line);
+            WorldPointerTargetRVO entry = FindForRequest(channel, target, "SetContent", file, line);
             if (entry == null) return;
 
-            if (_displays.TryGetValue(id, out WorldPointerDisplaySlot slot) && !slot.Accepts(content))
+            WorldPointerDisplaySlot slot = entry.Owner.Slot;
+
+            if (slot != null && !slot.Accepts(content))
             {
-                FlowLogger.LogError($"SetContent - the display of '{id}' ({slot.Name}) shows {slot.ContentType.Name}, "
+                FlowLogger.LogError($"SetContent - the display of '{channel}' ({slot.Name}) shows {slot.ContentType.Name}, "
                                     + $"not {typeof(TContent).Name}. Sent from {file}:{line}.", target);
                 return;
             }
 
-            entry.Content = content;
-            entry.HasContent = true;
+            _model.SetContent(entry, content);
 
             if (entry.Indicator != null)
-                entry.Slot.SetContent(entry.Indicator, content);
-
-            PublishStatus();
+                slot.SetContent(entry.Indicator, content);
         }
 
-        public void Show(string id, Transform target,
+        public void Show(string channel, Transform target,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
-            Target entry = FindForRequest(id, target, "Show", file, line);
+            WorldPointerTargetRVO entry = FindForRequest(channel, target, "Show", file, line);
             if (entry == null || entry.Visible) return;
 
-            entry.Visible = true;
-            PublishStatus();
+            _model.SetVisible(entry, true);
         }
 
-        public void Hide(string id, Transform target,
+        public void Hide(string channel, Transform target,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
-            Target entry = FindForRequest(id, target, "Hide", file, line);
+            WorldPointerTargetRVO entry = FindForRequest(channel, target, "Hide", file, line);
             if (entry == null || !entry.Visible) return;
 
-            entry.Visible = false;
+            _model.SetVisible(entry, false);
             if (entry.Indicator != null) Report(entry, WorldPointerState.Hidden);
-            PublishStatus();
         }
 
         public void UnregisterAll()
         {
-            foreach (Target entry in _targets)
-                Unmatch(entry);
+            IReadOnlyList<WorldPointerChannelRVO> channels = _model.Channels;
 
-            _targets.Clear();
-            PublishStatus();
+            for (int c = 0; c < channels.Count; c++)
+            {
+                List<WorldPointerTargetRVO> members = channels[c].Members;
+
+                for (int i = 0; i < members.Count; i++)
+                    Unmatch(members[i]);
+            }
+
+            _model.ClearTargets();
         }
 
         // ---------------------------------------------------------------- the screen side
 
-        public bool RegisterDisplay<TContent>(string id, IWorldPointerDisplay<TContent> display,
+        public void RegisterDisplay<TContent>(string channel, IWorldPointerDisplay<TContent> display,
             [CallerFilePath] string file = null, [CallerLineNumber] int line = 0)
         {
-            if (string.IsNullOrEmpty(id) || display == null || display is Object unityObject && unityObject == null)
+            if (string.IsNullOrEmpty(channel) || display == null || display is Object unityObject && unityObject == null)
             {
-                FlowLogger.LogError("RegisterDisplay - a display needs an id and a display, and one of them is missing. "
+                FlowLogger.LogError("RegisterDisplay - a display needs a channel and a display, and one of them is missing. "
                                     + $"Registered from {file}:{line}.");
-                return false;
+                return;
             }
 
             var slot = new WorldPointerDisplaySlot<TContent>(display);
+            WorldPointerChannelRVO existing = _model.GetChannel(channel);
 
-            if (_displays.TryGetValue(id, out WorldPointerDisplaySlot existing))
+            if (existing?.Slot != null)
             {
-                FlowLogger.LogError($"RegisterDisplay - '{id}' is already drawn by {existing.Name}; {slot.Name} is refused. "
-                                    + $"One id has one display. Registered from {file}:{line}.", display as Object);
-                return false;
-            }
-
-            foreach (Target entry in _targets)
-            {
-                if (entry.Id != id || !entry.HasContent || slot.Accepts(entry.Content)) continue;
-
-                FlowLogger.LogError($"RegisterDisplay - {slot.Name} shows {typeof(TContent).Name}, but '{entry.Transform.name}' "
-                                    + $"under '{id}' holds {entry.Content.GetType().Name}. Registered from {file}:{line}.",
-                    display as Object);
-                return false;
-            }
-
-            _displays.Add(id, slot);
-
-            foreach (Target entry in _targets)
-                if (entry.Id == id)
-                    Match(entry, slot);
-
-            PublishStatus();
-            return true;
-        }
-
-        public void UnregisterDisplay(IWorldPointerDisplay display)
-        {
-            if (display == null) return;
-
-            foreach (KeyValuePair<string, WorldPointerDisplaySlot> pair in _displays)
-            {
-                if (!ReferenceEquals(pair.Value.Display, display)) continue;
-
-                RemoveDisplay(pair.Key);
-                PublishStatus();
+                FlowLogger.LogError($"RegisterDisplay - '{channel}' is already drawn by {existing.Slot.Name}; {slot.Name} is refused. "
+                                    + $"One channel has one display. Registered from {file}:{line}.", display as Object);
                 return;
             }
+
+            if (existing != null && HoldsOtherContent(existing, slot, file, line))
+                return;
+
+            List<WorldPointerTargetRVO> members = _model.SetDisplay(channel, slot).Members;
+
+            // Backwards, so a target destroyed while it waited can leave in the same walk.
+            for (int i = members.Count - 1; i >= 0; i--)
+            {
+                WorldPointerTargetRVO entry = members[i];
+
+                if (entry.Target == null)
+                    _model.RemoveTarget(entry);
+                else
+                    Match(entry);
+            }
+        }
+
+        public void UnregisterDisplay(string channel)
+        {
+            WorldPointerChannelRVO row = _model.GetChannel(channel);
+            if (row?.Slot == null) return;
+
+            RemoveDisplay(row);
         }
 
         public bool TryProject(Vector3 worldPosition, RectTransform parent, out Vector3 pointOnCanvas)
@@ -216,192 +201,88 @@ namespace Modules.WorldPointerModule.Services
         // ---------------------------------------------------------------- the frame
 
         /// <summary>
-        /// One frame for every target. A destroyed display is dropped first, and its targets wait.
-        /// Walked backwards so an entry can be dropped mid-walk: a destroyed target is unregistered,
-        /// its indicator released; a destroyed indicator is let go and the target waits for the next
-        /// display. No camera at all leaves every indicator Hidden until one turns up.
+        /// One frame for every channel that has a display; a channel with none has nothing to move.
+        /// A destroyed display is dropped and its targets wait. Both walks go backwards, so an entry
+        /// can leave mid-walk: a destroyed target is unregistered and its indicator released; a
+        /// destroyed indicator is let go and the target waits for the next display. No camera at
+        /// all leaves every indicator Hidden until one turns up.
         /// </summary>
         public void Tick(float deltaTime)
         {
-            bool changed = DropDestroyedDisplays();
             Camera camera = Camera;
+            IReadOnlyList<WorldPointerChannelRVO> channels = _model.Channels;
 
-            for (int i = _targets.Count - 1; i >= 0; i--)
+            for (int c = channels.Count - 1; c >= 0; c--)
             {
-                Target entry = _targets[i];
+                WorldPointerChannelRVO channel = channels[c];
+                if (channel.Slot == null) continue;
 
-                if (entry.Transform == null)
+                if (channel.Slot.IsDestroyed)
                 {
-                    Unmatch(entry);
-                    _targets.RemoveAt(i);
-                    changed = true;
+                    RemoveDisplay(channel);
                     continue;
                 }
 
-                if (entry.Indicator == null) continue;
+                List<WorldPointerTargetRVO> members = channel.Members;
 
-                if (entry.Indicator is Object indicatorObject && indicatorObject == null || entry.Indicator.Rect == null)
-                {
-                    entry.Indicator = null;
-                    entry.Slot = null;
-                    changed = true;
-                    continue;
-                }
-
-                if (!entry.Visible) continue;
-
-                if (camera == null)
-                {
-                    changed |= Report(entry, WorldPointerState.Hidden);
-                    continue;
-                }
-
-                changed |= Step(entry, camera, deltaTime);
+                for (int i = members.Count - 1; i >= 0; i--)
+                    Step(members[i], camera, deltaTime);
             }
-
-            if (changed) PublishStatus();
         }
 
         private void LateUpdate() => Tick(Time.deltaTime);
 
-        /// <summary>
-        /// The design's frame step. Behind the camera Unity's projection is mirrored through the
-        /// centre, so it is mirrored back before anything reads it; the arrow is turned with a
-        /// local rotation, which is right in both canvas modes where a world-space up is not.
-        /// A clamped indicator is judged against the frame shrunk by its own half size on screen,
-        /// so the whole of it stays visible at the edge rather than half of it hanging off.
-        /// True when the indicator was told a new state.
-        /// </summary>
-        private bool Step(Target entry, Camera camera, float deltaTime)
+        private void Step(WorldPointerTargetRVO entry, Camera camera, float deltaTime)
         {
-            WorldPointerOptionsCVO options = entry.Slot.Options;
-
-            Vector3 screen = camera.WorldToScreenPoint(entry.Transform.position + options.WorldOffset);
-            bool behind = screen.z < 0f;
-            Vector2 point = (Vector2) screen + options.ScreenOffset;
-
-            var frame = new WorldPointerFrame(camera.pixelRect, options.ScreenMargins);
-            if (options.OffScreen == OffScreenMode.ClampToEdge) frame = frame.Inset(HalfSizeOnScreen(entry));
-            if (behind) point = frame.Centre - (point - frame.Centre);
-
-            bool inside = !behind && frame.Contains(point);
-
-            WorldPointerState state;
-            bool place;
-
-            switch (options.OffScreen)
+            if (entry.Target == null)
             {
-                case OffScreenMode.Hide:
-                    state = inside ? WorldPointerState.InFrame : WorldPointerState.Hidden;
-                    place = inside;
-                    break;
-
-                case OffScreenMode.ClampToEdge:
-                    if (inside)
-                    {
-                        state = WorldPointerState.InFrame;
-                    }
-                    else
-                    {
-                        state = WorldPointerState.OnEdge;
-                        point = frame.ClampToEdge(point, out Vector2 direction);
-                        if (options.RotateArrow) AimArrow(entry, direction, options.SmoothSpeed, deltaTime);
-                    }
-
-                    place = true;
-                    break;
-
-                default:
-                    state = WorldPointerState.InFrame;
-                    place = true;
-                    break;
-            }
-
-            if (place) Place(entry, point, options.SmoothSpeed, deltaTime);
-            return Report(entry, state);
-        }
-
-        /// <summary>
-        /// Half the indicator's width and height in screen pixels, from its corners - so a canvas
-        /// scaler, a scaled parent and both canvas modes all come out right.
-        /// </summary>
-        private Vector2 HalfSizeOnScreen(Target entry)
-        {
-            entry.Indicator.Rect.GetWorldCorners(_corners);
-
-            Vector2 min = RectTransformUtility.WorldToScreenPoint(entry.CanvasCamera, _corners[0]);
-            Vector2 max = min;
-
-            for (int i = 1; i < _corners.Length; i++)
-            {
-                Vector2 corner = RectTransformUtility.WorldToScreenPoint(entry.CanvasCamera, _corners[i]);
-                min = Vector2.Min(min, corner);
-                max = Vector2.Max(max, corner);
-            }
-
-            return (max - min) * 0.5f;
-        }
-
-        /// <summary>Local up along the direction: atan2 gives the angle of +x, and up is a quarter turn on.</summary>
-        private static void AimArrow(Target entry, Vector2 direction, float speed, float deltaTime)
-        {
-            RectTransform pivot = entry.Indicator.ArrowPivot;
-            if (pivot == null) return;
-
-            Quaternion rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f);
-
-            pivot.localRotation = speed > 0f
-                ? Quaternion.Slerp(pivot.localRotation, rotation, 1f - Mathf.Exp(-speed * deltaTime))
-                : rotation;
-        }
-
-        /// <summary>
-        /// By world point on the parent's plane rather than by anchoredPosition against the root,
-        /// which is what makes any parent and any anchors correct in both canvas modes.
-        /// </summary>
-        private static void Place(Target entry, Vector2 point, float speed, float deltaTime)
-        {
-            RectTransform rect = entry.Indicator.Rect;
-            var parent = rect.parent as RectTransform;
-            if (parent == null) return;
-
-            if (!RectTransformUtility.ScreenPointToWorldPointInRectangle(parent, point, entry.CanvasCamera, out Vector3 world))
+                Unmatch(entry);
+                _model.RemoveTarget(entry);
                 return;
+            }
 
-            rect.position = speed > 0f
-                ? Vector3.Lerp(rect.position, world, 1f - Mathf.Exp(-speed * deltaTime))
-                : world;
+            if (entry.Indicator == null) return;
+
+            if (entry.Indicator is Object indicatorObject && indicatorObject == null || entry.Indicator.Rect == null)
+            {
+                _model.SetIndicator(entry, null, null);
+                return;
+            }
+
+            if (!entry.Visible) return;
+
+            WorldPointerState state = camera == null
+                ? WorldPointerState.Hidden
+                : _stepper.Step(entry, entry.Owner.Slot.Options, camera, deltaTime);
+
+            Report(entry, state);
         }
 
         /// <summary>Told on the first tick, then only on a change. A destroyed indicator is not told anything.</summary>
-        private static bool Report(Target entry, WorldPointerState state)
+        private void Report(WorldPointerTargetRVO entry, WorldPointerState state)
         {
-            if (entry.HasState && entry.State == state) return false;
-
-            entry.HasState = true;
-            entry.State = state;
-
-            if (entry.Indicator is Object unityObject && unityObject == null) return true;
+            if (!_model.SetState(entry, state)) return;
+            if (entry.Indicator is Object unityObject && unityObject == null) return;
 
             entry.Indicator.SetState(state);
-            return true;
         }
 
         // ---------------------------------------------------------------- matching
 
         /// <summary>
-        /// Takes an indicator from the display for one target and replays what the target was told
-        /// while it waited. An indicator the display could not give, or one with no Canvas above
-        /// it, is reported against the display and handed back; the target keeps waiting.
+        /// Takes an indicator from the channel's display for one target and replays what the target
+        /// was told while it waited. An indicator the display could not give, or one with no Canvas
+        /// above it, is reported against the display and handed back; the target keeps waiting.
         /// </summary>
-        private static void Match(Target entry, WorldPointerDisplaySlot slot)
+        private void Match(WorldPointerTargetRVO entry)
         {
+            WorldPointerDisplaySlot slot = entry.Owner.Slot;
             IWorldPointerIndicator indicator = slot.Acquire();
 
             if (indicator == null || indicator.Rect == null)
             {
-                FlowLogger.LogError($"{slot.Name} gave no indicator with a RectTransform for '{entry.Transform.name}' under "
-                                    + $"'{entry.Id}', so nothing points at it.", slot.Display as Object);
+                FlowLogger.LogError($"{slot.Name} gave no indicator with a RectTransform for '{entry.Target.name}' on "
+                                    + $"'{entry.Owner.Id}', so nothing points at it.", slot.Display as Object);
                 return;
             }
 
@@ -417,137 +298,64 @@ namespace Modules.WorldPointerModule.Services
             }
 
             Canvas rootCanvas = canvas.rootCanvas;
-
-            entry.Slot = slot;
-            entry.Indicator = indicator;
-            entry.CanvasCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
-            entry.HasState = false;
+            _model.SetIndicator(entry, indicator,
+                rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera);
 
             if (entry.HasContent)
-                slot.SetContent(indicator, entry.Content);
+                slot.SetContent(indicator, entry.Value);
 
             if (!entry.Visible)
                 Report(entry, WorldPointerState.Hidden);
         }
 
         /// <summary>Hands the indicator back to its display. The display decides how it goes; nothing is told Hidden.</summary>
-        private static void Unmatch(Target entry)
+        private void Unmatch(WorldPointerTargetRVO entry)
         {
-            if (entry.Indicator == null) return;
-
             IWorldPointerIndicator indicator = entry.Indicator;
-            WorldPointerDisplaySlot slot = entry.Slot;
+            if (indicator == null) return;
 
-            entry.Indicator = null;
-            entry.Slot = null;
-            entry.HasState = false;
+            WorldPointerDisplaySlot slot = entry.Owner.Slot;
+            _model.SetIndicator(entry, null, null);
 
-            if (slot.IsDestroyed) return;
+            if (slot == null || slot.IsDestroyed) return;
             if (indicator is Object unityObject && unityObject == null) return;
 
             slot.Release(indicator);
         }
 
-        private void RemoveDisplay(string id)
+        private void RemoveDisplay(WorldPointerChannelRVO channel)
         {
-            foreach (Target entry in _targets)
-                if (entry.Id == id)
-                    Unmatch(entry);
+            List<WorldPointerTargetRVO> members = channel.Members;
 
-            _displays.Remove(id);
+            for (int i = 0; i < members.Count; i++)
+                Unmatch(members[i]);
+
+            _model.SetDisplay(channel.Id, null);
         }
 
-        private bool DropDestroyedDisplays()
+        private static bool HoldsOtherContent(WorldPointerChannelRVO channel, WorldPointerDisplaySlot slot, string file, int line)
         {
-            List<string> destroyed = null;
-
-            foreach (KeyValuePair<string, WorldPointerDisplaySlot> pair in _displays)
-                if (pair.Value.IsDestroyed)
-                    (destroyed ??= new List<string>()).Add(pair.Key);
-
-            if (destroyed == null) return false;
-
-            foreach (string id in destroyed)
-                RemoveDisplay(id);
-
-            return true;
-        }
-
-        private Target Find(string id, Transform target)
-        {
-            foreach (Target entry in _targets)
-                if (entry.Id == id && entry.Transform == target)
-                    return entry;
-
-            return null;
-        }
-
-        private Target FindForRequest(string id, Transform target, string request, string file, int line)
-        {
-            Target entry = Find(id, target);
-            if (entry != null) return entry;
-
-            string name = target != null ? target.name : "null";
-            FlowLogger.LogError($"{request} - '{name}' is not registered under '{id}'. RegisterTarget comes first. "
-                                + $"Sent from {file}:{line}.", target);
-            return null;
-        }
-
-        // ---------------------------------------------------------------- status
-
-        /// <summary>Rewrites RD_WorldPointer from the registries: every id with a display or a target, one row each.</summary>
-        private void PublishStatus()
-        {
-            if (_model == null) return;
-
-            var channels = new List<WorldPointerChannelRVO>();
-            var byId = new Dictionary<string, WorldPointerChannelRVO>();
-
-            foreach (KeyValuePair<string, WorldPointerDisplaySlot> pair in _displays)
-                byId[pair.Key] = Channel(channels, pair.Key, pair.Value.Name);
-
-            foreach (Target entry in _targets)
+            foreach (WorldPointerTargetRVO entry in channel.Members)
             {
-                if (!byId.TryGetValue(entry.Id, out WorldPointerChannelRVO channel))
-                    byId[entry.Id] = channel = Channel(channels, entry.Id, string.Empty);
+                if (!entry.HasContent || slot.Accepts(entry.Value)) continue;
 
-                bool shown = entry.Indicator != null;
-                bool serializable = entry.HasContent && entry.Content != null && entry.Content.GetType().IsClass
-                                    && entry.Content is not string && entry.Content is not Object;
-
-                channel.Targets.Add(new WorldPointerTargetRVO
-                {
-                    Target = entry.Transform,
-                    Visible = entry.Visible,
-                    Shown = shown,
-                    State = shown && entry.HasState ? entry.State : WorldPointerState.Hidden,
-                    ContentText = entry.HasContent ? entry.Content?.ToString() ?? "null" : string.Empty,
-                    Content = serializable ? entry.Content : null
-                });
+                FlowLogger.LogError($"RegisterDisplay - {slot.Name} shows {slot.ContentType.Name}, but '{entry.Target.name}' "
+                                    + $"on '{channel.Id}' holds {entry.Value.GetType().Name}. Registered from {file}:{line}.",
+                    slot.Display as Object);
+                return true;
             }
 
-            _model.Publish(channels);
+            return false;
         }
 
-        private static WorldPointerChannelRVO Channel(List<WorldPointerChannelRVO> channels, string id, string display)
+        private WorldPointerTargetRVO FindForRequest(string channel, Transform target, string request, string file, int line)
         {
-            var channel = new WorldPointerChannelRVO {Id = id, Display = display};
-            channels.Add(channel);
-            return channel;
-        }
+            if (_model.TryGetTarget(channel, target, out WorldPointerTargetRVO entry)) return entry;
 
-        private sealed class Target
-        {
-            public string Id;
-            public Transform Transform;
-            public object Content;
-            public bool HasContent;
-            public bool Visible = true;
-            public WorldPointerDisplaySlot Slot;
-            public IWorldPointerIndicator Indicator;
-            public Camera CanvasCamera;
-            public bool HasState;
-            public WorldPointerState State;
+            string name = target != null ? target.name : "null";
+            FlowLogger.LogError($"{request} - '{name}' is not registered on '{channel}'. RegisterTarget comes first. "
+                                + $"Sent from {file}:{line}.", target);
+            return null;
         }
     }
 }

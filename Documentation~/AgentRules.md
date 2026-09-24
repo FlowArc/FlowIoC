@@ -118,8 +118,8 @@ what is true whatever you are about to do.
   there the ScreenManager is used where it can be.
 - **A module with no screen never reaches a canvas.** UI that stands over something in the world -
   an emote over a head, a bar over a unit - is drawn by a screen of the module that owns the
-  object; the module registers the object's Transform with `IWorldPointerService` under an id and
-  sends it requests, and the screen registers as that id's display. The world side never creates
+  object; the module registers the object's Transform with `IWorldPointerService` on a channel and
+  sends it requests, and the screen registers as that channel's display. The world side never creates
   UI and never learns whether a request was applied.
 - **UI that moves every frame sits on a ScreenManager layer with a canvas of its own.** A moving
   element rebuilds its whole canvas, so the game gives the layers it sets aside for moving UI -
