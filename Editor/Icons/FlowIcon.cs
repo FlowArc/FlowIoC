@@ -54,7 +54,8 @@ namespace FlowIoC.Editor.Icons
         Wrench = 32,
         Chart = 33,
         Vibrate = 34,
-        Ad = 35
+        Ad = 35,
+        Speaker = 36
     }
 }
 

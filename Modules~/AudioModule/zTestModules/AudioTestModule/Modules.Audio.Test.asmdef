@@ -1,0 +1,18 @@
+{
+  "name": "Modules.Audio.Test",
+  "references": [
+    "FlowIoC",
+    "Modules.Audio.Shared",
+    "Modules.Audio.Signals",
+    "Modules.Audio"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

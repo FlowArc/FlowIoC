@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 388f26ab71bc0c247ae1157a02a40ca8, type: 3}
+  m_Name: CD_AudioSettings
+  m_EditorClassIdentifier: Modules.Audio::Modules.AudioModule.Data.UnityObjects.CD_AudioSettings
+  Mixer: {fileID: 24100000, guid: 7bee8ed030df39a49bafef7d2096717c, type: 2}
+  MusicGroup: {fileID: -378471582917426826, guid: 7bee8ed030df39a49bafef7d2096717c, type: 2}
+  SfxGroup: {fileID: -3492046664102459065, guid: 7bee8ed030df39a49bafef7d2096717c, type: 2}
+  UiGroup: {fileID: 1051186437093069747, guid: 7bee8ed030df39a49bafef7d2096717c, type: 2}
+  AmbientGroup: {fileID: -7041017020668552889, guid: 7bee8ed030df39a49bafef7d2096717c, type: 2}
+  MusicVolumeParameter: MusicVolume
+  SfxVolumeParameter: SfxVolume
+  Voices:
+  - Channel: 1
+    Initial: 6
+    Max: 16
+    Steal: 0
+  - Channel: 2
+    Initial: 2
+    Max: 4
+    Steal: 0
+  - Channel: 3
+    Initial: 1
+    Max: 4
+    Steal: 0
+  MusicCrossfade: 1
+  SnapshotTransition: 0.5

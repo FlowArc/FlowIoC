@@ -17,8 +17,10 @@ namespace FlowIoC.Editor.ModulePanels
     {
         private const float MIN_WIDTH = 560f;
         private const float MIN_HEIGHT = 320f;
-        private const float SIDEBAR_WIDTH = 200f;
         private const float SIDEBAR_BORDER = 1f;
+
+        /// <summary>How far either side of the list's edge a press takes hold of it.</summary>
+        private const float HANDLE_REACH = 3f;
 
         /// <summary>Which panel this window shows, kept as the name the type is rebuilt from.</summary>
         [SerializeField] private string _panelType;
@@ -31,6 +33,10 @@ namespace FlowIoC.Editor.ModulePanels
         private ModulePanelSidebarPainter _sidebar;
         private Vector2 _scroll;
         private Vector2 _sidebarScroll;
+        private ModulePanelSidebarWidth _sidebarWidth;
+
+        /// <summary>Where the bar ends, read on the last repaint; the list and its handle start there.</summary>
+        private float _splitTop;
 
         /// <summary>
         /// Opens the panel, or focuses it when it is already open. A module's menu item is one
@@ -87,6 +93,7 @@ namespace FlowIoC.Editor.ModulePanels
             Color accent = _palette.Accent(_panel.Role, EditorGUIUtility.isProSkin);
             _painter = new ModulePanelPainter(_rows, _palette, accent, _panel.GetType());
             _sidebar = new ModulePanelSidebarPainter(_rows, _palette, accent);
+            _sidebarWidth = new ModulePanelSidebarWidth(type.FullName);
         }
 
         private void OnGUI()
@@ -123,23 +130,29 @@ namespace FlowIoC.Editor.ModulePanels
         /// The list on the left, the rows on the right, each in a scroll view of its own. A scroll
         /// view is a group, so a row that bleeds to x = 0 bleeds to its column's edge and not to
         /// the window's. The sidebar's fill runs the full height under the bar whatever the list
-        /// inside it comes to, so it is painted from the window rather than from the rows.
+        /// inside it comes to, so it is painted from the window rather than from the rows. Its right
+        /// edge is a handle: dragged sideways it widens or narrows the list, and the width is kept
+        /// for the next time this panel opens.
         /// </summary>
         private void DrawSplit()
         {
+            float width = _sidebarWidth.Clamp(_sidebarWidth.Value, position.width);
+
             if (Event.current.type == EventType.Repaint)
             {
-                float top = GUILayoutUtility.GetLastRect().yMax;
+                _splitTop = GUILayoutUtility.GetLastRect().yMax;
 
-                EditorGUI.DrawRect(new Rect(0f, top, SIDEBAR_WIDTH, position.height - top),
+                EditorGUI.DrawRect(new Rect(0f, _splitTop, width, position.height - _splitTop),
                     new Color(0f, 0f, 0f, EditorGUIUtility.isProSkin ? 0.12f : 0.06f));
-                EditorGUI.DrawRect(new Rect(SIDEBAR_WIDTH - SIDEBAR_BORDER, top, SIDEBAR_BORDER, position.height - top),
+                EditorGUI.DrawRect(new Rect(width - SIDEBAR_BORDER, _splitTop, SIDEBAR_BORDER, position.height - _splitTop),
                     new Color(0f, 0f, 0f, 0.35f));
             }
 
+            DragHandle(width);
+
             EditorGUILayout.BeginHorizontal();
 
-            _sidebarScroll = EditorGUILayout.BeginScrollView(_sidebarScroll, GUILayout.Width(SIDEBAR_WIDTH));
+            _sidebarScroll = EditorGUILayout.BeginScrollView(_sidebarScroll, GUILayout.Width(width));
             _panel.DrawSidebar(_sidebar);
             EditorGUILayout.EndScrollView();
 
@@ -148,6 +161,39 @@ namespace FlowIoC.Editor.ModulePanels
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// The list's right edge, taken hold of by a press within a few pixels of it. While held,
+        /// the list follows the pointer; the width is written to EditorPrefs once, on release.
+        /// </summary>
+        private void DragHandle(float width)
+        {
+            var handle = new Rect(width - HANDLE_REACH, _splitTop, HANDLE_REACH * 2f, position.height - _splitTop);
+            int id = GUIUtility.GetControlID(FocusType.Passive);
+            Event current = Event.current;
+
+            EditorGUIUtility.AddCursorRect(handle, MouseCursor.ResizeHorizontal, id);
+
+            switch (current.GetTypeForControl(id))
+            {
+                case EventType.MouseDown when current.button == 0 && handle.Contains(current.mousePosition):
+                    GUIUtility.hotControl = id;
+                    current.Use();
+                    break;
+
+                case EventType.MouseDrag when GUIUtility.hotControl == id:
+                    _sidebarWidth.Set(current.mousePosition.x, position.width);
+                    current.Use();
+                    Repaint();
+                    break;
+
+                case EventType.MouseUp when GUIUtility.hotControl == id:
+                    GUIUtility.hotControl = 0;
+                    _sidebarWidth.Save();
+                    current.Use();
+                    break;
+            }
         }
     }
 }

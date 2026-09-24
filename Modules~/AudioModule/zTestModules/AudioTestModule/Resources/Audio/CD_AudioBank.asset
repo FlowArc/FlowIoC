@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 610555e5027ee254896801cbc64ce6c9, type: 3}
+  m_Name: CD_AudioBank
+  m_EditorClassIdentifier: Modules.Audio.Shared::Modules.AudioModule.Shared.Data.UnityObjects.CD_AudioBank
+  Module: AudioTestModule
+  PreloadAtBoot: 0
+  Sounds:
+  - Key: AudioTestModule/Beep
+    Clips:
+    - m_AssetGUID: 983426284b8f71c47a68277bd0e4dc47
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    - m_AssetGUID: d9ddf3c58dfe4e44bbe422bdb8ff597e
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    Volume: 0.8
+    Channel: 1
+    Loop: 0
+    SpatialBlend: 0
+    MinDistance: 1
+    MaxDistance: 20
+    MinInterval: 0.05
+  - Key: AudioTestModule/Boom
+    Clips:
+    - m_AssetGUID: 969f2db2a88718f4f8dbf9cd7300ccb9
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    Volume: 1
+    Channel: 1
+    Loop: 0
+    SpatialBlend: 1
+    MinDistance: 1
+    MaxDistance: 20
+    MinInterval: 0
+  - Key: AudioTestModule/Click
+    Clips:
+    - m_AssetGUID: 8ae0312b405a59944b9e2b098549c3ea
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    Volume: 0.6
+    Channel: 2
+    Loop: 0
+    SpatialBlend: 0
+    MinDistance: 1
+    MaxDistance: 20
+    MinInterval: 0
+  - Key: AudioTestModule/ThemeA
+    Clips:
+    - m_AssetGUID: e0d056eae03a9184aad791291ca51f24
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    Volume: 0.7
+    Channel: 0
+    Loop: 1
+    SpatialBlend: 0
+    MinDistance: 1
+    MaxDistance: 20
+    MinInterval: 0
+  - Key: AudioTestModule/ThemeB
+    Clips:
+    - m_AssetGUID: 58de94aad38b43a49a88194878437959
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
+    Volume: 0.7
+    Channel: 0
+    Loop: 1
+    SpatialBlend: 0
+    MinDistance: 1
+    MaxDistance: 20
+    MinInterval: 0

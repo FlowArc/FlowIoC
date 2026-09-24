@@ -1,0 +1,22 @@
+{
+  "name": "Modules.Audio",
+  "references": [
+    "FlowIoC",
+    "Modules.Audio.Shared",
+    "Modules.Audio.Signals",
+    "FlowIoC.Editor",
+    "Unity.Addressables",
+    "Unity.ResourceManager",
+    "Unity.InputSystem",
+    "Unity.Addressables.Editor"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
