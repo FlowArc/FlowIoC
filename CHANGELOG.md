@@ -5,6 +5,14 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.5] - 2026-09-24
+
+### Added
+
+- **Asset file prefixes.** Every asset file carries a prefix that says what it is - `TX_`, `SPR_`,
+  `MT_`, `Shader_`, `PB_`, `SND_` and the rest. The table is in the agent rules, the data types
+  skill, the README and a new Asset Files tab on the Data Types Help page.
+
 ## [1.22.4] - 2026-09-23
 
 ### Fixed
