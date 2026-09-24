@@ -113,6 +113,17 @@ what is true whatever you are about to do.
   module.
 - A screen dispatches its module's **Outgoing** for what leaves it and its **internal** holder for
   what stays.
+- **An overlay canvas exists only through the ScreenManager.** No Root, module or Shared Mono
+  carries a Screen Space Overlay canvas of its own. A test scene is the one exception, and even
+  there the ScreenManager is used where it can be.
+- **A module with no screen never reaches a canvas.** UI that stands over something in the world -
+  an emote over a head, a bar over a unit - is drawn by a screen of the module that owns the
+  object; the module registers the object's Transform with `IWorldPointerService` under an id and
+  sends it requests, and the screen registers as that id's display. The world side never creates
+  UI and never learns whether a request was applied.
+- **UI that moves every frame sits on the ScreenManager's own-canvas layers**, `Layer_3` and
+  `Layer_4`. A moving element rebuilds its whole canvas, and those two layers have a canvas of
+  their own, so the HUD's is not rebuilt with it.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
   what it announces. A module's signals are its public surface - together with the
   interface of a Service, which is the one thing another module may reference directly, and
@@ -137,7 +148,7 @@ what is true whatever you are about to do.
 - **A shared asset is filed once, on one Root.** A ScriptableObject other modules read goes in the
   *Shared Scriptables* of one Root's adapter - a scene component in its *Shared Monos* - and a
   reader injects `ISharedDataModel` and calls `GetScriptable<RD_Match>()` or
-  `GetMonoBehaviour<Canvas>("OverlayCanvas")` - never a second copy dragged onto its own adapter,
+  `GetMonoBehaviour<ArenaBounds>("Arena")` - never a second copy dragged onto its own adapter,
   which reads an asset nobody fills when the producer is not in the scene and reports nothing. The
   slot says the asset is common, not who produces it: a test module's Root files a ready-made
   `RD_Match` when the producer is not in the scene. Filing happens when the Root registers, at

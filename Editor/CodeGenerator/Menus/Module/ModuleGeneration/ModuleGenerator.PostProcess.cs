@@ -108,7 +108,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 return;
 
             string screenName = handoff.ModuleName + "View";
-            string prefabName = handoff.ModuleName;
+            string prefabName = string.IsNullOrEmpty(handoff.ScreenPrefabName) ? handoff.ModuleName : handoff.ScreenPrefabName;
             string rootObjectName = TrimScreen(handoff.ModuleName) + "TestRoot";
 
             List<Type> possibleAssemblyFiles = AssemblyHelper.GetAllTypesFromAssemblies(handoff.ModuleName);
@@ -129,15 +129,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     Debug.LogError($"ScreenServiceRoot prefab not found at: {CodeGeneratorStrings.SCREEN_SERVICE_ROOT_PATH}");
                 }
 
-                // The screen is addressable, and an addressable screen loads through the asset
-                // service, so the scene that runs it carries AssetServiceRoot beside
-                // ScreenServiceRoot.
-                GameObject assetServiceRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH);
+                // An addressable screen loads through the asset service, so the scene that runs it
+                // carries AssetServiceRoot beside ScreenServiceRoot. A Resource screen does not.
+                GameObject assetServiceRootPrefab = handoff.ScreenIsAddressable
+                    ? AssetDatabase.LoadAssetAtPath<GameObject>(CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH)
+                    : null;
                 if (assetServiceRootPrefab != null)
                 {
                     PrefabUtility.InstantiatePrefab(assetServiceRootPrefab, scene);
                 }
-                else
+                else if (handoff.ScreenIsAddressable)
                 {
                     Debug.LogError($"AssetServiceRoot prefab not found at: {CodeGeneratorStrings.ASSET_SERVICE_ROOT_PATH}");
                 }
@@ -204,12 +205,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 string finalPrefabPath = handoff.ScreenPrefabPath + "/" + prefabName + ".prefab";
                 PrefabUtility.SaveAsPrefabAssetAndConnect(screenGameObject, finalPrefabPath, InteractionMode.UserAction);
 
-                MakePrefabAddressable(finalPrefabPath, prefabName);
+                // A screen loaded from Resources is never given an address: nothing loads it
+                // through Addressables, and an entry would only put it in a group for nothing.
+                if (handoff.ScreenIsAddressable)
+                    MakePrefabAddressable(finalPrefabPath, prefabName);
             });
 
             AssetDatabase.Refresh();
 
-            Debug.Log($"Screen prefab '{prefabName}' has been created and marked as Addressable. Scene saved at: {handoff.ScenePath}");
+            string loaded = handoff.ScreenIsAddressable ? "marked as Addressable" : "placed under Resources";
+            Debug.Log($"Screen prefab '{prefabName}' has been created and {loaded}. Scene saved at: {handoff.ScenePath}");
         }
 
         /// <summary>

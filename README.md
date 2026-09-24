@@ -1629,8 +1629,10 @@ assembly stays: it is the one line that records who reads whose data.
 Scene components go the same way. The adapter's **Mono Map** holds the MonoBehaviours the
 module drives — a spawner, a marker, a rig under its Root — read by its Model with
 `GetMonoBehaviour<T>()`; the **Shared Mono Map** holds the ones other modules read, through
-`ISharedDataModel.GetMonoBehaviour<T>()`: a Canvas every module parents its overlays to, the
-one Camera a pointer projects through. *Tools ▸ FlowIoC ▸ Wiki ▸ Data Types* has a **Root
+`ISharedDataModel.GetMonoBehaviour<T>()`: the bounds of the arena enemies spawn in, an
+EventSystem. It files MonoBehaviours only - a `Canvas` or a `Camera` is a `Behaviour` - and no
+module shares a canvas for overlays: an overlay canvas exists only through the ScreenManager.
+*Tools ▸ FlowIoC ▸ Wiki ▸ Data Types* has a **Root
 Adapter** tab that walks through the four slots with the Model and the Command that read each.
 
 Namespaces follow the folder, as they already do for a module: a value object under
@@ -1696,7 +1698,10 @@ with its own Context:
 - **`zScreenModules/`** — one folder per UI screen, so a screen's signals, commands
   and views travel together. A screen belongs to the module whose feature it shows,
   so it nests under a main or a sub module and never under another screen module or
-  a test module.
+  a test module. Screens are the only UI: an overlay canvas exists only through the
+  ScreenManager, and UI over something in the world is drawn by a screen of the module
+  that owns it, joined to it by WorldPointer through an id. What moves every frame sits
+  on `Layer_3` and `Layer_4`, which have a canvas of their own inside the ScreenManager.
 - **`zTestModules/`** — an isolated test scene and context, marked `IsTest` so it
   never starts in a real build.
 

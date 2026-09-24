@@ -29,6 +29,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         public string ScreenContextFullName;
         public string ScreenPrefabPath;
 
+        /// <summary>The prefab's file name: the module's name, or the last segment of a Resource path.</summary>
+        public string ScreenPrefabName;
+
+        /// <summary>False for a screen loaded from Resources, whose prefab is given no address.</summary>
+        public bool ScreenIsAddressable;
+
         /// <summary>
         /// The asset path of the scene the first half made and saved, and empty when the run
         /// asked for none. After the reload the Root goes into the scene at this path and into

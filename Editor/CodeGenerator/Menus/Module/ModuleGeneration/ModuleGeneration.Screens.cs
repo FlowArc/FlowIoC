@@ -122,9 +122,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             handoff.ViewNamespace = CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames,
                 false, signalsName, signalsNamespace);
 
+            screenSettings ??= new ScreenModuleSettings {AddressableKey = moduleName};
+
+            // Placed before the context is rendered: an empty Resource path is filled in here, and
+            // the context has to load the prefab from the path it is saved under.
+            ScreenPrefabPlacement placement = new ScreenPrefabPlacement()
+                .For(screenSettings, moduleName, modulePath, screenPrefabPath);
+
             string contextFullName = CreateScreenContext(rootsAndContextsPath, modulePath, moduleName,
-                screenSettings ?? new ScreenModuleSettings {AddressableKey = moduleName}, signalsName, signalsNamespace,
-                out string contextScriptPath);
+                screenSettings, signalsName, signalsNamespace, out string contextScriptPath);
 
             RegisterScreenContextOnParentRoot(parentModulePath, directoryConfigMap[ModuleType.Main],
                 contextFullName, moduleName + "Context", contextScriptPath);
@@ -134,7 +140,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             if (createScreen)
             {
                 handoff.ScenePath = CreateScene(scenePath, moduleName + "TestScene");
-                handoff.ScreenPrefabPath = CreateScreenPrefab(moduleName, screenPrefabPath);
+                handoff.ScreenPrefabPath = CreateScreenPrefab(placement.Name, placement.Folder);
+                handoff.ScreenPrefabName = placement.Name;
+                handoff.ScreenIsAddressable = placement.Addressable;
             }
 
             handoff.RootName = moduleName + "TestRoot";

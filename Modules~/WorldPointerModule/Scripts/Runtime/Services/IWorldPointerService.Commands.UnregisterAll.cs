@@ -8,8 +8,8 @@ namespace Modules.WorldPointerModule.Services
         public static partial class Commands
         {
             /// <summary>
-            /// Stops every pointer - the step a flow binds when the scene the pointers were
-            /// following is left. Each indicator is told Hidden first.
+            /// Unregisters every target - the step a flow binds when the scene the targets stood in
+            /// is left. Every indicator goes back to its display's Release; the displays stay.
             /// </summary>
             public class UnregisterAll : Command
             {

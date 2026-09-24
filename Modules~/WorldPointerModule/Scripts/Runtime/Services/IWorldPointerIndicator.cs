@@ -15,7 +15,14 @@ namespace Modules.WorldPointerModule.Services
         /// <summary>Null unless the indicator has an arrow. Its up is aimed at the target on the edge.</summary>
         RectTransform ArrowPivot { get; }
 
-        /// <summary>Told on the first tick after Register, and afterwards only when the state changes.</summary>
+        /// <summary>Told on the first tick after it is handed out, and afterwards only when the state changes.</summary>
         void SetState(WorldPointerState state);
+    }
+
+    /// <summary>An indicator that shows content: what the world side sent with SetContent.</summary>
+    public interface IWorldPointerIndicator<in TContent> : IWorldPointerIndicator
+    {
+        /// <summary>Called when it is handed out with content already sent, and on every SetContent after.</summary>
+        void SetContent(TContent content);
     }
 }

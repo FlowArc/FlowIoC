@@ -124,8 +124,10 @@ public class ShowMatchResultCommand : Command
 - The reader references `Modules.Match.Shared`, as for any published type. That one line is the
   record of who reads whose data; the compiler keeps `Modules.Match` out of reach.
 - Scene components go the same way: the adapter's **Shared Mono Map**, read with
-  `ISharedDataModel.GetMonoBehaviour<Canvas>("OverlayCanvas")`. The type has to be one the reader
-  can name - Unity's own, or one from a Shared assembly.
+  `ISharedDataModel.GetMonoBehaviour<ArenaBounds>("Arena")`. The type has to be a MonoBehaviour the
+  reader can name - Unity's own, or one from a Shared assembly. A `Canvas` or a `Camera` is a
+  `Behaviour`, not a MonoBehaviour, and cannot be filed (CS0311); and no module shares a canvas for
+  overlays at all - an overlay canvas exists only through the ScreenManager.
 
 A Mediator injects nothing but its View, so a screen that needs shared data dispatches, and a
 Command reads it.

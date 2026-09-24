@@ -66,8 +66,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: FlowIoC::FlowIoC.BaseModule.Adapters.RootAdapter
   _scriptableMap:
+    m_Keys:
+    - RD_WorldPointer
+    m_Values:
+    - {fileID: 11400000, guid: 55c71f2c9b344524cbbd7f292870cc9f, type: 2}
+  _sharedScriptableMap:
     m_Keys: []
     m_Values: []
   _monoMap:
+    m_Keys: []
+    m_Values: []
+  _sharedMonoMap:
     m_Keys: []
     m_Values: []

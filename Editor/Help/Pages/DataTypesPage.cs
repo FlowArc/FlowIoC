@@ -241,14 +241,15 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Separator();
             painter.SubHeading("Shared Mono Map - the components other modules read");
             painter.Paragraph(
-                "The same rule for scene components: filed once, on one Root, read anywhere. A shared "
-                + "Canvas every module parents its overlays to, the one Camera a pointer projects "
-                + "through, an EventSystem. The component's type has to be one the reader can name - "
-                + "Unity's own, or one from a Shared assembly.");
+                "The same rule for scene components: filed once, on one Root, read anywhere. The "
+                + "bounds of the arena the enemies spawn in, an EventSystem. The component has to be "
+                + "a MonoBehaviour the reader can name - Unity's own, or one from a Shared assembly. A "
+                + "Canvas or a Camera is a Behaviour and cannot be filed, and no module shares a canvas "
+                + "for overlays: an overlay canvas exists only through the ScreenManager.");
             painter.Code(
                 "[Inject] private ISharedDataModel _sharedDataModel { get; set; }\n"
                 + "\n"
-                + "Canvas overlay = _sharedDataModel.GetMonoBehaviour<Canvas>(\"OverlayCanvas\");");
+                + "ArenaBounds arena = _sharedDataModel.GetMonoBehaviour<ArenaBounds>(\"Arena\");");
 
             painter.Separator();
             painter.SubHeading("What goes wrong");
