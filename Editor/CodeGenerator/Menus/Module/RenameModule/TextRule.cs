@@ -32,15 +32,21 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         /// The address a screen context declares, in either of the two shapes the generator writes -
         /// <c>ScreenLoadCVO.Addressable("Name")</c> and <c>ScreenLoadCVO.Resource("Folder/Name")</c>.
         /// Only the last segment of a resource path is the prefab's name, so only that is replaced.
+        /// An address is the stem exactly, the entry the Addressables pass renames; a resource path
+        /// names a file, and every prefab under Resources that starts with the stem is renamed with
+        /// the module, so a segment that starts with it carries the rest of its name along.
         /// </summary>
         internal static TextRule ScreenAddress(string old, string @new)
         {
+            string escaped = Regex.Escape(old);
+
             return new TextRule
             {
                 Old = old,
                 New = @new,
-                Pattern = new Regex(@"(ScreenLoadCVO\.(?:Addressable|Resource)\(""(?:[^""]*/)?)" + Regex.Escape(old) + @"(""\))"),
-                Replacement = "${1}" + Escaped(@new) + "${2}"
+                Pattern = new Regex(@"(ScreenLoadCVO\.Addressable\("")" + escaped + @"(""\))"
+                                    + @"|(ScreenLoadCVO\.Resource\(""(?:[^""]*/)?)" + escaped + @"([^""/]*""\))"),
+                Replacement = "${1}${3}" + Escaped(@new) + "${2}${4}"
             };
         }
 

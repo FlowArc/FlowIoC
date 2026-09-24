@@ -31,6 +31,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         private const string SCENE = ".unity";
         private const string SETTINGS = ".csproj.DotSettings";
 
+        /// <summary>
+        /// Where an Editor-only screen keeps its prefab - the World Pointer sample screens, loaded
+        /// by path in the Editor and absent from a build. It sits at the module's root rather than
+        /// in the layout, so no FolderType names it.
+        /// </summary>
+        private const string EDITOR_RESOURCES = "Editor/Resources";
+
         private static readonly FolderEVO.FolderType[] AssetFolders =
         {
             FolderEVO.FolderType.Prefabs, FolderEVO.FolderType.Scenes, FolderEVO.FolderType.Resources
@@ -210,17 +217,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         }
 
         /// <summary>
-        /// The prefabs and scenes in the module's own Prefabs, Scenes and Resources folders whose
-        /// name starts with the stem - the test scene, the screen prefab, a Root prefab named after
-        /// its class. RenameAsset keeps a GUID, so nothing that points at them notices.
+        /// The prefabs and scenes in the module's own Prefabs, Scenes, Resources and
+        /// Editor/Resources folders whose name starts with the stem - the test scene, the screen
+        /// prefab, a Root prefab named after its class. RenameAsset keeps a GUID, so nothing that
+        /// points at them notices.
         /// </summary>
         private void AddAssets(ModuleRenamePlanEVO plan, ModuleRenameEVO module)
         {
-            foreach (FolderEVO.FolderType type in AssetFolders)
+            foreach (string folder in AssetFolderPaths(module))
             {
-                string folder = Folder(module, type);
-                if (string.IsNullOrEmpty(folder)) continue;
-
                 foreach (string path in _lookups.FilesIn(folder))
                 {
                     if (!path.EndsWith(PREFAB, StringComparison.OrdinalIgnoreCase)
@@ -239,23 +244,44 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
             }
         }
 
+        private IEnumerable<string> AssetFolderPaths(ModuleRenameEVO module)
+        {
+            foreach (FolderEVO.FolderType type in AssetFolders)
+            {
+                string folder = Folder(module, type);
+                if (!string.IsNullOrEmpty(folder)) yield return folder;
+            }
+
+            string editorResources = EditorResources(module);
+            if (editorResources != null) yield return editorResources;
+        }
+
+        private string EditorResources(ModuleRenameEVO module)
+        {
+            string folder = Normalize(Path.Combine(module.OldPath, EDITOR_RESOURCES));
+
+            return _lookups.DirectoryExists(folder) ? folder : null;
+        }
+
         /// <summary>
         /// A screen's prefab is &lt;stem&gt;.prefab under Prefabs/ when the context loads it by address,
         /// or under Resources/ when it loads it by path - the address is the stem either way, both
-        /// written by the generator. Whether the address is still that is Addressables' answer and
-        /// is read at run time; here the entry is planned when the prefab is in one of those two
-        /// places, so the path in ScreenLoadCVO.Resource is rewritten with the file it names.
+        /// written by the generator. An Editor-only screen loads it by path from Editor/Resources.
+        /// Whether the address is still that is Addressables' answer and is read at run time; here
+        /// the entry is planned when the prefab is in one of those places, so the path in
+        /// ScreenLoadCVO.Resource is rewritten with the file it names.
         /// </summary>
         private void AddScreenAddress(ModuleRenamePlanEVO plan, ModuleRenameEVO module)
         {
             if (module.Kind != ModuleKind.Screen) return;
 
-            AssetRenameEVO prefab = PlannedPrefab(plan, module, FolderEVO.FolderType.Prefabs)
-                                    ?? PlannedPrefab(plan, module, FolderEVO.FolderType.Resources);
+            AssetRenameEVO prefab = PlannedPrefab(plan, Folder(module, FolderEVO.FolderType.Prefabs), module.OldStem)
+                                    ?? PlannedPrefab(plan, Folder(module, FolderEVO.FolderType.Resources), module.OldStem)
+                                    ?? PlannedPrefab(plan, EditorResources(module), module.OldStem);
 
             if (prefab == null)
             {
-                plan.Kept.Add("No Prefabs/ or Resources/" + module.OldStem + PREFAB + " in " + module.OldName
+                plan.Kept.Add("No Prefabs/, Resources/ or Editor/Resources/" + module.OldStem + PREFAB + " in " + module.OldName
                               + ": the screen's prefab and its address keep their names.");
 
                 return;
@@ -272,13 +298,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
             });
         }
 
-        private AssetRenameEVO PlannedPrefab(ModuleRenamePlanEVO plan, ModuleRenameEVO module, FolderEVO.FolderType folder)
+        private AssetRenameEVO PlannedPrefab(ModuleRenamePlanEVO plan, string folder, string stem)
         {
-            string path = Folder(module, folder);
+            if (folder == null) return null;
 
-            if (path == null) return null;
-
-            string expected = Normalize(Path.Combine(path, module.OldStem + PREFAB));
+            string expected = Normalize(Path.Combine(folder, stem + PREFAB));
 
             return plan.Assets.FirstOrDefault(asset => string.Equals(Normalize(asset.Path), expected, StringComparison.OrdinalIgnoreCase));
         }
@@ -336,8 +360,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
 
                 if (shipped.Contains(assembly.OldName))
                     plan.Warnings.Add(assembly.OldName + " is the assembly of a module the package ships. Renamed, the "
-                                      + "installer will not see it as installed and will offer the original again - "
-                                      + "a second copy, not an update.");
+                                                       + "installer will not see it as installed and will offer the original again - "
+                                                       + "a second copy, not an update.");
             }
         }
 
