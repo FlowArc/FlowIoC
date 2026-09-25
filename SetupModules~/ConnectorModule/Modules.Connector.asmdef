@@ -5,7 +5,6 @@
         "FlowIoC",
         "Modules.Main.Signals",
         "Modules.Main.Screen.Signals",
-        "Modules.Gameplay.Shared",
         "Modules.Gameplay.Screen.Signals",
         "Modules.Loading.Signals",
         "Modules.Loading.Shared",

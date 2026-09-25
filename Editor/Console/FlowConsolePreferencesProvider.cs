@@ -44,12 +44,12 @@ namespace FlowIoC.Editor.Console
 
             preferences.IsLoggingEnabled = EditorGUILayout.Toggle(
                 new GUIContent("Logging enabled",
-                    "The master switch. Off, nothing is recorded and nothing is mirrored. An error still reaches Unity's console."),
+                    "The master switch. Off, nothing is recorded and nothing is mirrored. A warning and an error still reach Unity's console."),
                 preferences.IsLoggingEnabled);
 
             preferences.SendLogsToUnityConsole = EditorGUILayout.Toggle(
                 new GUIContent("Mirror into Unity's console",
-                    "Send every line to Unity's own console as well, for the two side by side. A plain log is mirrored only while its channel is on, a warning whatever the switch says, an error always."),
+                    "Send the plain logs to Unity's own console as well, for the two side by side - each only while its channel is on. Warnings and errors reach Unity's console whether this is on or off."),
                 preferences.SendLogsToUnityConsole);
 
             preferences.StackTraceCapture = (FlowStackTraceCapture) EditorGUILayout.EnumPopup(

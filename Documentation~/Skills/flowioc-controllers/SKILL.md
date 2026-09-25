@@ -155,6 +155,22 @@ private IEnumerator DelayedComplete()
 `Release(params object[])` may pass data forward: the next command receives it through its typed
 `Execute`. `Stop()` abandons the rest of the sequence.
 
+**`Retain()` comes first whenever a Command ends its own step - to stop as much as to carry on,
+synchronous or not.** It is what says the step ends when the Command says so; without it `Release()`
+and `Stop()` are refused with an error and the sequence runs on. A Command that decides, inside
+`Execute`, that the flow ends here writes both lines:
+
+```csharp
+public override void Execute()
+{
+    if (_boosterModel.Count(_type) > 0)
+        return;                 // an ordinary step: the sequence carries on when Execute returns
+
+    Retain();
+    Stop();                     // no booster left - the steps behind this one do not run
+}
+```
+
 ## Every path out of a retained Command ends in `Release()` or `Stop()`
 
 **A retain nobody resolves hangs the group for ever. There is no timeout and nothing is logged.**
@@ -194,6 +210,116 @@ public override async void Execute()
 What the `catch` does is the game's decision and not the framework's - `Stop()`, a `Release()` that
 carries on regardless, a signal that opens something else - which is why no base class writes it for
 you. What is **not** a decision is that the retain is resolved on all three paths.
+
+## Work that runs every frame
+
+A game that moves things every frame still writes that work as Commands. A tick is an internal
+signal bound to one Command per job, so the frame's work reads in the Context. What dispatches the
+tick depends on the work, and there are two answers.
+
+### Driven by the frame
+
+The frame is the clock: every frame runs the sequence afresh. One Command starts it, and a flag in
+a Model says whether it runs:
+
+```csharp
+CommandBinder.Bind(_internalSignals.RunStarted).ToSequence<StartFrameTickCommand>();
+
+CommandBinder.Bind(_internalSignals.Tick)
+    .ToSequence<FlyBeesCommand>()
+    .ToSequence<DispatchArrivalsCommand>()
+    .ToSequence<ReleaseCratesCommand>()
+    .ToSequence<JudgeClearedCommand>()
+    .ToSequence<JudgeStuckCommand>()
+    .ToSequence<DrawSwarmCommand>();
+```
+
+The Command is the game's own; the package ships none.
+
+```csharp
+internal class StartFrameTickCommand : Command
+{
+    [Inject]       private IUpdateProvider         _updateProvider  { get; set; }
+    [Inject]       private IRunModel               _runModel        { get; set; }
+    [InjectSignal] private GameplayInternalSignals _internalSignals { get; set; }
+
+    public override void Execute()
+    {
+        if (_runModel.IsTicking)
+            return;
+
+        _runModel.IsTicking = true;
+
+        // Taken into locals: this instance goes back to the pool when Execute returns, and the
+        // frame callback outlives it.
+        IRunModel runModel = _runModel;
+        IUpdateProvider updateProvider = _updateProvider;
+        Signal tick = _internalSignals.Tick;
+
+        Action onFrame = null;
+        onFrame = () =>
+        {
+            if (!runModel.IsTicking)
+            {
+                updateProvider.RemoveUpdate(onFrame);
+                return;
+            }
+
+            tick.Dispatch();
+        };
+
+        updateProvider.AddUpdate(onFrame);
+    }
+}
+```
+
+- **Ending the loop is setting the flag.** Whichever Command ends play - won, lost, left - sets
+  `IsTicking` to false, and the next frame's callback removes itself. Nothing else has to know the
+  tick exists, and a second start while it runs does nothing.
+- **Why one Command both starts and stops it.** A separate stop Command cannot reach the callback
+  a finished Command added; only a Model outlives both. Putting the tick method in the Model
+  instead would have the Model dispatching the tick, which no reader looks for there. So the one
+  Command owns the callback and the Model owns only the flag.
+- **A step that `Stop()`s cuts that frame short**, and the next frame starts from the top. It does
+  not end the loop; the flag does.
+- **Every step is synchronous.** A step that retains past its frame leaves that frame's run open
+  while the next frame starts another beside it. Work that waits belongs in a flow of its own.
+
+### Paced by itself
+
+The next turn waits for the previous one to finish, however long that takes. A step retains until
+the next turn is due, and the last step dispatches the tick again. `CounterModule` is the worked
+example, ticking once a second:
+
+```csharp
+CommandBinder.Bind(_internalSignals.Tick)
+    .ToSequence<TimeTickCommand>()              // Retain, wait a second, Release
+    .ToSequence<TickProcessAllDataCommand>()
+    .ToSequence<SignalDispatchCommand>(_internalSignals.Tick);  // the next turn, a run of its own
+```
+
+- **A step that `Stop()`s ends the loop**, because the last step is never reached.
+- **Without a step that waits, the tick re-enters at once and never stops.**
+- **The last step dispatches the tick; it is never `.ToGroupAsParallel(Tick)`.** A group step waits
+  for its sub group, so a loop that names itself as a group makes every turn a sub group of the one
+  before. None of them ever finishes: each turn keeps a group resolver alive, and a `Stop()` unwinds
+  the whole chain in one call stack, deep enough to overflow it. `SignalDispatchCommand` starts the
+  next turn as a run of its own and lets this one finish and go back to the pool.
+
+### Either way
+
+- **The tick signal hides its log** - `public Signal Tick = new(hideCommandLog: true);` - or it
+  buries every other line in the Flow Console. `[HideCommandLog]` on one Command hides that step
+  alone.
+- **What lasts between turns lives in a Model**, because a Command holds no state: a flag that says
+  "cleared" was already announced, the version last drawn, the arrivals a move collected for the
+  next step to dispatch. Curve and easing maths shared by several steps is a Function.
+- **Commands and their groups are pooled**, so a sequence of six steps a frame does not allocate them.
+
+The shape both replace is a System or sub system that adds itself to `IUpdateProvider` and runs the
+frame in its own methods. Even when it dispatches only one signal per event, the frame's work is a
+file to read rather than a list in the Context, and two people changing two jobs change the same
+file.
 
 ## Writing a Function
 
@@ -292,4 +418,39 @@ Bind these rather than writing your own.
   to settle, and the answer is the same every time: dispatch, and let a Command read the conditions
   and decide.
 - **A command that runs every frame burying the console.** `[HideCommandLog]` drops that command's
-  two log lines and nothing else.
+  two log lines and nothing else; `hideCommandLog: true` on the tick signal hides the whole loop.
+- **A loop that ends in `.ToGroupAsParallel(Tick)`.** Every turn becomes a sub group of the one
+  before and none finishes: a group resolver kept per turn, and a `Stop()` that unwinds them all in
+  one call. The last step is `.ToSequence<SignalDispatchCommand>(Tick)`.
+- **A frame loop that re-enters itself.** A `Stop()` anywhere in it ends the loop for good, where
+  the frame's work wanted only that frame cut short. Work driven by the frame dispatches its tick
+  from `IUpdateProvider`; re-entering is for a loop paced by itself.
+- **A frame loop in a System's methods.** A sub system added to `IUpdateProvider` that moves, judges
+  and draws is the frame's work hidden in one file. It is a tick sequence - see *Work that runs
+  every frame*.
+- **An empty Unity console read as "nothing ran".** Unity's console shows warnings and errors; the
+  steps are in the Flow Console. Read it - see *Following a flow*.
+
+## Following a flow
+
+Every signal dispatched and every Command that ran, retained, released or stopped is recorded in
+the Flow Console - `FlowLogger.Logs`, in the Editor. Unity's console gets the warnings and errors
+and nothing else unless the developer mirrors the rest. An agent reads the list through the
+Editor's eval: the rows since its last read, the module's own channel and every warning and
+error, as plain text.
+
+```csharp
+int since = 0;   // the count the previous read returned; 0 the first time
+var logs = FlowIoC.ConsoleModule.FlowLogger.Logs;
+if (since > logs.Count) since = 0;   // cleared or trimmed since: start over
+var rows = new System.Collections.Generic.List<FlowIoC.ConsoleModule.ConsoleLog>();
+for (int i = since; i < logs.Count; i++)
+    if (logs[i].Channel == "PlayerModule" || logs[i].LogType != UnityEngine.LogType.Log)
+        rows.Add(logs[i]);
+return logs.Count + "\n" + new FlowIoC.Editor.Console.FlowConsoleExport().ToText(rows, false);
+```
+
+The first line of the answer is the `since` for the next read. A module's channel is its folder
+name; the framework's own are `Signal`, `Command`, `Injection`, `Context`, `Screen`, `Pool` and
+`Asset`. Do not switch *Mirror into Unity's console* on instead: it floods Unity's console with
+every line, and it is the developer's own setting.

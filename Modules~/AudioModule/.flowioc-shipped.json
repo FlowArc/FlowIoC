@@ -79,7 +79,7 @@
     "Scripts/Runtime/Data/ValueObjects/AudioVoicesCVO.cs": "ff34f68ffa301789e59f15bc7953d0e675dfda69",
     "Scripts/Runtime/Data/ValueObjects/AudioVoicesCVO.cs.meta": "6e12708afea7a6a59e2a5faea90c10958e4f8841",
     "Scripts/Runtime/Entities.meta": "812857a1b33a22c71b2a6227b4c3576937e5639d",
-    "Scripts/Runtime/Entities/AudioVoice.cs": "0587f8fe12f4af02bddbc4c61589aadfe60c29c8",
+    "Scripts/Runtime/Entities/AudioVoice.cs": "463e7f3ac764dfa1ed32fb6190e0461318fd0e90",
     "Scripts/Runtime/Entities/AudioVoice.cs.meta": "3c5f121eea8ece8302d23dafb4040d24b16abcd8",
     "Scripts/Runtime/Entities/SuppressClickSound.cs": "cb6429c0489228a5abed42621d37791b9ee029b0",
     "Scripts/Runtime/Entities/SuppressClickSound.cs.meta": "e19845ad4d67a142be0f83fcdb0492d11f5ddb4e",

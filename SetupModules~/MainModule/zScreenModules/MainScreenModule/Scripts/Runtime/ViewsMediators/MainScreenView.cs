@@ -1,7 +1,6 @@
 using System;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
-using Modules.GameplayModule.Shared.Enums;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,25 +9,21 @@ namespace Modules.MainModule.MainScreenModule.ViewsMediators
     [RequireComponent(typeof(ViewInjector))]
     public class MainScreenView : ScreenView
     {
-        [SerializeField] private Button _easyButton;
-        [SerializeField] private Button _mediumButton;
-        [SerializeField] private Button _hardButton;
+        [SerializeField] private Button _playButton;
 
-        public Action<DifficultyType> DifficultyClicked;
+        public Action PlayClicked;
 
         private void OnEnable()
         {
-            _easyButton.onClick.AddListener(() => DifficultyClicked?.Invoke(DifficultyType.Easy));
-            _mediumButton.onClick.AddListener(() => DifficultyClicked?.Invoke(DifficultyType.Medium));
-            _hardButton.onClick.AddListener(() => DifficultyClicked?.Invoke(DifficultyType.Hard));
+            _playButton.onClick.AddListener(OnPlayClicked);
         }
 
         private void OnDisable()
         {
-            _easyButton.onClick.RemoveAllListeners();
-            _mediumButton.onClick.RemoveAllListeners();
-            _hardButton.onClick.RemoveAllListeners();
+            _playButton.onClick.RemoveListener(OnPlayClicked);
         }
+
+        private void OnPlayClicked() => PlayClicked?.Invoke();
 
         /// <summary>
         /// This method runs if screenData.HasShowAnimation bool is true.

@@ -212,7 +212,9 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!command.IsRetain)
             {
                 FlowLogger.LogError(SystemLogType.CommandOperation,
-                    $"Command must be retained to call manual RELEASE! Command: {_displayName.Of(command.GetType())}", command.GetType());
+                    $"Command must be retained to call manual RELEASE! Command: {_displayName.Of(command.GetType())}. "
+                    + "Retain() comes first whenever a Command ends its own step, synchronous or not - then Release() "
+                    + "carries on and Stop() ends the sequence.", command.GetType());
                 return;
             }
 
@@ -260,7 +262,9 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!command.IsRetain)
             {
                 FlowLogger.LogError(SystemLogType.CommandOperation,
-                    $"Command must be retained to call STOP! Command: {_displayName.Of(command.GetType())}",
+                    $"Command must be retained to call STOP! Command: {_displayName.Of(command.GetType())}. "
+                    + "Retain() comes first whenever a Command ends its own step, synchronous or not: a Command "
+                    + "that stops the sequence from inside Execute writes Retain(); Stop();",
                     command.GetType());
                 return;
             }

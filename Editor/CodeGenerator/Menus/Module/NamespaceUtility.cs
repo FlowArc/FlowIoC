@@ -331,12 +331,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             return new ModuleNamespaceBuilder().Build(ancestorNames, module?.Name);
         }
 
+        /// <summary>
+        /// Compared without case: a script writes the project's folder in the casing of its own
+        /// working directory, D:\work\... where Unity says D:/Work/..., and Windows reads both as
+        /// the one folder.
+        /// </summary>
         public static string GetUnityAssetPath(string fullPath)
         {
             string normalizedFull = NormalizePath(fullPath);
             string normalizedData = NormalizePath(Application.dataPath);
 
-            if (!normalizedFull.StartsWith(normalizedData))
+            if (!normalizedFull.StartsWith(normalizedData, StringComparison.OrdinalIgnoreCase))
             {
                 Debug.LogError($"Path '{fullPath}' is not within the Assets folder.");
                 return "Assets";

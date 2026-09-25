@@ -212,9 +212,10 @@ What a switch hides is the channel's plain logs. **A warning and an error show w
 its channel's switch, its group's mute or an isolation says.** `Context` is off by
 default, and *Shared asset is not filed on any Root!* is written on it, so a console that
 let the switch decide showed the error in Unity's window and not in this one. The Warning
-and Error toggles on the bar are what hide a report. `SendLogsToUnityConsole` follows the
-same rule: a warning is forwarded whatever the switch says, a plain log only while its
-channel is on, and an error always.
+and Error toggles on the bar are what hide a report. Unity's console follows the same rule:
+a warning and an error reach it always - whatever `SendLogsToUnityConsole`, the channel's
+switch or the master switch says - and a plain log only while `SendLogsToUnityConsole` is on
+and its channel is on.
 
 What you switch on and off is yours. It lives in EditorPrefs, keyed by the project, and
 nothing committed is written when you click — one developer's filter has no business turning up in
@@ -401,8 +402,8 @@ the defaults written here.
 
 | Preference | Effect |
 |---|---|
-| Logging enabled (`IsLoggingEnabled`) | Master switch. Off: nothing is recorded and nothing is mirrored. An error still reaches Unity's console. |
-| Mirror into Unity's console (`SendLogsToUnityConsole`) | Mirror everything into Unity's own console, for when you need the two side by side. A plain log is mirrored only while its channel is on; a warning whatever the channel says; an error always, switch or no switch. |
+| Logging enabled (`IsLoggingEnabled`) | Master switch. Off: nothing is recorded and nothing is mirrored. A warning and an error still reach Unity's console. |
+| Mirror into Unity's console (`SendLogsToUnityConsole`) | Mirror the plain logs into Unity's own console, for when you need the two side by side - each only while its channel is on. Warnings and errors reach Unity's console whether this is on or off. |
 | Source capture (`StackTraceCapture`) | Which logs work out where they came from. `WarningsAndErrors` is the default and the one to leave alone: capturing a source builds the whole managed stack as a string and picks it apart, and the framework logs every signal, injection and command, so this is the most expensive thing the console does. Raise it to `Always` while following a flow and put it back afterwards. `Never` is the cheapest and shows no source for anything. Also on the console's bar, as `Source`. |
 | Max log count (`MaxLogCount`) | How many logs are kept. The oldest are dropped past this, so a long play session does not hold every log it ever wrote. `0` keeps all of them. |
 | Deep analysis in the detail panel (`DeepAnalysis`) | On: the detail panel shows the class name and the full stack trace. Off: only the source line. Editor-only — on device no trace is shown. |

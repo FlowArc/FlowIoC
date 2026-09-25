@@ -44,7 +44,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "and Add Sub Context is how a new crossing is put there.");
             painter.Bullet(
                 "MainConnectorSubContext, joining MainModule and its screens: the boot's Started opens "
-                + "the main screen, the difficulty the main screen picked opens the gameplay screen, and "
+                + "the main screen, the main screen's Play opens the gameplay screen, and "
                 + "the loading screen's retry runs the boot again.");
             painter.Bullet(
                 "LoadingConnectorSubContext, joining the loading service to its two presentations: "
@@ -107,14 +107,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "\n"
                 + "private void OutgoingSignals()\n"
                 + "{\n"
-                + "    _mainScreenSignals.Outgoing.DifficultySelected.Connect(_gameplayScreenSignals.Incoming.OpenGameplayScreen);\n"
+                + "    _mainScreenSignals.Outgoing.PlayClicked.Connect(_gameplayScreenSignals.Incoming.OpenGameplayScreen);\n"
                 + "}",
                 "ConnectorModule/Scripts/Runtime/RootsContexts/MainConnectorSubContext.cs");
             painter.Paragraph(
-                "DifficultySelected carries a DifficultyType and OpenGameplayScreen takes one, so "
-                + "Connect passes the payload through as it is; the retry has no payload to carry, so "
-                + "its wire is a lambda that dispatches. A payload that had to change shape between the "
-                + "two would be adapted on the same line.");
+                "PlayClicked and OpenGameplayScreen carry nothing, so Connect joins them as they are. "
+                + "RetryClicked carries the set it names and RetryBoot takes nothing, so that wire is a "
+                + "lambda that dispatches. A payload that had to change shape between the two would be "
+                + "adapted on the same line.");
 
             painter.SubHeading("LoadingConnectorSubContext");
             painter.Paragraph(

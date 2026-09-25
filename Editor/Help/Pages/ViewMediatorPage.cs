@@ -95,7 +95,9 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "The ViewInjector component lists one entry per IView on the object, and each entry "
                 + "says where its Context comes from. A View authored under its module's Root wants "
-                + "Bubble Up, which is the default.");
+                + "Bubble Up, which is the default. A View the list does not name - on an object "
+                + "assembled from code - registers with the defaults, so the list only has to carry a "
+                + "View whose settings differ.");
             painter.Table(new[] {"Context Source", "Which Root"},
                 new[] {"Bubble Up", "The first Root above the View in the hierarchy."},
                 new[] {"Selected Root", "The Root named on the entry, wherever it sits in the scene."},

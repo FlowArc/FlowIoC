@@ -254,6 +254,16 @@ only job is to dispatch is not written — `SignalDispatchCommand<T>` is bound w
 payload, and the signal leaving becomes a line in the Context — and a step that orders another
 module about is dispatched from the sequence, where it says what the operation manages.
 
+**Work that runs every frame is a Command sequence too.** A tick is an internal signal bound to one
+Command per job — move, judge, draw — so the frame's work reads in the Context. Work driven by the
+frame has one Command set an `IsTicking` flag in a Model and dispatch the tick from `IUpdateProvider`
+while the flag is set, so every frame runs the sequence afresh and a step that stops cuts only that frame short. Work paced by itself waits in
+a step and dispatches the tick again as its last step with `.ToSequence<SignalDispatchCommand>(Tick)`,
+the way `CounterModule` ticks each second — never as a group step, which would keep every turn alive
+under the one before. The tick signal hides its log with `hideCommandLog: true`. A System that adds
+itself to `IUpdateProvider` and runs the frame in its own methods hides the frame's work in one file,
+where two people changing two jobs change the same file.
+
 **The Connector translates, it does not decide.** One module's announcement joined to another
 module's order is a crossing. A list of consequences hung off one announcement is a flow, and a flow
 belongs in the Context of the module that owns it — otherwise binding `GameOver` to
@@ -464,7 +474,7 @@ a message; moving `ClanData` from `Boot` to a silent `PostBoot` opens the main s
 and no Command changes. A step may stand for a child set, which the fullscreen screen draws on a
 second bar while it runs. A running set that hears nothing for its `StallWarningSeconds` is
 reported once, naming the steps it is waiting for, so a Root missing from the scene shows up as a
-warning rather than a bar that never moves.
+warning in Unity's console rather than a bar that never moves.
 
 The loading screen and the overlay are two screen modules under `LoadingModule`, joined to the
 service by `LoadingConnectorSubContext` in the setup `ConnectorModule`; the screen's retry button
@@ -984,7 +994,10 @@ which Context each one belongs to. Each entry says so with **Context Source** �
 `Bubble Up` walks the hierarchy to the first Root above the View and is the
 default, `Selected Root` names a Root in the scene, and `Root Name` names one by
 its GameObject name and looks it up at startup. Registration happens as soon as
-that Context is started, and `OnRemove` runs when the object is destroyed.
+that Context is started, and `OnRemove` runs when the object is destroyed. A view
+the list does not name - on an object assembled from code, say - registers with
+the defaults, `Bubble Up` and Auto Register, so the list only has to carry a view
+whose settings differ.
 
 A prefab cannot hold a reference to a Root in the scene, so a prefab that has to
 reach a Root outside its own hierarchy uses `Root Name`. A screen answers none of
@@ -1780,6 +1793,14 @@ the matching suffix:
 So a level catalogue authored by hand is `CD_Maps` and its entries are `MapCVO`; that player's
 progress through the same levels is `PD_Maps`, made of `MapPVO`. Reading the two names side by
 side tells you which one is safe to regenerate and which one has to survive a restart.
+
+An asset's own values ship, and a `PD_` asset's are what a new player starts with. A test scene
+that needs a state of its own - always level 10 - keeps a copy in its test module's `Scriptables/`
+(`PD_Player_Test`, the way the Loading test module keeps `CD_LoadingSets_Test`) and files it on
+that scene's Roots in place of the original; it does not edit the original or put a `Level` field
+on its test Root. A scene that files a `PD_` copy ticks `IsTest` on its `LocalSaveServiceRoot`, so
+the save file is neither read over the copy nor written with it, and the copy is back to its own
+values after every Play.
 
 ```csharp
 [CreateAssetMenu(fileName = "CD_Maps", menuName = "Game/Data/CD_Maps")]

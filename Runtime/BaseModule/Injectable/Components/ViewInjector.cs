@@ -45,16 +45,10 @@ namespace FlowIoC.BaseModule.Injectable.Components
 
         private void Start()
         {
-            // An object built from code has never had this list written, and Unity hands a
-            // component added at runtime a null one rather than an empty one.
-            viewDataList ??= new List<ViewInjectorData>();
+            ListUnlistedViews();
 
             if (viewDataList.Count == 0)
-            {
-                ReportUnfilled();
-
                 return;
-            }
 
             _viewRegistrationDataDict = new Dictionary<IView, IContext>(viewDataList.Count);
 
@@ -63,6 +57,12 @@ namespace FlowIoC.BaseModule.Injectable.Components
             for (int i = 0; i < viewDataList.Count; i++)
             {
                 ViewInjectorData viewInjectorData = viewDataList[i];
+
+                // An entry whose view component was removed after the inspector last wrote the
+                // list. There is nothing to register, and resolving it threw.
+                if (viewInjectorData.View == null)
+                    continue;
+
                 IContext context = ResolveContext(viewInjectorData);
 
                 // ResolveContext has already said what was missing. Carrying on leaves the other
@@ -197,31 +197,6 @@ namespace FlowIoC.BaseModule.Injectable.Components
             FlowLogger.LogError(SystemLogType.Injection, message);
         }
 
-        /// <summary>
-        /// The list is filled by the injector's own inspector, so an object assembled from code
-        /// reaches Start with nothing in it and every view on the object stays unregistered without
-        /// a word. An injector on an object that carries no view is idle rather than broken, so
-        /// that one says nothing.
-        /// </summary>
-        private void ReportUnfilled()
-        {
-            List<IView> views = new List<IView>();
-            GetComponents(views);
-
-            if (views.Count == 0)
-                return;
-
-            string[] viewNames = new string[views.Count];
-            for (int i = 0; i < views.Count; i++)
-                viewNames[i] = views[i].GetType().Name;
-
-            string message = $"ViewInjector on \"{name}\": the view list is empty, so no view on this object "
-                             + $"registers: {string.Join(", ", viewNames)}. The list is filled by the injector's "
-                             + "own inspector - select the object once and save the scene.";
-
-            FlowLogger.LogError(SystemLogType.Injection, message);
-        }
-
         #endregion
 
         #region Injection
@@ -233,6 +208,9 @@ namespace FlowIoC.BaseModule.Injectable.Components
             for (int i = 0; i < viewDataList.Count; i++)
             {
                 ViewInjectorData viewInjectorData = viewDataList[i];
+
+                if (viewInjectorData.View == null)
+                    continue;
 
                 if (!_viewRegistrationDataDict.TryGetValue((IView) viewInjectorData.View, out IContext registeredContext))
                     continue;
@@ -269,15 +247,50 @@ namespace FlowIoC.BaseModule.Injectable.Components
             return injectResult;
         }
 
+        /// <summary>
+        /// The entry for a view on this object. A view the list does not name gets the entry the
+        /// inspector would have written for it - bubble up, register - so the list only has to say
+        /// what differs from that. The inspector writes the list, and an object assembled from code,
+        /// or a view added to it from code, reached Start unlisted: an empty list was an error the
+        /// reader had to fix by selecting the object, and a view missing from a partial list simply
+        /// never registered, with nothing logged.
+        /// </summary>
         public ViewInjectorData GetViewInjectorData(IView view)
         {
+            // Unity hands a component added at runtime a null list rather than an empty one.
+            viewDataList ??= new List<ViewInjectorData>();
+
             for (int i = 0; i < viewDataList.Count; i++)
             {
                 if (viewDataList[i].View == (Object) view)
                     return viewDataList[i];
             }
 
-            return null;
+            if (view is not Component component || component.gameObject != gameObject)
+                return null;
+
+            ViewInjectorData entry = new ViewInjectorData
+            {
+                View = component,
+                AutoRegister = true,
+                ContextSource = ViewContextSource.BubbleUp,
+                IsRegistered = false
+            };
+
+            viewDataList.Add(entry);
+
+            return entry;
+        }
+
+        private void ListUnlistedViews()
+        {
+            viewDataList ??= new List<ViewInjectorData>();
+
+            List<IView> views = new List<IView>();
+            GetComponents(views);
+
+            for (int i = 0; i < views.Count; i++)
+                GetViewInjectorData(views[i]);
         }
 
         public void ViewInjectionCompleted(IView view)

@@ -15,6 +15,11 @@ namespace Modules.LoadingModule.Controllers
     /// set's StallWarningSeconds. It does not retain: the watch outlives the step, on the coroutine
     /// provider, and ends by itself when the set ends. Captured locals only - the Command instance
     /// goes back to the pool the moment Execute returns.
+    ///
+    /// The report is a warning, which reaches Unity's console whatever the Flow Console's switches
+    /// say. It is not an error: the watch cannot tell a hang from slow work that reports nothing -
+    /// a backend call with no progress to give - and an error would reach a release build's log
+    /// from every player on a slow network. A step with a deadline of its own reports Fail.
     /// </summary>
     internal class WatchStallCommand : Command
     {

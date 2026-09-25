@@ -3,7 +3,6 @@ using FlowIoC.Editor.Addressables;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
-using UnityEngine;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 {
@@ -23,8 +22,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// </summary>
         private static void MakePrefabAddressable(string prefabPath, string prefabName)
         {
+            // Converted by the one helper that reads any form of the path. A plain Replace of
+            // Application.dataPath missed a parent written with backslashes or in another casing,
+            // and the screen then logged "No asset found" instead of becoming addressable.
             ScreenAddressableEntry entry = new ScreenAddressableEntries().For(prefabName);
-            entry.AssetPath = prefabPath.Replace(Application.dataPath, "Assets");
+            entry.AssetPath = NamespaceUtility.GetUnityAssetPath(prefabPath);
 
             new ScreenAddressables().Register(entry);
 

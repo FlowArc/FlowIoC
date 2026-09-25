@@ -28,12 +28,15 @@ namespace Modules.LocalSaveModule.RootsContexts
         /// the last reliable moment to write. Called on the model rather than dispatched, for the
         /// reason the Root gives on quit: a command dispatched while the app is going away may not
         /// run before it does.
+        ///
+        /// A pause during the boot can come before the bindings: there is no model yet, and
+        /// nothing has been read that could be saved.
         /// </summary>
         public override void PauseContext()
         {
             base.PauseContext();
 
-            _model.SaveAll();
+            _model?.SaveAll();
         }
     }
 }

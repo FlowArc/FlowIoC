@@ -420,7 +420,8 @@ MediationBinder.Bind<PlayerHudView>().To<PlayerHudMediator>();
 The `ViewInjector` component on the GameObject lists every `IView` on it and resolves
 which Context each belongs to — by bubbling up the hierarchy, by an explicit Root
 reference, or by Root name. Registration happens as soon as that Context is started,
-and `OnRemove` runs when the object is destroyed.
+and `OnRemove` runs when the object is destroyed. A view the list does not name - on an
+object assembled from code - registers with the defaults, bubbling up and Auto Register.
 
 Turn off **Auto Register** for a view in the ViewInjector list to control it yourself:
 

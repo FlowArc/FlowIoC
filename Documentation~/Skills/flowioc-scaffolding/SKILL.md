@@ -86,14 +86,16 @@ Decide the rest before pressing Create:
 
 ### Adding a folder afterwards
 
-Nothing has to be deleted. Run Create Module again with the same name and the same parent, tick
-the folders that are missing, and untick **Create Root**, **Create Context** and **Create
-Signals**. Existing files are left alone; the missing folders appear and the module index is
-refreshed so the other generators can find them.
+Nothing has to be deleted. Run Create Module again with the same name and the same parent and tick
+the folders that are missing. A module that already exists - its folder holds its asmdef or its
+card - only gets the folders it lacks: no file in it is written, whatever else is ticked, and the
+console lists the folders that were made. The module index is refreshed so the other generators can
+find them.
 
-For `Shared` specifically, prefer `Tools/FlowIoC/Edit Module/Add Shared or Signals` - it also adds the reference
-to every screen, sub and test module already under the module, and the same window writes a public
-signal holder for a module created without one.
+`Shared` and `Signals` are the exception: a run on an existing module does not make either, because
+each is an assembly the module has to reference. Use `Tools/FlowIoC/Edit Module/Add Shared or
+Signals` - it writes the folder, its assembly and the reference from every screen, sub and test
+module already under the module, and a public signal holder for a module created without one.
 
 ## The two signal holders, and which folder each lives in
 
@@ -201,7 +203,7 @@ genType.GetMethod("CreateModuleStructure",
         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
     .Invoke(null, new object[] {
         "Player",                                          // name, without "Module" and without the type's suffix
-        System.IO.Path.Combine(UnityEngine.Application.dataPath, "Modules"),   // Assets/Modules, or the owning module's folder
+        System.IO.Path.Combine(UnityEngine.Application.dataPath, "Modules"),   // Assets/Modules, or the owning module's folder - absolute, either slash
         System.Enum.Parse(modType, "Main"),                // Main, Test or Screen
         selected, configMap, actionNames,
         true, true, true, false,                           // createRoot, createContext, createSignals, createScreen
@@ -221,6 +223,11 @@ and leaves a name that already carries it alone. The suffix used to be the windo
 call from here that named a test module `"Ads"` wrote `zTestModules/AdsModule` with the parent's
 own assembly name, and its namespace settings over the parent's. Read the folder name and the
 asmdef name back after the call.
+
+**The parent is any absolute path to the folder.** `D:\work\Game\Assets\Modules\GameplayModule`
+built from a script's own working directory is the same folder as Unity's
+`D:/Work/Game/Assets/Modules/GameplayModule`, and the generator reads it so. A parent written that way used to put a top level module under
+`zSubModules` and leave a screen's prefab not addressable.
 
 **The role counts only for a Main module with a Root.** A Test or a Screen module, and a Main
 module made without a Root, are written plain whatever role is passed - `PlayerTestRoot` and
@@ -309,6 +316,16 @@ Then, for the module you just made:
   prefab on its layer - written by the half that runs after the reload.
 - **A test module of your own.** Made through the generator too, so it carries the mandatory
   folders; a test module copied or written by hand is the one the scanner finds a folder short.
+  The smallest useful one is three things in its scene: the module's own Root and the Root of
+  every Service it leans on; the test Root, whose adapter files under *Shared Scriptables* a
+  ready-made asset for each producer that is not in the scene - the `RD_Match` gameplay would
+  have written; and a `Launch` in the test context that sends the module's incoming signals the
+  way the game would, `InjectionBinderCrossContext.GetInstance<PlayerSignals>().Incoming
+  .InitializePlayer.Dispatch()`. A test module may reference anything, so it stands in for the
+  Connector too. A state the scene starts from - level 10 - is a copy of the data asset
+  (`PD_Player_Test` in the test module's `Scriptables/`, filed in place of the original, with
+  `IsTest` ticked on `LocalSaveServiceRoot`), never a field on the test Root; the data-types skill
+  has the whole of it. Then press Play in that scene.
 
 ## A panel a module ships
 

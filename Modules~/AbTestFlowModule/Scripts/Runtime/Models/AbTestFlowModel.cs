@@ -51,8 +51,11 @@ namespace Modules.AbTestFlowModule.Models
 #if UNITY_EDITOR
             // Before anything is written: every asset of the active test's control group, because
             // which group this player lands in is not known yet, and the published asset, which is
-            // filled at boot.
+            // filled at boot. Put back straight away as well as at the end, so a variant lands on
+            // the asset's file rather than on whatever an earlier run left in memory - the way a
+            // build starts from what was built into it.
             _snapshots.Capture(AssetsAboutToChange(_activeTest, _published));
+            _snapshots.Restore();
 #endif
 
             _published.Clear();

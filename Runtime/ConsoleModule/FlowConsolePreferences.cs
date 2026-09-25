@@ -36,7 +36,7 @@ namespace FlowIoC.ConsoleModule
 #endif
         }
 
-        /// <summary>The master switch. Off, nothing is recorded and nothing is mirrored; an error still reaches Unity's console.</summary>
+        /// <summary>The master switch. Off, nothing is recorded and nothing is mirrored; a warning and an error still reach Unity's console.</summary>
         public bool IsLoggingEnabled
         {
             get => _isLoggingEnabled;
@@ -44,9 +44,9 @@ namespace FlowIoC.ConsoleModule
         }
 
         /// <summary>
-        /// Mirror every line into Unity's own console as well, for the two side by side. A plain
-        /// log is mirrored only while its channel is on, a warning whatever the switch says, and an
-        /// error always - an error is never gated on this.
+        /// Mirror the plain logs into Unity's own console as well, for the two side by side - each
+        /// only while its channel is on. Warnings and errors are never gated on this: they reach
+        /// Unity's console whether it is on or off.
         /// </summary>
         public bool SendLogsToUnityConsole
         {

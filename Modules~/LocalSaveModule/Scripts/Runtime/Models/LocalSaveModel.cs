@@ -37,7 +37,11 @@ namespace Modules.LocalSaveModule.Models
             ReadRegistry();
 
 #if UNITY_EDITOR
+            // Put back straight away as well as at the end: a build starts every asset from what
+            // was built into it, and a run in the Editor starts from the asset's file the same way
+            // rather than from whatever an earlier run left in memory.
             _snapshots.Capture(_persisted.Values);
+            _snapshots.Restore();
 #endif
 
             _service.BeginSession(_password);

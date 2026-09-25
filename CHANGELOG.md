@@ -5,6 +5,57 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Module Scanner reports a screen whose address has no Addressables entry**, read off the
+  compiled context; *Fix* registers the prefab of the same name. It used to fail only on opening.
+- **Module Scanner reports any Addressables simulated load delay above 0.** A delay can hang an
+  Editor boot on a leftover object; *Fix* sets it to 0, and settings FlowIoC creates start at 0.
+
+### Changed
+
+- **A warning always reaches Unity's console**, as an error does; the Flow Console's mirror now
+  holds back plain logs only. Loading's stall report is one of those warnings; Loading 1.0.2
+  says why it is not an error. A forced screen open is asked for on purpose, so it is now a plain
+  log rather than a warning.
+- **Create Module on a module that exists only adds its missing folders** and writes no file.
+- **Agent rules: read the flow in the Flow Console.** An empty Unity console says nothing about
+  whether a flow ran; the controllers skill has the snippet that reads `FlowLogger.Logs`.
+- **Agent rules: a test scene's state is a copy of the data asset** (`PD_Player_Test`), filed in
+  place of the original with `IsTest` on `LocalSaveServiceRoot` - never a field on the test Root.
+- **`Retain()` comes first whenever a Command ends its own step**, synchronous or not: the agent
+  rules and the controllers skill say so, and the error for `Release()` or `Stop()` without it
+  shows `Retain(); Stop();`.
+- **Agent rules: work that runs every frame is a Command sequence**, never a System hooked to
+  `IUpdateProvider`: a tick dispatched every frame, or one that re-enters itself with
+  `SignalDispatchCommand` when it paces itself. The controllers skill has both loops.
+- **The setup set's main screen offers Play** instead of Easy, Medium and Hard; the gameplay screen
+  opens with no parameter, and Gameplay no longer ships a `DifficultyType` or a Shared assembly.
+  Every game removed the sample first. The screens skill and the Screen Module page show a screen
+  opened and filled from shared data instead, pointing at BotBar's opening Command.
+- **Counter re-enters its tick with `SignalDispatchCommand`.** Re-entering as a group step kept
+  every second's group alive under the one before; the docs showed the same loop and are fixed.
+
+### Fixed
+
+- **A view the `ViewInjector` list does not name registers with the defaults** - bubble up, auto
+  register. An object assembled from code no longer needs its list written, and a view added after
+  the list was written no longer stays unregistered without a word. An entry whose view component
+  is gone is skipped instead of throwing at `Start`.
+- **A Mediator's `HideCompleted` runs after its screen is back in the pool** on every opening, so
+  the next screen can open on the same layer.
+- **Local Save 1.0.3 and A/B Test 1.0.2 start each Editor run from the asset's file**, not from
+  values an earlier run left in memory.
+- **Local Save 1.0.3 no longer throws on a pause before its bindings.**
+- **Audio 1.0.1 plays nothing through a disabled source** instead of warning while play mode exits.
+- **A view whose Root binds no Mediator for it** is reported as such, naming that Root's context,
+  instead of "There is no Context".
+- **Create Module reads a parent path written with backslashes or another casing**: a top level
+  module stays top level and a screen's prefab is made addressable.
+- **`GetInstance` with a null name** finds the binding with no name.
+
 ## [1.24.0] - 2026-09-25
 
 ### Changed

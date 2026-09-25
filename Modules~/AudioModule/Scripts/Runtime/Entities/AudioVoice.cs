@@ -43,8 +43,16 @@ namespace Modules.AudioModule.Entities
             _fade != null
             || (Source != null && (Source.isPlaying || (AudioListener.pause && Source.clip != null && Source.timeSamples > 0)));
 
+        /// <summary>
+        /// A source that is off plays nothing and the voice stays free. Leaving play mode disables
+        /// the sources a frame before the game stops asking for sounds, and Unity would answer each
+        /// ask with a warning.
+        /// </summary>
         public void Play(AudioKey key, AudioClip clip, AudioClipCVO sound, Vector3 position, float startVolume)
         {
+            if (Source == null || !Source.isActiveAndEnabled)
+                return;
+
             StopFade();
 
             Key = key;

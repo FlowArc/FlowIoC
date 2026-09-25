@@ -142,7 +142,7 @@ namespace FlowIoC.BaseModule.Injectable
                 _container.Add(injectionType, new List<InjectionBinding>());
 
             InjectionBinding injectionBinding = _bindingPoolController.GetAvailableBinding<InjectionBinding>();
-            injectionBinding.Name = name;
+            injectionBinding.Name = name ?? "";
             injectionBinding.SetValue(instance);
             injectionBinding.SetKey(injectionType);
 
@@ -293,9 +293,14 @@ namespace FlowIoC.BaseModule.Injectable
         /// is. Asking for something nobody bound is a wiring mistake rather than a question with
         /// an answer - most often a Connector reaching for a module whose Root is not in the scene -
         /// so it is reported by name instead of throwing a dictionary's key error at the caller.
+        ///
+        /// A null name is the binding with no name, here and everywhere else in the binder: a tool
+        /// passing the name it has - null when there is none - used to be told the type was bound,
+        /// but not under the name ''.
         /// </summary>
         public TBindingType GetInstance<TBindingType>(string name = "")
         {
+            name ??= "";
             Type bindingType = typeof(TBindingType);
 
             if (!_container.TryGetValue(bindingType, out List<InjectionBinding> bindings))
@@ -329,6 +334,8 @@ namespace FlowIoC.BaseModule.Injectable
         /// </summary>
         public object GetInstance(Type instanceType, string name = "")
         {
+            name ??= "";
+
             if (!_container.TryGetValue(instanceType, out List<InjectionBinding> values))
             {
                 Type assignedType = ResolveAssignableType(instanceType);
@@ -455,7 +462,7 @@ namespace FlowIoC.BaseModule.Injectable
                 _container.Add(injectionType, new List<InjectionBinding>());
 
             InjectionBinding injectionBinding = _bindingPoolController.GetAvailableBinding<InjectionBinding>();
-            injectionBinding.Name = name;
+            injectionBinding.Name = name ?? "";
             injectionBinding.SetValue(instance);
             injectionBinding.SetKey(injectionType);
             injectionBinding.BoundContext = _boundContext;
@@ -517,7 +524,7 @@ namespace FlowIoC.BaseModule.Injectable
         internal InjectionBinding GetInjectionBinding(Type key, string name = "")
         {
             return _container.TryGetValue(key, out List<InjectionBinding> bindings)
-                ? bindings.FirstOrDefault(x => x.Name == name)
+                ? bindings.FirstOrDefault(x => x.Name == (name ?? ""))
                 : null;
         }
 
@@ -534,7 +541,7 @@ namespace FlowIoC.BaseModule.Injectable
             if (!_container.TryGetValue(bindingType, out List<InjectionBinding> instanceList))
                 return false;
 
-            return instanceList.FirstOrDefault(x => x.Name == name) != null;
+            return instanceList.FirstOrDefault(x => x.Name == (name ?? "")) != null;
         }
     }
 }

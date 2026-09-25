@@ -84,8 +84,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "MainScreenModule and GameplayScreenModule sit inside their parents, under "
                 + "zScreenModules. Together they make the flow: the game launches, the main screen "
-                + "opens, picking Easy, Medium or Hard closes it and opens the gameplay screen with "
-                + "the difficulty carried as a signal parameter.");
+                + "opens, and pressing Play closes it and opens the gameplay screen.");
             painter.Paragraph(
                 "LoadingModule owns the boot's bar: MainContext begins the Boot set, "
                 + "PreloadScreensCommand and FillPoolsCommand report into it, and the main screen "

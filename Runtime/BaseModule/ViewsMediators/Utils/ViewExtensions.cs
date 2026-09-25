@@ -72,10 +72,17 @@ namespace FlowIoC.BaseModule.ViewsMediators.Utils
         /// </summary>
         private static bool RegisterIn(this IView view, IContext context)
         {
+            // Asked of the binding rather than of the struct as a whole: Equals(default) on a struct
+            // compares it with a null object and is never true, so a view nobody binds used to fall
+            // through to the "There is no Context" line below - under a context that was there.
             ViewBindingData viewBindingData = context.GetBindingData(view);
-            if (viewBindingData.Equals(default))
+            if (viewBindingData.Binding == null)
             {
-                FlowLogger.LogError(SystemLogType.Injection, "There is no view binding! " + view.GetType(), view.GetType());
+                FlowLogger.LogError(SystemLogType.Injection,
+                    $"{view.GetType().Name} found {context.GetType().Name}, which binds no Mediator for it, nor does "
+                    + "any of its sub-contexts. A view registers against the Root above it in the hierarchy - put it "
+                    + "under the Root whose context binds its Mediator.",
+                    view.GetType(), context: view.gameObject);
                 return false;
             }
 

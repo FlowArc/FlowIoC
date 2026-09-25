@@ -1,4 +1,5 @@
 using FlowIoC.BaseModule.Contexts;
+using FlowIoC.BaseModule.Controller.Commands;
 using Modules.CounterModule.Controllers;
 using Modules.CounterModule.Models;
 using Modules.CounterModule.Services;
@@ -43,14 +44,16 @@ namespace Modules.CounterModule.RootsContexts
             // once initialization has actually succeeded.
             CommandBinder.Bind(_signals.Incoming.Initialize)
                 .ToSequence<InitializeCounterServiceCommand>()
-                .ToGroupAsParallel(_internalSignals.Tick);
+                .ToSequence<SignalDispatchCommand>(_internalSignals.Tick);
 
             // One second: move the clock, then report it to every counter, then queue the next
-            // second. The loop is the tick re-entering itself.
+            // second. The loop is the tick dispatching itself again, which starts a run of its own
+            // and lets this one finish. A group step would have made each second a sub group of
+            // the one before: none of them ever finished, and a stop unwound them all at once.
             CommandBinder.Bind(_internalSignals.Tick)
                 .ToSequence<TimeTickCommand>()
                 .ToSequence<TickProcessAllDataCommand>()
-                .ToGroupAsParallel(_internalSignals.Tick);
+                .ToSequence<SignalDispatchCommand>(_internalSignals.Tick);
 
             // Starting a counter is adding the entry, subscribing the caller to it, and giving
             // that caller its first value without waiting a second for it.

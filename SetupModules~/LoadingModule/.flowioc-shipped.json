@@ -1,6 +1,6 @@
 {
   "files": {
-    "MODULE.md": "2ceaf8a305dab353ab34b43a38b716dc5d85d3a5",
+    "MODULE.md": "121b67a8ec892825d8491b9c195af3e8c89b35bd",
     "MODULE.md.meta": "11616aec59bb68b93d24a0097d9a37b8abffd839",
     "Modules.Loading.asmdef": "209762f9ac94ce19ed4bf9c4979f6d993bd3a165",
     "Modules.Loading.asmdef.meta": "943381278ae2fb91ff7d1005048f2e0b9dcb5531",
@@ -25,7 +25,7 @@
     "Scripts/Runtime/Controllers/CheckSetCompletionCommand.cs.meta": "4b61bf1db51d0216f7f1c37679cd70f4258292a4",
     "Scripts/Runtime/Controllers/PublishSetStatusCommand.cs": "ab0624c48f15bc4257e3b0ea3258200589886d53",
     "Scripts/Runtime/Controllers/PublishSetStatusCommand.cs.meta": "02fdbac49d7ffd3c19e9cd02fe8cc9a3fa629190",
-    "Scripts/Runtime/Controllers/WatchStallCommand.cs": "eac2eb39d77ec72d36e9746f4eede326e4e26525",
+    "Scripts/Runtime/Controllers/WatchStallCommand.cs": "4580e0cc0d166915cff3bd427ced7edbc5ccc249",
     "Scripts/Runtime/Controllers/WatchStallCommand.cs.meta": "379e2c2c7d14889cffa7b18858276b459037c9c4",
     "Scripts/Runtime/Data.meta": "d5b1ea2187424f1396f504bba523f652d122a25e",
     "Scripts/Runtime/Data/UnityObjects.meta": "c63c120dd0ae0bf3bd4fd0efd8352eb1dffd7198",

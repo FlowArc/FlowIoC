@@ -149,8 +149,9 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
                 return true;
             }
 
-            FlowLogger.LogWarning(SystemLogType.Screen,
-                $"[ScreenService.Builder] Manager({_screenData.ManagerId}) Screen {_screenData.ScreenType.Name} is forced open!!!");
+            // A plain line: force was asked for on purpose, and a warning reaches Unity's console every time.
+            FlowLogger.Log(SystemLogType.Screen,
+                $"[ScreenService.Builder] Manager({_screenData.ManagerId}) Screen {_screenData.ScreenType.Name} is forced open");
 
             _hide.Screen(screenBody, !_screenData.ForceOpenForDuplicationWithHideAnim);
             return false;
@@ -168,8 +169,9 @@ namespace FlowIoC.ScreenModule.Service.Sub.Builder
                 return true;
             }
 
-            FlowLogger.LogWarning(SystemLogType.Screen,
-                $"[ScreenService.Builder] Manager({_screenData.ManagerId}) Layer {_screenData.LayerIndex} is forced open!!!");
+            // A plain line: force was asked for on purpose, and a warning reaches Unity's console every time.
+            FlowLogger.Log(SystemLogType.Screen,
+                $"[ScreenService.Builder] Manager({_screenData.ManagerId}) Layer {_screenData.LayerIndex} is forced open");
 
             _hide.ScreenInLayer(_screenData.LayerIndex, _screenData.ManagerId, !_screenData.ForceOpenAtFullLayerWithHideAnim);
             return false;

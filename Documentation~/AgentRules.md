@@ -53,6 +53,21 @@ what is true whatever you are about to do.
   sequence it is bound to, without opening a Command or crossing to the Connector. So a Command
   whose only job is to dispatch is not written - bind `SignalDispatchCommand<T>` - and a step that
   orders another module about is dispatched from the sequence.
+- **Work that runs every frame is a Command sequence too, never a System hooked to the frame.** A
+  tick is an internal signal bound to one Command per job - move, judge, draw - so the frame's work
+  reads in the Context. What dispatches the tick depends on the work. **Driven by the frame:** one
+  Command the flow starts sets an `IsTicking` flag in a Model and adds a callback to
+  `IUpdateProvider` that dispatches the tick while the flag is set and removes itself once it is
+  not, so ending play is setting the flag and every frame runs the sequence afresh; a step that `Stop()`s cuts that frame short and the next
+  frame starts from the top. Its steps are synchronous, or two frames' runs overlap. **Paced by
+  itself:** the next turn waits for the previous one - a step retains until the next is due, and
+  the last step is `.ToSequence<SignalDispatchCommand>(Tick)`, the way `CounterModule` ticks each
+  second; a `Stop()` then ends the loop. Never `.ToGroupAsParallel(Tick)`: a group waits for its
+  sub group, so every turn stays alive under the one before. The tick signal hides its log with
+  `hideCommandLog: true`. A System or sub system that adds itself to `IUpdateProvider` and runs the
+  frame in its own methods is the shape this rule replaces, however carefully it dispatches one
+  signal per event: the frame's work is then a file to read instead of a list in the Context, and
+  two people changing two jobs change the same file. The controllers skill has both loops.
 - **The Connector translates, it does not decide.** One module's announcement joined to another
   module's order is a crossing. A list of consequences hung off one announcement is not: what
   follows an announcement is a decision, and it belongs where the deciding happens.
@@ -68,6 +83,11 @@ what is true whatever you are about to do.
   the same order as the numbers.
 - A Command does one unit of work, holds no state between runs, and returns no value. It
   injects models and services, mutates state, and dispatches outgoing signals.
+- **A Command that ends its own step calls `Retain()` first - to stop as much as to carry on.**
+  `Retain()` says the step ends when the Command says so, and only then do `Release()` (carry on)
+  and `Stop()` (end the sequence) work. That holds in a synchronous Command too: one that stops the
+  sequence from inside `Execute` writes `Retain(); Stop();`, and a `Stop()` without it is refused
+  and the sequence runs on.
 - **Every path out of a retained Command ends in `Release()` or `Stop()`, and an `await` has three
   of them.** A `Retain()` that is never resolved hangs the group for ever - there is no timeout and
   nothing is logged. The success path is the one everybody writes; the work came back with nothing,
@@ -160,6 +180,16 @@ what is true whatever you are about to do.
   whose data, and the compiler is what keeps a Runtime type out of reach. The module's own two
   slots are read by its Model off the adapter, and a Command asks the Model - a Command never
   reaches for the adapter.
+- **A test scene's state is a copy of the data asset, never a field on its test Root.** A data
+  asset's own values ship, and a `PD_` asset's are what a new player starts with. A test scene that
+  needs a state of its own - always level 10 - puts a copy in its test module's `Scriptables/`,
+  named after the original with the test's suffix (`PD_Player_Test`, the way `CD_LoadingSets_Test`
+  is), and files it on the scene's Roots in place of the original, so the modules read it the way
+  the game does. The original is never edited to set a test up, and a `Level` or `Coins` field on
+  the test Root is not a substitute. **A scene that files a `PD_` copy ticks `IsTest` on its
+  `LocalSaveServiceRoot`**: without it the save file is read over the copy and the copy's values
+  are written into the developer's save; with it the save is neither read nor written, and the copy
+  starts every Play from its own values and returns to them after.
 - A module adds nothing to the `Tools/FlowIoC` menu. Whatever it hands the reader ships
   inside the module instead: a test module brings the scene it runs in, already built, so
   installing the module is the only step there is. That holds for the modules FlowIoC ships
@@ -525,6 +555,13 @@ Logging compiles only in the Editor and in a Development Build - a release build
 it, and there is no scripting define to manage. The framework already
 logs its own contexts, injections, signals and commands on built-in channels, so watching a
 flow does not require adding log lines.
+
+**The flow is in the Flow Console, not in Unity's console - read it there.** A warning and an
+error reach Unity's console whatever the Flow Console's switches say; every plain line - each
+signal, command and injection - is recorded in `FlowLogger.Logs` in the Editor and reaches Unity's
+console only while its mirror is on. So an empty Unity console says nothing about whether a flow
+ran. An agent following one reads `FlowLogger.Logs` through the Editor's eval - the rows since its
+last read, filtered by channel or level; the controllers skill has the snippet.
 
 **An error is the exception, and it is logged exactly once.** `FlowLogger.LogError` carries no
 `[Conditional]`, so an error reaches the console in a release build too - a project

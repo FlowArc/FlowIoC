@@ -79,6 +79,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 },
                 new[]
                 {
+                    "Screen addressable",
+                    "A screen whose context loads it by address has an Addressables entry at that "
+                    + "address - otherwise it fails only when it is opened. Read off the compiled "
+                    + "context, so no scene is opened. Fix registers the prefab of the same name in the "
+                    + "module; with no such prefab the row reports and does not guess."
+                },
+                new[]
+                {
                     "Namespace settings",
                     "The .csproj.DotSettings at the project root that tells Rider which folders "
                     + "produce a namespace."

@@ -40,6 +40,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 new SignalsSharedReferenceCheck(),
                 new SignalReferenceCheck(),
                 new RootContextRoleCheck(),
+                new ScreenAddressableCheck(),
                 new DotSettingsCheck(),
                 new FlowModulePartCheck(),
                 new LogChannelCheck(),
@@ -51,7 +52,8 @@ namespace FlowIoC.Editor.ModuleScanner
                 new ModuleDirectoryCheck(),
                 new OrphanFilesCheck(),
                 new ProjectFilesCheck(),
-                new SolutionCodeStyleCheck()
+                new SolutionCodeStyleCheck(),
+                new AddressablesLoadDelayCheck()
             })
         {
         }

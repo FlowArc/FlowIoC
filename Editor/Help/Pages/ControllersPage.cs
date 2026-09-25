@@ -396,6 +396,52 @@ namespace FlowIoC.Editor.Help.Pages
                 + "should cause.");
 
             painter.Separator();
+            painter.SubHeading("Work that runs every frame");
+            painter.Paragraph(
+                "A game that moves things every frame still writes that work as Commands. A tick is "
+                + "an internal signal bound to one Command per job, so the frame's work reads in the "
+                + "Context. What dispatches the tick depends on the work.");
+            painter.Paragraph(
+                "Driven by the frame: one Command the flow runs when play starts sets an IsTicking "
+                + "flag in a Model and adds a callback to IUpdateProvider that dispatches the tick "
+                + "while the flag is set and removes itself once it is not. Ending play is setting the "
+                + "flag to false, from whichever Command ends it. Every frame runs the sequence "
+                + "afresh, so a step that stops cuts that frame short and the next frame starts from "
+                + "the top. The steps are synchronous, or two frames' runs overlap.");
+            painter.Code(
+                "CommandBinder.Bind(_internalSignals.RunStarted).ToSequence<StartFrameTickCommand>();\n"
+                + "\n"
+                + "CommandBinder.Bind(_internalSignals.Tick)\n"
+                + "    .ToSequence<FlyBeesCommand>()\n"
+                + "    .ToSequence<JudgeClearedCommand>()\n"
+                + "    .ToSequence<DrawSwarmCommand>();",
+                "A frame's work, read in the Context");
+            painter.Paragraph(
+                "Paced by itself: the next turn waits for the previous one. A step retains until the "
+                + "next turn is due and the last step dispatches the tick again, the way "
+                + "CounterModule ticks each second. A step that stops then ends the loop.");
+            painter.Code(
+                "CommandBinder.Bind(_internalSignals.Tick)\n"
+                + "    .ToSequence<TimeTickCommand>()\n"
+                + "    .ToSequence<TickProcessAllDataCommand>()\n"
+                + "    .ToSequence<SignalDispatchCommand>(_internalSignals.Tick);",
+                "CounterServiceContext - a loop paced by itself");
+            painter.Note(
+                "A loop paced by itself dispatches the tick as its last step, never "
+                + ".ToGroupAsParallel(Tick). A group step waits for its sub group, so every turn would "
+                + "stay alive under the one before - a group resolver kept per turn, and a Stop() that "
+                + "unwinds them all in one call.");
+            painter.Paragraph(
+                "Either way the start and wait Commands are the game's own - the controllers skill "
+                + "has both - and what lasts between "
+                + "turns lives in a Model, since a Command holds none.");
+            painter.Note(
+                "The shape this replaces is a System or sub system that adds itself to "
+                + "IUpdateProvider and runs the frame in its own methods. Even when it dispatches "
+                + "one signal per event, the frame's work is a file to read rather than a list in "
+                + "the Context, and two people changing two jobs change the same file.");
+
+            painter.Separator();
             painter.SubHeading("Silencing a command that runs every frame");
             painter.Paragraph(
                 "The Flow Console logs every command as it executes and again as it returns to "
@@ -719,6 +765,8 @@ namespace FlowIoC.Editor.Help.Pages
         {
             painter.Bullet("A decision belongs in a Command, wherever it would otherwise be taken - a Context, a View, a Mediator, a System.");
             painter.Bullet("A flow is read from one Context. A Command whose only job is to dispatch is not written - bind SignalDispatchCommand.");
+            painter.Bullet(
+                "Work that runs every frame is a tick sequence - dispatched every frame from IUpdateProvider, or re-entering itself with SignalDispatchCommand when it paces itself - never a System hooked to IUpdateProvider.");
             painter.Bullet("A list of consequences hung off one announcement belongs in the sequence, not in the Connector.");
             painter.Bullet("What needs no decision is not one. A close button that always closes is the Mediator calling _view.Hide().");
             painter.Bullet("A Command does one unit of work, holds no state between runs, and returns no value.");

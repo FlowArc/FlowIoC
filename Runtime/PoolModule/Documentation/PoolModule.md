@@ -54,6 +54,21 @@ entry describes one poolable prefab:
 A `PoolConfigAdapterView` component in the scene carries a dictionary of group key →
 `PoolGroupCVO`, and registers those groups when its context starts.
 
+It works only under a `PoolAdapterRoot`, because that Root's context is the one that binds the
+view's Mediator. The package ships `PoolAdapterRoot.prefab` in its `Assets/Prefabs` folder with a
+`PoolConfigAdapter` child already on it; drop it under the Root of the module whose pools it
+registers and fill the child's dictionary:
+
+```
+GameplaySystemRoot
+└── PoolAdapterRoot
+    └── PoolConfigAdapter      ← PoolConfigAdapterView
+```
+
+> **Important:** on the module's own Root, or under any Root that is not a `PoolAdapterRoot`, the
+> view is refused with an error naming that Root's context - and every `Get` after it fails with
+> `No GroupConfigKey found`, which is the line that gets noticed first.
+
 | `PoolGroupCVO` field | Meaning |
 |---|---|
 | `Group` | The `CD_PoolGroup` asset |

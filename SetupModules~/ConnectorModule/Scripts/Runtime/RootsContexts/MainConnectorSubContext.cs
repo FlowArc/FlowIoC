@@ -37,7 +37,7 @@ namespace Modules.ConnectorModule.RootsContexts
 
         private void OutgoingSignals()
         {
-            _mainScreenSignals.Outgoing.DifficultySelected.Connect(_gameplayScreenSignals.Incoming.OpenGameplayScreen);
+            _mainScreenSignals.Outgoing.PlayClicked.Connect(_gameplayScreenSignals.Incoming.OpenGameplayScreen);
         }
 
         public override void DestroyContext()
@@ -55,6 +55,6 @@ namespace Modules.ConnectorModule.RootsContexts
         }
 
         private void UnbindOutgoingSignals() =>
-            _mainScreenSignals.Outgoing.DifficultySelected.Disconnect();
+            _mainScreenSignals.Outgoing.PlayClicked.Disconnect();
     }
 }

@@ -137,6 +137,47 @@ in `PostConstruct`, and a Command asks the Model; a Command never reaches for th
 *Tools ▸ FlowIoC ▸ Wiki ▸ Data Types ▸ Root Adapter* shows all four slots with the Model and the
 Command that read each.
 
+## A test scene's own values
+
+A data asset's values ship, and a `PD_` asset's are what a new player starts with - `PD_Player` at
+level 0. A test scene that always starts at level 10 does not edit that asset, and does not put a
+`Level` field on its test Root for its Context to hand out either. It keeps a copy:
+
+- **Where:** the test module's `Scriptables/` folder.
+- **Name:** the original's, with the test's suffix - `PD_Player_Test`, the way the Loading test
+  module keeps `CD_LoadingSets_Test`.
+- **Filed:** on the scene's Roots in place of the original - every slot the original sits in, a
+  module's own *Scriptable Map* and the *Shared Scriptables* alike, as overrides on the scene's
+  Root instances - so the modules read the copy the way the game reads the original.
+- **Save:** a scene that files a `PD_` copy ticks `IsTest` on its `LocalSaveServiceRoot`. The save
+  is then neither read nor written: the copy starts every Play from its own values and returns to
+  them after. Left unticked, the save file is read over the copy, and the copy's values are
+  written into the developer's save on the way out.
+
+A producer that is not in the scene at all is stood in for the same way - the test Root files a
+ready-made `RD_Match` - rather than with fields.
+
+### Starting over from an empty save
+
+A test scene never needs this: with `IsTest` ticked the save is not touched. To empty the
+developer's own save file - so the next Play of the real scenes starts every `PD_` asset from its
+file, as a first install does - press *Reset* on `Tools/FlowIoC-Modules/Local Save/Panel`, or run
+the same through the Editor's eval. Only in edit mode: in play mode the game holds the save in
+memory and writes it back on the way out.
+
+```csharp
+var asm   = System.AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetName().Name == "Modules.LocalSave");
+var type  = asm.GetType("Modules.LocalSaveModule.Editor.LocalSaveFileTools");
+var tools = System.Activator.CreateInstance(type, true);
+var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+
+type.GetMethod("Reset", flags).Invoke(tools, null);          // the save and a stray .tmp beside it
+return (string) type.GetProperty("Path", flags).GetValue(tools);
+```
+
+It deletes the developer's progress on this machine, so it is run when they ask for it, not to
+tidy up after a test.
+
 ## Asset files
 
 Every asset file a project makes carries a prefix that says what the file **is** - never where it
@@ -197,6 +238,8 @@ abbreviation; a rare type, or one whose abbreviation would not read, takes the w
 | A new `.cs` file dropped anywhere | Data lives in `Data/UnityObjects/` or `Data/ValueObjects/`; the generators and namespace tools depend on it. |
 | The same `RD_` asset dragged onto every reader's adapter | It works while the producer is in the scene and reads an asset nobody fills when it is not, and nothing reports it. File it once, in one Root's Shared Scriptables, and read it through `ISharedDataModel`. |
 | Reading a shared asset from the reader's own `RootAdapter` | The adapter is the module's own map. Another module's asset comes through `ISharedDataModel`, which reports an asset nobody filed. |
+| A test level typed into `PD_Player`, or a `Level` field on the test Root | The asset's values ship as a new player's start, and a Root field bypasses the modules that read the data. Copy it to `PD_Player_Test` in the test module and file the copy in that scene. |
+| A `PD_` copy filed with `IsTest` off on `LocalSaveServiceRoot` | The save file is read over the copy, and the copy's values are written into the developer's save. |
 | `T_`, `M_`, `S_`, `P_` on an asset file | No prefix is a single letter. It is `TX_`, `MT_`, `Shader_`, `PB_`. |
 | `AC_` on an audio clip or an animator controller | The two collide on the same letters. An audio clip is `SND_`, an animator controller `Animator_`. |
 | `UI_` or `IMG_` on a sprite | The prefix says what the file is, not where it is shown. A sprite is `SPR_` in UI and in the world. |

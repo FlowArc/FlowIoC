@@ -24,7 +24,7 @@ namespace FlowIoC.Editor.Addressables
             if (entry == null || string.IsNullOrEmpty(entry.AssetPath))
                 return;
 
-            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            AddressableAssetSettings settings = SettingsCreatingIfMissing();
 
             if (settings == null)
             {
@@ -62,6 +62,27 @@ namespace FlowIoC.Editor.Addressables
 
             EditorUtility.SetDirty(settings);
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, created, true);
+        }
+
+        /// <summary>
+        /// The project's settings, created when it has none - and then created with no simulated
+        /// load delay. Addressables' default of 0.1 s queues every Editor load on an object an
+        /// earlier Play can leave stopped, and the boot hangs on it with nothing in the console;
+        /// ModuleScanner's AddressablesLoadDelayCheck says why at length. Settings the project
+        /// already has are left as they are and reported by that check instead.
+        /// </summary>
+        private AddressableAssetSettings SettingsCreatingIfMissing()
+        {
+            AddressableAssetSettings existing = AddressableAssetSettingsDefaultObject.GetSettings(false);
+            if (existing != null) return existing;
+
+            AddressableAssetSettings created = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            if (created == null) return null;
+
+            created.SimulatedLoadDelay = 0f;
+            EditorUtility.SetDirty(created);
+
+            return created;
         }
 
         /// <summary>

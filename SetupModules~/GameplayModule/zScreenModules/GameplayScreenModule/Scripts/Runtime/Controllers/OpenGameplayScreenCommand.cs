@@ -4,15 +4,12 @@ using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Service;
 using Modules.GameplayModule.GameplayScreenModule.ViewsMediators;
-using Modules.GameplayModule.Shared.Enums;
 
 namespace Modules.GameplayModule.GameplayScreenModule.Controllers
 {
     internal class OpenGameplayScreenCommand : Command
     {
         [Inject] private IScreenService _screenService { get; set; }
-
-        [SignalParam] private DifficultyType _difficulty { get; set; }
 
         /// <summary>
         /// Three ways out, and every one of them resolves the retain: the screen opened, the screen
@@ -23,13 +20,11 @@ namespace Modules.GameplayModule.GameplayScreenModule.Controllers
         {
             Retain();
 
-            FlowLogger.Log($"Execute - OpenGameplayScreenCommand | difficulty={_difficulty}");
+            FlowLogger.Log("Execute - OpenGameplayScreenCommand");
 
             try
             {
-                GameplayScreenView screen = await _screenService.Open<GameplayScreenView>()
-                    .SetParameters(_difficulty)
-                    .Show<GameplayScreenView>();
+                GameplayScreenView screen = await _screenService.Open<GameplayScreenView>().Show<GameplayScreenView>();
 
                 if (screen == null)
                 {

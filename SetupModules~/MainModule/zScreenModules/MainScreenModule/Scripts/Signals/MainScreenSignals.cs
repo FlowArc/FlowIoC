@@ -1,5 +1,4 @@
 using FlowIoC.BaseModule.Signals;
-using Modules.GameplayModule.Shared.Enums;
 
 namespace Modules.MainModule.MainScreenModule.Signals
 {
@@ -16,6 +15,6 @@ namespace Modules.MainModule.MainScreenModule.Signals
 
     public class MainScreenSignalsOutgoing
     {
-        public Signal<DifficultyType> DifficultySelected = new();
+        public Signal PlayClicked = new();
     }
 }

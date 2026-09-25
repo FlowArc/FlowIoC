@@ -354,13 +354,17 @@ CommandBinder.Bind(_signals.Incoming.PurchaseCompleted)
 `ToGroupAsSequence` waits for the whole sub-chain before continuing.
 `ToGroupAsParallel` starts it alongside the other parallel steps.
 
-A group may point at itself, which is how a tick loop is written:
+A tick loop is **not** a group pointing at itself. A group step waits for its sub group, so each
+turn would become a sub group of the one before: none of them finishes, every turn keeps a group
+resolver alive, and a `Stop()` unwinds the whole chain in one call. The loop dispatches the tick
+again as its last step instead, which starts a run of its own and lets this one finish:
 
 ```csharp
 CommandBinder.Bind(_internalSignals.Tick)
+    .ToSequence<WaitForNextTickCommand>()    // retains and releases when the next tick is due
     .ToSequence<AdvanceTimersCommand>()
     .ToSequence<PublishExpiredTimersCommand>()
-    .ToGroupAsParallel(_internalSignals.Tick);
+    .ToSequence<SignalDispatchCommand>(_internalSignals.Tick);
 ```
 
 ---
@@ -677,9 +681,10 @@ internal class PublishExpiredTimersCommand : Command { /* ... */ }
 
 ```csharp
 CommandBinder.Bind(_internal.Tick)
+    .ToSequence<WaitForNextTickCommand>()
     .ToSequence<AdvanceTimersCommand>()
     .ToSequence<PublishExpiredTimersCommand>()
-    .ToGroupAsParallel(_internal.Tick);
+    .ToSequence<SignalDispatchCommand>(_internal.Tick);
 ```
 
 Marking only the signal still leaves the per-command execute lines; marking only the

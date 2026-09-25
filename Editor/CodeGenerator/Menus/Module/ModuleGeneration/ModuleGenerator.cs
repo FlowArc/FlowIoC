@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using FlowIoC.Editor.Console;
 using FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule;
 using FlowIoC.Editor.CodeGenerator.Screens;
@@ -83,8 +85,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             string resolvedModuleKind = selectedModuleType switch
             {
-                ModuleType.Main when parentModulePath != Path.Combine(Application.dataPath, "Modules") => "Sub",
-                ModuleType.Main when parentModulePath == Path.Combine(Application.dataPath, "Modules") => "Main",
+                ModuleType.Main => IsModulesFolder(parentModulePath) ? "Main" : "Sub",
                 _ => selectedModuleType.ToString()
             };
 
@@ -98,6 +99,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string modulePath = string.IsNullOrEmpty(subDirectory)
                 ? Path.Combine(parentModulePath, $"{moduleName}Module")
                 : Path.Combine(parentModulePath, subDirectory, $"{moduleName}Module");
+
+            if (IsExistingModule(modulePath))
+            {
+                AddMissingFolders(moduleName, modulePath, directoryConfigMap[selectedModuleType], selectedOptionalFolders,
+                    codeGenSettings);
+                return;
+            }
 
             CreateFoldersRecursively(modulePath, directoryConfigMap[selectedModuleType].RootFolders, selectedOptionalFolders);
 
@@ -266,6 +274,80 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         {
             new ModuleCardFile().Write(modulePath, new ModuleCardStub().For(moduleName, card));
         }
+
+        /// <summary>
+        /// Whether the parent is Assets/Modules itself, in whatever form the caller wrote it. The
+        /// panel hands Path.Combine(Application.dataPath, "Modules"); a script is as likely to hand
+        /// the same folder with its separators the other way round or in another casing, which a
+        /// plain string comparison read as a sub module's parent - and wrote the module under
+        /// zSubModules.
+        /// </summary>
+        private static bool IsModulesFolder(string path) =>
+            string.Equals(FullPathOf(path), FullPathOf(Path.Combine(Application.dataPath, "Modules")),
+                StringComparison.OrdinalIgnoreCase);
+
+        private static string FullPathOf(string path) => Path.GetFullPath(path).Replace('\\', '/').TrimEnd('/');
+
+        /// <summary>
+        /// A module is there once its folder holds its assembly or its card. A folder with neither -
+        /// made by hand ahead of the run - is a module still to be created, and gets the whole run.
+        /// </summary>
+        private static bool IsExistingModule(string modulePath) =>
+            Directory.Exists(modulePath)
+            && (Directory.GetFiles(modulePath, "*.asmdef", SearchOption.TopDirectoryOnly).Length > 0
+                || new ModuleCardFile().Exists(modulePath));
+
+        /// <summary>
+        /// Create Module run again on a module that exists, which is how a module gets a folder it
+        /// was created without. Only the missing folders are made, and no file is written: the
+        /// asmdefs, the card, the Root, the Context and the signal holders are the module's own by
+        /// now, and a second run used to write each of them again from its template - the card back
+        /// to placeholders, the asmdef back to the references it started with, and the public holder
+        /// back to empty.
+        ///
+        /// Scripts/Shared and Scripts/Signals are not made here when the module lacks them. Each is
+        /// an assembly of its own that the module has to reference and a holder or data has to fill,
+        /// and Add Shared or Signals is the tool that does all of it; a folder alone would compile
+        /// into the module's own assembly. The optional folders under one the module already has are
+        /// made like any other.
+        /// </summary>
+        private static void AddMissingFolders(string moduleName, string modulePath, DirectoryStructureConfig config,
+            List<FolderEVO> selectedOptionalFolders, ED_CodeGenerator codeGenSettings)
+        {
+            var before = new HashSet<string>(Directory.GetDirectories(modulePath, "*", SearchOption.AllDirectories));
+
+            List<FolderEVO> folders = selectedOptionalFolders
+                .Where(folder => !IsAssemblyFolder(folder)
+                                 || Directory.Exists(config.FindFullFolderPathByID(folder.Type, modulePath)))
+                .ToList();
+            List<FolderEVO> withheld = selectedOptionalFolders.Except(folders).ToList();
+
+            CreateFoldersRecursively(modulePath, config.RootFolders, folders);
+            AddNamespaceExceptions(config, modulePath);
+
+            AssetDatabase.Refresh();
+            new ModuleIndexRegistrar().Register(modulePath, config, codeGenSettings.DirectoryStructureConfigMap.Keys);
+
+            List<string> added = Directory.GetDirectories(modulePath, "*", SearchOption.AllDirectories)
+                .Where(folder => !before.Contains(folder))
+                .Select(folder => Path.GetRelativePath(modulePath, folder).Replace('\\', '/'))
+                .ToList();
+
+            string report = added.Count == 0
+                ? $"<color=cyan>[FlowIoC]</color> {moduleName}Module already exists and has every folder asked for. No file in it was written."
+                : $"<color=cyan>[FlowIoC]</color> {moduleName}Module already exists, so only its missing folders were made: "
+                  + $"{string.Join(", ", added)}. No file in it was written.";
+
+            if (withheld.Count > 0)
+                report += $" Scripts/{string.Join(" and Scripts/", withheld.Select(folder => folder.FolderName))} "
+                          + $"{(withheld.Count == 1 ? "comes" : "come")} from Tools/FlowIoC/Edit Module/Add Shared or "
+                          + "Signals, which writes the assembly and its references with the folder.";
+
+            Debug.Log(report);
+        }
+
+        private static bool IsAssemblyFolder(FolderEVO folder) =>
+            folder.Type == FolderEVO.FolderType.Shared || folder.Type == FolderEVO.FolderType.PublicSignals;
     }
 }
 #endif

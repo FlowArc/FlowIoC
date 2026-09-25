@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Utils;
@@ -126,11 +127,17 @@ namespace FlowIoC.ScreenModule.Service.Sub
         /// Wires the screen's hide completion. Dropped first: a screen shown again before it was
         /// hidden - which is what force-opening over a duplicate does - would otherwise carry two
         /// subscriptions, and one hide would then park the same instance in the pool twice.
+        ///
+        /// Put back at the front, not the end. A Mediator hears HideCompleted to open what comes
+        /// next, often on the same layer, and the layer is free only once this handler has parked
+        /// the screen. Added at the end, it ran first on the first hide alone - the Mediator
+        /// subscribes when the screen registers, after this - and behind the Mediator on every
+        /// hide after it.
         /// </summary>
         internal void Setup<T>(T screenBody) where T : IScreenBody
         {
-            screenBody.HideCompleted -= HideAnimationCompleted;
-            screenBody.HideCompleted += HideAnimationCompleted;
+            screenBody.HideCompleted = (Action<IScreenBody>) HideAnimationCompleted
+                                       + (screenBody.HideCompleted - HideAnimationCompleted);
         }
     }
 }

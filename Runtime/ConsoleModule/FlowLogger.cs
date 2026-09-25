@@ -839,7 +839,9 @@ namespace FlowIoC.ConsoleModule
         private static void AddLog(SystemLogType systemLogType, string message, LogType logType, Type blame = null,
             bool captureSource = true, bool forceCapture = false, string filePath = null, int lineNumber = 0)
         {
-            if (!Preferences.IsLoggingEnabled) return;
+            // Logging off records nothing, but a warning still goes on to Unity's console.
+            bool isLoggingEnabled = Preferences.IsLoggingEnabled;
+            if (!isLoggingEnabled && logType != LogType.Warning) return;
 
             // The channel's profile is what puts the tag on the front - "[Signal]", "[Command]" -
             // so a message says only what happened. Read off the channel table, and applied here
@@ -847,7 +849,7 @@ namespace FlowIoC.ConsoleModule
             // caller passed a profile to.
             message = ResolveMessage(SystemChannelName(systemLogType), message);
 
-            if (IsRecording)
+            if (isLoggingEnabled && IsRecording)
             {
                 var log = CreateLogEntry(message, logType, blame, captureSource, forceCapture);
                 log.SystemLogType = systemLogType;
@@ -872,9 +874,10 @@ namespace FlowIoC.ConsoleModule
         [HideInCallstack]
         private static void AddCustomLog(string channel, string message, LogType logType, Type blame = null)
         {
-            if (!Preferences.IsLoggingEnabled) return;
+            bool isLoggingEnabled = Preferences.IsLoggingEnabled;
+            if (!isLoggingEnabled && logType != LogType.Warning) return;
 
-            if (IsRecording)
+            if (isLoggingEnabled && IsRecording)
             {
                 var log = CreateLogEntry(message, logType, blame);
                 log.Channel = channel;
@@ -896,9 +899,10 @@ namespace FlowIoC.ConsoleModule
         [HideInCallstack]
         private static void AddCustomLogAt(string channel, string message, LogType logType, string filePath, int lineNumber)
         {
-            if (!Preferences.IsLoggingEnabled) return;
+            bool isLoggingEnabled = Preferences.IsLoggingEnabled;
+            if (!isLoggingEnabled && logType != LogType.Warning) return;
 
-            if (IsRecording)
+            if (isLoggingEnabled && IsRecording)
             {
                 var log = CreateLogEntry(message, logType, null, false);
                 log.Channel = channel;
@@ -985,14 +989,20 @@ namespace FlowIoC.ConsoleModule
 
 #endif
 
+        /// <summary>
+        /// A warning reaches Unity's console whatever the mirror, the channel switch or the master
+        /// switch says, the way an error does: it is a line somebody has to see, and Unity's
+        /// console is where most people - and every agent's console tool - look. It costs a release
+        /// build nothing, because LogWarning is not compiled into one. A plain log is chatter and
+        /// waits for the mirror, and for its channel's switch.
+        /// </summary>
         private static void ForwardToUnityConsole(string channel, string message, LogType logType)
         {
-            if (!Preferences.SendLogsToUnityConsole) return;
-
-            // A channel's switch holds back its chatter and nothing else, here as in the window: a
-            // warning is forwarded whatever the switch says, so the two consoles show the same
-            // warnings whichever one is being read.
-            if (ChannelRule.AnswersToChannels(logType) && !Channels.IsShown(channel)) return;
+            if (logType != LogType.Warning)
+            {
+                if (!Preferences.SendLogsToUnityConsole) return;
+                if (ChannelRule.AnswersToChannels(logType) && !Channels.IsShown(channel)) return;
+            }
 
             // Raised so the editor bridge can tell this log apart from somebody else's when
             // Unity hands it straight back through Application.logMessageReceived.

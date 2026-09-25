@@ -252,6 +252,22 @@ namespace FlowIoC.Editor.Help.Pages
                 + "ArenaBounds arena = _sharedDataModel.GetMonoBehaviour<ArenaBounds>(\"Arena\");");
 
             painter.Separator();
+            painter.SubHeading("A test scene's own values");
+            painter.Paragraph(
+                "An asset's own values ship, and a PD_ asset's are what a new player starts with. A test "
+                + "scene that needs a state of its own - always level 10 - keeps a copy in its test "
+                + "module's Scriptables folder, named after the original with the test's suffix "
+                + "(PD_Player_Test, the way the Loading test module keeps CD_LoadingSets_Test), and files "
+                + "it on that scene's Roots in place of the original, so the modules read it the way the "
+                + "game does. It does not edit the original, and it does not put a Level field on its "
+                + "test Root.");
+            painter.Note(
+                "Important: a scene that files a PD_ copy ticks IsTest on its LocalSaveServiceRoot. "
+                + "Left unticked, the save file is read over the copy and the copy's values are written "
+                + "into your save; ticked, the save is neither read nor written, and the copy is back to "
+                + "its own values after every Play.");
+
+            painter.Separator();
             painter.SubHeading("What goes wrong");
             painter.Table(new[] {"What happened", "What you get"},
                 new[]

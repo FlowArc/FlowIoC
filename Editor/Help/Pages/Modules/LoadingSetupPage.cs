@@ -48,7 +48,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "speed, say.");
             painter.Bullet(
                 "A set that goes quiet is reported. Nothing hangs silently: after StallWarningSeconds "
-                + "with no report, the console names the steps not started and the steps still running.");
+                + "with no report, a warning in Unity's console names the steps not started and the steps "
+                + "still running.");
             painter.Bullet(
                 "Every step is timed on the module's channel, so the Flow Console reads "
                 + "\"Boot completed in 4.20 s - Screens 1.12, Pools skipped\" without a stopwatch anywhere.");

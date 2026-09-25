@@ -20,8 +20,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         public override string BodyHeadline => "Where the game is written.";
 
         public override string BodyTagline =>
-            "GameplayModule is the game; GameplayScreenModule under it is the screen the difficulty "
-            + "is played on.";
+            "GameplayModule is the game; GameplayScreenModule under it is the screen the game is "
+            + "played on.";
 
         public override void DrawBody(HelpPainter painter)
         {
@@ -30,28 +30,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "GameplaySystemContext, which binds GameplaySignals and nothing else yet: both halves of the "
                 + "holder are empty, waiting for what the game announces and accepts.");
             painter.Bullet(
-                "DifficultyType in the module's Shared assembly - Easy, Medium, Hard. Shared is where "
-                + "it lives because the main screen names it too, and a screen of another module may "
-                + "read a neighbour's Shared data and never its Runtime.");
-            painter.Bullet(
                 "GameplayScreenModule under zScreenModules: the screen the game is played on, opened in "
-                + "Layer_1 with the difficulty as its parameter, with its test scene beside it.");
+                + "Layer_1, with its test scene beside it.");
 
-            painter.SubHeading("How the difficulty arrives");
+            painter.SubHeading("How the screen opens");
             painter.Paragraph(
-                "The main screen announces DifficultySelected with a DifficultyType. MainConnectorSubContext "
-                + "joins it to the gameplay screen's OpenGameplayScreen, whose Command reads the value as a "
-                + "[SignalParam] and hands it to the screen through SetParameters - the screen finds it in "
-                + "Data.Parameters. GameplayModule itself never sees the main screen: the crossing is the "
-                + "Connector's, and the value crosses as data from Shared.");
-            painter.Code(
-                "internal class OpenGameplayScreenCommand : Command\n"
-                + "{\n"
-                + "    [Inject]      private IScreenService _screenService { get; set; }\n"
-                + "    [SignalParam] private DifficultyType _difficulty    { get; set; }\n"
-                + "    ...\n"
-                + "}",
-                "GameplayScreenModule - the parameter arrives through [SignalParam], never through Execute");
+                "The main screen announces PlayClicked. MainConnectorSubContext joins it to the gameplay "
+                + "screen's OpenGameplayScreen, whose Command opens the screen. GameplayModule itself never "
+                + "sees the main screen: the crossing is the Connector's. What the screen shows once the "
+                + "game has something to show, its opening Command reads and fills in - the Screen "
+                + "Module page has the shape.");
+            painter.PageLink("Screen Module", "Read: Screen Module - opening a screen and filling it");
 
             painter.SubHeading("Writing the game here");
             painter.Bullet(

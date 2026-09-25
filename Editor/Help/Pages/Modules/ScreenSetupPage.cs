@@ -169,9 +169,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "\n"
                 + "    try\n"
                 + "    {\n"
-                + "        GameplayScreenView screen = await _screenService.Open<GameplayScreenView>()\n"
-                + "            .SetParameters(_difficulty)\n"
-                + "            .Show<GameplayScreenView>();\n"
+                + "        GameplayScreenView screen = await _screenService.Open<GameplayScreenView>().Show<GameplayScreenView>();\n"
                 + "\n"
                 + "        if (screen == null)\n"
                 + "        {\n"
@@ -188,7 +186,62 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "        Stop();\n"
                 + "    }\n"
                 + "}",
-                "OpenGameplayScreenCommand - the difficulty arrives as a [SignalParam] and rides in through SetParameters");
+                "OpenGameplayScreenCommand - the three ways out of a retained Command");
+
+            painter.SubHeading("Filled by the Command that opens it");
+            painter.Paragraph(
+                "The gameplay screen has nothing to show yet, so its Command only opens it. A screen that "
+                + "shows data is filled by the same Command: it reads the data where it is published - "
+                + "the module's own Model, or a Shared asset through ISharedDataModel - and calls the "
+                + "view's own methods on the instance it awaited, before releasing. A signal dispatched "
+                + "instead would land after the screen is up, a frame of an empty screen.");
+            painter.Code(
+                "internal class OpenShopScreenCommand : Command\n"
+                + "{\n"
+                + "    [Inject] private IScreenService   _screenService { get; set; }\n"
+                + "    [Inject] private ISharedDataModel _sharedData    { get; set; }\n"
+                + "\n"
+                + "    public override async void Execute()\n"
+                + "    {\n"
+                + "        Retain();\n"
+                + "\n"
+                + "        try\n"
+                + "        {\n"
+                + "            CD_Shop shop = _sharedData.GetScriptable<CD_Shop>();\n"
+                + "            PD_Player player = _sharedData.GetScriptable<PD_Player>();\n"
+                + "\n"
+                + "            if (shop == null || player == null)\n"
+                + "            {\n"
+                + "                Stop();                  // the shared data model has reported the missing filing\n"
+                + "                return;\n"
+                + "            }\n"
+                + "\n"
+                + "            ShopScreenView screen = await _screenService.Open<ShopScreenView>().Show<ShopScreenView>();\n"
+                + "\n"
+                + "            if (screen == null)\n"
+                + "            {\n"
+                + "                FlowLogger.LogError(\"OpenShopScreenCommand - the screen did not open.\");\n"
+                + "                Stop();\n"
+                + "                return;\n"
+                + "            }\n"
+                + "\n"
+                + "            screen.ShowItems(shop.Items);\n"
+                + "            screen.ShowCoins(player.Coins);\n"
+                + "            Release();\n"
+                + "        }\n"
+                + "        catch (Exception exception)\n"
+                + "        {\n"
+                + "            FlowLogger.LogError($\"OpenShopScreenCommand threw while opening the screen: {exception}\");\n"
+                + "            Stop();\n"
+                + "        }\n"
+                + "    }\n"
+                + "}",
+                "Reading the published data and filling the view before anybody sees it");
+            painter.Paragraph(
+                "The screen module references the Shared assembly the assets live in, and nothing else of "
+                + "the modules that publish them. BotBar's OpenBotBarScreenCommand is a working one: it "
+                + "reads CD_BotBar and RD_BotBar and fills the bar, and refills a bar that is already up.");
+            painter.PageLink("BotBar Module", "Read: BotBar Module - a screen opened and filled from shared data");
             painter.PageLink("Controllers", "Read: Controllers - Retain, Release and Stop");
 
             painter.SubHeading("Where a screen module goes");
