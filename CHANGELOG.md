@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A module panel's section can fold**: `painter.HeadingFoldable(text, actions)` draws the heading
   with a triangle and returns whether it is open; its buttons work while it is shut.
 
+### Changed
+
+- **Agent rules:** an agent playing an unfocused Editor sets `Application.runInBackground` at
+  runtime, never in `PlayerSettings` or the auto-tick.
+
 ### Fixed
 
 - **A package update writes the agent rules, the skills, the solution code style and the module

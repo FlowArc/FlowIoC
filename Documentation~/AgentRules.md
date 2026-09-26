@@ -564,6 +564,13 @@ console only while its mirror is on. So an empty Unity console says nothing abou
 ran. An agent following one reads `FlowLogger.Logs` through the Editor's eval - the rows since its
 last read, filtered by channel or level; the controllers skill has the snippet.
 
+**An agent playing an unfocused Editor sets `Application.runInBackground = true` through eval,
+after entering Play.** With the project's *Run In Background* off, Unity stops advancing frames
+while it is not the focused window, so a flow an agent starts from the terminal stalls at its first
+frame and reads as broken. The runtime value is reset when Play ends and reaches no build. Never
+tick *Run In Background* in `PlayerSettings` and never change the Editor's auto-tick to get there:
+both outlive the test and are the developer's settings.
+
 **An error is the exception, and it is logged exactly once.** `FlowLogger.LogError` carries no
 `[Conditional]`, so an error reaches the console in a release build too - a project
 with logging switched off is exactly the one that most needs to be told something is broken. Never
