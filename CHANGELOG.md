@@ -5,6 +5,14 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **FlowIoC.Editor compiles on Unity 6.5 and later.** The Root and View Injector inspectors keyed
+  their folds by `GetInstanceID`, which 6.5 made a compile error; from 6.2 they ask for
+  `GetEntityId`, and 6.0 and 6.1 keep the instance ID.
+
 ## [1.25.0] - 2026-09-26
 
 ### Added

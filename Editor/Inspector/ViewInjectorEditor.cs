@@ -154,16 +154,15 @@ namespace FlowIoC.Editor.Inspector
             EditorGUILayout.BeginVertical(_gui.CardEntry);
 
             string viewName = view.GetType().Name;
-            int injectorId = _injector.GetInstanceID();
 
-            bool wasExpanded = _foldouts.IsExpanded(injectorId, viewName);
+            bool wasExpanded = _foldouts.IsExpanded(_injector, viewName);
 
             EditorGUILayout.BeginHorizontal();
 
             bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(viewName), true);
 
             if (expanded != wasExpanded)
-                _foldouts.SetExpanded(injectorId, viewName, expanded);
+                _foldouts.SetExpanded(_injector, viewName, expanded);
 
             DrawSourceBadge(entry);
 
