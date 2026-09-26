@@ -5,6 +5,20 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`Pool_` is the asset prefix of a pool group** (`Pool_Forest`); a new `CD_PoolGroup` asset is
+  created as `Pool_New`.
+
+### Changed
+
+- **`PD_` is now `SD_` (saveable data), and `PVO` is now `SVO`.** The code style, the agent rules,
+  the skills and Help use the new names; rename a game's `PD_` assets and classes to match.
+- **Help's Scene Switcher page moved to Editor Tools**, after Folder Painter.
+- **Module Scanner comes before Screen Scanner**, in the Tools/FlowIoC menu and in Help.
+
 ## [1.26.0] - 2026-09-26
 
 ### Added

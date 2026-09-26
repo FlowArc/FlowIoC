@@ -68,7 +68,7 @@ namespace FlowIoC.Editor.Help.Pages.Features
                 + "that. Group by lifetime - what is warmed and returned together - rather than by what "
                 + "the objects look like.");
             painter.Image(_images.Get("PoolGroupInspector.png"),
-                "CD_PoolGroup_PointerSample, the group the World Pointer module's sample draws its "
+                "Pool_PointerSample, the group the World Pointer module's sample draws its "
                 + "labels from.");
 
             painter.Separator();
@@ -95,7 +95,7 @@ namespace FlowIoC.Editor.Help.Pages.Features
             painter.SubHeading("The same keys in every group: Group Specific Pools");
             painter.Paragraph(
                 "Some groups are meant to hold the same keys. A game with themes gives every theme a "
-                + "group of its own - CD_PoolGroup_Forest, CD_PoolGroup_Beach - and every one lists a "
+                + "group of its own - Pool_Forest, Pool_Beach - and every one lists a "
                 + "Gate and an Exit, each theme with its own prefab. Off, two groups with one key share "
                 + "one pool: the group registered last overwrites the other, and Get(\"Gate\") hands out "
                 + "whichever theme won.");

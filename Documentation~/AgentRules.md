@@ -181,12 +181,12 @@ what is true whatever you are about to do.
   slots are read by its Model off the adapter, and a Command asks the Model - a Command never
   reaches for the adapter.
 - **A test scene's state is a copy of the data asset, never a field on its test Root.** A data
-  asset's own values ship, and a `PD_` asset's are what a new player starts with. A test scene that
+  asset's own values ship, and an `SD_` asset's are what a new player starts with. A test scene that
   needs a state of its own - always level 10 - puts a copy in its test module's `Scriptables/`,
-  named after the original with the test's suffix (`PD_Player_Test`, the way `CD_LoadingSets_Test`
+  named after the original with the test's suffix (`SD_Player_Test`, the way `CD_LoadingSets_Test`
   is), and files it on the scene's Roots in place of the original, so the modules read it the way
   the game does. The original is never edited to set a test up, and a `Level` or `Coins` field on
-  the test Root is not a substitute. **A scene that files a `PD_` copy ticks `IsTest` on its
+  the test Root is not a substitute. **A scene that files an `SD_` copy ticks `IsTest` on its
   `LocalSaveServiceRoot`**: without it the save file is read over the copy and the copy's values
   are written into the developer's save; with it the save is neither read nor written, and the copy
   starts every Play from its own values and returns to them after.
@@ -262,8 +262,8 @@ Modules/
         │   ├── Constants/
         │   ├── Controllers/        # commands and functions
         │   ├── Data/
-        │   │   ├── UnityObjects/   # ScriptableObjects: CD_, RD_, PD_, ED_, DD_
-        │   │   └── ValueObjects/   # plain data: VO, CVO, RVO, PVO, EVO, DVO
+        │   │   ├── UnityObjects/   # ScriptableObjects: CD_, RD_, SD_, ED_, DD_
+        │   │   └── ValueObjects/   # plain data: VO, CVO, RVO, SVO, EVO, DVO
         │   ├── Entities/
         │   ├── Enums/
         │   ├── Models/
@@ -331,7 +331,7 @@ the plain `[Serializable]` classes those assets are built out of, suffixed to ma
 |---|---|---|
 | `CD_` | Config data. Authored in the Editor, constant at runtime. | `MapCVO` |
 | `RD_` | Runtime data. Produced during play, not persisted. | `MapRVO` |
-| `PD_` | Player data. Loaded at startup, saved again whenever it changes. | `MapPVO` |
+| `SD_` | Saveable data. Loaded at startup, saved again whenever it changes. | `MapSVO` |
 | `ED_` | Editor data. Read by editor tooling only. | `MapEVO` |
 | `DD_` | Database data. Filled from an external backend. | `MapDVO` |
 
@@ -341,11 +341,12 @@ prefixes and suffixes are legal is declared in `<Solution>.sln.DotSettings`.
 **An asset file carries a prefix that says what the file is**, never where it is used: `TX_` a
 texture a material samples, `SPR_` a sprite, `MT_` a material, `Shader_`, `PB_` and `PBV_` a prefab
 and its variant, `SM_` a mesh with no rig and `RM_` a rigged one, `SND_` an audio clip, `Anim_` an
-animation clip. No prefix is a single letter: a type a project holds many of takes two or three, and
-a rare one, or one whose short form does not read, takes the whole word. A category is the second
-token and a variant number has two digits - `SND_SFX_GunShot_01`, `PB_FX_TorchFire`. A prefab named
-after the class it carries keeps the class name, a scene keeps `<Name>Scene`, and a vendor package's
-assets are never renamed. The whole table is in the data types skill.
+animation clip, `Pool_` a pool group. No prefix is a single letter: a type a project holds many of
+takes two or three, and a rare one, or one whose short form does not read, takes the whole word. A
+category is the second token and a variant number has two digits - `SND_SFX_GunShot_01`,
+`PB_FX_TorchFire`. A prefab named after the class it carries keeps the class name, a scene keeps
+`<Name>Scene`, and a vendor package's assets are never renamed. The whole table is in the data
+types skill.
 
 ### Naming
 
@@ -358,7 +359,7 @@ assets are never renamed. The whole table is in the data types skill.
 | System | `IMapSystem` and `MapSystem` |
 | Sub service | `AssetLoadSubService`, `ScreenBuilderSubService` |
 | Sub system | `MapLevelSubSystem` |
-| Data asset | `CD_Maps`, `RD_Maps`, `PD_Maps` |
+| Data asset | `CD_Maps`, `RD_Maps`, `SD_Maps` |
 | Value object | `PlayerStateVO`, `MapCVO`, `MapRVO` |
 | View and Mediator | `HudView` and `HudMediator` |
 | Function | `CalculateDamageFunction` |

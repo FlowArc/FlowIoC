@@ -24,7 +24,7 @@ namespace FlowIoC.Editor.CodeStyle
     /// <summary>
     /// Writes the code style FlowIoC ships into the consumer project as soon as the Editor opens.
     ///
-    /// The rules that decide what a `CD_` asset or a `PVO` value object may be called live in the
+    /// The rules that decide what a `CD_` asset or an `SVO` value object may be called live in the
     /// solution level settings file, and Rider only reads it under the solution's own name. Until
     /// this ran, that file was written by a menu item the reader had to know about and nothing
     /// else - it is `Tools/FlowIoC/Module Scanner` now - so a project that installed the package and generated a module

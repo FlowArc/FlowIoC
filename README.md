@@ -1319,7 +1319,7 @@ you do not want.
 | **CounterModule** | `ICounterService` | Named counters with once-a-second callbacks: `CountDownFrom` towards zero or `CountUpFrom` measuring elapsed time, seconds left or 0..1, several listeners per id, and a pluggable time source so a server clock can replace the device one. `ICounterService.Commands.Stop(id)` is the one step it ships - a sequence ends a counter with the id given at the binding. |
 | **WorldPointerModule** | `IWorldPointerService` | A UI element that follows a 3D object on screen every frame - a health bar, a name, a "wave incoming" notice - and, outside the frame, hides, clamps to the edge with an arrow aimed at the target, or carries on. The frame is the camera's pixel rect inset by margins, so a HUD bar is a margin; a destroyed target drops itself; `TryProject` places something once. `IWorldPointerService.Commands.UnregisterAll` is the one step it ships - the flow that leaves the scene clears every pointer. |
 | **HapticModule** | `IHapticService` | The nine haptic presets iOS names - Selection, Success, Warning, Failure and the Light, Medium, Heavy, Rigid and Soft impacts - played through UIKit's feedback generators on iOS and as a waveform through the Vibrator on Android, with no native library and no vendor asset. `Play(preset)` from the Command that decided the event, or `IHapticService.Commands.Play` bound as a step of a sequence with the preset given at the binding - `.ToSequence<IHapticService.Commands.Play>(HapticPreset.Success)` - so the flow reads from the Context; `IsEnabled` and `SetEnabled` keep the player's choice in PlayerPrefs, and `IHapticService.Commands.SetEnabled` binds to a settings toggle's `Signal<bool>`; the `VIBRATE` permission is written into the Gradle project by the module. |
-| **LocalSaveModule** | `ILocalSaveService` | The ScriptableObjects filed on `LocalSaveServiceRoot`'s adapter written to a file of the module's own - `SaveFile.flowsave` under `Application.persistentDataPath`, one JSON object with a member per asset - and read back in the module's `PostConstruct`, before any other module wakes up. A game binds `ILocalSaveService.Commands.Save` as the step after the one that changed the data, with the asset's name given at the binding - `.ToSequence<ILocalSaveService.Commands.Save>(nameof(PD_Profile))` - and `.SaveAll` where a session ends; the module saves everything on pause and on quit by itself. Newtonsoft does the serializing, narrowed to what Unity would save, so Dictionary members and `[SerializeReference]` fields survive. A password on the adapter encrypts the file with AES; empty, the file is one a developer reads. In the Editor the assets are put back when play mode ends, so a session leaves no diff. |
+| **LocalSaveModule** | `ILocalSaveService` | The ScriptableObjects filed on `LocalSaveServiceRoot`'s adapter written to a file of the module's own - `SaveFile.flowsave` under `Application.persistentDataPath`, one JSON object with a member per asset - and read back in the module's `PostConstruct`, before any other module wakes up. A game binds `ILocalSaveService.Commands.Save` as the step after the one that changed the data, with the asset's name given at the binding - `.ToSequence<ILocalSaveService.Commands.Save>(nameof(SD_Profile))` - and `.SaveAll` where a session ends; the module saves everything on pause and on quit by itself. Newtonsoft does the serializing, narrowed to what Unity would save, so Dictionary members and `[SerializeReference]` fields survive. A password on the adapter encrypts the file with AES; empty, the file is one a developer reads. In the Editor the assets are put back when play mode ends, so a session leaves no diff. |
 | **AssetDeliveryModule** | `IAssetDeliveryService` | Store-delivered content on the device before the boot needs it: Play Asset Delivery on Android, Apple-hosted managed Background Assets on iOS (iOS 26). One setting per Addressables group - Unity's own Play Asset Delivery schema, Install Time / Fast Follow / On Demand - read by both platforms. `IAssetDeliveryService.Commands.EnsurePromised`, bound after `Begin` in the boot, asks the store for every pack it promised and draws what is still missing on the `Content` step of the loading bar; `.Ensure("Chapter2")` holds a flow until an on-demand pack is there. The Addressables build writes the packs' manifest beside the catalog and, for iOS, folds each pack out of the app with its `Manifest.json`; the player build adds the Xcode downloader extension and the Background Assets keys. Requires `com.unity.addressables.android`. The iOS half is unverified on a device. |
 
 Install one from **Tools > FlowIoC > Module Library**: pick the module and press **Install** on its
@@ -1487,7 +1487,7 @@ while FlowIoC is installed, and names the check and the folder to delete if it i
 | `flowioc-connectors` | The one place two modules meet: getting the holders rather than binding them, wiring by direction, and what a Connector may not decide. |
 | `flowioc-systems-services` | Which of the three kinds a module is, when work earns a Service of its own, giving a System a surface, and where a piece of data belongs. |
 | `flowioc-root-order` | Where a Root sits in the scene, what its Initialize Order decides and what it does not, and reading a null holder or a Connector that wired nothing. |
-| `flowioc-data-types` | The `CD_`, `RD_`, `PD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, which folder each kind belongs in, and the prefix an asset file takes. |
+| `flowioc-data-types` | The `CD_`, `RD_`, `SD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, which folder each kind belongs in, and the prefix an asset file takes. |
 
 The skills ship in `Documentation~/Skills/`.
 
@@ -1512,8 +1512,8 @@ Modules/
     │   │   ├── Constants/         # constant strings and keys
     │   │   ├── Controllers/       # commands and functions
     │   │   ├── Data/
-    │   │   │   ├── UnityObjects/  # ScriptableObjects (CD_, RD_, PD_, ED_, DD_)
-    │   │   │   └── ValueObjects/  # plain data (…VO, …CVO, …RVO, …PVO)
+    │   │   │   ├── UnityObjects/  # ScriptableObjects (CD_, RD_, SD_, ED_, DD_)
+    │   │   │   └── ValueObjects/  # plain data (…VO, …CVO, …RVO, …SVO)
     │   │   ├── Entities/          # MonoBehaviours owned by the module
     │   │   ├── Enums/
     │   │   ├── Models/
@@ -1786,19 +1786,19 @@ the matching suffix:
 |---|---|---|---|
 | `CD_` | Config data. Constant: the same in every session, on every device. | Whoever authors the game, in the Editor. | `MapCVO` |
 | `RD_` | Runtime data. Produced while the game runs, gone when it stops. | Play. | `MapRVO` |
-| `PD_` | Player data. This one player's state: loaded at startup, written back to the save system whenever it changes. | Play, through the save system. | `MapPVO` |
+| `SD_` | Saveable data. State that outlives the session: loaded at startup, written back to the save system whenever it changes. | Play, through the save system. | `MapSVO` |
 | `ED_` | Editor data. Settings and caches only editor tooling reads. | Editor tools. | `MapEVO` |
 | `DD_` | Database data. A copy of something a backend owns. | A download. | `MapDVO` |
 
 So a level catalogue authored by hand is `CD_Maps` and its entries are `MapCVO`; that player's
-progress through the same levels is `PD_Maps`, made of `MapPVO`. Reading the two names side by
+progress through the same levels is `SD_Maps`, made of `MapSVO`. Reading the two names side by
 side tells you which one is safe to regenerate and which one has to survive a restart.
 
-An asset's own values ship, and a `PD_` asset's are what a new player starts with. A test scene
+An asset's own values ship, and an `SD_` asset's are what a new player starts with. A test scene
 that needs a state of its own - always level 10 - keeps a copy in its test module's `Scriptables/`
-(`PD_Player_Test`, the way the Loading test module keeps `CD_LoadingSets_Test`) and files it on
+(`SD_Player_Test`, the way the Loading test module keeps `CD_LoadingSets_Test`) and files it on
 that scene's Roots in place of the original; it does not edit the original or put a `Level` field
-on its test Root. A scene that files a `PD_` copy ticks `IsTest` on its `LocalSaveServiceRoot`, so
+on its test Root. A scene that files an `SD_` copy ticks `IsTest` on its `LocalSaveServiceRoot`, so
 the save file is neither read over the copy nor written with it, and the copy is back to its own
 values after every Play.
 
@@ -1860,6 +1860,7 @@ prefix is a single letter.
 | VFX Graph / Render Texture / Sprite Atlas | `VFX_` / `RT_` / `Atlas_` | `VFX_Explosion`, `RT_Minimap`, `Atlas_Shop` |
 | Timeline / Physics Material / Volume Profile | `Timeline_` / `PhysicsMat_` / `Volume_` | `Timeline_Intro`, `PhysicsMat_Ice`, `Volume_Night` |
 | Font, and its TextMesh Pro asset | `Font_` | `Font_Lexend_Bold`, `Font_Lexend_Bold_SDF` |
+| Pool group, a `CD_PoolGroup` asset | `Pool_` | `Pool_Forest` |
 
 A category is the second token and a variant number has two digits - `SND_Music_Combat_01`,
 `PB_FX_TorchFire`. A material is named after what it dresses, not after its shader. A sprite and a

@@ -208,7 +208,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "        try\n"
                 + "        {\n"
                 + "            CD_Shop shop = _sharedData.GetScriptable<CD_Shop>();\n"
-                + "            PD_Player player = _sharedData.GetScriptable<PD_Player>();\n"
+                + "            SD_Player player = _sharedData.GetScriptable<SD_Player>();\n"
                 + "\n"
                 + "            if (shop == null || player == null)\n"
                 + "            {\n"

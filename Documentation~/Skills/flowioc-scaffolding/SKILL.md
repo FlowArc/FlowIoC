@@ -323,7 +323,7 @@ Then, for the module you just made:
   way the game would, `InjectionBinderCrossContext.GetInstance<PlayerSignals>().Incoming
   .InitializePlayer.Dispatch()`. A test module may reference anything, so it stands in for the
   Connector too. A state the scene starts from - level 10 - is a copy of the data asset
-  (`PD_Player_Test` in the test module's `Scriptables/`, filed in place of the original, with
+  (`SD_Player_Test` in the test module's `Scriptables/`, filed in place of the original, with
   `IsTest` ticked on `LocalSaveServiceRoot`), never a field on the test Root; the data-types skill
   has the whole of it. Then press Play in that scene.
 

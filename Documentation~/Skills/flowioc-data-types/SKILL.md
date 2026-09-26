@@ -1,6 +1,6 @@
 ---
 name: flowioc-data-types
-description: Use when adding or naming data in a FlowIoC Unity project - a ScriptableObject data asset, a serializable value object, saved player state, downloaded backend data, editor-only settings - when unsure whether a class should be CD_/RD_/PD_/ED_/DD_ or carry a VO/CVO/RVO/PVO/EVO/DVO suffix, or when one module needs to read a ScriptableObject another module filed as shared. Also when naming an asset file - a texture, sprite, material, shader, prefab, mesh or FBX, audio clip, animation - and choosing its prefix.
+description: Use when adding or naming data in a FlowIoC Unity project - a ScriptableObject data asset, a serializable value object, saved state, downloaded backend data, editor-only settings - when unsure whether a class should be CD_/RD_/SD_/ED_/DD_ or carry a VO/CVO/RVO/SVO/EVO/DVO suffix, or when one module needs to read a ScriptableObject another module filed as shared. Also when naming an asset file - a texture, sprite, material, shader, prefab, mesh or FBX, audio clip, animation - and choosing its prefix.
 ---
 
 # FlowIoC Data Types
@@ -22,7 +22,7 @@ matching suffix.
 |---|---|---|---|
 | `CD_` | Config data - constant in every session, on every device | An author, in the Editor | `MapCVO` |
 | `RD_` | Runtime data - produced during play, gone when it stops | Play | `MapRVO` |
-| `PD_` | Player data - this player's state, loaded at startup and saved back on every change | Play, through the save system | `MapPVO` |
+| `SD_` | Saveable data - state that outlives the session, loaded at startup and saved back on every change | Play, through the save system | `MapSVO` |
 | `ED_` | Editor data - settings and caches only editor tooling reads | Editor tools | `MapEVO` |
 | `DD_` | Database data - a copy of something a backend owns | A download | `MapDVO` |
 
@@ -33,8 +33,8 @@ the shape a Function returns.
 
 ```
 Scripts/Runtime/Data/
-├── UnityObjects/    # CD_Maps.cs, PD_Maps.cs, RD_MapPool.cs
-└── ValueObjects/    # MapVO.cs, MapCVO.cs, MapPVO.cs
+├── UnityObjects/    # CD_Maps.cs, SD_Maps.cs, RD_MapPool.cs
+└── ValueObjects/    # MapVO.cs, MapCVO.cs, MapSVO.cs
 ```
 
 Data another module reads goes in `Scripts/Shared/Data/` instead, under the same two
@@ -87,7 +87,7 @@ Ask where the value comes from, not what it is about:
 
 - Typed in by a designer and never written at runtime → `CD_` / `CVO`
 - Computed while playing and thrown away at the end → `RD_` / `RVO`
-- Has to still be there next launch → `PD_` / `PVO`
+- Has to still be there next launch → `SD_` / `SVO`
 - Only an Editor tool ever reads it → `ED_` / `EVO`
 - Downloaded from a backend that owns the truth → `DD_` / `DVO`
 
@@ -139,17 +139,17 @@ Command that read each.
 
 ## A test scene's own values
 
-A data asset's values ship, and a `PD_` asset's are what a new player starts with - `PD_Player` at
+A data asset's values ship, and an `SD_` asset's are what a new player starts with - `SD_Player` at
 level 0. A test scene that always starts at level 10 does not edit that asset, and does not put a
 `Level` field on its test Root for its Context to hand out either. It keeps a copy:
 
 - **Where:** the test module's `Scriptables/` folder.
-- **Name:** the original's, with the test's suffix - `PD_Player_Test`, the way the Loading test
+- **Name:** the original's, with the test's suffix - `SD_Player_Test`, the way the Loading test
   module keeps `CD_LoadingSets_Test`.
 - **Filed:** on the scene's Roots in place of the original - every slot the original sits in, a
   module's own *Scriptable Map* and the *Shared Scriptables* alike, as overrides on the scene's
   Root instances - so the modules read the copy the way the game reads the original.
-- **Save:** a scene that files a `PD_` copy ticks `IsTest` on its `LocalSaveServiceRoot`. The save
+- **Save:** a scene that files an `SD_` copy ticks `IsTest` on its `LocalSaveServiceRoot`. The save
   is then neither read nor written: the copy starts every Play from its own values and returns to
   them after. Left unticked, the save file is read over the copy, and the copy's values are
   written into the developer's save on the way out.
@@ -160,7 +160,7 @@ ready-made `RD_Match` - rather than with fields.
 ### Starting over from an empty save
 
 A test scene never needs this: with `IsTest` ticked the save is not touched. To empty the
-developer's own save file - so the next Play of the real scenes starts every `PD_` asset from its
+developer's own save file - so the next Play of the real scenes starts every `SD_` asset from its
 file, as a first install does - press *Reset* on `Tools/FlowIoC-Modules/Local Save/Panel`, or run
 the same through the Editor's eval. Only in edit mode: in play mode the game holds the save in
 memory and writes it back on the way out.
@@ -210,7 +210,8 @@ abbreviation; a rare type, or one whose abbreviation would not read, takes the w
 | Physics Material | `PhysicsMat_` | `PhysicsMat_Ice` |
 | Volume Profile | `Volume_` | `Volume_Night` |
 | Font, and its TextMesh Pro asset | `Font_` | `Font_Lexend_Bold`, `Font_Lexend_Bold_SDF` |
-| ScriptableObject data | `CD_` `RD_` `PD_` `ED_` `DD_` | the table at the top of this skill |
+| Pool group, a `CD_PoolGroup` asset | `Pool_` | `Pool_Forest` |
+| ScriptableObject data | `CD_` `RD_` `SD_` `ED_` `DD_` | the table at the top of this skill |
 
 - **A category is the second token**: `SND_Music_Combat_01`, `SND_SFX_GunShot_01`, `SND_UI_Click_01`.
   A particle effect is a prefab, so it is `PB_FX_TorchFire` - `FX` is its category, not its prefix.
@@ -221,6 +222,8 @@ abbreviation; a rare type, or one whose abbreviation would not read, takes the w
   game's character art is a sprite even though it is not UI.
 - **A prefab variant that is unpacked or made a base prefab** loses the `V` - rename it with the
   change.
+- **A pool group asset is `Pool_`**, although its class is `CD_PoolGroup`: `Pool_Forest`, never
+  `CD_PoolGroup_Forest`.
 - **A prefab named after the class it carries keeps the class name**: `GameplaySystemRoot.prefab`,
   a screen's prefab. The prefix is for content, not for the prefabs FlowIoC's generators write.
 - **A scene keeps `<Name>Scene`**, the name Create Module writes.
@@ -232,14 +235,14 @@ abbreviation; a rare type, or one whose abbreviation would not read, takes the w
 | Mistake | Why it is wrong |
 |---|---|
 | `MapData`, `MapConfig`, `MapSO` | The suffix family is the convention; a bare descriptive name says nothing about lifetime. |
-| Writing to a `CD_` asset at runtime | Config is constant. If it changes during play it is `RD_`, and if it must survive a restart it is `PD_`. |
-| A `CVO` list inside a `PD_` asset | The suffix has to match the asset it lives in, or the name stops predicting the lifetime. |
+| Writing to a `CD_` asset at runtime | Config is constant. If it changes during play it is `RD_`, and if it must survive a restart it is `SD_`. |
+| A `CVO` list inside an `SD_` asset | The suffix has to match the asset it lives in, or the name stops predicting the lifetime. |
 | Naming a mixed holder `GameHexCVO` | Name a two-kind holder plain `VO` and keep the lettered suffixes on its parts. |
 | A new `.cs` file dropped anywhere | Data lives in `Data/UnityObjects/` or `Data/ValueObjects/`; the generators and namespace tools depend on it. |
 | The same `RD_` asset dragged onto every reader's adapter | It works while the producer is in the scene and reads an asset nobody fills when it is not, and nothing reports it. File it once, in one Root's Shared Scriptables, and read it through `ISharedDataModel`. |
 | Reading a shared asset from the reader's own `RootAdapter` | The adapter is the module's own map. Another module's asset comes through `ISharedDataModel`, which reports an asset nobody filed. |
-| A test level typed into `PD_Player`, or a `Level` field on the test Root | The asset's values ship as a new player's start, and a Root field bypasses the modules that read the data. Copy it to `PD_Player_Test` in the test module and file the copy in that scene. |
-| A `PD_` copy filed with `IsTest` off on `LocalSaveServiceRoot` | The save file is read over the copy, and the copy's values are written into the developer's save. |
+| A test level typed into `SD_Player`, or a `Level` field on the test Root | The asset's values ship as a new player's start, and a Root field bypasses the modules that read the data. Copy it to `SD_Player_Test` in the test module and file the copy in that scene. |
+| An `SD_` copy filed with `IsTest` off on `LocalSaveServiceRoot` | The save file is read over the copy, and the copy's values are written into the developer's save. |
 | `T_`, `M_`, `S_`, `P_` on an asset file | No prefix is a single letter. It is `TX_`, `MT_`, `Shader_`, `PB_`. |
 | `AC_` on an audio clip or an animator controller | The two collide on the same letters. An audio clip is `SND_`, an animator controller `Animator_`. |
 | `UI_` or `IMG_` on a sprite | The prefix says what the file is, not where it is shown. A sprite is `SPR_` in UI and in the world. |
