@@ -29,7 +29,11 @@ namespace FlowIoC.Editor.Inspector
 
             if (!Application.isPlaying)
             {
+#if UNITY_6000_4_OR_NEWER
+                List<ScreenManager> allScreenManagers = FindObjectsByType<ScreenManager>().ToList();
+#else
                 List<ScreenManager> allScreenManagers = FindObjectsByType<ScreenManager>(FindObjectsSortMode.None).ToList();
+#endif
                 foreach (ScreenManager screenManager in allScreenManagers)
                 {
                     int managerIndex = screenManager.ManagerData.ManagerID;

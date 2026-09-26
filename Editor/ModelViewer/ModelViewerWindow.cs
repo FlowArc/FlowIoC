@@ -137,7 +137,11 @@ namespace FlowIoC.Editor.ModelViewer
                 return;
             }
 
+#if UNITY_6000_4_OR_NEWER
+            RootBase[] found = FindObjectsByType<RootBase>(FindObjectsInactive.Exclude);
+#else
             RootBase[] found = FindObjectsByType<RootBase>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+#endif
             List<ModelRootEVO> roots = _modelTree.Build(found);
 
             if (roots.Count == 0)

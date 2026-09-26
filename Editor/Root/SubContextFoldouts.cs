@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using FlowIoC.BaseModule.Root;
+using FlowIoC.Editor.Inspector;
 using UnityEditor;
 
 namespace FlowIoC.Editor.Root
@@ -17,23 +19,25 @@ namespace FlowIoC.Editor.Root
     {
         private const string Prefix = "FlowIoC.SubContext.";
 
-        internal bool IsEntryExpanded(int rootInstanceId, string contextFullName)
-            => SessionState.GetBool(EntryKey(rootInstanceId, contextFullName), false);
+        private readonly SessionObjectId _ids = new();
 
-        internal void SetEntryExpanded(int rootInstanceId, string contextFullName, bool expanded)
-            => SessionState.SetBool(EntryKey(rootInstanceId, contextFullName), expanded);
+        internal bool IsEntryExpanded(RootBase root, string contextFullName)
+            => SessionState.GetBool(EntryKey(root, contextFullName), false);
 
-        internal bool IsScreenExpanded(int rootInstanceId, string contextFullName)
-            => SessionState.GetBool(ScreenKey(rootInstanceId, contextFullName), false);
+        internal void SetEntryExpanded(RootBase root, string contextFullName, bool expanded)
+            => SessionState.SetBool(EntryKey(root, contextFullName), expanded);
 
-        internal void SetScreenExpanded(int rootInstanceId, string contextFullName, bool expanded)
-            => SessionState.SetBool(ScreenKey(rootInstanceId, contextFullName), expanded);
+        internal bool IsScreenExpanded(RootBase root, string contextFullName)
+            => SessionState.GetBool(ScreenKey(root, contextFullName), false);
 
-        private string EntryKey(int rootInstanceId, string contextFullName)
-            => $"{Prefix}Entry.{rootInstanceId}.{contextFullName}";
+        internal void SetScreenExpanded(RootBase root, string contextFullName, bool expanded)
+            => SessionState.SetBool(ScreenKey(root, contextFullName), expanded);
 
-        private string ScreenKey(int rootInstanceId, string contextFullName)
-            => $"{Prefix}Screen.{rootInstanceId}.{contextFullName}";
+        private string EntryKey(RootBase root, string contextFullName)
+            => $"{Prefix}Entry.{_ids.For(root)}.{contextFullName}";
+
+        private string ScreenKey(RootBase root, string contextFullName)
+            => $"{Prefix}Screen.{_ids.For(root)}.{contextFullName}";
     }
 }
 #endif
