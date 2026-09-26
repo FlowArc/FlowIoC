@@ -48,6 +48,7 @@ namespace FlowIoC.Editor.ModulePanels
         private readonly Color _accent;
         private readonly Type _panel;
         private readonly FlowHelpState _state;
+        private readonly ModulePanelFoldState _folds;
 
         private GUIStyle _question;
 
@@ -67,6 +68,7 @@ namespace FlowIoC.Editor.ModulePanels
             _accent = accent;
             _panel = panel;
             _state = new FlowHelpState();
+            _folds = new ModulePanelFoldState(panel.FullName);
         }
 
         /// <summary>
@@ -94,6 +96,56 @@ namespace FlowIoC.Editor.ModulePanels
             Rect rect = Row(HEADING_HEIGHT);
             PaintHeading(rect);
 
+            Rect content = HeadingActions(rect, actions);
+            GUI.Label(content, text.ToUpperInvariant(), _rows.Heading(_accent));
+        }
+
+        /// <summary>
+        /// A section's name that folds the section away: a triangle on the left, and a click on the
+        /// triangle or the name opens or shuts it. Returns whether the section is open, so the
+        /// panel draws its rows only then. The buttons stay on the row and keep working while the
+        /// section is shut - adding to a folded list is still adding - and pressing one does not
+        /// fold anything. Which sections are shut is remembered per panel and heading, for this
+        /// developer, across reloads.
+        /// </summary>
+        public bool HeadingFoldable(string text, params ModulePanelAction[] actions)
+        {
+            Rect rect = Row(HEADING_HEIGHT);
+            PaintHeading(rect);
+
+            // The buttons are drawn first, so a click on one is theirs before the fold sees it.
+            Rect content = HeadingActions(rect, actions);
+            bool open = _folds.IsOpen(text);
+
+            float arrow = EditorStyles.foldout.CalcSize(GUIContent.none).x;
+            var toggle = new Rect(content.x, rect.y, content.width, rect.height);
+            Event current = Event.current;
+
+            if (current.type == EventType.MouseDown && current.button == 0 && toggle.Contains(current.mousePosition))
+            {
+                open = !open;
+                _folds.SetOpen(text, open);
+                current.Use();
+            }
+
+            if (current.type == EventType.Repaint)
+            {
+                var arrowRect = new Rect(content.x, rect.y + (rect.height - arrow) / 2f, arrow, arrow);
+                EditorStyles.foldout.Draw(arrowRect, GUIContent.none, false, false, open, false);
+            }
+
+            content.xMin += arrow;
+            GUI.Label(content, text.ToUpperInvariant(), _rows.Heading(_accent));
+
+            return open;
+        }
+
+        /// <summary>
+        /// A heading's buttons, pressed against the right edge in the order given, and the room
+        /// left for its name. A label that is one glyph is drawn as a small square.
+        /// </summary>
+        private Rect HeadingActions(Rect rect, ModulePanelAction[] actions)
+        {
             Rect content = Content(rect);
             float x = content.xMax;
 
@@ -110,7 +162,8 @@ namespace FlowIoC.Editor.ModulePanels
             }
 
             content.width = Mathf.Max(0f, x - content.x);
-            GUI.Label(content, text.ToUpperInvariant(), _rows.Heading(_accent));
+
+            return content;
         }
 
         /// <summary>The quiet tint of a row taken down a step, the way the bar's strip sits under its title.</summary>

@@ -374,6 +374,10 @@ a, b)`, so undo, dirtying and saving are Unity's; it edits what the Inspector wo
 is inside the line. Defer a change to a list's shape - an element added or removed - until the
 rows are drawn, because the rows are walked by index.
 
+A section that grows long folds: `if (painter.HeadingFoldable("Arrows", add)) { ...rows... }` draws
+the heading with a triangle and returns whether it is open. Its buttons keep working while it is
+shut, and which sections are shut is remembered per developer.
+
 Put the file operations in a class of their own beside the panel (`LocalSaveFileTools`) so the
 workspace's tests reach them without a window; the panel only draws.
 

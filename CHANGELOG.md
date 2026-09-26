@@ -5,6 +5,13 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **A module panel's section can fold**: `painter.HeadingFoldable(text, actions)` draws the heading
+  with a triangle and returns whether it is open; its buttons work while it is shut.
+
 ## [1.26.1] - 2026-09-26
 
 ### Added
