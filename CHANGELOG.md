@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   each step of a tick is no longer needed.
 - **The frame-tick example keeps an `IsHooked` flag beside `IsTicking`**, so a stop and a start in
   one frame no longer add a second callback that ticks twice.
+- **Counter 1.0.3**: its tick steps carry no `[HideCommandLog]`; the tick signal hides them.
 
 ### Fixed
 

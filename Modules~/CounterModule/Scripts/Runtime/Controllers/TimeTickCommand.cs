@@ -1,4 +1,3 @@
-using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.Provider.Coroutine;
@@ -12,7 +11,6 @@ namespace Modules.CounterModule.Controllers
     /// the module started rather than added to the previous reading, so a frame that took longer
     /// than a second does not leave every counter running slow.
     /// </summary>
-    [HideCommandLog]
     internal class TimeTickCommand : Command
     {
         [Inject] private ICoroutineProvider _coroutineProvider { get; set; }

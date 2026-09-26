@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using FlowIoC.BaseModule.Attributes;
 using Modules.CounterModule.Data.ValueObjects;
 
 namespace Modules.CounterModule.Controllers
@@ -8,7 +7,6 @@ namespace Modules.CounterModule.Controllers
     /// One second of work for every counter: report the new time, or finish the ones that have
     /// run out. Runs behind <see cref="TimeTickCommand"/>, so the clock has already moved.
     /// </summary>
-    [HideCommandLog]
     internal class TickProcessAllDataCommand : TickProcessBaseCommand
     {
         public override void Execute()
