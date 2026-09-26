@@ -14,7 +14,7 @@ namespace FlowIoC.Editor.Help.Pages.Features
 
         public override string Title => "Scene Switcher";
 
-        public override FlowIcon Icon => FlowIcon.Layers;
+        public override FlowIcon Icon => FlowIcon.SwitchArrows;
 
         protected override string BodyHeadline => "Every scene the modules bring, one click from the toolbar.";
 

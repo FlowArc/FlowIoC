@@ -125,6 +125,14 @@ namespace FlowIoC.Editor.Inspector
                 SerializedProperty value = values.GetArrayElementAtIndex(index);
                 Rect row = new Rect(body.x, y, body.width, RowHeight(value));
 
+                // Every other pair on a darker band, so a long list of multi-line values still
+                // reads pair by pair.
+                if (index % 2 == 1 && Event.current.type == EventType.Repaint)
+                {
+                    Rect band = new Rect(row.x - 2f, row.y - Spacing * 0.5f, row.width + 4f, row.height + Spacing);
+                    EditorGUI.DrawRect(band, EditorGUIUtility.isProSkin ? new Color(0f, 0f, 0f, 0.14f) : new Color(0f, 0f, 0f, 0.07f));
+                }
+
                 if (DrawRow(row, property.propertyPath, keys, index, value, refused && refusal.Index == index))
                     removeAt = index;
 

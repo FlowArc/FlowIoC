@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **A `SerializedDictionary` is drawn as key and value pairs**, added and removed together; a key
-  already in the dictionary is refused.
+- **A `SerializedDictionary` is drawn as key and value pairs**, added and removed together, every
+  other pair on a darker band; a key already in the dictionary is refused.
+- **Help's FlowIoC Features has Screen Service and Pool Service pages.**
 - **Help has a FlowIoC Features section**, after MVCS Structure (was Structure), with a Scene
   Switcher page: what it lists and how to turn it on in the toolbar.
 
@@ -25,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A context listed on two Roots no longer warns of a same injection**, and the first one torn
   down no longer unbinds the other's name.
+- **The `CD_PoolGroup` inspector** no longer draws an item's arrow over its drag handle or its
+  section headings twice.
 
 ## [1.25.0] - 2026-09-26
 

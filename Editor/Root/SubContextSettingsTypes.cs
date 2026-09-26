@@ -24,6 +24,10 @@ namespace FlowIoC.Editor.Root
             return null;
         }
 
+        /// <summary>The settings class's name without its suffix: PoolSubContextSettingsCVO is "Pool".</summary>
+        internal string Title(Type settingsType)
+            => UnityEditor.ObjectNames.NicifyVariableName(settingsType.Name.Replace("SubContextSettingsCVO", string.Empty));
+
         /// <summary>A fresh instance of the context's settings, or null when it takes none.</summary>
         internal SubContextSettingsCVO NewFor(Type contextType)
         {

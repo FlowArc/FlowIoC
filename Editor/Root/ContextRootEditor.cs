@@ -24,6 +24,7 @@ namespace FlowIoC.Editor.Root
         private SubContextEntryStates _entryStates;
         private SubContextNameSync _nameSync;
         private SubContextSettingsTypes _settingsTypes;
+        private SubContextBadge _badge;
 
         private FlowPalette _palette;
         private FlowRoleResolver _roles;
@@ -77,6 +78,7 @@ namespace FlowIoC.Editor.Root
             _helpState = new FlowHelpState();
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
             _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
+            _badge = new SubContextBadge(_declarations, _roles, _palette, _settingsTypes);
         }
 
         /// <summary>
@@ -308,31 +310,12 @@ namespace FlowIoC.Editor.Root
         {
             Type contextType = _declarations.ResolveType(contextData.ContextFullName);
 
-            string badge = string.Empty;
-            Color color = Color.clear;
-
-            if (_declarations.IsScreenContext(contextType))
-            {
-                badge = "SCREEN";
-                color = _palette.Accent(FlowRole.Screen, EditorGUIUtility.isProSkin);
-            }
-            else if (_roles.IsConnector(contextType))
-            {
-                badge = "CONNECTOR";
-                color = _palette.Accent(FlowRole.Connector, EditorGUIUtility.isProSkin);
-            }
-            else if (_settingsTypes.For(contextType) is { } settingsType)
-            {
-                // A sub-context a service ships to be configured on the Root that uses it - the
-                // pool's - wears the service colour and the name of what it configures.
-                badge = SettingsTitle(settingsType).ToUpperInvariant();
-                color = _palette.Accent(FlowRole.Service, EditorGUIUtility.isProSkin);
-            }
+            _badge.TryGet(contextType, out string badge, out Color color);
 
             Color previous = GUI.color;
             GUI.color = color;
 
-            EditorGUILayout.LabelField(badge, EditorStyles.miniBoldLabel, GUILayout.Width(68));
+            EditorGUILayout.LabelField(badge ?? string.Empty, EditorStyles.miniBoldLabel, GUILayout.Width(68));
 
             GUI.color = previous;
         }
@@ -468,7 +451,7 @@ namespace FlowIoC.Editor.Root
             // folded.
             int rootId = _root.GetInstanceID();
             string summary = carries ? SettingsSummary(settings) : string.Empty;
-            string title = SettingsTitle(settingsType);
+            string title = _settingsTypes.Title(settingsType);
             string label = string.IsNullOrEmpty(summary) ? title : $"{title}  ({summary})";
 
             bool wasExpanded = _foldouts.IsSettingsExpanded(rootId, contextData.ContextFullName);
@@ -522,10 +505,6 @@ namespace FlowIoC.Editor.Root
                 MarkDirty();
         }
 
-        /// <summary>The settings class's name without its suffix: PoolSubContextSettingsCVO is "Pool".</summary>
-        private string SettingsTitle(Type settingsType)
-            => ObjectNames.NicifyVariableName(settingsType.Name.Replace("SubContextSettingsCVO", string.Empty));
-
         /// <summary>
         /// How many the settings' first list or dictionary holds - "2 groups" - so a folded block
         /// still says whether it is empty. Settings with no collection say nothing.
@@ -549,7 +528,14 @@ namespace FlowIoC.Editor.Root
                     : (int?) null;
 
                 if (count.HasValue)
-                    return $"{count.Value} {ObjectNames.NicifyVariableName(field.name).ToLowerInvariant()}";
+                {
+                    // "Groups" names the list; one of them is a group.
+                    string noun = ObjectNames.NicifyVariableName(field.name).ToLowerInvariant();
+                    if (count.Value == 1 && noun.EndsWith("s"))
+                        noun = noun.Substring(0, noun.Length - 1);
+
+                    return $"{count.Value} {noun}";
+                }
             }
             while (field.NextVisible(false));
 

@@ -209,8 +209,30 @@ when the boss spawns, and return both when the match ends — without a per-pref
 anywhere in code.
 
 `GroupSpecificPools` matters when two groups use the same `PoolKey` for different
-prefabs. With it on, each group keeps its own pool for that key; with it off, they
-share.
+prefabs. With it off, they share one pool, and the group registered last overwrites the
+other. With it on, each item's pool is named `<group key>_<pool key>`, so each group
+keeps its own - and that full name is what `Get` takes.
+
+Two groups, `Forest` and `Beach`, both listing `Gate`:
+
+| `GroupSpecificPools` | Pools made | Asked for with | Answers |
+|---|---|---|---|
+| Off | `Gate` | `Get("Gate")` | ✔ the `Gate` of whichever group registered last |
+| On | `Forest_Gate`, `Beach_Gate` | `Get("Forest_Gate")` | ✔ the Forest theme's `Gate` |
+| On | `Forest_Gate`, `Beach_Gate` | `Get("Gate")` | ✖ nothing - no pool has that name |
+
+It is made for groups that are meant to hold the same keys. A game with themes gives
+every theme a group, and every group lists a `Gate` and an `Exit` with that theme's
+prefab; the code works the group out from the theme and asks with both halves:
+
+```csharp
+// Groups "Forest" and "Beach", both with GroupSpecificPools on, both listing "Gate".
+var gate = _poolService.Get<GateView>($"{_themeModel.Name}_Gate", _boardParent);
+```
+
+> **Important:** with `GroupSpecificPools` on, `Get("Gate")` finds nothing - the pool
+> is `Forest_Gate`. When the keys are yours to choose, leave it off and keep them apart
+> by name instead (`gameplay.bullet`, `menu.bullet`).
 
 Creating a group at runtime is possible when the config is not known ahead of time:
 
@@ -400,7 +422,8 @@ matching `Dismiss()`, including the ones where the object dies early, and call
 
 Two groups declaring the same `PoolKey` share a pool unless `GroupSpecificPools` is
 on, so a `Get` can hand back the other group's prefab. Either namespace your keys
-(`combat.bullet`, `menu.bullet`) or turn on `GroupSpecificPools`.
+(`combat.bullet`, `menu.bullet`) or turn on `GroupSpecificPools` and ask for
+`<group key>_<pool key>`.
 
 ### The group disappears when a scene unloads
 

@@ -9,6 +9,8 @@ namespace FlowIoC.Editor.PoolModule.Editors
     [CustomEditor(typeof(CD_PoolGroup))]
     public class CD_PoolGroupEditor : UnityEditor.Editor
     {
+        private const float FOLDOUT_INSET = 12f;
+
         private SerializedProperty _itemListProp;
 
         private GUIStyle _headerStyle;
@@ -44,6 +46,16 @@ namespace FlowIoC.Editor.PoolModule.Editors
             {
                 SerializedProperty element = _reorderableList.serializedProperty.GetArrayElementAtIndex(index);
                 DrawPoolItemElement(rect, element, index, isActive, isFocused);
+            };
+
+            // Every other item on a darker band, the way the dictionary drawer bands its pairs, so a
+            // long group of open items still reads item by item. The selection keeps its own colour.
+            _reorderableList.drawElementBackgroundCallback = (rect, index, isActive, isFocused) =>
+            {
+                ReorderableList.defaultBehaviours.DrawElementBackground(rect, index, isActive, isFocused, true);
+
+                if (index % 2 == 1 && !isActive && Event.current.type == EventType.Repaint)
+                    EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin ? new Color(0f, 0f, 0f, 0.14f) : new Color(0f, 0f, 0f, 0.07f));
             };
 
             _reorderableList.elementHeightCallback = index =>
@@ -130,6 +142,12 @@ namespace FlowIoC.Editor.PoolModule.Editors
             float singleLineHeight = EditorGUIUtility.singleLineHeight;
             float propertySpacing = EditorGUIUtility.standardVerticalSpacing;
 
+            // The foldout arrow is drawn to the left of its label, which put it on top of the list's
+            // drag handle; moving the row right by the arrow's width gives each its own place.
+            rect.x += FOLDOUT_INSET;
+            rect.width -= FOLDOUT_INSET;
+            rect.y += 1f;
+
             SerializedProperty keyProp = element.FindPropertyRelative("PoolKey");
             SerializedProperty prefabProp = element.FindPropertyRelative("Prefab");
             SerializedProperty addressablePrefabProp = element.FindPropertyRelative("AddressablePrefab");
@@ -165,7 +183,7 @@ namespace FlowIoC.Editor.PoolModule.Editors
                 currentY += singleLineHeight + propertySpacing;
 
                 Rect keyRect = new Rect(rect.x, currentY, rect.width, EditorGUI.GetPropertyHeight(keyProp, _poolKeyContent, true));
-                EditorGUI.PropertyField(keyRect, keyProp, GUIContent.none, true);
+                EditorGUI.PropertyField(keyRect, keyProp, _poolKeyContent, true);
                 currentY += EditorGUI.GetPropertyHeight(keyProp, _poolKeyContent, true) + propertySpacing;
 
                 Rect assetLabelRect = new Rect(rect.x, currentY, rect.width, singleLineHeight);
@@ -244,7 +262,7 @@ namespace FlowIoC.Editor.PoolModule.Editors
 
         private float GetPoolItemElementHeight(SerializedProperty element)
         {
-            float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing + 1f;
 
             if (element.isExpanded)
             {

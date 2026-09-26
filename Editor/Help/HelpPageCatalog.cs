@@ -49,6 +49,8 @@ namespace FlowIoC.Editor.Help
                         new ViewMediatorPage(),
                         new ConnectorsPage()),
                     new HelpSection("FlowIoC Features", FlowIcon.Bolt,
+                        new ScreenServicePage(),
+                        new PoolServicePage(),
                         new SceneSwitcherPage()),
                     new HelpSection("Editor Tools", FlowIcon.Wrench,
                         // In the order the Tools/FlowIoC menu lists the panels, so a reader who

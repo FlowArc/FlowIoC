@@ -599,23 +599,40 @@ MonoBehaviour:
     ContextName: PointerSampleScreenContext
     AutoSetup: 1
     IsTest: 0
-    OverrideScreen: 0
-    ScreenManagerId: 0
-    ScreenLayer: 0
-    ScreenTag: 0
-    ScreenHasShowAnimation: 0
-    ScreenHasHideAnimation: 0
+    Settings:
+      rid: -2
+    LegacyOverrideScreen: 0
+    LegacyScreenManagerId: 0
+    LegacyScreenLayer: 0
+    LegacyScreenTag: 0
+    LegacyScreenHasShowAnimation: 0
+    LegacyScreenHasHideAnimation: 0
   - ContextScript: {fileID: 11500000, guid: fbbea6cbe2b79f04c8c14e11e6130b3e, type: 3}
     ContextFullName: Modules.WorldPointerModule.PointerControlsScreenModule.RootsContexts.PointerControlsScreenContext
     ContextName: PointerControlsScreenContext
     AutoSetup: 1
     IsTest: 0
-    OverrideScreen: 0
-    ScreenManagerId: 0
-    ScreenLayer: 0
-    ScreenTag: 0
-    ScreenHasShowAnimation: 0
-    ScreenHasHideAnimation: 0
+    Settings:
+      rid: -2
+    LegacyOverrideScreen: 0
+    LegacyScreenManagerId: 0
+    LegacyScreenLayer: 0
+    LegacyScreenTag: 0
+    LegacyScreenHasShowAnimation: 0
+    LegacyScreenHasHideAnimation: 0
+  - ContextScript: {fileID: 11500000, guid: bf1723558fa67e648a7466d21f2ae441, type: 3}
+    ContextFullName: FlowIoC.PoolModule.RootsContexts.PoolSubContext
+    ContextName: PoolSubContext
+    AutoSetup: 1
+    IsTest: 0
+    Settings:
+      rid: 2186214543850733889
+    LegacyOverrideScreen: 0
+    LegacyScreenManagerId: 0
+    LegacyScreenLayer: 0
+    LegacyScreenTag: 0
+    LegacyScreenHasShowAnimation: 0
+    LegacyScreenHasHideAnimation: 0
   initializeOrder: 0
   AutoBindInjections: 1
   AutoBindMediations: 1
@@ -623,6 +640,22 @@ MonoBehaviour:
   AutoSetup: 1
   AutoLaunch: 1
   IsTest: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 2186214543850733889
+      type: {class: PoolSubContextSettingsCVO, ns: FlowIoC.PoolModule.Data.ValueObjects, asm: FlowIoC}
+      data:
+        Groups:
+          m_Keys:
+          - PointerSample
+          m_Values:
+          - Group: {fileID: 11400000, guid: d1beec08c641f964aab499e3d1788184, type: 2}
+            AutoInitialize: 1
+            GroupSpecificPools: 0
+        UnregisterWhenRootDestroyed: 0
 --- !u!4 &861152156
 Transform:
   m_ObjectHideFlags: 0
@@ -1381,26 +1414,6 @@ PrefabInstance:
     - target: {fileID: 4143549671386703464, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
       propertyPath: m_Name
       value: PoolServiceRoot
-      objectReference: {fileID: 0}
-    - target: {fileID: 5616041125493592121, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
-      propertyPath: _poolGroups.m_Keys.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5616041125493592121, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
-      propertyPath: _poolGroups.m_Values.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5616041125493592121, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
-      propertyPath: '_poolGroups.m_Keys.Array.data[0]'
-      value: PointerSample
-      objectReference: {fileID: 0}
-    - target: {fileID: 5616041125493592121, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
-      propertyPath: _poolGroups.m_Values.Array.data[0].Group
-      value: 
-      objectReference: {fileID: 11400000, guid: d1beec08c641f964aab499e3d1788184, type: 2}
-    - target: {fileID: 5616041125493592121, guid: 04b865b261e06044cbe4a5915109ebed, type: 3}
-      propertyPath: _poolGroups.m_Values.Array.data[0].AutoInitialize
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

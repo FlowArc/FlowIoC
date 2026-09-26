@@ -55,7 +55,10 @@ namespace FlowIoC.Editor.Icons
         Chart = 33,
         Vibrate = 34,
         Ad = 35,
-        Speaker = 36
+        Speaker = 36,
+        ScreenStack = 37,
+        Recycle = 38,
+        SwitchArrows = 39
     }
 }
 
