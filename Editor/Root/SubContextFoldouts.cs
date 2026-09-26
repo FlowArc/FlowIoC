@@ -34,14 +34,14 @@ namespace FlowIoC.Editor.Root
             => SessionState.SetBool(ScreenKey(root, contextFullName), expanded);
 
         /// <summary>The settings block of any other configurable sub-context - a module's pool groups.</summary>
-        internal bool IsSettingsExpanded(int rootInstanceId, string contextFullName)
-            => SessionState.GetBool(SettingsKey(rootInstanceId, contextFullName), false);
+        internal bool IsSettingsExpanded(RootBase root, string contextFullName)
+            => SessionState.GetBool(SettingsKey(root, contextFullName), false);
 
-        internal void SetSettingsExpanded(int rootInstanceId, string contextFullName, bool expanded)
-            => SessionState.SetBool(SettingsKey(rootInstanceId, contextFullName), expanded);
+        internal void SetSettingsExpanded(RootBase root, string contextFullName, bool expanded)
+            => SessionState.SetBool(SettingsKey(root, contextFullName), expanded);
 
-        private string SettingsKey(int rootInstanceId, string contextFullName)
-            => $"{Prefix}Settings.{rootInstanceId}.{contextFullName}";
+        private string SettingsKey(RootBase root, string contextFullName)
+            => $"{Prefix}Settings.{_ids.For(root)}.{contextFullName}";
 
         private string EntryKey(RootBase root, string contextFullName)
             => $"{Prefix}Entry.{_ids.For(root)}.{contextFullName}";

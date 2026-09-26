@@ -447,16 +447,15 @@ namespace FlowIoC.Editor.Root
 
             // Folds on its own, the way the screen block does, and says how much it holds while
             // folded.
-            int rootId = _root.GetInstanceID();
             string summary = carries ? SettingsSummary(settings) : string.Empty;
             string title = _settingsTypes.Title(settingsType);
             string label = string.IsNullOrEmpty(summary) ? title : $"{title}  ({summary})";
 
-            bool wasExpanded = _foldouts.IsSettingsExpanded(rootId, contextData.ContextFullName);
+            bool wasExpanded = _foldouts.IsSettingsExpanded(_root, contextData.ContextFullName);
             bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(label), true);
 
             if (expanded != wasExpanded)
-                _foldouts.SetSettingsExpanded(rootId, contextData.ContextFullName, expanded);
+                _foldouts.SetSettingsExpanded(_root, contextData.ContextFullName, expanded);
 
             if (!expanded)
                 return;
