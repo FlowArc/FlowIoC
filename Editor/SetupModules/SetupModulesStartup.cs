@@ -17,13 +17,27 @@ namespace FlowIoC.Editor.SetupModules
     /// <summary>
     /// Holds the one instance Unity's load callback needs. Unity forces this entry point to be
     /// static; everything it does lives on <see cref="SetupModulesStartup"/>.
+    ///
+    /// EditorApplication.update rather than delayCall: delayCall never fires while the Editor
+    /// sits unfocused, and an assistant drives this Editor from a terminal with Unity behind it.
     /// </summary>
     [InitializeOnLoad]
     internal static class SetupModulesStartupHook
     {
-        static SetupModulesStartupHook()
+        static SetupModulesStartupHook() => Schedule();
+
+        private static void Schedule()
         {
-            EditorApplication.delayCall += () => new SetupModulesStartup().Run();
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new SetupModulesStartup().Run();
         }
     }
 

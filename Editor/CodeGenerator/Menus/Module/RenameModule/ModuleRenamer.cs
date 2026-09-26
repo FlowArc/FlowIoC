@@ -154,16 +154,31 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
 
         /// <summary>
         /// The card blocks name the assemblies and the sub modules, and describing a module needs
-        /// its compiled assembly - so that part waits for the reload. A delayed call, because on the
-        /// reload itself the index and the assemblies are still settling; the generators wait the
-        /// same way.
+        /// its compiled assembly - so that part waits for the reload, and then for the first update
+        /// tick with no import or compile running, because on the reload itself the index and the
+        /// assemblies are still settling. An update tick rather than a delayCall, which never fires
+        /// while the Editor sits unfocused - where an assistant drives a rename from.
         /// </summary>
         [DidReloadScripts]
         private static void FinishAfterReload()
         {
             if (!EditorPrefs.HasKey(PENDING_KEY)) return;
 
-            EditorApplication.delayCall += () => new ModuleRenameContinuation().Run();
+            Schedule();
+        }
+
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new ModuleRenameContinuation().Run();
         }
 
         private void RenameAssemblies(ModuleRenamePlanEVO plan, ModuleRenameReportEVO report)

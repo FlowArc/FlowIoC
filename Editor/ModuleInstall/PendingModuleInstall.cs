@@ -34,9 +34,25 @@ namespace FlowIoC.Editor.ModuleInstall
         [InitializeOnLoadMethod]
         private static void OnProjectLoad()
         {
-            // Delayed, because a load hook runs before the Package Manager has published what the
-            // reload resolved, and the check would read the project as it was.
-            EditorApplication.delayCall += () => new PendingModuleInstall().Resume();
+            // Deferred to the first update tick with no import or compile running, because a load
+            // hook runs before the Package Manager has published what the reload resolved, and the
+            // check would read the project as it was. An update tick rather than a delayCall,
+            // which never fires while the Editor sits unfocused - where an assistant drives it.
+            Schedule();
+        }
+
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new PendingModuleInstall().Resume();
         }
 
         /// <summary>

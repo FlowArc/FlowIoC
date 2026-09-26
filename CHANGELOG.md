@@ -5,6 +5,13 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The setup install, a pending module install, a module rename, the module index and the update
+  notice run with the Editor unfocused**; they waited for Unity to be focused again.
+
 ## [1.27.0] - 2026-09-26
 
 ### Added

@@ -22,8 +22,24 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
             if (!SessionState.GetBool(InitializedKey, false))
             {
                 SessionState.SetBool(InitializedKey, true);
-                EditorApplication.delayCall += DetectAndRegisterModulesOnStartup;
+                Schedule();
             }
+        }
+
+        // An update tick rather than a delayCall, which never fires while the Editor sits
+        // unfocused - where an assistant drives it.
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            DetectAndRegisterModulesOnStartup();
         }
 
         /// <summary>
