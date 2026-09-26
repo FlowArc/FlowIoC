@@ -26,7 +26,7 @@ namespace FlowIoC.Editor.Help.Pages.Features
         protected override void DrawBody(HelpPainter painter)
         {
             painter.Image(_images.Get("SceneSwitcherPopup.png"),
-                "The Scene Switcher dropped down from the main toolbar.");
+                "The Scene Switcher button on the main toolbar, and the list it drops down.");
 
             painter.SubHeading("Turning it on");
             painter.Paragraph(

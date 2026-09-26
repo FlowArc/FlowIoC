@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A `SerializedDictionary` is drawn as key and value pairs**, added and removed together; a key
   already in the dictionary is refused.
-- **Help has a Features section**, after Structure, with a Scene Switcher page: what it lists and
-  how to turn it on in the toolbar.
+- **Help has a FlowIoC Features section**, after MVCS Structure (was Structure), with a Scene
+  Switcher page: what it lists and how to turn it on in the toolbar.
 
 ### Changed
 

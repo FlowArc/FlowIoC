@@ -40,7 +40,7 @@ namespace FlowIoC.Editor.Help
                     new HelpSection(new DataTypesPage()),
                     new HelpSection(new CodeStylePage()),
                     new HelpSection(new OrderingRootsPage()),
-                    new HelpSection("Structure", FlowIcon.Diagram,
+                    new HelpSection("MVCS Structure", FlowIcon.Diagram,
                         new RootContextPage(),
                         new SignalsPage(),
                         new ControllersPage(),
@@ -48,7 +48,7 @@ namespace FlowIoC.Editor.Help
                         new SystemsServicesPage(),
                         new ViewMediatorPage(),
                         new ConnectorsPage()),
-                    new HelpSection("Features", FlowIcon.Bolt,
+                    new HelpSection("FlowIoC Features", FlowIcon.Bolt,
                         new SceneSwitcherPage()),
                     new HelpSection("Editor Tools", FlowIcon.Wrench,
                         // In the order the Tools/FlowIoC menu lists the panels, so a reader who
