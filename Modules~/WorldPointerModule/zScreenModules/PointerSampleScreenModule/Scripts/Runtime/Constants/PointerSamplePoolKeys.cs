@@ -2,7 +2,7 @@
 namespace Modules.WorldPointerModule.PointerSampleScreenModule.Constants
 {
     /// <summary>
-    /// The pool item the sample's labels come from. CD_PoolGroup_PointerSample lists it with the
+    /// The pool item the sample's labels come from. Pool_PointerSample lists it with the
     /// SampleLabelIndicator prefab, and the test scene's PoolServiceRoot files that group.
     /// </summary>
     public static class PointerSamplePoolKeys

@@ -151,7 +151,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: FlowIoC::FlowIoC.BaseModule.Adapters.RootAdapter
   _scriptableMap:
     m_Keys:
-    - PD_LocalSaveProbe
+    - SD_LocalSaveProbe
     m_Values:
     - {fileID: 11400000, guid: f7f759c8d85789b449263d0287f17572, type: 2}
   _monoMap:
@@ -669,7 +669,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4797032695095035559, guid: cf2b259b466a56246932acc9be3b3c1e, type: 3}
       propertyPath: '_scriptableMap.m_Keys.Array.data[0]'
-      value: PD_LocalSaveProbe
+      value: SD_LocalSaveProbe
       objectReference: {fileID: 0}
     - target: {fileID: 4797032695095035559, guid: cf2b259b466a56246932acc9be3b3c1e, type: 3}
       propertyPath: '_scriptableMap.m_Values.Array.data[0]'

@@ -43,7 +43,7 @@ namespace Modules.LocalSaveModule.LocalSaveTestModule.RootsContexts
 
             CommandBinder.Bind(_signals.Incoming.IncrementProbe)
                 .ToSequence<IncrementProbeCommand>()
-                .ToSequence<ILocalSaveService.Commands.Save>(nameof(PD_LocalSaveProbe))
+                .ToSequence<ILocalSaveService.Commands.Save>(nameof(SD_LocalSaveProbe))
                 .ToSequence<ReportProbeCommand>();
         }
 

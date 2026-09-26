@@ -13,7 +13,7 @@ namespace Modules.LocalSaveModule.LocalSaveTestModule.Models
     {
         [Inject(nameof(LocalSaveTestContext))] private GameObject _root { get; set; }
 
-        private PD_LocalSaveProbe _probe;
+        private SD_LocalSaveProbe _probe;
 
         public bool IsPostConstructed { get; set; }
         public bool IsDeconstructed { get; set; }
@@ -24,7 +24,7 @@ namespace Modules.LocalSaveModule.LocalSaveTestModule.Models
         /// whatever the last session saved by the time this reads it.
         /// </summary>
         public void PostConstruct() =>
-            _probe = _root.GetComponent<RootAdapter>().GetScriptable<PD_LocalSaveProbe>();
+            _probe = _root.GetComponent<RootAdapter>().GetScriptable<SD_LocalSaveProbe>();
 
         public int Counter => _probe.Counter;
 

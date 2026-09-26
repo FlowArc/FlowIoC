@@ -7,7 +7,7 @@ own pointer screen takes, at sample size.
 
 ## Concepts
 world pointer sample, sample screen, display, WorldPointerPoolDisplay, SampleLabelIndicator,
-RegisterDisplay, CD_PoolGroup_PointerSample
+RegisterDisplay, Pool_PointerSample
 
 ## Decisions
 - **Editor-only.** Every script is under `#if UNITY_EDITOR`, the screen loads from Resources, and
@@ -20,7 +20,7 @@ RegisterDisplay, CD_PoolGroup_PointerSample
   `RegisterSampleDisplaysCommand` builds a `WorldPointerPoolDisplay` per channel from the pool,
   the `SampleLabel` item key and the panel and preset the View holds; `UnregisterSampleDisplaysCommand`
   takes the three channels' displays away by name. A Mediator injects nothing but its View.
-- **The labels are pooled.** `CD_PoolGroup_PointerSample` lists `SampleLabelIndicator` under
+- **The labels are pooled.** `Pool_PointerSample` lists `SampleLabelIndicator` under
   `SampleLabel`, and the scene that shows the sample files it on its `PoolServiceRoot`.
 - The channels and the content VO sit in this module's Shared assembly because the sample has no
   module owning the targets; in a game they belong to the owner's Shared.
