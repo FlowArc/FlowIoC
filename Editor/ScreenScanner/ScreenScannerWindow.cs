@@ -4,6 +4,7 @@ using System.Linq;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.Editor.Inspector;
 using FlowIoC.Editor.Root;
+using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
@@ -47,7 +48,6 @@ namespace FlowIoC.Editor.ScreenScanner
         private ScreenSubContextDeclarations _declarations;
         private ScreenScannerRunner _scan;
         private ScreenLayerCollisions _collisions;
-        private ScreenOverrideSeed _seed;
         private RootDirtyMarker _dirtyMarker;
         private FlowHeaderBar _bar;
 
@@ -77,7 +77,6 @@ namespace FlowIoC.Editor.ScreenScanner
             _declarations = new ScreenSubContextDeclarations();
             _scan = new ScreenScannerRunner(_declarations);
             _collisions = new ScreenLayerCollisions();
-            _seed = new ScreenOverrideSeed();
             _dirtyMarker = new RootDirtyMarker();
             _bar = new FlowHeaderBar(new FlowPalette(), new FlowHelpPageMap());
 
@@ -415,17 +414,18 @@ namespace FlowIoC.Editor.ScreenScanner
             if (!TryTakeEntry(row, out SubContextData entry))
                 return;
 
-            if (!entry.OverrideScreen)
-            {
-                entry.OverrideScreen = true;
-                entry = _seed.Apply(entry, row.Declaration);
-            }
+            // A new instance rather than the entry's own, so Undo records the entry as it was. Every
+            // value is written below, so there is nothing to seed.
+            ScreenSubContextSettingsCVO screen = (entry.Settings as ScreenSubContextSettingsCVO)?.Copy()
+                                                 ?? new ScreenSubContextSettingsCVO();
 
-            entry.ScreenManagerId = managerId;
-            entry.ScreenLayer = layer;
-            entry.ScreenTag = tag;
-            entry.ScreenHasShowAnimation = show;
-            entry.ScreenHasHideAnimation = hide;
+            screen.Override = true;
+            screen.ManagerId = managerId;
+            screen.Layer = layer;
+            screen.Tag = tag;
+            screen.HasShowAnimation = show;
+            screen.HasHideAnimation = hide;
+            entry.Settings = screen;
 
             Commit(row, entry, "screen-panel-edit");
         }
@@ -435,7 +435,12 @@ namespace FlowIoC.Editor.ScreenScanner
             if (!TryTakeEntry(row, out SubContextData entry))
                 return;
 
-            entry.OverrideScreen = false;
+            if (entry.Settings is not ScreenSubContextSettingsCVO current)
+                return;
+
+            ScreenSubContextSettingsCVO screen = current.Copy();
+            screen.Override = false;
+            entry.Settings = screen;
 
             Commit(row, entry, "screen-panel-reset");
         }

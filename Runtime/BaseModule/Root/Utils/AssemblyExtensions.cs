@@ -8,26 +8,16 @@ namespace FlowIoC.BaseModule.Root.Utils
 {
     public static class AssemblyExtensions
     {
-        private static Assembly[] GetAssemblies()
-        {
-            Assembly currentAssembly = typeof(Context).Assembly;
-
-            Assembly[] assemblyList = AppDomain.CurrentDomain
-                .GetAssemblies()
-                .Where(x => x != currentAssembly)
-                .ToArray();
-
-            return assemblyList;
-        }
-
         /// <summary>
-        /// Every type in every loaded assembly but the framework's own. An assembly that cannot
-        /// hand over all of its types gives up the ones it loaded rather than taking the whole
-        /// scan down with it - a single broken reference used to stop every Root in the scene.
+        /// Every type in every loaded assembly, the framework's own included: a context the
+        /// framework ships to be listed on a game's Root - PoolSubContext - has to resolve like the
+        /// game's own, or the Root builds nothing for it. An assembly that cannot hand over all of
+        /// its types gives up the ones it loaded rather than taking the whole scan down with it - a
+        /// single broken reference used to stop every Root in the scene.
         /// </summary>
         private static List<Type> GetTypesInAllAssemblies()
         {
-            Assembly[] assemblies = GetAssemblies();
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             List<Type> typeList = new List<Type>();
 
             for (int i = 0; i < assemblies.Length; i++)

@@ -5,6 +5,25 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **A `SerializedDictionary` is drawn as key and value pairs**, added and removed together; a key
+  already in the dictionary is refused.
+
+### Changed
+
+- **A module's pool groups are a `PoolSubContext` entry on its own Root.** `PoolAdapterRoot`,
+  `PoolConfigAdapterView` and the adapter on `PoolServiceRoot` are gone.
+- **A sub-context entry carries settings of its context's own class.** A screen's override moved
+  there; scenes saved with the old fields are read as before.
+
+### Fixed
+
+- **A context listed on two Roots no longer warns of a same injection**, and the first one torn
+  down no longer unbinds the other's name.
+
 ## [1.25.0] - 2026-09-26
 
 ### Added

@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3697047976774127514}
   - component: {fileID: 7023137603586019295}
-  - component: {fileID: 5616041125493592121}
   m_Layer: 0
   m_Name: PoolServiceRoot
   m_TagString: Untagged
@@ -53,16 +52,3 @@ MonoBehaviour:
   AutoSetup: 1
   AutoLaunch: 1
   IsTest: 0
---- !u!114 &5616041125493592121
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4143549671386703464}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c41825a6821c3d43bb552ba0e755893, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _pools: []

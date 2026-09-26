@@ -1,13 +1,13 @@
 using System;
-using FlowIoC.ScreenModule.Enums;
+using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FlowIoC.BaseModule.Root
 {
     /// <summary>
-    /// One sub-context as a Root lists it. The screen fields are the exception to this struct
-    /// being about contexts in general: they are the configuration a screen context declares in
-    /// code, which the Root may override for its own registration. They are prefixed so another
-    /// kind of sub-context can add its own without a collision.
+    /// One sub-context as a Root lists it. What a particular kind of sub-context is configured
+    /// with - a screen's layer, a module's pool groups - is not a field here but the entry's
+    /// Settings, whose class the context names, so a Root knows nothing about screens or pools.
     /// </summary>
     [Serializable]
     public struct SubContextData
@@ -40,24 +40,33 @@ namespace FlowIoC.BaseModule.Root
         public bool IsTest;
 
         /// <summary>
-        /// Whether the five screen fields below replace what the screen context declares. Off on
-        /// every entry that predates the feature, so an untouched scene keeps its behaviour.
+        /// What this Root says about the context it lists, of the class the context names through
+        /// ISubContextConfigurable&lt;TSettings&gt;. Null means nothing configured: the entry
+        /// predates its context taking settings, or its context takes none.
         /// </summary>
-        public bool OverrideScreen;
+        [SerializeReference] public SubContextSettingsCVO Settings;
 
-        /// <summary>Which screen manager this registration belongs to.</summary>
-        public int ScreenManagerId;
+        // The screen override as it was stored before it moved into the entry's settings. Read
+        // once, by RootBase.OnAfterDeserialize, which moves a ticked override into a
+        // ScreenSubContextSettingsCVO and clears these. Kept for one release so a scene saved
+        // under the old shape keeps its screens where they were; remove with that migration.
+        [SerializeField, HideInInspector, FormerlySerializedAs("OverrideScreen")]
+        internal bool LegacyOverrideScreen;
 
-        /// <summary>How far up the stack the screen is drawn. A higher layer covers a lower one.</summary>
-        public int ScreenLayer;
+        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenManagerId")]
+        internal int LegacyScreenManagerId;
 
-        /// <summary>What kind of surface this is - a screen in its own right, or a popup over one.</summary>
-        public ScreenTag ScreenTag;
+        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenLayer")]
+        internal int LegacyScreenLayer;
 
-        /// <summary>Whether the screen plays its own animation when it opens, instead of appearing.</summary>
-        public bool ScreenHasShowAnimation;
+        /// <summary>The ScreenTag, read as the int Unity stores an enum as.</summary>
+        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenTag")]
+        internal int LegacyScreenTag;
 
-        /// <summary>Whether the screen plays its own animation when it closes.</summary>
-        public bool ScreenHasHideAnimation;
+        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenHasShowAnimation")]
+        internal bool LegacyScreenHasShowAnimation;
+
+        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenHasHideAnimation")]
+        internal bool LegacyScreenHasHideAnimation;
     }
 }

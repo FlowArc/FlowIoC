@@ -51,33 +51,36 @@ entry describes one poolable prefab:
 
 ### 3. Registering the group
 
-A `PoolConfigAdapterView` component in the scene carries a dictionary of group key →
-`PoolGroupCVO`, and registers those groups when its context starts.
-
-It works only under a `PoolAdapterRoot`, because that Root's context is the one that binds the
-view's Mediator. The package ships `PoolAdapterRoot.prefab` in its `Assets/Prefabs` folder with a
-`PoolConfigAdapter` child already on it; drop it under the Root of the module whose pools it
-registers and fill the child's dictionary:
+The module that spawns the objects is the one that knows them, so its own Root registers them.
+Open that Root's inspector, press **Add Sub Context**, pick `PoolSubContext`, and fill the entry's
+**Groups** - group key → `PoolGroupCVO`:
 
 ```
 GameplaySystemRoot
-└── PoolAdapterRoot
-    └── PoolConfigAdapter      ← PoolConfigAdapterView
+  Sub Contexts
+    PoolSubContext
+      Groups    combat_core → CD_CombatPool
+                combat_boss → CD_BossPool
+      Unregister When Root Destroyed
 ```
 
-> **Important:** on the module's own Root, or under any Root that is not a `PoolAdapterRoot`, the
-> view is refused with an error naming that Root's context - and every `Get` after it fails with
-> `No GroupConfigKey found`, which is the line that gets noticed first.
+`PoolServiceRoot` itself is never edited, the way a screen context sits on the Root that shows it
+rather than on `ScreenServiceRoot`. The entry registers its groups in `Setup`, which runs once every
+Root has bound, so a step in `Launch` that fills a group finds it configured.
 
-| `PoolGroupCVO` field | Meaning |
+> **Important:** a Root never goes under another Root. The pools are an entry on the module's own
+> Root, not a child Root beside its objects.
+
+| Field | Meaning |
 |---|---|
 | `Group` | The `CD_PoolGroup` asset |
 | `AutoInitialize` | Create the items as soon as the group is registered |
 | `GroupSpecificPools` | Keep this group's pools separate from other groups using the same keys |
-| `UnregisterWhenViewDestroyed` (on the view) | Tear the group down when this GameObject goes away |
+| `UnregisterWhenRootDestroyed` (on the entry) | Tear the groups down when this Root goes away |
 
-That component is why pooling is scene-scoped by default: the combat scene registers
-combat pools, the menu scene does not pay for them.
+Registration follows the Root, so pooling is scene-scoped by default: the combat scene's Root
+registers combat pools, the menu scene does not pay for them. `PoolServiceRoot` missing from the
+scene is an error naming the Root that asked.
 
 If you would rather not create the items at registration time, leave
 `AutoInitialize` off and warm them when you are ready:
@@ -401,10 +404,10 @@ on, so a `Get` can hand back the other group's prefab. Either namespace your key
 
 ### The group disappears when a scene unloads
 
-`PoolConfigAdapterView` with `UnregisterWhenViewDestroyed` on tears the group down
-with its GameObject. That is usually what you want — but if the pool must outlive the
-scene that registered it, put the adapter on an object owned by a Root that calls
-`DontDestroyOnLoad` in `BeforeCreateContext`.
+A `PoolSubContext` entry with `UnregisterWhenRootDestroyed` on tears its groups down
+with its Root. That is usually what you want for a scene loaded on top of another — but
+if the pool must outlive the scene that registered it, leave it off, or list the entry
+on a Root that calls `DontDestroyOnLoad` in `BeforeCreateContext`.
 
 ---
 

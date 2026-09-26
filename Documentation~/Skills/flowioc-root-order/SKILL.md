@@ -1,6 +1,6 @@
 ---
 name: flowioc-root-order
-description: Use when placing a Root in a FlowIoC scene or choosing its Initialize Order - adding a new module Root, a Service Root, a Connector or a screen Root, deciding which context binds before which, making a Root persistent across a scene load and knowing what its context takes back when it is destroyed, or debugging a null signal holder, a missing binding or a Connector that wired nothing.
+description: Use when placing a Root in a FlowIoC scene or choosing its Initialize Order - adding a new module Root, a Service Root, a Connector or a screen Root, registering a module's pool groups on its Root, deciding which context binds before which, making a Root persistent across a scene load and knowing what its context takes back when it is destroyed, or debugging a null signal holder, a missing binding or a Connector that wired nothing.
 ---
 
 # Ordering Roots in FlowIoC
@@ -79,6 +79,18 @@ A sub-context listed on a Root - a screen context, a Connector's - goes through 
 the Root that lists it, after the Root's own context: it binds, it is set up, and it is launched,
 so a screen context's `Launch` is where it dispatches what it loads for itself.
 
+**A Root never sits under another Root.** What a service needs from the module that uses it is a
+sub-context of the service's, listed on that module's own Root and configured on the entry - the
+service's Root is never edited. A screen's layer is the screen entry's settings; a module's pool
+groups are a `PoolSubContext` entry on the module's Root, registered in its `Setup`:
+
+```
+GameplaySystemRoot
+  Sub Contexts
+    GameplayScreenContext        (Override Screen, layer)
+    PoolSubContext               Groups: combat → CD_CombatPool
+```
+
 So the order decides who *binds* first, and who is called first within the `Setup()` and
 `Launch()` passes. It does not decide whether cross-module access is safe: the frame barrier
 already guarantees that every signal holder in the scene exists before any `Setup()` runs. That
@@ -145,6 +157,9 @@ Two things follow, and both are easy to get wrong:
 
 ## What goes wrong
 
+- A Root nested under a module's Root to register something with a service - the old
+  `PoolAdapterRoot` under `GameplaySystemRoot`. List the service's sub-context on the module's Root
+  instead.
 - A Root left at `0` that other Roots inject from. It binds in registration order relative to its
   peers, so the failure is intermittent - fine on one machine, null on another.
 - A Connector mixed in among the modules it wires. It still works, because the barrier saves it,

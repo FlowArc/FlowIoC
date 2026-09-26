@@ -177,7 +177,11 @@ namespace FlowIoC.Editor.Root
                         // Off, a hosted context - an analytics plug, a screen - was added and never
                         // ran, with nothing logged, until someone found the tick.
                         AutoSetup = true,
-                        IsTest = false
+                        IsTest = false,
+
+                        // The settings its context reads, so an entry for a pool sub-context has
+                        // groups to fill the moment it is listed.
+                        Settings = new SubContextSettingsTypes().NewFor(type)
                     });
 
                     MarkDirty();
