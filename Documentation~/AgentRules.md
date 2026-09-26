@@ -63,8 +63,10 @@ what is true whatever you are about to do.
   itself:** the next turn waits for the previous one - a step retains until the next is due, and
   the last step is `.ToSequence<SignalDispatchCommand>(Tick)`, the way `CounterModule` ticks each
   second; a `Stop()` then ends the loop. Never `.ToGroupAsParallel(Tick)`: a group waits for its
-  sub group, so every turn stays alive under the one before. The tick signal hides its log with
-  `hideCommandLog: true`. A System or sub system that adds itself to `IUpdateProvider` and runs the
+  sub group, so every turn stays alive under the one before. The tick signal hides its whole run
+  with `hideCommandLog: true` - every step and sub group, so the steps carry no `[HideCommandLog]`
+  of their own - and a warning or an error inside it still names the step and the steps before it.
+  A System or sub system that adds itself to `IUpdateProvider` and runs the
   frame in its own methods is the shape this rule replaces, however carefully it dispatches one
   signal per event: the frame's work is then a file to read instead of a list in the Context, and
   two people changing two jobs change the same file. The controllers skill has both loops.

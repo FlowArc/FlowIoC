@@ -260,7 +260,8 @@ frame has one Command set an `IsTicking` flag in a Model and dispatch the tick f
 while the flag is set, so every frame runs the sequence afresh and a step that stops cuts only that frame short. Work paced by itself waits in
 a step and dispatches the tick again as its last step with `.ToSequence<SignalDispatchCommand>(Tick)`,
 the way `CounterModule` ticks each second — never as a group step, which would keep every turn alive
-under the one before. The tick signal hides its log with `hideCommandLog: true`. A System that adds
+under the one before. The tick signal hides its whole run with `hideCommandLog: true` - every step
+and sub group - and a warning or an error inside it still names the step. A System that adds
 itself to `IUpdateProvider` and runs the frame in its own methods hides the frame's work in one file,
 where two people changing two jobs change the same file.
 
@@ -708,7 +709,7 @@ internal class PlayerInternalSignals : ISignalHolder
 ```
 
 Every dispatch is logged to the Flow Console unless the signal was constructed
-with `hideCommandLog: true`.
+with `hideCommandLog: true`, which hides what it runs as well - every step and sub group.
 
 ---
 

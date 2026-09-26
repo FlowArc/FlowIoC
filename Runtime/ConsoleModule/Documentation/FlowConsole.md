@@ -264,9 +264,9 @@ back: each flow opens with a line that folds it away, and a nested one sits inde
 under it. Read straight down, a busy frame is four operations interleaved; grouped, each
 one is a block you can follow.
 
-A silenced command contributes no node — `[HideCommandLog]` suppresses the framework's
-lines and there is nothing left to make one from — so a log you wrote inside it sits
-directly under the flow's root. Inventing a node for a command somebody asked to hide
+A silenced command contributes no node — `[HideCommandLog]` on it, or `hideCommandLog: true`
+on the signal that runs it, suppresses the framework's lines and there is nothing left to make
+one from — so a log you wrote inside it sits directly under the flow's root. Inventing a node for a command somebody asked to hide
 would undo the request.
 
 ### Attaching a device
@@ -447,26 +447,28 @@ is visual.
 
 ## Silencing Noise
 
-A tick loop dispatching many times per second drowns everything else. Two switches
-suppress framework lifecycle logs without hiding the channel entirely:
+A tick loop dispatching many times per second drowns everything else. One flag on its
+signal suppresses the framework's lifecycle logs for the whole loop without hiding the
+channel entirely:
 
 ```csharp
-// Silences this signal's dispatch and group lines.
+// Silences the dispatch, and every step and sub group it runs.
 public Signal Tick = new(hideCommandLog: true);
 ```
 
-```csharp
-// Silences this command's execute and pool-return lines.
-[HideCommandLog]
-internal class AdvanceTimersCommand : Command { }
+It does not affect your own `FlowLogger` calls inside the commands. A warning or an error
+raised inside the hidden run still appears, followed by where the run was:
+
+```
+Currency went negative.
+  in 'Tick' (hidden), step 3 of 4: PublishExpiredTimersCommand; before it: WaitForNextTickCommand, AdvanceTimersCommand
 ```
 
-Both are needed for a fully silent loop — the signal flag does not cover the command
-lines and vice versa. Neither affects your own `FlowLogger` calls inside the command
-body.
+`[HideCommandLog]` on a command silences that command's execute and pool-return lines
+wherever it is bound — for a command that is noisy in every flow, not for a loop.
 
 To hide a whole project channel, switch it off in the window. That is a whole-channel switch,
-not a per-loop one, so prefer the two flags above when only one loop is noisy.
+not a per-loop one, so prefer the signal flag when only one loop is noisy.
 
 For a loop you did not write — somebody else's module, or the framework's own lines — the
 search box does the same job without touching any code: `-tick` hides every row whose
