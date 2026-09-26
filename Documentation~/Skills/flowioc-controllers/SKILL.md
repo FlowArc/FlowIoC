@@ -219,8 +219,8 @@ tick depends on the work, and there are two answers.
 
 ### Driven by the frame
 
-The frame is the clock: every frame runs the sequence afresh. One Command starts it, and a flag in
-a Model says whether it runs:
+The frame is the clock: every frame runs the sequence afresh. One Command starts it, and two flags
+in a Model say whether it runs and whether a callback is already on the frame:
 
 ```csharp
 CommandBinder.Bind(_internalSignals.RunStarted).ToSequence<StartFrameTickCommand>();
@@ -245,10 +245,15 @@ internal class StartFrameTickCommand : Command
 
     public override void Execute()
     {
-        if (_runModel.IsTicking)
+        _runModel.IsTicking = true;
+
+        // A callback still on the frame - the run was stopped and started again before it saw
+        // the flag go false - carries on with the new run. Adding a second one would tick twice
+        // a frame.
+        if (_runModel.IsHooked)
             return;
 
-        _runModel.IsTicking = true;
+        _runModel.IsHooked = true;
 
         // Taken into locals: this instance goes back to the pool when Execute returns, and the
         // frame callback outlives it.
@@ -262,6 +267,7 @@ internal class StartFrameTickCommand : Command
             if (!runModel.IsTicking)
             {
                 updateProvider.RemoveUpdate(onFrame);
+                runModel.IsHooked = false;
                 return;
             }
 
@@ -276,6 +282,11 @@ internal class StartFrameTickCommand : Command
 - **Ending the loop is setting the flag.** Whichever Command ends play - won, lost, left - sets
   `IsTicking` to false, and the next frame's callback removes itself. Nothing else has to know the
   tick exists, and a second start while it runs does nothing.
+- **Two flags, because a stop and a start can land in one frame.** A Try Again or a Continue ends
+  the run and starts the next before the callback has run: with `IsTicking` alone the start sees
+  false and adds a second callback, the first never sees false, and the tick runs twice a frame with
+  nothing logged. `IsHooked` says a callback is on the frame, so the start only sets `IsTicking`
+  and the callback already there carries the new run.
 - **Why one Command both starts and stops it.** A separate stop Command cannot reach the callback
   a finished Command added; only a Model outlives both. Putting the tick method in the Model
   instead would have the Model dispatching the tick, which no reader looks for there. So the one

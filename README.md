@@ -257,7 +257,8 @@ module about is dispatched from the sequence, where it says what the operation m
 **Work that runs every frame is a Command sequence too.** A tick is an internal signal bound to one
 Command per job — move, judge, draw — so the frame's work reads in the Context. Work driven by the
 frame has one Command set an `IsTicking` flag in a Model and dispatch the tick from `IUpdateProvider`
-while the flag is set, so every frame runs the sequence afresh and a step that stops cuts only that frame short. Work paced by itself waits in
+while the flag is set - hooking the callback only when an `IsHooked` flag says none is on the frame,
+so a stop and a start in one frame never tick twice - so every frame runs the sequence afresh and a step that stops cuts only that frame short. Work paced by itself waits in
 a step and dispatches the tick again as its last step with `.ToSequence<SignalDispatchCommand>(Tick)`,
 the way `CounterModule` ticks each second — never as a group step, which would keep every turn alive
 under the one before. The tick signal hides its whole run with `hideCommandLog: true` - every step

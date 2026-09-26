@@ -404,7 +404,9 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "Driven by the frame: one Command the flow runs when play starts sets an IsTicking "
                 + "flag in a Model and adds a callback to IUpdateProvider that dispatches the tick "
-                + "while the flag is set and removes itself once it is not. Ending play is setting the "
+                + "while the flag is set and removes itself once it is not. A second flag, IsHooked, "
+                + "says a callback is already on the frame, so a stop and a start in the same frame "
+                + "do not add a second one and tick twice. Ending play is setting the "
                 + "flag to false, from whichever Command ends it. Every frame runs the sequence "
                 + "afresh, so a step that stops cuts that frame short and the next frame starts from "
                 + "the top. The steps are synchronous, or two frames' runs overlap.");

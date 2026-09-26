@@ -56,9 +56,11 @@ what is true whatever you are about to do.
 - **Work that runs every frame is a Command sequence too, never a System hooked to the frame.** A
   tick is an internal signal bound to one Command per job - move, judge, draw - so the frame's work
   reads in the Context. What dispatches the tick depends on the work. **Driven by the frame:** one
-  Command the flow starts sets an `IsTicking` flag in a Model and adds a callback to
-  `IUpdateProvider` that dispatches the tick while the flag is set and removes itself once it is
-  not, so ending play is setting the flag and every frame runs the sequence afresh; a step that `Stop()`s cuts that frame short and the next
+  Command the flow starts sets an `IsTicking` flag in a Model and, unless an `IsHooked` flag says
+  one is already on the frame, adds a callback to `IUpdateProvider` that dispatches the tick while
+  `IsTicking` is set and removes itself, clearing `IsHooked`, once it is not - so a stop and a start
+  in one frame never tick twice, ending play is setting the flag and every frame runs the sequence
+  afresh; a step that `Stop()`s cuts that frame short and the next
   frame starts from the top. Its steps are synchronous, or two frames' runs overlap. **Paced by
   itself:** the next turn waits for the previous one - a step retains until the next is due, and
   the last step is `.ToSequence<SignalDispatchCommand>(Tick)`, the way `CounterModule` ticks each

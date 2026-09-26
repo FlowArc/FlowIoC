@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`hideCommandLog: true` hides the whole run**: every step and sub group, not only the dispatch;
   a warning or an error inside it names the step and the steps before it. `[HideCommandLog]` on
   each step of a tick is no longer needed.
+- **The frame-tick example keeps an `IsHooked` flag beside `IsTicking`**, so a stop and a start in
+  one frame no longer add a second callback that ticks twice.
 
 ### Fixed
 
