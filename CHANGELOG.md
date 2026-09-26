@@ -5,7 +5,7 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.26.1] - 2026-09-26
 
 ### Added
 
@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the skills and Help use the new names; rename a game's `PD_` assets and classes to match.
 - **Help's Scene Switcher page moved to Editor Tools**, after Folder Painter.
 - **Module Scanner comes before Screen Scanner**, in the Tools/FlowIoC menu and in Help.
+- **Local Save 1.0.4 and World Pointer 1.2.2** use the new names: `SD_LocalSaveProbe`,
+  `Pool_PointerSample`.
 
 ## [1.26.0] - 2026-09-26
 
