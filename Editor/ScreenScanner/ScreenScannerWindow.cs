@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
+using FlowIoC.BaseModule;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.Editor.Inspector;
 using FlowIoC.Editor.Root;
@@ -108,11 +109,7 @@ namespace FlowIoC.Editor.ScreenScanner
             // can arrive while the scan itself is still null.
             if (_scan == null) return;
 
-#if UNITY_6000_4_OR_NEWER
-            RootBase[] roots = Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include);
-#else
-            RootBase[] roots = Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-#endif
+            RootBase[] roots = new SceneObjects().All<RootBase>(FindObjectsInactive.Include);
 
             _rows = _scan.Rows(roots);
             _collided = _collisions.Find(_rows);
@@ -132,12 +129,7 @@ namespace FlowIoC.Editor.ScreenScanner
         {
             var managers = new Dictionary<int, ScreenManager>();
 
-#if UNITY_6000_4_OR_NEWER
-            ScreenManager[] found = Object.FindObjectsByType<ScreenManager>(FindObjectsInactive.Include);
-#else
-            ScreenManager[] found = Object.FindObjectsByType<ScreenManager>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
-#endif
+            ScreenManager[] found = new SceneObjects().All<ScreenManager>(FindObjectsInactive.Include);
 
             foreach (ScreenManager manager in found)
             {

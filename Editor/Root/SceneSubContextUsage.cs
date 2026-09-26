@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using FlowIoC.BaseModule;
 using FlowIoC.BaseModule.Root;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -64,11 +65,7 @@ namespace FlowIoC.Editor.Root
             if (stage != null)
                 return stage.prefabContentsRoot.GetComponentsInChildren<RootBase>(true);
 
-#if UNITY_6000_4_OR_NEWER
-            return Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include);
-#else
-            return Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-#endif
+            return new SceneObjects().All<RootBase>(FindObjectsInactive.Include);
         }
     }
 }

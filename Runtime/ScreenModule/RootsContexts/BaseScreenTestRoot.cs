@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using FlowIoC.BaseModule;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
 using UnityEngine;
@@ -35,11 +36,7 @@ namespace FlowIoC.ScreenModule.RootsContexts
         /// </summary>
         private static void ClearAuthoredScreens()
         {
-#if UNITY_6000_4_OR_NEWER
-            ScreenBody[] screens = FindObjectsByType<ScreenBody>();
-#else
-            ScreenBody[] screens = FindObjectsByType<ScreenBody>(FindObjectsSortMode.None);
-#endif
+            ScreenBody[] screens = new SceneObjects().All<ScreenBody>();
 
             for (int i = 0; i < screens.Length; i++)
             {

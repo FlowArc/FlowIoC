@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using FlowIoC.BaseModule;
 using FlowIoC.BaseModule.Root;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -122,11 +123,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.DeleteModule
 
             bool changed = false;
 
-#if UNITY_6000_4_OR_NEWER
-            RootBase[] roots = Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include);
-#else
-            RootBase[] roots = Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-#endif
+            RootBase[] roots = new SceneObjects().All<RootBase>(FindObjectsInactive.Include);
 
             foreach (RootBase root in roots)
             {

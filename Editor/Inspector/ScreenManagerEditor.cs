@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
+using FlowIoC.BaseModule;
 using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
 using UnityEngine;
@@ -29,11 +30,7 @@ namespace FlowIoC.Editor.Inspector
 
             if (!Application.isPlaying)
             {
-#if UNITY_6000_4_OR_NEWER
-                List<ScreenManager> allScreenManagers = FindObjectsByType<ScreenManager>().ToList();
-#else
-                List<ScreenManager> allScreenManagers = FindObjectsByType<ScreenManager>(FindObjectsSortMode.None).ToList();
-#endif
+                List<ScreenManager> allScreenManagers = new SceneObjects().All<ScreenManager>().ToList();
                 foreach (ScreenManager screenManager in allScreenManagers)
                 {
                     int managerIndex = screenManager.ManagerData.ManagerID;

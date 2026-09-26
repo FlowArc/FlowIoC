@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using FlowIoC.BaseModule;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Root;
 using FlowIoC.Editor.Inspector;
@@ -137,11 +138,7 @@ namespace FlowIoC.Editor.ModelViewer
                 return;
             }
 
-#if UNITY_6000_4_OR_NEWER
-            RootBase[] found = FindObjectsByType<RootBase>(FindObjectsInactive.Exclude);
-#else
-            RootBase[] found = FindObjectsByType<RootBase>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-#endif
+            RootBase[] found = new SceneObjects().All<RootBase>(FindObjectsInactive.Exclude);
             List<ModelRootEVO> roots = _modelTree.Build(found);
 
             if (roots.Count == 0)
