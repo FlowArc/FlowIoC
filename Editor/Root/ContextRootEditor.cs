@@ -217,15 +217,14 @@ namespace FlowIoC.Editor.Root
                     EditorGUILayout.BeginVertical(_gui.CardEntry);
 
                     SubContextData contextData = _root.SubContextTypes[ii];
-                    int rootId = _root.GetInstanceID();
-                    bool wasExpanded = _foldouts.IsEntryExpanded(rootId, contextData.ContextFullName);
+                    bool wasExpanded = _foldouts.IsEntryExpanded(_root, contextData.ContextFullName);
 
                     EditorGUILayout.BeginHorizontal();
 
                     bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(HeaderFor(contextData)), true);
 
                     if (expanded != wasExpanded)
-                        _foldouts.SetEntryExpanded(rootId, contextData.ContextFullName, expanded);
+                        _foldouts.SetEntryExpanded(_root, contextData.ContextFullName, expanded);
 
                     GUI_SubContextKind(contextData);
 
@@ -345,15 +344,14 @@ namespace FlowIoC.Editor.Root
             if (!_declarations.IsScreenContext(contextType))
                 return;
 
-            int rootId = _root.GetInstanceID();
             string summary = _summary.For(contextData);
             string label = string.IsNullOrEmpty(summary) ? "Screen" : $"Screen  ({summary})";
 
-            bool wasExpanded = _foldouts.IsScreenExpanded(rootId, contextData.ContextFullName);
+            bool wasExpanded = _foldouts.IsScreenExpanded(_root, contextData.ContextFullName);
             bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(label), true);
 
             if (expanded != wasExpanded)
-                _foldouts.SetScreenExpanded(rootId, contextData.ContextFullName, expanded);
+                _foldouts.SetScreenExpanded(_root, contextData.ContextFullName, expanded);
 
             if (!expanded)
                 return;
@@ -449,16 +447,15 @@ namespace FlowIoC.Editor.Root
 
             // Folds on its own, the way the screen block does, and says how much it holds while
             // folded.
-            int rootId = _root.GetInstanceID();
             string summary = carries ? SettingsSummary(settings) : string.Empty;
             string title = _settingsTypes.Title(settingsType);
             string label = string.IsNullOrEmpty(summary) ? title : $"{title}  ({summary})";
 
-            bool wasExpanded = _foldouts.IsSettingsExpanded(rootId, contextData.ContextFullName);
+            bool wasExpanded = _foldouts.IsSettingsExpanded(_root, contextData.ContextFullName);
             bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(label), true);
 
             if (expanded != wasExpanded)
-                _foldouts.SetSettingsExpanded(rootId, contextData.ContextFullName, expanded);
+                _foldouts.SetSettingsExpanded(_root, contextData.ContextFullName, expanded);
 
             if (!expanded)
                 return;

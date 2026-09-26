@@ -64,7 +64,11 @@ namespace FlowIoC.Editor.Root
             if (stage != null)
                 return stage.prefabContentsRoot.GetComponentsInChildren<RootBase>(true);
 
+#if UNITY_6000_4_OR_NEWER
+            return Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include);
+#else
             return Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#endif
         }
     }
 }

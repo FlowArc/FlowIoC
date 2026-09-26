@@ -35,7 +35,11 @@ namespace FlowIoC.ScreenModule.RootsContexts
         /// </summary>
         private static void ClearAuthoredScreens()
         {
+#if UNITY_6000_4_OR_NEWER
+            ScreenBody[] screens = FindObjectsByType<ScreenBody>();
+#else
             ScreenBody[] screens = FindObjectsByType<ScreenBody>(FindObjectsSortMode.None);
+#endif
 
             for (int i = 0; i < screens.Length; i++)
             {

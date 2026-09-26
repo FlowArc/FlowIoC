@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using FlowIoC.BaseModule.Injectable.Components;
 using UnityEditor;
 
 namespace FlowIoC.Editor.Inspector
@@ -16,14 +17,16 @@ namespace FlowIoC.Editor.Inspector
     {
         private const string Prefix = "FlowIoC.ViewInjector.Entry.";
 
-        internal bool IsExpanded(int injectorInstanceId, string viewTypeName)
-            => SessionState.GetBool(Key(injectorInstanceId, viewTypeName), true);
+        private readonly SessionObjectId _ids = new();
 
-        internal void SetExpanded(int injectorInstanceId, string viewTypeName, bool expanded)
-            => SessionState.SetBool(Key(injectorInstanceId, viewTypeName), expanded);
+        internal bool IsExpanded(ViewInjector injector, string viewTypeName)
+            => SessionState.GetBool(Key(injector, viewTypeName), true);
 
-        private string Key(int injectorInstanceId, string viewTypeName)
-            => $"{Prefix}{injectorInstanceId}.{viewTypeName}";
+        internal void SetExpanded(ViewInjector injector, string viewTypeName, bool expanded)
+            => SessionState.SetBool(Key(injector, viewTypeName), expanded);
+
+        private string Key(ViewInjector injector, string viewTypeName)
+            => $"{Prefix}{_ids.For(injector)}.{viewTypeName}";
     }
 }
 

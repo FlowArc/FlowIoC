@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The setup install, a pending module install, a module rename, the module index and the update
   notice run with the Editor unfocused**; they waited for Unity to be focused again.
+- **FlowIoC.Editor compiles on Unity 6.5 and later.** The Root and View Injector inspectors keyed
+  their folds by `GetInstanceID`, which 6.5 made a compile error; from 6.2 they ask for
+  `GetEntityId`, and 6.0 and 6.1 keep the instance ID.
+- **No `FindObjectsSortMode` deprecation warnings on Unity 6.4 and later.** Scene searches use the
+  `FindObjectsByType` overloads without a sort mode there; 6.0 to 6.3 have only the ones with it.
 
 ## [1.27.0] - 2026-09-26
 
