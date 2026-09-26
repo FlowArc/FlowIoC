@@ -41,6 +41,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 new SignalReferenceCheck(),
                 new RootContextRoleCheck(),
                 new ScreenAddressableCheck(),
+                new ArtAddressCheck(),
                 new DotSettingsCheck(),
                 new FlowModulePartCheck(),
                 new LogChannelCheck(),

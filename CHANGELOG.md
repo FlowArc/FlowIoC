@@ -5,6 +5,18 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Module Scanner reports screen art addressed under another name than its file**; *Fix* sets the
+  address to the file name.
+
+### Fixed
+
+- **A module update that renames a screen's art moves its address with it.** Loading 1.0.4 left
+  `SPR_LoadingBackground` addressed as `T_LoadingBackground`; an update now also registers new art.
+
 ## [1.27.1] - 2026-09-26
 
 ### Changed

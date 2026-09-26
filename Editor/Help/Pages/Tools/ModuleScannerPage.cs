@@ -87,6 +87,13 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 },
                 new[]
                 {
+                    "Art addresses",
+                    "A file in a screen module's Art folder that is addressable is addressed by its own "
+                    + "name - the name the screen asks for. A file renamed with its old address kept fails "
+                    + "only when the screen loads it. Fix sets the address to the file's name."
+                },
+                new[]
+                {
                     "Namespace settings",
                     "The .csproj.DotSettings at the project root that tells Rider which folders "
                     + "produce a namespace."

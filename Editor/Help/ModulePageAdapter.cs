@@ -373,6 +373,11 @@ namespace FlowIoC.Editor.Help
             if (new ModuleUpdater().TryApply(plan, installedAt, shipped, policy, out string error))
             {
                 _registrar.Register(_installer.ProjectRelative(installedAt), "updated");
+
+                // After the registrar's refresh, so a file the update renamed is imported and its
+                // Addressables entry can be found by the GUID it kept.
+                new ModuleUpdateArtAddresses().Follow(plan, _installer.ProjectRelative(installedAt));
+
                 EditorUtility.DisplayDialog(_page.Title + " updated",
                     summary.Done(_page.Title, to, plan, policy == ConflictPolicy.KeepMine), "OK");
 
