@@ -50,8 +50,7 @@ namespace FlowIoC.Editor.Help
                         new ConnectorsPage()),
                     new HelpSection("FlowIoC Features", FlowIcon.Bolt,
                         new ScreenServicePage(),
-                        new PoolServicePage(),
-                        new SceneSwitcherPage()),
+                        new PoolServicePage()),
                     new HelpSection("Editor Tools", FlowIcon.Wrench,
                         // In the order the Tools/FlowIoC menu lists the panels, so a reader who
                         // found one there finds its page at the same place here.
@@ -64,12 +63,14 @@ namespace FlowIoC.Editor.Help
                             new CreateCommandPage(),
                             new CreateFunctionPage(),
                             new AddSharedOrSignalsPage()),
-                        new HelpSection(new ScreenScannerPage()),
                         new HelpSection(new ModuleScannerPage()),
+                        new HelpSection(new ScreenScannerPage()),
                         new HelpSection(new AgentScannerPage()),
                         new HelpSection(new FlowConsolePage()),
                         new HelpSection(new ModelViewerPage()),
-                        new HelpSection(new FolderPainterPage()))),
+                        new HelpSection(new FolderPainterPage()),
+                        // Not on the menu: it lives on the main toolbar, so it comes last.
+                        new HelpSection(new SceneSwitcherPage()))),
                 new HelpSection("Module Library", FlowIcon.Puzzle, ModuleSections())
             };
 

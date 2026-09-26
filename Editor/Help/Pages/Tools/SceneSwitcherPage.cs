@@ -2,7 +2,7 @@
 
 using FlowIoC.Editor.Icons;
 
-namespace FlowIoC.Editor.Help.Pages.Features
+namespace FlowIoC.Editor.Help.Pages.Tools
 {
     internal class SceneSwitcherPage : HelpPage
     {
