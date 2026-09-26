@@ -99,14 +99,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "modules' Resources folders, so the bar is on stage before Addressables has "
                 + "initialised - seconds on a remote catalogue over a bad connection, with nothing "
                 + "to show otherwise. What a game changes between releases stays addressable: "
-                + "T_LoadingBackground in LoadingScreenModule/Art is the splash behind the bar, "
+                + "SPR_LoadingBackground in LoadingScreenModule/Art is the splash behind the bar, "
                 + "bundled on the prefab as the fallback and loaded again through IAssetService from "
                 + "the screen context's Launch. Once the load lands the addressable copy replaces the "
                 + "bundled one; on this run's first boot that may be after the bar has gone, and the "
                 + "cache answers from the next boot on.");
             painter.Note(
                 "Important: replace the asset and keep its address. The screen asks for "
-                + "T_LoadingBackground by name; the installer registered the file in Art under that "
+                + "SPR_LoadingBackground by name; the installer registered the file in Art under that "
                 + "name in the Local_Screen-Loading group, and a new file dropped in beside it is "
                 + "not addressable until it is. A load that brings nothing is an error from the asset "
                 + "service and leaves the bundled art on stage.");

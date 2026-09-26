@@ -6,7 +6,7 @@ set, and a failed state with a retry button.
 
 ## Concepts
 loading screen, progress bar, second bar, child set, retry, failed state, background, splash,
-T_LoadingBackground, LoadingScreenView
+SPR_LoadingBackground, LoadingScreenView
 
 ## Decisions
 - **It fills from its own model, not from the signal that opened it.** A snapshot, a close or a
@@ -17,7 +17,7 @@ T_LoadingBackground, LoadingScreenView
 - **Layer 9**, the top of the shipped ScreenManager, so nothing the boot opens sits over the bar.
 - **The prefab comes from Resources, the art behind the bar from Addressables.** This screen shows
   the loads, so it cannot wait on Addressables' own initialisation - seconds on a remote catalogue,
-  with nothing on stage. `T_LoadingBackground` in `Art/` is the one thing a game changes between
+  with nothing on stage. `SPR_LoadingBackground` in `Art/` is the one thing a game changes between
   releases: bundled on the prefab as the fallback, loaded again through `IAssetService` from the
   context's `Launch`, replaced in place when the load lands and never reset between openings. A
   game replaces the asset and keeps the address.

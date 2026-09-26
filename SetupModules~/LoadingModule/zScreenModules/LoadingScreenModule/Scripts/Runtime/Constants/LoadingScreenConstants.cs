@@ -9,6 +9,6 @@ namespace Modules.LoadingModule.LoadingScreenModule.Constants
         /// remote catalogue change the art between releases without a build. A game keeps the
         /// address and replaces the asset - in <c>Art/</c>, where the installer registers it.
         /// </summary>
-        public const string BACKGROUND_KEY = "T_LoadingBackground";
+        public const string BACKGROUND_KEY = "SPR_LoadingBackground";
     }
 }

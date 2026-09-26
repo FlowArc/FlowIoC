@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The frame-tick example keeps an `IsHooked` flag beside `IsTicking`**, so a stop and a start in
   one frame no longer add a second callback that ticks twice.
 - **Counter 1.0.3**: its tick steps carry no `[HideCommandLog]`; the tick signal hides them.
+- **Loading 1.0.4**: the loading screen art is `SPR_LoadingBackground`, its address too; the overlay's
+  test scene is a plain screen test scene that opens the overlay with a sample set.
 
 ### Fixed
 
