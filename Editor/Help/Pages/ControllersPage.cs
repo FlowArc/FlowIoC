@@ -463,10 +463,11 @@ namespace FlowIoC.Editor.Help.Pages
                 + "switching the whole channel off - the loop stops narrating itself and still "
                 + "says the one thing you asked it to.");
             painter.Note(
-                "The signal half of the same loop is silenced separately, with "
-                + "new Signal(hideCommandLog: true) where the signal is declared. The attribute "
-                + "does not cover the dispatch and the flag does not cover the command lines, so "
-                + "a fully silent loop carries both.");
+                "A loop is silenced from its signal: new Signal(hideCommandLog: true) hides the "
+                + "dispatch and every step and sub group it runs, so its commands need no attribute. "
+                + "A warning or an error inside it still appears, followed by the step that raised "
+                + "it and the steps before it. [HideCommandLog] is for a command that is noisy "
+                + "wherever it is bound.");
 
             painter.Separator();
             painter.SubHeading("Writing one");

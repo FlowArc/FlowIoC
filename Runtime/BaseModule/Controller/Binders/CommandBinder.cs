@@ -247,7 +247,11 @@ namespace FlowIoC.BaseModule.Controller.Binders
                 : (CommandBody) Activator.CreateInstance(commandType);
         }
 
-        internal void ReturnCommandToPool(ICommandBody commandBody)
+        /// <summary>
+        /// Puts a finished command back. <paramref name="hideLog"/> is the group's: a step run by a
+        /// signal declared with <c>hideCommandLog</c> is as quiet as the signal, whatever its class says.
+        /// </summary>
+        internal void ReturnCommandToPool(ICommandBody commandBody, bool hideLog = false)
         {
             commandBody.Clean();
             Type commandType = commandBody.GetType();
@@ -255,7 +259,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
             // Safe by construction: a step type is constrained to CommandBody, and the pool only
             // ever sees back what GetCommand handed out.
             _commandPool.Return(commandType, (CommandBody) commandBody);
-            if (!HasHideCommandLog(commandType))
+            if (!hideLog && !HasHideCommandLog(commandType))
                 FlowLogger.LogPlumbing(SystemLogType.CommandOperation, _displayName.Of(commandType), " returned to pool");
         }
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`hideCommandLog: true` hides the whole run**: every step and sub group, not only the dispatch;
+  a warning or an error inside it names the step and the steps before it. `[HideCommandLog]` on
+  each step of a tick is no longer needed.
+
 ### Fixed
 
 - **The setup install, a pending module install, a module rename, the module index and the update

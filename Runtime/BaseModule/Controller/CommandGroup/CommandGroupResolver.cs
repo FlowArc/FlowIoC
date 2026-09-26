@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using FlowIoC.BaseModule.Controller.Binders;
 using FlowIoC.BaseModule.Injectable.Utils;
 using FlowIoC.BaseModule.Signals;
@@ -11,7 +12,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
     /// Manages the execution of a command group, which can contain commands and other command groups
     /// executed in sequence or in parallel.
     /// </summary>
-    internal class CommandGroupResolver : ICommandGroupResolver
+    internal class CommandGroupResolver : ICommandGroupResolver, IFlowStepContext
     {
         #region Properties and Events
 
@@ -41,6 +42,9 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private readonly Dictionary<ICommandBody, CommandStepVO> _retainedCommands = new();
 
         private int _executionIndex;
+
+        /// <summary>The step a warning or an error of a hidden run is about - see <see cref="DescribeStep"/>.</summary>
+        private int _describedStep = -1;
         private int _completionCount;
         private bool _isDisposed;
 
@@ -127,7 +131,11 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _advanceRequested = false;
             _pendingParameters = null;
             _runId++;
-            IsHideLog = commandBinding.Key is ISignalBody signal && signal.HideCommandLog;
+            // A signal declared with hideCommandLog hides the whole of what it runs - every step, and
+            // every sub group under it - not only its own dispatch line. A tick runs a dozen steps a
+            // frame, and hiding the signal alone left two lines per step per frame in the console.
+            IsHideLog = (commandBinding.Key is ISignalBody signal && signal.HideCommandLog)
+                        || (_parent != null && _parent.IsHideLog);
 
             // The flow is started by whoever starts the group - CommandBinder for a dispatch, and
             // ExecuteGroupStep for a sub group - so that the line announcing the group belongs to
@@ -180,6 +188,64 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         #endregion
 
+        #region Hidden runs
+
+        /// <summary>
+        /// A Release or a Stop arriving for a step of a hidden run: what it raises is about that step,
+        /// which the run still holds until the call below takes it out.
+        /// </summary>
+        private void EnterHiddenStepOf(ICommandBody command, ref IFlowStepContext previous)
+        {
+            if (!IsHideLog || _steps == null)
+                return;
+
+            if (_retainedCommands.TryGetValue(command, out CommandStepVO step))
+                _describedStep = _steps.IndexOf(step);
+
+            FlowLogger.EnterHiddenStep(this, ref previous);
+        }
+
+        private void ExitHiddenStepOf(IFlowStepContext previous)
+        {
+            if (IsHideLog)
+                FlowLogger.ExitHiddenStep(previous);
+        }
+
+        /// <summary>
+        /// Where a hidden run is, for the one line it writes when something goes wrong: its signal,
+        /// the step running and the steps before it, in the order they were bound. Built only then,
+        /// so a run that goes right costs nothing for it.
+        /// </summary>
+        public string DescribeStep()
+        {
+            string signal = (_commandBinding?.Key as ISignalBody)?.Name ?? "a hidden signal";
+
+            if (_steps == null || _describedStep < 0 || _describedStep >= _steps.Count)
+                return $"  in '{signal}' (hidden)";
+
+            var text = new StringBuilder();
+            text.Append("  in '").Append(signal).Append("' (hidden), step ").Append(_describedStep + 1)
+                .Append(" of ").Append(_steps.Count).Append(": ").Append(StepName(_steps[_describedStep]));
+
+            if (_describedStep > 0)
+            {
+                text.Append("; before it: ");
+
+                for (int index = 0; index < _describedStep; index++)
+                {
+                    if (index > 0) text.Append(", ");
+                    text.Append(StepName(_steps[index]));
+                }
+            }
+
+            return text.ToString();
+        }
+
+        private string StepName(CommandStepVO step) =>
+            step.GroupKey != null ? "'" + step.GroupKey.Name + "' group" : _displayName.Of(step.CommandType);
+
+        #endregion
+
         #region Public API for Commands
 
         [UnityEngine.HideInCallstack]
@@ -195,12 +261,16 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             int previousLine = 0;
             FlowLogger.EnterDeclaration(_declarationFile, _declarationLine, ref previousFile, ref previousLine);
 
+            IFlowStepContext previousStep = null;
+            EnterHiddenStepOf(command, ref previousStep);
+
             try
             {
                 ReleaseCommandInFlow(command, commandParameters);
             }
             finally
             {
+                ExitHiddenStepOf(previousStep);
                 FlowLogger.ExitDeclaration(previousFile, previousLine);
                 FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
             }
@@ -230,7 +300,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
-            _commandBinder.ReturnCommandToPool(command);
+            _commandBinder.ReturnCommandToPool(command, IsHideLog);
 
             HandleStepCompletion(commandParameters);
         }
@@ -245,12 +315,16 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             int previousLine = 0;
             FlowLogger.EnterDeclaration(_declarationFile, _declarationLine, ref previousFile, ref previousLine);
 
+            IFlowStepContext previousStep = null;
+            EnterHiddenStepOf(command, ref previousStep);
+
             try
             {
                 StopCommandInFlow(command);
             }
             finally
             {
+                ExitHiddenStepOf(previousStep);
                 FlowLogger.ExitDeclaration(previousFile, previousLine);
                 FlowLogger.ExitFlow(previousFlowId, previousParentFlowId);
             }
@@ -278,7 +352,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
-            _commandBinder.ReturnCommandToPool(command);
+            _commandBinder.ReturnCommandToPool(command, IsHideLog);
 
             if (step.ExecutionType == CommandExecutionType.Parallel)
                 _completionCount--;
@@ -376,6 +450,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private void StartStep(int stepIndex, object[] commandParameters)
         {
             CommandStepVO step = _steps[stepIndex];
+            _describedStep = stepIndex;
 
             if (step.GroupKey != null)
                 ExecuteGroupStep(step);
@@ -477,7 +552,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             FlowLogger.EnterFlow(subFlowId, subParentFlowId, ref previousFlowId, ref previousParentFlowId);
             try
             {
-                if (!step.GroupKey.HideCommandLog)
+                if (!IsHideLog && !step.GroupKey.HideCommandLog)
                     FlowLogger.LogPlumbing(SystemLogType.CommandOperation, "'", step.GroupKey.Name, "' opened a sub group");
 
                 object[] parametersToUse = step.SignalParameters?.Length > 0 ? step.SignalParameters : _signalParameters;
@@ -507,7 +582,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
             // Asked before the message is built rather than inside the call: an enum's name is a
             // lookup and an allocation, and this line runs for every command of every dispatch.
-            if (FlowLogger.IsEnabled && !_commandBinder.HasHideCommandLog(step.CommandType))
+            if (FlowLogger.IsEnabled && !IsHideLog && !_commandBinder.HasHideCommandLog(step.CommandType))
                 // Two different questions, and they have two different answers.
                 //
                 // Which channel: whose sequence this step is in. A step bound by one of the
@@ -530,7 +605,21 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                         _displayName.Of(step.CommandType), " executed as ", step.ExecutionType.ToString());
                 }
 
-            command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());
+            // A hidden run writes nothing for this step, so whatever warning or error the command
+            // raises carries the step's place in the run instead.
+            IFlowStepContext previousStep = null;
+            if (IsHideLog)
+                FlowLogger.EnterHiddenStep(this, ref previousStep);
+
+            try
+            {
+                command.InvokeExecute(step.CommandParameters ?? commandParameters ?? Array.Empty<object>());
+            }
+            finally
+            {
+                if (IsHideLog)
+                    FlowLogger.ExitHiddenStep(previousStep);
+            }
 
             // A command that retained and released inside that Execute is already back in the pool,
             // and a later step of the same type may have taken it out again - in which case the
@@ -542,7 +631,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!command.HasRetain)
             {
                 _retainedCommands.Remove(command);
-                _commandBinder.ReturnCommandToPool(command);
+                _commandBinder.ReturnCommandToPool(command, IsHideLog);
                 HandleStepCompletion(null);
             }
         }

@@ -120,21 +120,18 @@ namespace FlowIoC.Editor.Help.Pages.Tools
 
             painter.SubHeading("Silencing a noisy loop");
             painter.Paragraph(
-                "A tick loop dispatching many times per second drowns everything else. Two flags "
-                + "silence the framework's own lines for it without hiding the channel that "
-                + "everything else shares.");
+                "A tick loop dispatching many times per second drowns everything else. One flag "
+                + "on its signal silences the framework's own lines for the whole loop without "
+                + "hiding the channel that everything else shares.");
             painter.Code(
-                "// The signal's dispatch and group lines.\n"
-                + "public Signal Tick = new(hideCommandLog: true);\n"
-                + "\n"
-                + "// The command's execute and pool-return lines.\n"
-                + "[HideCommandLog]\n"
-                + "internal class AdvanceTimersCommand : Command { }");
+                "// The dispatch, every step and every sub group it runs.\n"
+                + "public Signal Tick = new(hideCommandLog: true);");
             painter.Note(
-                "Both are needed for a fully silent loop - the signal flag does not cover the "
-                + "command lines and the attribute does not cover the dispatch. Neither touches "
-                + "your own FlowLogger calls inside the command body, which is the point: the "
-                + "loop stops narrating itself and still says the one thing you asked it to.");
+                "It does not touch your own FlowLogger calls inside the commands, which is the "
+                + "point: the loop stops narrating itself and still says the one thing you asked it "
+                + "to. A warning or an error raised inside it is followed by the step that raised "
+                + "it and the steps before it, so a silent loop is not a blind one. [HideCommandLog] "
+                + "on a command silences that command wherever it is bound.");
             painter.Paragraph(
                 "For a loop you did not write, the search box does the same job without touching "
                 + "code: a term starting with '-' hides every row carrying it and leaves the "

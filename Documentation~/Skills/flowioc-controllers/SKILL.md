@@ -309,8 +309,10 @@ CommandBinder.Bind(_internalSignals.Tick)
 ### Either way
 
 - **The tick signal hides its log** - `public Signal Tick = new(hideCommandLog: true);` - or it
-  buries every other line in the Flow Console. `[HideCommandLog]` on one Command hides that step
-  alone.
+  buries every other line in the Flow Console. The flag hides the whole run: the dispatch, every
+  step, every sub group. A warning or an error raised inside it still appears, with the step that
+  raised it and the steps before it on the next line. The steps need no `[HideCommandLog]` of
+  their own; that attribute is for a Command noisy wherever it is bound.
 - **What lasts between turns lives in a Model**, because a Command holds no state: a flag that says
   "cleared" was already announced, the version last drawn, the arrivals a move collected for the
   next step to dispatch. Curve and easing maths shared by several steps is a Function.

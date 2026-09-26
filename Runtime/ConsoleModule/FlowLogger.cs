@@ -68,6 +68,9 @@ namespace FlowIoC.ConsoleModule
         private static string _currentDeclarationFile;
         private static int _currentDeclarationLine;
 
+        /// <summary>The step of a hidden flow running now, if any - see <see cref="EnterHiddenStep"/>.</summary>
+        private static IFlowStepContext _hiddenStep;
+
         /// <summary>
         /// The flow being executed right now, which every log written meanwhile belongs to.
         /// A plain static on a main-thread assumption - FlowLogger.Logs already makes that
@@ -149,6 +152,36 @@ namespace FlowIoC.ConsoleModule
         {
             _currentDeclarationFile = previousFile;
             _currentDeclarationLine = previousLine;
+        }
+
+        /// <summary>
+        /// A step of a flow whose lines are hidden is running. Nothing is written for it, so a
+        /// warning or an error raised meanwhile carries the step's own account of where the flow
+        /// is - the one line a hidden tick writes is then enough to find the step that failed.
+        /// </summary>
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
+        public static void EnterHiddenStep(IFlowStepContext step, ref IFlowStepContext previous)
+        {
+            previous = _hiddenStep;
+            _hiddenStep = step;
+        }
+
+        [Conditional(InEditor), Conditional(InDevelopmentBuild)]
+        public static void ExitHiddenStep(IFlowStepContext previous)
+        {
+            _hiddenStep = previous;
+        }
+
+        /// <summary>
+        /// A warning or an error written inside a hidden step, with the step's place in its flow
+        /// on the next line. A plain log is left alone: it is hidden for a reason.
+        /// </summary>
+        private static string WithHiddenStep(string message, LogType logType)
+        {
+            if (_hiddenStep == null || logType == LogType.Log || message == null)
+                return message;
+
+            return message + "\n" + _hiddenStep.DescribeStep();
         }
 
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
@@ -560,6 +593,9 @@ namespace FlowIoC.ConsoleModule
             string unityMessage, UnityEngine.Object context, Type blame = null, string filePath = null,
             int lineNumber = 0)
         {
+            message = WithHiddenStep(message, LogType.Error);
+            unityMessage = WithHiddenStep(unityMessage, LogType.Error);
+
             if (IsRecording)
             {
                 var log = CreateLogEntry(message, LogType.Error, blame);
@@ -847,7 +883,7 @@ namespace FlowIoC.ConsoleModule
             // so a message says only what happened. Read off the channel table, and applied here
             // so every one of the framework's own lines gets it rather than only the ones a
             // caller passed a profile to.
-            message = ResolveMessage(SystemChannelName(systemLogType), message);
+            message = WithHiddenStep(ResolveMessage(SystemChannelName(systemLogType), message), logType);
 
             if (isLoggingEnabled && IsRecording)
             {
@@ -874,6 +910,7 @@ namespace FlowIoC.ConsoleModule
         [HideInCallstack]
         private static void AddCustomLog(string channel, string message, LogType logType, Type blame = null)
         {
+            message = WithHiddenStep(message, logType);
             bool isLoggingEnabled = Preferences.IsLoggingEnabled;
             if (!isLoggingEnabled && logType != LogType.Warning) return;
 
@@ -899,6 +936,7 @@ namespace FlowIoC.ConsoleModule
         [HideInCallstack]
         private static void AddCustomLogAt(string channel, string message, LogType logType, string filePath, int lineNumber)
         {
+            message = WithHiddenStep(message, logType);
             bool isLoggingEnabled = Preferences.IsLoggingEnabled;
             if (!isLoggingEnabled && logType != LogType.Warning) return;
 

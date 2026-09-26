@@ -658,10 +658,10 @@ affected.
 
 | Switch | Scope | Silences |
 |---|---|---|
-| `[HideCommandLog]` on the command class | every instance of that command type | `[Command] Execute as ...`, `Command is returned to pool! - ...` |
-| `new Signal(hideCommandLog: true)` | that one signal field | `Signal is dispatched: ...`, `InitializeGroupWithSignal`, `Command SubGroup is executed`, `CommandGroup is returned to pool!` |
+| `new Signal(hideCommandLog: true)` | that one signal field, and everything it runs | the dispatch, the group, every step's execute and pool-return line, every sub group |
+| `[HideCommandLog]` on the command class | every instance of that command type, wherever bound | `[Command] Execute as ...`, `... returned to pool` |
 
-They are complementary — a self-retriggering loop needs both to go fully quiet:
+A loop is silenced from its signal; its commands need no attribute:
 
 ```csharp
 internal class CounterInternalSignals : ISignalHolder
@@ -672,14 +672,6 @@ internal class CounterInternalSignals : ISignalHolder
 ```
 
 ```csharp
-[HideCommandLog]
-internal class AdvanceTimersCommand : Command { /* ... */ }
-
-[HideCommandLog]
-internal class PublishExpiredTimersCommand : Command { /* ... */ }
-```
-
-```csharp
 CommandBinder.Bind(_internal.Tick)
     .ToSequence<WaitForNextTickCommand>()
     .ToSequence<AdvanceTimersCommand>()
@@ -687,8 +679,9 @@ CommandBinder.Bind(_internal.Tick)
     .ToSequence<SignalDispatchCommand>(_internal.Tick);
 ```
 
-Marking only the signal still leaves the per-command execute lines; marking only the
-commands still leaves the dispatch lines.
+Hidden is not blind: a warning or an error raised inside a hidden run still appears, followed
+by the step that raised it and the steps before it - `in 'Tick' (hidden), step 3 of 4:
+PublishExpiredTimersCommand; before it: WaitForNextTickCommand, AdvanceTimersCommand`.
 
 To hide a whole project log channel instead, switch it off in the Flow Console's Filters panel —
 but that is a global switch, not a per-loop one.

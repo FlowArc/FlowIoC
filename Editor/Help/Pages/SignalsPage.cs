@@ -176,15 +176,14 @@ namespace FlowIoC.Editor.Help.Pages
                 + "name it.");
             painter.Paragraph(
                 "A signal that fires every frame takes hideCommandLog, which drops its dispatch "
-                + "and group lines from the Flow Console. The console logs every dispatch, and a "
+                + "and everything it runs - every step and sub group - from the Flow Console. The console logs every dispatch, and a "
                 + "loop running sixty times a second buries everything else in a window somebody "
                 + "is trying to read a flow in. It silences the framework's lines only - what you "
                 + "log yourself inside the commands it runs still appears, which is what makes the "
                 + "flag worth reaching for rather than switching the whole channel off.");
             painter.Note(
-                "The command half of the same loop is silenced separately, with [HideCommandLog] "
-                + "on the command. The signal flag does not cover the command's execute and "
-                + "pool-return lines, so a fully silent loop carries both.");
+                "Hidden is not blind: a warning or an error raised inside the loop still appears, "
+                + "followed by the step that raised it and the steps before it in that run.");
 
             painter.Separator();
             painter.SubHeading("Two holders, two folders");
