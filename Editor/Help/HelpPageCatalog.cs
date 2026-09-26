@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Help.Pages;
+using FlowIoC.Editor.Help.Pages.Features;
 using FlowIoC.Editor.Help.Pages.Modules;
 using FlowIoC.Editor.Help.Pages.Tools;
 using FlowIoC.Editor.Help.Pages.Tools.Generators;
@@ -47,6 +48,8 @@ namespace FlowIoC.Editor.Help
                         new SystemsServicesPage(),
                         new ViewMediatorPage(),
                         new ConnectorsPage()),
+                    new HelpSection("Features", FlowIcon.Bolt,
+                        new SceneSwitcherPage()),
                     new HelpSection("Editor Tools", FlowIcon.Wrench,
                         // In the order the Tools/FlowIoC menu lists the panels, so a reader who
                         // found one there finds its page at the same place here.
