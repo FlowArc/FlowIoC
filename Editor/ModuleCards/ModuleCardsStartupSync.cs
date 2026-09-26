@@ -14,21 +14,37 @@ namespace FlowIoC.Editor.ModuleCards
     ///
     /// Both go through ModuleCardsRefresher, which writes only what differs. Writing
     /// unconditionally would re-import the file and bring the postprocessor straight back.
+    ///
+    /// The refresh runs on the first update tick rather than on a delayCall, which never fires while
+    /// the Editor sits unfocused: the cards are read by an assistant and an IDE with Unity in the
+    /// background, so they have to follow a compile nobody is watching. Scheduling twice before the
+    /// tick runs the refresh once.
     /// </summary>
     internal class ModuleCardsStartupSync : AssetPostprocessor
     {
         [DidReloadScripts]
-        private static void OnScriptsReloaded()
-        {
-            EditorApplication.delayCall += () => new ModuleCardsRefresher().Run();
-        }
+        private static void OnScriptsReloaded() => Schedule();
 
         private static void OnPostprocessAllAssets(
             string[] imported, string[] deleted, string[] moved, string[] movedFrom)
         {
             if (!Touches(imported) && !Touches(deleted) && !Touches(moved)) return;
 
-            EditorApplication.delayCall += () => new ModuleCardsRefresher().Run();
+            Schedule();
+        }
+
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new ModuleCardsRefresher().Run();
         }
 
         private static bool Touches(string[] paths)

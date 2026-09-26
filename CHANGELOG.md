@@ -14,8 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **A package update writes the agent rules, the skills and the solution code style** even with
-  the Editor unfocused and without a restart; they used to stay on the old version.
+- **A package update writes the agent rules, the skills, the solution code style and the module
+  cards** even with the Editor unfocused and without a restart; they used to stay on the old version.
 
 ## [1.26.1] - 2026-09-26
 
