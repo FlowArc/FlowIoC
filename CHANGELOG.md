@@ -5,7 +5,7 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.26.0] - 2026-09-26
 
 ### Added
 
@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PoolConfigAdapterView` and the adapter on `PoolServiceRoot` are gone.
 - **A sub-context entry carries settings of its context's own class.** A screen's override moved
   there; scenes saved with the old fields are read as before.
+- **The Scene Switcher lists scenes in tabs** - Frequent, Modules, Screens, Tests - with the game's
+  own scenes pinned above them, each row in its module's Root colour.
+- **The setup set's Main module no longer ships a `PoolServiceRoot` variant**; its scenes use the
+  package's own.
+- **World Pointer 1.2.1**: its test scene registers its pool group with `PoolSubContext`. **Asset
+  Delivery 1.0.3 and Loading 1.0.3**: their test scenes use the package's `PoolServiceRoot`.
 
 ### Fixed
 
