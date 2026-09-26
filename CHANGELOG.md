@@ -5,7 +5,7 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.27.2] - 2026-09-27
 
 ### Added
 
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A module update that renames a screen's art moves its address with it.** Loading 1.0.4 left
   `SPR_LoadingBackground` addressed as `T_LoadingBackground`; an update now also registers new art.
+- **The Pool Service Help page shows the group as `Pool_PointerSample`.**
 
 ## [1.27.1] - 2026-09-26
 
