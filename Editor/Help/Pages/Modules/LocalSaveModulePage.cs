@@ -147,7 +147,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.AddCurrency)\n"
                 + "    .ToSequence<AddCurrencyCommand>()\n"
-                + "    .ToSequence<ILocalSaveService.Commands.Save>(nameof(PD_Profile));");
+                + "    .ToSequence<ILocalSaveService.Commands.Save>(nameof(SD_Profile));");
             painter.Space();
 
             painter.SubHeading("Saving everything");
@@ -178,7 +178,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "whatever their system pairs with that name; what is inside is JSON all the same.");
             painter.Code(
                 "{\n"
-                + "  \"PD_Profile\": {\n"
+                + "  \"SD_Profile\": {\n"
                 + "    \"Coins\": 120,\n"
                 + "    \"Levels\": { \"forest\": 3 }\n"
                 + "  }\n"

@@ -8,9 +8,14 @@ using UnityEngine;
 
 namespace FlowIoC.BaseModule.Root
 {
-    public class RootBase : MonoBehaviour, IRoot
+    public class RootBase : MonoBehaviour, IRoot, ISerializationCallbackReceiver
     {
-        [HideInInspector] public List<SubContextData> SubContextTypes;
+        /// <summary>
+        /// Not HideInInspector: the flag hides every child with it, and the Root's inspector draws
+        /// an entry's settings from their serialized fields. The inspector leaves the list out of
+        /// its default drawing instead and draws the entries itself.
+        /// </summary>
+        public List<SubContextData> SubContextTypes;
 
         protected Dictionary<IContext, SubContextData> _subContexts = new();
 
@@ -96,6 +101,31 @@ namespace FlowIoC.BaseModule.Root
         {
         }
 
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        {
+        }
+
+        /// <summary>
+        /// Moves a screen override stored in the entry's old flat fields into its settings, so a
+        /// scene saved before the override moved keeps its screens where they were. Remove with the
+        /// legacy fields on SubContextData.
+        /// </summary>
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            if (SubContextTypes == null)
+                return;
+
+            LegacyScreenOverride legacy = new LegacyScreenOverride();
+
+            for (int index = 0; index < SubContextTypes.Count; index++)
+            {
+                SubContextData entry = SubContextTypes[index];
+
+                if (legacy.TryMigrate(ref entry))
+                    SubContextTypes[index] = entry;
+            }
+        }
+
         public virtual void InitializeSubContexts()
         {
             if (SubContextTypes == null || SubContextTypes.Count == 0)
@@ -121,8 +151,8 @@ namespace FlowIoC.BaseModule.Root
 
                 // Before any binding phase, so a context that reads its own configuration during
                 // one of them already has the Root's word for it.
-                if (context is ISubContextOverridable overridable)
-                    overridable.ApplyOverride(subContextData);
+                if (context is ISubContextConfigurable configurable)
+                    configurable.Configure(subContextData.Settings);
 
                 FlowLogger.Log(SystemLogType.Context, "Sub | " + subContextData.ContextName + " | initialized");
                 context.Initialize(gameObject, initializeOrder, _rootsManager.InjectionBinderCrossContext, new List<IContext>(),

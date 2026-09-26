@@ -454,3 +454,15 @@ The first line of the answer is the `since` for the next read. A module's channe
 name; the framework's own are `Signal`, `Command`, `Injection`, `Context`, `Screen`, `Pool` and
 `Asset`. Do not switch *Mirror into Unity's console* on instead: it floods Unity's console with
 every line, and it is the developer's own setting.
+
+Unity driven from a terminal is not the focused window, and a project whose *Run In Background* is
+off stops advancing frames there: `Time.frameCount` stays put, the Game view is never drawn, and a
+flow seems to hang at its first step. Enter Play, then set the runtime value through eval:
+
+```csharp
+UnityEngine.Application.runInBackground = true;   // this Play only; reset when Play ends
+```
+
+Do not tick *Run In Background* in `PlayerSettings`, and do not change the Editor's auto-tick
+instead: the auto-tick does not advance a Play that Unity has paused, and both settings outlive the
+test.

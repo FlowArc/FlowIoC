@@ -323,7 +323,7 @@ Then, for the module you just made:
   way the game would, `InjectionBinderCrossContext.GetInstance<PlayerSignals>().Incoming
   .InitializePlayer.Dispatch()`. A test module may reference anything, so it stands in for the
   Connector too. A state the scene starts from - level 10 - is a copy of the data asset
-  (`PD_Player_Test` in the test module's `Scriptables/`, filed in place of the original, with
+  (`SD_Player_Test` in the test module's `Scriptables/`, filed in place of the original, with
   `IsTest` ticked on `LocalSaveServiceRoot`), never a field on the test Root; the data-types skill
   has the whole of it. Then press Play in that scene.
 
@@ -373,6 +373,10 @@ A panel that authors an asset - the A/B Test Editor over `CD_AbTests` - draws th
 a, b)`, so undo, dirtying and saving are Unity's; it edits what the Inspector would edit, which
 is inside the line. Defer a change to a list's shape - an element added or removed - until the
 rows are drawn, because the rows are walked by index.
+
+A section that grows long folds: `if (painter.HeadingFoldable("Arrows", add)) { ...rows... }` draws
+the heading with a triangle and returns whether it is open. Its buttons keep working while it is
+shut, and which sections are shut is remembered per developer.
 
 Put the file operations in a class of their own beside the panel (`LocalSaveFileTools`) so the
 workspace's tests reach them without a window; the panel only draws.

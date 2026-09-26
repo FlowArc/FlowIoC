@@ -15,6 +15,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **No `FindObjectsSortMode` deprecation warnings on Unity 6.4 and later.** Scene searches use the
   `FindObjectsByType` overloads without a sort mode there; 6.0 to 6.3 have only the ones with it.
 
+## [1.27.0] - 2026-09-26
+
+### Added
+
+- **A module panel's section can fold**: `painter.HeadingFoldable(text, actions)` draws the heading
+  with a triangle and returns whether it is open; its buttons work while it is shut.
+
+### Changed
+
+- **Agent rules:** an agent playing an unfocused Editor sets `Application.runInBackground` at
+  runtime, never in `PlayerSettings` or the auto-tick.
+
+### Fixed
+
+- **A package update writes the agent rules, the skills, the solution code style and the module
+  cards** even with the Editor unfocused and without a restart; they used to stay on the old version.
+
+## [1.26.1] - 2026-09-26
+
+### Added
+
+- **`Pool_` is the asset prefix of a pool group** (`Pool_Forest`); a new `CD_PoolGroup` asset is
+  created as `Pool_New`.
+
+### Changed
+
+- **`PD_` is now `SD_` (saveable data), and `PVO` is now `SVO`.** The code style, the agent rules,
+  the skills and Help use the new names; rename a game's `PD_` assets and classes to match.
+- **Help's Scene Switcher page moved to Editor Tools**, after Folder Painter.
+- **Module Scanner comes before Screen Scanner**, in the Tools/FlowIoC menu and in Help.
+- **Local Save 1.0.4 and World Pointer 1.2.2** use the new names: `SD_LocalSaveProbe`,
+  `Pool_PointerSample`.
+
+## [1.26.0] - 2026-09-26
+
+### Added
+
+- **A `SerializedDictionary` is drawn as key and value pairs**, added and removed together, every
+  other pair on a darker band; a key already in the dictionary is refused.
+- **Help's FlowIoC Features has Screen Service and Pool Service pages.**
+- **Help has a FlowIoC Features section**, after MVCS Structure (was Structure), with a Scene
+  Switcher page: what it lists and how to turn it on in the toolbar.
+
+### Changed
+
+- **A module's pool groups are a `PoolSubContext` entry on its own Root.** `PoolAdapterRoot`,
+  `PoolConfigAdapterView` and the adapter on `PoolServiceRoot` are gone.
+- **A sub-context entry carries settings of its context's own class.** A screen's override moved
+  there; scenes saved with the old fields are read as before.
+- **The Scene Switcher lists scenes in tabs** - Frequent, Modules, Screens, Tests - with the game's
+  own scenes pinned above them, each row in its module's Root colour.
+- **The setup set's Main module no longer ships a `PoolServiceRoot` variant**; its scenes use the
+  package's own.
+- **World Pointer 1.2.1**: its test scene registers its pool group with `PoolSubContext`. **Asset
+  Delivery 1.0.3 and Loading 1.0.3**: their test scenes use the package's `PoolServiceRoot`.
+
+### Fixed
+
+- **A context listed on two Roots no longer warns of a same injection**, and the first one torn
+  down no longer unbinds the other's name.
+- **The `CD_PoolGroup` inspector** no longer draws an item's arrow over its drag handle or its
+  section headings twice.
+
 ## [1.25.0] - 2026-09-26
 
 ### Added

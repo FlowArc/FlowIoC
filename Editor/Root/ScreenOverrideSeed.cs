@@ -1,41 +1,45 @@
 #if UNITY_EDITOR
-using FlowIoC.BaseModule.Root;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 
 namespace FlowIoC.Editor.Root
 {
     /// <summary>
-    /// What the five override fields hold the first time someone ticks the override on a Root
+    /// What the five override values hold the first time someone ticks the override on a Root
     /// entry: the values the screen context declares, so the edit starts from the truth rather
-    /// than from zero. An entry that has already been edited is left alone, which is what makes
+    /// than from zero. Settings that have already been edited are left alone, which is what makes
     /// toggling the override off and on again non-destructive. When the declaration itself is all
     /// defaults the two cases produce the same result, so no extra "already seeded" flag is
     /// stored.
+    ///
+    /// Always hands back a new instance, never the one it was given: the entry's own settings are
+    /// replaced, not changed, so Undo sees the edit.
     /// </summary>
     internal class ScreenOverrideSeed
     {
-        internal SubContextData Apply(SubContextData data, ScreenCVO declaration)
+        internal ScreenSubContextSettingsCVO Apply(ScreenSubContextSettingsCVO settings, ScreenCVO declaration)
         {
-            if (declaration == null || !IsUntouched(data))
-                return data;
+            ScreenSubContextSettingsCVO seeded = settings?.Copy() ?? new ScreenSubContextSettingsCVO();
 
-            data.ScreenManagerId = declaration.ManagerId;
-            data.ScreenLayer = declaration.Layer;
-            data.ScreenTag = declaration.Tag;
-            data.ScreenHasShowAnimation = declaration.HasShowAnimation;
-            data.ScreenHasHideAnimation = declaration.HasHideAnimation;
+            if (declaration == null || !IsUntouched(seeded))
+                return seeded;
 
-            return data;
+            seeded.ManagerId = declaration.ManagerId;
+            seeded.Layer = declaration.Layer;
+            seeded.Tag = declaration.Tag;
+            seeded.HasShowAnimation = declaration.HasShowAnimation;
+            seeded.HasHideAnimation = declaration.HasHideAnimation;
+
+            return seeded;
         }
 
-        private bool IsUntouched(SubContextData data)
+        private bool IsUntouched(ScreenSubContextSettingsCVO settings)
         {
-            return data.ScreenManagerId == 0
-                   && data.ScreenLayer == 0
-                   && data.ScreenTag == ScreenTag.Default
-                   && !data.ScreenHasShowAnimation
-                   && !data.ScreenHasHideAnimation;
+            return settings.ManagerId == 0
+                   && settings.Layer == 0
+                   && settings.Tag == ScreenTag.Default
+                   && !settings.HasShowAnimation
+                   && !settings.HasHideAnimation;
         }
     }
 }

@@ -12,9 +12,10 @@ namespace FlowIoC.Editor.SceneSwitcher
 {
     /// <summary>
     /// Lists every scene that lives under the FlowIoC modules folder in a main toolbar
-    /// dropdown and opens the picked one, both in edit mode and in play mode. Entries are
-    /// labelled "ModuleName/SceneName" so scenes belonging to different modules stay
-    /// distinguishable when they share a name.
+    /// dropdown and opens the picked one, both in edit mode and in play mode. The list is
+    /// <see cref="SceneSwitcherPopup"/>: a search, tabs for the scenes opened most, every scene by
+    /// module, the screens' test scenes and the modules' test scenes, and the game's own scenes
+    /// pinned above them.
     /// </summary>
     public class SceneSwitcherDropdown
     {
@@ -25,9 +26,9 @@ namespace FlowIoC.Editor.SceneSwitcher
         public const string ELEMENT_PATH = "FlowIoC/Scene Switcher";
 
         private const string MODULES_FOLDER = "Assets/Modules";
-        private const string MODULES_FOLDER_NAME = "Modules";
 
         private readonly List<SceneEntry> _scenes = new();
+        private readonly SceneSwitcherUsage _usage = new();
 
         public SceneSwitcherDropdown()
         {
@@ -48,32 +49,18 @@ namespace FlowIoC.Editor.SceneSwitcher
 
         private void ShowDropdownMenu(Rect dropDownRect)
         {
-            var menu = new GenericMenu();
+            string activePath = Application.isPlaying
+                ? SceneManager.GetActiveScene().path
+                : EditorSceneManager.GetActiveScene().path;
 
-            if (_scenes.Count == 0)
-            {
-                menu.AddDisabledItem(new GUIContent("No scenes found"));
-                menu.DropDown(dropDownRect);
-                return;
-            }
-
-            string currentScene = Application.isPlaying
-                ? SceneManager.GetActiveScene().name
-                : EditorSceneManager.GetActiveScene().name;
-
-            foreach (SceneEntry scene in _scenes)
-            {
-                string path = scene.Path;
-                bool isActive = Path.GetFileNameWithoutExtension(path) == currentScene;
-
-                menu.AddItem(new GUIContent(scene.DisplayName), isActive, () => SwitchScene(path));
-            }
-
-            menu.DropDown(dropDownRect);
+            UnityEditor.PopupWindow.Show(dropDownRect,
+                new SceneSwitcherPopup(_scenes, _usage, activePath, SwitchScene));
         }
 
         private void SwitchScene(string scenePath)
         {
+            _usage.Record(scenePath);
+
             if (Application.isPlaying)
             {
                 string sceneName = Path.GetFileNameWithoutExtension(scenePath);
@@ -107,44 +94,7 @@ namespace FlowIoC.Editor.SceneSwitcher
             string[] guids = AssetDatabase.FindAssets("t:Scene", new[] { MODULES_FOLDER });
 
             foreach (string guid in guids)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                _scenes.Add(new SceneEntry(BuildDisplayName(path), path));
-            }
-
-            _scenes.Sort((left, right) => string.CompareOrdinal(left.DisplayName, right.DisplayName));
-        }
-
-        private string BuildDisplayName(string scenePath)
-        {
-            string sceneName = Path.GetFileNameWithoutExtension(scenePath);
-            string folderPath = Path.GetDirectoryName(scenePath)?.Replace("\\", "/");
-
-            if (string.IsNullOrEmpty(folderPath)) return sceneName;
-
-            string[] folders = folderPath.Split('/');
-
-            // The module name is whatever folder sits directly under "Modules"; the rest of
-            // the path is the module's internal layout and carries no meaning for the menu.
-            for (int i = 0; i < folders.Length - 1; i++)
-            {
-                if (folders[i] == MODULES_FOLDER_NAME)
-                    return $"{folders[i + 1]}/{sceneName}";
-            }
-
-            return sceneName;
-        }
-
-        private readonly struct SceneEntry
-        {
-            public readonly string DisplayName;
-            public readonly string Path;
-
-            public SceneEntry(string displayName, string path)
-            {
-                DisplayName = displayName;
-                Path = path;
-            }
+                _scenes.Add(SceneEntry.From(AssetDatabase.GUIDToAssetPath(guid)));
         }
     }
 }

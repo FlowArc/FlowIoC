@@ -26,6 +26,7 @@ namespace FlowIoC.Editor.Root
 
         private SceneSubContextUsage _usage;
         private ScreenSubContextDeclarations _declarations;
+        private SubContextBadge _badge;
         private FlowRoleResolver _roles;
         private FlowPalette _palette;
         private GUIStyle _nameStyle;
@@ -177,7 +178,11 @@ namespace FlowIoC.Editor.Root
                         // Off, a hosted context - an analytics plug, a screen - was added and never
                         // ran, with nothing logged, until someone found the tick.
                         AutoSetup = true,
-                        IsTest = false
+                        IsTest = false,
+
+                        // The settings its context reads, so an entry for a pool sub-context has
+                        // groups to fill the moment it is listed.
+                        Settings = new SubContextSettingsTypes().NewFor(type)
                     });
 
                     MarkDirty();
@@ -223,30 +228,15 @@ namespace FlowIoC.Editor.Root
         }
 
         /// <summary>
-        /// The badge a row wears, the same one the Root's own list of sub-contexts shows: a screen
-        /// in the screen colour, a connector in the connector's, and nothing at all for a context
-        /// that is neither.
+        /// The badge a row wears, the same one the Root's own list of sub-contexts shows - SCREEN,
+        /// CONNECTOR, or what a service's sub-context configures, POOL - and nothing for any other.
         /// </summary>
         private void KindOf(Type type, out string badge, out Color color)
         {
-            bool proSkin = EditorGUIUtility.isProSkin;
+            _badge ??= new SubContextBadge(_declarations ?? new ScreenSubContextDeclarations(), _roles, _palette,
+                new SubContextSettingsTypes());
 
-            if (_declarations != null && _declarations.IsScreenContext(type))
-            {
-                badge = "SCREEN";
-                color = _palette.Accent(FlowRole.Screen, proSkin);
-                return;
-            }
-
-            if (_roles.IsConnector(type))
-            {
-                badge = "CONNECTOR";
-                color = _palette.Accent(FlowRole.Connector, proSkin);
-                return;
-            }
-
-            badge = null;
-            color = Color.clear;
+            _badge.TryGet(type, out badge, out color);
         }
 
         private void EnsureStyles()

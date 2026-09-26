@@ -56,7 +56,7 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                 + "is what it reaches for when one particular kind of work comes up, and it can "
                 + "afford to be longer. One folder per skill, under .claude/skills.");
             painter.Bullet(
-                "flowioc-data-types - the CD_, RD_, PD_, ED_ and DD_ prefixes, the VO suffix family "
+                "flowioc-data-types - the CD_, RD_, SD_, ED_ and DD_ prefixes, the VO suffix family "
                 + "that goes with them, which folder each kind belongs in, and the prefix an asset file "
                 + "takes.");
             painter.Bullet(

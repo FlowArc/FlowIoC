@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FlowIoC.PoolModule.Data.UnityObjects
 {
-    [CreateAssetMenu(fileName = "PoolGroup", menuName = "FlowIoC/PoolModule/Data/CD_PoolGroup", order = 1)]
+    [CreateAssetMenu(fileName = "Pool_New", menuName = "FlowIoC/PoolModule/Data/CD_PoolGroup", order = 1)]
     public class CD_PoolGroup : ScriptableObject
     {
         [SerializeField]

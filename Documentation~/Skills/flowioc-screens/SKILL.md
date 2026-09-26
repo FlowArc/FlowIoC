@@ -93,7 +93,7 @@ internal class OpenShopScreenCommand : Command
             // Read first: what the screen shows is published data - a Shared asset here, the
             // module's own Model when the data is the screen module's.
             CD_Shop shop = _sharedData.GetScriptable<CD_Shop>();
-            PD_Player player = _sharedData.GetScriptable<PD_Player>();
+            SD_Player player = _sharedData.GetScriptable<SD_Player>();
 
             if (shop == null || player == null)
             {

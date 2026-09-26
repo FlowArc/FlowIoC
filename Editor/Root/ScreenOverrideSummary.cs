@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using FlowIoC.BaseModule.Root;
+using FlowIoC.ScreenModule.Data;
 
 namespace FlowIoC.Editor.Root
 {
@@ -12,10 +13,10 @@ namespace FlowIoC.Editor.Root
     {
         internal string For(SubContextData data)
         {
-            if (!data.OverrideScreen)
+            if (data.Settings is not ScreenSubContextSettingsCVO screen || !screen.Override)
                 return string.Empty;
 
-            return $"M{data.ScreenManagerId} L{data.ScreenLayer}";
+            return $"M{screen.ManagerId} L{screen.Layer}";
         }
     }
 }

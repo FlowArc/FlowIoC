@@ -14,6 +14,7 @@ namespace FlowIoC.BaseModule.Contexts
     public class Context : IContext
     {
         private GameObject _gameObject;
+        private bool _boundGameObjectAcross;
         private SignalParamResolver _signalParamResolver;
         public bool IsStarted { get; set; }
         public MediationBinder MediationBinder { get; set; }
@@ -116,7 +117,15 @@ namespace FlowIoC.BaseModule.Contexts
             CommandBinder = InjectionBinder.Bind<ICommandBinder, CommandBinder>();
             ((CommandBinder) CommandBinder).Context = this;
 
-            InjectionBinderCrossContext.BindInstance<GameObject>(_gameObject, GetType().Name);
+            // A context listed on two Roots - a pool sub-context on every module with pools - has
+            // one name for two GameObjects. The first binds it and the rest leave it, rather than
+            // each warning of a same injection; only the one that bound it takes it back.
+            if (!InjectionBinderCrossContext.HasBinding<GameObject>(GetType().Name))
+            {
+                InjectionBinderCrossContext.BindInstance<GameObject>(_gameObject, GetType().Name);
+                _boundGameObjectAcross = true;
+            }
+
             InjectionBinder.BindInstance<GameObject>(_gameObject, nameof(IContext));
 
             if (!InjectionBinderCrossContext.HasBinding<IUpdateProvider>())
@@ -169,7 +178,12 @@ namespace FlowIoC.BaseModule.Contexts
             CommandBinder?.UnBindAll();
             InjectionBinder?.UnBindAll();
 
-            InjectionBinderCrossContext?.UnBind<GameObject>(GetType().Name);
+            if (_boundGameObjectAcross)
+            {
+                InjectionBinderCrossContext?.UnBind<GameObject>(GetType().Name);
+                _boundGameObjectAcross = false;
+            }
+
             InjectionBinderCrossContext?.UnBindAllBoundBy(this);
         }
 

@@ -1,44 +1,28 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using FlowIoC.BaseModule.Attributes;
-using FlowIoC.BaseModule.Constructables;
-using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using FlowIoC.PoolModule.Data.ValueObjects;
-using FlowIoC.PoolModule.Entities;
-using FlowIoC.PoolModule.RootsContexts;
-using UnityEngine;
 
 namespace FlowIoC.PoolModule.Models.Config
 {
-    internal class PoolConfigModel : IPoolConfigModel, IConstructable
+    /// <summary>
+    /// The groups the modules registered. Nothing is read at construction: every group arrives
+    /// from a PoolSubContext on the Root of the module that uses it.
+    /// </summary>
+    internal class PoolConfigModel : IPoolConfigModel
     {
-        [Inject(nameof(PoolServiceContext))] private GameObject _root { get; set; }
-
         [ShowInModelViewer] private readonly Dictionary<string, PoolItemBaseCVO> _itemConfigMap = new(); // itemKey -> itemConfig
         [ShowInModelViewer] private readonly Dictionary<string, string> _itemToGroupConfigMap = new(); // itemKey -> groupConfigKey
         [ShowInModelViewer] private readonly Dictionary<string, PoolGroupCVO> _groupConfigMap = new(); // groupConfigKey -> groupConfig
 
-        public void PostConstruct()
-        {
-            var adapter = _root.GetComponent<PoolRootAdapter>();
-            if (adapter == null) return;
-
-            foreach (var kvp in adapter.PoolGroups)
-            {
-                var group = kvp.Key;
-                var groupConfig = kvp.Value;
-                if (groupConfig == null || groupConfig.Group == null)
-                {
-                    FlowLogger.LogError(SystemLogType.Pool, $"There is a null PoolGroupConfig:({group}) in PoolRootAdapter({_root.name})!!!");
-                    continue;
-                }
-
-                AddGroupConfig(group, groupConfig);
-            }
-        }
-        
         private void AddGroupConfig(string group, PoolGroupCVO entry)
         {
+            if (entry.Group == null)
+            {
+                FlowLogger.LogError(SystemLogType.Pool, $"[PoolConfigModel.AddGroupConfig][group({group})] has no CD_PoolGroup.");
+                return;
+            }
+
             if (!_groupConfigMap.ContainsKey(group))
                 _groupConfigMap.Add(group, entry);
 
@@ -81,8 +65,5 @@ namespace FlowIoC.PoolModule.Models.Config
         public bool IsGroupConfigExist(string groupConfigKey) => _groupConfigMap.ContainsKey(groupConfigKey);
         public void RegisterPoolConfig(KeyValuePair<string, PoolGroupCVO> config) => AddGroupConfig(config.Key, config.Value);
         public void UnregisterPoolConfig(KeyValuePair<string, PoolGroupCVO> config) => RemoveGroupConfig(config.Key);
-        public bool IsPostConstructed { get; set; }
-        public bool IsDeconstructed { get; set; }
-
     }
 }

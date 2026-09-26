@@ -61,7 +61,7 @@ namespace FlowIoC.Editor.ScreenScanner
                 SceneName = root.gameObject.scene.name,
                 Declaration = declaration,
                 Effective = Effective(entry, declaration),
-                IsOverridden = entry.OverrideScreen,
+                IsOverridden = entry.Settings is ScreenSubContextSettingsCVO { Override: true },
                 DeclarationError = error
             };
         }
@@ -73,17 +73,17 @@ namespace FlowIoC.Editor.ScreenScanner
         /// </summary>
         private ScreenCVO Effective(SubContextData entry, ScreenCVO declaration)
         {
-            if (!entry.OverrideScreen)
+            if (entry.Settings is not ScreenSubContextSettingsCVO { Override: true } screen)
                 return declaration;
 
             return new ScreenCVO
             {
                 Load = declaration?.Load ?? default,
-                ManagerId = entry.ScreenManagerId,
-                Layer = entry.ScreenLayer,
-                Tag = entry.ScreenTag,
-                HasShowAnimation = entry.ScreenHasShowAnimation,
-                HasHideAnimation = entry.ScreenHasHideAnimation
+                ManagerId = screen.ManagerId,
+                Layer = screen.Layer,
+                Tag = screen.Tag,
+                HasShowAnimation = screen.HasShowAnimation,
+                HasHideAnimation = screen.HasHideAnimation
             };
         }
     }

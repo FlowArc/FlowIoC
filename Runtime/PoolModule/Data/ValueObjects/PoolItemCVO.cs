@@ -7,10 +7,8 @@ namespace FlowIoC.PoolModule.Data.ValueObjects
     [Serializable]
     public class PoolItemCVO : PoolItemBaseCVO
     {
-        [Header("Asset Config - Direct Prefab")]
         public GameObject Prefab;
 
-        [Header("Asset Config - Addressable Prefab")]
         public AssetReferenceSpawnableObject AddressablePrefab;
 
         public override object Asset => IsAddressable ? (object)AddressablePrefab : Prefab;

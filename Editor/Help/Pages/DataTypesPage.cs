@@ -24,14 +24,14 @@ namespace FlowIoC.Editor.Help.Pages
             new HelpTreeNode("UnityObjects", "the ScriptableObject assets",
                 new HelpTreeNode("CD_Maps", "config data - authored in the Editor, constant at runtime"),
                 new HelpTreeNode("RD_MapPool", "runtime data - produced by play, gone when it stops"),
-                new HelpTreeNode("PD_Maps", "player data - loaded at startup, saved again on every change"),
+                new HelpTreeNode("SD_Maps", "saveable data - loaded at startup, saved again on every change"),
                 new HelpTreeNode("ED_MapTools", "editor data - only editor tooling reads it"),
                 new HelpTreeNode("DD_Maps", "database data - a copy of what a backend owns")),
             new HelpTreeNode("ValueObjects", "the plain classes those assets are built out of",
                 new HelpTreeNode("MapVO", "belongs to no one asset - a payload, a return shape"),
                 new HelpTreeNode("MapCVO", "what CD_Maps holds"),
                 new HelpTreeNode("MapRVO", "what RD_MapPool holds"),
-                new HelpTreeNode("MapPVO", "what PD_Maps holds"),
+                new HelpTreeNode("MapSVO", "what SD_Maps holds"),
                 new HelpTreeNode("MapEVO", "what ED_MapTools holds"),
                 new HelpTreeNode("MapDVO", "what DD_Maps holds")));
 
@@ -61,7 +61,8 @@ namespace FlowIoC.Editor.Help.Pages
             new[] {"Timeline", "Timeline_", "Timeline_Intro"},
             new[] {"Physics Material", "PhysicsMat_", "PhysicsMat_Ice"},
             new[] {"Volume Profile", "Volume_", "Volume_Night"},
-            new[] {"Font, and its TextMesh Pro asset", "Font_", "Font_Lexend_Bold_SDF"}
+            new[] {"Font, and its TextMesh Pro asset", "Font_", "Font_Lexend_Bold_SDF"},
+            new[] {"Pool group, a CD_PoolGroup asset", "Pool_", "Pool_Forest"}
         };
 
         private readonly HelpImages _images = new HelpImages();
@@ -101,7 +102,7 @@ namespace FlowIoC.Editor.Help.Pages
                 new[] {"RD_", "runtime data", "Play produces it, and nothing keeps it once play stops."},
                 new[]
                 {
-                    "PD_", "player data",
+                    "SD_", "saveable data",
                     "It is loaded at startup and written back to the save system whenever it changes."
                 },
                 new[]
@@ -254,15 +255,15 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Separator();
             painter.SubHeading("A test scene's own values");
             painter.Paragraph(
-                "An asset's own values ship, and a PD_ asset's are what a new player starts with. A test "
+                "An asset's own values ship, and an SD_ asset's are what a new player starts with. A test "
                 + "scene that needs a state of its own - always level 10 - keeps a copy in its test "
                 + "module's Scriptables folder, named after the original with the test's suffix "
-                + "(PD_Player_Test, the way the Loading test module keeps CD_LoadingSets_Test), and files "
+                + "(SD_Player_Test, the way the Loading test module keeps CD_LoadingSets_Test), and files "
                 + "it on that scene's Roots in place of the original, so the modules read it the way the "
                 + "game does. It does not edit the original, and it does not put a Level field on its "
                 + "test Root.");
             painter.Note(
-                "Important: a scene that files a PD_ copy ticks IsTest on its LocalSaveServiceRoot. "
+                "Important: a scene that files an SD_ copy ticks IsTest on its LocalSaveServiceRoot. "
                 + "Left unticked, the save file is read over the copy and the copy's values are written "
                 + "into your save; ticked, the save is neither read nor written, and the copy is back to "
                 + "its own values after every Play.");
@@ -299,7 +300,7 @@ namespace FlowIoC.Editor.Help.Pages
         {
             painter.Rule("The suffix inside an asset matches the prefix on it.");
             painter.Paragraph(
-                "CD_Maps holds MapCVO, PD_Maps holds MapPVO. Mixing them breaks the one thing the "
+                "CD_Maps holds MapCVO, SD_Maps holds MapSVO. Mixing them breaks the one thing the "
                 + "convention buys you: reading a name and knowing the lifetime.");
 
             painter.Space();
@@ -337,8 +338,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.SubHeading("What goes wrong");
             painter.Bullet("MapData, MapConfig, MapSO. A descriptive name says nothing about lifetime; the suffix family is the convention.");
             painter.Bullet(
-                "Writing to a CD_ asset at runtime. Config is constant - if it changes during play it is RD_, and if it must survive a restart it is PD_.");
-            painter.Bullet("A CVO list inside a PD_ asset. The suffix has to match the asset it lives in.");
+                "Writing to a CD_ asset at runtime. Config is constant - if it changes during play it is RD_, and if it must survive a restart it is SD_.");
+            painter.Bullet("A CVO list inside an SD_ asset. The suffix has to match the asset it lives in.");
             painter.Bullet(
                 "A data class dropped anywhere. It belongs in Data/UnityObjects or Data/ValueObjects; the generators and the namespace tools depend on it.");
 
@@ -379,6 +380,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "the FBX has no rig and RM_ that it has one.");
             painter.Bullet("A material named after its shader. MT_Grass is named after what it dresses.");
             painter.Bullet("A prefab variant unpacked or made a base prefab keeps PBV_. Rename it with the change.");
+            painter.Bullet("CD_PoolGroup_Forest. The class is CD_PoolGroup; a pool group asset is Pool_Forest.");
 
             painter.Separator();
             painter.SubHeading("What keeps its own name");

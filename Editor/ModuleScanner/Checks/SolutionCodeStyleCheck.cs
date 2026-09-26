@@ -8,7 +8,7 @@ using UnityEngine;
 namespace FlowIoC.Editor.ModuleScanner
 {
     /// <summary>
-    /// The solution-wide .sln.DotSettings: the naming rules, the CD_/RD_/PD_ prefixes and the
+    /// The solution-wide .sln.DotSettings: the naming rules, the CD_/RD_/SD_ prefixes and the
     /// VO/CVO/RVO suffixes the project is written against. It is generated from the package's
     /// template rather than edited by hand, so a difference means the template moved on.
     ///

@@ -19,7 +19,7 @@ namespace FlowIoC.ScreenModule.RootsContexts
     /// package - a screen context derives from ScreenSubContext&lt;TView, TMediator&gt;, which
     /// supplies it.
     /// </summary>
-    public abstract class ScreenSubContextBase : Context, ISubContextOverridable
+    public abstract class ScreenSubContextBase : Context, ISubContextConfigurable<ScreenSubContextSettingsCVO>
     {
         protected IScreenService _screenService;
 
@@ -49,9 +49,9 @@ namespace FlowIoC.ScreenModule.RootsContexts
         /// Load is copied from the declaration rather than taken from the entry: where a prefab
         /// lives is the module's business and not the scene's, and this is where that is enforced.
         /// </summary>
-        void ISubContextOverridable.ApplyOverride(in SubContextData data)
+        void ISubContextConfigurable.Configure(SubContextSettingsCVO settings)
         {
-            if (!data.OverrideScreen)
+            if (settings is not ScreenSubContextSettingsCVO screen || !screen.Override)
                 return;
 
             ScreenCVO declaration = Screen;
@@ -59,11 +59,11 @@ namespace FlowIoC.ScreenModule.RootsContexts
             _resolved = new ScreenCVO
             {
                 Load = declaration.Load,
-                ManagerId = data.ScreenManagerId,
-                Layer = data.ScreenLayer,
-                Tag = data.ScreenTag,
-                HasShowAnimation = data.ScreenHasShowAnimation,
-                HasHideAnimation = data.ScreenHasHideAnimation
+                ManagerId = screen.ManagerId,
+                Layer = screen.Layer,
+                Tag = screen.Tag,
+                HasShowAnimation = screen.HasShowAnimation,
+                HasHideAnimation = screen.HasHideAnimation
             };
         }
 

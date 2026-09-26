@@ -23,6 +23,8 @@ namespace FlowIoC.Editor.Root
         private RootDirtyMarker _dirtyMarker;
         private SubContextEntryStates _entryStates;
         private SubContextNameSync _nameSync;
+        private SubContextSettingsTypes _settingsTypes;
+        private SubContextBadge _badge;
 
         private FlowPalette _palette;
         private FlowRoleResolver _roles;
@@ -67,6 +69,7 @@ namespace FlowIoC.Editor.Root
             // compiled, and a recompile must not be answered from a cache taken before it.
             _entryStates = new SubContextEntryStates();
             _nameSync = new SubContextNameSync();
+            _settingsTypes = new SubContextSettingsTypes();
 
             _painter = new FlowRowPainter();
             _palette = new FlowPalette();
@@ -75,6 +78,7 @@ namespace FlowIoC.Editor.Root
             _helpState = new FlowHelpState();
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
             _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
+            _badge = new SubContextBadge(_declarations, _roles, _palette, _settingsTypes);
         }
 
         /// <summary>
@@ -120,7 +124,8 @@ namespace FlowIoC.Editor.Root
         {
             serializedObject.Update();
 
-            DrawPropertiesExcluding(serializedObject, "m_Script");
+            // The sub-context list is drawn by GUI_SubContexts, entry by entry.
+            DrawPropertiesExcluding(serializedObject, "m_Script", nameof(RootBase.SubContextTypes));
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -258,6 +263,7 @@ namespace FlowIoC.Editor.Root
                             WriteSubContext(ii, contextData);
 
                         GUI_ScreenOverride(ii, contextData);
+                        GUI_Settings(ii, contextData, _declarations.ResolveType(contextData.ContextFullName));
 
                         EditorGUI.indentLevel--;
                     }
@@ -303,24 +309,12 @@ namespace FlowIoC.Editor.Root
         {
             Type contextType = _declarations.ResolveType(contextData.ContextFullName);
 
-            string badge = string.Empty;
-            Color color = Color.clear;
-
-            if (_declarations.IsScreenContext(contextType))
-            {
-                badge = "SCREEN";
-                color = _palette.Accent(FlowRole.Screen, EditorGUIUtility.isProSkin);
-            }
-            else if (_roles.IsConnector(contextType))
-            {
-                badge = "CONNECTOR";
-                color = _palette.Accent(FlowRole.Connector, EditorGUIUtility.isProSkin);
-            }
+            _badge.TryGet(contextType, out string badge, out Color color);
 
             Color previous = GUI.color;
             GUI.color = color;
 
-            EditorGUILayout.LabelField(badge, EditorStyles.miniBoldLabel, GUILayout.Width(68));
+            EditorGUILayout.LabelField(badge ?? string.Empty, EditorStyles.miniBoldLabel, GUILayout.Width(68));
 
             GUI.color = previous;
         }
@@ -376,21 +370,27 @@ namespace FlowIoC.Editor.Root
             else
                 EditorGUILayout.HelpBox(error, MessageType.Warning);
 
+            ScreenSubContextSettingsCVO screen = contextData.Settings as ScreenSubContextSettingsCVO;
+            bool overridden = screen != null && screen.Override;
+
             EditorGUI.BeginChangeCheck();
-            bool overrideScreen = EditorGUILayout.Toggle(new GUIContent("Override Screen"), contextData.OverrideScreen);
+            bool overrideScreen = EditorGUILayout.Toggle(new GUIContent("Override Screen"), overridden);
 
             if (EditorGUI.EndChangeCheck())
             {
-                bool turnedOn = overrideScreen && !contextData.OverrideScreen;
-                contextData.OverrideScreen = overrideScreen;
+                // A new instance rather than the entry's own, so Undo records the entry as it was.
+                ScreenSubContextSettingsCVO edited = overrideScreen && read
+                    ? _seed.Apply(screen, declaration)
+                    : screen?.Copy() ?? new ScreenSubContextSettingsCVO();
 
-                if (turnedOn && read)
-                    contextData = _seed.Apply(contextData, declaration);
+                edited.Override = overrideScreen;
+                contextData.Settings = edited;
 
                 WriteSubContext(index, contextData);
+                return;
             }
 
-            if (!contextData.OverrideScreen)
+            if (!overridden)
             {
                 if (read)
                     GUI_DeclaredScreenValues(declaration);
@@ -400,14 +400,144 @@ namespace FlowIoC.Editor.Root
 
             EditorGUI.BeginChangeCheck();
 
-            contextData.ScreenManagerId = EditorGUILayout.IntField("Manager Id", contextData.ScreenManagerId);
-            contextData.ScreenLayer = EditorGUILayout.IntField("Layer", contextData.ScreenLayer);
-            contextData.ScreenTag = (ScreenTag) EditorGUILayout.EnumPopup("Tag", contextData.ScreenTag);
-            contextData.ScreenHasShowAnimation = EditorGUILayout.Toggle("Has Show Animation", contextData.ScreenHasShowAnimation);
-            contextData.ScreenHasHideAnimation = EditorGUILayout.Toggle("Has Hide Animation", contextData.ScreenHasHideAnimation);
+            int managerId = EditorGUILayout.IntField("Manager Id", screen.ManagerId);
+            int layer = EditorGUILayout.IntField("Layer", screen.Layer);
+            ScreenTag tag = (ScreenTag) EditorGUILayout.EnumPopup("Tag", screen.Tag);
+            bool show = EditorGUILayout.Toggle("Has Show Animation", screen.HasShowAnimation);
+            bool hide = EditorGUILayout.Toggle("Has Hide Animation", screen.HasHideAnimation);
 
-            if (EditorGUI.EndChangeCheck())
-                WriteSubContext(index, contextData);
+            if (!EditorGUI.EndChangeCheck())
+                return;
+
+            ScreenSubContextSettingsCVO values = screen.Copy();
+            values.ManagerId = managerId;
+            values.Layer = layer;
+            values.Tag = tag;
+            values.HasShowAnimation = show;
+            values.HasHideAnimation = hide;
+            contextData.Settings = values;
+
+            WriteSubContext(index, contextData);
+        }
+
+        /// <summary>
+        /// The settings of any other configurable sub-context - a module's pool groups - drawn from
+        /// their serialized fields. An entry with none, or with another context's, offers to create
+        /// the right ones rather than drawing nothing: its context would otherwise run unconfigured.
+        /// </summary>
+        private void GUI_Settings(int index, SubContextData contextData, Type contextType)
+        {
+            Type settingsType = _settingsTypes.For(contextType);
+
+            if (settingsType == null || _declarations.IsScreenContext(contextType))
+                return;
+
+            bool carries = contextData.Settings != null && contextData.Settings.GetType() == settingsType;
+
+            SerializedProperty settings = null;
+
+            if (carries)
+            {
+                serializedObject.Update();
+
+                settings = serializedObject.FindProperty(nameof(RootBase.SubContextTypes))
+                    .GetArrayElementAtIndex(index)
+                    .FindPropertyRelative(nameof(SubContextData.Settings));
+            }
+
+            // Folds on its own, the way the screen block does, and says how much it holds while
+            // folded.
+            int rootId = _root.GetInstanceID();
+            string summary = carries ? SettingsSummary(settings) : string.Empty;
+            string title = _settingsTypes.Title(settingsType);
+            string label = string.IsNullOrEmpty(summary) ? title : $"{title}  ({summary})";
+
+            bool wasExpanded = _foldouts.IsSettingsExpanded(rootId, contextData.ContextFullName);
+            bool expanded = EditorGUILayout.Foldout(wasExpanded, new GUIContent(label), true);
+
+            if (expanded != wasExpanded)
+                _foldouts.SetSettingsExpanded(rootId, contextData.ContextFullName, expanded);
+
+            if (!expanded)
+                return;
+
+            EditorGUI.indentLevel++;
+            GUI_SettingsBody(index, contextData, contextType, settingsType, settings);
+            EditorGUI.indentLevel--;
+        }
+
+        private void GUI_SettingsBody(int index, SubContextData contextData, Type contextType, Type settingsType,
+            SerializedProperty settings)
+        {
+            if (settings == null)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox("This entry carries no " + settingsType.Name + ".", MessageType.Warning);
+
+                if (GUILayout.Button("Create", _gui.EntryAction, GUILayout.Width(60)))
+                {
+                    contextData.Settings = _settingsTypes.NewFor(contextType);
+                    WriteSubContext(index, contextData);
+                }
+
+                EditorGUILayout.EndHorizontal();
+                return;
+            }
+
+            SerializedProperty field = settings.Copy();
+            SerializedProperty end = settings.GetEndProperty();
+
+            if (field.NextVisible(true))
+            {
+                do
+                {
+                    if (SerializedProperty.EqualContents(field, end))
+                        break;
+
+                    EditorGUILayout.PropertyField(field, true);
+                }
+                while (field.NextVisible(false));
+            }
+
+            if (serializedObject.ApplyModifiedProperties() && !Application.isPlaying)
+                MarkDirty();
+        }
+
+        /// <summary>
+        /// How many the settings' first list or dictionary holds - "2 groups" - so a folded block
+        /// still says whether it is empty. Settings with no collection say nothing.
+        /// </summary>
+        private string SettingsSummary(SerializedProperty settings)
+        {
+            SerializedProperty field = settings.Copy();
+            SerializedProperty end = settings.GetEndProperty();
+
+            if (!field.NextVisible(true))
+                return string.Empty;
+
+            do
+            {
+                if (SerializedProperty.EqualContents(field, end))
+                    break;
+
+                SerializedProperty keys = field.FindPropertyRelative("m_Keys");
+                int? count = keys != null ? keys.arraySize
+                    : field.isArray && field.propertyType != SerializedPropertyType.String ? field.arraySize
+                    : (int?) null;
+
+                if (count.HasValue)
+                {
+                    // "Groups" names the list; one of them is a group.
+                    string noun = ObjectNames.NicifyVariableName(field.name).ToLowerInvariant();
+                    if (count.Value == 1 && noun.EndsWith("s"))
+                        noun = noun.Substring(0, noun.Length - 1);
+
+                    return $"{count.Value} {noun}";
+                }
+            }
+            while (field.NextVisible(false));
+
+            return string.Empty;
         }
 
         private void GUI_DeclaredScreenValues(ScreenCVO declaration)

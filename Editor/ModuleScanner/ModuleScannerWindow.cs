@@ -36,7 +36,7 @@ namespace FlowIoC.Editor.ModuleScanner
         private const float FINDING_INDENT = 26f;
         private const float STATUS_WIDTH = 55f;
 
-        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1250)]
+        [MenuItem("Tools/FlowIoC/" + TITLE, false, -1251)]
         internal static void Open()
         {
             ModuleScannerWindow window = GetWindow<ModuleScannerWindow>(TITLE);
