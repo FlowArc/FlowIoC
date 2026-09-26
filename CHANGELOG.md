@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A module panel's section can fold**: `painter.HeadingFoldable(text, actions)` draws the heading
   with a triangle and returns whether it is open; its buttons work while it is shut.
 
+### Fixed
+
+- **A package update writes the agent rules, the skills and the solution code style** even with
+  the Editor unfocused and without a restart; they used to stay on the old version.
+
 ## [1.26.1] - 2026-09-26
 
 ### Added

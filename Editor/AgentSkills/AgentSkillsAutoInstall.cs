@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using FlowIoC.Editor.AgentRules;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FlowIoC.Editor.AgentSkills
@@ -12,13 +13,38 @@ namespace FlowIoC.Editor.AgentSkills
     /// <summary>
     /// Holds the one instance Unity's load callback needs. Unity forces this entry point to be
     /// static; everything it does lives on <see cref="AgentSkillsStartup"/>.
+    ///
+    /// EditorApplication.update rather than delayCall, for the reason the agent rules give:
+    /// delayCall does not fire while the Editor sits unfocused, so a package update there left
+    /// the skills on the old version.
     /// </summary>
     [InitializeOnLoad]
     internal static class AgentSkillsStartupHook
     {
         static AgentSkillsStartupHook()
         {
-            EditorApplication.delayCall += () => new AgentSkillsStartup().Run();
+            Schedule();
+
+            // A package update that changes no code reloads nothing, so the load above never
+            // sees it. The Package Manager says when a package was registered; run again then.
+            Events.registeredPackages -= OnRegisteredPackages;
+            Events.registeredPackages += OnRegisteredPackages;
+        }
+
+        private static void OnRegisteredPackages(PackageRegistrationEventArgs args) => Schedule();
+
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new AgentSkillsStartup().Run();
         }
     }
 

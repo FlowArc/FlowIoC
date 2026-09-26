@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FlowIoC.Editor.AgentRules
@@ -11,13 +12,39 @@ namespace FlowIoC.Editor.AgentRules
     /// <summary>
     /// Holds the one instance Unity's load callback needs. Unity forces this entry point to be
     /// static; everything it does lives on <see cref="AgentRulesStartupSync"/>.
+    ///
+    /// EditorApplication.update rather than delayCall, for the reason the migration bootstrap
+    /// gives: delayCall is pumped by the GUI loop and does not fire while the Editor sits
+    /// unfocused. A package updated in an Editor on another screen then reloaded and left the
+    /// rules on the old version, while the project files, run from an update tick, followed it.
     /// </summary>
     [InitializeOnLoad]
     internal static class AgentRulesStartupHook
     {
         static AgentRulesStartupHook()
         {
-            EditorApplication.delayCall += () => new AgentRulesStartupSync().Run();
+            Schedule();
+
+            // A package update that changes no code reloads nothing, so the load above never
+            // sees it. The Package Manager says when a package was registered; run again then.
+            Events.registeredPackages -= OnRegisteredPackages;
+            Events.registeredPackages += OnRegisteredPackages;
+        }
+
+        private static void OnRegisteredPackages(PackageRegistrationEventArgs args) => Schedule();
+
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new AgentRulesStartupSync().Run();
         }
     }
 

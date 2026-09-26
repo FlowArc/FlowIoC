@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using FlowIoC.Editor.AgentRules;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FlowIoC.Editor.CodeStyle
@@ -11,13 +12,37 @@ namespace FlowIoC.Editor.CodeStyle
     /// <summary>
     /// Holds the one instance Unity's load callback needs. Unity forces this entry point to be
     /// static; everything it does lives on <see cref="SolutionCodeStyleStartup"/>.
+    ///
+    /// EditorApplication.update rather than delayCall, for the reason the agent rules give:
+    /// delayCall does not fire while the Editor sits unfocused.
     /// </summary>
     [InitializeOnLoad]
     internal static class SolutionCodeStyleStartupHook
     {
         static SolutionCodeStyleStartupHook()
         {
-            EditorApplication.delayCall += () => new SolutionCodeStyleStartup().Run();
+            Schedule();
+
+            // A package update that changes no code reloads nothing, so the load above never
+            // sees it. The Package Manager says when a package was registered; run again then.
+            Events.registeredPackages -= OnRegisteredPackages;
+            Events.registeredPackages += OnRegisteredPackages;
+        }
+
+        private static void OnRegisteredPackages(PackageRegistrationEventArgs args) => Schedule();
+
+        private static void Schedule()
+        {
+            EditorApplication.update -= RunOnce;
+            EditorApplication.update += RunOnce;
+        }
+
+        private static void RunOnce()
+        {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
+
+            EditorApplication.update -= RunOnce;
+            new SolutionCodeStyleStartup().Run();
         }
     }
 
@@ -38,22 +63,20 @@ namespace FlowIoC.Editor.CodeStyle
     /// folder renamed once - a game cloned from a template repository is the common case - leaves
     /// the old solution's file beside the new one, and Rider goes on reading whichever it opens.
     /// The Module Scanner reports and sweeps the same file; this is the sweep nobody has to ask for.
+    ///
+    /// There is deliberately no session guard, for the reason the agent rules have none: whether
+    /// the file is current is answered by reading it, and a run that finds it correct writes
+    /// nothing. A guard kept in SessionState outlived the domain reload of a package update, so a
+    /// project updated inside one session kept the old rules until the Editor restarted.
     /// </summary>
     internal class SolutionCodeStyleStartup
     {
-        private const string SessionKey = "FlowIoC.SolutionCodeStyle.Written";
-
         internal void Run()
         {
             // A batch run has no one to write for and no business editing the workspace it was
             // handed - the same line the agent skills install draws.
             if (Application.isBatchMode)
                 return;
-
-            if (SessionState.GetBool(SessionKey, false))
-                return;
-
-            SessionState.SetBool(SessionKey, true);
 
             SolutionCodeStyleReport report = new SolutionCodeStyleAutoInstall(
                 new ProjectRoot().Resolve(),
