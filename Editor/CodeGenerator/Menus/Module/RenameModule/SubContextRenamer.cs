@@ -111,7 +111,13 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
 
             bool changed = false;
 
-            foreach (RootBase root in Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+#if UNITY_6000_4_OR_NEWER
+            RootBase[] roots = Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include);
+#else
+            RootBase[] roots = Object.FindObjectsByType<RootBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#endif
+
+            foreach (RootBase root in roots)
             {
                 if (root.gameObject.scene != scene) continue;
 
