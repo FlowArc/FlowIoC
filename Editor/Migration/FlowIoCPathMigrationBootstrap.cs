@@ -18,7 +18,7 @@ namespace FlowIoC.Editor.Migration
     /// the two are one pass: the migration rewrites what the parts are referenced as and deletes
     /// the files an older FlowIoC wrote, and the generator writes the parts under the new name and
     /// sweeps the old ones - all before assemblies reload, or the compile between would see a
-    /// reference with nothing declaring it. The screen config migrator needs the same footing.
+    /// reference with nothing declaring it.
     /// </summary>
     internal static class FlowIoCPathMigrationBootstrap
     {
@@ -36,7 +36,6 @@ namespace FlowIoC.Editor.Migration
             EditorApplication.update -= Run;
 
             FlowModuleGenerator.Generate();
-            new ScreenConfigMigrator().MigrateIfNeeded();
         }
     }
 }

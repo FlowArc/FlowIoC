@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FlowIoC.BaseModule.Root
 {
@@ -45,28 +44,5 @@ namespace FlowIoC.BaseModule.Root
         /// predates its context taking settings, or its context takes none.
         /// </summary>
         [SerializeReference] public SubContextSettingsCVO Settings;
-
-        // The screen override as it was stored before it moved into the entry's settings. Read
-        // once, by RootBase.OnAfterDeserialize, which moves a ticked override into a
-        // ScreenSubContextSettingsCVO and clears these. Kept for one release so a scene saved
-        // under the old shape keeps its screens where they were; remove with that migration.
-        [SerializeField, HideInInspector, FormerlySerializedAs("OverrideScreen")]
-        internal bool LegacyOverrideScreen;
-
-        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenManagerId")]
-        internal int LegacyScreenManagerId;
-
-        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenLayer")]
-        internal int LegacyScreenLayer;
-
-        /// <summary>The ScreenTag, read as the int Unity stores an enum as.</summary>
-        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenTag")]
-        internal int LegacyScreenTag;
-
-        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenHasShowAnimation")]
-        internal bool LegacyScreenHasShowAnimation;
-
-        [SerializeField, HideInInspector, FormerlySerializedAs("ScreenHasHideAnimation")]
-        internal bool LegacyScreenHasHideAnimation;
     }
 }

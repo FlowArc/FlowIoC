@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace FlowIoC.BaseModule.Root
 {
-    public class RootBase : MonoBehaviour, IRoot, ISerializationCallbackReceiver
+    public class RootBase : MonoBehaviour, IRoot
     {
         /// <summary>
         /// Not HideInInspector: the flag hides every child with it, and the Root's inspector draws
@@ -99,31 +99,6 @@ namespace FlowIoC.BaseModule.Root
 
         public virtual void StartContext(bool forceToStart = false)
         {
-        }
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-        }
-
-        /// <summary>
-        /// Moves a screen override stored in the entry's old flat fields into its settings, so a
-        /// scene saved before the override moved keeps its screens where they were. Remove with the
-        /// legacy fields on SubContextData.
-        /// </summary>
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            if (SubContextTypes == null)
-                return;
-
-            LegacyScreenOverride legacy = new LegacyScreenOverride();
-
-            for (int index = 0; index < SubContextTypes.Count; index++)
-            {
-                SubContextData entry = SubContextTypes[index];
-
-                if (legacy.TryMigrate(ref entry))
-                    SubContextTypes[index] = entry;
-            }
         }
 
         public virtual void InitializeSubContexts()
