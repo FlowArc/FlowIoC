@@ -173,7 +173,10 @@ public override void Execute()
 
 ## Every path out of a retained Command ends in `Release()` or `Stop()`
 
-**A retain nobody resolves hangs the group for ever. There is no timeout and nothing is logged.**
+**A retain nobody resolves hangs the group for ever. Nothing resolves it for you: after 10 seconds a
+warning names the Command, and Play's end lists every step still retained.** A step that waits
+longer on purpose - an ad, the player's tap - carries `[LongRetain(seconds)]`, or `[LongRetain]`
+when its wait has no bound.
 
 An `await` has three ways out and only one of them is the one everybody writes. The work came back
 with nothing, and the work threw, are the other two. A throw is the worse of the pair: it leaves
@@ -414,7 +417,12 @@ Bind these rather than writing your own.
 
 ## What goes wrong
 
-- **A retained Command with a path that resolves nothing.** The group hangs, silently and for ever.
+- **A retained Command with a path that resolves nothing.** The group hangs for ever; a warning
+  names the Command after 10 seconds.
+- **A Command that waits without retaining.** It is back in its pool as soon as `Execute` returns,
+  and a pooled Command holds none of its injections in the Editor: its hook or delayed call throws a
+  `NullReferenceException` and a warning names the Command. Code after its own `Release()` is on a
+  pooled instance too - read what it needs into a local first.
 - **A field instead of a property** under `[Inject]`, `[InjectSignal]` or `[SignalParam]`. Skipped
   without a word; null at runtime.
 - **Expecting the signal's payload in `Execute`.** It arrives through `[SignalParam]`; a

@@ -770,9 +770,18 @@ public class SavePlayerCommand : Command<IPlayerModel>
 
 **Every way out of a retained command resolves the retain**, and an `await` has three
 of them: the work returned, the work came back with nothing, and the work threw. A
-retain nobody resolves hangs the group for ever — there is no timeout and nothing is
-logged, and with `async void` a throw leaves `Execute` at the `await` line and surfaces
+retain nobody resolves hangs the group for ever — nothing resolves it for you, but after
+10 seconds a warning names the command and Play's end lists every step still retained —
+and with `async void` a throw leaves `Execute` at the `await` line and surfaces
 through Unity's unhandled-exception handler with nothing in it to name the command.
+A step that waits longer on purpose carries `[LongRetain(seconds)]`, or `[LongRetain]`
+when its wait has no bound.
+
+A command that waits **without** retaining is back in its pool the moment `Execute`
+returns, and in the Editor and a Development Build a pooled command holds none of its
+injections: an `OnUpdate` hook or a `DelayedCall` it left behind throws a
+`NullReferenceException` where it touches one, with a warning under it naming the
+command.
 
 ```csharp
 public override async void Execute()

@@ -134,7 +134,8 @@ the Shared assembly the assets live in and nothing else of the module that publi
 `SkipShowAnimation` and the rest are steps on it.
 
 **All three ways out resolve the retain**: the screen opened, the screen came back null, and the
-await threw. A retain nobody resolves hangs the group for ever - no timeout, nothing logged - and
+await threw. A retain nobody resolves hangs the group for ever - a warning names the Command after
+10 seconds, but nothing resolves it - and
 with `async void` a throw leaves `Execute` at the `await` line and surfaces through Unity's
 unhandled-exception handler with nothing in it to name the command. What the `catch` does is this
 game's decision: `Stop()`, a `Release()` that carries on, or a signal that opens something else.

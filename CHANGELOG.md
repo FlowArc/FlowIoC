@@ -5,6 +5,24 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **A retained step left unresolved is reported** after 10 s, naming the Command; Play's end
+  lists the steps still retained. `[LongRetain(seconds)]` and `[LongRetain]` mark deliberate waits.
+- **A pooled Command or Function holds none of its injections** in the Editor and a Development
+  Build, so a callback that outlived its step fails on its own line, with a hint naming the Command.
+
+### Changed
+
+- **Commands, command groups and Functions no longer log their return to the pool.**
+- **The shipped ads, permission, download and loading steps carry `[LongRetain]`.**
+
+### Fixed
+
+- **A Function called from a `hideCommandLog` run is as quiet as the run.**
+
 ## [1.27.3] - 2026-09-27
 
 ### Added

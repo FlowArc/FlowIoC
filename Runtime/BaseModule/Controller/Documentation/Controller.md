@@ -435,8 +435,8 @@ public override void Execute()
 ```
 
 ```csharp
-// ❌ The failure callback never resolves the retain. The chain hangs forever,
-//    with no error and no timeout — the next step simply never runs.
+// ❌ The failure callback never resolves the retain. The chain hangs forever and
+//    the next step never runs; ten seconds later a warning names this command.
 public override void Execute()
 {
     Retain();
@@ -495,8 +495,8 @@ public override async void Execute()
 
 ```csharp
 // ❌ Only the success path resolves the retain. A throw inside the await leaves
-//    Execute at that line: the group waits forever, with no timeout, and the only
-//    sign of it is an unhandled exception that does not name this command.
+//    Execute at that line: the group waits forever, with an unhandled exception
+//    that does not name this command and, ten seconds on, a warning that does.
 public override async void Execute()
 {
     Retain();
@@ -512,6 +512,39 @@ public override async void Execute()
 >
 > Prefer `Show<T>()` over `Show()`. A typed view compares against `null` through
 > Unity's own operator; an `IScreenBody` is an interface and does not.
+
+### A step that waits long on purpose — `[LongRetain]`
+
+A retained step that has not resolved after ten seconds is reported once, naming the
+command, and Play's end lists every step still retained. Nothing is released for you:
+the warning only says where to look. A step that normally takes longer says so on its
+class:
+
+```csharp
+[LongRetain(60)]                         // an ad: warn only after a minute
+public class ShowRewarded : Command<string> { ... }
+
+[LongRetain]                             // the player's tap: never warn
+public class WaitForTapCommand : Command
+{
+    public override void Execute()
+    {
+        Retain();
+        _tutorial.OnTapped += Release;
+    }
+}
+```
+
+### A pooled command holds nothing
+
+A command is back in its pool the moment its step ends - when `Execute` returns without
+`Retain()`, or when it calls `Release()` or `Stop()`. In the Editor and a Development
+Build a pooled command has every reference-typed `[Inject]`, `[InjectSignal]` and
+`[SignalParam]` property cleared, and gets them back when it is taken out again. A hook
+or a delayed call left behind by a command that did not retain then throws a
+`NullReferenceException` on its own line, and a warning under it names the command. The
+same holds for code after a command's own `Release()`: read what it needs into a local
+first. A release build keeps the references and says nothing.
 
 ### Typed parameters, not an object bag
 
@@ -651,15 +684,15 @@ public override void Execute()
 
 ## Silencing High-Frequency Chains
 
-The framework logs every signal dispatch, command step, and pool return. For a tick
+The framework logs every signal dispatch, command group and command step. For a tick
 loop running many times per second that is noise. Two switches suppress *framework
 lifecycle* logs only — your own `FlowLogger` calls inside a command body are never
 affected.
 
 | Switch | Scope | Silences |
 |---|---|---|
-| `new Signal(hideCommandLog: true)` | that one signal field, and everything it runs | the dispatch, the group, every step's execute and pool-return line, every sub group |
-| `[HideCommandLog]` on the command class | every instance of that command type, wherever bound | `[Command] Execute as ...`, `... returned to pool` |
+| `new Signal(hideCommandLog: true)` | that one signal field, and everything it runs | the dispatch, the group, every step's execute line, every sub group, and the lines of every Function its steps call |
+| `[HideCommandLog]` on the command class | every instance of that command type, wherever bound | `[Command] ... executed as ...` |
 
 A loop is silenced from its signal; its commands need no attribute:
 
@@ -708,8 +741,8 @@ appears and no command line follows, the binding is the problem, not the signal.
 ### The chain hangs after a step
 
 A command retained and never released. Look for an early `return`, an exception
-thrown after `Retain()`, or a callback path that forgets to resolve. There is no
-timeout — a hung group waits forever.
+thrown after `Retain()`, or a callback path that forgets to resolve. Nothing times
+out — a hung group waits forever — but after ten seconds a warning names the command.
 
 A group step is the other candidate: `ToGroupAsSequence` on a signal no Context has
 bound reports `GroupKey '...' could not be found in any context` and skips the step,

@@ -420,13 +420,12 @@ The framework channels are most useful in combination. A single button press sho
 read like this:
 
 ```
-[Signal]           Signal is dispatched: 'PurchaseRequested' with 1 parameter!
-[CommandOperation] [CommandGroup][InitializeGroupWithSignal] : 'PurchaseRequested'.
-[Command]          Execute as Sequence : ValidatePurchaseCommand
-[Command]          Execute as Sequence : SpendCurrencyCommand
-[Signal]           Signal is dispatched: 'CurrencyChanged' with 1 parameter!
-[Command]          Execute as Sequence : GrantItemCommand
-[CommandOperation] Command is returned to pool! - GrantItemCommand
+[Signal]           'ShopSignals.PurchaseRequested' dispatched (1 parameter)
+[CommandOperation] 'ShopSignals.PurchaseRequested' opened a command group
+[Command]          ValidatePurchaseCommand executed as Sequence
+[Command]          SpendCurrencyCommand executed as Sequence
+[Signal]           'PlayerSignals.CurrencyChanged' dispatched (1 parameter)
+[Command]          GrantItemCommand executed as Sequence
 ```
 
 Reading that top to bottom answers most questions without a breakpoint:
@@ -435,7 +434,8 @@ Reading that top to bottom answers most questions without a breakpoint:
   upstream of the command chain.
 - **Dispatch present, no command line** → the signal is not bound, or you bound a
   different instance of the signal holder.
-- **Chain stops mid-way** → the last command that logged retained and never released.
+- **Chain stops mid-way** → a step retained and never resolved. After ten seconds a warning
+  names the Command; Play's end lists every step still retained.
 - **Commands run in an order you did not expect** → check where `ToParallel` sits in
   the binding.
 

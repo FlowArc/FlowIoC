@@ -321,8 +321,11 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Space();
             painter.Rule("Every way out of a retained command resolves the retain");
             painter.Paragraph(
-                "A retain nobody resolves hangs the group for ever: there is no timeout and nothing "
-                + "is logged. An await has three ways out and only one of them is the one everybody "
+                "A retain nobody resolves hangs the group for ever. Nothing resolves it for you, but "
+                + "after ten seconds a warning names the command, and Play's end lists every step "
+                + "still retained; a step that waits longer on purpose carries [LongRetain(seconds)], "
+                + "or [LongRetain] when its wait has no bound. An await has three ways out and only "
+                + "one of them is the one everybody "
                 + "writes - the work came back with nothing, and the work threw, are the other two. "
                 + "A throw is the worse of the pair: it leaves Execute at the await line, so neither "
                 + "Release nor Stop is reached, and async void surfaces it through Unity's "
@@ -362,6 +365,18 @@ namespace FlowIoC.Editor.Help.Pages
                 "Prefer Show<T>() over Show(). A typed view compares against null through Unity's "
                 + "own operator; an IScreenBody is an interface and does not, so a destroyed screen "
                 + "would not read as null.");
+
+            painter.Space();
+            painter.Rule("A pooled command holds nothing");
+            painter.Paragraph(
+                "A command is back in its pool the moment its step ends - when Execute returns "
+                + "without Retain(), or when it calls Release() or Stop(). In the Editor and a "
+                + "Development Build a pooled command has its [Inject], [InjectSignal] and "
+                + "[SignalParam] references cleared, and gets them back when it is taken out again. "
+                + "An OnUpdate hook or a DelayedCall left behind by a command that did not retain then "
+                + "throws a NullReferenceException on its own line, and a warning under it names the "
+                + "command. Code after a command's own Release() runs on a pooled instance too: read "
+                + "what it needs into a local first.");
 
             painter.Separator();
             painter.SubHeading("A flow is read from one Context");
@@ -735,8 +750,8 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Note(
                 "Important: base.Execute retains the step and counts the attempts, but it attempts "
                 + "nothing. The first Try is yours to call. An Execute that forgets it retains a "
-                + "step that never resolves, and the group waits for ever - there is no timeout and "
-                + "nothing is logged.");
+                + "step that never resolves, and the group waits for ever - ten seconds later a "
+                + "warning names the command, but nothing resolves the step.");
 
             painter.Space();
             painter.Rule("What it does with a failure");

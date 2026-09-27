@@ -93,9 +93,17 @@ what is true whatever you are about to do.
   sequence from inside `Execute` writes `Retain(); Stop();`, and a `Stop()` without it is refused
   and the sequence runs on.
 - **Every path out of a retained Command ends in `Release()` or `Stop()`, and an `await` has three
-  of them.** A `Retain()` that is never resolved hangs the group for ever - there is no timeout and
-  nothing is logged. The success path is the one everybody writes; the work came back with nothing,
-  and the work threw, are the two that hang.
+  of them.** A `Retain()` that is never resolved hangs the group for ever. The framework does not
+  resolve it for you: after 10 seconds it warns once, naming the Command, and when Play ends it lists
+  every step still retained. A step that waits longer on purpose carries `[LongRetain(seconds)]`, or
+  `[LongRetain]` when its wait has no bound. The success path is the one everybody writes; the work
+  came back with nothing, and the work threw, are the two that hang.
+- **A Command that waits without `Retain()` fails on its own line.** A Command goes back to its
+  pool the moment its step ends, and in the Editor and a Development Build a pooled Command holds
+  none of its injections. An `OnUpdate` hook or a `DelayedCall` it left behind then throws a
+  `NullReferenceException` where it touches one, and a warning under it names the Command. Retain the
+  step and release it when the wait is over; read what the code after a `Release()` needs into a
+  local first.
 - **A Command is a step in a flow; a Function is called from inside one**, and both live in
   `Controllers/`. A sequence is read in order, and that reading is what a Command is for; a
   Function does its work without depending on where it sits. A Function is not a step in the Flow
