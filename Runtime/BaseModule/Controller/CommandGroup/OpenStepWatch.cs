@@ -39,6 +39,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         private readonly Dictionary<ICommandBody, OpenStep> _open = new();
         private readonly Dictionary<Type, double> _thresholds = new();
+        private readonly PooledCommandFrame _pooledFrame = new();
         private readonly Func<double> _clock;
         private readonly Action _tick;
         private double _nextCheckAt;
@@ -72,6 +73,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         {
             updateProvider?.AddUpdate(_tick);
             Application.quitting += ReportOpenSteps;
+            Application.logMessageReceived += OnUnityLog;
         }
 
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
@@ -137,6 +139,29 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         }
 
         /// <summary>
+        /// A NullReferenceException thrown by a Command's code outside any running step, and no
+        /// step of that Command retained: its instance was parked, which is why the reference is
+        /// gone. One warning says so, blamed on the Command. Not conditional, for the same reason
+        /// as <see cref="ReportOpenSteps"/>: Application.logMessageReceived needs a delegate to it.
+        /// </summary>
+        internal void OnUnityLog(string condition, string stackTrace, LogType type)
+        {
+            if (type != LogType.Exception || condition == null
+                || !condition.StartsWith("NullReferenceException", StringComparison.Ordinal))
+                return;
+
+            Type command = _pooledFrame.Find(stackTrace);
+            if (command == null || IsOpen(command))
+                return;
+
+            FlowLogger.LogWarning(SystemLogType.CommandOperation,
+                command.Name + " was back in its pool when this ran - its step had already ended, and a "
+                + "pooled Command holds none of its injections. Retain() the step and Release() it when "
+                + "the wait is over.",
+                command);
+        }
+
+        /// <summary>
         /// Play is ending: every step still over its threshold is listed in one warning, blamed on
         /// the first, so a hang that was scrolled past is named once more. A step under its
         /// threshold is left out - stopping Play in the middle of a download is not a hang. Written
@@ -147,6 +172,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         internal void ReportOpenSteps()
         {
             Application.quitting -= ReportOpenSteps;
+            Application.logMessageReceived -= OnUnityLog;
             if (_hasReported) return;
             _hasReported = true;
 
