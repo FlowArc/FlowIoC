@@ -14,6 +14,7 @@ namespace FlowIoC.PoolModule.Components
     /// * At runtime it can load/instantiate the GameObject, then return the desired component.  API matches base class (LoadAssetAsync &amp; InstantiateAsync).
     /// </summary>
     /// <typeparam name="TComponent">The component type.</typeparam>
+    [System.Serializable]
     public class ComponentReference<TComponent> : AssetReference
     {
         /// <inheritdoc />
