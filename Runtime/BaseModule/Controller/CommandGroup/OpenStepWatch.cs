@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Provider.Update;
 using FlowIoC.ConsoleModule;
@@ -41,6 +42,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private readonly Func<double> _clock;
         private readonly Action _tick;
         private double _nextCheckAt;
+        private bool _hasReported;
 
         public OpenStepWatch() : this(() => Time.unscaledTimeAsDouble) { }
 
@@ -69,6 +71,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         internal void Hook(IUpdateProvider updateProvider)
         {
             updateProvider?.AddUpdate(_tick);
+            Application.quitting += ReportOpenSteps;
         }
 
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
@@ -131,6 +134,43 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                     + "A step that waits this long on purpose carries [LongRetain].",
                     step.CommandType);
             }
+        }
+
+        /// <summary>
+        /// Play is ending: every step still over its threshold is listed in one warning, blamed on
+        /// the first, so a hang that was scrolled past is named once more. A step under its
+        /// threshold is left out - stopping Play in the middle of a download is not a hang. Written
+        /// once and unsubscribed, so a watch of an earlier Play never reports into a later one.
+        /// Not conditional itself, because Application.quitting needs a delegate to it; only the
+        /// conditional Hook subscribes it, so a release build never calls it.
+        /// </summary>
+        internal void ReportOpenSteps()
+        {
+            Application.quitting -= ReportOpenSteps;
+            if (_hasReported) return;
+            _hasReported = true;
+
+            double now = _clock();
+            StringBuilder text = null;
+            Type first = null;
+            int count = 0;
+
+            foreach (OpenStep step in _open.Values)
+            {
+                if (now - step.OpenedAt < step.WarnAfter)
+                    continue;
+
+                text ??= new StringBuilder();
+                first ??= step.CommandType;
+                count++;
+                text.Append("\n  '").Append(step.RunName).Append("': ").Append(step.CommandType.Name)
+                    .Append(", ").Append((int) (now - step.OpenedAt)).Append(" s");
+            }
+
+            if (count == 0) return;
+
+            FlowLogger.LogWarning(SystemLogType.CommandOperation,
+                "Play ended with " + count + " step(s) still retained:" + text, first);
         }
     }
 }
