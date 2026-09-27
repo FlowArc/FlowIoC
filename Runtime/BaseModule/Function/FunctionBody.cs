@@ -35,6 +35,12 @@ namespace FlowIoC.BaseModule.Function
 
         internal int InjectionStamp = -1;
 
+        /// <summary>
+        /// What the last fill wrote into the [Inject] and [InjectSignal] properties, in entry
+        /// order - kept so a parked instance can have them back without resolving again.
+        /// </summary>
+        internal object[] InjectedValues;
+
         public virtual void Retain()
         {
             IsRetain = true;

@@ -21,6 +21,12 @@ namespace FlowIoC.BaseModule.Controller
         internal int InjectionStamp = -1;
 
         /// <summary>
+        /// What the last fill wrote into the [Inject] and [InjectSignal] properties, in entry
+        /// order - kept so a parked instance can have them back without resolving again.
+        /// </summary>
+        internal object[] InjectedValues;
+
+        /// <summary>
         /// Which execution of this pooled instance is the current one. A command that retains and
         /// releases inside its own Execute is back in the pool before that Execute returns, and the
         /// next step of the same type takes the same instance straight out again - so the frame that

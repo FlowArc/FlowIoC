@@ -170,6 +170,7 @@ namespace FlowIoC.BaseModule.Function.Provider
             Type functionType = functionBody.GetType();
 
             functionBody.Dispose();
+            InjectionExtensions.Park(functionBody);
             _functionPool.Return(functionType, functionBody);
 
             FlowLogger.Log(SystemLogType.Function, functionType.Name, " returned to pool");

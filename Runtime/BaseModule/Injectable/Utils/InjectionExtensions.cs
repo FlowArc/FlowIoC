@@ -73,9 +73,13 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                 int generation = context?.InjectionBinderCrossContext?.BindingGeneration ?? 0;
 
                 if (body.InjectedContext == context && body.InjectionStamp == generation)
+                {
+                    Restore(body, body.InjectedValues);
                     return;
+                }
 
-                InjectMembers(functionBody, context);
+                body.InjectedValues = new object[GetInjectEntries(body.GetType()).Count];
+                InjectMembers(functionBody, context, body.InjectedValues);
                 body.InjectedContext = context;
                 body.InjectionStamp = generation;
                 return;
@@ -98,9 +102,14 @@ namespace FlowIoC.BaseModule.Injectable.Utils
 
                 if (body.InjectedContext != context || body.InjectionStamp != generation)
                 {
-                    InjectMembers(command, context);
+                    body.InjectedValues = new object[GetInjectEntries(body.GetType()).Count];
+                    InjectMembers(command, context, body.InjectedValues);
                     body.InjectedContext = context;
                     body.InjectionStamp = generation;
+                }
+                else
+                {
+                    Restore(body, body.InjectedValues);
                 }
             }
             else
@@ -123,7 +132,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
 
         #region Member Injection
 
-        private static void InjectMembers(object target, IContext context)
+        private static void InjectMembers(object target, IContext context, object[] written = null)
         {
             if (target == null)
                 return;
@@ -142,6 +151,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                 }
 
                 entry.Set(target, value);
+                if (written != null) written[i] = value;
             }
         }
 
@@ -309,6 +319,54 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             data = new CachedInjectableData();
             _cachedInjectableData.Add(type, data);
             return data;
+        }
+
+        #endregion
+
+        #region Parking
+
+        /// <summary>
+        /// Clears what a Command or a Function was given, as it goes back to its pool. A callback
+        /// that outlived its step - an OnUpdate hook, a DelayedCall - then fails on its own line
+        /// instead of working on with the last run's references. Only reference types can be
+        /// cleared; a value-type [SignalParam] keeps its last value. Editor and Development Build
+        /// only: a release build keeps today's behaviour and cost.
+        /// </summary>
+        [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+        internal static void Park(object body)
+        {
+            if (body == null) return;
+
+            Type type = body.GetType();
+
+            List<InjectEntry> entries = GetInjectEntries(type);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (!entries[i].Type.IsValueType)
+                    entries[i].Set(body, null);
+            }
+
+            if (body is not ICommandBody) return;
+
+            List<SignalParamEntry> parameters = GetSignalParamEntries(type);
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                if (!parameters[i].Type.IsValueType)
+                    parameters[i].Set(body, null);
+            }
+        }
+
+        /// <summary>Writes a parked instance's injections back. A slot the fill could not resolve stays empty, as it was.</summary>
+        private static void Restore(object body, object[] values)
+        {
+            if (values == null) return;
+
+            List<InjectEntry> entries = GetInjectEntries(body.GetType());
+            for (int i = 0; i < entries.Count && i < values.Length; i++)
+            {
+                if (values[i] != null)
+                    entries[i].Set(body, values[i]);
+            }
         }
 
         #endregion

@@ -5,6 +5,7 @@ using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Bind.Binders;
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Controller.CommandGroup;
+using FlowIoC.BaseModule.Injectable.Utils;
 using FlowIoC.BaseModule.Pooling;
 using FlowIoC.BaseModule.Signals;
 using FlowIoC.ConsoleModule;
@@ -260,6 +261,7 @@ namespace FlowIoC.BaseModule.Controller.Binders
         internal void ReturnCommandToPool(ICommandBody commandBody, bool hideLog = false)
         {
             commandBody.Clean();
+            InjectionExtensions.Park(commandBody);
             Type commandType = commandBody.GetType();
 
             // Safe by construction: a step type is constrained to CommandBody, and the pool only
