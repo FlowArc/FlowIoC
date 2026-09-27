@@ -78,7 +78,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
                     return;
                 }
 
-                body.InjectedValues = new object[GetInjectEntries(body.GetType()).Count];
+                body.InjectedValues = NewInjectedValues(body.GetType());
                 InjectMembers(functionBody, context, body.InjectedValues);
                 body.InjectedContext = context;
                 body.InjectionStamp = generation;
@@ -102,7 +102,7 @@ namespace FlowIoC.BaseModule.Injectable.Utils
 
                 if (body.InjectedContext != context || body.InjectionStamp != generation)
                 {
-                    body.InjectedValues = new object[GetInjectEntries(body.GetType()).Count];
+                    body.InjectedValues = NewInjectedValues(body.GetType());
                     InjectMembers(command, context, body.InjectedValues);
                     body.InjectedContext = context;
                     body.InjectionStamp = generation;
@@ -356,7 +356,21 @@ namespace FlowIoC.BaseModule.Injectable.Utils
             }
         }
 
+        /// <summary>
+        /// Somewhere for a fill to record what it wrote, so a parked instance can have it back.
+        /// Only where parking happens: a release build parks nothing and keeps nothing.
+        /// </summary>
+        private static object[] NewInjectedValues(Type type)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            return new object[GetInjectEntries(type).Count];
+#else
+            return null;
+#endif
+        }
+
         /// <summary>Writes a parked instance's injections back. A slot the fill could not resolve stays empty, as it was.</summary>
+        [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
         private static void Restore(object body, object[] values)
         {
             if (values == null) return;

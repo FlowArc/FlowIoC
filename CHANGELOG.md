@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **A retained step left unresolved is reported** after 10 s, naming the Command; Play's end
-  lists the steps still retained. `[LongRetain(seconds)]` and `[LongRetain]` mark deliberate waits.
+  lists the steps still waiting past it. `[LongRetain(seconds)]` and `[LongRetain]` mark deliberate waits.
 - **A pooled Command or Function holds none of its injections** in the Editor and a Development
   Build, so a callback that outlived its step fails on its own line, with a hint naming the Command.
 

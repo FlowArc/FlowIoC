@@ -48,12 +48,21 @@ namespace FlowIoC.BaseModule.Function
             HasRetain = true;
         }
 
+        [UnityEngine.HideInCallstack]
         public virtual void Release()
         {
             if (_functionProvider is FunctionProvider provider)
             {
                 provider.ReleaseFunctionManually(this);
+                return;
             }
+
+            // A pooled function holds none of its injections, so a Release that finds no provider
+            // came after the function went back to its pool - a second call, or a callback late.
+            FlowLogger.LogError(SystemLogType.Function,
+                "Release on a function that is not running: " + GetType().Name
+                + ". It already went back to its pool - Release was called twice, or from a callback "
+                + "that outlived the run.", GetType());
         }
 
         /// <summary>

@@ -516,7 +516,7 @@ public override async void Execute()
 ### A step that waits long on purpose — `[LongRetain]`
 
 A retained step that has not resolved after ten seconds is reported once, naming the
-command, and Play's end lists every step still retained. Nothing is released for you:
+command, and Play's end lists every step still waiting past it. Nothing is released for you:
 the warning only says where to look. A step that normally takes longer says so on its
 class:
 
@@ -527,10 +527,20 @@ public class ShowRewarded : Command<string> { ... }
 [LongRetain]                             // the player's tap: never warn
 public class WaitForTapCommand : Command
 {
+    [Inject] private ITutorialModel _tutorial { get; set; }
+
     public override void Execute()
     {
         Retain();
-        _tutorial.OnTapped += Release;
+
+        ITutorialModel tutorial = _tutorial;   // the tap arrives later; read it now
+        void Tapped()
+        {
+            tutorial.OnTapped -= Tapped;       // one tap, one release
+            Release();
+        }
+
+        tutorial.OnTapped += Tapped;
     }
 }
 ```
@@ -542,7 +552,7 @@ A command is back in its pool the moment its step ends - when `Execute` returns 
 Build a pooled command has every reference-typed `[Inject]`, `[InjectSignal]` and
 `[SignalParam]` property cleared, and gets them back when it is taken out again. A hook
 or a delayed call left behind by a command that did not retain then throws a
-`NullReferenceException` on its own line, and a warning under it names the command. The
+`NullReferenceException` on its own line, and a warning beside it names the command. The
 same holds for code after a command's own `Release()`: read what it needs into a local
 first. A release build keeps the references and says nothing.
 

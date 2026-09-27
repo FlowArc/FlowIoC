@@ -435,7 +435,7 @@ Reading that top to bottom answers most questions without a breakpoint:
 - **Dispatch present, no command line** → the signal is not bound, or you bound a
   different instance of the signal holder.
 - **Chain stops mid-way** → a step retained and never resolved. After ten seconds a warning
-  names the Command; Play's end lists every step still retained.
+  names the Command; Play's end lists every step still waiting past it.
 - **Commands run in an order you did not expect** → check where `ToParallel` sits in
   the binding.
 

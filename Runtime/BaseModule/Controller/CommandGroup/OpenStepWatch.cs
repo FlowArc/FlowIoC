@@ -68,9 +68,17 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             return false;
         }
 
+        /// <summary>Whether this watch is on the frame and on Unity's log and quit events.</summary>
+        internal bool IsHooked { get; private set; }
+
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         internal void Hook(IUpdateProvider updateProvider)
         {
+            // Outside Play nothing ends the run - no quit unhooks the watch - so a Context started
+            // by a test or an editor tool would leave it answering every log until the next reload.
+            if (!Application.isPlaying) return;
+
+            IsHooked = true;
             updateProvider?.AddUpdate(_tick);
             Application.quitting += ReportOpenSteps;
             Application.logMessageReceived += OnUnityLog;

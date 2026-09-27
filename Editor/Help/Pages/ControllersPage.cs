@@ -323,7 +323,7 @@ namespace FlowIoC.Editor.Help.Pages
             painter.Paragraph(
                 "A retain nobody resolves hangs the group for ever. Nothing resolves it for you, but "
                 + "after ten seconds a warning names the command, and Play's end lists every step "
-                + "still retained; a step that waits longer on purpose carries [LongRetain(seconds)], "
+                + "still waiting past it; a step that waits longer on purpose carries [LongRetain(seconds)], "
                 + "or [LongRetain] when its wait has no bound. An await has three ways out and only "
                 + "one of them is the one everybody "
                 + "writes - the work came back with nothing, and the work threw, are the other two. "
@@ -374,7 +374,7 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Development Build a pooled command has its [Inject], [InjectSignal] and "
                 + "[SignalParam] references cleared, and gets them back when it is taken out again. "
                 + "An OnUpdate hook or a DelayedCall left behind by a command that did not retain then "
-                + "throws a NullReferenceException on its own line, and a warning under it names the "
+                + "throws a NullReferenceException on its own line, and a warning beside it names the "
                 + "command. Code after a command's own Release() runs on a pooled instance too: read "
                 + "what it needs into a local first.");
 

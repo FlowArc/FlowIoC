@@ -174,7 +174,7 @@ public override void Execute()
 ## Every path out of a retained Command ends in `Release()` or `Stop()`
 
 **A retain nobody resolves hangs the group for ever. Nothing resolves it for you: after 10 seconds a
-warning names the Command, and Play's end lists every step still retained.** A step that waits
+warning names the Command, and Play's end lists every step still waiting past it.** A step that waits
 longer on purpose - an ad, the player's tap - carries `[LongRetain(seconds)]`, or `[LongRetain]`
 when its wait has no bound.
 

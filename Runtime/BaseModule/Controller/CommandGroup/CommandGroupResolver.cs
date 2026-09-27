@@ -206,8 +206,12 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         /// </summary>
         private void EnterHiddenStepOf(ICommandBody command, ref IFlowStepContext previous)
         {
+            // A visible run clears whatever hidden step it was reached from, as ExecuteCommandStep does.
             if (!IsHideLog || _steps == null)
+            {
+                FlowLogger.EnterHiddenStep(null, ref previous);
                 return;
+            }
 
             if (_retainedCommands.TryGetValue(command, out CommandStepVO step))
                 _describedStep = _steps.IndexOf(step);
@@ -217,8 +221,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         private void ExitHiddenStepOf(IFlowStepContext previous)
         {
-            if (IsHideLog)
-                FlowLogger.ExitHiddenStep(previous);
+            FlowLogger.ExitHiddenStep(previous);
         }
 
         /// <summary>
@@ -618,10 +621,10 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 }
 
             // A hidden run writes nothing for this step, so whatever warning or error the command
-            // raises carries the step's place in the run instead.
+            // raises carries the step's place in the run instead. A visible run clears it: one
+            // dispatched from inside a hidden step is a run of its own and is not hidden.
             IFlowStepContext previousStep = null;
-            if (IsHideLog)
-                FlowLogger.EnterHiddenStep(this, ref previousStep);
+            FlowLogger.EnterHiddenStep(IsHideLog ? this : null, ref previousStep);
 
             try
             {
@@ -629,8 +632,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             }
             finally
             {
-                if (IsHideLog)
-                    FlowLogger.ExitHiddenStep(previousStep);
+                FlowLogger.ExitHiddenStep(previousStep);
             }
 
             // A command that retained and released inside that Execute is already back in the pool,
