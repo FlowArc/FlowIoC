@@ -166,6 +166,9 @@ namespace FlowIoC.ConsoleModule
             _hiddenStep = step;
         }
 
+        /// <summary>Whether a step of a hidden run is executing now - read by what it calls, which logs nothing then.</summary>
+        internal static bool IsInHiddenStep => _hiddenStep != null;
+
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void ExitHiddenStep(IFlowStepContext previous)
         {

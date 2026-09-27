@@ -234,13 +234,8 @@ namespace FlowIoC.BaseModule.Controller.Binders
             if (groupResolver is not CommandGroup.CommandGroupResolver concrete)
                 return;
 
-            bool hideLog = concrete.IsHideLog;
-
             concrete.Dispose();
             _commandGroupPool.Push(concrete);
-
-            if (!hideLog)
-                FlowLogger.LogPlumbing(SystemLogType.CommandOperation, "Command group returned to pool");
         }
 
         #endregion
@@ -255,20 +250,17 @@ namespace FlowIoC.BaseModule.Controller.Binders
         }
 
         /// <summary>
-        /// Puts a finished command back. <paramref name="hideLog"/> is the group's: a step run by a
-        /// signal declared with <c>hideCommandLog</c> is as quiet as the signal, whatever its class says.
+        /// Puts a finished command back, parked. Nothing is logged: a step that never comes back is
+        /// what needs saying, and <see cref="OpenStepWatch"/> says it.
         /// </summary>
-        internal void ReturnCommandToPool(ICommandBody commandBody, bool hideLog = false)
+        internal void ReturnCommandToPool(ICommandBody commandBody)
         {
             commandBody.Clean();
             InjectionExtensions.Park(commandBody);
-            Type commandType = commandBody.GetType();
 
             // Safe by construction: a step type is constrained to CommandBody, and the pool only
             // ever sees back what GetCommand handed out.
-            _commandPool.Return(commandType, (CommandBody) commandBody);
-            if (!hideLog && !HasHideCommandLog(commandType))
-                FlowLogger.LogPlumbing(SystemLogType.CommandOperation, _displayName.Of(commandType), " returned to pool");
+            _commandPool.Return(commandBody.GetType(), (CommandBody) commandBody);
         }
 
         public bool HasHideCommandLog(Type type)

@@ -80,7 +80,8 @@ namespace FlowIoC.BaseModule.Function.Provider
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out _);
-            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
+            if (!IsHiddenRun(function))
+                FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
 
             if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
@@ -97,7 +98,8 @@ namespace FlowIoC.BaseModule.Function.Provider
 
             Context.TryToInjectFunction(function);
             Invoke(function, functionDataContainer.ExecuteParameters, out object result);
-            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
+            if (!IsHiddenRun(function))
+                FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
 
             ReturnDataContainerToPool(functionDataContainer);
 
@@ -128,7 +130,8 @@ namespace FlowIoC.BaseModule.Function.Provider
             (functionDataContainer as AsyncFunctionDataContainerBase)?.ApplyCallback(function);
             Context.TryToInjectFunction(function);
             yield return function.Execute();
-            FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
+            if (!IsHiddenRun(function))
+                FlowLogger.LogAbout(SystemLogType.Function, function.GetType(), function.GetType().Name, " executed");
 
             if (IsStillTheSameRun(function, runToken) && !function.HasRetain)
             {
@@ -161,19 +164,22 @@ namespace FlowIoC.BaseModule.Function.Provider
                 return;
             }
 
+            bool isHidden = IsHiddenRun(function);
             ReturnFunctionToPool(function);
-            FlowLogger.Log(SystemLogType.Function, function.GetType().Name, " released");
+
+            if (!isHidden)
+                FlowLogger.Log(SystemLogType.Function, function.GetType().Name, " released");
         }
 
+        /// <summary>
+        /// Puts a finished function back, parked. Nothing is logged: the executed line already said
+        /// the function ran, and going back to the pool adds nothing a reader needs.
+        /// </summary>
         private void ReturnFunctionToPool(IFunctionBody functionBody)
         {
-            Type functionType = functionBody.GetType();
-
             functionBody.Dispose();
             InjectionExtensions.Park(functionBody);
-            _functionPool.Return(functionType, functionBody);
-
-            FlowLogger.Log(SystemLogType.Function, functionType.Name, " returned to pool");
+            _functionPool.Return(functionBody.GetType(), functionBody);
         }
 
         /// <summary>
@@ -188,7 +194,9 @@ namespace FlowIoC.BaseModule.Function.Provider
             if (!_functionPool.TryTake(functionType, out IFunctionBody function))
             {
                 function = (IFunctionBody) Activator.CreateInstance(functionType);
-                FlowLogger.Log(SystemLogType.Function, functionType.Name, " created");
+
+                if (!FlowLogger.IsInHiddenStep)
+                    FlowLogger.Log(SystemLogType.Function, functionType.Name, " created");
             }
 
             (function as FunctionBody)?.BeginRun();
@@ -205,6 +213,10 @@ namespace FlowIoC.BaseModule.Function.Provider
         /// </summary>
         private static bool IsStillTheSameRun(IFunctionBody function, int runToken) =>
             function is not FunctionBody body || body.RunToken == runToken;
+
+        /// <summary>Whether the function's current run was called from a step of a hidden run, and so logs nothing.</summary>
+        private static bool IsHiddenRun(IFunctionBody function) =>
+            function is FunctionBody body && body.IsHiddenRun;
 
         private static int RunTokenOf(IFunctionBody function) =>
             function is FunctionBody body ? body.RunToken : 0;

@@ -1,6 +1,7 @@
 using FlowIoC.BaseModule.Contexts;
 using FlowIoC.BaseModule.Function.Provider;
 using FlowIoC.BaseModule.Injectable.Attributes;
+using FlowIoC.ConsoleModule;
 
 namespace FlowIoC.BaseModule.Function
 {
@@ -65,6 +66,13 @@ namespace FlowIoC.BaseModule.Function
         internal int RunToken;
 
         /// <summary>
+        /// Whether this run was called from a step of a hidden run. Taken when the run begins, so a
+        /// function that answers a frame later - after the step has left - stays as quiet as the
+        /// run that called it.
+        /// </summary>
+        internal bool IsHiddenRun;
+
+        /// <summary>
         /// Readies a pooled instance for one execution. Both retain flags belong to a single run:
         /// leaving either set carries the last run's answer into this one, and clearing them here
         /// rather than on the way out is what lets a function release itself mid-Execute without
@@ -75,6 +83,7 @@ namespace FlowIoC.BaseModule.Function
             IsRetain = false;
             HasRetain = false;
             RunToken++;
+            IsHiddenRun = FlowLogger.IsInHiddenStep;
         }
 
         /// <summary>

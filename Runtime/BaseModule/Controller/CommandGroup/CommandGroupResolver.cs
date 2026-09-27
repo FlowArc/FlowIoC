@@ -188,8 +188,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             _declarationFile = null;
             _declarationLine = 0;
 
-            // IsHideLog is deliberately left where it is. The binder reads it on the way to the
-            // pool, which is after this now, and Initialize sets it for the next run anyway.
+            // IsHideLog is left where it is: Initialize sets it for the next run anyway.
 
             // _isPumping is not cleared here either, and for a sharper reason: the driver's own
             // finally owns it. Clearing it from a Dispose that landed mid-run would let the next
@@ -312,7 +311,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             }
 
             _commandBinder.OpenSteps?.Close(command);
-            _commandBinder.ReturnCommandToPool(command, IsHideLog);
+            _commandBinder.ReturnCommandToPool(command);
 
             HandleStepCompletion(commandParameters);
         }
@@ -365,7 +364,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             }
 
             _commandBinder.OpenSteps?.Close(command);
-            _commandBinder.ReturnCommandToPool(command, IsHideLog);
+            _commandBinder.ReturnCommandToPool(command);
 
             if (step.ExecutionType == CommandExecutionType.Parallel)
                 _completionCount--;
@@ -644,7 +643,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
             if (!command.HasRetain)
             {
                 _retainedCommands.Remove(command);
-                _commandBinder.ReturnCommandToPool(command, IsHideLog);
+                _commandBinder.ReturnCommandToPool(command);
                 HandleStepCompletion(null);
                 return;
             }
