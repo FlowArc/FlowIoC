@@ -77,6 +77,45 @@ namespace FlowIoC.Editor.Help
             }
         }
 
+        /// <summary>
+        /// The flags this section's sidebar row wears: a topic its own, and a category one of each
+        /// kind found anywhere below it, UPDATE before NEW. A reader then sees from a shut sidebar
+        /// that something inside wants a look, and opening the category moves the flags down a
+        /// level until they sit on the module itself. The window asks a category only while it is
+        /// shut, because an open one shows its rows' own flags.
+        /// </summary>
+        public IReadOnlyList<SidebarFlagEVO> SidebarFlags
+        {
+            get
+            {
+                bool update = false;
+                bool fresh = false;
+
+                foreach (IHelpPage page in Pages)
+                {
+                    SidebarFlagEVO flag = page.SidebarFlag;
+
+                    if (flag == null)
+                        continue;
+
+                    if (flag.Tone == SidebarFlagTone.Update)
+                        update = true;
+                    else
+                        fresh = true;
+                }
+
+                var flags = new List<SidebarFlagEVO>(2);
+
+                if (update)
+                    flags.Add(SidebarFlagEVO.Update);
+
+                if (fresh)
+                    flags.Add(SidebarFlagEVO.New);
+
+                return flags;
+            }
+        }
+
         /// <summary>This section and everything below it, in the order the sidebar draws them.</summary>
         public IEnumerable<HelpSection> Descendants()
         {

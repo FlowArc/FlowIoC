@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A shut category in the Help sidebar wears UPDATE and NEW** for the modules inside it.
+- **A module panel's number is dragged by its label**, as in the Inspector, inside its `[Min]` or
+  `[Range]`; `Property(..., dragPace: 0.1f)` sets the value moved per pixel.
+
 ### Removed
 
 - **The `1.26.0` migration of a sub-context's flat screen override.** A Root saved before `1.26.0`

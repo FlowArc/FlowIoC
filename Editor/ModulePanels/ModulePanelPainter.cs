@@ -49,6 +49,7 @@ namespace FlowIoC.Editor.ModulePanels
         private readonly Type _panel;
         private readonly FlowHelpState _state;
         private readonly ModulePanelFoldState _folds;
+        private readonly ModulePanelNumberDrag _drag = new ModulePanelNumberDrag();
 
         private GUIStyle _question;
 
@@ -337,10 +338,14 @@ namespace FlowIoC.Editor.ModulePanels
         /// The label is the property's own unless the panel says otherwise. This is the mark a
         /// panel that authors an asset is made of: it edits what the Inspector would edit, not a
         /// Model's values.
+        ///
+        /// A float or an int is dragged by its label, as in the Inspector. Unity's pace unless
+        /// dragPace names the value moved per pixel - 0.1 on an int is one step every ten pixels.
         /// </summary>
-        public void Property(SerializedProperty property, string label = null, string help = null)
+        public void Property(SerializedProperty property, string label = null, string help = null,
+            float? dragPace = null)
         {
-            Properties(label ?? property.displayName, help, property);
+            PropertiesRow(label ?? property.displayName, help, null, null, dragPace, new[] {property});
         }
 
         /// <summary>
@@ -355,7 +360,9 @@ namespace FlowIoC.Editor.ModulePanels
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Labelled(rect, label, help);
-            GUI.Label(new Rect(content.x, content.y, LABEL_WIDTH, content.height), label, _rows.Name(false));
+            var labelRect = new Rect(content.x, content.y, LABEL_WIDTH, content.height);
+            GUI.Label(labelRect, label, _rows.Name(false));
+            _drag.Handle(labelRect, property, null);
 
             Rect value = ValueRect(content);
             value.y += (content.height - EditorGUIUtility.singleLineHeight) / 2f;
@@ -367,7 +374,9 @@ namespace FlowIoC.Editor.ModulePanels
 
             EditorGUI.PropertyField(new Rect(value.x, value.y, value.width - asideWidth - ASIDE_GAP, value.height),
                 property, GUIContent.none);
-            GUI.Label(new Rect(value.xMax - asideWidth, value.y, asideLabelWidth, value.height), asideLabel, mini);
+            var asideLabelRect = new Rect(value.xMax - asideWidth, value.y, asideLabelWidth, value.height);
+            GUI.Label(asideLabelRect, asideLabel, mini);
+            _drag.Handle(asideLabelRect, aside, null);
             EditorGUI.PropertyField(new Rect(value.xMax - ASIDE_FIELD_WIDTH, value.y, ASIDE_FIELD_WIDTH, value.height),
                 aside, GUIContent.none);
 
@@ -401,13 +410,25 @@ namespace FlowIoC.Editor.ModulePanels
         /// about it. One flag per field, or null for none.
         /// </summary>
         public void Properties(string label, string help, ModulePanelAction?[] trailing, bool[] flagged,
-            params SerializedProperty[] properties)
+            params SerializedProperty[] properties) =>
+            PropertiesRow(label, help, trailing, flagged, null, properties);
+
+        /// <summary>
+        /// The row every Properties overload draws. The label drags the value only when the row
+        /// holds one field: a label over several cells names them all, and a drag has to move one.
+        /// </summary>
+        private void PropertiesRow(string label, string help, ModulePanelAction?[] trailing, bool[] flagged,
+            float? dragPace, SerializedProperty[] properties)
         {
             Rect rect = Row(ACTION_HEIGHT);
             _rows.Paint(rect, _accent, FlowRowPainter.QUIET_ALPHA);
 
             Rect content = Labelled(rect, label, help);
-            GUI.Label(new Rect(content.x, content.y, LABEL_WIDTH, content.height), label, _rows.Name(false));
+            var labelRect = new Rect(content.x, content.y, LABEL_WIDTH, content.height);
+            GUI.Label(labelRect, label, _rows.Name(false));
+
+            if (properties.Length == 1)
+                _drag.Handle(labelRect, properties[0], dragPace);
 
             Rect value = ValueRect(content);
             value.y += (content.height - EditorGUIUtility.singleLineHeight) / 2f;
