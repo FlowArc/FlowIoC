@@ -20,6 +20,9 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
 
         internal bool IsHideLog { get; private set; }
 
+        /// <summary>What the watch calls this run: the signal or the group key that started it.</summary>
+        internal string RunName => (_commandBinding?.Key as ISignalBody)?.Name ?? "a command group";
+
         #endregion
 
         #region Private Fields
@@ -159,6 +162,14 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         {
             if (_isDisposed) return;
             _isDisposed = true;
+
+            // A step still retained when the group ends is dropped, and so is its watch: a late
+            // Release already warns that it arrived after the group ended.
+            if (_retainedCommands.Count > 0 && _commandBinder?.OpenSteps != null)
+            {
+                foreach (ICommandBody retained in _retainedCommands.Keys)
+                    _commandBinder.OpenSteps.Close(retained);
+            }
 
             _retainedCommands.Clear();
 
@@ -300,6 +311,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
+            _commandBinder.OpenSteps?.Close(command);
             _commandBinder.ReturnCommandToPool(command, IsHideLog);
 
             HandleStepCompletion(commandParameters);
@@ -352,6 +364,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 return;
             }
 
+            _commandBinder.OpenSteps?.Close(command);
             _commandBinder.ReturnCommandToPool(command, IsHideLog);
 
             if (step.ExecutionType == CommandExecutionType.Parallel)
@@ -633,7 +646,13 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 _retainedCommands.Remove(command);
                 _commandBinder.ReturnCommandToPool(command, IsHideLog);
                 HandleStepCompletion(null);
+                return;
             }
+
+            // Still waited on once Execute is back - a release inside Execute has already taken it
+            // out of the dictionary. Only these reach the watch; a synchronous step never does.
+            if (_retainedCommands.ContainsKey(command))
+                _commandBinder.OpenSteps?.Open(command, RunName);
         }
 
         #endregion

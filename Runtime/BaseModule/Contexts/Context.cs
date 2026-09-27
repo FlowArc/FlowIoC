@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FlowIoC.BaseModule.Controller.Binders;
+using FlowIoC.BaseModule.Controller.CommandGroup;
 using FlowIoC.BaseModule.Function.Provider;
 using FlowIoC.BaseModule.Injectable;
 using FlowIoC.BaseModule.Injectable.Binders;
@@ -130,6 +131,16 @@ namespace FlowIoC.BaseModule.Contexts
 
             if (!InjectionBinderCrossContext.HasBinding<IUpdateProvider>())
                 InjectionBinderCrossContext.BindMonoBehaviorInstance<IUpdateProvider, UpdateProvider>();
+
+            // One watch over retained steps for the run, beside the update provider that ticks it.
+            if (!InjectionBinderCrossContext.HasBinding<OpenStepWatch>())
+            {
+                var openSteps = new OpenStepWatch();
+                openSteps.Hook(InjectionBinderCrossContext.GetInstance<IUpdateProvider>());
+                InjectionBinderCrossContext.BindInstance(openSteps);
+            }
+
+            ((CommandBinder) CommandBinder).OpenSteps = InjectionBinderCrossContext.GetInstance<OpenStepWatch>();
 
             if (!InjectionBinderCrossContext.HasBinding<ICoroutineProvider>())
                 InjectionBinderCrossContext.BindMonoBehaviorInstance<ICoroutineProvider, CoroutineProvider>();

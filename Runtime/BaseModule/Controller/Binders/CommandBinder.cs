@@ -34,6 +34,12 @@ namespace FlowIoC.BaseModule.Controller.Binders
 
         internal IContext Context;
 
+        /// <summary>
+        /// The run's watch over retained steps, handed over by the Context. Null in a binder built
+        /// without one - a test's - and every call to it is then skipped.
+        /// </summary>
+        internal OpenStepWatch OpenSteps;
+
         public CommandBinder()
         {
             _returnGroupToPool = ReturnGroupToPool;
