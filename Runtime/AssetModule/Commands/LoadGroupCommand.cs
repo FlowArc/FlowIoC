@@ -37,15 +37,19 @@ namespace FlowIoC.AssetModule.Commands
                 return;
             }
 
+            // Read before the await: a later step that throws inside the Release lands in the catch
+            // below, on a pooled instance that no longer holds its payload.
+            string label = _label;
+
             try
             {
-                await _assetService.LoadGroupByLabelAsync<UnityEngine.Object>(_label);
+                await _assetService.LoadGroupByLabelAsync<UnityEngine.Object>(label);
                 Release();
             }
             catch (Exception exception)
             {
                 FlowLogger.LogError(SystemLogType.Asset,
-                    $"LoadGroupCommand threw while loading the group '{_label}': {exception}");
+                    $"LoadGroupCommand threw while loading the group '{label}': {exception}");
                 Stop();
             }
         }

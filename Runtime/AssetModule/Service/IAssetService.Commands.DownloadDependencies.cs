@@ -1,4 +1,5 @@
 using System;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
@@ -16,6 +17,7 @@ namespace FlowIoC.AssetModule.Service
             /// Nothing is held afterwards - it is a download, not a load. A download that fails
             /// stops the sequence, and so does one that throws; the service reports the reason.
             /// </summary>
+            [LongRetain]
             public class DownloadDependencies : Command<string>
             {
                 [Inject] private IAssetService _assetService { get; set; }
