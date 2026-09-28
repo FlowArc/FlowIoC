@@ -1,4 +1,5 @@
 using System;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
@@ -15,6 +16,7 @@ namespace Modules.AssetDeliveryModule.Services
             /// Reports no loading step - only the flow knows which set it is in; a flow that wants
             /// the bar calls EnsureAsync with a progress from a Command of its own.
             /// </summary>
+            [LongRetain]
             public class Ensure : Command<string>
             {
                 [Inject] private IAssetDeliveryService _delivery { get; set; }

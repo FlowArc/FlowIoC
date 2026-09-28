@@ -16,7 +16,7 @@
     "Scripts/Runtime/Controllers.meta": "69ba05b78183cb4bd039ebc8f0a8fe3ee586c63d",
     "Scripts/Runtime/Controllers/FlushProviderCommand.cs": "f642e57921ed7cedc13afe3a023442648ee1dfbf",
     "Scripts/Runtime/Controllers/FlushProviderCommand.cs.meta": "e66529c5d37f19ad4308a22d6eede2595583ceed",
-    "Scripts/Runtime/Controllers/InitializeProvidersCommand.cs": "d532758cae1139f476fc446ad4903572feda027a",
+    "Scripts/Runtime/Controllers/InitializeProvidersCommand.cs": "885e03bbc536b24a9438af78baa529ff0b399ffa",
     "Scripts/Runtime/Controllers/InitializeProvidersCommand.cs.meta": "325c32a3b1a6dcef5f9c643ad1ec00b0a70933a9",
     "Scripts/Runtime/Controllers/LogEventCommand.cs": "1634b2e4a00b68eb4e40ea0ce636022a7ef95794",
     "Scripts/Runtime/Controllers/LogEventCommand.cs.meta": "d7302eddfa64af8a0fb57a9980906930b334e9ee",

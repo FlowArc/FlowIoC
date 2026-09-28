@@ -15,6 +15,9 @@ namespace Modules.DeviceDebuggerModule.Data.ValueObjects
         public float Uptime;
         public float TimeScale;
 
+        /// <summary>The game's own frame target in milliseconds - the graph's guide line.</summary>
+        public float TargetFrameMs;
+
         /// <summary>Frame times in milliseconds, oldest first.</summary>
         public float[] FrameHistory = Array.Empty<float>();
     }

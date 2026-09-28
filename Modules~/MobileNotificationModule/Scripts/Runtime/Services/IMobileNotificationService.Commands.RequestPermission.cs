@@ -16,6 +16,7 @@ namespace Modules.MobileNotificationModule.Services
             /// at boot.
             /// </summary>
             [DebugOption("Mobile Notification", "Request permission")]
+            [LongRetain]
             public class RequestPermission : Command
             {
                 [Inject] private IMobileNotificationService _notifications { get; set; }

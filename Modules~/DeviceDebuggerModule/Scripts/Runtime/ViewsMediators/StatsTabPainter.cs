@@ -7,17 +7,17 @@ using UnityEngine.UIElements;
 namespace Modules.DeviceDebuggerModule.ViewsMediators
 {
     /// <summary>
-    /// The Stats page: a strip of frame-time bars drawn with Painter2D, a guide at 16.7 ms, and
-    /// the numbers under it. Repainted with whatever sample it is handed.
+    /// The Stats page: a strip of frame-time bars drawn with Painter2D, a guide at the game's own
+    /// frame target, and the numbers under it. Repainted with whatever sample it is handed; the
+    /// graph's ceiling comes from the config.
     /// </summary>
     public class StatsTabPainter
     {
-        private const float GUIDE_MS = 1000f / 60f;
-        private const float GRAPH_CEILING_MS = 50f;
-
         private readonly VisualElement _graph;
         private readonly Label _rows;
         private float[] _history = Array.Empty<float>();
+        private float _guideMs;
+        private float _ceilingMs;
 
         public StatsTabPainter(VisualElement page)
         {
@@ -26,18 +26,29 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             _graph.generateVisualContent += DrawGraph;
         }
 
+        /// <summary>The frame time drawn at the top of the graph; a longer frame is drawn at full height.</summary>
+        public void SetGraphCeiling(float ceilingMs)
+        {
+            _ceilingMs = ceilingMs;
+            _graph.MarkDirtyRepaint();
+        }
+
         public void Paint(StatsSampleVO sample)
         {
             if (sample == null) return;
 
             _history = sample.FrameHistory ?? Array.Empty<float>();
+            _guideMs = sample.TargetFrameMs;
             _graph.MarkDirtyRepaint();
 
             _rows.text =
-                "FPS  " + sample.Fps.ToString("0", CultureInfo.InvariantCulture) + "   frame " + sample.FrameMs.ToString("0.0", CultureInfo.InvariantCulture) + " ms   worst " + sample.WorstFrameMs.ToString("0.0", CultureInfo.InvariantCulture) + " ms\n"
+                "FPS  " + sample.Fps.ToString("0", CultureInfo.InvariantCulture) + "   frame " +
+                sample.FrameMs.ToString("0.0", CultureInfo.InvariantCulture) + " ms   worst " +
+                sample.WorstFrameMs.ToString("0.0", CultureInfo.InvariantCulture) + " ms\n"
                 + "Allocated  " + Megabytes(sample.AllocatedBytes) + "   reserved " + Megabytes(sample.ReservedBytes) + "\n"
                 + "Mono heap  " + Megabytes(sample.MonoHeapBytes) + "   GC runs " + sample.GcCount + "\n"
-                + "Uptime  " + TimeSpan.FromSeconds(sample.Uptime).ToString(@"hh\:mm\:ss") + "   time scale " + sample.TimeScale.ToString("0.00", CultureInfo.InvariantCulture);
+                + "Uptime  " + TimeSpan.FromSeconds(sample.Uptime).ToString(@"hh\:mm\:ss") + "   time scale " +
+                sample.TimeScale.ToString("0.00", CultureInfo.InvariantCulture);
         }
 
         private void DrawGraph(MeshGenerationContext context)
@@ -45,10 +56,10 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             Painter2D painter = context.painter2D;
             Rect area = _graph.contentRect;
 
-            if (area.width <= 0f || area.height <= 0f) return;
+            if (area.width <= 0f || area.height <= 0f || _ceilingMs <= 0f || _guideMs <= 0f) return;
 
-            // The 60 fps guide.
-            float guideY = area.yMax - Mathf.Clamp01(GUIDE_MS / GRAPH_CEILING_MS) * area.height;
+            // The guide at the game's own frame target.
+            float guideY = area.yMax - Mathf.Clamp01(_guideMs / _ceilingMs) * area.height;
             painter.strokeColor = new Color(1f, 1f, 1f, 0.25f);
             painter.lineWidth = 1f;
             painter.BeginPath();
@@ -64,11 +75,11 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             for (int i = 0; i < _history.Length; i++)
             {
                 float ms = _history[i];
-                float height = Mathf.Clamp01(ms / GRAPH_CEILING_MS) * area.height;
+                float height = Mathf.Clamp01(ms / _ceilingMs) * area.height;
                 float x = area.xMin + i * barWidth + barWidth * 0.5f;
 
-                painter.strokeColor = ms > GUIDE_MS * 2f ? new Color(0.88f, 0.32f, 0.31f)
-                    : ms > GUIDE_MS ? new Color(0.90f, 0.71f, 0.33f)
+                painter.strokeColor = ms > _guideMs * 2f ? new Color(0.88f, 0.32f, 0.31f)
+                    : ms > _guideMs ? new Color(0.90f, 0.71f, 0.33f)
                     : new Color(0.42f, 0.78f, 0.55f);
                 painter.BeginPath();
                 painter.MoveTo(new Vector2(x, area.yMax));

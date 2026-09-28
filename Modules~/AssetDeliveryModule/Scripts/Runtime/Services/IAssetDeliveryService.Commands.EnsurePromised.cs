@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
@@ -22,6 +23,7 @@ namespace Modules.AssetDeliveryModule.Services
             /// Bound as <c>.ToSequence&lt;IAssetDeliveryService.Commands.EnsurePromised&gt;()</c>
             /// after Begin and before anything loads.
             /// </summary>
+            [LongRetain]
             public class EnsurePromised : Command
             {
                 [Inject] private IAssetDeliveryService _delivery { get; set; }

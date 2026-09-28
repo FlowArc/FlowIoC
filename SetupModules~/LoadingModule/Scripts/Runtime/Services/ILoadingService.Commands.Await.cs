@@ -1,4 +1,5 @@
 using System;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
@@ -16,6 +17,7 @@ namespace Modules.LoadingModule.Services
             /// Three ways out, and every one resolves the retain: completed releases, failed
             /// stops, and a throw stops.
             /// </summary>
+            [LongRetain]
             public class Await : Command<string>
             {
                 [Inject] private ILoadingService _loadingService { get; set; }

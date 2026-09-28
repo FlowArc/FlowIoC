@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.ViewsMediators.View;
 using FlowIoC.ConsoleModule;
-using Modules.DeviceDebuggerModule.Constants;
 using Modules.DeviceDebuggerModule.Data.UnityObjects;
 using Modules.DeviceDebuggerModule.Data.ValueObjects;
 using Modules.DeviceDebuggerModule.Enums;
@@ -59,11 +58,13 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
         private InfoTabPainter _info;
         private PressFeedback _pressFeedback;
 
-        private const float TRIGGER_MARGIN = 8f;
 
         private DebugTrigger _triggerKind = DebugTrigger.Button;
         private DebugCorner _corner = DebugCorner.BottomRight;
-        private float _bottomInset = DeviceDebuggerConstants.DEFAULT_BOTTOM_INSET;
+        private float _bottomInset;
+        private float _triggerMargin;
+        private float _tripleTapWindowSeconds;
+        private string _triggerLabelText = string.Empty;
         private bool _badgeEnabled = true;
         private bool _badgeShowing;
         private int _taps;
@@ -116,6 +117,10 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             _badgeEnabled = config.ShowErrorBadge;
             _corner = config.Corner;
             _bottomInset = config.BottomInset;
+            _triggerMargin = config.TriggerMargin;
+            _tripleTapWindowSeconds = config.TripleTapWindowSeconds;
+            _triggerLabelText = config.TriggerLabel;
+            _stats?.SetGraphCeiling(config.GraphCeilingMs);
 
             foreach (DebugCorner corner in Enum.GetValues(typeof(DebugCorner)))
                 _trigger.EnableInClassList(CORNER_CLASS_PREFIX + corner.ToString().ToLowerInvariant(), corner == config.Corner);
@@ -124,7 +129,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             ApplySafeArea();
 
             _trigger.EnableInClassList(TRIGGER_TAP_CLASS, config.Trigger == DebugTrigger.TripleTap);
-            _triggerLabel.text = DeviceDebuggerConstants.TRIGGER_LABEL;
+            _triggerLabel.text = _triggerLabelText;
             _triggerLabel.style.display = config.Trigger == DebugTrigger.Button ? DisplayStyle.Flex : DisplayStyle.None;
             RefreshTriggerVisibility();
         }
@@ -147,7 +152,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
 
             if (_triggerKind != DebugTrigger.Button) return;
 
-            _triggerLabel.text = show ? fps.ToString("0") + " fps" : DeviceDebuggerConstants.TRIGGER_LABEL;
+            _triggerLabel.text = show ? fps.ToString("0") + " fps" : _triggerLabelText;
         }
 
         public void ShowPanel(bool open)
@@ -282,7 +287,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
 
             float now = Time.unscaledTime;
 
-            if (_taps == 0 || now - _firstTapAt > DeviceDebuggerConstants.TRIPLE_TAP_WINDOW_SECONDS)
+            if (_taps == 0 || now - _firstTapAt > _tripleTapWindowSeconds)
             {
                 _taps = 0;
                 _firstTapAt = now;
@@ -345,10 +350,10 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             bool atTop = _corner == DebugCorner.TopLeft || _corner == DebugCorner.TopRight;
             bool atLeft = _corner == DebugCorner.TopLeft || _corner == DebugCorner.BottomLeft;
             var auto = new StyleLength(StyleKeyword.Auto);
-            _trigger.style.top = atTop ? new StyleLength(top + TRIGGER_MARGIN) : auto;
-            _trigger.style.bottom = atTop ? auto : new StyleLength(bottom + TRIGGER_MARGIN);
-            _trigger.style.left = atLeft ? new StyleLength(left + TRIGGER_MARGIN) : auto;
-            _trigger.style.right = atLeft ? auto : new StyleLength(right + TRIGGER_MARGIN);
+            _trigger.style.top = atTop ? new StyleLength(top + _triggerMargin) : auto;
+            _trigger.style.bottom = atTop ? auto : new StyleLength(bottom + _triggerMargin);
+            _trigger.style.left = atLeft ? new StyleLength(left + _triggerMargin) : auto;
+            _trigger.style.right = atLeft ? auto : new StyleLength(right + _triggerMargin);
 
             _appliedSafeArea = Screen.safeArea;
         }

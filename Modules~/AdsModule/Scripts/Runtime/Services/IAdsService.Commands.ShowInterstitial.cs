@@ -15,6 +15,7 @@ namespace Modules.AdsModule.Services
             /// condition for nothing, and the flow behind it goes on whether it showed or not.
             /// </summary>
             [DebugOption("Ads", "Show interstitial", Argument = "debug")]
+            [LongRetain(60)]
             public class ShowInterstitial : Command<string>
             {
                 [Inject] private IAdsService _ads { get; set; }

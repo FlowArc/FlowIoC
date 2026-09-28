@@ -14,20 +14,12 @@ namespace Modules.DeviceDebuggerModule.Constants
         public const bool IS_AVAILABLE = false;
 #endif
 
-        public const int DEFAULT_LOG_CAPACITY = 1000;
-
-        /// <summary>Room under the panel for a phone's rounded corners and gesture bar, in dp.</summary>
-        public const int DEFAULT_BOTTOM_INSET = 24;
-
-        /// <summary>Frame times the stats sampler keeps; two seconds at sixty.</summary>
-        public const int STATS_WINDOW = 120;
-
-        public const float TRIPLE_TAP_WINDOW_SECONDS = 1f;
+        // What a game may tune - the ring's size, the trigger's label and gesture window, the stats
+        // window and refresh rates - is on CD_DeviceDebugger, not here. What stays is what is not
+        // a setting: a compile-time fact, a hierarchy name, a glyph, scanning plumbing.
 
         /// <summary>The child of the Root that carries the UIDocument and the view.</summary>
         public const string PANEL_OBJECT_NAME = "DeviceDebuggerPanel";
-
-        public const string TRIGGER_LABEL = "FlowIoC";
 
         /// <summary>What a Value row shows before its signal has carried anything.</summary>
         public const string NO_VALUE = "—";
@@ -37,7 +29,8 @@ namespace Modules.DeviceDebuggerModule.Constants
         /// <summary>Assemblies never scanned for annotated steps: nothing of the game's lives in them.</summary>
         public static readonly string[] SKIPPED_ASSEMBLY_PREFIXES =
         {
-            "System", "Unity", "mscorlib", "netstandard", "Mono.", "Microsoft", "nunit", "Newtonsoft", "Bee.", "ReportGeneratorMerged", "JetBrains", "Rider", "FlowIoC.Dev."
+            "System", "Unity", "mscorlib", "netstandard", "Mono.", "Microsoft", "nunit", "Newtonsoft", "Bee.", "ReportGeneratorMerged", "JetBrains",
+            "Rider", "FlowIoC.Dev."
         };
     }
 }

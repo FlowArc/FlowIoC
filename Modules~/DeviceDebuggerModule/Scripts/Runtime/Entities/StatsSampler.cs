@@ -1,5 +1,4 @@
 using System;
-using Modules.DeviceDebuggerModule.Constants;
 using Modules.DeviceDebuggerModule.Data.ValueObjects;
 
 namespace Modules.DeviceDebuggerModule.Entities
@@ -17,7 +16,7 @@ namespace Modules.DeviceDebuggerModule.Entities
         private int _next;
         private int _count;
 
-        public StatsSampler(int window = DeviceDebuggerConstants.STATS_WINDOW)
+        public StatsSampler(int window)
         {
             _frameSeconds = new float[window > 0 ? window : 1];
         }
@@ -42,7 +41,7 @@ namespace Modules.DeviceDebuggerModule.Entities
         }
 
         public StatsSampleVO Sample(Func<long> allocated, Func<long> reserved, Func<long> monoHeap, Func<int> gcCount,
-            float uptime, float timeScale)
+            float uptime, float timeScale, float targetFrameMs)
         {
             var history = new float[_count];
 
@@ -60,6 +59,7 @@ namespace Modules.DeviceDebuggerModule.Entities
                 GcCount = gcCount?.Invoke() ?? 0,
                 Uptime = uptime,
                 TimeScale = timeScale,
+                TargetFrameMs = targetFrameMs,
                 FrameHistory = history
             };
         }

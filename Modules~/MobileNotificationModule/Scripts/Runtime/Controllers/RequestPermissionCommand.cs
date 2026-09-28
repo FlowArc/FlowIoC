@@ -1,4 +1,5 @@
 using System;
+using FlowIoC.BaseModule.Attributes;
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
@@ -14,6 +15,7 @@ namespace Modules.MobileNotificationModule.Controllers
     /// answer; the Editor gateway, which answers on the same frame. A gateway answers last, so
     /// the throw path cannot follow an answer.
     /// </summary>
+    [LongRetain]
     internal class RequestPermissionCommand : Command
     {
         [Inject] private IMobileNotificationModel _model { get; set; }

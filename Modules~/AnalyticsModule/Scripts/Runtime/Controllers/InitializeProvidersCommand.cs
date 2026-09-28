@@ -26,6 +26,10 @@ namespace Modules.AnalyticsModule.Controllers
             if (!_model.IsLaunched)
                 return;
 
+            // A provider answers after this step has ended, on a pooled instance that no longer
+            // holds its injections, so the holder the answer dispatches on is read here.
+            AnalyticsInternalSignals signals = _signals;
+
             foreach (ProviderSlotVO slot in _model.Slots)
             {
                 if (slot.State != AnalyticsProviderState.Plugged)
@@ -37,7 +41,7 @@ namespace Modules.AnalyticsModule.Controllers
 
                 try
                 {
-                    provider.Initialize(ready => _signals.ProviderReady.Dispatch(provider, ready));
+                    provider.Initialize(ready => signals.ProviderReady.Dispatch(provider, ready));
                 }
                 catch (Exception exception)
                 {

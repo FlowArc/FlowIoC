@@ -18,19 +18,17 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
     /// a tab (a Show with the tab, so discovery runs again), an option, a signal, a clear, a
     /// copy - and everything that only shows something is done here on the view's tick from the
     /// last PanelStateVO the module announced: the log list when the ring's version moved, the
-    /// badge, the stats four times a second, a Value row when its signal fires. A Mediator
+    /// badge, the stats as often as the config says, a Value row when its signal fires. A Mediator
     /// injects its View and signals and nothing else, which is why the model's state arrives on
     /// a signal, asked for once when the view registers.
     /// </summary>
     public class DeviceDebuggerMediator : IMediator
     {
-        private const float STATS_INTERVAL = 0.25f;
-        private const float TRIGGER_FPS_INTERVAL = 1f;
-
         [Inject] private DeviceDebuggerView _view { get; set; }
         [InjectSignal] private DeviceDebuggerInternalSignals _signals { get; set; }
 
-        private readonly StatsSampler _sampler = new();
+        // Built once the config is known, because its window is the config's.
+        private StatsSampler _sampler;
         private readonly List<ConsoleLog> _visible = new();
         private readonly Dictionary<DebugOptionVO, Action<object[]>> _valueListeners = new();
 
@@ -154,7 +152,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
 
             bool sampling = _state.IsOpen || _state.Config.ShowFpsOnTrigger;
 
-            if (sampling) _sampler.Tick(unscaledDeltaTime);
+            if (sampling) _sampler?.Tick(unscaledDeltaTime);
 
             if (!_state.IsOpen)
             {
@@ -168,10 +166,10 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
 
                 _triggerFpsClock += unscaledDeltaTime;
 
-                if (_triggerFpsClock < TRIGGER_FPS_INTERVAL) return;
+                if (_triggerFpsClock < _state.Config.TriggerFpsRefreshSeconds) return;
 
                 _triggerFpsClock = 0f;
-                _view.SetTriggerFps(_sampler.Fps, true);
+                _view.SetTriggerFps(_sampler?.Fps ?? 0f, true);
                 return;
             }
 
@@ -182,7 +180,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
                     break;
                 case DebugTab.Stats:
                     _statsClock += unscaledDeltaTime;
-                    if (_statsClock < STATS_INTERVAL) break;
+                    if (_statsClock < _state.Config.StatsRefreshSeconds) break;
                     _statsClock = 0f;
                     PaintStats();
                     break;
@@ -196,6 +194,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             if (_state == null || !_view.IsBuilt) return;
 
             _view.ApplyConfig(_state.Config);
+            _sampler = new StatsSampler(_state.Config.StatsWindow);
             _view.SetTriggerFps(0f, false);
             _view.ShowPanel(_state.IsOpen);
             _view.SetErrorBadge(_state.Logs.UnreadErrors);
@@ -213,7 +212,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             _view.SetErrorBadge(_state.Logs.UnreadErrors);
             _paintedBadge = _state.Logs.UnreadErrors;
             _paintedLogVersion = -1;
-            _statsClock = STATS_INTERVAL;
+            _statsClock = _state.Config.StatsRefreshSeconds;
             PaintForTab();
         }
 
@@ -253,15 +252,28 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
 
         private void PaintStats()
         {
+            if (_sampler == null) return;
+
             StatsSampleVO sample = _sampler.Sample(
                 Profiler.GetTotalAllocatedMemoryLong,
                 Profiler.GetTotalReservedMemoryLong,
                 () => GC.GetTotalMemory(false),
                 () => GC.CollectionCount(0),
                 Time.realtimeSinceStartup,
-                Time.timeScale);
+                Time.timeScale,
+                TargetFrameMs());
 
             _view.PaintStats(sample);
+        }
+
+        /// <summary>
+        /// The frame the game aims for, which is what the graph's guide is drawn at: the rate
+        /// ConfigureFrameRateCommand set, or sixty when the game left it to the platform.
+        /// </summary>
+        private static float TargetFrameMs()
+        {
+            int rate = Application.targetFrameRate > 0 ? Application.targetFrameRate : 60;
+            return 1000f / rate;
         }
 
         // ======================== Value rows ========================

@@ -22,15 +22,19 @@ namespace Modules.CounterModule.CounterTestModule.Controllers
         {
             // CountDownFrom takes a start time, so it works whether or not the service is up
             // yet. checkActive answers now and again later if the service was still starting.
+            // The callbacks fire after this step has ended, on a pooled instance that no longer
+            // holds its injections, so the holder they dispatch on is read here.
+            CounterTestSignals signals = _signals;
+
             _counterService.CountDownFrom(
                 _testModel.CounterId,
                 _testModel.Duration,
                 _counterService.GetTime() ?? System.DateTime.UtcNow,
-                checkActive: isActive => _signals.Outgoing.ServiceActive.Dispatch(isActive),
-                counterTick: remaining => _signals.Outgoing.Ticked.Dispatch(remaining),
-                counterComplete: () => _signals.Outgoing.Completed.Dispatch(),
-                counterStop: () => _signals.Outgoing.Stopped.Dispatch(),
-                elapsedTimeTick: elapsed => _signals.Outgoing.Elapsed.Dispatch(elapsed));
+                checkActive: isActive => signals.Outgoing.ServiceActive.Dispatch(isActive),
+                counterTick: remaining => signals.Outgoing.Ticked.Dispatch(remaining),
+                counterComplete: () => signals.Outgoing.Completed.Dispatch(),
+                counterStop: () => signals.Outgoing.Stopped.Dispatch(),
+                elapsedTimeTick: elapsed => signals.Outgoing.Elapsed.Dispatch(elapsed));
         }
     }
 }

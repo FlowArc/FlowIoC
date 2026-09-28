@@ -14,6 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.DeviceDebugger::Modules.DeviceDebuggerModule.Data.UnityObjects.CD_DeviceDebugger
   _trigger: 0
   _corner: 3
-  _logCapacity: 1000
+  _triggerLabel: FlowIoC
+  _triggerMargin: 8
+  _tripleTapWindowSeconds: 1
   _showErrorBadge: 1
   _showFpsOnTrigger: 0
+  _triggerFpsRefreshSeconds: 1
+  _logCapacity: 10000
+  _bottomInset: 24
+  _statsWindow: 120
+  _statsRefreshSeconds: 0.25
+  _graphCeilingMs: 50

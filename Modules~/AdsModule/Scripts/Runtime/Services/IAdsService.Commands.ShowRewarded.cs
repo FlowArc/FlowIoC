@@ -18,6 +18,7 @@ namespace Modules.AdsModule.Services
             /// callback.
             /// </summary>
             [DebugOption("Ads", "Show rewarded", Argument = "debug")]
+            [LongRetain(60)]
             public class ShowRewarded : Command<string>
             {
                 [Inject] private IAdsService _ads { get; set; }
