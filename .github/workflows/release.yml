@@ -4,6 +4,8 @@ name: Sign and release
 # for the FlowArc organization (package/.attestation.p7m inside it), and attaches the
 # signed .tgz to a GitHub Release of the same tag. OpenUPM tracks the release asset
 # (trackingMode: githubRelease), so the tarball a consumer installs is the one signed here.
+# The packed package.json carries the tag's CHANGELOG section as _upm.changelog and a
+# changelogUrl pointing at the tag.
 # Run by hand with a tag, it packs that tag again and replaces the release's tarball.
 
 on:
@@ -51,6 +53,37 @@ jobs:
           echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
           printf 'Packing %s@%s\n' "$package_name" "$package_version"
 
+      # The Package Manager shows a version's notes in Version History only from package.json's
+      # _upm.changelog - it never reads CHANGELOG.md - and its Changelog link opens changelogUrl.
+      # Both are written into the packed package.json from the tag's own CHANGELOG section, so
+      # each version's row shows its own notes and links its own tag rather than master.
+      - name: Write the version's notes into package.json
+        run: |
+          awk -v v="$PACKAGE_VERSION" '
+            index($0, "## [" v "]") == 1 { inside = 1; next }
+            inside && /^## \[/ { exit }
+            inside { print }
+          ' CHANGELOG.md \
+            | awk '
+                /^  +[^ ]/ && held != "" { sub(/^ +/, ""); held = held " " $0; next }
+                NR > 1 { print held }
+                { held = $0 }
+                END { print held }
+              ' \
+            | sed 's/\*\*//g' > /tmp/release-notes.md
+
+          if ! grep -q '[^[:space:]]' /tmp/release-notes.md; then
+            printf 'CHANGELOG.md has no section for %s\n' "$PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
+          jq --rawfile notes /tmp/release-notes.md \
+             --arg url "https://github.com/$GITHUB_REPOSITORY/blob/$RELEASE_TAG/CHANGELOG.md" \
+             '."_upm".changelog = ($notes | gsub("^[[:space:]]+|[[:space:]]+$"; "")) | .changelogUrl = $url' \
+             package.json > /tmp/package.json
+          mv /tmp/package.json package.json
+          jq '{changelogUrl, "_upm"}' package.json
+
       # The installer is fetched outside the checkout: upm pack takes every file it finds
       # under the package root, and a stray file with no .meta warns at every consumer's import.
       - name: Install Unity UPM CLI
@@ -77,6 +110,8 @@ jobs:
           tar -tzf "$archive" | grep -qx 'package/package.json'
           tar -tzf "$archive" | grep -qx 'package/.attestation.p7m'
           tar -xOzf "$archive" package/package.json | jq -e --arg v "$PACKAGE_VERSION" '.version == $v' > /dev/null
+          tar -xOzf "$archive" package/package.json \
+            | jq -e --arg t "/blob/$RELEASE_TAG/" '(."_upm".changelog | length > 0) and (.changelogUrl | contains($t))' > /dev/null
 
           # The tarball holds every file git tracks, apart from the repository's own dotfiles,
           # and nothing else: an untracked file has no .meta, and Unity warns about it at import.

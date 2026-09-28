@@ -9,16 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **A module panel can pin rows under its scrolling ones**: `HasFooter` and `DrawFooter`.
+- A module panel can pin rows below its scrolling ones: `HasFooter` and `DrawFooter`.
 
 ### Changed
 
-- **A module install or update writes its text files in CRLF** where the project's git has
-  `core.autocrlf` on, so git no longer warns on every file it touched.
-
-### Fixed
-
-- **DeviceDebugger 1.1.1 compiles without three CS0162 warnings.**
+- Module installs and updates write text files in CRLF where git's `core.autocrlf` is on.
+- Modules: DeviceDebugger 1.1.1.
 
 ## [1.28.0] - 2026-09-28
 
