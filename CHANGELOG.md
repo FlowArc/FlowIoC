@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Commands, command groups and Functions no longer log their return to the pool.**
 - **The shipped ads, permission, download and loading steps carry `[LongRetain]`.**
+- **Module Help pages show the module**: its test scene, its panel, its Root in the scene and its
+  config on the adapter; a bar parts each topic.
+- **UI that moves every frame goes on one layer, `Layer_3`.**
+- **WorldPointer 1.2.3**: its test scene gives only `Layer_3` a canvas of its own.
 
 ### Fixed
 

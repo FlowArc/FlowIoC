@@ -154,10 +154,10 @@ what is true whatever you are about to do.
   sends it requests, and the screen registers as that channel's display. The world side never creates
   UI and never learns whether a request was applied.
 - **UI that moves every frame sits on a ScreenManager layer with a canvas of its own.** A moving
-  element rebuilds its whole canvas, so the game gives the layers it sets aside for moving UI -
-  `Layer_3` and `Layer_4` by convention - a Canvas and a GraphicRaycaster as overrides on its
-  scene's ScreenManager instance. The shipped prefab stays one canvas; which layers get their
-  own is the game's decision.
+  element rebuilds its whole canvas, so the game gives the layer it sets aside for moving UI -
+  `Layer_3` by convention - a Canvas and a GraphicRaycaster as overrides on its scene's
+  ScreenManager instance. The shipped prefab stays one canvas; which layer gets its own is the
+  game's decision.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
   what it announces. A module's signals are its public surface - together with the
   interface of a Service, which is the one thing another module may reference directly, and
