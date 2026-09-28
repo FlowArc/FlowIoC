@@ -120,9 +120,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The prefab carries the shipped CD_DeviceDebugger on its adapter. Make your own "
                 + "from Create > FlowIoC > DeviceDebuggerModule > Data and put it in the adapter's "
                 + "own Scriptables slot to change how the panel is reached: a Button pill, a "
-                + "TripleTap zone, or None (the service and the badge only); which corner; how "
-                + "many rows the Console keeps; whether the badge shows; whether the pill shows the "
-                + "frame rate.");
+                + "TripleTap zone, or None (the service and the badge only); the pill's label, its "
+                + "corner and margin; how long three taps may take; how many rows the Console "
+                + "keeps; whether the badge shows; whether the pill shows the frame rate and how "
+                + "often it redraws; how many frames the Stats graph keeps, how often the tab "
+                + "repaints and the frame time at the top of its graph. The graph's guide line is "
+                + "the frame rate the game set, not a setting.");
 
             painter.SubHeading("3. The build");
             painter.Paragraph(
@@ -253,8 +256,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("Stats");
             painter.Paragraph(
                 "Sampled by the view's tick while the panel is open, four times a second on the "
-                + "page: the frame rate over the last second, the current and the worst frame time "
-                + "of the last 120 frames, the bar strip with a guide at 60 fps, allocated and "
+                + "page by default: the frame rate over the last second, the current and the worst "
+                + "frame time of the last 120 frames (both in the config), the bar strip with a "
+                + "guide at the frame rate the game set, allocated and "
                 + "reserved memory, the mono heap, GC runs, uptime and time scale. With Show FPS On "
                 + "Trigger ticked in the config, the pill shows the rate while the panel is closed.");
 
