@@ -52,6 +52,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Image(_images.Get("MainSceneHierarchy.png"),
                 "MainScene: the Roots in the order their numbers put them, top to bottom.");
 
+            painter.Separator();
             painter.SubHeading("In the scene");
             painter.Table(new[] {"Root", "Initialize Order", "Role"},
                 new[]
@@ -86,6 +87,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "CommandBinder.Bind(_mainSignals.Incoming.RetryBoot).ToSequence<SignalDispatchCommand>(_internalSignals.Launch);",
                 "MainModule/Scripts/Runtime/RootsContexts/MainContext.cs - CommandBindings");
 
+            painter.Separator();
             painter.SubHeading("Step by step");
             painter.Bullet(
                 "Launch dispatches the internal Launch signal - MainRoot is the last Root, so every "

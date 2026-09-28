@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class LocalSaveModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "LocalSaveModule";
 
         public override string Title => "Local Save Module";
@@ -77,6 +79,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "ILocalSaveService.Commands.Save as a step. It has no signals: the module that "
                 + "changed the data is the one that knows it is time to write.");
 
+            painter.Separator();
             painter.SubHeading("What it is not");
             painter.Paragraph(
                 "Not a cloud save, not save slots, and not a secret. The password keeps a player "
@@ -91,12 +94,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Drop the ScriptableObject onto the adapter on LocalSaveServiceRoot. That is the whole "
                 + "step - the name you file it under is the key it is stored against, and "
                 + "restoring it needs no code in your module at all.");
+            painter.Image(_images.Get("LocalSaveRootInspector.png"),
+                "LocalSaveServiceRoot as it ships: Initialize Order -100, IsTest off, and the adapter's "
+                + "maps empty until you file the assets to persist - with the Password beside them.");
             painter.Paragraph(
                 "A key that was never written is skipped, so the asset keeps the values you "
                 + "authored in the Editor. Those are your defaults; there is nowhere else to write "
                 + "them.");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("Ordering");
             painter.Paragraph(
                 "LocalSaveServiceRoot sits at Initialize Order -100, ahead of the band the game's own "
@@ -104,8 +110,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "and each Root finishes its own before the next begins - so sitting ahead of band "
                 + "0 is what puts the saved data in place before another module's model reads it. "
                 + "Do not raise the number above 0.");
-            painter.Space();
+            painter.Image(_images.Get("LocalSaveRootHierarchy.png"),
+                "LocalSaveServiceRoot in MainScene, first of all the Roots.");
 
+            painter.Separator();
             painter.SubHeading("In the Editor");
             painter.Paragraph(
                 "Loading writes into the ScriptableObject asset, and in the Editor that change "
@@ -116,16 +124,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "Tick IsTest on LocalSaveServiceRoot to switch the whole thing off for a scene: nothing "
                 + "is read and nothing is written. A build always gets the real service.");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("Trying it");
             painter.Paragraph(
                 "The module ships the scene it runs in. Open LocalSaveTestScene under "
                 + "zTestModules, press Play, click Increment a few times, leave play mode and come "
                 + "back - the counter is where you left it, and the probe asset is untouched in "
                 + "source control.");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("The panel");
             painter.Paragraph(
                 "Tools > FlowIoC-Modules > Local Save > Panel shows the file on this machine: where "
@@ -135,6 +143,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "from the authored values, and Rewrite writes it again under another password for "
                 + "the day the one on the Root changes. Clear PlayerPrefs is there too, for what any "
                 + "module keeps in PlayerPrefs. It reads and never edits: the file is the Model's.");
+            painter.Image(_images.Get("LocalSavePanel.png"),
+                "The panel on this machine's file: plain JSON, 53 bytes, read with the Root's empty "
+                + "password.");
         }
 
         private void DrawUsage(HelpPainter painter)
@@ -148,8 +159,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "CommandBinder.Bind(_signals.Incoming.AddCurrency)\n"
                 + "    .ToSequence<AddCurrencyCommand>()\n"
                 + "    .ToSequence<ILocalSaveService.Commands.Save>(nameof(SD_Profile));");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("Saving everything");
             painter.Paragraph(
                 "SaveAll writes every filed asset at once. The module sends it to itself when the "
@@ -159,8 +170,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "CommandBinder.Bind(_signals.Incoming.LeaveMatch)\n"
                 + "    .ToSequence<CloseMatchCommand>()\n"
                 + "    .ToSequence<ILocalSaveService.Commands.SaveAll>();");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("Reading");
             painter.Paragraph(
                 "There is nothing to call. The asset you filed holds the saved values by the time "
@@ -187,8 +198,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Nothing reaches disk until a Save step flushes. The write goes to a temporary "
                 + "file first and is moved over the old one only when it is whole, so a player "
                 + "killed mid-write is left with the previous save rather than half of a new one.");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("The password");
             painter.Paragraph(
                 "Set it on LocalSaveServiceRoot's adapter and the file is AES-256, the key derived from "
@@ -204,8 +215,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "What the password protects against is a player opening the file in a text editor "
                 + "and changing a number. It is not a secret from a determined one: the password "
                 + "is a string in the build.");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("What is stored");
             painter.Paragraph(
                 "Newtonsoft does the serializing, narrowed back to Unity's own rules: public fields "

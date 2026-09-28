@@ -64,6 +64,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "module knows its own readiness and announces it, and a readiness registry would "
                 + "let one module depend on another's load without a Connector.");
 
+            painter.Separator();
             painter.SubHeading("The shipped boot");
             painter.Paragraph(
                 "MainContext binds the boot as one chain: load the loading screens into the pool, "
@@ -93,6 +94,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "bound right after Begin; its page has the line and the Content row the set needs.");
             painter.PageLink("Asset Delivery Module");
 
+            painter.Separator();
             painter.SubHeading("The screens come from Resources, the art from Addressables");
             painter.Paragraph(
                 "Both loading screens declare ScreenLoadCVO.Resource and keep their prefabs in their "
@@ -111,6 +113,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "not addressable until it is. A load that brings nothing is an error from the asset "
                 + "service and leaves the bundled art on stage.");
 
+            painter.Separator();
             painter.SubHeading("Reporting a step");
             painter.Code(
                 "[Inject] private ILoadingService _loadingService { get; set; }\n"
@@ -128,6 +131,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "its weight, so the bar reaches the end. A Complete, Skip or Fail on a step that "
                 + "never started is accepted - instantaneous work need not write two lines.");
 
+            painter.Separator();
             painter.SubHeading("Beginning and waiting");
             painter.Paragraph(
                 "The chain that owns the moment binds the two shipped Commands: ILoadingService.Commands.Begin "
@@ -144,6 +148,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "set for the spinner meanwhile. Nothing asks the loading service whether clan data "
                 + "is in - the clan module knows, and tells its neighbours with an Outgoing.");
 
+            painter.Separator();
             painter.SubHeading("Sets");
             painter.Paragraph("What a CD_LoadingSets asset might hold - three sets, and the steps of each:");
             painter.Table(new[] {"Set", "Step", "Weight", "Label", "Notes"},
@@ -171,6 +176,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Move ClanData from Boot to PostBoot and the main screen opens without it; the "
                 + "Command that reports ClanData does not change.");
 
+            painter.Separator();
             painter.SubHeading("Retry");
             painter.Paragraph(
                 "The fullscreen screen shows the failed step and a Retry button. Its RetryClicked "
@@ -178,6 +184,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "again from the top. A game that re-runs only the failed step reports it again: the "
                 + "set reopens, the steps that succeeded keep their end, and it completes on its own.");
 
+            painter.Separator();
             painter.SubHeading("Setup that fails quietly");
             painter.Note(
                 "Important: a step key that no set lists is an error at the Command that reported "
@@ -192,12 +199,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "that says so is the stall warning. Read the step names in it - a step the asset "
                 + "lists that nothing reports is either a missing Root or a line to delete.");
 
+            painter.Separator();
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "LoadingTestScene under the test module's Scenes folder walks every state once: "
                 + "parallel steps, the second bar, a step that fails and the retry that succeeds, "
                 + "and a silent set running beside it all.");
 
+            painter.Separator();
             painter.SubHeading("In the scene");
             painter.Table(new[] {"Root", "Initialize Order", "Role"},
                 new[]

@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class AdsModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "AdsModule";
 
         public override string Title => "Ads Module";
@@ -48,6 +50,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("AdsTestScene.png"),
+                "AdsTestScene in play with its fake provider: ready, a rewarded ad on screen for the "
+                + "chest placement, and what the service announced.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "IAdsService: ShowRewarded and ShowInterstitial with a placement and a callback, IsReady "
@@ -82,8 +89,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "AdsServiceRoot into the scene the game boots from, Initialize Order -84, right behind "
                 + "Analytics. CD_Ads ships filed on its adapter: InitializeOnLaunch (on), "
                 + "InterstitialMinIntervalSeconds (0), ShowTimeoutSeconds (10).");
+            painter.Image(_images.Get("AdsRootHierarchy.png"),
+                "AdsServiceRoot in MainScene, in the Services band.");
+            painter.Image(_images.Get("AdsRootAdapter.png"),
+                "Its adapter as it ships: CD_Ads in the Scriptable Map.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The plug");
             painter.Note(
                 "A plug is an entry on AdsServiceRoot's Sub Context Types: Add Sub Context > "
@@ -102,7 +113,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Without it the plug reports at Setup and never initializes; the SDK key itself lives in "
                 + "AppLovin's Integration Manager, where the module cannot see it.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Order");
             painter.Paragraph(
                 "The plug plugs in Setup; the service asks it to initialize in Launch when "
@@ -122,7 +133,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "failed, skipped. Bind the grant after it, never before it, and put nothing after it that "
                 + "must run regardless.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("An interstitial");
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.LevelFinished)\n"
@@ -133,7 +144,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The interstitial step releases on every outcome, the AdResultVO handed on: the level-end "
                 + "flow goes on whether the ad showed, was skipped, or failed.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Both paths");
             painter.Code(
                 "public class WatchAdForChestCommand : Command\n"
@@ -153,7 +164,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    }\n"
                 + "}");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The button, the audio, the revenue");
             painter.Bullet("A watch-ad button reads IsReady(AdFormat.Rewarded) when it opens and follows Outgoing.ReadyChanged while it is open.");
             painter.Bullet("A Connector carries Outgoing.Opened and Closed to the audio module's mute and unmute.");
@@ -194,7 +205,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Closed; a plug over an SDK that cannot promise the order holds its Closed until the "
                 + "reward answer has arrived.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Your own plug");
             painter.Code(
                 "[AllowAsSubContext]\n"
@@ -221,7 +232,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The test module's FakeAdsProvider is the shape: a class behind IAdsProvider, a hosted "
                 + "context that plugs it, listed on AdsServiceRoot.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Shipped: AppLovin MAX");
             painter.Bullet("Assembly Modules.AppLovinMaxAds, define FLOWIOC_APPLOVIN_MAX from a version define on com.applovin.mediation.ads; references MaxSdk.Scripts.");
             painter.Bullet("CD_AppLovinMaxAds with the four ad unit ids, filed in AdsServiceRoot's Shared Scriptables.");

@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class CounterModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "CounterModule";
 
         public override string Title => "Counter Module";
@@ -39,6 +41,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("CounterTestScene.png"),
+                "CounterTestScene in play: a one-minute countdown two seconds in.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "A counter is a string id. Several callers may listen to the same one: the first "
@@ -59,12 +65,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "ICounterService directly. That is the one thing the architecture lets a module "
                 + "reach across a boundary for.");
 
+            painter.Separator();
             painter.SubHeading("Its signals");
             painter.Paragraph(
                 "Incoming.Initialize prepares the time source and starts the clock. The module's own "
                 + "context dispatches it on setup, so a game sends it again only to retry a source "
                 + "that failed. Outgoing.Ready says whether that worked.");
 
+            painter.Separator();
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives with "
@@ -91,6 +99,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    counterTick: remaining => _view.SetLabel($\"{remaining:0}s\"),\n"
                 + "    counterComplete: () => _signals.Outgoing.ChestReady.Dispatch());");
 
+            painter.Separator();
             painter.SubHeading("Joining and leaving");
             painter.Paragraph(
                 "A second screen showing the same chest adds itself to the countdown already "
@@ -100,6 +109,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "_counter.AddCallbacks(\"chest\", counterTick: OnTick);\n"
                 + "_counter.RemoveCallbacks(\"chest\", counterTick: OnTick);");
 
+            painter.Separator();
             painter.SubHeading("Filling a bar");
             painter.Paragraph(
                 "Pass isPercentageTick and the tick arrives as 0..1 of the whole countdown, so the "
@@ -108,6 +118,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "_counter.AddCallbacks(\"chest\", isPercentageTick: true,\n"
                 + "    counterTick: fraction => _view.SetFill(fraction));");
 
+            painter.Separator();
             painter.SubHeading("Counting up");
             painter.Paragraph(
                 "CountUpFrom measures forward from a moment in the past. Leave the duration "

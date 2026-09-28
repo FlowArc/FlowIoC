@@ -50,6 +50,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("AbTestFlowTestScene.png"),
+                "AbTestFlowTestScene in play: where this player landed, the probe config as it "
+                + "reads after the override, and the buttons that decide again.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "A test is an id, a version, the share of players who enter it and its groups, laid "
@@ -76,6 +81,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Modules.AbTestFlow and injects IAbTestFlowService directly. A module that only "
                 + "reads the status references Modules.AbTestFlow.Shared and nothing else.");
 
+            painter.Separator();
             painter.SubHeading("When it decides");
             painter.Paragraph(
                 "The overrides land during the binding pass, from the service's PostConstruct, "
@@ -90,6 +96,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "below every module whose config it overrides, or that module reads the original "
                 + "before the variant lands - and nothing is logged, because nothing went wrong.");
 
+            painter.Separator();
             painter.SubHeading("Its signal");
             painter.Paragraph(
                 "Incoming.ResolveAbTests decides the active test for this player and writes the "
@@ -97,6 +104,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "decide again, which changes nothing while the version stands. There is no "
                 + "Outgoing: the result is in RD_AbTestStatus.");
 
+            painter.Separator();
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives "
@@ -112,8 +120,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "Drop Prefabs/AbTestFlowServiceRoot into the scene. It detaches itself and survives "
                 + "scene loads, so a scene change neither decides again nor writes an override "
-                + "twice. Its RootAdapter already carries the two assets the module reads, filed "
-                + "under their type names:");
+                + "twice.");
+            painter.Image(_images.Get("AbTestFlowRootHierarchy.png"),
+                "AbTestFlowServiceRoot in MainScene, first in the Services band - it has to bind "
+                + "before every module whose config it overrides.");
+            painter.Paragraph(
+                "Its RootAdapter already carries the two assets the module reads, filed under their "
+                + "type names:");
+            painter.Image(_images.Get("RootAdapterInspector.png"),
+                "The adapter as it ships: CD_AbTests in the Scriptable Map, RD_AbTestStatus in the "
+                + "Shared Scriptable Map.");
             painter.Table(new[] {"Asset", "What it holds", "Where it is filed"},
                 new[] {"CD_AbTests", "The tests, authored by you.", "In the adapter's own map."},
                 new[]
@@ -130,6 +146,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "asset and the Root, and the module then decides nothing. Double-click the error "
                 + "to reach the Root.");
 
+            painter.Separator();
             painter.SubHeading("2. A test");
             painter.Paragraph(
                 "Open Tools > FlowIoC-Modules > AB Test > Editor. The tests of every CD_AbTests in the "
@@ -168,14 +185,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "cannot forget an asset - but it can leave a cell empty, and an empty cell is an "
                 + "error at boot that skips that row alone. Fill every cell before the test goes out.");
 
+            painter.Separator();
             painter.SubHeading("3. Restarting a test");
             painter.Paragraph(
                 "Raise Version. Every player decides again on their next launch, including the ones "
                 + "left outside the test - a test is restarted, not amended. Activating another test "
                 + "leaves the stored decisions untouched, so activating this one again returns every "
                 + "player to the group they had.");
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("4. Seeing a variant on this machine");
             painter.Paragraph(
                 "Tools > FlowIoC-Modules > AB Test > Selector lists every test with the group this "
@@ -184,6 +202,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the test's current version - or Reset the assignment and the next run rolls "
                 + "again. Nothing changes in a running game: the module reads its assignments once, "
                 + "at boot.");
+            painter.Image(_images.Get("AbTestSelector.png"),
+                "The Selector: this machine forced into group B of Level, the active test; Theme not "
+                + "assigned yet. Reset on a row forgets the assignment.");
         }
 
         private void DrawUsage(HelpPainter painter)
@@ -202,6 +223,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "overrides are for - is invisible to the module reading that config: it reads "
                 + "CD_Level as it always did and gets group B's numbers.");
 
+            painter.Separator();
             painter.SubHeading("Reporting the group");
             painter.Paragraph(
                 "An analytics module comes up asynchronously, after its SDK. When it is ready it "
@@ -215,6 +237,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "        _analytics.SetUserProperty(\"abtest_\" + status.AbTestId, status.Group);\n"
                 + "}");
 
+            painter.Separator();
             painter.SubHeading("What is stored");
             painter.Paragraph(
                 "One PlayerPrefs entry per test, under the prefix AbTestConstants.PrefsPrefix:");
@@ -243,6 +266,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "it without a word. Validation warns about a variant whose type carries one; the "
                 + "copy itself leaves that field as the original had it.");
 
+            painter.Separator();
             painter.SubHeading("What the Editor keeps");
             painter.Paragraph(
                 "In a build a ScriptableObject's runtime changes die with the process. In the "

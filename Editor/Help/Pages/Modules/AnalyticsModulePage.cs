@@ -51,6 +51,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("AnalyticsTestScene.png"),
+                "AnalyticsTestScene in play: two events and a user property logged, and the recording "
+                + "plug showing what reached it.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "IAnalyticsService: Log an event of a name and parameters, set a user property, set the "
@@ -84,7 +89,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Image(_images.Get("AnalyticsRootHierarchy.png"),
                 "The Root in the scene, beside the other Roots; the test scene shown.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The plugs");
             painter.Image(_images.Get("AnalyticsRootInspector.png"),
                 "The Root inspector: Initialize Order -85, and under Sub Contexts the two shipped plugs listed, "
@@ -106,7 +111,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Firebase, the App ID in FacebookSettings for Facebook. The module cannot see whether "
                 + "they are there; the SDK reports what it will at initialize.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Order");
             painter.Paragraph(
                 "Plugs plug in Setup; the service asks them to initialize in Launch; events logged from "
@@ -123,7 +128,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    .ToSequence<IAnalyticsService.Commands.Log>(new AnalyticsEventVO(\"settings_opened\"));",
                 "In the module that owns the screen. The flow reads there: open, then log.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("An event built from state");
             painter.Code(
                 "[Inject] private IAnalyticsService _analytics { get; set; }\n"
@@ -135,7 +140,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "        .With(\"attempt\", _match.Attempt));",
                 "A Command of the game's own, bound after the step that decided it. Names as constants beside it.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Who the player is");
             painter.Code(
                 "_analytics.SetUserId(profile.Id);\n"
@@ -160,7 +165,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "}",
                 "Until ready reports, the service queues for the plug; a false report drops the queue.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Your own plug");
             painter.Code(
                 "[AllowAsSubContext]\n"
@@ -184,7 +189,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "One class behind the socket, one hosted context that plugs it, listed on AnalyticsServiceRoot. "
                 + "The test module's RecordingAnalyticsProvider is the worked example.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The shipped plugs");
             painter.Table(new[] {"Plug", "Assembly", "Define", "Set by"},
                 new[]

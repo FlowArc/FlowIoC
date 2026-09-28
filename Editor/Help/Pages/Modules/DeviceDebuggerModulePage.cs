@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class DeviceDebuggerModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "DeviceDebuggerModule";
 
         public override string Title => "Device Debugger Module";
@@ -50,6 +52,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("DeviceDebuggerConsole.png"),
+                "The panel open in DeviceDebuggerTestScene on the Console tab: the boot's own lines, "
+                + "and the warning and the error the scene logs on purpose counted at the top.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "A Console tab: every row the Flow Console would show - the framework's own lines, "
@@ -83,6 +90,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "hidden button, a gesture of the game's own. What a module exposes on the panel "
                 + "needs no reference at all: the [DebugOption] attribute lives in the package.");
 
+            painter.Separator();
             painter.SubHeading("Where it differs from SRDebugger");
             painter.Paragraph(
                 "SRDebugger reads and writes a property. Here an option is a signal: a control "
@@ -91,6 +99,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "no counterpart there at all. And the panel is UI Toolkit, scaled by physical size, "
                 + "so the text is the same size on every phone.");
 
+            painter.Separator();
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives "
@@ -109,12 +118,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "game boots from. It ships at Initialize Order -95, just after the save restore, "
                 + "so the binding lines of every Root after it land in its ring; it is persistent, "
                 + "so the ring survives a scene load. One Root per game.");
+            painter.Image(_images.Get("DeviceDebuggerRootHierarchy.png"),
+                "DeviceDebuggerServiceRoot in MainScene, first in the Services band, with its "
+                + "DeviceDebuggerPanel under it.");
             painter.Note(
                 "Important: the Root must be in the first scene, and only there. A second Root in a "
                 + "later scene is a second panel and a second hook on the logger; a Root missing "
                 + "from the boot scene means the boot's lines are not in the ring, and nothing says "
                 + "so.");
 
+            painter.Separator();
             painter.SubHeading("2. The config asset");
             painter.Paragraph(
                 "The prefab carries the shipped CD_DeviceDebugger on its adapter. Make your own "
@@ -126,7 +139,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "often it redraws; how many frames the Stats graph keeps, how often the tab "
                 + "repaints and the frame time at the top of its graph. The graph's guide line is "
                 + "the frame rate the game set, not a setting.");
+            painter.Image(_images.Get("DeviceDebuggerRootAdapter.png"),
+                "The adapter as it ships: CD_DeviceDebugger in the Scriptable Map - the slot your own "
+                + "asset replaces it in.");
 
+            painter.Separator();
             painter.SubHeading("3. The build");
             painter.Paragraph(
                 "Tick Development Build. The panel compiles behind the same line as logging - the "
@@ -137,6 +154,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Important: in a release build there is no panel and no error to say so. A tester "
                 + "who reports that the pill is missing has a release build in hand.");
 
+            painter.Separator();
             painter.SubHeading("4. UI Toolkit");
             painter.Paragraph(
                 "The panel is a UIDocument under the Root, with its PanelSettings and theme in the "
@@ -194,6 +212,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "never found. A module whose options do not appear has its attribute on the wrong "
                 + "holder, or the Root that binds the holder is not in the scene.");
 
+            painter.Separator();
             painter.SubHeading("On a shipped step");
             painter.Paragraph(
                 "A Service's step - a Command nested under its interface - carries the attribute on "
@@ -215,6 +234,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "panel first opens; the holders are walked again on every open, because a scene "
                 + "that came and went may have changed them.");
 
+            painter.Separator();
             painter.SubHeading("From code");
             painter.Code(
                 "CommandBinder.Bind(_signals.Incoming.DebugPanelRequested)\n"
@@ -245,6 +265,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The annotated rows, a foldout per category. A control's value goes out as text and "
                 + "is parsed to the payload type by the module; a value that cannot be parsed is "
                 + "refused with a warning in the Console, not sent.");
+            painter.Image(_images.Get("DeviceDebuggerOptions.png"),
+                "The test scene's Options tab: a row of every kind under Sample, and two buttons "
+                + "that make trouble on purpose.");
 
             painter.SubHeading("Signals");
             painter.Paragraph(

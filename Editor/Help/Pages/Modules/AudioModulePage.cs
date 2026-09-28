@@ -12,6 +12,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class AudioModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "AudioModule";
 
         public override string Title => "Audio Module";
@@ -50,6 +52,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("AudioTestScene.png"),
+                "AudioTestScene in play: the test module's bank loaded, the settings at full, and a "
+                + "button per flow.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "AudioKey, one partial struct every module adds its keys to. AudioKey.Gameplay.Jump is "
@@ -86,6 +93,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "and binds the steps under IAudioService.Commands directly. The panel adds both "
                 + "references when it gives a module its keys.");
 
+            painter.Separator();
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "Open AudioTestScene under the test module's Scenes folder and press Play. Theme A starts "
@@ -102,10 +110,15 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Drop AudioServiceRoot from the module's Prefabs folder into the scene. It ships at "
                 + "Initialize Order -55, in the Service band, and files the module's CD_AudioSettings, "
                 + "which is wired to Mixer_Audio.");
+            painter.Image(_images.Get("AudioRootHierarchy.png"),
+                "AudioServiceRoot in MainScene, with ButtonClickSound under it.");
+            painter.Image(_images.Get("AudioRootAdapter.png"),
+                "Its adapter as it ships: CD_AudioSettings in the Scriptable Map.");
             painter.Note(
                 "Important: nothing is heard without an AudioListener, and the module does not add one. "
                 + "Keep the one on the game's camera. A 3D sound is heard from wherever that listener is.");
 
+            painter.Separator();
             painter.SubHeading("2. A module's keys and bank");
             painter.Paragraph(
                 "Open Tools/FlowIoC-Modules/Audio/Panel, pick the module under Give a module sound, and "
@@ -113,6 +126,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "with AudioKey.<Module>.cs and the Modules.Audio.Shared.asmref beside it, and "
                 + "Resources/Audio/CD_AudioBank.asset, and adds Modules.Audio and Modules.Audio.Shared "
                 + "to the module's assembly.");
+            painter.Image(_images.Get("AudioPanel.png"),
+                "The panel with AudioTestModule picked: where its keys and its bank live, five keys "
+                + "declared and five rows in the bank.");
             painter.Code(
                 "public readonly partial struct AudioKey\n"
                 + "{\n"
@@ -132,6 +148,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "into an Addressables group called Audio when it is imported. A clip taken out of "
                 + "Addressables by hand stops loading, and LoadBank reports it.");
 
+            painter.Separator();
             painter.SubHeading("3. Your own mixer or settings");
             painter.Paragraph(
                 "To change the voices, the fade times or the mixer, make a CD_AudioSettings of your own "
@@ -152,6 +169,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    .ToSequence<ApplyJumpCommand>()\n"
                 + "    .ToSequence<IAudioService.Commands.Play>(AudioKey.Gameplay.Jump);");
 
+            painter.Separator();
             painter.SubHeading("A sound at a point");
             painter.Paragraph(
                 "PlayAt takes the key where it is bound and the point off the signal the sequence is "
@@ -160,6 +178,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "CommandBinder.Bind(_signals.Incoming.Exploded)   // Signal<Vector3>\n"
                 + "    .ToSequence<IAudioService.Commands.PlayAt>(AudioKey.Gameplay.Boom);");
 
+            painter.Separator();
             painter.SubHeading("A bank, then its music");
             painter.Paragraph(
                 "A bank ticked Preload At Boot is loading from the start. Any other is loaded by a step "
@@ -174,16 +193,21 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Important: a sound asked for before its bank is loaded does not play. The Flow Console "
                 + "says so on the Audio channel, naming the key and the bank.");
 
+            painter.Separator();
             painter.SubHeading("Settings and an ad");
             painter.Paragraph(
                 "A settings screen and an ad reach the module through a Connector, on its Incoming: "
                 + "SetMusicEnabled, SetSfxEnabled, SetMusicVolume and SetSfxVolume take the player's "
                 + "choice and store it; Mute and Unmute hold every sound where it is.");
+            painter.Image(_images.Get("AudioPanelOverview.png"),
+                "The panel's Overview: every bank in the project, and what this machine has stored "
+                + "for the player's settings, with a reset.");
             painter.Code(
                 "_settingsSignals.Outgoing.MusicToggled.Connect(_audioSignals.Incoming.SetMusicEnabled);\n"
                 + "_adsSignals.Outgoing.Opened.Connect((_, _) => _audioSignals.Incoming.Mute.Dispatch());\n"
                 + "_adsSignals.Outgoing.Closed.Connect((_, _) => _audioSignals.Incoming.Unmute.Dispatch());");
 
+            painter.Separator();
             painter.SubHeading("A call from a Command");
             painter.Paragraph(
                 "Where the sound is part of a decision, the game's Command injects IAudioService and "

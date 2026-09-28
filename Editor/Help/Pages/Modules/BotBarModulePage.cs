@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class BotBarModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "BotBarModule";
 
         public override string Title => "BotBar Module";
@@ -43,6 +45,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("BotBarTestScene.png"),
+                "The bar in BotBarTestScene: Battle selected, the clan tab locked with its level, and "
+                + "a badge of 2 on the shop.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "A System with its own screen: tabs from CD_BotBar, the selected one scaled, raised and "
@@ -64,7 +71,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Bullet(
                 "BotBarSystemRoot into the hub scene, in the 0 - 97 band (shipped at 2; its child "
                 + "BotBarConnectorRoot at 3). CD_BotBar and RD_BotBar ship filed in its Shared Scriptables.");
+            painter.Image(_images.Get("BotBarRootHierarchy.png"),
+                "BotBarSystemRoot in MainScene, in the Systems band, with BotBarConnectorRoot under it.");
+            painter.Image(_images.Get("BotBarRootAdapter.png"),
+                "Its adapter as it ships: CD_BotBar and RD_BotBar in the Shared Scriptable Map.");
 
+            painter.Separator();
             painter.SubHeading("2. Your Connector");
             painter.Paragraph(
                 "In your ConnectorModule, a sub-context named after the bar. Each tab is one line, by the "
@@ -106,6 +118,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "The keys are yours: whatever CD_BotBar says. A key in a Connector that no tab carries is "
                 + "named by a warning at Launch, and a tab with no Connector line does nothing when tapped.");
 
+            painter.Separator();
             painter.SubHeading("3. The layer");
             painter.Note(
                 "The bar's screen sits on layer 2; your pages share layer 0 and open with "
@@ -121,6 +134,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "LockedLabel - shown while locked, empty shows nothing. Five entries make five tabs, six make six.");
             painter.Bullet("StartTab - the key selected when the bar opens; Open puts the bar back on it every time.");
 
+            painter.Separator();
             painter.SubHeading("Options");
             painter.Bullet(
                 "ScaleSelected + SelectedScale, RaiseSelected + SelectedRaise, WidenSelected + SelectedWidth "
@@ -129,6 +143,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Titles: Always, SelectedOnly, Never. NewMarkOnUnlock: a NEW mark on a tab that just unlocked, "
                 + "until its first tap. HideDuration and HideCurve: the slide off and on.");
 
+            painter.Separator();
             painter.SubHeading("Locks and badges");
             painter.Bullet(
                 "SetLocked(key, locked) from your own decision - a level reached, a purchase made. A locked "

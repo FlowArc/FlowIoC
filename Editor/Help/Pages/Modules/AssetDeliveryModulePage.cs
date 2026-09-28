@@ -76,6 +76,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "extension and keys added after the build, and a panel that shows what the next "
                 + "build will send.");
 
+            painter.Separator();
             painter.SubHeading("The three delivery types");
             painter.Paragraph(
                 "Install Time ships inside the app on Android, in one AddressablesAssetPack with the "
@@ -86,6 +87,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "changed pack with an update, so what a release changes stays in a pack and never "
                 + "in a hand-written download.");
 
+            painter.Separator();
             painter.SubHeading("What it is not");
             painter.Paragraph(
                 "A remote catalogue. Content that changes with no release - a CDN, Build Remote "
@@ -108,7 +110,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "AssetDeliveryServiceRoot goes into every scene whose boot ensures packs - MainScene "
                 + "in the setup set - at Initialize Order -40, a free ten among the services; the "
                 + "seat does not matter, because the service acts only inside the boot sequence.");
+            painter.Image(_images.Get("AssetDeliveryRootHierarchy.png"),
+                "AssetDeliveryServiceRoot in MainScene, in the Services band.");
 
+            painter.Separator();
             painter.SubHeading("The groups");
             painter.Paragraph(
                 "Run Window > Asset Management > Addressables > Init Play Asset Delivery once; it adds "
@@ -125,6 +130,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "with every other character turned into an underscore, and two groups that end up "
                 + "the same fail the build with both names in the error.");
 
+            painter.Separator();
             painter.SubHeading("Android");
             painter.Bullet("Build App Bundle on, in the Build Profiles window's Android platform settings. An APK carries no asset packs.");
             painter.Image(_images.Get("AssetDeliveryAppBundle.png"),
@@ -147,6 +153,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "initialised, App Bundle off, Split Application Binary off and a group in no pack are "
                 + "each an error in the console at the end of the build.");
 
+            painter.Separator();
             painter.SubHeading("iOS");
             painter.Bullet(
                 "The Addressables build for iOS moves each delivery group's bundles out of the build "
@@ -178,6 +185,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "documented under Testing asset packs locally - serves .aar files over HTTPS to a "
                 + "device that trusts a self-signed root.");
 
+            painter.Separator();
             painter.SubHeading("The panel");
             painter.Paragraph(
                 "Tools > FlowIoC-Modules > Asset Delivery > Panel shows what the next build sends: "
@@ -217,6 +225,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "crossing, the same one Main makes. Without a Content row in the set the report "
                 + "lands on no set and the loading service says so.");
 
+            painter.Separator();
             painter.SubHeading("An on-demand pack");
             painter.Paragraph(
                 "Where a flow needs its pack - a level, a chapter, a language - one step holds the "
@@ -230,6 +239,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "name breaks Google's rule - and the Asset Delivery panel lists both. Ensure reports "
                 + "no loading step, because only the flow knows which set it is in.");
 
+            painter.Separator();
             painter.SubHeading("From a Command");
             painter.Code(
                 "[Inject] private IAssetDeliveryService _delivery { get; set; }\n"
@@ -254,6 +264,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "packs; RemoveAsync frees a pack the player is done with, and the next Ensure "
                 + "fetches it again.");
 
+            painter.Separator();
             painter.SubHeading("In the Editor");
             painter.Paragraph(
                 "There is no store, so every pack counts as on the device: the Content step is "

@@ -72,7 +72,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         protected override void DrawBody(HelpPainter painter)
         {
-            painter.Space();
+
+            painter.Separator();
             painter.SubHeading("What is here");
             painter.Paragraph(
                 "MainModule launches the game and owns MainScene. ScreenModule holds the "
@@ -96,7 +97,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Update to X for the one that carries a version, or Install for a module the game "
                 + "removed and wants back.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The Roots, in the order they run");
             painter.Paragraph(
                 "Every module is one Root in MainScene, and its Initialize Order says when it binds, "
@@ -112,7 +113,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 new[] {"Main", "MainRoot", "100", "Core - the entry point, last of all"});
             painter.PageLink("Ordering Roots", "Read: Ordering Roots - the bands, and where a new Root goes");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Installed once, and only once");
             painter.Paragraph(
                 "The set is recorded in ProjectSettings/FlowIoCSetup.json, which belongs in source "
@@ -125,7 +126,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "These modules are yours once they land. Rename them, gut them, delete what the "
                 + "game does not need - nothing here is reinstalled or repaired behind your back.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Updating a ready-made module");
             painter.Paragraph(
                 "Every module under Modules~ carries a version, the Version: line on its card, and "

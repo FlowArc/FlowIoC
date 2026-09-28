@@ -14,6 +14,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class CameraModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "CameraModule";
 
         /// <summary>
@@ -81,6 +83,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "module references it. What reaches it are signals, wired in a Connector - which "
                 + "the install deliberately does not write for you. The Wiring tab has it.");
 
+            painter.Separator();
             painter.SubHeading("What lands in the project");
             painter.Table(new[] {"What", "Holds"},
                 new[] {"Modules.Camera", "The model, the commands, the adapters."},
@@ -94,6 +97,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 new[] {"Prefabs/CameraSystemRoot", "The module's presence in the scene."},
                 new[] {"Scriptables/CD_CameraCustomBlends", "The blend table."});
 
+            painter.Separator();
             painter.SubHeading("What it needs");
             painter.Paragraph(
                 "com.unity.cinemachine, and com.unity.render-pipelines.core for the "
@@ -104,7 +108,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         private void DrawUsage(HelpPainter painter)
         {
+            painter.SubHeading("The Root");
+            painter.Paragraph(
+                "Drop CameraSystemRoot into the scene. It brings its own Main Camera with the "
+                + "Cinemachine brain, and a CameraManager - the adapter view - holding a Cinemachine camera and the target it follows.");
+            painter.Image(_images.Get("CameraRootHierarchy.png"),
+                "CameraSystemRoot in MainScene, in the Systems band, opened out.");
+            painter.Image(_images.Get("CameraRootAdapter.png"),
+                "Its adapter as it ships: CD_CameraCustomBlends, the blend table, in the Scriptable Map.");
 
+            painter.Separator();
             painter.SubHeading("Naming a camera");
             painter.Paragraph(
                 "CameraName is the module's vocabulary and lives in its Shared assembly. Add the "
@@ -117,6 +130,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    Cutscene\n"
                 + "}");
 
+            painter.Separator();
             painter.SubHeading("Switching");
             painter.Paragraph(
                 "Everything the module does is an incoming signal, so a Command drives it the way "
@@ -127,6 +141,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "_cameraSignals.Incoming.SwitchCamera.Dispatch(CameraName.Gameplay);\n"
                 + "_cameraSignals.Incoming.SetCameraTarget.Dispatch(_playerTransform);");
 
+            painter.Separator();
             painter.SubHeading("Coming back to where you were");
             painter.Paragraph(
                 "Store a camera's position before leaving it and move back to it afterwards. The "
@@ -135,6 +150,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "_cameraSignals.Incoming.SetCameraLastPos.Dispatch(CameraName.Gameplay);\n"
                 + "_cameraSignals.Incoming.MoveCameraToLastPos.Dispatch(CameraName.Gameplay, 0.4f);");
 
+            painter.Separator();
             painter.SubHeading("Asking who the target is");
             painter.Paragraph(
                 "PublishCameraTarget asks; the answer comes back on Outgoing.CameraTargetReady, "
@@ -159,6 +175,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "connectors. That assembly is the only one in the project allowed to see both "
                 + "sides of a wire.");
 
+            painter.Separator();
             painter.SubHeading("One sub-context");
             painter.Paragraph(
                 "Name it after the module on the other side of the wire and split the two "
@@ -189,6 +206,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "            .Connect(_mainSignals.Incoming.CameraTargetReady);\n"
                 + "}");
 
+            painter.Separator();
             painter.SubHeading("One entry on the Root");
             painter.Paragraph(
                 "A sub-context is not found by reflection: the Root that owns it lists it. Select "

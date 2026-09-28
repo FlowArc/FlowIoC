@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class MobileNotificationModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "MobileNotificationModule";
 
         public override string Title => "Mobile Notification Module";
@@ -50,6 +52,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("MobileNotificationPreview.png"),
+                "The Return reminder as the Android tray and the iOS banner will draw it, previewed in "
+                + "the panel.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "Local notifications on iOS and Android through Unity's Mobile Notifications package, "
@@ -82,8 +89,12 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "CD_MobileNotifications on the Root's adapter, in the module's own Scriptables slot. The "
                 + "shipped asset has a Reminders channel, a Return template, a Test template and the "
                 + "three reminders; edit it or file your own.");
+            painter.Image(_images.Get("MobileNotificationRootHierarchy.png"),
+                "MobileNotificationServiceRoot in MainScene, in the Services band.");
+            painter.Image(_images.Get("MobileNotificationRootAdapter.png"),
+                "Its adapter as it ships: CD_MobileNotifications in the Scriptable Map.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Project Settings > Mobile Notifications");
             painter.Note(
                 "Android > Notification Icons: register every SmallIcon and LargeIcon name the catalogue "
@@ -95,13 +106,16 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "iOS > Request Authorization on App Launch: off. The ask is the module's step, bound "
                 + "where the game wants it; the package's own ask would pre-empt it at the first frame.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("The panel");
             painter.Paragraph(
                 "Tools > FlowIoC-Modules > Mobile Notification > Panel edits the catalogue, previews each "
                 + "template as the Android and iOS trays draw it - sample arguments filling its "
                 + "placeholders - flags the three settings above when they are wrong, and, while the game "
                 + "runs, lists what the service has scheduled with the card each one will show.");
+            painter.Image(_images.Get("MobileNotificationPanel.png"),
+                "The panel on the shipped catalogue: Return open, three project settings flagged at the "
+                + "top, and its card previewed for both trays.");
         }
 
         private void DrawUsage(HelpPainter painter)
@@ -113,14 +127,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    .ToSequence<OpenMainScreenCommand>();",
                 "The step holds the sequence until the OS dialog answers.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("A computed time");
             painter.Code(
                 "[Inject] private IMobileNotificationService _notifications { get; set; }\n\n"
                 + "_notifications.Schedule(\"ChestReady\", chest.Remaining, slot.ToString(), chest.Name);",
                 "Key, delay, an instance tag, and the args that fill {0} in the template's texts.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("A fixed time, cancel, everything");
             painter.Code(
                 ".ToSequence<IMobileNotificationService.Commands.Schedule>(\"FreeChest\")\n"
@@ -128,7 +142,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + ".ToSequence<IMobileNotificationService.Commands.CancelAll>()",
                 "Schedule takes the template's DefaultAfterMinutes.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("What the player tapped");
             painter.Code(
                 "if (_notifications.OpenedFromKey == \"ChestReady\")\n"
@@ -143,7 +157,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Key, Name, Description, Importance. Android registers each as a channel the player can "
                 + "mute in the OS settings; iOS groups notifications by the key and ignores the rest.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Notifications");
             painter.Paragraph(
                 "Key, Channel, Title, Body, SmallIcon, LargeIcon, Picture, ShowInForeground, Repeats, "
@@ -160,7 +174,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "file path; a notification scheduled before its copy is there goes out without it, and "
                 + "says so in the log.");
 
-            painter.Space();
+            painter.Separator();
             painter.SubHeading("Return reminders");
             painter.Paragraph(
                 "A template key and AfterMinutes. Every entry is scheduled when the app is left and "

@@ -58,6 +58,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Image(_images.Get("ConnectorRootInspector.png"),
                 "ConnectorRoot: the two shipped sub-contexts, and the button that adds the next crossing.");
 
+            painter.Separator();
             painter.SubHeading("In the scene");
             painter.Table(new[] {"Root", "Initialize Order", "Role"},
                 new[]
@@ -116,6 +117,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "lambda that dispatches. A payload that had to change shape between the two would be "
                 + "adapted on the same line.");
 
+            painter.Separator();
             painter.SubHeading("LoadingConnectorSubContext");
             painter.Paragraph(
                 "One service, two screens. Each Began reaches its own presentation - FullscreenBegan "
@@ -134,6 +136,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "_loadingSignals.Outgoing.SetFailed.Connect(_loadingOverlayScreenSignals.Incoming.Close, (set, step) => set, GROUP);",
                 "LoadingConnectorSubContext - IncomingSignals");
 
+            painter.Separator();
             painter.SubHeading("Adding a crossing");
             painter.Bullet(
                 "A new module that has to hear another module gets a sub-context named after the one "

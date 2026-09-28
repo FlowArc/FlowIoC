@@ -59,6 +59,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Image(_images.Get("ScreenRootHierarchy.png"),
                 "MainScene with ScreenRoot folded open: the manager and its ten layers, under the Core roots.");
 
+            painter.Separator();
             painter.SubHeading("In the scene");
             painter.Table(new[] {"Root", "Initialize Order", "Role"},
                 new[]
@@ -98,6 +99,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Image(_images.Get("ScreenManagerInspector.png"),
                 "The ScreenManager component: its id, and the layer list in the order the slots are numbered.");
 
+            painter.Separator();
             painter.SubHeading("What the manager does not hold");
             painter.Paragraph(
                 "No list of screens. A screen registers itself with the screen service when its Root "
@@ -106,6 +108,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Module, is known to the manager the moment its Root is in the scene, and nothing "
                 + "on this component changes.");
 
+            painter.Separator();
             painter.SubHeading("Loaded, shown, hidden, unloaded");
             painter.Paragraph(
                 "A screen's prefab is loaded once and pooled. Open shows the pooled instance; Hide takes "
@@ -156,6 +159,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "}",
                 "GameplayModule/zScreenModules/GameplayScreenModule/Scripts/Runtime/RootsContexts/GameplayScreenContext.cs");
 
+            painter.Separator();
             painter.SubHeading("Opened from a Command");
             painter.Paragraph(
                 "A screen opens from a Command, never from a Mediator, so the opening is a step in a "
@@ -188,6 +192,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "}",
                 "OpenGameplayScreenCommand - the three ways out of a retained Command");
 
+            painter.Separator();
             painter.SubHeading("Filled by the Command that opens it");
             painter.Paragraph(
                 "The gameplay screen has nothing to show yet, so its Command only opens it. A screen that "
@@ -244,6 +249,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.PageLink("BotBar Module", "Read: BotBar Module - a screen opened and filled from shared data");
             painter.PageLink("Controllers", "Read: Controllers - Retain, Release and Stop");
 
+            painter.Separator();
             painter.SubHeading("Where a screen module goes");
             painter.Bullet(
                 "In the zScreenModules of the module whose feature it shows - MainScreenModule under "

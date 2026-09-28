@@ -33,6 +33,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "GameplayScreenModule under zScreenModules: the screen the game is played on, opened in "
                 + "Layer_1, with its test scene beside it.");
 
+            painter.Separator();
             painter.SubHeading("How the screen opens");
             painter.Paragraph(
                 "The main screen announces PlayClicked. MainConnectorSubContext joins it to the gameplay "
@@ -42,6 +43,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Module page has the shape.");
             painter.PageLink("Screen Module", "Read: Screen Module - opening a screen and filling it");
 
+            painter.Separator();
             painter.SubHeading("Writing the game here");
             painter.Bullet(
                 "Rules and state go in a Model under Models; the work a signal runs goes in a Command "
@@ -58,6 +60,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.PageLink("Controllers", "Read: Controllers - Commands and Functions");
             painter.PageLink("Model", "Read: Model - state and the rules that keep it valid");
 
+            painter.Separator();
             painter.SubHeading("In the scene");
             painter.Table(new[] {"Root", "Initialize Order", "Role"},
                 new[]

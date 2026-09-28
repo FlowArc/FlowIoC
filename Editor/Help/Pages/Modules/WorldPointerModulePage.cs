@@ -59,6 +59,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Image(_images.Get("WorldPointerOverTarget.png"),
                 "WorldPointerTestScene in play: the sample screen's label stands over the cube it follows.");
 
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "RegisterTarget takes a channel - what kind of pointer this is, such as Emote - and "
@@ -95,6 +96,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "own - the indicators live in one of its screens, on a ScreenManager layer "
                 + "the game has given a canvas of its own. The Setup tab shows how.");
 
+            painter.Separator();
             painter.SubHeading("How it places");
             painter.Paragraph(
                 "One LateUpdate walks every matched target: it is projected through the camera, "
@@ -103,6 +105,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "canvas modes come out right. Behind the camera Unity's projection is mirrored "
                 + "through the centre, so it is mirrored back before anything reads it.");
 
+            painter.Separator();
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives "
@@ -122,7 +125,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Drop WorldPointerServiceRoot from the module's Prefabs folder into the scene. It "
                 + "ships at Initialize Order -30, in the Service band, with RD_WorldPointer filed "
                 + "on its adapter.");
+            painter.Image(_images.Get("WorldPointerRootHierarchy.png"),
+                "WorldPointerServiceRoot in MainScene, in the Services band.");
 
+            painter.Separator();
             painter.SubHeading("2. The camera");
             painter.Paragraph(
                 "Pointers are projected through Camera.main until a game sets the service's Camera "
@@ -133,16 +139,18 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "and none set on the service, every indicator is told Hidden and nothing is "
                 + "logged - there is nothing wrong to report, only nothing to project through.");
 
+            painter.Separator();
             painter.SubHeading("3. The screen");
             painter.Paragraph(
                 "Create a screen module in the zScreenModules of the module that owns the objects, "
-                + "on a layer set aside for UI that moves - Layer_3 or Layer_4 in the setup below.");
+                + "on the layer set aside for UI that moves - Layer_3 in the setup below.");
 
+            painter.Separator();
             painter.SubHeading("4. The ScreenManager (recommended)");
             painter.Paragraph(
-                "In the scene, select Layer_3 and Layer_4 under the ScreenManager and add a Canvas "
-                + "and a Graphic Raycaster to each. Leave Override Sorting off, so the layers still "
-                + "draw in hierarchy order.");
+                "In the scene, select Layer_3 under the ScreenManager and add a Canvas and a "
+                + "Graphic Raycaster to it. Leave Override Sorting off, so the layer still draws in "
+                + "hierarchy order.");
             painter.Image(_images.Get("WorldPointerScreenManagerHierarchy.png"),
                 "The ScreenManager in WorldPointerTestScene: Layer_3 selected.");
             painter.Image(_images.Get("WorldPointerLayerInspector.png"),
@@ -161,6 +169,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "raycaster does not reach into a nested canvas, so every button on that layer "
                 + "stops taking clicks, and nothing reports it.");
 
+            painter.Separator();
             painter.SubHeading("5. The indicator and its pool");
             painter.Paragraph(
                 "Derive one line of class: EmoteIndicator : WorldPointerIndicator<EmoteVO> goes on "
@@ -190,6 +199,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "addressable indicator prefab has to be in the pool already - warm its group at "
                 + "boot - or the Get is refused.");
 
+            painter.Separator();
             painter.SubHeading("6. The channel and the content");
             painter.Paragraph(
                 "Both go in the Shared assembly of the module that owns the objects - a const "
@@ -220,6 +230,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Important: a request for a pair that was never registered is an error naming the "
                 + "line that sent it. RegisterTarget comes first.");
 
+            painter.Separator();
             painter.SubHeading("Clearing everything");
             painter.Paragraph(
                 "UnregisterAll unregisters every target and hands every indicator back to its "
@@ -254,6 +265,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "refused with an error naming its line, and so is a display whose content type "
                 + "differs from content a target already holds.");
 
+            painter.Separator();
             painter.SubHeading("Letting an indicator go slowly");
             painter.Paragraph(
                 "The service never tells an indicator Hidden when it hands it back - the display "
@@ -261,6 +273,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "own Dismiss, which returns it to the pool at once; override Dismiss to play a fade "
                 + "and call the base when the fade ends.");
 
+            painter.Separator();
             painter.SubHeading("Placing something once");
             painter.Paragraph(
                 "A damage number does not follow; it appears where the hit was and animates itself. "
@@ -319,6 +332,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "its state after the first InFrame. Behind the camera it lands at the mirrored "
                 + "point; if that matters, the mode is Hide.");
 
+            painter.Separator();
             painter.SubHeading("Offsets, margins, smoothing");
             painter.Paragraph(
                 "World Offset lifts the point before projecting - the height of a head. Screen "

@@ -11,6 +11,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
     /// </summary>
     internal class HapticModulePage : ModulePage
     {
+        private readonly HelpImages _images = new HelpImages();
+
         public override string ModuleFolderName => "HapticModule";
 
         public override string Title => "Haptic Module";
@@ -50,6 +52,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         public override void DrawBody(HelpPainter painter)
         {
+            painter.Image(_images.Get("HapticTestScene.png"),
+                "HapticTestScene in play: a button per preset, and the on/off choice the module keeps.");
+
+            painter.Separator();
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "Nine presets, the ones iOS names: Selection, Success, Warning, Failure, and the "
@@ -77,6 +83,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "that decided the event, and that Command calls Play. Nothing outside the module "
                 + "needs telling that it did.");
 
+            painter.Separator();
             painter.SubHeading("Where the presets come from");
             painter.Paragraph(
                 "The Android envelopes are Nice Vibrations' nine tables (Lofelt, MIT), with its "
@@ -84,6 +91,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "One cell was changed after a device run - Medium runs 120 ms rather than 80 - "
                 + "and the Presets tab says why.");
 
+            painter.Separator();
             painter.SubHeading("Trying it out");
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives "
@@ -101,7 +109,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Drop HapticServiceRoot from the module's Prefabs folder into the scene. It ships "
                 + "at Initialize Order -50, in the Service band; it reaches no other module, so "
                 + "nothing depends on where it sits among the other Roots.");
+            painter.Image(_images.Get("HapticRootHierarchy.png"),
+                "HapticServiceRoot in MainScene, in the Services band.");
 
+            painter.Separator();
             painter.SubHeading("2. Android");
             painter.Paragraph(
                 "Nothing to add. The module carries an IPostGenerateGradleAndroidProject that "
@@ -117,6 +128,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "AndroidJavaException from the Command - the build is not silent, but it is "
                 + "already on the phone.");
 
+            painter.Separator();
             painter.SubHeading("3. iOS");
             painter.Paragraph(
                 "Nothing to add either. Plugins/iOS/FlowHaptics.mm ships inside the module with an "
@@ -127,6 +139,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "build for iOS, and has not been through an Xcode build yet. The first one is "
                 + "its test; the calls are UIKit's own and there is nothing else in the file.");
 
+            painter.Separator();
             painter.SubHeading("4. The Editor");
             painter.Paragraph(
                 "The Editor never vibrates. A SilentHapticPlayer takes the place of the device "
@@ -157,6 +170,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "Execute(HapticPreset). A step before it may also choose the preset at runtime and "
                 + "hand it on with Release(preset) instead.");
 
+            painter.Separator();
             painter.SubHeading("A call from a Command");
             painter.Paragraph(
                 "Where the preset is part of a decision - the same coin is a LightImpact when it "
@@ -177,6 +191,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "click dispatches a signal and a Command plays the preset. A Play call written in "
                 + "a Mediator is refused at runtime with the injection error, not by the compiler.");
 
+            painter.Separator();
             painter.SubHeading("The on/off choice");
             painter.Paragraph(
                 "A settings screen reads IsEnabled to draw its toggle and dispatches the new value "
@@ -187,6 +202,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Code(
                 "CommandBinder.Bind(_signals.HapticsToggled).ToSequence<IHapticService.Commands.SetEnabled>();");
 
+            painter.Separator();
             painter.SubHeading("Reading the flow");
             painter.Paragraph(
                 "Every call crosses the module's internal signals into a step of its own - "
@@ -211,8 +227,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 new[] {"Success", "UINotificationFeedbackTypeSuccess", "a 240 ms ramp in 8 steps"},
                 new[] {"Warning", "UINotificationFeedbackTypeWarning", "a 280 ms ramp in 9 steps"},
                 new[] {"Failure", "UINotificationFeedbackTypeError", "a 480 ms ramp in 16 steps"});
-            painter.Space();
 
+            painter.Separator();
             painter.SubHeading("What Android actually plays");
             painter.Paragraph(
                 "The envelope goes to the Vibrator as one waveform - createWaveform with the step "
@@ -235,6 +251,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "written, and every phone feels a little different; that is Android haptics, and "
                 + "no vendor asset gets past it either.");
 
+            painter.Separator();
             painter.SubHeading("Devices with less");
             painter.Paragraph(
                 "Without amplitude control - Android 7 and under, or a vibrator that reports none - "
