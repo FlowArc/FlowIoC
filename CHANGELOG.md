@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **A Function called from a `hideCommandLog` run is as quiet as the run.**
+- **The Module Scanner's project-files Fix deletes a `.csproj` no solution lists**, which
+  regenerating left behind, so the finding clears.
 
 ## [1.27.3] - 2026-09-27
 

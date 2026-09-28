@@ -17,6 +17,11 @@ namespace FlowIoC.Editor.ModuleScanner
     /// The repair is the one Preferences offers by hand: regenerate every project file. The
     /// startup sync presses it once per FlowIoC version on its own; this check is where the
     /// state shows, and the Fix for the cases the startup could not cover.
+    ///
+    /// Regenerating writes the projects Unity generates today and never deletes the rest: an
+    /// assembly that was removed, or a package whose projects the IDE no longer generates, leaves
+    /// a .csproj no solution lists. Nothing loads it, so the Fix deletes it once the solution is
+    /// written afresh.
     /// </summary>
     internal class ProjectFilesCheck : IProjectCheck
     {
@@ -35,6 +40,7 @@ namespace FlowIoC.Editor.ModuleScanner
         private readonly Func<string, string> _readText;
         private readonly Func<string, bool> _directoryExists;
         private readonly Func<string, bool> _fileExists;
+        private readonly Action<string> _deleteFile;
         private readonly IProjectFilesRegenerator _regenerator;
 
         internal ProjectFilesCheck() : this(
@@ -44,17 +50,20 @@ namespace FlowIoC.Editor.ModuleScanner
             File.ReadAllText,
             Directory.Exists,
             File.Exists,
+            File.Delete,
             new CodeEditorProjectFiles())
         {
         }
 
         internal ProjectFilesCheck(Func<string, string, string[]> filesMatching, Func<string, string> readText,
-            Func<string, bool> directoryExists, Func<string, bool> fileExists, IProjectFilesRegenerator regenerator)
+            Func<string, bool> directoryExists, Func<string, bool> fileExists, Action<string> deleteFile,
+            IProjectFilesRegenerator regenerator)
         {
             _filesMatching = filesMatching;
             _readText = readText;
             _directoryExists = directoryExists;
             _fileExists = fileExists;
+            _deleteFile = deleteFile;
             _regenerator = regenerator;
         }
 
@@ -62,28 +71,81 @@ namespace FlowIoC.Editor.ModuleScanner
 
         public FindingEVO Inspect(ProjectTargetEVO project)
         {
-            List<string> stale = Stale(project);
-
-            if (stale.Count == 0)
+            if (string.IsNullOrEmpty(project?.ProjectRoot))
                 return FindingEVO.Ok(Id, "Project files follow the packages");
 
-            return FindingEVO.Fixable(Id,
-                $"{stale.Count} project file(s) point at a package folder or a project that is gone - "
-                + $"the IDE reports what Unity compiles: {string.Join(", ", stale)}");
+            string root = project.ProjectRoot;
+            List<string> unlisted = Unlisted(root);
+            List<string> stale = Stale(root, unlisted);
+
+            if (stale.Count == 0 && unlisted.Count == 0)
+                return FindingEVO.Ok(Id, "Project files follow the packages");
+
+            var parts = new List<string>();
+
+            if (stale.Count > 0)
+                parts.Add($"{stale.Count} project file(s) point at a package folder or a project that is gone - "
+                          + $"the IDE reports what Unity compiles: {string.Join(", ", stale)}");
+
+            if (unlisted.Count > 0)
+                parts.Add($"{unlisted.Count} project file(s) no solution lists, so nothing loads them: "
+                          + string.Join(", ", Names(unlisted)));
+
+            return FindingEVO.Fixable(Id, string.Join("; ", parts));
         }
 
-        public void Fix(ProjectTargetEVO project) => _regenerator.Regenerate();
-
-        private List<string> Stale(ProjectTargetEVO project)
+        public void Fix(ProjectTargetEVO project)
         {
-            var stale = new List<string>();
-            if (string.IsNullOrEmpty(project?.ProjectRoot))
-                return stale;
+            _regenerator.Regenerate();
 
-            string root = project.ProjectRoot;
+            if (string.IsNullOrEmpty(project?.ProjectRoot))
+                return;
+
+            foreach (string path in Unlisted(project.ProjectRoot))
+                _deleteFile(path);
+        }
+
+        /// <summary>
+        /// The root project files that no solution at the root lists. With no solution at all
+        /// there is nothing to measure against - the IDE has not synced yet - so none is.
+        /// </summary>
+        private List<string> Unlisted(string root)
+        {
+            var unlisted = new List<string>();
+            string[] solutions = _filesMatching(root, SOLUTION_PATTERN);
+            if (solutions.Length == 0)
+                return unlisted;
+
+            var listed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string solution in solutions)
+            {
+                foreach (Match match in SolutionProject.Matches(_readText(solution) ?? string.Empty))
+                    listed.Add(Path.GetFileName(match.Groups[1].Value));
+            }
 
             foreach (string path in _filesMatching(root, PROJECT_PATTERN))
             {
+                if (!listed.Contains(Path.GetFileName(path)))
+                    unlisted.Add(path);
+            }
+
+            return unlisted;
+        }
+
+        private static IEnumerable<string> Names(List<string> paths)
+        {
+            foreach (string path in paths)
+                yield return Path.GetFileName(path);
+        }
+
+        private List<string> Stale(string root, List<string> unlisted)
+        {
+            var stale = new List<string>();
+
+            foreach (string path in _filesMatching(root, PROJECT_PATTERN))
+            {
+                // A project file nothing loads is named once, as that, and the Fix deletes it.
+                if (unlisted.Contains(path)) continue;
                 if (PointsAtMissingPackage(root, _readText(path)))
                     stale.Add(Path.GetFileName(path));
             }

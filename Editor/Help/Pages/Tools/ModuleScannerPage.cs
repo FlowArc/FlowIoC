@@ -132,7 +132,10 @@ namespace FlowIoC.Editor.Help.Pages.Tools
                     + "project builds while the IDE reports every type in the package. Fix "
                     + "regenerates them all, the way Regenerate project files in Preferences does; "
                     + "FlowIoC also does that on its own the first time a version of it runs in a "
-                    + "project, so the row is red only when that did not happen."
+                    + "project, so the row is red only when that did not happen. Regenerating never "
+                    + "deletes a .csproj Unity no longer generates - a removed assembly, a package "
+                    + "the IDE leaves out - so a project file no solution lists is named too, and "
+                    + "the Fix deletes it once the solution is written afresh."
                 });
 
             painter.SubHeading("Reading a row");
