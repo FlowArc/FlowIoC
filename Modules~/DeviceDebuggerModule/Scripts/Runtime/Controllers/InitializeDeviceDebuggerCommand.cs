@@ -29,7 +29,7 @@ namespace Modules.DeviceDebuggerModule.Controllers
         {
             Transform panel = _root != null ? _root.transform.Find(DeviceDebuggerConstants.PANEL_OBJECT_NAME) : null;
 
-            if (!DeviceDebuggerConstants.IS_AVAILABLE)
+            if (!DeviceDebuggerConstants.IsAvailable)
             {
                 if (panel != null) Object.Destroy(panel.gameObject);
                 return;

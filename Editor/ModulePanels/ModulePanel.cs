@@ -61,6 +61,18 @@ namespace FlowIoC.Editor.ModulePanels
 
         /// <summary>The rows of the panel, drawn every repaint with the marks the painter offers.</summary>
         public abstract void Draw(ModulePanelPainter painter);
+
+        /// <summary>
+        /// True for a panel with rows that stay in reach whatever the rows above them scroll to -
+        /// the Discard and Save of an editor whose list runs longer than the window. The window
+        /// then draws <see cref="DrawFooter"/> under the scrolling rows, across the rows' width.
+        /// </summary>
+        public virtual bool HasFooter => false;
+
+        /// <summary>The rows pinned under the scrolling ones, in the same marks; drawn only while <see cref="HasFooter"/>.</summary>
+        public virtual void DrawFooter(ModulePanelPainter painter)
+        {
+        }
     }
 }
 

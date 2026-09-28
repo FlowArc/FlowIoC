@@ -7,11 +7,15 @@ namespace Modules.DeviceDebuggerModule.Constants
         /// Development Build, the same line FlowLogger draws for logging. A release player keeps
         /// the Root and a service that answers "not available", and every decision that depends
         /// on this is taken in a Command reading it.
+        ///
+        /// Static readonly rather than const: a const makes the compiler see one of the two
+        /// branches that read it as unreachable, and every game shipping the module would get a
+        /// CS0162 warning on each recompile.
         /// </summary>
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        public const bool IS_AVAILABLE = true;
+        public static readonly bool IsAvailable = true;
 #else
-        public const bool IS_AVAILABLE = false;
+        public static readonly bool IsAvailable = false;
 #endif
 
         // What a game may tune - the ring's size, the trigger's label and gesture window, the stats

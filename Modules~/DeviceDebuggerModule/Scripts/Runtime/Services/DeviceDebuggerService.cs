@@ -23,7 +23,7 @@ namespace Modules.DeviceDebuggerModule.Services
 
         public bool IsDeconstructed { get; set; }
 
-        public bool IsAvailable => DeviceDebuggerConstants.IS_AVAILABLE;
+        public bool IsAvailable => DeviceDebuggerConstants.IsAvailable;
 
         public bool IsOpen => _model.IsOpen;
 

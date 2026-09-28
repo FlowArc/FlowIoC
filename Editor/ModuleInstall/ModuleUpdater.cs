@@ -23,6 +23,7 @@ namespace FlowIoC.Editor.ModuleInstall
         private readonly ShippedRecord _record = new ShippedRecord();
         private readonly ModuleCardVersionLine _version = new ModuleCardVersionLine();
         private readonly ModuleCardFile _card = new ModuleCardFile();
+        private readonly ProjectLineEndings _lineEndings = new ProjectLineEndings();
 
         internal bool TryApply(ModuleUpdatePlanEVO plan, string installedFolder, string shippedFolder,
             ConflictPolicy policy, out string error)
@@ -53,6 +54,9 @@ namespace FlowIoC.Editor.ModuleInstall
 
                 if (card != null && version != ModuleCardVersionLine.NONE)
                     _card.Write(installedFolder, _version.Write(card, version));
+
+                _lineEndings.Apply(Path.Combine(installedFolder, ShippedRecord.FILE_NAME));
+                _lineEndings.Apply(_card.PathFor(installedFolder));
             }
             catch (Exception exception)
             {
@@ -63,7 +67,7 @@ namespace FlowIoC.Editor.ModuleInstall
             return true;
         }
 
-        private static void Apply(string path, ModuleUpdateVerdict verdict, string installed, string shipped,
+        private void Apply(string path, ModuleUpdateVerdict verdict, string installed, string shipped,
             ConflictPolicy policy)
         {
             switch (verdict)
@@ -95,12 +99,13 @@ namespace FlowIoC.Editor.ModuleInstall
             }
         }
 
-        private static void CopyOver(string shipped, string installed, string path)
+        private void CopyOver(string shipped, string installed, string path)
         {
             string target = Full(installed, path);
 
             Directory.CreateDirectory(Path.GetDirectoryName(target));
             File.Copy(Full(shipped, path), target, true);
+            _lineEndings.Apply(target);
         }
 
         /// <summary>

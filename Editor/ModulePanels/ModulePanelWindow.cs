@@ -18,6 +18,7 @@ namespace FlowIoC.Editor.ModulePanels
         private const float MIN_WIDTH = 560f;
         private const float MIN_HEIGHT = 320f;
         private const float SIDEBAR_BORDER = 1f;
+        private const float FOOTER_BORDER = 1f;
 
         /// <summary>How far either side of the list's edge a press takes hold of it.</summary>
         private const float HANDLE_REACH = 3f;
@@ -124,6 +125,27 @@ namespace FlowIoC.Editor.ModulePanels
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
             _panel.Draw(_painter);
             EditorGUILayout.EndScrollView();
+
+            DrawFooter();
+        }
+
+        /// <summary>
+        /// The panel's pinned rows, under the scroll view and outside it, so they stay where they
+        /// are however far the rows above are scrolled. A line parts them from the rows, the same
+        /// weight as the sidebar's border.
+        /// </summary>
+        private void DrawFooter()
+        {
+            if (!_panel.HasFooter)
+                return;
+
+            Rect line = GUILayoutUtility.GetRect(0f, FOOTER_BORDER, GUILayout.ExpandWidth(true));
+
+            if (Event.current.type == EventType.Repaint)
+                EditorGUI.DrawRect(line, new Color(0f, 0f, 0f, 0.35f));
+
+            _panel.DrawFooter(_painter);
+            _painter.Space();
         }
 
         /// <summary>
@@ -156,9 +178,15 @@ namespace FlowIoC.Editor.ModulePanels
             _panel.DrawSidebar(_sidebar);
             EditorGUILayout.EndScrollView();
 
+            EditorGUILayout.BeginVertical();
+
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
             _panel.Draw(_painter);
             EditorGUILayout.EndScrollView();
+
+            DrawFooter();
+
+            EditorGUILayout.EndVertical();
 
             EditorGUILayout.EndHorizontal();
         }

@@ -5,6 +5,21 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **A module panel can pin rows under its scrolling ones**: `HasFooter` and `DrawFooter`.
+
+### Changed
+
+- **A module install or update writes its text files in CRLF** where the project's git has
+  `core.autocrlf` on, so git no longer warns on every file it touched.
+
+### Fixed
+
+- **DeviceDebugger 1.1.1 compiles without three CS0162 warnings.**
+
 ## [1.28.0] - 2026-09-28
 
 ### Added

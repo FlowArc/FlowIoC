@@ -31,7 +31,7 @@ namespace Modules.DeviceDebuggerModule.Controllers
 
         public override void Execute()
         {
-            if (!DeviceDebuggerConstants.IS_AVAILABLE) return;
+            if (!DeviceDebuggerConstants.IsAvailable) return;
 
             List<ISignalHolder> holders = Holders();
 

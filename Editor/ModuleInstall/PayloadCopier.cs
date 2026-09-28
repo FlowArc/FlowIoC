@@ -18,6 +18,7 @@ namespace FlowIoC.Editor.ModuleInstall
         private const string FOLDER_MARK = "folderAsset: yes";
 
         private readonly LongPath _longPath = new();
+        private readonly ProjectLineEndings _lineEndings = new();
 
         /// <summary>
         /// Both ends go through LongPath first: the payload is read out of the package cache, and a
@@ -33,6 +34,7 @@ namespace FlowIoC.Editor.ModuleInstall
             {
                 string copy = Path.Combine(target, Path.GetFileName(file));
                 File.Copy(file, copy, false);
+                _lineEndings.Apply(copy);
 
                 if (IsFolderMeta(file))
                     Directory.CreateDirectory(copy.Substring(0, copy.Length - META.Length));

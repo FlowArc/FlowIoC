@@ -18,7 +18,7 @@ namespace Modules.DeviceDebuggerModule.Controllers
 
         public override void Execute()
         {
-            if (!DeviceDebuggerConstants.IS_AVAILABLE || _model.IsCapturing) return;
+            if (!DeviceDebuggerConstants.IsAvailable || _model.IsCapturing) return;
 
             FlowLogger.OnLogRecorded += _model.AddLog;
             _model.SetCapturing(true);
