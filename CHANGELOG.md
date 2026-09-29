@@ -5,6 +5,13 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `[ReadOnly]` locks the field it marks; as a plain `Attribute`, Unity never handed the field to its drawer.
+- A `[ReadOnly]` list or array locks its size and buttons too, and a class or struct is drawn with its fields.
+
 ## [1.29.0] - 2026-09-28
 
 ### Added
