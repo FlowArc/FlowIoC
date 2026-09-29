@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `[ReadOnly]` locks the field it marks; as a plain `Attribute`, Unity never handed the field to its drawer.
-- A `[ReadOnly]` list or array locks its size and buttons too, and a class or struct is drawn with its fields.
+- `[ReadOnly]` now locks the field it marks, a list's size and buttons included.
 
 ## [1.29.0] - 2026-09-28
 
