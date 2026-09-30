@@ -11,7 +11,7 @@ namespace FlowIoC.Editor.Help
     /// An introduction to FlowIoC that lives in the Editor. The window teaches one worked example
     /// and never inspects the project it is opened in, so every project sees the same pages.
     /// </summary>
-    internal class HelpWindow : EditorWindow
+    internal class HelpWindow : EditorWindow, ISerializationCallbackReceiver
     {
         /// <summary>
         /// Wide enough that a topic two categories deep still fits its name on one line. The
@@ -225,6 +225,14 @@ namespace FlowIoC.Editor.Help
         private FlowIcons _icons;
         private HelpPainter _painter;
         private IHelpPage _selected;
+
+        // The page and the reading the window was on, carried across a script reload. The pages
+        // themselves are rebuilt with the catalogue, so without these every compile - and the
+        // second reload an update brings, right after the startup notice opened What's New -
+        // would put the reader back on Welcome's introduction.
+        [SerializeField] private string _placeTitle;
+        [SerializeField] private int _placeTab;
+
         private readonly HashSet<string> _openCategories = new HashSet<string>();
         private Vector2 _scroll;
         private Vector2 _sidebarScroll;
@@ -235,7 +243,7 @@ namespace FlowIoC.Editor.Help
             _theme = new HelpTheme();
             _icons = new FlowIcons();
             _painter = new HelpPainter(_theme, _catalog, _icons);
-            _selected = _catalog.OpeningPage;
+            _selected = RestoredPlace();
             _openCategories.Clear();
 
             // The sidebar rows light up under the pointer, and a highlight that only arrives when
@@ -251,6 +259,37 @@ namespace FlowIoC.Editor.Help
             // opens on would not be on screen. The introduction sits at the top level and is
             // inside none of them, so the sidebar opens closed: Welcome, Wiki, Modules.
             OpenCategoriesTo(_selected);
+        }
+
+        /// <summary>
+        /// The page the window was left on before a reload, on the reading it was left on; the
+        /// opening page when nothing was kept or the page is gone - a module page whose module
+        /// was removed in the meantime.
+        /// </summary>
+        private IHelpPage RestoredPlace()
+        {
+            IHelpPage page = string.IsNullOrEmpty(_placeTitle) ? null : _catalog.FindPage(_placeTitle);
+
+            if (page == null)
+                return _catalog.OpeningPage;
+
+            if (_placeTab >= 0 && _placeTab < page.Tabs.Count)
+                page.SelectedTab = _placeTab;
+
+            return page;
+        }
+
+        public void OnBeforeSerialize()
+        {
+            if (_selected == null)
+                return;
+
+            _placeTitle = _selected.Title;
+            _placeTab = _selected.SelectedTab;
+        }
+
+        public void OnAfterDeserialize()
+        {
         }
 
         /// <summary>The theme holds textures of its own, and they go when the window does.</summary>
