@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ConsoleModule;
-using Modules.DeviceDebuggerModule.Constants;
 using Modules.DeviceDebuggerModule.Data.ValueObjects;
 using Modules.DeviceDebuggerModule.Entities;
 using Modules.DeviceDebuggerModule.Enums;
@@ -303,35 +302,6 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             _valueListeners.Clear();
         }
 
-        private void ValueArrived(DebugOptionVO row, object[] args)
-        {
-            row.Dispatches++;
-            row.LastValue = args == null || args.Length == 0
-                ? "× " + row.Dispatches + ", last " + DateTime.Now.ToString("HH:mm:ss")
-                : Join(args);
-
-            _view.RefreshOptionValue(row);
-
-            if (_state?.Options == null) return;
-
-            // A control that shares the row's key shows what the module just announced.
-            foreach (DebugOptionVO option in _state.Options)
-            {
-                if (option == row || option.Key != row.Key || option.Kind == DebugOptionKind.Value) continue;
-
-                option.LastValue = row.LastValue;
-                _view.RefreshOptionValue(option);
-            }
-        }
-
-        private static string Join(object[] args)
-        {
-            var parts = new string[args.Length];
-
-            for (int i = 0; i < args.Length; i++)
-                parts[i] = args[i] == null ? DeviceDebuggerConstants.NO_VALUE : args[i].ToString();
-
-            return string.Join(", ", parts);
-        }
+        private void ValueArrived(DebugOptionVO row, object[] args) => _view.ShowOptionValue(row.Key, args);
     }
 }

@@ -17,15 +17,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             if (!AssetKeyExtensions.TryNormalize(key, out var regKey, out _)) return;
             if (!_registry.Entries.TryGetValue(regKey, out var entry)) return;
 
-            if (groupId != null)
-            {
-                if (entry.Owners.Remove(groupId) && _registry.Groups.TryGetValue(groupId, out var group))
-                    group.Keys.Remove(regKey);
-            }
-            else if (entry.UnscopedClaims > 0)
-            {
-                entry.UnscopedClaims--;
-            }
+            _registry.Unclaim(entry, regKey, groupId);
 
             if (!entry.HasOwners) HardRelease(regKey);
         }
@@ -40,26 +32,15 @@ namespace FlowIoC.AssetModule.Service.Sub
             {
                 if (!_registry.Entries.TryGetValue(regKey, out var entry)) continue;
 
-                entry.Owners.Remove(groupId);
+                _registry.Unclaim(entry, regKey, groupId);
                 if (!entry.HasOwners) HardRelease(regKey);
             }
 
-            _registry.Groups.Remove(groupId);
+            _registry.RemoveGroup(groupId);
             _signals.Outgoing.GroupReleased.Dispatch(groupId);
             FlowLogger.Log(SystemLogType.Asset, $"[AssetReleaseSubService.ReleaseGroup][groupId({groupId})]");
         }
 
-        public void HardRelease(string regKey)
-        {
-            if (!_registry.Entries.TryGetValue(regKey, out var entry)) return;
-
-            foreach (var groupId in entry.Owners)
-                if (_registry.Groups.TryGetValue(groupId, out var group))
-                    group.Keys.Remove(regKey);
-
-            entry.Handle?.Release();
-
-            _registry.Entries.Remove(regKey);
-        }
+        public void HardRelease(string regKey) => _registry.RemoveEntry(regKey);
     }
 }

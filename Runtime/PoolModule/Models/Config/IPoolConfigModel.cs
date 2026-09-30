@@ -7,7 +7,7 @@ namespace FlowIoC.PoolModule.Models.Config
     {
         bool TryGetItemConfig(string itemKey, out PoolItemBaseCVO itemConfig);
         string GetGroupConfigOfItem(string itemKey);
-        Dictionary<string, PoolGroupCVO> GetGroupConfigMap();
+        IReadOnlyDictionary<string, PoolGroupCVO> GetGroupConfigMap();
         PoolGroupCVO GetGroupConfig(string groupKey);
         bool IsGroupConfigExist(string tag);
         void RegisterPoolConfig(KeyValuePair<string, PoolGroupCVO> config);

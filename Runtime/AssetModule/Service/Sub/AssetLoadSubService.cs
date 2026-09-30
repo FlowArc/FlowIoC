@@ -25,15 +25,20 @@ namespace FlowIoC.AssetModule.Service.Sub
             }
 
             var entry = _registry.GetOrCreateEntry(regKey);
-            AddOwnership(entry, regKey, groupId);
+            _registry.Claim(entry, regKey, groupId);
 
             if (entry.Result is T cached)
                 return cached;
 
-            if (!_registry.InFlight.TryGetValue(regKey, out var task))
+            var task = entry.Loading;
+
+            if (task == null)
             {
                 task = LoadInternalAsync<T>(regKey, runtimeKey, entry);
-                _registry.InFlight[regKey] = task;
+
+                // A load that finished before it returned has nothing left for a later caller to wait on.
+                if (!task.IsCompleted)
+                    _registry.SetLoading(entry, task);
             }
 
             var result = await task;
@@ -49,13 +54,13 @@ namespace FlowIoC.AssetModule.Service.Sub
             }
 
             var entry = _registry.GetOrCreateEntry(regKey);
-            AddOwnership(entry, regKey, groupId);
+            _registry.Claim(entry, regKey, groupId);
 
             if (entry.Result is T cached)
                 return cached;
 
             // A load already in flight for this key is waited on rather than started again, which
-            // is what the async path's in-flight map does for its own callers.
+            // is what the async path's Loading task does for its own callers.
             IAssetHandle handle = entry.Handle != null && entry.Handle.IsValid ? entry.Handle : null;
 
             if (handle == null)
@@ -94,18 +99,6 @@ namespace FlowIoC.AssetModule.Service.Sub
             return false;
         }
 
-        public void AddOwnership(AssetEntryVO entry, string regKey, string groupId)
-        {
-            if (groupId == null)
-            {
-                entry.UnscopedClaims++;
-                return;
-            }
-
-            if (entry.Owners.Add(groupId))
-                _registry.GetOrCreateGroup(groupId).Keys.Add(regKey);
-        }
-
         private async Task<object> LoadInternalAsync<T>(string regKey, object runtimeKey, AssetEntryVO entry)
         {
             try
@@ -129,7 +122,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             }
             finally
             {
-                _registry.InFlight.Remove(regKey);
+                _registry.SetLoading(entry, null);
             }
         }
     }

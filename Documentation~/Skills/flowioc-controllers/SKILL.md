@@ -1,6 +1,6 @@
 ---
 name: flowioc-controllers
-description: Use when writing the logic a signal runs in a FlowIoC module - a Command or a Function, deciding which of the two something is, binding a sequence or a parallel step, passing a value on with Release, holding a step open with Retain around an await or a coroutine, or working out why a sequence hangs for ever, skips a step, or starts the next one too early.
+description: Use when writing the logic a signal runs in a FlowIoC module - a Command or a Function, deciding which of the two something is, binding a sequence or a parallel step, splitting a large Context's bindings into partial files, passing a value on with Release, holding a step open with Retain around an await or a coroutine, or working out why a sequence hangs for ever, skips a step, or starts the next one too early.
 ---
 
 # Commands and Functions in FlowIoC
@@ -132,6 +132,65 @@ CommandBinder.Bind(_mapSignals.Incoming.PlayRequest)
     .ToSequence<BakeNavmeshCommand>()
     .ToSequence<SignalDispatchCommand>(_signals.Outgoing.LoadGameScene);
 ```
+
+### A Context that outgrows one file
+
+A System that runs the whole game binds many flows, and once `CommandBindings` runs past a screen a
+reader has to scroll through every other flow to find one. Split the class with `partial`, one file
+per area of the game - the tick, the figures, the power-ups, the finish - so a flow is read in a
+file of thirty lines rather than three hundred. It is still one Context: nothing about binding
+changes, only where the lines sit.
+
+- **The main file keeps the class's name**, `GameplaySystemContext.cs`, with `: Context`, the
+  fields, `SignalBindings`, `InjectionBindings`, `MediationBindings`, `Setup` and `Launch`. Its
+  `CommandBindings` calls one method per area, in the order a reader should meet them, and keeps the
+  flows that start and end the whole thing - a run starting, a run ending.
+- **Each area is `<Context>.<Area>.cs`** beside it in `RootsContexts/`, holding one
+  `private void <Area>CommandBindings()` and nothing else - no field, no override, no other phase.
+  Its `<summary>` says what the area decides and why its flows are shaped the way they are.
+- **A signal is bound in one file.** An area owns its signals' bindings; two areas binding the same
+  signal is the split in the wrong place.
+
+```csharp
+// GameplaySystemContext.cs
+public override void CommandBindings()
+{
+    base.CommandBindings();
+
+    TickCommandBindings();
+    FigureCommandBindings();
+    PowerUpCommandBindings();
+
+    CommandBinder.Bind(_signals.Incoming.StartRun)
+        .ToSequence<ClearRunCommand>()
+        .ToSequence<StartFrameTickCommand>()
+        .ToSequence<SignalDispatchCommand>(_signals.Outgoing.RunStarted);
+}
+
+// GameplaySystemContext.PowerUps.cs
+public partial class GameplaySystemContext
+{
+    /// <summary>
+    /// What each power-up does once pressed. Each flow announces that it did its work, and that
+    /// announcement is what spends the power-up - a press that changed nothing costs nothing.
+    /// </summary>
+    private void PowerUpCommandBindings()
+    {
+        CommandBinder.Bind(_signals.Incoming.UndoLastFeed)
+            .ToSequence<UndoLastFeedCommand>()
+            .ToSequence<SignalDispatchCommand>(_signals.Outgoing.FeedUndone);
+    }
+}
+```
+
+The two file names are what the tooling reads. A Root's sub-context entry finds a context's script
+by the file named after the class, and Rename Module renames every file in `RootsContexts/` that
+starts with the module's stem - so `GameplaySystemContext.Tick.cs` follows a rename and a file
+called `TickBindings.cs` does not.
+
+A partial is a file layout, not a boundary. An area that brings Models and state of its own is a
+sub system or a module of its own - the systems and services skill says which - and splitting its
+bindings into a file only hides that it outgrew the Context.
 
 ## Holding the sequence open
 

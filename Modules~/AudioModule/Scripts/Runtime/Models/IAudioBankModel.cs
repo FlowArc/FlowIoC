@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Modules.AudioModule.Data.ValueObjects;
 using Modules.AudioModule.Enums;
 using Modules.AudioModule.Shared;
 using Modules.AudioModule.Shared.Data.UnityObjects;
@@ -11,7 +12,8 @@ namespace Modules.AudioModule.Models
 {
     internal interface IAudioBankModel
     {
-        IReadOnlyList<CD_AudioBank> Banks { get; }
+        /// <summary>Every bank registered, in the order they were found; read the record, change it through the methods below.</summary>
+        IReadOnlyList<AudioBankVO> Banks { get; }
 
         /// <summary>Files a bank under its module and indexes its sounds by key. False for a second bank of the same module.</summary>
         bool Register(CD_AudioBank bank);

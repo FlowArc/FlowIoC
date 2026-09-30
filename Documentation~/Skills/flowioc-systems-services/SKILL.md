@@ -181,6 +181,9 @@ far its scope reaches:
 | A Model | The data is the **module's** state rather than one sub system's |
 | A module of its own | The data is large, or its scope reaches past this module |
 
+Once the data is a Model's, how the Model holds it - one record per thing, filled from its config
+and save assets - is the `flowioc-models` skill.
+
 ## Splitting into sub services and sub systems
 
 Both split the same way, into `Services/Sub/` and `Systems/Sub/`, and for **two** reasons:

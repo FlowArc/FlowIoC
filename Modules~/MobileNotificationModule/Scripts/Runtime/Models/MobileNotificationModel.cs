@@ -24,6 +24,7 @@ namespace Modules.MobileNotificationModule.Models
         private readonly List<NotificationChannelCVO> _channels = new();
         private readonly List<ReturnReminderCVO> _returnReminders = new();
         private readonly List<string> _pictures = new();
+        private readonly HashSet<string> _pictureIndex = new();
         private readonly Dictionary<string, NotificationChannelCVO> _channelsByKey = new();
         private readonly Dictionary<string, NotificationCVO> _notificationsByKey = new();
         private readonly List<NotificationDraftVO> _scheduled = new();
@@ -39,9 +40,12 @@ namespace Modules.MobileNotificationModule.Models
 
         public NotificationPermission Permission { get; private set; } = NotificationPermission.NotAsked;
 
-        public string OpenedFromKey { get; private set; } = string.Empty;
+        /// <summary>The notification the app was last opened from, as the gateway reported it; null when none was.</summary>
+        public NotificationIdentityVO OpenedFrom { get; private set; }
 
-        public string OpenedFromTag { get; private set; } = string.Empty;
+        public string OpenedFromKey => OpenedFrom?.Key ?? string.Empty;
+
+        public string OpenedFromTag => OpenedFrom?.Tag ?? string.Empty;
 
         public IReadOnlyList<NotificationDraftVO> Scheduled => _scheduled;
 
@@ -52,6 +56,7 @@ namespace Modules.MobileNotificationModule.Models
             _notificationsByKey.Clear();
             _returnReminders.Clear();
             _pictures.Clear();
+            _pictureIndex.Clear();
 
             if (TryReadAdapter(out CD_MobileNotifications catalogue))
                 Read(catalogue);
@@ -65,11 +70,7 @@ namespace Modules.MobileNotificationModule.Models
 
         public void SetPermission(NotificationPermission permission) => Permission = permission;
 
-        public void SetOpenedFrom(NotificationIdentityVO identity)
-        {
-            OpenedFromKey = identity?.Key ?? string.Empty;
-            OpenedFromTag = identity?.Tag ?? string.Empty;
-        }
+        public void SetOpenedFrom(NotificationIdentityVO identity) => OpenedFrom = identity;
 
         public void MarkScheduled(NotificationDraftVO draft)
         {
@@ -112,19 +113,22 @@ namespace Modules.MobileNotificationModule.Models
 
                 if (_notificationsByKey.ContainsKey(notification.Key))
                 {
-                    FlowLogger.LogError($"CD_MobileNotifications declares notification '{notification.Key}' twice; the second is ignored.", catalogue);
+                    FlowLogger.LogError($"CD_MobileNotifications declares notification '{notification.Key}' twice; the second is ignored.",
+                        catalogue);
                     continue;
                 }
 
                 if (!_channelsByKey.ContainsKey(notification.Channel ?? string.Empty))
                 {
-                    FlowLogger.LogError($"Notification '{notification.Key}' names channel '{notification.Channel}', which CD_MobileNotifications does not declare; it is ignored.", catalogue);
+                    FlowLogger.LogError(
+                        $"Notification '{notification.Key}' names channel '{notification.Channel}', which CD_MobileNotifications does not declare; it is ignored.",
+                        catalogue);
                     continue;
                 }
 
                 _notificationsByKey.Add(notification.Key, notification);
 
-                if (!string.IsNullOrEmpty(notification.Picture) && !_pictures.Contains(notification.Picture))
+                if (!string.IsNullOrEmpty(notification.Picture) && _pictureIndex.Add(notification.Picture))
                     _pictures.Add(notification.Picture);
             }
 
@@ -132,7 +136,9 @@ namespace Modules.MobileNotificationModule.Models
             {
                 if (!_notificationsByKey.ContainsKey(reminder.Notification ?? string.Empty))
                 {
-                    FlowLogger.LogError($"Return reminder names notification '{reminder.Notification}', which CD_MobileNotifications does not declare; it is ignored.", catalogue);
+                    FlowLogger.LogError(
+                        $"Return reminder names notification '{reminder.Notification}', which CD_MobileNotifications does not declare; it is ignored.",
+                        catalogue);
                     continue;
                 }
 

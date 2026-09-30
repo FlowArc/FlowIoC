@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Modules.AudioModule.Data.ValueObjects;
 using Modules.AudioModule.Enums;
 using Modules.AudioModule.Shared;
 using Modules.AudioModule.Shared.Data.UnityObjects;
@@ -10,22 +11,16 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 namespace Modules.AudioModule.Models
 {
     /// <summary>
-    /// Every bank the project has, what state each is in, the clips a loaded one holds, and the
-    /// two memories a play needs - when a key last played, and which variant it played.
+    /// Every bank the project has and every sound they list, one record each: a bank's record holds
+    /// its asset, the state its load is in, the handles the load took and whoever waits on it; a
+    /// sound's record holds its entry, the clips a loaded bank gave it, and the two memories a play
+    /// needs - when it last played, and which variant it played.
     /// </summary>
     internal class AudioBankModel : IAudioBankModel
     {
-        private static readonly IReadOnlyList<AudioClip> NO_CLIPS = Array.Empty<AudioClip>();
-
-        private readonly List<CD_AudioBank> _banks = new();
-        private readonly Dictionary<string, CD_AudioBank> _bankByModule = new();
-        private readonly Dictionary<AudioKey, AudioClipCVO> _soundByKey = new();
-        private readonly Dictionary<string, AudioBankState> _state = new();
-        private readonly Dictionary<AudioKey, IReadOnlyList<AudioClip>> _clips = new();
-        private readonly Dictionary<string, List<AsyncOperationHandle<AudioClip>>> _handles = new();
-        private readonly Dictionary<string, List<Action<bool>>> _waiters = new();
-        private readonly Dictionary<AudioKey, float> _lastPlayed = new();
-        private readonly Dictionary<AudioKey, int> _lastVariant = new();
+        private readonly List<AudioBankVO> _banks = new();
+        private readonly Dictionary<string, AudioBankVO> _banksByModule = new();
+        private readonly Dictionary<AudioKey, AudioSoundVO> _sounds = new();
         private readonly System.Random _random;
 
         public AudioBankModel() : this(new System.Random())
@@ -38,24 +33,25 @@ namespace Modules.AudioModule.Models
             _random = random;
         }
 
-        public IReadOnlyList<CD_AudioBank> Banks => _banks;
+        public IReadOnlyList<AudioBankVO> Banks => _banks;
 
         public bool Register(CD_AudioBank bank)
         {
-            if (bank == null || string.IsNullOrEmpty(bank.Module) || _bankByModule.ContainsKey(bank.Module))
+            if (bank == null || string.IsNullOrEmpty(bank.Module) || _banksByModule.ContainsKey(bank.Module))
                 return false;
 
-            _banks.Add(bank);
-            _bankByModule[bank.Module] = bank;
-            _state[bank.Module] = AudioBankState.Unloaded;
+            var record = new AudioBankVO {Config = bank};
+            _banks.Add(record);
+            _banksByModule[bank.Module] = record;
 
+            // The first bank to list a key owns it; a second bank listing the same key is reported
+            // by FindBanks, not here.
             foreach (AudioClipCVO sound in bank.Sounds)
             {
                 if (sound == null || string.IsNullOrEmpty(sound.Key))
                     continue;
 
-                var key = new AudioKey(sound.Key);
-                _soundByKey.TryAdd(key, sound);
+                _sounds.TryAdd(new AudioKey(sound.Key), new AudioSoundVO {Config = sound});
             }
 
             return true;
@@ -63,80 +59,105 @@ namespace Modules.AudioModule.Models
 
         public bool TryGetBank(string module, out CD_AudioBank bank)
         {
-            bank = null;
-            return module != null && _bankByModule.TryGetValue(module, out bank);
+            bank = TryGetRecord(module, out AudioBankVO record) ? record.Config : null;
+            return bank != null;
         }
 
-        public bool TryGetSound(AudioKey key, out AudioClipCVO sound) => _soundByKey.TryGetValue(key, out sound);
+        public bool TryGetSound(AudioKey key, out AudioClipCVO sound)
+        {
+            sound = _sounds.TryGetValue(key, out AudioSoundVO record) ? record.Config : null;
+            return sound != null;
+        }
 
         public AudioBankState StateOf(string module) =>
-            module != null && _state.TryGetValue(module, out AudioBankState state) ? state : AudioBankState.Unloaded;
+            TryGetRecord(module, out AudioBankVO record) ? record.State : AudioBankState.Unloaded;
 
-        public void SetState(string module, AudioBankState state) => _state[module] = state;
+        public void SetState(string module, AudioBankState state)
+        {
+            if (TryGetRecord(module, out AudioBankVO record))
+                record.State = state;
+        }
 
         public IReadOnlyList<AudioClip> ClipsOf(AudioKey key) =>
-            _clips.TryGetValue(key, out IReadOnlyList<AudioClip> clips) ? clips : NO_CLIPS;
+            _sounds.TryGetValue(key, out AudioSoundVO record) ? record.Clips : AudioSoundVO.NO_CLIPS;
 
-        public void SetClips(AudioKey key, IReadOnlyList<AudioClip> clips) => _clips[key] = clips ?? NO_CLIPS;
+        public void SetClips(AudioKey key, IReadOnlyList<AudioClip> clips)
+        {
+            if (_sounds.TryGetValue(key, out AudioSoundVO record))
+                record.Clips = clips ?? AudioSoundVO.NO_CLIPS;
+        }
 
+        /// <summary>
+        /// Empties the clips of every key the bank lists. The play memories stay, so a sound played
+        /// just before an unload still waits out its interval after the next load.
+        /// </summary>
         public void ClearClips(string module)
         {
-            if (!TryGetBank(module, out CD_AudioBank bank))
+            if (!TryGetRecord(module, out AudioBankVO bank))
                 return;
 
-            foreach (AudioClipCVO sound in bank.Sounds)
+            foreach (AudioClipCVO sound in bank.Config.Sounds)
             {
-                if (sound != null && !string.IsNullOrEmpty(sound.Key))
-                    _clips.Remove(new AudioKey(sound.Key));
+                if (sound != null && !string.IsNullOrEmpty(sound.Key) && _sounds.TryGetValue(new AudioKey(sound.Key), out AudioSoundVO record))
+                    record.Clips = AudioSoundVO.NO_CLIPS;
             }
         }
 
         public void AddHandle(string module, AsyncOperationHandle<AudioClip> handle)
         {
-            if (!_handles.TryGetValue(module, out List<AsyncOperationHandle<AudioClip>> handles))
-                _handles[module] = handles = new List<AsyncOperationHandle<AudioClip>>();
-
-            handles.Add(handle);
+            if (TryGetRecord(module, out AudioBankVO record))
+                record.Handles.Add(handle);
         }
 
         public List<AsyncOperationHandle<AudioClip>> TakeHandles(string module)
         {
-            if (!_handles.Remove(module, out List<AsyncOperationHandle<AudioClip>> handles))
-                return new List<AsyncOperationHandle<AudioClip>>();
+            var handles = new List<AsyncOperationHandle<AudioClip>>();
 
+            if (!TryGetRecord(module, out AudioBankVO record))
+                return handles;
+
+            handles.AddRange(record.Handles);
+            record.Handles.Clear();
             return handles;
         }
 
         public void AddWaiter(string module, Action<bool> done)
         {
-            if (done == null)
-                return;
-
-            if (!_waiters.TryGetValue(module, out List<Action<bool>> waiters))
-                _waiters[module] = waiters = new List<Action<bool>>();
-
-            waiters.Add(done);
+            if (done != null && TryGetRecord(module, out AudioBankVO record))
+                record.Waiters.Add(done);
         }
 
         public List<Action<bool>> TakeWaiters(string module)
         {
-            if (!_waiters.Remove(module, out List<Action<bool>> waiters))
-                return new List<Action<bool>>();
+            var waiters = new List<Action<bool>>();
 
+            if (!TryGetRecord(module, out AudioBankVO record))
+                return waiters;
+
+            waiters.AddRange(record.Waiters);
+            record.Waiters.Clear();
             return waiters;
         }
 
         public bool IsCoolingDown(AudioKey key, float now, float interval) =>
-            interval > 0f && _lastPlayed.TryGetValue(key, out float last) && now - last < interval;
+            interval > 0f && _sounds.TryGetValue(key, out AudioSoundVO record) && record.HasPlayed && now - record.LastPlayed < interval;
 
-        public void MarkPlayed(AudioKey key, float now) => _lastPlayed[key] = now;
+        public void MarkPlayed(AudioKey key, float now)
+        {
+            if (!_sounds.TryGetValue(key, out AudioSoundVO record))
+                return;
+
+            record.LastPlayed = now;
+            record.HasPlayed = true;
+        }
 
         public int PickVariant(AudioKey key, int count)
         {
             if (count <= 1)
                 return 0;
 
-            int last = _lastVariant.TryGetValue(key, out int played) ? played : -1;
+            _sounds.TryGetValue(key, out AudioSoundVO record);
+            int last = record?.LastVariant ?? -1;
 
             // One fewer choice than there are clips, then step over the last one: never the same
             // clip twice in a row, and every other clip equally likely.
@@ -145,8 +166,16 @@ namespace Modules.AudioModule.Models
             if (last >= 0 && last < count && pick >= last)
                 pick++;
 
-            _lastVariant[key] = pick;
+            if (record != null)
+                record.LastVariant = pick;
+
             return pick;
+        }
+
+        private bool TryGetRecord(string module, out AudioBankVO record)
+        {
+            record = null;
+            return module != null && _banksByModule.TryGetValue(module, out record);
         }
     }
 }

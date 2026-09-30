@@ -81,6 +81,11 @@ public class GameHexVO
 Calling that `GameHexCVO` would be a lie about half its contents, so it is named for the
 hex and the halves keep their own suffixes.
 
+This is also the shape a Model keeps its state in: one record per thing, holding the config entry
+and the save entry themselves. When the data you are naming is what a Model holds, or a Model fills
+it from a `CD_` and an `SD_` asset, read the `flowioc-models` skill - it covers how the records are
+keyed, filled and handed out.
+
 ## Choosing
 
 Ask where the value comes from, not what it is about:
@@ -249,6 +254,8 @@ abbreviation; a rare type, or one whose abbreviation would not read, takes the w
 | `SM_` because the mesh is static in the scene | Static is a flag in one scene. `SM_` means the FBX has no rig, `RM_` that it has one. |
 
 ## Related
+
+How a Model holds and fills the data named here is the `flowioc-models` skill.
 
 FlowIoC's full architecture rules live in the project's `AGENTS.md`, written by
 *Tools ▸ FlowIoC ▸ AI ▸ Agent Rules*. The legal prefixes and suffixes are declared in

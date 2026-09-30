@@ -30,10 +30,14 @@ what is true whatever you are about to do.
 - **A test module reaches anything.** Everything under `zTestModules` is test code, so it
   may reference any module in the project. In exchange, every script in it is wrapped in
   `#if UNITY_EDITOR`.
-- A module's tests are that test module, and nothing else. There is no assembly of unit tests
-  under `Scripts/`: the shape `Create Module` writes has no `Tests` folder, and adding one gives
-  the module a second assembly nothing else in the project has. What a module hands the reader
-  is the scene its test module runs, the same way it ships everything else it offers.
+- **A module's sample is its test module; its unit tests live outside it.** There is no assembly
+  of tests under a module's `Scripts/`: the shape `Create Module` writes has no `Tests` folder,
+  and adding one gives the module a second assembly nothing else in the project has. What a
+  module hands the reader is the scene its test module runs. A game that wants unit tests for its
+  own modules writes them - in a test assembly of its own outside every module folder, such as
+  `Assets/Tests/`, referencing the modules' assemblies. FlowIoC itself and the ready-made modules
+  it installs are not tested from a game: they are tested where they are made, and a copy of
+  such a test breaks the day the module updates.
 - Systems are never added to one another's assemblies. Two Systems in separate modules
   talk through signals wired in a Connector, like any other cross-module traffic.
 - A Connector gets signal holders, it never binds them:
@@ -119,6 +123,11 @@ what is true whatever you are about to do.
   incoming signal runs a Command, and the Command calls the Model.
 - A Model may dispatch its own module's outgoing signals to announce that a value it
   holds has changed. Announcing is allowed; listening is not.
+- **A Model holds one record per thing it keeps.** What the config says of it and what the save
+  holds of it sit on one object - a plain `VO` holding the `CVO` and the `SVO` entries themselves -
+  found under one key. Never parallel lists or dictionaries sharing a key or an index, which every
+  read has to put back together; a second collection is an index onto the same records. The models
+  skill has the filling and what the Model hands out.
 - **Which of the three a module is, is something you can see.** A Service has files under
   `Services/`; a screen module has a context deriving from `ScreenSubContext<TView, TMediator>`;
   everything else is a System. There is no fourth question to ask.
@@ -602,6 +611,7 @@ and the reasons this block leaves out. Read the one that covers the work in fron
 | A UI screen - its context and `ScreenCVO`, opening and filling it, animations, a Mediator's guard | `flowioc-screens` |
 | Wiring two modules - a Connector sub-context, a signal that never arrives | `flowioc-connectors` |
 | A System or a Service - which of the two, sub systems, what a Service announces | `flowioc-systems-services` |
+| A Model - how it holds its state, filling it from its config and save, what it hands out | `flowioc-models` |
 | Where a Root sits, its Initialize Order, making it persistent, what its context takes back | `flowioc-root-order` |
 | Naming a ScriptableObject, a value object or an asset file, and which prefix it takes | `flowioc-data-types` |
 

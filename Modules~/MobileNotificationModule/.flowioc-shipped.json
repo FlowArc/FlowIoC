@@ -77,7 +77,7 @@
     "Scripts/Runtime/Models.meta": "5b87f49a0911be01542acc39bfb3f344e944c7fe",
     "Scripts/Runtime/Models/IMobileNotificationModel.cs": "61ee0ce79f03be32f03b5628eee26ec49a80a961",
     "Scripts/Runtime/Models/IMobileNotificationModel.cs.meta": "b1c822f62873727b936ea9b96dc08089971032d9",
-    "Scripts/Runtime/Models/MobileNotificationModel.cs": "486c680a83dbc819c35624bf725057a08bca3721",
+    "Scripts/Runtime/Models/MobileNotificationModel.cs": "192fb5637220d319f77878af76780f4f7efc93dc",
     "Scripts/Runtime/Models/MobileNotificationModel.cs.meta": "d7ead9d0855613fddff93ff43847dfd36d46bd9a",
     "Scripts/Runtime/RootsContexts.meta": "0bcd47a86fbc5b5925cc5c4f3959da8d65d3d3bc",
     "Scripts/Runtime/RootsContexts/MobileNotificationServiceContext.cs": "0bd1b5477e941653c68f3acf545b74796b07b29b",

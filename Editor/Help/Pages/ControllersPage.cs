@@ -410,6 +410,46 @@ namespace FlowIoC.Editor.Help.Pages
                 + "announcement into one order; it does not decide what a thing having happened "
                 + "should cause.");
 
+            painter.Space();
+            painter.SubHeading("A Context that outgrows one file");
+            painter.Paragraph(
+                "A System that runs the whole game binds many flows, and a reader looking for one "
+                + "should not scroll past all the others. Split the Context with partial, one file "
+                + "per area of the game. It stays one class, and nothing about binding changes.");
+            painter.Bullet(
+                "The main file keeps the class's name. It holds the fields and every phase, and its "
+                + "CommandBindings calls one method per area, then binds the flows that start and "
+                + "end the whole thing.");
+            painter.Bullet(
+                "Each area is <Context>.<Area>.cs beside it in RootsContexts, with one private "
+                + "<Area>CommandBindings method and a summary saying what the area decides.");
+            painter.Bullet("A signal is bound in one file.");
+            painter.Code(
+                "// GameplaySystemContext.cs\n"
+                + "public override void CommandBindings()\n"
+                + "{\n"
+                + "    base.CommandBindings();\n"
+                + "\n"
+                + "    TickCommandBindings();\n"
+                + "    PowerUpCommandBindings();\n"
+                + "}\n"
+                + "\n"
+                + "// GameplaySystemContext.PowerUps.cs\n"
+                + "public partial class GameplaySystemContext\n"
+                + "{\n"
+                + "    private void PowerUpCommandBindings()\n"
+                + "    {\n"
+                + "        CommandBinder.Bind(_signals.Incoming.UndoLastFeed)\n"
+                + "            .ToSequence<UndoLastFeedCommand>()\n"
+                + "            .ToSequence<SignalDispatchCommand>(_signals.Outgoing.FeedUndone);\n"
+                + "    }\n"
+                + "}",
+                "One Context, one file per area");
+            painter.Note(
+                "Keep both names. A Root finds a context's script by the file named after the "
+                + "class, and Rename Module renames only the files that start with the module's "
+                + "name. An area with Models of its own is a sub system, not a partial file.");
+
             painter.Separator();
             painter.SubHeading("Work that runs every frame");
             painter.Paragraph(

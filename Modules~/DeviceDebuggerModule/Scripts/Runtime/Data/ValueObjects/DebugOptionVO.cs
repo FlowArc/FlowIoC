@@ -1,6 +1,5 @@
 using System;
 using FlowIoC.BaseModule.Signals;
-using Modules.DeviceDebuggerModule.Constants;
 using Modules.DeviceDebuggerModule.Enums;
 
 namespace Modules.DeviceDebuggerModule.Data.ValueObjects
@@ -43,9 +42,6 @@ namespace Modules.DeviceDebuggerModule.Data.ValueObjects
 
         /// <summary>Why the row is Unsupported.</summary>
         public string Reason = "";
-
-        public string LastValue = DeviceDebuggerConstants.NO_VALUE;
-        public int Dispatches;
 
         public string Key => Category + "/" + Label;
     }

@@ -32,7 +32,7 @@ namespace FlowIoC.AssetModule.Service.Sub
                 FlowLogger.LogWarning(SystemLogType.Asset,
                     $"[AssetService] No '{typeof(T).Name}' locations found for label '{label}'. Are the assets labelled?");
                 options.Progress?.Report(1f);
-                _registry.GetOrCreateGroup(groupId).IsLoaded = true;
+                _registry.MarkGroupLoaded(groupId);
                 _signals.Outgoing.GroupLoaded.Dispatch(groupId);
                 return;
             }
@@ -56,8 +56,7 @@ namespace FlowIoC.AssetModule.Service.Sub
             if (!AssetKeyExtensions.TryNormalize(key, out var regKey, out _)) return;
             if (!_registry.Entries.TryGetValue(regKey, out var entry)) return;
 
-            if (entry.Owners.Add(groupId))
-                _registry.GetOrCreateGroup(groupId).Keys.Add(regKey);
+            _registry.Claim(entry, regKey, groupId);
         }
 
         public bool IsGroupLoaded(string groupId)
@@ -103,7 +102,7 @@ namespace FlowIoC.AssetModule.Service.Sub
                 if (options.Background) _priority.Exit();
             }
 
-            _registry.GetOrCreateGroup(groupId).IsLoaded = true;
+            _registry.MarkGroupLoaded(groupId);
             _signals.Outgoing.GroupLoaded.Dispatch(groupId);
         }
 

@@ -187,7 +187,8 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
 
         public void PaintOptions(IReadOnlyList<DebugOptionVO> options) => _options?.Paint(options);
 
-        public void RefreshOptionValue(DebugOptionVO option) => _options?.RefreshValue(option);
+        /// <summary>A watched signal was dispatched: the rows under its key show what it carried.</summary>
+        public void ShowOptionValue(string key, object[] args) => _options?.ShowValue(key, args);
 
         public void PaintSignals(IReadOnlyList<DebugSignalVO> rows) => _signals?.Paint(rows);
 

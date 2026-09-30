@@ -1,5 +1,6 @@
 using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
+using Modules.AudioModule.Data.ValueObjects;
 using Modules.AudioModule.Models;
 using Modules.AudioModule.Shared.Data.UnityObjects;
 using Modules.AudioModule.Signals;
@@ -14,8 +15,10 @@ namespace Modules.AudioModule.Controllers
 
         public override void Execute()
         {
-            foreach (CD_AudioBank bank in _banks.Banks)
+            foreach (AudioBankVO record in _banks.Banks)
             {
+                CD_AudioBank bank = record.Config;
+
                 if (bank.PreloadAtBoot)
                     _signals.LoadBank.Dispatch(bank.Module, _ => { });
             }

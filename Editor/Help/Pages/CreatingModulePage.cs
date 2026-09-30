@@ -80,6 +80,12 @@ namespace FlowIoC.Editor.Help.Pages
                 + "module is the one place allowed to reference any module in the project, which is "
                 + "what makes it useful and what keeps it out of a build. It attaches to the module "
                 + "it tests, so it cannot be nested inside another test module.");
+            painter.Paragraph(
+                "A test module is the module's sample, not a home for unit tests, and no module "
+                + "carries a test assembly of its own. Unit tests for a game's own modules go in a "
+                + "test assembly outside every module folder - Assets/Tests, say - referencing the "
+                + "modules' assemblies. FlowIoC and the ready-made modules it installs need none from "
+                + "a game: they are tested where they are made.");
 
             painter.Note(
                 "Delete a module through its own panel for the same reason. Deleting the folder by "

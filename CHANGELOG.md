@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Agent skill `flowioc-models`: a Model holds one record per thing and fills it from its config and save; the agent rules say the same.
+- Agent skill `flowioc-controllers`: a Context that outgrows one file splits its command bindings into partial files, one per area.
+
+### Changed
+
+- Agent rules: a game may unit-test its own modules from a test assembly outside them; FlowIoC and its ready-made modules need no tests from a game.
+- Help updated.
+
 ### Fixed
 
 - `[ReadOnly]` now locks the field it marks, a list's size and buttons included.
+- An asset released while still loading and asked for again loads afresh, instead of waiting on the released load.
+- Unregistering a pool group no longer takes out a pool key a later group registered under the same name.
 
 ## [1.29.0] - 2026-09-28
 

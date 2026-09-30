@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Modules.DeviceDebuggerModule.Constants;
 using Modules.DeviceDebuggerModule.Data.ValueObjects;
 using Modules.DeviceDebuggerModule.Enums;
 using UnityEngine.UIElements;
@@ -18,6 +19,11 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
         private readonly ScrollView _page;
         private readonly Dictionary<string, VisualElement> _controls = new();
         private readonly Dictionary<string, Label> _values = new();
+
+        // What each watched signal last carried and how often it went, by key. The panel draws
+        // this, and it outlives a rescan that repaints the rows.
+        private readonly Dictionary<string, string> _lastValues = new();
+        private readonly Dictionary<string, int> _dispatches = new();
 
         public event Action<DebugOptionVO, string> OnActivated;
 
@@ -64,34 +70,60 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             }
         }
 
-        /// <summary>A Value row's text, and the shown state of the control that shares its key.</summary>
-        public void RefreshValue(DebugOptionVO option)
+        /// <summary>
+        /// A watched signal was dispatched. What it carried is kept under its key - the rows are
+        /// repainted on every rescan, the text is not - and shown on the Value row and on the
+        /// control that shares the key. A signal with no payload shows how often it went and when.
+        /// </summary>
+        public void ShowValue(string key, object[] args)
         {
-            if (option == null) return;
+            if (key == null) return;
 
-            if (_values.TryGetValue(option.Key, out Label value))
-                value.text = option.LastValue;
+            _dispatches.TryGetValue(key, out int count);
+            _dispatches[key] = ++count;
 
-            if (!_controls.TryGetValue(option.Key, out VisualElement control)) return;
+            string text = args == null || args.Length == 0
+                ? "× " + count + ", last " + DateTime.Now.ToString("HH:mm:ss")
+                : Join(args);
+
+            _lastValues[key] = text;
+
+            if (_values.TryGetValue(key, out Label value))
+                value.text = text;
+
+            if (!_controls.TryGetValue(key, out VisualElement control)) return;
 
             switch (control)
             {
-                case Toggle toggle when bool.TryParse(option.LastValue, out bool on):
+                case Toggle toggle when bool.TryParse(text, out bool on):
                     toggle.SetValueWithoutNotify(on);
                     break;
-                case Slider slider when float.TryParse(option.LastValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float f):
+                case Slider slider when float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float f):
                     slider.SetValueWithoutNotify(f);
                     break;
-                case SliderInt sliderInt when int.TryParse(option.LastValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i):
+                case SliderInt sliderInt when int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i):
                     sliderInt.SetValueWithoutNotify(i);
                     break;
                 case TextField field:
-                    field.SetValueWithoutNotify(option.LastValue);
+                    field.SetValueWithoutNotify(text);
                     break;
-                case DropdownField dropdown when dropdown.choices.Contains(option.LastValue):
-                    dropdown.SetValueWithoutNotify(option.LastValue);
+                case DropdownField dropdown when dropdown.choices.Contains(text):
+                    dropdown.SetValueWithoutNotify(text);
                     break;
             }
+        }
+
+        private string LastValueOf(string key) =>
+            _lastValues.TryGetValue(key, out string text) ? text : DeviceDebuggerConstants.NO_VALUE;
+
+        private static string Join(object[] args)
+        {
+            var parts = new string[args.Length];
+
+            for (int i = 0; i < args.Length; i++)
+                parts[i] = args[i] == null ? DeviceDebuggerConstants.NO_VALUE : args[i].ToString();
+
+            return string.Join(", ", parts);
         }
 
         private VisualElement Row(DebugOptionVO option)
@@ -142,7 +174,7 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
                     break;
 
                 case DebugOptionKind.Value:
-                    var value = new Label(option.LastValue);
+                    var value = new Label(LastValueOf(option.Key));
                     value.AddToClassList("dd-row-value");
                     row.Add(value);
                     _values[option.Key] = value;
@@ -165,7 +197,8 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             {
                 var sliderInt = new SliderInt((int) option.Min, (int) option.Max) {showInputField = true};
                 sliderInt.AddToClassList("dd-row-slider");
-                sliderInt.RegisterValueChangedCallback(changed => OnActivated?.Invoke(option, changed.newValue.ToString(CultureInfo.InvariantCulture)));
+                sliderInt.RegisterValueChangedCallback(changed =>
+                    OnActivated?.Invoke(option, changed.newValue.ToString(CultureInfo.InvariantCulture)));
                 Remember(option, sliderInt);
                 return sliderInt;
             }

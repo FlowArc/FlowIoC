@@ -4,6 +4,7 @@ using FlowIoC.BaseModule.Function.Provider;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using Modules.AudioModule.Constants;
+using Modules.AudioModule.Data.ValueObjects;
 using Modules.AudioModule.Models;
 using Modules.AudioModule.Shared;
 using Modules.AudioModule.Shared.Data.UnityObjects;
@@ -42,8 +43,10 @@ namespace Modules.AudioModule.Controllers
         {
             var rows = new HashSet<AudioKey>();
 
-            foreach (CD_AudioBank bank in _banks.Banks)
+            foreach (AudioBankVO record in _banks.Banks)
             {
+                CD_AudioBank bank = record.Config;
+
                 foreach (AudioClipCVO sound in bank.Sounds)
                 {
                     if (sound == null || string.IsNullOrEmpty(sound.Key))

@@ -291,6 +291,20 @@ to collapse eight injections into one, so a Command injects `IMapSystem` and wri
 with Models among its members where the module's own state lives, and when a module has one its
 Commands reach that module's Models through it rather than injecting them directly.
 
+**A Model holds one record per thing it keeps.** What the config says of a power-up and what the
+save holds of it are two halves of one thing, so they sit on one object — a plain `PowerUpVO`
+holding the `PowerUpCVO` and the `PowerUpSVO` entries themselves — in one
+`Dictionary<PowerUpType, PowerUpVO>`. Parallel lists read at the same index, or three dictionaries
+under the same key, make every read put the thing back together, and a field copied out of the
+config is a copy that drifts. A second collection is fine when it is an index onto the same records.
+The Model fills the records in `PostConstruct` one source at a time — the config decides what
+exists, the save attaches to it, what is still missing starts from the config. What it holds may be
+handed out as it is, to a Command or on a signal to a screen. A field the Model keeps valid, or the
+save writes, changes only through the Model's own methods; a flag a Command keeps for its own flow
+is set where it is used. A new value object is written only when nothing existing
+carries what the reader needs — a value derived by a rule, several records combined, or a Runtime
+type that another module cannot reference.
+
 **A Service is driven in two ways and answers in two ways.** A caller injects its interface and
 calls it, or binds one of the Commands it ships — the second for the case where the work has to
 be a step in a sequence with the next step waiting on it. Those Commands are nested in the
@@ -1497,6 +1511,7 @@ while FlowIoC is installed, and names the check and the folder to delete if it i
 | `flowioc-screens` | A screen module's context and its `ScreenCVO`, opening a screen and filling it, the state guard on a Mediator, and the animation callbacks a pooled screen depends on. |
 | `flowioc-connectors` | The one place two modules meet: getting the holders rather than binding them, wiring by direction, and what a Connector may not decide. |
 | `flowioc-systems-services` | Which of the three kinds a module is, when work earns a Service of its own, giving a System a surface, and where a piece of data belongs. |
+| `flowioc-models` | How a Model holds its state — one record per thing rather than parallel collections — filling it from its config and save assets, and what it hands a Command or a screen. |
 | `flowioc-root-order` | Where a Root sits in the scene, what its Initialize Order decides and what it does not, and reading a null holder or a Connector that wired nothing. |
 | `flowioc-data-types` | The `CD_`, `RD_`, `SD_`, `ED_` and `DD_` prefixes, the `VO` suffix family that goes with them, which folder each kind belongs in, and the prefix an asset file takes. |
 
@@ -1740,6 +1755,12 @@ references theirs.
 `zTestModules` is exempt from all of it. Everything there is test code, so it may
 reference any module in the project; in exchange, every script in it is wrapped in
 `#if UNITY_EDITOR` and never reaches a build.
+
+A test module is a module's sample, not a home for unit tests, and no module carries a test
+assembly under `Scripts/`. Unit tests for a game's own modules go in a test assembly of the
+game's own outside every module folder - `Assets/Tests/`, say - referencing the modules'
+assemblies. FlowIoC and the ready-made modules it installs need none from a game: they are
+tested where they are made, and a copy of such a test breaks when the module updates.
 
 Sub-contexts are attached from the Root's inspector (*Add Sub Context*), which
 lists every `Context` type in the project. Mark a context with
