@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The Help window keeps its page and tab through a script reload, so What's New stays open after an update.
+- A module created from a script with an `Assets/...` parent folder is made whole; it used to come out with no scene and no Root listing. A parent outside `Assets` is refused before anything is written.
 
 ## [1.30.0] - 2026-10-01
 

@@ -50,6 +50,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 return;
             }
 
+            if (!new ModuleParentFolder().TryResolve(parentModulePath, out parentModulePath, out string refusal))
+            {
+                Debug.LogError(refusal);
+                return;
+            }
+
             // The type's suffix goes on here, not in the window: "Ads" with type Test is
             // AdsTestModule whoever asked. Left to the window, a call from a script that named a
             // test module "Ads" wrote zTestModules/AdsModule, with the parent's own assembly name.

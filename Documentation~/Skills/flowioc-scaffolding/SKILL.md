@@ -203,7 +203,7 @@ genType.GetMethod("CreateModuleStructure",
         System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
     .Invoke(null, new object[] {
         "Player",                                          // name, without "Module" and without the type's suffix
-        System.IO.Path.Combine(UnityEngine.Application.dataPath, "Modules"),   // Assets/Modules, or the owning module's folder - absolute, either slash
+        "Assets/Modules",                                  // or the owning module's folder - Assets/... or absolute, either slash
         System.Enum.Parse(modType, "Main"),                // Main, Test or Screen
         selected, configMap, actionNames,
         true, true, true, false,                           // createRoot, createContext, createSignals, createScreen
@@ -224,10 +224,12 @@ call from here that named a test module `"Ads"` wrote `zTestModules/AdsModule` w
 own assembly name, and its namespace settings over the parent's. Read the folder name and the
 asmdef name back after the call.
 
-**The parent is any absolute path to the folder.** `D:\work\Game\Assets\Modules\GameplayModule`
-built from a script's own working directory is the same folder as Unity's
-`D:/Work/Game/Assets/Modules/GameplayModule`, and the generator reads it so. A parent written that way used to put a top level module under
-`zSubModules` and leave a screen's prefab not addressable.
+**The parent is any path to the folder inside `Assets`.** `Assets/Modules/GameplayModule`, Unity's
+`D:/Work/Game/Assets/Modules/GameplayModule` and `D:\work\Game\Assets\Modules\GameplayModule` built
+from a script's own working directory are one folder, and the generator reads them so. An
+`Assets/...` parent used to write a module with no scene and no Root listing, one `not within the
+Assets folder` error per folder; a parent outside `Assets` is refused now with one error, and
+nothing is written.
 
 **The role counts only for a Main module with a Root.** A Test or a Screen module, and a Main
 module made without a Root, are written plain whatever role is passed - `PlayerTestRoot` and
@@ -237,10 +239,11 @@ the role into both names.
 
 Three things to know before relying on this:
 
-**`eval` gives up on the response after about five seconds of main thread work, but the code
-usually finishes anyway.** Module generation takes longer than that, so a timeout is the normal
-result rather than a failure. Verify by looking at the project - the module folder, the asmdef, the
-`.csproj.DotSettings` at the root - not by trusting the error.
+**The call returns before the module is finished.** It writes the code and returns, usually in
+seconds; the scene, the Root in it and a screen's prefab on its layer are put in after the domain
+reload that follows. Wait for the compile, then verify by looking at the project - the module
+folder, the asmdef, the `.csproj.DotSettings` at the root, the scene - not by trusting the `ok`. An
+`eval` that times out has not necessarily failed either: the code usually finishes anyway.
 
 **Compilation needs asking for.** After writing files, `AssetDatabase.Refresh()` then
 `CompilationPipeline.RequestScriptCompilation()`, and poll `recompile_status` until it reports

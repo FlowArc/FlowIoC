@@ -303,6 +303,12 @@ Modules/
             PlayerSignals            # the module's public surface
 ```
 
+**Driving `Create Module` from a terminal, copy the call from the scaffolding skill - open it again
+even if it was read earlier in the session.** The generator is internal and takes fourteen
+arguments by reflection; a call rebuilt from the package source or from a summary of an earlier
+one gets a field where there is a property, or a setting the window would have filled, and leaves a
+module half made.
+
 Do not rename a module in the Project window either. `Tools/FlowIoC/Edit Module/Rename Module` carries the name
 to everything it reaches - the assemblies and their references, the namespaces, the settings files,
 the log channel, the Root, Context and signal holders named after it, and the Roots in scenes that
