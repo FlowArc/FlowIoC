@@ -5,11 +5,11 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.31.0] - 2026-10-05
 
 ### Changed
 
-- Loading: the overlay screen is gone. A screen that waits for its data puts the `LoadingSpinner` prefab, or a variant of it, inside itself, so its close button keeps working. `LoadingPresentation.Overlay` and `OverlayBegan` are removed; an Overlay set in a `CD_LoadingSets` becomes Silent.
+- **BREAKING:** Loading: the overlay screen is gone. A screen that waits for its data puts the `LoadingSpinner` prefab, or a variant of it, inside itself, so its close button keeps working. `LoadingPresentation.Overlay` and `OverlayBegan` are removed; an Overlay set in a `CD_LoadingSets` becomes Silent.
 - Modules: Loading 1.1.0.
 - Agent rules and skill `flowioc-screens`: a screen is filled by the Command that opened it; a screen that announces `Opened` and waits for a neighbour to send its data is the wrong shape.
 
