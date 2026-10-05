@@ -47,9 +47,9 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the main screen, the main screen's Play opens the gameplay screen, and "
                 + "the loading screen's retry runs the boot again.");
             painter.Bullet(
-                "LoadingConnectorSubContext, joining the loading service to its two presentations: "
-                + "Began, SetChanged, SetCompleted and SetFailed reach the fullscreen screen and the "
-                + "overlay, each applying what concerns the set it shows.");
+                "LoadingConnectorSubContext, joining the loading service to its screen: "
+                + "FullscreenBegan, SetChanged, SetCompleted and SetFailed reach the fullscreen "
+                + "screen, which applies what concerns the set it shows.");
             painter.Bullet(
                 "The longest reference list in the project, on purpose: every module's Signals "
                 + "assembly, and the Shared assemblies their payloads need. The Connector is the one place "
@@ -120,20 +120,14 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Separator();
             painter.SubHeading("LoadingConnectorSubContext");
             painter.Paragraph(
-                "One service, two screens. Each Began reaches its own presentation - FullscreenBegan "
-                + "opens the loading screen, OverlayBegan the overlay - and the set's changes, completion "
-                + "and failure reach both. The wires are connected under one group name, so "
+                "One service, one screen. FullscreenBegan opens the loading screen, and the set's "
+                + "changes, completion and failure reach it. The wires are connected under one group name, so "
                 + "DestroyContext takes them all back with a single DisconnectGroup.");
             painter.Code(
                 "_loadingSignals.Outgoing.FullscreenBegan.Connect(_loadingScreenSignals.Incoming.Open, GROUP);\n"
                 + "_loadingSignals.Outgoing.SetChanged.Connect(_loadingScreenSignals.Incoming.Apply, GROUP);\n"
                 + "_loadingSignals.Outgoing.SetCompleted.Connect(_loadingScreenSignals.Incoming.Close, GROUP);\n"
-                + "_loadingSignals.Outgoing.SetFailed.Connect(_loadingScreenSignals.Incoming.ShowFailed, GROUP);\n"
-                + "\n"
-                + "_loadingSignals.Outgoing.OverlayBegan.Connect(_loadingOverlayScreenSignals.Incoming.Open, GROUP);\n"
-                + "_loadingSignals.Outgoing.SetChanged.Connect(_loadingOverlayScreenSignals.Incoming.Apply, GROUP);\n"
-                + "_loadingSignals.Outgoing.SetCompleted.Connect(_loadingOverlayScreenSignals.Incoming.Close, GROUP);\n"
-                + "_loadingSignals.Outgoing.SetFailed.Connect(_loadingOverlayScreenSignals.Incoming.Close, (set, step) => set, GROUP);",
+                + "_loadingSignals.Outgoing.SetFailed.Connect(_loadingScreenSignals.Incoming.ShowFailed, GROUP);",
                 "LoadingConnectorSubContext - IncomingSignals");
 
             painter.Separator();

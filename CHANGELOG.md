@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Loading: the overlay screen is gone. A screen that waits for its data puts the `LoadingSpinner` prefab, or a variant of it, inside itself, so its close button keeps working. `LoadingPresentation.Overlay` and `OverlayBegan` are removed; an Overlay set in a `CD_LoadingSets` becomes Silent.
+- Modules: Loading 1.1.0.
+
 ### Fixed
 
 - What's New no longer shows an empty Unreleased section above the latest release.

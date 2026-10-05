@@ -57,17 +57,6 @@ MonoBehaviour:
     ScreenTag: 0
     ScreenHasShowAnimation: 0
     ScreenHasHideAnimation: 0
-  - ContextScript: {fileID: 11500000, guid: 3bba25e0978c656469ce267466589d13, type: 3}
-    ContextFullName: Modules.LoadingModule.LoadingOverlayScreenModule.RootsContexts.LoadingOverlayScreenContext
-    ContextName: LoadingOverlayScreenContext
-    AutoSetup: 1
-    IsTest: 0
-    OverrideScreen: 0
-    ScreenManagerId: 0
-    ScreenLayer: 0
-    ScreenTag: 0
-    ScreenHasShowAnimation: 0
-    ScreenHasHideAnimation: 0
   initializeOrder: -10
   AutoBindInjections: 1
   AutoBindMediations: 1

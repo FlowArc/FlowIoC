@@ -10,7 +10,7 @@ using Modules.LoadingModule.LoadingTestModule.Signals;
 namespace Modules.LoadingModule.LoadingTestModule.RootsContexts
 {
     /// <summary>
-    /// Every state of the two screens, once: a fullscreen set with parallel steps and a child set
+    /// Every state of the loading screen, once: a fullscreen set with parallel steps and a child set
     /// on the second bar, a step that fails and a retry that succeeds, and a silent set running
     /// beside it all. The config is CD_LoadingSets_Test on this scene's LoadingServiceRoot.
     /// </summary>

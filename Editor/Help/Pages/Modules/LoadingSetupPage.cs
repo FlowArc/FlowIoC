@@ -37,8 +37,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("What it gives you");
             painter.Bullet(
                 "A set: steps with weights and messages, declared in CD_LoadingSets, shown as one bar. "
-                + "Fullscreen for the boot, Overlay for a feature waiting on its own data, Silent for "
-                + "work the player never sees.");
+                + "Fullscreen for the boot, Silent for work the player never sees.");
+            painter.Bullet(
+                "A spinner for a screen that waits on its own data. LoadingSpinner is a prefab the "
+                + "screen puts inside itself, so the rest of the screen - its close button - keeps "
+                + "working while it turns.");
             painter.Bullet(
                 "Parallel by nature. A set accepts its steps in any order and any number at once; the "
                 + "order of the work is the caller's Context, not the set's.");
@@ -95,10 +98,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.PageLink("Asset Delivery Module");
 
             painter.Separator();
-            painter.SubHeading("The screens come from Resources, the art from Addressables");
+            painter.SubHeading("The screen comes from Resources, the art from Addressables");
             painter.Paragraph(
-                "Both loading screens declare ScreenLoadCVO.Resource and keep their prefabs in their "
-                + "modules' Resources folders, so the bar is on stage before Addressables has "
+                "The loading screen declares ScreenLoadCVO.Resource and keeps its prefab in its "
+                + "module's Resources folder, so the bar is on stage before Addressables has "
                 + "initialised - seconds on a remote catalogue over a bad connection, with nothing "
                 + "to show otherwise. What a game changes between releases stays addressable: "
                 + "SPR_LoadingBackground in LoadingScreenModule/Art is the splash behind the bar, "
@@ -142,11 +145,40 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 ".ToSequence<ILoadingService.Commands.Begin>(\"EnterMatch\")\n"
                 + "...\n"
                 + ".ToSequence<ILoadingService.Commands.Await>(\"EnterMatch\")");
+
+            painter.Separator();
+            painter.SubHeading("A screen that waits for its data");
             painter.Paragraph(
-                "A feature that waits for its own data waits in its own module: the first Command of "
-                + "the clan panel's open flow retains until its Model is ready, and begins an Overlay "
-                + "set for the spinner meanwhile. Nothing asks the loading service whether clan data "
-                + "is in - the clan module knows, and tells its neighbours with an Outgoing.");
+                "A screen that opens before its data is in - a leaderboard, a clan panel - shows the "
+                + "spinner inside itself, not over itself. Drop LoadingModule/Prefabs/LoadingSpinner "
+                + "into the screen's prefab where the list will be, or make a prefab variant of it "
+                + "first to change the icon, its size or its speed, and drop the variant. The View "
+                + "switches it on before each opening and off when it is filled.");
+            painter.Code(
+                "[SerializeField] private GameObject _loading;\n"
+                + "\n"
+                + "public override void BeforeScreenActivation()\n"
+                + "{\n"
+                + "    base.BeforeScreenActivation();\n"
+                + "    _loading.SetActive(true);\n"
+                + "}\n"
+                + "\n"
+                + "public void Fill(LeaderboardVO board)\n"
+                + "{\n"
+                + "    _loading.SetActive(false);\n"
+                + "    ...\n"
+                + "}");
+            painter.Paragraph(
+                "Nothing asks the loading service whether the data is in - the leaderboard module "
+                + "knows, and the screen's Mediator calls Fill when the signal carrying the data "
+                + "arrives. The spinner blocks no input, so a player who would rather not wait "
+                + "closes the panel; the Mediator's guard drops the late signal, and the next opening "
+                + "switches the spinner on again. A wait that has to block everything - a purchase "
+                + "being confirmed - is a screen of the game's own with the spinner inside it.");
+            painter.Note(
+                "The prefab carries a Canvas of its own, so the turning rebuilds that small canvas "
+                + "every frame rather than the screen's. Keep it in a variant: without it the whole "
+                + "screen is rebuilt every frame the spinner turns, and nothing reports it.");
 
             painter.Separator();
             painter.SubHeading("Sets");
@@ -191,7 +223,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "it. Every step a Command names has to be in exactly one set of CD_LoadingSets on "
                 + "LoadingServiceRoot's adapter.");
             painter.Note(
-                "Important: a Fullscreen or Overlay set that nobody called Begin on begins at its "
+                "Important: a Fullscreen set that nobody called Begin on begins at its "
                 + "first report, with a warning. Begin it first, from the chain that owns the moment, "
                 + "so its screen is up before the first step starts.");
             painter.Note(

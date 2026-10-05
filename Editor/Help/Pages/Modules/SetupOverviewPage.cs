@@ -89,9 +89,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "LoadingModule owns the boot's bar: MainContext begins the Boot set, "
                 + "PreloadScreensCommand and FillPoolsCommand report into it, and the main screen "
-                + "opens when the set completes. LoadingScreenModule and LoadingOverlayScreenModule "
-                + "under it are the two presentations, and LoadingConnectorSubContext in "
-                + "ConnectorModule joins them to the service. The Loading page has the rest.");
+                + "opens when the set completes. LoadingScreenModule under it draws the bar, and "
+                + "LoadingConnectorSubContext in ConnectorModule joins it to the service. The "
+                + "LoadingSpinner prefab beside them is what a screen of the game puts inside itself "
+                + "while it waits for its data. The Loading page has the rest.");
             painter.Paragraph(
                 "Each module has a page of its own beside this one, with its button: Installed, "
                 + "Update to X for the one that carries a version, or Install for a module the game "

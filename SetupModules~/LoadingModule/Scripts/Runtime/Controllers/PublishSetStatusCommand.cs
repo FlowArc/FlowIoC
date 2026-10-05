@@ -9,8 +9,8 @@ using Modules.LoadingModule.Signals;
 namespace Modules.LoadingModule.Controllers
 {
     /// <summary>
-    /// Publishes the set's snapshot. The first publish of a run announces the presentation first,
-    /// so the Connector can open the right screen, and every publish announces the change.
+    /// Publishes the set's snapshot. The first publish of a Fullscreen run announces it began, so
+    /// the Connector can open the loading screen, and every publish announces the change.
     /// </summary>
     internal class PublishSetStatusCommand : Command
     {
@@ -29,15 +29,8 @@ namespace Modules.LoadingModule.Controllers
             {
                 set.BeginAnnounced = true;
 
-                switch (set.Config.Presentation)
-                {
-                    case LoadingPresentation.Fullscreen:
-                        _signals.Outgoing.FullscreenBegan.Dispatch(status);
-                        break;
-                    case LoadingPresentation.Overlay:
-                        _signals.Outgoing.OverlayBegan.Dispatch(status);
-                        break;
-                }
+                if (set.Config.Presentation == LoadingPresentation.Fullscreen)
+                    _signals.Outgoing.FullscreenBegan.Dispatch(status);
             }
 
             _signals.Outgoing.SetChanged.Dispatch(status);
