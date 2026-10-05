@@ -26,22 +26,22 @@ namespace FlowIoC.Editor.ModuleCards
         private const string BLOCK_BEGIN = "<!-- FLOWIOC:BEGIN";
         private const string KEY = "Version: ";
 
-        private static readonly Regex Line = new Regex(
+        private static readonly Regex _line = new Regex(
             @"^\s*Version:\s*(?<value>\S.*?)\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         // The other lines a tool reads off the card. A version written directly under one of
         // them keeps the three together, which is where the next reader looks for them.
-        private static readonly Regex ToolLine = new Regex(
+        private static readonly Regex _toolLine = new Regex(
             @"^\s*(Colou?r|Profile|Publish|Update):", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        internal static bool IsLine(string line) => Line.IsMatch(line ?? string.Empty);
+        internal static bool IsLine(string line) => _line.IsMatch(line ?? string.Empty);
 
         /// <summary>The version above the block, or 0.0.0 when the card carries none.</summary>
         internal string Read(string cardText)
         {
             foreach (string line in AuthoredLines(cardText))
             {
-                Match match = Line.Match(line);
+                Match match = _line.Match(line);
 
                 if (match.Success)
                     return match.Groups["value"].Value;
@@ -54,7 +54,7 @@ namespace FlowIoC.Editor.ModuleCards
         {
             foreach (string line in AuthoredLines(cardText))
             {
-                if (Line.IsMatch(line))
+                if (_line.IsMatch(line))
                     return true;
             }
 
@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.ModuleCards
             {
                 bool inAuthored = blockAt < 0 || index < blockAt;
 
-                if (inAuthored && Line.IsMatch(all[index]))
+                if (inAuthored && _line.IsMatch(all[index]))
                     continue;
 
                 (inAuthored ? authored : rest).Add(all[index]);
@@ -89,7 +89,7 @@ namespace FlowIoC.Editor.ModuleCards
             while (authored.Count > 0 && authored[authored.Count - 1].Trim().Length == 0)
                 authored.RemoveAt(authored.Count - 1);
 
-            if (authored.Count > 0 && !ToolLine.IsMatch(authored[authored.Count - 1]))
+            if (authored.Count > 0 && !_toolLine.IsMatch(authored[authored.Count - 1]))
                 authored.Add(string.Empty);
 
             authored.Add(KEY + version.Trim());
@@ -119,7 +119,7 @@ namespace FlowIoC.Editor.ModuleCards
             {
                 bool inAuthored = blockAt < 0 || index < blockAt;
 
-                if (inAuthored && Line.IsMatch(all[index]))
+                if (inAuthored && _line.IsMatch(all[index]))
                     continue;
 
                 bool blank = all[index].Trim().Length == 0;

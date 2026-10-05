@@ -28,7 +28,7 @@ namespace FlowIoC.Editor.Console
     /// </summary>
     public class ScriptAssetSearchPlan
     {
-        private static readonly FlowStackFrameFilter PathText = new();
+        private static readonly FlowStackFrameFilter _pathText = new();
 
         public List<ScriptSearchAttempt> Build(string blameTypeName, string sourceFilePath, int sourceLineNumber)
         {
@@ -78,7 +78,7 @@ namespace FlowIoC.Editor.Console
             {
                 // Taken apart by hand: a path read out of a stack trace can hold characters
                 // System.IO.Path refuses, and it throws rather than answering.
-                string fileName = PathText.FileNameWithoutExtensionOf(normalized);
+                string fileName = _pathText.FileNameWithoutExtensionOf(normalized);
                 if (!string.IsNullOrEmpty(fileName))
                 {
                     attempts.Add(new ScriptSearchAttempt

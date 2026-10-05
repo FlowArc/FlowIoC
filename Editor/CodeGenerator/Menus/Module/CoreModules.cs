@@ -24,7 +24,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
     /// </summary>
     internal class CoreModules
     {
-        private static readonly Dictionary<string, string> Reasons = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _reasons = new Dictionary<string, string>
         {
             {
                 "MainModule",
@@ -48,7 +48,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         {
             if (string.IsNullOrEmpty(moduleName)) return null;
 
-            foreach (KeyValuePair<string, string> reason in Reasons)
+            foreach (KeyValuePair<string, string> reason in _reasons)
             {
                 if (string.Equals(reason.Key, moduleName, StringComparison.Ordinal)) return reason.Value;
             }

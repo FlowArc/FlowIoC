@@ -19,7 +19,7 @@ namespace Modules.BotBarModule.BotBarTestModule.RootsContexts
     public class BotBarTestContext : BaseScreenContext
     {
         private const string GROUP = nameof(BotBarTestContext);
-        private static readonly string[] Keys = {"home", "battle", "clan", "collection", "shop"};
+        private static readonly string[] _keys = {"home", "battle", "clan", "collection", "shop"};
 
         private BotBarTestInternalSignals _signals;
         private BotBarSignals _botBar;
@@ -68,7 +68,7 @@ namespace Modules.BotBarModule.BotBarTestModule.RootsContexts
             if (_botBar == null)
                 return;
 
-            foreach (string key in Keys)
+            foreach (string key in _keys)
             {
                 string captured = key;
                 _botBar.Outgoing.Selected(key).Connect(() => _signals.Note.Dispatch($"Selected[{captured}]"), GROUP);

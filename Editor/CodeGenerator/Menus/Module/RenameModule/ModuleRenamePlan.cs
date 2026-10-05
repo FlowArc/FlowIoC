@@ -38,7 +38,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         /// </summary>
         private const string EDITOR_RESOURCES = "Editor/Resources";
 
-        private static readonly FolderEVO.FolderType[] AssetFolders =
+        private static readonly FolderEVO.FolderType[] _assetFolders =
         {
             FolderEVO.FolderType.Prefabs, FolderEVO.FolderType.Scenes, FolderEVO.FolderType.Resources
         };
@@ -246,7 +246,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
 
         private IEnumerable<string> AssetFolderPaths(ModuleRenameEVO module)
         {
-            foreach (FolderEVO.FolderType type in AssetFolders)
+            foreach (FolderEVO.FolderType type in _assetFolders)
             {
                 string folder = Folder(module, type);
                 if (!string.IsNullOrEmpty(folder)) yield return folder;

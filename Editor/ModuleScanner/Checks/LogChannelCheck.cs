@@ -44,8 +44,8 @@ namespace FlowIoC.Editor.ModuleScanner
         private const string FLOW_MODULE_PREFIX = "FlowModule.";
         private const int NAMED_IN_MESSAGE = 6;
 
-        private static readonly Regex Constant = new Regex("^FlowModule\\.(?<name>[A-Za-z_][A-Za-z0-9_]*)$", RegexOptions.Compiled);
-        private static readonly Regex PlainLiteral = new Regex("^\"(?<name>[A-Za-z_][A-Za-z0-9_]*)\"$", RegexOptions.Compiled);
+        private static readonly Regex _constant = new Regex("^FlowModule\\.(?<name>[A-Za-z_][A-Za-z0-9_]*)$", RegexOptions.Compiled);
+        private static readonly Regex _plainLiteral = new Regex("^\"(?<name>[A-Za-z_][A-Za-z0-9_]*)\"$", RegexOptions.Compiled);
 
         private readonly Func<ModuleTargetEVO, IEnumerable<string>> _sourcesOf;
         private readonly Func<string, string> _read;
@@ -175,7 +175,7 @@ namespace FlowIoC.Editor.ModuleScanner
 
             if (IsStringLiteral(first))
             {
-                Match plain = PlainLiteral.Match(first);
+                Match plain = _plainLiteral.Match(first);
                 string literal = plain.Success ? plain.Groups["name"].Value : null;
 
                 // LogError("Save failed.", _config) is the channel-less overload with its context:
@@ -197,7 +197,7 @@ namespace FlowIoC.Editor.ModuleScanner
                 return true;
             }
 
-            Match constant = Constant.Match(first);
+            Match constant = _constant.Match(first);
             if (!constant.Success) return false;
 
             string name = constant.Groups["name"].Value;

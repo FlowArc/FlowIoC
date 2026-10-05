@@ -99,7 +99,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
         private string _declarationFile;
         private int _declarationLine;
 
-        private static readonly FlowFrameworkOrigin Origin = new();
+        private static readonly FlowFrameworkOrigin _origin = new();
         private readonly CommandDisplayName _displayName = new();
 
         #endregion
@@ -608,7 +608,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 // Whether it opens anything: whose class is running. A game binds
                 // SignalDispatchCommand as a step of its own, and that step belongs in its flow -
                 // but the class is the framework's, and taking a reader there tells them nothing.
-                if (Origin.IsFrameworkType(_commandBinder?.Context?.GetType()))
+                if (_origin.IsFrameworkType(_commandBinder?.Context?.GetType()))
                 {
                     FlowLogger.LogPlumbing(SystemLogType.CommandOperation,
                         _displayName.Of(step.CommandType), " executed as ", step.ExecutionType.ToString());
@@ -616,7 +616,7 @@ namespace FlowIoC.BaseModule.Controller.CommandGroup
                 else
                 {
                     FlowLogger.LogAbout(SystemLogType.Command,
-                        Origin.IsFrameworkType(step.CommandType) ? null : step.CommandType,
+                        _origin.IsFrameworkType(step.CommandType) ? null : step.CommandType,
                         _displayName.Of(step.CommandType), " executed as ", step.ExecutionType.ToString());
                 }
 

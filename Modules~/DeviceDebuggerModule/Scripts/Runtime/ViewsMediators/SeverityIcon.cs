@@ -11,10 +11,10 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
     /// </summary>
     public class SeverityIcon : VisualElement
     {
-        private static readonly Color ErrorColor = new(0.88f, 0.32f, 0.31f);
-        private static readonly Color WarningColor = new(0.90f, 0.71f, 0.33f);
-        private static readonly Color LogColor = new(0.45f, 0.55f, 0.68f);
-        private static readonly Color Ink = new(0.08f, 0.09f, 0.11f);
+        private static readonly Color _errorColor = new(0.88f, 0.32f, 0.31f);
+        private static readonly Color _warningColor = new(0.90f, 0.71f, 0.33f);
+        private static readonly Color _logColor = new(0.45f, 0.55f, 0.68f);
+        private static readonly Color _ink = new(0.08f, 0.09f, 0.11f);
 
         private LogType _kind = LogType.Log;
 
@@ -50,16 +50,16 @@ namespace Modules.DeviceDebuggerModule.ViewsMediators
             switch (_kind)
             {
                 case LogType.Warning:
-                    Triangle(painter, center, radius, WarningColor);
-                    Mark(painter, center + new Vector2(0f, radius * 0.12f), radius * 0.62f, Ink);
+                    Triangle(painter, center, radius, _warningColor);
+                    Mark(painter, center + new Vector2(0f, radius * 0.12f), radius * 0.62f, _ink);
                     break;
                 case LogType.Log:
-                    Disc(painter, center, radius, LogColor);
+                    Disc(painter, center, radius, _logColor);
                     Dot(painter, center - new Vector2(0f, radius * 0.42f), radius * 0.13f, Color.white);
                     Bar(painter, center + new Vector2(0f, radius * 0.16f), radius * 0.5f, radius * 0.22f, Color.white);
                     break;
                 default:
-                    Disc(painter, center, radius, ErrorColor);
+                    Disc(painter, center, radius, _errorColor);
                     Mark(painter, center, radius * 0.6f, Color.white);
                     break;
             }

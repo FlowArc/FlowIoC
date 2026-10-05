@@ -19,15 +19,15 @@ namespace FlowIoC.Editor.Inspector
         /// <summary>Where the summary of the type itself is filed.</summary>
         public const string TypeKey = "$type";
 
-        private static readonly Regex TypeDeclaration = new Regex(@"\b(?:class|struct)\s+(\w+)");
+        private static readonly Regex _typeDeclaration = new Regex(@"\b(?:class|struct)\s+(\w+)");
 
-        private static readonly Regex MemberDeclaration = new Regex(
+        private static readonly Regex _memberDeclaration = new Regex(
             @"^\s*(?:\[[^\]]*\]\s*)*(?:(?:public|private|protected|internal|static|readonly|virtual|override|abstract|sealed|new|const)\s+)*[\w<>,\[\]\.\?]+\s+(\w+)\s*(?:\{|=|;)");
 
-        private static readonly Regex SeeReference = new Regex(@"<see\s+cref\s*=\s*""(?:[\w\.]*\.)?(\w+)""\s*/?>");
-        private static readonly Regex Summary = new Regex(@"<summary>(.*?)</summary>", RegexOptions.Singleline);
-        private static readonly Regex AnyTag = new Regex(@"<[^>]+>");
-        private static readonly Regex Whitespace = new Regex(@"\s+");
+        private static readonly Regex _seeReference = new Regex(@"<see\s+cref\s*=\s*""(?:[\w\.]*\.)?(\w+)""\s*/?>");
+        private static readonly Regex _summary = new Regex(@"<summary>(.*?)</summary>", RegexOptions.Singleline);
+        private static readonly Regex _anyTag = new Regex(@"<[^>]+>");
+        private static readonly Regex _whitespace = new Regex(@"\s+");
 
         public Dictionary<string, string> Parse(string source)
         {
@@ -81,26 +81,26 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         private string KeyFor(string declaration)
         {
-            Match type = TypeDeclaration.Match(declaration);
+            Match type = _typeDeclaration.Match(declaration);
 
             if (type.Success)
                 return TypeKey;
 
-            Match member = MemberDeclaration.Match(declaration);
+            Match member = _memberDeclaration.Match(declaration);
 
             return member.Success ? member.Groups[1].Value : null;
         }
 
         private string Clean(string comment)
         {
-            Match summary = Summary.Match(comment);
+            Match summary = _summary.Match(comment);
             string body = summary.Success ? summary.Groups[1].Value : comment;
 
-            body = SeeReference.Replace(body, "$1");
+            body = _seeReference.Replace(body, "$1");
             body = body.Replace("<para>", " ").Replace("</para>", " ");
-            body = AnyTag.Replace(body, string.Empty);
+            body = _anyTag.Replace(body, string.Empty);
 
-            return Whitespace.Replace(body, " ").Trim();
+            return _whitespace.Replace(body, " ").Trim();
         }
     }
 }

@@ -36,7 +36,7 @@ namespace FlowIoC.Editor.ModelViewer
         /// Types drawn as one value rather than opened. The Unity structs are here because their
         /// ToString says everything their fields would, on one line.
         /// </summary>
-        private static readonly HashSet<Type> LeafTypes = new HashSet<Type>
+        private static readonly HashSet<Type> _leafTypes = new HashSet<Type>
         {
             typeof(string), typeof(decimal), typeof(DateTime), typeof(TimeSpan), typeof(Guid),
             typeof(Vector2), typeof(Vector3), typeof(Vector4), typeof(Vector2Int), typeof(Vector3Int),
@@ -44,7 +44,7 @@ namespace FlowIoC.Editor.ModelViewer
             typeof(Bounds), typeof(Matrix4x4)
         };
 
-        private static readonly Dictionary<Type, string> Keywords = new Dictionary<Type, string>
+        private static readonly Dictionary<Type, string> _keywords = new Dictionary<Type, string>
         {
             {typeof(int), "int"}, {typeof(float), "float"}, {typeof(double), "double"}, {typeof(bool), "bool"},
             {typeof(string), "string"}, {typeof(long), "long"}, {typeof(byte), "byte"}, {typeof(short), "short"},
@@ -173,7 +173,7 @@ namespace FlowIoC.Editor.ModelViewer
 
             return type.IsPrimitive
                    || type.IsEnum
-                   || LeafTypes.Contains(type)
+                   || _leafTypes.Contains(type)
                    || typeof(Type).IsAssignableFrom(type)
                    || typeof(Delegate).IsAssignableFrom(type)
                    || typeof(Object).IsAssignableFrom(type);
@@ -250,7 +250,7 @@ namespace FlowIoC.Editor.ModelViewer
         {
             if (type == null) return "";
 
-            if (Keywords.TryGetValue(type, out string keyword)) return keyword;
+            if (_keywords.TryGetValue(type, out string keyword)) return keyword;
 
             Type underlying = Nullable.GetUnderlyingType(type);
 

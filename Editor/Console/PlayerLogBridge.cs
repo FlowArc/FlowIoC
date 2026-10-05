@@ -29,9 +29,9 @@ namespace FlowIoC.Editor.Console
     {
         private const string INTAKE_KEY = "FlowIoC.Console.PlayerLogIntake";
 
-        private static readonly PlayerLogIntake Intake = new();
+        private static readonly PlayerLogIntake _intake = new();
 
-        public static bool IsFlowPlayerPresent => Intake.IsFlowPlayerPresent;
+        public static bool IsFlowPlayerPresent => _intake.IsFlowPlayerPresent;
 
         static PlayerLogBridge()
         {
@@ -43,7 +43,7 @@ namespace FlowIoC.Editor.Console
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
 
-            Intake.Restore(SessionState.GetString(INTAKE_KEY, null), ConnectedPlayerIds());
+            _intake.Restore(SessionState.GetString(INTAKE_KEY, null), ConnectedPlayerIds());
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace FlowIoC.Editor.Console
 
         private static void OnMessage(MessageEventArgs args)
         {
-            ConsoleLog log = Intake.Receive(args.playerId, args.data, ConnectionNameOf(args.playerId));
+            ConsoleLog log = _intake.Receive(args.playerId, args.data, ConnectionNameOf(args.playerId));
 
             if (log != null)
                 FlowLogger.AddPlayerLog(log);
@@ -69,13 +69,13 @@ namespace FlowIoC.Editor.Console
 
         private static void OnDisconnected(int playerId)
         {
-            Intake.Disconnected(playerId);
+            _intake.Disconnected(playerId);
             Park();
         }
 
         private static void Park()
         {
-            SessionState.SetString(INTAKE_KEY, Intake.Serialize());
+            SessionState.SetString(INTAKE_KEY, _intake.Serialize());
         }
 
         private static string ConnectionNameOf(int playerId)

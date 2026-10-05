@@ -10,7 +10,7 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
     /// <summary>Asks every cube's pointer to hide, or to show again.</summary>
     internal class SetTestPointersHiddenCommand : Command
     {
-        private static readonly string[] Ids = {WorldPointerSampleIds.Hide, WorldPointerSampleIds.Clamp, WorldPointerSampleIds.Ignore};
+        private static readonly string[] _ids = {WorldPointerSampleIds.Hide, WorldPointerSampleIds.Clamp, WorldPointerSampleIds.Ignore};
 
         [Inject] private IWorldPointerService _worldPointerService { get; set; }
 
@@ -19,12 +19,12 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 
         public override void Execute()
         {
-            for (int i = 0; i < _targets.Length && i < Ids.Length; i++)
+            for (int i = 0; i < _targets.Length && i < _ids.Length; i++)
             {
                 if (_hidden)
-                    _worldPointerService.Hide(Ids[i], _targets[i]);
+                    _worldPointerService.Hide(_ids[i], _targets[i]);
                 else
-                    _worldPointerService.Show(Ids[i], _targets[i]);
+                    _worldPointerService.Show(_ids[i], _targets[i]);
             }
         }
     }

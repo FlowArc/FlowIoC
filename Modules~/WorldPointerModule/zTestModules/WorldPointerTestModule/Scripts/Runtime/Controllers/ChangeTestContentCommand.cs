@@ -14,8 +14,8 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
     /// </summary>
     internal class ChangeTestContentCommand : Command
     {
-        private static readonly string[] Ids = {WorldPointerSampleIds.Hide, WorldPointerSampleIds.Clamp, WorldPointerSampleIds.Ignore};
-        private static readonly string[] Words = {"Hello", "Over here", "Wave!", "Ouch", "Nice", "Hmm"};
+        private static readonly string[] _ids = {WorldPointerSampleIds.Hide, WorldPointerSampleIds.Clamp, WorldPointerSampleIds.Ignore};
+        private static readonly string[] _words = {"Hello", "Over here", "Wave!", "Ouch", "Nice", "Hmm"};
 
         [Inject] private IWorldPointerService _worldPointerService { get; set; }
 
@@ -23,15 +23,15 @@ namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 
         public override void Execute()
         {
-            for (int i = 0; i < _targets.Length && i < Ids.Length; i++)
+            for (int i = 0; i < _targets.Length && i < _ids.Length; i++)
             {
                 var content = new WorldPointerSampleVO
                 {
-                    Text = Words[Random.Range(0, Words.Length)],
+                    Text = _words[Random.Range(0, _words.Length)],
                     Colour = Color.HSVToRGB(Random.value, 0.6f, 0.9f)
                 };
 
-                _worldPointerService.SetContent(Ids[i], _targets[i], content);
+                _worldPointerService.SetContent(_ids[i], _targets[i], content);
             }
         }
     }

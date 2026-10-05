@@ -10,51 +10,51 @@ namespace FlowIoC.Editor.CodeGenerator
         // The package root is resolved from this assembly instead of being hardcoded, so the
         // generator keeps working however the package was installed: embedded under Packages/,
         // pulled from a Git URL into Library/PackageCache, or resolved from a registry.
-        private static readonly PackageInfo Package =
+        private static readonly PackageInfo _package =
             PackageInfo.FindForAssembly(typeof(CodeGeneratorStrings).Assembly);
 
         // Unity virtual path, e.g. "Packages/com.flowarc.flowioc.core". Used with AssetDatabase.
-        private static readonly string PackageAssetRoot =
-            Package != null ? Package.assetPath : "Packages/com.flowarc.flowioc.core";
+        private static readonly string _packageAssetRoot =
+            _package != null ? _package.assetPath : "Packages/com.flowarc.flowioc.core";
 
         // Absolute path on disk. Used with System.IO when reading the code templates.
-        private static readonly string PackageDiskRoot =
-            Package != null ? Package.resolvedPath : Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC";
+        private static readonly string _packageDiskRoot =
+            _package != null ? _package.resolvedPath : Application.dataPath.Replace("Assets", "") + "Packages/FlowIoC";
 
         // One instance for the whole type: the paths object is stateless, and this class is
         // already the package's static string table.
-        private static readonly FlowIoCProjectPaths Paths = new FlowIoCProjectPaths();
+        private static readonly FlowIoCProjectPaths _paths = new FlowIoCProjectPaths();
 
-        public static readonly string CONFIG_PATH = Paths.CodeGeneratorSettings;
+        public static readonly string CONFIG_PATH = _paths.CodeGeneratorSettings;
 
-        public static readonly string SCREEN_SERVICE_ROOT_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenServiceRoot.prefab";
-        public static readonly string ASSET_SERVICE_ROOT_PATH = PackageAssetRoot + "/Assets/Prefabs/AssetServiceRoot.prefab";
-        internal static readonly string SCREEN_MANAGER_PREFAB_PATH = PackageAssetRoot + "/Assets/Prefabs/ScreenManager.prefab";
+        public static readonly string SCREEN_SERVICE_ROOT_PATH = _packageAssetRoot + "/Assets/Prefabs/ScreenServiceRoot.prefab";
+        public static readonly string ASSET_SERVICE_ROOT_PATH = _packageAssetRoot + "/Assets/Prefabs/AssetServiceRoot.prefab";
+        internal static readonly string SCREEN_MANAGER_PREFAB_PATH = _packageAssetRoot + "/Assets/Prefabs/ScreenManager.prefab";
 
 
-        internal static readonly string TempViewPath = PackageDiskRoot + "/Editor/CodeGenerator/TempViews/TempView.cs";
-        internal static readonly string TempMediatorPath = PackageDiskRoot + "/Editor/CodeGenerator/TempViews/TempMediator.cs";
+        internal static readonly string TempViewPath = _packageDiskRoot + "/Editor/CodeGenerator/TempViews/TempView.cs";
+        internal static readonly string TempMediatorPath = _packageDiskRoot + "/Editor/CodeGenerator/TempViews/TempMediator.cs";
 
-        internal static readonly string TempModelPath = PackageDiskRoot + "/Editor/CodeGenerator/TempModels/TempModel.cs";
-        internal static readonly string TempIModelPath = PackageDiskRoot + "/Editor/CodeGenerator/TempModels/ITempModel.cs";
+        internal static readonly string TempModelPath = _packageDiskRoot + "/Editor/CodeGenerator/TempModels/TempModel.cs";
+        internal static readonly string TempIModelPath = _packageDiskRoot + "/Editor/CodeGenerator/TempModels/ITempModel.cs";
 
-        internal static readonly string TempCommandPath = PackageDiskRoot + "/Editor/CodeGenerator/TempCommands/TempCommand.cs";
+        internal static readonly string TempCommandPath = _packageDiskRoot + "/Editor/CodeGenerator/TempCommands/TempCommand.cs";
 
-        internal static readonly string TempSignalsPath = PackageDiskRoot + "/Editor/CodeGenerator/TempSignals/TempSignals.cs";
+        internal static readonly string TempSignalsPath = _packageDiskRoot + "/Editor/CodeGenerator/TempSignals/TempSignals.cs";
 
         internal static readonly string TempInternalSignalsPath =
-            PackageDiskRoot + "/Editor/CodeGenerator/TempSignals/TempInternalSignals.cs";
+            _packageDiskRoot + "/Editor/CodeGenerator/TempSignals/TempInternalSignals.cs";
 
-        internal static readonly string TempContextPath = PackageDiskRoot + "/Editor/CodeGenerator/TempRoots/TempContext.cs";
-        internal static readonly string TempRootPath = PackageDiskRoot + "/Editor/CodeGenerator/TempRoots/TempRoot.cs";
-
-
-        internal static readonly string TempScreenViewPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenView.cs";
-        internal static readonly string TempScreenMediatorPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenMediator.cs";
+        internal static readonly string TempContextPath = _packageDiskRoot + "/Editor/CodeGenerator/TempRoots/TempContext.cs";
+        internal static readonly string TempRootPath = _packageDiskRoot + "/Editor/CodeGenerator/TempRoots/TempRoot.cs";
 
 
-        internal static readonly string TempScreenTestContextPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestContext.cs";
-        internal static readonly string TempScreenTestRootPath = PackageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestRoot.cs";
+        internal static readonly string TempScreenViewPath = _packageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenView.cs";
+        internal static readonly string TempScreenMediatorPath = _packageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenMediator.cs";
+
+
+        internal static readonly string TempScreenTestContextPath = _packageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestContext.cs";
+        internal static readonly string TempScreenTestRootPath = _packageDiskRoot + "/Editor/CodeGenerator/TempScreens/TempScreenTestRoot.cs";
 
         internal static string GetPath(string path, string parentFolderName)
         {

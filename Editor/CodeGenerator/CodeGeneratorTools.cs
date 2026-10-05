@@ -14,7 +14,7 @@ namespace FlowIoC.Editor.CodeGenerator
         /// module tree and the button that writes the file, and below this the tree is the part
         /// that gives way.
         /// </summary>
-        private static readonly Vector2 GENERATOR_WINDOW_SIZE = new Vector2(520, 640);
+        private static readonly Vector2 _generatorWindowSize = new Vector2(520, 640);
 
         [MenuItem("Tools/FlowIoC/Create New Module", false, -1301)]
         private static void CreateModule()
@@ -34,28 +34,28 @@ namespace FlowIoC.Editor.CodeGenerator
         private static void CreateViewV2()
         {
             var window = EditorWindow.GetWindow<CreateViewMenu>("Create View");
-            window.minSize = GENERATOR_WINDOW_SIZE;
+            window.minSize = _generatorWindowSize;
         }
 
         [MenuItem("Tools/FlowIoC/Edit Module/Create Model", false, -1286)]
         private static void CreateModelV2()
         {
             var window = EditorWindow.GetWindow<CreateModelMenu>("Create Model");
-            window.minSize = GENERATOR_WINDOW_SIZE;
+            window.minSize = _generatorWindowSize;
         }
 
         [MenuItem("Tools/FlowIoC/Edit Module/Create Command", false, -1285)]
         private static void CreateCommandV2()
         {
             var window = EditorWindow.GetWindow<CreateCommandMenu>("Create Command");
-            window.minSize = GENERATOR_WINDOW_SIZE;
+            window.minSize = _generatorWindowSize;
         }
 
         [MenuItem("Tools/FlowIoC/Edit Module/Create Function", false, -1284)]
         private static void CreateFunction()
         {
             var window = EditorWindow.GetWindow<CreateFunctionMenu>("Create Function");
-            window.minSize = GENERATOR_WINDOW_SIZE;
+            window.minSize = _generatorWindowSize;
         }
     }
 }

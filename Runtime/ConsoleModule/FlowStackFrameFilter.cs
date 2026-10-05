@@ -17,7 +17,7 @@ namespace FlowIoC.ConsoleModule
     /// </summary>
     public class FlowStackFrameFilter
     {
-        private static readonly string[] SkippedPrefixes =
+        private static readonly string[] _skippedPrefixes =
         {
             "FlowIoC.",
             "UnityEngine.Debug:",
@@ -36,9 +36,9 @@ namespace FlowIoC.ConsoleModule
         {
             if (string.IsNullOrEmpty(traceLine)) return true;
 
-            for (int i = 0; i < SkippedPrefixes.Length; i++)
+            for (int i = 0; i < _skippedPrefixes.Length; i++)
             {
-                if (traceLine.StartsWith(SkippedPrefixes[i], StringComparison.Ordinal))
+                if (traceLine.StartsWith(_skippedPrefixes[i], StringComparison.Ordinal))
                     return true;
             }
 
@@ -85,7 +85,7 @@ namespace FlowIoC.ConsoleModule
         {
             if (string.IsNullOrEmpty(path)) return string.Empty;
 
-            int slash = path.LastIndexOfAny(PathSeparators);
+            int slash = path.LastIndexOfAny(_pathSeparators);
             return slash < 0 ? path : path.Substring(slash + 1);
         }
 
@@ -98,7 +98,7 @@ namespace FlowIoC.ConsoleModule
             return dot <= 0 ? name : name.Substring(0, dot);
         }
 
-        private static readonly char[] PathSeparators = {'/', '\\'};
+        private static readonly char[] _pathSeparators = {'/', '\\'};
 
         /// <summary>The class name a Unity stack frame starts with, or null.</summary>
         public string ParseClassName(string traceLine)

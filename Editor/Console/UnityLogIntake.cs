@@ -28,14 +28,14 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         public bool IsCompilerMessage(string message)
         {
-            return message != null && CompilerMessage.IsMatch(message);
+            return message != null && _compilerMessage.IsMatch(message);
         }
 
         /// <summary>
         /// What Unity prints for a compile error: the file, the line and column in brackets, then
         /// error or warning, then the compiler's own code.
         /// </summary>
-        private static readonly Regex CompilerMessage =
+        private static readonly Regex _compilerMessage =
             new(@"\(\d+,\d+\):\s*(error|warning)\s+\w+\d+:", RegexOptions.Compiled);
 
         /// <summary>
@@ -49,14 +49,14 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         public bool IsShaderMessage(string message)
         {
-            return message != null && ShaderMessage.IsMatch(message);
+            return message != null && _shaderMessage.IsMatch(message);
         }
 
         /// <summary>
         /// What Unity prints for a shader diagnostic: the word Shader, error or warning, then the
         /// shader's name in quotes.
         /// </summary>
-        private static readonly Regex ShaderMessage =
+        private static readonly Regex _shaderMessage =
             new(@"^Shader\s+(error|warning)\s+in\s+'", RegexOptions.Compiled);
 
         /// <summary>
@@ -71,11 +71,11 @@ namespace FlowIoC.Editor.Console
             if (!flowPlayerPresent) return false;
             if (!string.IsNullOrEmpty(stackTrace)) return false;
 
-            return message != null && PlayerEcho.IsMatch(message);
+            return message != null && _playerEcho.IsMatch(message);
         }
 
         /// <summary>What Unity's receiver writes: <i>PlayerType "name"</i>, a space, the line.</summary>
-        private static readonly Regex PlayerEcho = new(@"^<i>[^<]*""</i> ", RegexOptions.Compiled);
+        private static readonly Regex _playerEcho = new(@"^<i>[^<]*""</i> ", RegexOptions.Compiled);
 
         /// <summary>
         /// Folds Exception and Assert onto Error. The console offers three filters, so a kind

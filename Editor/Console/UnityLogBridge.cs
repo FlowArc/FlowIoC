@@ -24,17 +24,17 @@ namespace FlowIoC.Editor.Console
     {
         private const string PENDING_COMPILER_LOGS_KEY = "FlowIoC.Console.PendingCompilerLogs";
 
-        private static readonly UnityLogIntake Intake = new();
-        private static readonly CompilerLogStore Store = new();
-        private static readonly UnityLogRelay Relay = new(OnUnityLog, () => FlowLogger.IsWritingToUnityConsole);
+        private static readonly UnityLogIntake _intake = new();
+        private static readonly CompilerLogStore _store = new();
+        private static readonly UnityLogRelay _relay = new(OnUnityLog, () => FlowLogger.IsWritingToUnityConsole);
 
         static UnityLogBridge()
         {
-            Relay.Hook();
+            _relay.Hook();
 
             // A line from another thread waits in the relay until the editor's next update.
-            EditorApplication.update -= Relay.Drain;
-            EditorApplication.update += Relay.Drain;
+            EditorApplication.update -= _relay.Drain;
+            EditorApplication.update += _relay.Drain;
 
             CompilationPipeline.assemblyCompilationFinished -= OnAssemblyCompiled;
             CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompiled;
@@ -57,23 +57,23 @@ namespace FlowIoC.Editor.Console
 
         private static void OnUnityLog(string condition, string stackTrace, LogType type, bool isEcho)
         {
-            if (!Intake.ShouldRecord(type, isEcho)) return;
+            if (!_intake.ShouldRecord(type, isEcho)) return;
 
             // The compile error Unity is printing is the one CompilationPipeline already handed
             // over, with the file and the line this copy does not carry.
-            if (Intake.IsCompilerMessage(condition)) return;
+            if (_intake.IsCompilerMessage(condition)) return;
 
             // Same again for a shader, with one difference: the shader bridge is asked whether it
             // really recorded this error. It reads them off the asset at import, so an error a
             // variant only hits at play time never reached it - and dropping this copy on the
             // strength of the wording alone would lose that error altogether.
-            if (Intake.IsShaderMessage(condition) && ShaderLogBridge.Intake.WasReported(condition)) return;
+            if (_intake.IsShaderMessage(condition) && ShaderLogBridge.Intake.WasReported(condition)) return;
 
             // Unity's forwarding of a player's line, while that player's rows are already coming
             // in over FlowIoC's own message with their channel and flow.
-            if (Intake.IsPlayerEcho(condition, stackTrace, PlayerLogBridge.IsFlowPlayerPresent)) return;
+            if (_intake.IsPlayerEcho(condition, stackTrace, PlayerLogBridge.IsFlowPlayerPresent)) return;
 
-            FlowLogger.AddExternalLog(LogSource.Unity, Intake.ToLogType(type), condition,
+            FlowLogger.AddExternalLog(LogSource.Unity, _intake.ToLogType(type), condition,
                 stackTrace, null, 0);
         }
 
@@ -86,7 +86,7 @@ namespace FlowIoC.Editor.Console
             if (messages == null || messages.Length == 0) return;
 
             List<CompilerLogRecord> pending =
-                Store.Deserialize(SessionState.GetString(PENDING_COMPILER_LOGS_KEY, null));
+                _store.Deserialize(SessionState.GetString(PENDING_COMPILER_LOGS_KEY, null));
 
             for (int i = 0; i < messages.Length; i++)
             {
@@ -111,7 +111,7 @@ namespace FlowIoC.Editor.Console
                 Record(record);
             }
 
-            SessionState.SetString(PENDING_COMPILER_LOGS_KEY, Store.Serialize(pending));
+            SessionState.SetString(PENDING_COMPILER_LOGS_KEY, _store.Serialize(pending));
         }
 
         private static void Record(CompilerLogRecord record)
@@ -124,7 +124,7 @@ namespace FlowIoC.Editor.Console
         private static void DrainPendingCompilerLogs()
         {
             List<CompilerLogRecord> pending =
-                Store.Deserialize(SessionState.GetString(PENDING_COMPILER_LOGS_KEY, null));
+                _store.Deserialize(SessionState.GetString(PENDING_COMPILER_LOGS_KEY, null));
 
             if (pending.Count == 0) return;
 

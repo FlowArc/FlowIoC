@@ -30,7 +30,7 @@ namespace FlowIoC.Editor.Console
     {
         private const string NoProfile = "none";
 
-        private static readonly Regex Pair = new Regex(
+        private static readonly Regex _pair = new Regex(
             "(?<key>[A-Za-z][A-Za-z-]*)=(?:\"(?<quoted>(?:[^\"\\\\]|\\\\.)*)\"|(?<bare>\\S+))",
             RegexOptions.Compiled);
 
@@ -45,7 +45,7 @@ namespace FlowIoC.Editor.Console
 
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (Match match in Pair.Matches(line))
+            foreach (Match match in _pair.Matches(line))
             {
                 string key = match.Groups["key"].Value;
                 string value = match.Groups["quoted"].Success

@@ -13,7 +13,7 @@ namespace FlowIoC.Editor.Console
     /// </summary>
     public class FlowConsoleExport
     {
-        private static readonly Regex RichText = new("<.*?>", RegexOptions.Compiled);
+        private static readonly Regex _richText = new("<.*?>", RegexOptions.Compiled);
 
         public string ToText(IReadOnlyList<ConsoleLog> logs, bool includeStackTrace)
         {
@@ -48,7 +48,7 @@ namespace FlowIoC.Editor.Console
 
         private static string Strip(string message)
         {
-            return message == null ? string.Empty : RichText.Replace(message, string.Empty);
+            return message == null ? string.Empty : _richText.Replace(message, string.Empty);
         }
     }
 }

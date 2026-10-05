@@ -20,7 +20,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         internal const string XAML_PRESENTATION = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         internal const string JETBRAINS_SETTINGS_STORAGE = "urn:shemas-jetbrains-com:settings-storage-xaml";
         private const string LEGACY_CODE_GENERATED_SECTION = "CodeGeneratedEntries";
-        private static readonly CultureInfo TurkishCulture = new CultureInfo("tr-TR");
+        private static readonly CultureInfo _turkishCulture = new CultureInfo("tr-TR");
         internal static readonly string[] SkipFolderNames = {"zScreenModules", "zSubModules", "zTestModules"};
 
         public static void SetNamespaceProvider(
@@ -128,7 +128,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         {
             var spellings = new List<string> {EncodeAssetPath(assetFolderPath)};
 
-            foreach (CultureInfo culture in new[] {CultureInfo.InvariantCulture, CultureInfo.CurrentCulture, TurkishCulture})
+            foreach (CultureInfo culture in new[] {CultureInfo.InvariantCulture, CultureInfo.CurrentCulture, _turkishCulture})
             {
                 string spelling = EncodeLowercaseAssetPath(assetFolderPath, culture);
 

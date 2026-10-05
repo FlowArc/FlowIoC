@@ -27,7 +27,7 @@ namespace FlowIoC.Editor.ModuleCards
         private const string SERVICES_NAMESPACE = ".Services";
         private const string SYSTEMS_NAMESPACE = ".Systems";
 
-        private static readonly Dictionary<Type, string> KEYWORDS = new Dictionary<Type, string>
+        private static readonly Dictionary<Type, string> _keywords = new Dictionary<Type, string>
         {
             {typeof(bool), "bool"},
             {typeof(byte), "byte"},
@@ -140,7 +140,7 @@ namespace FlowIoC.Editor.ModuleCards
 
         private string Friendly(Type type)
         {
-            if (KEYWORDS.TryGetValue(type, out string keyword)) return keyword;
+            if (_keywords.TryGetValue(type, out string keyword)) return keyword;
 
             if (!type.IsGenericType) return type.Name;
 

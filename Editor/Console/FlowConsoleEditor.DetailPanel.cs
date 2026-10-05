@@ -162,7 +162,7 @@ namespace FlowIoC.Editor.Console
 
                 _cachedTraceFilePaths[i] = pathPart;
                 _cachedTraceLineNumbers[i] = lineNumber;
-                string shortName = PathText.FileNameOf(pathPart);
+                string shortName = _pathText.FileNameOf(pathPart);
                 _cachedTraceDisplayTexts[i] = line.Substring(0, atIdx) + $"(at {shortName}:{lineNumber})";
             }
         }

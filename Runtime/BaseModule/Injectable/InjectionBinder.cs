@@ -28,7 +28,7 @@ namespace FlowIoC.BaseModule.Injectable
         // What an assignable-type scan settled on last time, misses kept as null. Cleared whenever
         // the container changes, which is the only thing that can make an answer wrong.
         private readonly Dictionary<Type, Type> _assignableTypes = new();
-        private static readonly FlowFrameworkOrigin SignalOrigin = new();
+        private static readonly FlowFrameworkOrigin _signalOrigin = new();
 
         public InjectionBinder()
         {
@@ -70,7 +70,7 @@ namespace FlowIoC.BaseModule.Injectable
 
             // A signal holder is walked once here so a dispatch does not have to work out whose
             // signal it is. Framework signals and the game's go on different channels.
-            if (instance is ISignalHolder) SignalOrigin.StampSignalHolder(instance);
+            if (instance is ISignalHolder) _signalOrigin.StampSignalHolder(instance);
 
             return instance;
         }

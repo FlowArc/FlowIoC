@@ -18,8 +18,8 @@ namespace FlowIoC.Editor.Console
     [InitializeOnLoad]
     internal static class FlowConsoleAutoClear
     {
-        private static readonly FlowConsoleState State = new();
-        private static readonly FlowConsoleAutoClearPolicy Policy = new();
+        private static readonly FlowConsoleState _state = new();
+        private static readonly FlowConsoleAutoClearPolicy _policy = new();
 
         static FlowConsoleAutoClear()
         {
@@ -35,7 +35,7 @@ namespace FlowIoC.Editor.Console
 
         internal static void ClearFor(FlowConsoleClearTrigger trigger)
         {
-            if (!Policy.ShouldClear(trigger, State.ClearOnPlay, State.ClearOnRecompile, State.ClearOnBuild))
+            if (!_policy.ShouldClear(trigger, _state.ClearOnPlay, _state.ClearOnRecompile, _state.ClearOnBuild))
                 return;
 
             FlowLogger.ClearLogsKeepingPinned();
@@ -54,7 +54,7 @@ namespace FlowIoC.Editor.Console
 
         private static void OnUnityLogForErrorPause(string condition, string stackTrace, LogType type)
         {
-            if (!State.ErrorPause) return;
+            if (!_state.ErrorPause) return;
             if (!EditorApplication.isPlaying || EditorApplication.isPaused) return;
             if (type != LogType.Error && type != LogType.Exception && type != LogType.Assert) return;
 

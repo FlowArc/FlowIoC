@@ -43,21 +43,21 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         private const float DISABLED_STRENGTH = 0.5f;
 
-        private static readonly Color DarkBackground = new Color(0.22f, 0.22f, 0.22f);
-        private static readonly Color LightBackground = new Color(0.76f, 0.76f, 0.76f);
+        private static readonly Color _darkBackground = new Color(0.22f, 0.22f, 0.22f);
+        private static readonly Color _lightBackground = new Color(0.76f, 0.76f, 0.76f);
 
         /// <summary>
         /// What a row's text sits at while the pointer is elsewhere. Off white rather than white,
         /// so a row has somewhere to go when the pointer arrives.
         /// </summary>
-        private static readonly Color IdleText = new Color(0.82f, 0.82f, 0.82f);
+        private static readonly Color _idleText = new Color(0.82f, 0.82f, 0.82f);
 
-        private static readonly Color HoverText = Color.white;
+        private static readonly Color _hoverText = Color.white;
 
         /// <summary>What a row says quietly, and the same again once the row is under the pointer.</summary>
-        private static readonly Color IdleMuted = new Color(0.62f, 0.62f, 0.62f);
+        private static readonly Color _idleMuted = new Color(0.62f, 0.62f, 0.62f);
 
-        private static readonly Color HoverMuted = new Color(0.88f, 0.88f, 0.88f);
+        private static readonly Color _hoverMuted = new Color(0.88f, 0.88f, 0.88f);
 
         private readonly GUIStyle[] _name = new GUIStyle[2];
         private readonly GUIStyle[] _strong = new GUIStyle[2];
@@ -150,7 +150,7 @@ namespace FlowIoC.Editor.Inspector
         {
             if (!GUI.enabled)
             {
-                Color background = EditorGUIUtility.isProSkin ? DarkBackground : LightBackground;
+                Color background = EditorGUIUtility.isProSkin ? _darkBackground : _lightBackground;
 
                 color = new Color(
                     Mathf.Lerp(background.r, color.r, DISABLED_STRENGTH),
@@ -210,25 +210,25 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public GUIStyle Name(bool hovered)
         {
-            return Style(_name, hovered, EditorStyles.label, TextAnchor.MiddleLeft, IdleText, HoverText);
+            return Style(_name, hovered, EditorStyles.label, TextAnchor.MiddleLeft, _idleText, _hoverText);
         }
 
         /// <summary>The one line that is a heading rather than a row, and is bold for it.</summary>
         public GUIStyle Strong(bool hovered)
         {
-            return Style(_strong, hovered, EditorStyles.boldLabel, TextAnchor.MiddleLeft, IdleText, HoverText);
+            return Style(_strong, hovered, EditorStyles.boldLabel, TextAnchor.MiddleLeft, _idleText, _hoverText);
         }
 
         /// <summary>A cell beside the name, in the same grey.</summary>
         public GUIStyle Cell(bool hovered)
         {
-            return Style(_cell, hovered, EditorStyles.label, TextAnchor.MiddleLeft, IdleText, HoverText);
+            return Style(_cell, hovered, EditorStyles.label, TextAnchor.MiddleLeft, _idleText, _hoverText);
         }
 
         /// <summary>What a row says quietly - an assembly name, a column heading.</summary>
         public GUIStyle Mini(bool hovered)
         {
-            return Style(_mini, hovered, EditorStyles.miniLabel, TextAnchor.MiddleLeft, IdleMuted, HoverMuted);
+            return Style(_mini, hovered, EditorStyles.miniLabel, TextAnchor.MiddleLeft, _idleMuted, _hoverMuted);
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public GUIStyle Muted()
         {
-            return Style(_muted, false, EditorStyles.label, TextAnchor.MiddleLeft, IdleMuted, HoverMuted);
+            return Style(_muted, false, EditorStyles.label, TextAnchor.MiddleLeft, _idleMuted, _hoverMuted);
         }
 
         /// <summary>
@@ -249,8 +249,8 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public GUIStyle MiniWrapped(bool hovered)
         {
-            GUIStyle style = Style(_miniWrapped, hovered, EditorStyles.miniLabel, TextAnchor.MiddleLeft, IdleMuted,
-                HoverMuted);
+            GUIStyle style = Style(_miniWrapped, hovered, EditorStyles.miniLabel, TextAnchor.MiddleLeft, _idleMuted,
+                _hoverMuted);
 
             // Set every call rather than once: the cache hands back the same instance, so this
             // costs an assignment and saves a second cache to say whether it has been done.
@@ -267,7 +267,7 @@ namespace FlowIoC.Editor.Inspector
         /// </summary>
         public GUIStyle NameWrapped(bool hovered)
         {
-            GUIStyle style = Style(_nameWrapped, hovered, EditorStyles.label, TextAnchor.UpperLeft, IdleText, HoverText);
+            GUIStyle style = Style(_nameWrapped, hovered, EditorStyles.label, TextAnchor.UpperLeft, _idleText, _hoverText);
 
             style.wordWrap = true;
 
@@ -277,7 +277,7 @@ namespace FlowIoC.Editor.Inspector
         /// <summary>The quiet grey of <see cref="Muted"/>, wrapped, for the same reason as <see cref="NameWrapped"/>.</summary>
         public GUIStyle MutedWrapped()
         {
-            GUIStyle style = Style(_mutedWrapped, false, EditorStyles.label, TextAnchor.UpperLeft, IdleMuted, HoverMuted);
+            GUIStyle style = Style(_mutedWrapped, false, EditorStyles.label, TextAnchor.UpperLeft, _idleMuted, _hoverMuted);
 
             style.wordWrap = true;
 
@@ -305,7 +305,7 @@ namespace FlowIoC.Editor.Inspector
         /// <summary>What kind of thing the row is, against its right edge.</summary>
         public GUIStyle Badge(bool hovered)
         {
-            return Style(_badge, hovered, EditorStyles.miniLabel, TextAnchor.MiddleRight, IdleMuted, HoverMuted);
+            return Style(_badge, hovered, EditorStyles.miniLabel, TextAnchor.MiddleRight, _idleMuted, _hoverMuted);
         }
 
         /// <summary>

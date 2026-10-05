@@ -25,7 +25,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         /// Recognised in order, longest suffix first: "MatchBoardScreenTestModule" has to be read
         /// as a screen's test module rather than as a test module of "MatchBoardScreen".
         /// </summary>
-        private static readonly (string Suffix, string Tail)[] Roles =
+        private static readonly (string Suffix, string Tail)[] _roles =
         {
             ("ScreenTestModule", ".Screen.Test"),
             ("ScreenModule", ".Screen"),
@@ -44,7 +44,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             if (string.IsNullOrEmpty(name))
                 return string.Empty;
 
-            foreach ((string suffix, string tail) in Roles)
+            foreach ((string suffix, string tail) in _roles)
             {
                 string parent = ParentBefore(name, suffix);
 

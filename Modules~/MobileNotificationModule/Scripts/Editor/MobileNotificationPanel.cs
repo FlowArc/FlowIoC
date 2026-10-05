@@ -43,7 +43,7 @@ namespace Modules.MobileNotificationModule.Editor
         private const string NOW = "now";
         private const string ICON_NONE = "(none)";
 
-        private static readonly Color AndroidAccent = new(0.62f, 0.76f, 1f);
+        private static readonly Color _androidAccent = new(0.62f, 0.76f, 1f);
 
         private enum Picked
         {
@@ -504,7 +504,7 @@ namespace Modules.MobileNotificationModule.Editor
                 LargeIcon = large,
                 AppIcon = AppIcon(),
                 Picture = Picture(template.Picture),
-                Accent = AndroidAccent
+                Accent = _androidAccent
             };
         }
 

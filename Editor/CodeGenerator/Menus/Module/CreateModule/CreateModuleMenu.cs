@@ -104,7 +104,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         private const string CONFIG_BUTTON_TOOLTIP =
             "Select the folder layout this module type is generated from.";
 
-        private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
+        private static readonly Color _buttonColorInProgress = Color.gray;
 
         private static string _moduleSuffix;
         private static string _moduleName;

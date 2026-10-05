@@ -44,7 +44,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string INVALID_FUNCTION_NAME_TITLE = "Invalid Function Name";
         private const string INVALID_FUNCTION_NAME_MESSAGE = "Please enter a valid Function name.";
 
-        private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
+        private static readonly Color _buttonColorInProgress = Color.gray;
 
         private string _functionName = string.Empty;
         private FunctionKind _kind;
@@ -325,7 +325,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void DisplayCreateFunctionButton()
         {
             bool inProgress = _generationState == GenerationState.InProgress;
-            Color background = inProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
+            Color background = inProgress ? _buttonColorInProgress : new ModulePanelTheme().Action;
 
             if (!_body.FooterButton(this, CREATE_FUNCTION_BUTTON, inProgress || string.IsNullOrEmpty(_parentModulePath), background))
                 return;

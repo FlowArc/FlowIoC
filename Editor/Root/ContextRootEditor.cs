@@ -40,7 +40,7 @@ namespace FlowIoC.Editor.Root
         /// The rows the bar's help button opens and closes together. They are the fields of
         /// RootBase, which is where the lifecycle lives whatever the Root is called.
         /// </summary>
-        private static readonly string[] LifecycleMembers =
+        private static readonly string[] _lifecycleMembers =
         {
             nameof(RootBase.initializeOrder),
             nameof(RootBase.AutoBindInjections),
@@ -116,7 +116,7 @@ namespace FlowIoC.Editor.Root
                 {
                     bool next = !open;
                     _helpState.SetOpen(type, FlowHelpParser.TypeKey, next);
-                    _helpState.SetAll(type, LifecycleMembers, next);
+                    _helpState.SetAll(type, _lifecycleMembers, next);
                 });
         }
 

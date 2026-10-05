@@ -32,7 +32,7 @@ namespace FlowIoC.Editor.ModuleScanner
     /// </summary>
     internal class SignalReferenceCheck : IModuleCheck
     {
-        private static readonly Regex ReferenceEntry = new Regex("\"(?<name>[^\"]+)\"", RegexOptions.Compiled);
+        private static readonly Regex _referenceEntry = new Regex("\"(?<name>[^\"]+)\"", RegexOptions.Compiled);
 
         private readonly Func<ModuleTargetEVO, string> _asmdefTextOf;
         private readonly Func<ModuleTargetEVO, string> _signalsAssemblyOf;
@@ -114,7 +114,7 @@ namespace FlowIoC.Editor.ModuleScanner
 
             string inner = asmdef.Substring(openIndex + 1, closeIndex - openIndex - 1);
 
-            foreach (Match match in ReferenceEntry.Matches(inner))
+            foreach (Match match in _referenceEntry.Matches(inner))
                 yield return match.Groups["name"].Value;
         }
 

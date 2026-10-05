@@ -29,10 +29,10 @@ namespace FlowIoC.Editor.ModuleScanner
         private const string SOLUTION_PATTERN = "*.sln";
         private const string PACKAGE_CACHE = "Library/PackageCache";
 
-        private static readonly Regex PackageFolder =
+        private static readonly Regex _packageFolder =
             new Regex(@"PackageCache[\\/]([^\\/""<>]+@[0-9a-f]+)", RegexOptions.Compiled);
 
-        private static readonly Regex SolutionProject =
+        private static readonly Regex _solutionProject =
             new Regex(@"^Project\(""\{[^}]+\}""\)\s*=\s*""[^""]*"",\s*""([^""]+\.csproj)""",
                 RegexOptions.Compiled | RegexOptions.Multiline);
 
@@ -119,7 +119,7 @@ namespace FlowIoC.Editor.ModuleScanner
             var listed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string solution in solutions)
             {
-                foreach (Match match in SolutionProject.Matches(_readText(solution) ?? string.Empty))
+                foreach (Match match in _solutionProject.Matches(_readText(solution) ?? string.Empty))
                     listed.Add(Path.GetFileName(match.Groups[1].Value));
             }
 
@@ -167,7 +167,7 @@ namespace FlowIoC.Editor.ModuleScanner
         {
             var seen = new HashSet<string>(StringComparer.Ordinal);
 
-            foreach (Match match in PackageFolder.Matches(projectText ?? string.Empty))
+            foreach (Match match in _packageFolder.Matches(projectText ?? string.Empty))
             {
                 string folder = match.Groups[1].Value;
                 if (!seen.Add(folder)) continue;
@@ -180,7 +180,7 @@ namespace FlowIoC.Editor.ModuleScanner
 
         private bool ListsMissingProject(string root, string solutionText)
         {
-            foreach (Match match in SolutionProject.Matches(solutionText ?? string.Empty))
+            foreach (Match match in _solutionProject.Matches(solutionText ?? string.Empty))
             {
                 if (!_fileExists(Path.Combine(root, match.Groups[1].Value)))
                     return true;

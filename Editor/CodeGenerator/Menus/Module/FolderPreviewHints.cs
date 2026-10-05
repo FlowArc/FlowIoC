@@ -22,7 +22,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
     /// </summary>
     internal class FolderPreviewHints
     {
-        private static readonly Dictionary<FolderEVO.FolderType, string> Hints =
+        private static readonly Dictionary<FolderEVO.FolderType, string> _hints =
             new Dictionary<FolderEVO.FolderType, string>
             {
                 {FolderEVO.FolderType.PublicSignals, "the module's public surface"},
@@ -34,7 +34,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
         {
             if (folder == null) return null;
 
-            return Hints.TryGetValue(folder.Type, out string hint) ? hint : null;
+            return _hints.TryGetValue(folder.Type, out string hint) ? hint : null;
         }
     }
 }

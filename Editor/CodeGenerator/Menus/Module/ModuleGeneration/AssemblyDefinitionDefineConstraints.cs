@@ -19,7 +19,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
     {
         private const string CONSTRAINTS_KEY = "\"defineConstraints\"";
 
-        private static readonly Regex Entry = new Regex("\"(?<name>[^\"]+)\"", RegexOptions.Compiled);
+        private static readonly Regex _entry = new Regex("\"(?<name>[^\"]+)\"", RegexOptions.Compiled);
 
         internal IReadOnlyList<string> Read(string asmdefContent)
         {
@@ -37,7 +37,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             string inner = asmdefContent.Substring(openIndex + 1, closeIndex - openIndex - 1);
 
-            foreach (Match match in Entry.Matches(inner))
+            foreach (Match match in _entry.Matches(inner))
                 constraints.Add(match.Groups["name"].Value);
 
             return constraints;

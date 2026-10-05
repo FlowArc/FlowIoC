@@ -26,7 +26,7 @@ namespace FlowIoC.Editor.Modules
         private const string ROOT_SUFFIX = "Root";
         private const string MODULE_SUFFIX = "Module";
 
-        private static readonly Regex Header = new Regex(@"\[\s*FlowHeader\s*\(\s*FlowRole\s*\.\s*(\w+)");
+        private static readonly Regex _header = new Regex(@"\[\s*FlowHeader\s*\(\s*FlowRole\s*\.\s*(\w+)");
 
         private readonly FlowRoleResolver _resolver = new FlowRoleResolver();
 
@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.Modules
 
         private static FlowRole? Declared(string rootFile)
         {
-            Match match = Header.Match(File.ReadAllText(rootFile));
+            Match match = _header.Match(File.ReadAllText(rootFile));
 
             if (match.Success && Enum.TryParse(match.Groups[1].Value, out FlowRole role))
                 return role;

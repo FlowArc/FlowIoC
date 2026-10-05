@@ -29,13 +29,13 @@ namespace Modules.MobileNotificationModule.Editor
         private const float PADDING = 16f;
         private const int BODY_LINES = 2;
 
-        private static readonly Color AndroidCard = new(0.11f, 0.11f, 0.125f);
-        private static readonly Color AndroidMeta = new(0.72f, 0.72f, 0.74f);
-        private static readonly Color AndroidBody = new(0.80f, 0.80f, 0.82f);
-        private static readonly Color IosCard = new(0.94f, 0.94f, 0.95f);
-        private static readonly Color IosMeta = new(0.45f, 0.45f, 0.47f);
-        private static readonly Color IosTitle = new(0.08f, 0.08f, 0.09f);
-        private static readonly Color IosBody = new(0.30f, 0.30f, 0.32f);
+        private static readonly Color _androidCard = new(0.11f, 0.11f, 0.125f);
+        private static readonly Color _androidMeta = new(0.72f, 0.72f, 0.74f);
+        private static readonly Color _androidBody = new(0.80f, 0.80f, 0.82f);
+        private static readonly Color _iosCard = new(0.94f, 0.94f, 0.95f);
+        private static readonly Color _iosMeta = new(0.45f, 0.45f, 0.47f);
+        private static readonly Color _iosTitle = new(0.08f, 0.08f, 0.09f);
+        private static readonly Color _iosBody = new(0.30f, 0.30f, 0.32f);
 
         private GUIStyle _meta;
         private GUIStyle _title;
@@ -50,7 +50,7 @@ namespace Modules.MobileNotificationModule.Editor
         public void Android(Rect content, NotificationCardEVO card)
         {
             Rect box = Box(content, AndroidHeight(card));
-            Rounded(box, AndroidCard);
+            Rounded(box, _androidCard);
 
             float x = box.x + PADDING;
             float y = box.y + 12f;
@@ -72,7 +72,7 @@ namespace Modules.MobileNotificationModule.Editor
             else if (card.AppIcon != null)
                 GUI.DrawTexture(small, card.AppIcon, ScaleMode.ScaleToFit, true, 0f, Color.white, 0f, 4f);
 
-            GUIStyle meta = Meta(AndroidMeta);
+            GUIStyle meta = Meta(_androidMeta);
             string header = card.AppName + "  •  " + card.Time;
             GUI.Label(new Rect(x + 24f, y - 2f, right - x - 24f, 18f), header, meta);
 
@@ -80,7 +80,7 @@ namespace Modules.MobileNotificationModule.Editor
             GUI.Label(new Rect(x, y, right - x, 20f), Fit(Title(Color.white), card.Title, right - x, 1), Title(Color.white));
 
             y += 22f;
-            GUIStyle body = Body(AndroidBody);
+            GUIStyle body = Body(_androidBody);
             GUI.Label(new Rect(x, y, right - x, body.lineHeight * BODY_LINES + 2f), Fit(body, card.Body, right - x, BODY_LINES), body);
 
             // Expanded, the big picture spans the card under the text, the way BigPictureStyle lays it out.
@@ -94,7 +94,7 @@ namespace Modules.MobileNotificationModule.Editor
         public void Ios(Rect content, NotificationCardEVO card)
         {
             Rect box = Box(content, IosHeight(card));
-            Rounded(box, IosCard);
+            Rounded(box, _iosCard);
 
             float x = box.x + PADDING;
             float y = box.y + 14f;
@@ -105,7 +105,7 @@ namespace Modules.MobileNotificationModule.Editor
             if (card.AppIcon != null)
                 GUI.DrawTexture(icon, card.AppIcon, ScaleMode.ScaleToFit, true, 0f, Color.white, 0f, 9f);
             else
-                Rounded(icon, IosMeta, 9f);
+                Rounded(icon, _iosMeta, 9f);
 
             // The attachment is the thumbnail at the right of the banner; the texts stop short of it.
             if (card.Picture != null)
@@ -116,18 +116,18 @@ namespace Modules.MobileNotificationModule.Editor
             }
 
             float textX = icon.xMax + 12f;
-            GUIStyle meta = Meta(IosMeta);
+            GUIStyle meta = Meta(_iosMeta);
             GUI.Label(new Rect(textX, y - 2f, right - textX - 40f, 18f), card.AppName.ToUpperInvariant(), meta);
 
-            GUIStyle time = Meta(IosMeta);
+            GUIStyle time = Meta(_iosMeta);
             time.alignment = TextAnchor.UpperRight;
             GUI.Label(new Rect(right - 60f, y - 2f, 60f, 18f), card.Time, time);
 
             y += 18f;
-            GUI.Label(new Rect(textX, y, right - textX, 20f), Fit(Title(IosTitle), card.Title, right - textX, 1), Title(IosTitle));
+            GUI.Label(new Rect(textX, y, right - textX, 20f), Fit(Title(_iosTitle), card.Title, right - textX, 1), Title(_iosTitle));
 
             y += 21f;
-            GUIStyle body = Body(IosBody);
+            GUIStyle body = Body(_iosBody);
             GUI.Label(new Rect(textX, y, right - textX, body.lineHeight * BODY_LINES + 2f), Fit(body, card.Body, right - textX, BODY_LINES), body);
         }
 

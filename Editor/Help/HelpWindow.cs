@@ -49,7 +49,7 @@ namespace FlowIoC.Editor.Help
         /// <summary>The room between two flags on one row, and between the flags and a category's arrow.</summary>
         private const float SidebarFlagGap = 4f;
 
-        private static readonly IReadOnlyList<SidebarFlagEVO> NoFlags = new SidebarFlagEVO[0];
+        private static readonly IReadOnlyList<SidebarFlagEVO> _noFlags = new SidebarFlagEVO[0];
 
         /// <summary>
         /// What the groove between two rows takes off the bottom of the upper one: a dark hairline
@@ -89,7 +89,7 @@ namespace FlowIoC.Editor.Help
         /// at their own pixels: an editor window resampled to fit is a blurred editor window, and
         /// the widest picture here is the Screen Scanner at 880.
         /// </summary>
-        private static readonly Vector2 MinimumSize = new Vector2(1200f, 600f);
+        private static readonly Vector2 _minimumSize = new Vector2(1200f, 600f);
 
         /// <summary>
         /// A topic inside a category: shorter than the category above it, and indented. Half the
@@ -132,7 +132,7 @@ namespace FlowIoC.Editor.Help
         internal static void Open(string sectionTitle)
         {
             HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
-            window.minSize = MinimumSize;
+            window.minSize = _minimumSize;
             window.Show();
 
             if (!string.IsNullOrEmpty(sectionTitle))
@@ -154,7 +154,7 @@ namespace FlowIoC.Editor.Help
         internal static void OpenPage(string pageTitle, string tabTitle)
         {
             HelpWindow window = GetWindow<HelpWindow>("FlowIoC Help");
-            window.minSize = MinimumSize;
+            window.minSize = _minimumSize;
             window.Show();
 
             window.GoToPage(pageTitle, tabTitle);
@@ -422,7 +422,7 @@ namespace FlowIoC.Editor.Help
 
             // A shut category wears what is flagged inside it; an open one shows its rows' own.
             if (DrawRow(section.Title, section.Icon, false, false, height, depth, open,
-                    open ? NoFlags : section.SidebarFlags))
+                    open ? _noFlags : section.SidebarFlags))
             {
                 if (open)
                     _openCategories.Remove(key);

@@ -24,10 +24,10 @@ namespace FlowIoC.Editor.Inspector
     public class ViewInjectorEditor : UnityEditor.Editor
     {
         /// <summary>Where the help for the fields of an entry is read from.</summary>
-        private static readonly Type EntryType = typeof(ViewInjectorData);
+        private static readonly Type _entryType = typeof(ViewInjectorData);
 
         /// <summary>The rows the bar's help button opens and closes together.</summary>
-        private static readonly string[] EntryMembers =
+        private static readonly string[] _entryMembers =
         {
             nameof(ViewInjectorData.AutoRegister),
             nameof(ViewInjectorData.InjectableView),
@@ -118,7 +118,7 @@ namespace FlowIoC.Editor.Inspector
                 {
                     bool next = !open;
                     _helpState.SetOpen(type, FlowHelpParser.TypeKey, next);
-                    _helpState.SetAll(EntryType, EntryMembers, next);
+                    _helpState.SetAll(_entryType, _entryMembers, next);
                 });
         }
 
@@ -219,9 +219,9 @@ namespace FlowIoC.Editor.Inspector
 
         private void DrawContextSource(SerializedProperty entry)
         {
-            _gui.Property(EntryType, entry.FindPropertyRelative(nameof(ViewInjectorData.AutoRegister)));
-            _gui.Property(EntryType, entry.FindPropertyRelative(nameof(ViewInjectorData.InjectableView)));
-            _gui.Property(EntryType, entry.FindPropertyRelative(nameof(ViewInjectorData.ContextSource)));
+            _gui.Property(_entryType, entry.FindPropertyRelative(nameof(ViewInjectorData.AutoRegister)));
+            _gui.Property(_entryType, entry.FindPropertyRelative(nameof(ViewInjectorData.InjectableView)));
+            _gui.Property(_entryType, entry.FindPropertyRelative(nameof(ViewInjectorData.ContextSource)));
 
             var source = (ViewContextSource) entry.FindPropertyRelative(nameof(ViewInjectorData.ContextSource))
                 .enumValueIndex;
@@ -229,12 +229,12 @@ namespace FlowIoC.Editor.Inspector
             switch (source)
             {
                 case ViewContextSource.SelectedRoot:
-                    _gui.Property(EntryType, entry.FindPropertyRelative(nameof(ViewInjectorData.SelectedRoot)));
+                    _gui.Property(_entryType, entry.FindPropertyRelative(nameof(ViewInjectorData.SelectedRoot)));
                     WarnIfPrefab();
                     break;
 
                 case ViewContextSource.RootName:
-                    _gui.Property(EntryType, entry.FindPropertyRelative(nameof(ViewInjectorData.RootName)));
+                    _gui.Property(_entryType, entry.FindPropertyRelative(nameof(ViewInjectorData.RootName)));
                     break;
             }
         }
@@ -269,12 +269,12 @@ namespace FlowIoC.Editor.Inspector
 
             IContext context = _injector.GetContextOfView(view);
 
-            _gui.ReadOnlyField(EntryType, nameof(ViewInjectorData.View), "Context",
+            _gui.ReadOnlyField(_entryType, nameof(ViewInjectorData.View), "Context",
                 context == null ? "not resolved" : context.GetType().Name);
 
             SerializedProperty registered = entry.FindPropertyRelative(nameof(ViewInjectorData.IsRegistered));
 
-            bool pressed = _gui.Status(EntryType, nameof(ViewInjectorData.IsRegistered), "Registration",
+            bool pressed = _gui.Status(_entryType, nameof(ViewInjectorData.IsRegistered), "Registration",
                 registered.boolValue, "● registered", "○ waiting", registered.boolValue ? "■" : "▶", true);
 
             if (!pressed)

@@ -63,7 +63,7 @@ namespace FlowIoC.Editor.ModuleScanner
         private const string RECEIVER = "FlowLogger.";
 
         // Longest first, so "LogWarning" is not read as "Log" followed by "Warning".
-        private static readonly string[] Methods = {"LogWarning", "LogError", "LogLong", "Log"};
+        private static readonly string[] _methods = {"LogWarning", "LogError", "LogLong", "Log"};
 
         internal IReadOnlyList<LogCallEVO> Read(string text)
         {
@@ -104,7 +104,7 @@ namespace FlowIoC.Editor.ModuleScanner
             int nameStart = start + RECEIVER.Length;
             string method = null;
 
-            foreach (string candidate in Methods)
+            foreach (string candidate in _methods)
             {
                 if (Matches(text, nameStart, candidate) && !IsIdentifierChar(Peek(text, nameStart + candidate.Length)))
                 {

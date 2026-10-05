@@ -21,7 +21,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         private const string TEST = "TestModule";
         private const string SCREEN = "ScreenModule";
 
-        private static readonly Regex Identifier = new Regex("^[A-Za-z_][A-Za-z0-9_]*$");
+        private static readonly Regex _identifier = new Regex("^[A-Za-z_][A-Za-z0-9_]*$");
 
         internal string FullStem(string moduleName) => WithoutSuffix(moduleName, MODULE);
 
@@ -62,7 +62,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
         {
             if (string.IsNullOrWhiteSpace(typedStem)) return "Type the new name.";
 
-            if (!Identifier.IsMatch(typedStem))
+            if (!_identifier.IsMatch(typedStem))
                 return "A name is letters, digits and underscores, and does not start with a digit.";
 
             if (typedStem.EndsWith(MODULE, StringComparison.Ordinal))

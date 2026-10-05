@@ -28,7 +28,7 @@ namespace FlowIoC.Editor.Help
         /// `add` and `remove` are left out, since outside the member that gives them meaning they
         /// are ordinary names and colouring one would be a lie.
         /// </summary>
-        private static readonly HashSet<string> Keywords = new HashSet<string>
+        private static readonly HashSet<string> _keywords = new HashSet<string>
         {
             "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked",
             "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else",
@@ -48,7 +48,7 @@ namespace FlowIoC.Editor.Help
         /// apart for: what follows one of these is a name being declared, so the `Currency` in
         /// `double Currency` is a property and not a class.
         /// </summary>
-        private static readonly HashSet<string> TypeKeywords = new HashSet<string>
+        private static readonly HashSet<string> _typeKeywords = new HashSet<string>
         {
             "bool", "byte", "char", "decimal", "double", "dynamic", "float", "int", "long",
             "object", "sbyte", "short", "string", "uint", "ulong", "ushort", "var", "void"
@@ -61,7 +61,7 @@ namespace FlowIoC.Editor.Help
         /// either side would tell the two apart. Every snippet in the help window is FlowIoC's own,
         /// so the handful of names is worth naming.
         /// </summary>
-        private static readonly HashSet<string> ContextMembers = new HashSet<string>
+        private static readonly HashSet<string> _contextMembers = new HashSet<string>
         {
             "AllContexts", "CommandBinder", "InjectionBinder", "InjectionBinderCrossContext",
             "MediationBinder", "SubContexts"
@@ -212,7 +212,7 @@ namespace FlowIoC.Editor.Help
                     index = Colour(builder, code, index, end,
                         Kind(code, name, index, end, sign, word, afterType, generic));
 
-                    afterType = !Keywords.Contains(name) || TypeKeywords.Contains(name);
+                    afterType = !_keywords.Contains(name) || _typeKeywords.Contains(name);
                     word = name;
                     sign = code[end - 1];
 
@@ -248,7 +248,7 @@ namespace FlowIoC.Editor.Help
         private string Kind(string code, string name, int start, int end, char sign, string word,
             bool afterType, int generic)
         {
-            if (Keywords.Contains(name))
+            if (_keywords.Contains(name))
                 return _keyword;
 
             bool afterDot = sign == '.';
@@ -264,7 +264,7 @@ namespace FlowIoC.Editor.Help
             if (IsCall(code, end))
                 return _method;
 
-            if (ContextMembers.Contains(name))
+            if (_contextMembers.Contains(name))
                 return _field;
 
             // `Signal<double> AddCurrency` and `IPlayerModel _playerModel`: a name that follows a

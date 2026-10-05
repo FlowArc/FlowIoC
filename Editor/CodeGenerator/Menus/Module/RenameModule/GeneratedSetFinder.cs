@@ -22,7 +22,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
     {
         private const string EXTENSION = ".cs";
 
-        private static readonly Regex Declaration =
+        private static readonly Regex _declaration =
             new Regex(@"\b(?:class|struct|interface|enum)\s+([A-Za-z_][A-Za-z0-9_]*)");
 
         private readonly Func<string, IEnumerable<string>> _csFilesIn;
@@ -74,7 +74,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.RenameModule
                             _stems.Carried(file, oldStem, newStem) + EXTENSION)
                     };
 
-                    foreach (Match match in Declaration.Matches(_readText(path)))
+                    foreach (Match match in _declaration.Matches(_readText(path)))
                     {
                         string identifier = match.Groups[1].Value;
 

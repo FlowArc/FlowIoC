@@ -19,7 +19,7 @@ namespace FlowIoC.Editor.Console
     {
         private const string PARK_KEY = "FlowIoC.Console.ParkedLogs";
 
-        private static readonly FlowConsoleLogPark Park = new();
+        private static readonly FlowConsoleLogPark _park = new();
 
         static FlowConsoleReloadSurvival()
         {
@@ -34,7 +34,7 @@ namespace FlowIoC.Editor.Console
             // Whatever Clear on Recompile was going to take has already been taken by the time
             // this runs - the automatic clear happens when compilation starts, and what it leaves
             // behind is the pinned rows. So the list is parked as it stands, always.
-            SessionState.SetString(PARK_KEY, Park.Write(FlowLogger.Logs));
+            SessionState.SetString(PARK_KEY, _park.Write(FlowLogger.Logs));
         }
 
         private static void Restore()
@@ -44,7 +44,7 @@ namespace FlowIoC.Editor.Console
 
             SessionState.EraseString(PARK_KEY);
 
-            List<ConsoleLog> logs = Park.Read(parked);
+            List<ConsoleLog> logs = _park.Read(parked);
             if (logs.Count == 0) return;
 
             // Anything written between this assembly loading and here belongs after what the last

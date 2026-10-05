@@ -34,10 +34,10 @@ namespace FlowIoC.Editor.ModuleCards
         private const string COLOUR_KEY = "Colour: ";
         private const string PROFILE_KEY = "Profile: ";
 
-        private static readonly Regex ColourLine = new Regex(
+        private static readonly Regex _colourLine = new Regex(
             @"^\s*Colou?r:\s*(?<value>\S.*?)\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static readonly Regex ProfileLine = new Regex(
+        private static readonly Regex _profileLine = new Regex(
             @"^\s*Profile:\s*(?<value>\S.*?)\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         internal ModuleCardChannelLinesEVO Read(string cardText)
@@ -46,14 +46,14 @@ namespace FlowIoC.Editor.ModuleCards
 
             foreach (string line in AuthoredLines(cardText))
             {
-                Match colour = ColourLine.Match(line);
+                Match colour = _colourLine.Match(line);
                 if (colour.Success && lines.Colour == null)
                 {
                     lines.Colour = colour.Groups["value"].Value;
                     continue;
                 }
 
-                Match profile = ProfileLine.Match(line);
+                Match profile = _profileLine.Match(line);
                 if (profile.Success && lines.Profile == null)
                     lines.Profile = profile.Groups["value"].Value;
             }
@@ -80,7 +80,7 @@ namespace FlowIoC.Editor.ModuleCards
             {
                 bool inAuthored = blockAt < 0 || index < blockAt;
 
-                if (inAuthored && (ColourLine.IsMatch(all[index]) || ProfileLine.IsMatch(all[index])))
+                if (inAuthored && (_colourLine.IsMatch(all[index]) || _profileLine.IsMatch(all[index])))
                     continue;
 
                 (inAuthored ? authored : rest).Add(all[index]);

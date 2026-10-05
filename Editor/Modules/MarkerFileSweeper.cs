@@ -13,12 +13,12 @@ namespace FlowIoC.Editor.Modules
     /// </summary>
     internal class MarkerFileSweeper
     {
-        private static readonly Regex MarkerPattern =
+        private static readonly Regex _markerPattern =
             new Regex(@"^_[a-z]+_info\.txt$", RegexOptions.CultureInvariant);
 
         public bool IsMarkerFile(string fileName)
         {
-            return !string.IsNullOrEmpty(fileName) && MarkerPattern.IsMatch(fileName);
+            return !string.IsNullOrEmpty(fileName) && _markerPattern.IsMatch(fileName);
         }
 
         public List<string> Sweep(string rootAbsolutePath)

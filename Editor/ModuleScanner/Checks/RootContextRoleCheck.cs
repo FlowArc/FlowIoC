@@ -41,7 +41,7 @@ namespace FlowIoC.Editor.ModuleScanner
         /// parameter list - does not match, and the base may be any Root: <c>Root</c>,
         /// <c>BaseScreenRoot</c>, <c>BaseScreenTestRoot</c>.
         /// </summary>
-        private static readonly Regex Declaration = new Regex(
+        private static readonly Regex _declaration = new Regex(
             @"class\s+(?<root>\w+" + ROOT_SUFFIX + @")\s*:\s*\w*" + ROOT_SUFFIX + @"\s*<\s*(?<context>\w+)\s*>",
             RegexOptions.Compiled);
 
@@ -71,7 +71,7 @@ namespace FlowIoC.Editor.ModuleScanner
 
             foreach (string file in files)
             {
-                Match match = Declaration.Match(_readFile(file) ?? string.Empty);
+                Match match = _declaration.Match(_readFile(file) ?? string.Empty);
 
                 if (!match.Success)
                     continue;

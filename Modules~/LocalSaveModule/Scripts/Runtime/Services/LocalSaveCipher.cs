@@ -23,19 +23,19 @@ namespace Modules.LocalSaveModule.Services
         private const int KEY_LENGTH = 32;
         private const int ITERATIONS = 10000;
 
-        private static readonly byte[] Magic = Encoding.ASCII.GetBytes("FLOWSAVE");
+        private static readonly byte[] _magic = Encoding.ASCII.GetBytes("FLOWSAVE");
 
-        private static int HeaderLength => Magic.Length + 1 + SALT_LENGTH + IV_LENGTH;
+        private static int HeaderLength => _magic.Length + 1 + SALT_LENGTH + IV_LENGTH;
 
         /// <summary>Whether the bytes open with the magic word an encrypted file carries.</summary>
         internal bool IsEncrypted(byte[] bytes)
         {
-            if (bytes == null || bytes.Length < Magic.Length)
+            if (bytes == null || bytes.Length < _magic.Length)
                 return false;
 
-            for (int index = 0; index < Magic.Length; index++)
+            for (int index = 0; index < _magic.Length; index++)
             {
-                if (bytes[index] != Magic[index])
+                if (bytes[index] != _magic[index])
                     return false;
             }
 
@@ -55,7 +55,7 @@ namespace Modules.LocalSaveModule.Services
 
                 using (var stream = new MemoryStream(HeaderLength + body.Length))
                 {
-                    stream.Write(Magic, 0, Magic.Length);
+                    stream.Write(_magic, 0, _magic.Length);
                     stream.WriteByte(VERSION);
                     stream.Write(salt, 0, salt.Length);
                     stream.Write(iv, 0, iv.Length);
@@ -75,13 +75,13 @@ namespace Modules.LocalSaveModule.Services
             if (!IsEncrypted(bytes) || bytes.Length < HeaderLength)
                 throw new InvalidDataException("the file is not an encrypted save");
 
-            if (bytes[Magic.Length] != VERSION)
+            if (bytes[_magic.Length] != VERSION)
                 throw new InvalidDataException("the file was written by a newer save format");
 
             var salt = new byte[SALT_LENGTH];
             var iv = new byte[IV_LENGTH];
-            Buffer.BlockCopy(bytes, Magic.Length + 1, salt, 0, SALT_LENGTH);
-            Buffer.BlockCopy(bytes, Magic.Length + 1 + SALT_LENGTH, iv, 0, IV_LENGTH);
+            Buffer.BlockCopy(bytes, _magic.Length + 1, salt, 0, SALT_LENGTH);
+            Buffer.BlockCopy(bytes, _magic.Length + 1 + SALT_LENGTH, iv, 0, IV_LENGTH);
 
             using (Aes aes = Create(password, salt, iv))
             using (ICryptoTransform decryptor = aes.CreateDecryptor())

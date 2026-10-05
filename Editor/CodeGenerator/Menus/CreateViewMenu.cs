@@ -26,7 +26,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private const string INVALID_VIEW_NAME_MESSAGE = "Please enter a valid View name.";
         private const string PARENT_MODULE_REQUIRED_TITLE = "Parent Module Required";
         private const string PARENT_MODULE_REQUIRED_MESSAGE = "Please select a parent module";
-        private static readonly Color BUTTON_COLOR_IN_PROGRESS = Color.gray;
+        private static readonly Color _buttonColorInProgress = Color.gray;
 
         private string _viewName = string.Empty;
         private string _parentModulePath;
@@ -145,7 +145,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus
         private void DisplayCreateViewButton()
         {
             bool inProgress = _generationState == GenerationState.InProgress;
-            Color background = inProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
+            Color background = inProgress ? _buttonColorInProgress : new ModulePanelTheme().Action;
 
             if (!_body.FooterButton(this, CREATE_VIEW_BUTTON, inProgress || string.IsNullOrEmpty(_parentModulePath), background))
                 return;

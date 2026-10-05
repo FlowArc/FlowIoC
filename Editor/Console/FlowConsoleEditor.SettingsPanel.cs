@@ -32,7 +32,7 @@ namespace FlowIoC.Editor.Console
         /// window, and a shade over the list would take the colour of whichever row - banded,
         /// selected - happened to lie under it.
         /// </summary>
-        private static readonly Color FloatingStripColor = new Color(0.13f, 0.13f, 0.13f, 1f);
+        private static readonly Color _floatingStripColor = new Color(0.13f, 0.13f, 0.13f, 1f);
 
         /// <summary>
         /// The gear, taken from the editor's own icons so it matches every other settings button in
@@ -47,7 +47,7 @@ namespace FlowIoC.Editor.Console
         {
             const string tooltip = "Show how a row is drawn and how much a log remembers about where it came from.";
 
-            foreach (string iconName in SettingsIconNames)
+            foreach (string iconName in _settingsIconNames)
             {
                 Texture icon = EditorGUIUtility.IconContent(iconName)?.image;
                 if (icon == null) continue;
@@ -58,7 +58,7 @@ namespace FlowIoC.Editor.Console
             return new GUIContent("Settings", tooltip);
         }
 
-        private static readonly string[] SettingsIconNames =
+        private static readonly string[] _settingsIconNames =
         {
             "d__Popup", "_Popup", "SettingsIcon", "d_SettingsIcon", "EditorSettings Icon"
         };
@@ -91,7 +91,7 @@ namespace FlowIoC.Editor.Console
             // what a toolbar button turns when it is on, and a brighter strip would read as five
             // pressed buttons with the one that is actually pressed lost among them.
             if (Event.current.type == EventType.Repaint)
-                EditorGUI.DrawRect(strip, FloatingStripColor);
+                EditorGUI.DrawRect(strip, _floatingStripColor);
 
             RightControlsGUI(strip);
 
@@ -99,8 +99,8 @@ namespace FlowIoC.Editor.Console
             // so it ends the way the panel does rather than fading into the row behind it.
             if (Event.current.type != EventType.Repaint) return;
 
-            EditorGUI.DrawRect(new Rect(strip.x, strip.y, 1f, strip.height), FiltersPanelEdgeColor);
-            EditorGUI.DrawRect(new Rect(strip.x, strip.yMax - 1f, strip.width, 1f), FiltersPanelEdgeColor);
+            EditorGUI.DrawRect(new Rect(strip.x, strip.y, 1f, strip.height), _filtersPanelEdgeColor);
+            EditorGUI.DrawRect(new Rect(strip.x, strip.yMax - 1f, strip.width, 1f), _filtersPanelEdgeColor);
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace FlowIoC.Editor.Console
             // and covered anything under it. GUI.backgroundColor multiplies that background, so
             // the switch takes the same colour the pinned rows carry.
             Color backgroundWas = GUI.backgroundColor;
-            if (_pinnedOnly) GUI.backgroundColor = PinBadgeTintColor;
+            if (_pinnedOnly) GUI.backgroundColor = _pinBadgeTintColor;
 
             bool pinnedOnly = GUI.Toggle(rect, _pinnedOnly, pinnedLabel, EditorStyles.toolbarButton);
 

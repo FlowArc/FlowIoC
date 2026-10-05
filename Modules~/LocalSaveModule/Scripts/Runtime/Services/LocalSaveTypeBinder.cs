@@ -14,7 +14,7 @@ namespace Modules.LocalSaveModule.Services
     /// </summary>
     internal class LocalSaveTypeBinder : ISerializationBinder
     {
-        private static readonly string[] RefusedPrefixes =
+        private static readonly string[] _refusedPrefixes =
         {
             "System", "mscorlib", "netstandard", "Unity", "UnityEngine", "UnityEditor", "Mono"
         };
@@ -40,7 +40,7 @@ namespace Modules.LocalSaveModule.Services
         {
             string assembly = type.Assembly.GetName().Name;
 
-            foreach (string prefix in RefusedPrefixes)
+            foreach (string prefix in _refusedPrefixes)
             {
                 if (assembly.StartsWith(prefix, StringComparison.Ordinal))
                     return false;

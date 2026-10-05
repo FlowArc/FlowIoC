@@ -125,13 +125,13 @@ namespace FlowIoC.Editor.Console
         private const float ChannelRowHeight = 20f;
         private const float ChannelRowIndent = 14f;
         private const float GroupMuteWidth = 48f;
-        private static readonly Color GroupMutedTintColor = new Color(1.4f, 0.85f, 0.55f, 1f);
+        private static readonly Color _groupMutedTintColor = new Color(1.4f, 0.85f, 0.55f, 1f);
         private const float ChannelSwatchSize = 9f;
-        private static readonly Color ChannelRowBandColor = new Color(0f, 0f, 0f, 0.08f);
-        private static readonly Color ChannelRowHoverColor = new Color(1f, 1f, 1f, 0.06f);
-        private static readonly Color ChannelOnTextColor = new Color(0.92f, 0.92f, 0.92f, 1f);
-        private static readonly Color ChannelOffTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
-        private static readonly Color ChannelTickColor = new Color(0.35f, 0.8f, 0.4f, 1f);
+        private static readonly Color _channelRowBandColor = new Color(0f, 0f, 0f, 0.08f);
+        private static readonly Color _channelRowHoverColor = new Color(1f, 1f, 1f, 0.06f);
+        private static readonly Color _channelOnTextColor = new Color(0.92f, 0.92f, 0.92f, 1f);
+        private static readonly Color _channelOffTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+        private static readonly Color _channelTickColor = new Color(0.35f, 0.8f, 0.4f, 1f);
 
         // Muting is a display decision, not a stored one: it throws no channel switch, so unmuting
         // brings back the exact selection the reader had. Index 0 Unity, 1 Framework, 2 Modules.
@@ -181,11 +181,11 @@ namespace FlowIoC.Editor.Console
         /// </summary>
         private const float FiltersPanelCountsMinWidth = 200f;
 
-        private static readonly Color FiltersPanelEdgeColor = new Color(0f, 0f, 0f, 0.45f);
-        private static readonly Color FiltersPanelBackgroundColor = new Color(0f, 0f, 0f, 0.16f);
-        private static readonly Color FiltersPanelBarColor = new Color(0f, 0f, 0f, 0.30f);
-        private static readonly Color FiltersGroupHeaderColor = new Color(1f, 1f, 1f, 0.07f);
-        private static readonly Color FiltersGroupHeaderHoverColor = new Color(1f, 1f, 1f, 0.13f);
+        private static readonly Color _filtersPanelEdgeColor = new Color(0f, 0f, 0f, 0.45f);
+        private static readonly Color _filtersPanelBackgroundColor = new Color(0f, 0f, 0f, 0.16f);
+        private static readonly Color _filtersPanelBarColor = new Color(0f, 0f, 0f, 0.30f);
+        private static readonly Color _filtersGroupHeaderColor = new Color(1f, 1f, 1f, 0.07f);
+        private static readonly Color _filtersGroupHeaderHoverColor = new Color(1f, 1f, 1f, 0.13f);
         private const float FiltersPanelBarHeight = 20f;
 
         private readonly FlowConsoleFlowTreeBuilder _flowTree = new FlowConsoleFlowTreeBuilder();
@@ -200,7 +200,7 @@ namespace FlowIoC.Editor.Console
         private const float FlowHeaderHeight = 18f;
         private const float FlowIndent = 14f;
         private GUIStyle _flowHeaderStyle;
-        private static readonly Color FlowHeaderColor = new Color(0.45f, 0.65f, 0.85f, 1f);
+        private static readonly Color _flowHeaderColor = new Color(0.45f, 0.65f, 0.85f, 1f);
 
         private readonly FlowConsolePins _pins = new FlowConsolePins();
         private bool _pinnedOnly;
@@ -217,11 +217,11 @@ namespace FlowIoC.Editor.Console
 
         private GUIStyle _sessionSeparatorStyle;
         private const float SessionSeparatorHeight = 18f;
-        private static readonly Color SessionSeparatorColor = new Color(0.78f, 0.78f, 0.78f, 0.9f);
-        private static readonly Color SessionSeparatorBandColor = new Color(1f, 1f, 1f, 0.09f);
+        private static readonly Color _sessionSeparatorColor = new Color(0.78f, 0.78f, 0.78f, 0.9f);
+        private static readonly Color _sessionSeparatorBandColor = new Color(1f, 1f, 1f, 0.09f);
 
         /// <summary>Translucent, so the text keeps reading through it.</summary>
-        private static readonly Color SearchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
+        private static readonly Color _searchHighlightColor = new Color(0.24f, 0.48f, 0.90f, 0.45f);
 
         /// <summary>Between the channel tag on a source line and the file name after it.</summary>
         private const float SecondLineTagGap = 4f;
@@ -239,10 +239,10 @@ namespace FlowIoC.Editor.Console
         /// A dark cyan. The pin glyph is light, so the disc behind it has to be dark enough to
         /// leave the shape readable - yellow washed it out.
         /// </summary>
-        private static readonly Color PinBadgeColor = new Color(0.05f, 0.42f, 0.48f, 1f);
+        private static readonly Color _pinBadgeColor = new Color(0.05f, 0.42f, 0.48f, 1f);
 
         /// <summary>The same colour as a multiplier, for a control that paints its own background.</summary>
-        private static readonly Color PinBadgeTintColor = new Color(0.35f, 1.1f, 1.25f, 1f);
+        private static readonly Color _pinBadgeTintColor = new Color(0.35f, 1.1f, 1.25f, 1f);
 
         /// <summary>2 is a square with the corners taken off; half the width would be a disc.</summary>
         private const float PinBadgeCornerRadius = 2f;
@@ -278,7 +278,7 @@ namespace FlowIoC.Editor.Console
         private float _preSearchScrollY;
         private bool _logSelectedDuringSearch;
 
-        private static readonly SystemLogType[] SystemLogTypeValues =
+        private static readonly SystemLogType[] _systemLogTypeValues =
             (SystemLogType[]) Enum.GetValues(typeof(SystemLogType));
 
         private readonly FlowSourceNavigator _navigator = new();
@@ -290,7 +290,7 @@ namespace FlowIoC.Editor.Console
         /// apart by hand rather than by System.IO.Path, which throws on characters Windows does
         /// not allow - and a throw inside OnGUI takes the window's drawing down with it.
         /// </summary>
-        private static readonly FlowStackFrameFilter PathText = new();
+        private static readonly FlowStackFrameFilter _pathText = new();
 
         private bool _collapseRows;
         private int[] _collapseCounts;
@@ -360,7 +360,7 @@ namespace FlowIoC.Editor.Console
         private Texture _warningIcon;
         private Texture _errorIcon;
         private Texture _dropdownIcon;
-        private static readonly GUIContent ClearLabel = new("Clear");
+        private static readonly GUIContent _clearLabel = new("Clear");
 
         private Texture _infoIconSmall;
         private Texture _warningIconSmall;
@@ -554,7 +554,7 @@ namespace FlowIoC.Editor.Console
         private static string SecondLineFor(ConsoleLog log)
         {
             if (!string.IsNullOrEmpty(log.SourceFilePath))
-                return PathText.FileNameOf(log.SourceFilePath) + ":" + log.SourceLineNumber;
+                return _pathText.FileNameOf(log.SourceFilePath) + ":" + log.SourceLineNumber;
 
             if (!string.IsNullOrEmpty(log.BlameTypeName))
                 return log.BlameTypeName;
@@ -1112,7 +1112,7 @@ namespace FlowIoC.Editor.Console
                 }
 
                 // The label alone, with no background of its own.
-                GUI.Label(clearRect, ClearLabel, _toolbarLabelStyle);
+                GUI.Label(clearRect, _clearLabel, _toolbarLabelStyle);
 
                 // Inset so the divider reads as part of the button rather than as a cut through
                 // the toolbar, which is what running it the full height looked like.
@@ -1759,7 +1759,7 @@ namespace FlowIoC.Editor.Console
                 fontStyle = FontStyle.Bold
             };
 
-            _flowHeaderStyle.normal.textColor = FlowHeaderColor;
+            _flowHeaderStyle.normal.textColor = _flowHeaderColor;
         }
 
         /// <summary>
@@ -1778,16 +1778,16 @@ namespace FlowIoC.Editor.Console
 
             // A band behind it. Drawn on nothing the strip read as a black gap in the list, which
             // is the one thing a boundary between two sessions should not look like.
-            EditorGUI.DrawRect(rect, SessionSeparatorBandColor);
+            EditorGUI.DrawRect(rect, _sessionSeparatorBandColor);
 
             float middle = rect.y + rect.height * 0.5f;
             float left = rect.x + 8f;
             float right = rect.xMax - 8f;
             float labelLeft = left + 12f;
 
-            EditorGUI.DrawRect(new Rect(left, middle, 12f, 1f), SessionSeparatorColor);
+            EditorGUI.DrawRect(new Rect(left, middle, 12f, 1f), _sessionSeparatorColor);
             EditorGUI.DrawRect(new Rect(labelLeft + labelWidth, middle, Mathf.Max(0f, right - labelLeft - labelWidth),
-                1f), SessionSeparatorColor);
+                1f), _sessionSeparatorColor);
 
             GUI.Label(new Rect(labelLeft + 5f, rect.y, labelWidth, rect.height), content, _sessionSeparatorStyle);
         }
@@ -1807,7 +1807,7 @@ namespace FlowIoC.Editor.Console
                 fontSize = 10
             };
 
-            _sessionSeparatorStyle.normal.textColor = SessionSeparatorColor;
+            _sessionSeparatorStyle.normal.textColor = _sessionSeparatorColor;
         }
 
         /// <summary>
@@ -1839,7 +1839,7 @@ namespace FlowIoC.Editor.Console
                 if (width <= 0f) continue;
 
                 EditorGUI.DrawRect(new Rect(from.x, lineRect.y + 1f, width, lineRect.height - 2f),
-                    SearchHighlightColor);
+                    _searchHighlightColor);
             }
         }
 
@@ -2068,7 +2068,7 @@ namespace FlowIoC.Editor.Console
                         // list by colour rather than by recognising a small grey glyph. Inset,
                         // because the pin's own texture carries empty space around the glyph.
                         DrawDisc(new Rect(pinRect.x + 0.5f, pinRect.y - 0.5f, PinBadgeSize, PinBadgeSize),
-                            PinBadgeColor);
+                            _pinBadgeColor);
 
                         GUI.DrawTexture(pinRect, pin, ScaleMode.StretchToFill);
                     }

@@ -22,7 +22,7 @@ namespace FlowIoC.Editor.CodeStyle
         internal const string Prefix = "/Default/CodeInspection/NamespaceProvider/NamespaceFoldersToSkip/=";
         internal const string Suffix = "/@EntryIndexedValue";
 
-        private static readonly CultureInfo Turkish = new CultureInfo("tr-TR");
+        private static readonly CultureInfo _turkish = new CultureInfo("tr-TR");
 
         /// <summary>
         /// Every key Rider might look the folder up under: the invariant spelling, the machine's
@@ -45,7 +45,7 @@ namespace FlowIoC.Editor.CodeStyle
 
             var spellings = new List<string>();
 
-            foreach (CultureInfo culture in new[] {CultureInfo.InvariantCulture, CultureInfo.CurrentCulture, Turkish})
+            foreach (CultureInfo culture in new[] {CultureInfo.InvariantCulture, CultureInfo.CurrentCulture, _turkish})
             {
                 string encoded = Encode(path.ToLower(culture));
 

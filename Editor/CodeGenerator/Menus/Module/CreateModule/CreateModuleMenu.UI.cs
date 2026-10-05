@@ -693,7 +693,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
         private void DisplayCreateModuleButton()
         {
-            GUI.backgroundColor = _generationState == GenerationState.InProgress ? BUTTON_COLOR_IN_PROGRESS : new ModulePanelTheme().Action;
+            GUI.backgroundColor = _generationState == GenerationState.InProgress ? _buttonColorInProgress : new ModulePanelTheme().Action;
             EditorGUI.BeginDisabledGroup(_generationState == GenerationState.InProgress);
             if (GUILayout.Button(CREATE_MODULE_BUTTON, GUILayout.Height(40)))
             {

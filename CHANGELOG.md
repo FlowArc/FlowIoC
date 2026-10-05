@@ -5,6 +5,13 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Code style: a `private static readonly` field is named `_camelCase`, like every other private field; Rider flags the PascalCase ones once the Editor rewrites the solution's `.sln.DotSettings`.
+- Modules: Device Debugger 1.1.3, Local Save 1.0.5, Mobile Notification 1.0.5, World Pointer 1.2.4.
+
 ## [1.31.1] - 2026-10-05
 
 ### Changed

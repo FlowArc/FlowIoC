@@ -23,7 +23,7 @@ namespace FlowIoC.ConsoleModule
 
         public static readonly List<ConsoleLog> Logs = new();
 
-        private static readonly ConsoleLogTrimmer Trimmer = new();
+        private static readonly ConsoleLogTrimmer _trimmer = new();
         public static Action<ConsoleLog> OnLogAdded;
 
         /// <summary>
@@ -53,10 +53,10 @@ namespace FlowIoC.ConsoleModule
         private static FlowConsolePreferences _preferences;
         private static FlowLogChannels _channels;
 
-        private static readonly CollapseKeyBuilder CollapseKeys = new();
-        private static readonly FlowStackFrameFilter StackFrames = new();
-        private static readonly FlowConsoleChannelRule ChannelRule = new();
-        private static readonly CallerModuleResolver CallerModule = new();
+        private static readonly CollapseKeyBuilder _collapseKeys = new();
+        private static readonly FlowStackFrameFilter _stackFrames = new();
+        private static readonly FlowConsoleChannelRule _channelRule = new();
+        private static readonly CallerModuleResolver _callerModule = new();
 
         /// <summary>The player's end of the console. Installed only in a development player.</summary>
         internal static readonly PlayerLogSender Sender = new();
@@ -455,7 +455,7 @@ namespace FlowIoC.ConsoleModule
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void Log(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
         {
-            string channel = CallerModule.ChannelOf(file);
+            string channel = _callerModule.ChannelOf(file);
             AddCustomLogAt(channel, ResolveMessage(channel, message), LogType.Log, file, line);
         }
 
@@ -500,7 +500,7 @@ namespace FlowIoC.ConsoleModule
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void LogWarning(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
         {
-            string channel = CallerModule.ChannelOf(file);
+            string channel = _callerModule.ChannelOf(file);
             AddCustomLogAt(channel, ResolveMessage(channel, message), LogType.Warning, file, line);
         }
 
@@ -559,7 +559,7 @@ namespace FlowIoC.ConsoleModule
         [HideInCallstack]
         public static void LogError(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
         {
-            string channel = CallerModule.ChannelOf(file);
+            string channel = _callerModule.ChannelOf(file);
             WriteError(channel, null, ResolveMessage(channel, message), null, null, null, file, line);
         }
 
@@ -568,7 +568,7 @@ namespace FlowIoC.ConsoleModule
         public static void LogError(string message, UnityEngine.Object context, [CallerLineNumber] int line = 0,
             [CallerFilePath] string file = "")
         {
-            string channel = CallerModule.ChannelOf(file);
+            string channel = _callerModule.ChannelOf(file);
             WriteError(channel, null, ResolveMessage(channel, message), null, context, null, file, line);
         }
 
@@ -641,7 +641,7 @@ namespace FlowIoC.ConsoleModule
         [Conditional(InEditor), Conditional(InDevelopmentBuild)]
         public static void LogLong(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
         {
-            string channel = CallerModule.ChannelOf(file);
+            string channel = _callerModule.ChannelOf(file);
             LogLongInternal(channel, message, Channels.ProfileOf(channel));
         }
 
@@ -804,7 +804,7 @@ namespace FlowIoC.ConsoleModule
         {
             string[] lines = stackTrace.Split('\n');
 
-            int index = StackFrames.FindFirstGameFrame(lines);
+            int index = _stackFrames.FindFirstGameFrame(lines);
 
             // The game's frame is the one worth opening, but only if it says where it is. A trace
             // whose first game frame is a Unity callback - or which holds nothing of the game's at
@@ -813,8 +813,8 @@ namespace FlowIoC.ConsoleModule
             // opens happily is worse than opening the framework's file.
             int gameIndex = index;
 
-            if (index < 0 || !StackFrames.TryParseFrame(lines[index], out _, out _))
-                index = StackFrames.FindFirstFrameWithLocation(lines);
+            if (index < 0 || !_stackFrames.TryParseFrame(lines[index], out _, out _))
+                index = _stackFrames.FindFirstFrameWithLocation(lines);
 
             // No frame anywhere says where it is - an IL2CPP player's trace carries method names
             // and nothing else. The game's frame is still the one to name: one line, and a class
@@ -825,10 +825,10 @@ namespace FlowIoC.ConsoleModule
 
             string frame = lines[index];
 
-            log.SourceClassName = StackFrames.ParseClassName(frame);
+            log.SourceClassName = _stackFrames.ParseClassName(frame);
             log.SourceTrace = frame;
 
-            if (StackFrames.TryParseFrame(frame, out string filePath, out int lineNumber))
+            if (_stackFrames.TryParseFrame(frame, out string filePath, out int lineNumber))
             {
                 log.SourceFilePath = filePath;
                 log.SourceLineNumber = lineNumber;
@@ -949,7 +949,7 @@ namespace FlowIoC.ConsoleModule
                 log.Channel = channel;
                 log.SourceFilePath = filePath;
                 log.SourceLineNumber = lineNumber;
-                log.SourceTrace = StackFrames.FileNameOf(filePath) + ":" + lineNumber;
+                log.SourceTrace = _stackFrames.FileNameOf(filePath) + ":" + lineNumber;
 
                 if (Channels.TryGet(channel, out FlowLogChannel channelInfo))
                     log.LogColor = channelInfo.Color;
@@ -1016,7 +1016,7 @@ namespace FlowIoC.ConsoleModule
         /// </summary>
         private static void AppendLog(ConsoleLog log)
         {
-            log.CollapseKey = CollapseKeys.Build(log.Message, log.StackTrace, log.Channel);
+            log.CollapseKey = _collapseKeys.Build(log.Message, log.StackTrace, log.Channel);
 
             Logs.Add(log);
             OnLogAdded?.Invoke(log);
@@ -1025,7 +1025,7 @@ namespace FlowIoC.ConsoleModule
             if (maxLogCount <= 0 || Logs.Count <= maxLogCount + LogTrimChunk)
                 return;
 
-            Trimmer.Trim(Logs, maxLogCount);
+            _trimmer.Trim(Logs, maxLogCount);
         }
 
 #endif
@@ -1042,7 +1042,7 @@ namespace FlowIoC.ConsoleModule
             if (logType != LogType.Warning)
             {
                 if (!Preferences.SendLogsToUnityConsole) return;
-                if (ChannelRule.AnswersToChannels(logType) && !Channels.IsShown(channel)) return;
+                if (_channelRule.AnswersToChannels(logType) && !Channels.IsShown(channel)) return;
             }
 
             // Raised so the editor bridge can tell this log apart from somebody else's when
@@ -1153,7 +1153,7 @@ namespace FlowIoC.ConsoleModule
                 // caught it. Once the source is found the frames go back into the trace: the
                 // detail panel shows the whole stack, because somebody chasing a bug in FlowIoC
                 // itself needs it. Only the frame the log points at changes.
-                bool isFrameworkFrame = StackFrames.IsFrameworkFrame(line);
+                bool isFrameworkFrame = _stackFrames.IsFrameworkFrame(line);
                 if (isFrameworkFrame && !sourceFound)
                     continue;
 
@@ -1188,7 +1188,7 @@ namespace FlowIoC.ConsoleModule
                         // StackFrames rather than System.IO.Path: this path came out of a trace
                         // and can hold characters Path refuses, which it answers with a throw.
                         string shortName = !string.IsNullOrEmpty(log.SourceFilePath)
-                            ? StackFrames.FileNameOf(log.SourceFilePath)
+                            ? _stackFrames.FileNameOf(log.SourceFilePath)
                             : null;
                         if (!string.IsNullOrEmpty(shortName))
                             log.SourceTrace = line.Substring(0, atIdx) + $"(at {shortName}:{log.SourceLineNumber})";

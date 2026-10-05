@@ -35,7 +35,7 @@ namespace FlowIoC.Editor.Console
             if (Event.current.type == EventType.Repaint)
             {
                 EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, width, position.height),
-                    FiltersPanelBackgroundColor);
+                    _filtersPanelBackgroundColor);
             }
 
             // Before the header, so a press on the edge is the edge's and not the switch's.
@@ -54,9 +54,9 @@ namespace FlowIoC.Editor.Console
 
             if (Event.current.type == EventType.Repaint)
             {
-                EditorGUI.DrawRect(barRect, FiltersPanelBarColor);
+                EditorGUI.DrawRect(barRect, _filtersPanelBarColor);
                 EditorGUI.DrawRect(new Rect(barRect.x, barRect.yMax - 1f, barRect.width, 1f),
-                    FiltersPanelEdgeColor);
+                    _filtersPanelEdgeColor);
             }
 
             PresetMenuGUI(new Rect(barRect.xMax - 70f, barRect.y + 1f, 66f, barRect.height - 2f));
@@ -74,7 +74,7 @@ namespace FlowIoC.Editor.Console
                 if (Event.current.type == EventType.Repaint)
                 {
                     EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, 1f, position.height),
-                        FiltersPanelEdgeColor);
+                        _filtersPanelEdgeColor);
                 }
 
                 return;
@@ -116,7 +116,7 @@ namespace FlowIoC.Editor.Console
 
             // Last, so nothing the panel drew can paint over it.
             if (Event.current.type == EventType.Repaint)
-                EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, 1f, position.height), FiltersPanelEdgeColor);
+                EditorGUI.DrawRect(new Rect(panelRect.x, panelRect.y, 1f, position.height), _filtersPanelEdgeColor);
         }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace FlowIoC.Editor.Console
             // the row read as two colours. Drawn here, one band runs the width and lights whole.
             if (Event.current.type == EventType.Repaint)
             {
-                EditorGUI.DrawRect(rect, hovered ? FiltersGroupHeaderHoverColor : FiltersGroupHeaderColor);
+                EditorGUI.DrawRect(rect, hovered ? _filtersGroupHeaderHoverColor : _filtersGroupHeaderColor);
             }
 
             // The foldout is given everything but the mute button's corner. Handed the whole row it
@@ -302,7 +302,7 @@ namespace FlowIoC.Editor.Console
                 + "Alt+click to silence the others instead, and again to bring them back.");
 
             Color backgroundWas = GUI.backgroundColor;
-            if (muted) GUI.backgroundColor = GroupMutedTintColor;
+            if (muted) GUI.backgroundColor = _groupMutedTintColor;
 
             bool pressed = GUI.Button(rect, content, EditorStyles.miniButton);
 
@@ -376,15 +376,15 @@ namespace FlowIoC.Editor.Console
         {
             int row = 0;
 
-            for (int i = 0; i < UnityChannels.Length; i++)
+            for (int i = 0; i < _unityChannels.Length; i++)
             {
-                if (!Channels.TryGet(UnityChannels[i], out FlowLogChannel channel)) continue;
+                if (!Channels.TryGet(_unityChannels[i], out FlowLogChannel channel)) continue;
 
                 ChannelRowGUI(channel.Name, channel, row++);
             }
         }
 
-        private static readonly SystemLogType[] UnityChannels =
+        private static readonly SystemLogType[] _unityChannels =
             {SystemLogType.Unity, SystemLogType.Compiler, SystemLogType.Shader};
 
         private void SystemChannelRowsGUI()
@@ -397,19 +397,19 @@ namespace FlowIoC.Editor.Console
                 OnLogTypeSelectionChanged();
             }, row++, !_groupUnmuted[1]);
 
-            for (int i = 0; i < FrameworkChannelOrder.Length; i++)
+            for (int i = 0; i < _frameworkChannelOrder.Length; i++)
             {
-                if (!Channels.TryGet(FrameworkChannelOrder[i], out FlowLogChannel channel)) continue;
+                if (!Channels.TryGet(_frameworkChannelOrder[i], out FlowLogChannel channel)) continue;
 
                 ChannelRowGUI(channel.Name, channel, row++);
             }
 
             // Anything the list above has not heard of - a channel added to the enum and not to
             // the order - still appears, at the end, rather than quietly not being offered.
-            for (int i = 0; i < SystemLogTypeValues.Length; i++)
+            for (int i = 0; i < _systemLogTypeValues.Length; i++)
             {
-                SystemLogType systemType = SystemLogTypeValues[i];
-                if (Array.IndexOf(FrameworkChannelOrder, systemType) >= 0) continue;
+                SystemLogType systemType = _systemLogTypeValues[i];
+                if (Array.IndexOf(_frameworkChannelOrder, systemType) >= 0) continue;
                 if (!Channels.TryGet(systemType, out FlowLogChannel channel)) continue;
                 if (channel.IsWrittenByUnity) continue;
 
@@ -423,7 +423,7 @@ namespace FlowIoC.Editor.Console
         /// belongs beside Signal. A number is never changed to move a row - it is serialized into
         /// every settings asset already written.
         /// </summary>
-        private static readonly SystemLogType[] FrameworkChannelOrder =
+        private static readonly SystemLogType[] _frameworkChannelOrder =
         {
             SystemLogType.Context,
             SystemLogType.Injection,
@@ -481,10 +481,10 @@ namespace FlowIoC.Editor.Console
                 // The same banding the log list uses, for the same reason: thirty rows of words
                 // need something to keep the eye on one line.
                 if (rowIndex % 2 == 1)
-                    EditorGUI.DrawRect(rect, ChannelRowBandColor);
+                    EditorGUI.DrawRect(rect, _channelRowBandColor);
 
                 if (hovered)
-                    EditorGUI.DrawRect(rect, ChannelRowHoverColor);
+                    EditorGUI.DrawRect(rect, _channelRowHoverColor);
 
                 var swatch = new Rect(rect.x + ChannelRowIndent,
                     rect.y + (rect.height - ChannelSwatchSize) * 0.5f, ChannelSwatchSize, ChannelSwatchSize);
@@ -506,7 +506,7 @@ namespace FlowIoC.Editor.Console
                     var tickRect = new Rect(rect.xMax - 18f, rect.y + (rect.height - 14f) * 0.5f, 14f, 14f);
 
                     if (tick != null) GUI.DrawTexture(tickRect, tick, ScaleMode.ScaleToFit);
-                    else EditorGUI.DrawRect(tickRect, ChannelTickColor);
+                    else EditorGUI.DrawRect(tickRect, _channelTickColor);
                 }
             }
 
@@ -583,10 +583,10 @@ namespace FlowIoC.Editor.Console
             if (Event.current.type == EventType.Repaint)
             {
                 if (rowIndex % 2 == 1)
-                    EditorGUI.DrawRect(rect, ChannelRowBandColor);
+                    EditorGUI.DrawRect(rect, _channelRowBandColor);
 
                 if (hovered)
-                    EditorGUI.DrawRect(rect, ChannelRowHoverColor);
+                    EditorGUI.DrawRect(rect, _channelRowHoverColor);
 
                 EnsureChannelRowStyles();
 
@@ -601,7 +601,7 @@ namespace FlowIoC.Editor.Console
                     var tickRect = new Rect(rect.xMax - 18f, rect.y + (rect.height - 14f) * 0.5f, 14f, 14f);
 
                     if (tick != null) GUI.DrawTexture(tickRect, tick, ScaleMode.ScaleToFit);
-                    else EditorGUI.DrawRect(tickRect, ChannelTickColor);
+                    else EditorGUI.DrawRect(tickRect, _channelTickColor);
                 }
             }
 
@@ -643,13 +643,13 @@ namespace FlowIoC.Editor.Console
                     alignment = TextAnchor.MiddleLeft
                 };
 
-                _channelOnStyle.normal.textColor = ChannelOnTextColor;
+                _channelOnStyle.normal.textColor = _channelOnTextColor;
             }
 
             if (!_styleGuard.IsBuilt(_channelOffStyle, "FlowConsoleChannelOff"))
             {
                 _channelOffStyle = new GUIStyle(_channelOnStyle) {name = "FlowConsoleChannelOff"};
-                _channelOffStyle.normal.textColor = ChannelOffTextColor;
+                _channelOffStyle.normal.textColor = _channelOffTextColor;
             }
 
             if (!_styleGuard.IsBuilt(_channelAllOnStyle, "FlowConsoleChannelAllOn"))
@@ -687,7 +687,7 @@ namespace FlowIoC.Editor.Console
             if (_styleGuard.IsBuilt(_groupCountHighlightStyle, "FlowConsoleGroupCountHighlight")) return;
 
             _groupCountHighlightStyle = new GUIStyle(_groupCountStyle) {name = "FlowConsoleGroupCountHighlight"};
-            _groupCountHighlightStyle.normal.textColor = ChannelOnTextColor;
+            _groupCountHighlightStyle.normal.textColor = _channelOnTextColor;
         }
 
         private bool IsAllProjectTypesVisible()
