@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace FlowIoC.Editor.Help.WhatsNew
@@ -79,6 +80,10 @@ namespace FlowIoC.Editor.Help.WhatsNew
             }
 
             Close(entry, lines);
+
+            // An `[Unreleased]` heading left standing over nothing after a release is still a
+            // heading, and the tab would draw it as an empty release above the real one.
+            releases.RemoveAll(release => release.Groups.All(group => group.Lines.Count == 0));
 
             return releases;
         }
