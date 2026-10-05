@@ -149,7 +149,22 @@ instead would arrive after the screen is already on screen, which is a frame of 
 
 Inside that same Command nothing needs a signal - it has the instance for as long as it runs.
 
+**A screen never asks for its data.** The shape to avoid: the Mediator dispatches `Opened` on
+`ShowCompleted`, a Connector carries it to the module that owns the data, and that module answers
+with a signal the Mediator applies to the view. The data was already published - in a Model, in a
+Shared asset - so the asking adds a round trip and nothing else, and the screen plays its whole
+show animation without its contents: empty, or showing what the last opening left on it, because
+it is pooled. Then the values jump in. What a screen shows as it animates in is part of the
+animation only when the opening Command filled it before the animation started. An `Opened` the
+screen announces is for what genuinely follows the opening - pausing the game under a popup, an
+analytics event - never a request for the screen's own contents. A screen whose data nobody has
+published yet gets it published - a Model, or an `RD_` asset filed as shared - rather than asked
+for.
+
 ## Changing a screen that is already open
+
+This is for a value that changes while the screen is up. What the screen shows when it opens is the
+opening Command's, above.
 
 **Do not fetch the open screen and change it.** Whoever changed the value dispatches a signal, and
 the screen's Mediator applies it. The view is touched directly once, by the Command that opened it,
@@ -334,8 +349,12 @@ the screen again. The test context only opens it in `Launch`.
 - **A value sent right after the screen opened never shows.** `Show<T>()` returns when the show
   *starts*, and with a show animation the Mediator subscribes only at `ShowCompleted` - so a signal
   dispatched in the same sequence, one step after the opening Command, lands on nobody. Fill the
-  screen in the opening Command from the published data, or send the value once `ShowCompleted` has
-  come.
+  screen in the opening Command from the published data. Waiting for `ShowCompleted` and sending
+  the value then is not the fix: the screen has played its whole show animation without it.
+- **The screen animates in empty, or with the last opening's values, and then they jump.** Its
+  Mediator announced `Opened` and the view was filled from whatever a neighbour answered. Read the
+  published data in the opening Command and fill the view `Show<T>()` returned - see *A screen
+  never asks for its data*.
 - **`Layer N is not empty`, and the open comes back null.** A layer holds one screen, and the one
   there - or one still playing its hide - is in the way. Open the next from what the Mediator
   dispatches on `HideCompleted`, when the layer is free, or with `ForceOpenAtFullLayer()` - see

@@ -149,6 +149,11 @@ what is true whatever you are about to do.
   - where a View wires its buttons, where a Mediator subscribes, what resets a screen between
   openings, and why an animation has to report that it finished - is in the screens skill, and
   getting any of it wrong fails silently.
+- **A screen is filled by the Command that opened it**, from data already published - its Model, a
+  Shared asset - read before `Show<T>()` and set on the view it returns. A screen never asks for its
+  data: a Mediator that announces `Opened` and fills the view from whatever a neighbour answers plays
+  its whole show animation empty, or showing the last opening's values. A signal reaches an open
+  screen only for a value that changes while it is up.
 - A screen module belongs to the module whose feature it shows, so it lives in the
   `zScreenModules` of a main or a sub module and never under another screen module or a test
   module.
