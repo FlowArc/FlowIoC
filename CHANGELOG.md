@@ -5,6 +5,12 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Agent rules: only UI that keeps moving while it is up needs a layer with a canvas of its own; a short animation - a show, a hide, a one-second pop - does not.
+
 ## [1.31.0] - 2026-10-05
 
 ### Changed

@@ -1739,9 +1739,9 @@ with its own Context:
   so it nests under a main or a sub module and never under another screen module or
   a test module. Screens are the only UI: an overlay canvas exists only through the
   ScreenManager, and UI over something in the world is drawn by a screen of the module
-  that owns it, joined to it by WorldPointer through an id. What moves every frame sits
-  on a layer the game gives a canvas of its own - `Layer_3`, as an override on the
-  scene's ScreenManager.
+  that owns it, joined to it by WorldPointer through an id. What keeps moving while it is
+  up sits on a layer the game gives a canvas of its own - `Layer_3`, as an override on
+  the scene's ScreenManager; an animation that plays and stops needs none.
 - **`zTestModules/`** — an isolated test scene and context, marked `IsTest` so it
   never starts in a real build.
 

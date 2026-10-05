@@ -167,11 +167,14 @@ what is true whatever you are about to do.
   object; the module registers the object's Transform with `IWorldPointerService` on a channel and
   sends it requests, and the screen registers as that channel's display. The world side never creates
   UI and never learns whether a request was applied.
-- **UI that moves every frame sits on a ScreenManager layer with a canvas of its own.** A moving
-  element rebuilds its whole canvas, so the game gives the layer it sets aside for moving UI -
-  `Layer_3` by convention - a Canvas and a GraphicRaycaster as overrides on its scene's
-  ScreenManager instance. The shipped prefab stays one canvas; which layer gets its own is the
-  game's decision.
+- **UI that keeps moving sits on a ScreenManager layer with a canvas of its own.** That is motion
+  lasting as long as the UI is up - a pointer following a unit all match, a bar over a head - and a
+  moving element rebuilds its whole canvas every frame it moves. The game gives the layer it sets
+  aside for it - `Layer_3` by convention - a Canvas and a GraphicRaycaster as overrides on its
+  scene's ScreenManager instance. The shipped prefab stays one canvas; which layer gets its own is
+  the game's decision. **An animation that plays and stops is not moving UI** - a screen's show or
+  hide, a one-second pop: it stays on its screen's layer and needs no canvas, and a layer without
+  one is not a finding to report or a caveat to repeat.
 - A Signal is a name and a payload. `Incoming` is what the module accepts, `Outgoing` is
   what it announces. A module's signals are its public surface - together with the
   interface of a Service, which is the one thing another module may reference directly, and
