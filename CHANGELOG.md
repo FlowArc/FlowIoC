@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.1] - 2026-10-05
+
 ### Fixed
 
 - The Help window keeps its page and tab through a script reload, so What's New stays open after an update.
