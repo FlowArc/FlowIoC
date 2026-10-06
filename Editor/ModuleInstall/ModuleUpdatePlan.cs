@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using FlowIoC.Editor.ModuleCards;
 
 namespace FlowIoC.Editor.ModuleInstall
 {
@@ -14,8 +15,9 @@ namespace FlowIoC.Editor.ModuleInstall
     /// Where both sides changed a file, its kind decides. Code is the package's: its version
     /// replaces the game's edit, and the dialog lists it first. Data may be the game's own work -
     /// a CD_Ads with its ad unit ids, a screen prefab dressed for the game - so the reader chooses
-    /// for each file. A meta goes the way its file goes. A file the game added is the game's,
-    /// whatever its kind, and is never written over unasked.
+    /// for each file. A file the shipped card names on an Extend line is read as data, code or
+    /// not. A meta goes the way its file goes. A file the game added is the game's, whatever its
+    /// kind, and is never written over unasked.
     ///
     /// A module installed before it kept a record gets the only reading that is honest without
     /// one: a file that differs from the shipped copy was changed by somebody nobody can name, and
@@ -36,11 +38,16 @@ namespace FlowIoC.Editor.ModuleInstall
             {".cs", ".asmdef", ".asmref", ".shader", ".cginc", ".hlsl", ".compute"};
 
         private readonly ShippedRecord _record = new ShippedRecord();
+        private readonly HashSet<string> _extendable = new HashSet<string>(StringComparer.Ordinal);
 
         internal ModuleUpdatePlanEVO Build(string installedFolder, string shippedFolder)
         {
             ShippedRecordEVO shipped = _record.Read(shippedFolder) ?? _record.Build(shippedFolder);
             ShippedRecordEVO installed = _record.Read(installedFolder);
+
+            // What the package hands the game to extend is the package's word, so the shipped card says.
+            _extendable.Clear();
+            _extendable.UnionWith(new ModuleCardExtendLine().Read(new ModuleCardFile().Read(shippedFolder)));
 
             var plan = new ModuleUpdatePlanEVO {HadRecord = installed != null};
 
@@ -116,7 +123,7 @@ namespace FlowIoC.Editor.ModuleInstall
         /// rewritten in the project by FlowIoC's own tools, so a difference in one is no edit of
         /// the game's to list: it simply takes the package's version.
         /// </summary>
-        private static ModuleUpdateVerdict ForFile(string path, ModuleUpdateVerdict raw, bool present,
+        private ModuleUpdateVerdict ForFile(string path, ModuleUpdateVerdict raw, bool present,
             bool gameAddition, IReadOnlyList<string> removedModules)
         {
             if (InRemovedModule(path, removedModules))
@@ -145,7 +152,7 @@ namespace FlowIoC.Editor.ModuleInstall
         /// settings are the game's as much as the file is. A folder's meta, which carries nothing
         /// but its GUID, is the package's.
         /// </summary>
-        private static ModuleUpdateVerdict ForMeta(string path, ModuleUpdateVerdict raw, bool present,
+        private ModuleUpdateVerdict ForMeta(string path, ModuleUpdateVerdict raw, bool present,
             ModuleUpdatePlanEVO plan)
         {
             if (InRemovedModule(path, plan.RemovedModules))
@@ -240,7 +247,7 @@ namespace FlowIoC.Editor.ModuleInstall
         /// card - goes whatever the tools did to it, code the game edited goes as listed, and data
         /// the game edited is asked about. A file the game added there is its own and stays.
         /// </summary>
-        private static ModuleUpdateVerdict InRemovedModule(string path, ModuleUpdateVerdict raw, bool present)
+        private ModuleUpdateVerdict InRemovedModule(string path, ModuleUpdateVerdict raw, bool present)
         {
             if (!present || raw == ModuleUpdateVerdict.Leave || raw == ModuleUpdateVerdict.Delete)
                 return raw;
@@ -260,9 +267,15 @@ namespace FlowIoC.Editor.ModuleInstall
 
         private static bool IsMeta(string path) => path.EndsWith(META, StringComparison.Ordinal);
 
-        /// <summary>Scripts, assembly files, shaders and the card: the package's, whoever edited them.</summary>
-        private static bool IsCode(string path)
+        /// <summary>
+        /// Scripts, assembly files, shaders and the card: the package's, whoever edited them -
+        /// except a file the shipped card hands the game to extend, which is read as data.
+        /// </summary>
+        private bool IsCode(string path)
         {
+            if (_extendable.Contains(path))
+                return false;
+
             if (path == CARD || path.EndsWith("/" + CARD, StringComparison.Ordinal))
                 return true;
 

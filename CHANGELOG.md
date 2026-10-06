@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - A module update now decides per file: code you edited takes the package's version and is listed first; an asset, prefab, scene or art file you edited is offered file by file, keep yours or take the package's, with its meta following it.
+- Modules: AB Test Flow 1.1.1, Haptic 1.1.1, Local Save 1.1.1, World Pointer 1.3.1 - now stable; Camera 1.1.0.
+- Camera is a Service: `CameraServiceRoot` and `CameraServiceContext` replace `CameraSystemRoot` and `CameraSystemContext` (a scene keeps its Root), and its Root sits at Initialize Order -40.
+- Camera has no public signals: `CameraSignals` and `Modules.Camera.Signals` are gone - call `ICameraService` (`Switch`, `Follow`, `MoveCamera`, `SetDistance`, `RememberPosition`) or bind its steps `ICameraService.Commands.Switch`, `MoveCamera`, `SetDistance` and `RememberPosition`. `MoveCameraToLastPos` and `PublishCameraTarget` are dropped. `SingleCameraAdapterView` is gone too: every camera sits under the Root's `CameraManager` and is listed on its adapter. A test scene shows switching, moving and zooming two cameras.
+- A module's card can name files a game extends on an `Extend:` line, such as Camera's `CameraName`; an update asks about such a file instead of replacing your edit.
+- Module Library marks a module still in beta, whose settings may change shape between versions, with a BETA pill at the left of its row and `-beta` after its version, and its update dialog says so; a module whose card says `Stage: stable` keeps its data's shape.
+- Help updated.
 
 ### Fixed
 

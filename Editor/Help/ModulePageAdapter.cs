@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using FlowIoC.BaseModule.Attributes;
 using FlowIoC.Editor.AgentRules;
 using FlowIoC.Editor.Icons;
+using FlowIoC.Editor.ModuleCards;
 using FlowIoC.Editor.ModuleInstall;
 using FlowIoC.Editor.Modules;
 using FlowIoC.Editor.SetupModules;
@@ -37,6 +38,8 @@ namespace FlowIoC.Editor.Help
         private readonly ModuleRootRole _rootRole = new ModuleRootRole();
         private FlowRole? _role;
         private bool _roleRead;
+
+        private bool? _beta;
 
         /// <summary>
         /// What the page reads off the project: taken once and kept until the page is told the
@@ -125,7 +128,37 @@ namespace FlowIoC.Editor.Help
 
         public override HelpAction Action => _action;
 
-        public override string Version => State().Version;
+        /// <summary>The version, marked -beta while the shipped card does not call the module stable.</summary>
+        public override string Version
+        {
+            get
+            {
+                string version = State().Version;
+
+                return version != null && Beta ? version + "-beta" : version;
+            }
+        }
+
+        /// <summary>
+        /// Read off the shipped card, once: the stage is what the package says of the module it
+        /// ships, and the shipped copy does not change while the window is open.
+        /// </summary>
+        public override bool Beta
+        {
+            get
+            {
+                if (_beta.HasValue)
+                    return _beta.Value;
+
+                string card = _installer == null
+                    ? null
+                    : new ModuleCardFile().Read(_installer.ShippedPathOf(_page.ModuleFolderName));
+
+                _beta = card != null && new ModuleCardStageLine().IsBeta(card);
+
+                return _beta.Value;
+            }
+        }
 
         public override SidebarFlagEVO SidebarFlag
         {
@@ -352,7 +385,7 @@ namespace FlowIoC.Editor.Help
             string projectRoot = System.IO.Path.GetDirectoryName(UnityEngine.Application.dataPath);
             IReadOnlyList<string> references =
                 new RemovedAssemblyReferences().Find(plan, installedAt, shipped, projectRoot);
-            string question = summary.Ask(_page.Title, from, to, plan, references);
+            string question = summary.Ask(_page.Title, from, to, plan, references, Beta);
 
             if (plan.HasConflicts)
             {

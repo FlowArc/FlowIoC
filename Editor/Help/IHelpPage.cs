@@ -44,6 +44,12 @@ namespace FlowIoC.Editor.Help
         SidebarFlagEVO SidebarFlag { get; }
 
         /// <summary>
+        /// Whether the page is a module still in beta, whose data may change shape between
+        /// versions. Its sidebar row wears BETA at its left edge. False for every page but a module's.
+        /// </summary>
+        bool Beta { get; }
+
+        /// <summary>
         /// The version the banner shows beside the page's action, or null - which is every page
         /// but a module's. A module page shows the installed version, or the shipped one while
         /// the module is not here, so the number is read where the button that acts on it sits.

@@ -14,13 +14,10 @@ namespace Modules.CameraModule.ViewsMediators
         public bool IsRegistered { get; set; }
 
         [SerializeField] private SerializedDictionary<CameraName, CameraCVO> _cameraConfigs = new();
-        [SerializeField] private Transform _cameraTarget;
 
         public Action<SerializedDictionary<CameraName, CameraCVO>> OnUnregisterCameras;
 
         public SerializedDictionary<CameraName, CameraCVO> GetCameraConfigs() => _cameraConfigs;
-
-        public Transform GetCameraTarget() => _cameraTarget;
 
         private void OnDestroy()
         {

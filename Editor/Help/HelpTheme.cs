@@ -191,6 +191,12 @@ namespace FlowIoC.Editor.Help
         public Color FlagNew => _pro ? Hex(0xC94A3F) : Hex(0xB84136);
 
         /// <summary>
+        /// The fill under BETA at the left of a beta module's row: a very dark purple, the window's
+        /// own hue, quiet beside the green and red flags that ask for something.
+        /// </summary>
+        public Color FlagBeta => _pro ? Hex(0x3B2566) : Hex(0x4A2E7A);
+
+        /// <summary>
         /// What a row is filled with at the depth it sits. The panel's own colour at the top level,
         /// and a shade darker for every category above it, so a fold that opens reads as a step
         /// down into the panel rather than as more rows of the same surface. The top level is the

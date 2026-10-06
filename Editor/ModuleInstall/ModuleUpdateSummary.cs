@@ -19,10 +19,11 @@ namespace FlowIoC.Editor.ModuleInstall
     {
         /// <summary>
         /// The question. references are the project's asmdefs that reference an assembly the
-        /// update removes, one line each, as <see cref="RemovedAssemblyReferences"/> words them.
+        /// update removes, one line each, as <see cref="RemovedAssemblyReferences"/> words them;
+        /// beta says the module has not settled its data's shape yet.
         /// </summary>
         internal string Ask(string title, string from, string to, ModuleUpdatePlanEVO plan,
-            IReadOnlyList<string> references = null)
+            IReadOnlyList<string> references = null, bool beta = false)
         {
             var text = new StringBuilder();
 
@@ -79,6 +80,12 @@ namespace FlowIoC.Editor.ModuleInstall
                 text.Append('\n').Append(Files(conflicts))
                     .Append(conflicts == 1 ? " of yours meets" : " of yours meet")
                     .Append(" a change of the package's - choose for each below.\n");
+            }
+
+            if (beta)
+            {
+                text.Append('\n').Append(title).Append(" is in beta: the shape of its settings may have changed, "
+                                                       + "so check the data assets you filled after updating.\n");
             }
 
             if (!plan.HadRecord)

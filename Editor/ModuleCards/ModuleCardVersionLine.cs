@@ -32,7 +32,7 @@ namespace FlowIoC.Editor.ModuleCards
         // The other lines a tool reads off the card. A version written directly under one of
         // them keeps the three together, which is where the next reader looks for them.
         private static readonly Regex _toolLine = new Regex(
-            @"^\s*(Colou?r|Profile|Publish|Update):", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            @"^\s*(Colou?r|Profile|Publish|Update|Stage|Extend):", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         internal static bool IsLine(string line) => _line.IsMatch(line ?? string.Empty);
 

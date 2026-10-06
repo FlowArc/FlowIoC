@@ -49,6 +49,18 @@ namespace FlowIoC.Editor.Help
         /// <summary>The room between two flags on one row, and between the flags and a category's arrow.</summary>
         private const float SidebarFlagGap = 4f;
 
+        /// <summary>The word at the left edge of a beta module's row.</summary>
+        private const string BetaMark = "BETA";
+
+        /// <summary>
+        /// The beta pill's padding, tighter than a flag's: the pill sits in the indent ahead of a
+        /// module's icon, and the word has to fit there without touching it.
+        /// </summary>
+        private const float BetaPadding = 3f;
+
+        /// <summary>Where the beta pill starts, from the row's left edge: flush against it.</summary>
+        private const float BetaInset = 0f;
+
         private static readonly IReadOnlyList<SidebarFlagEVO> _noFlags = new SidebarFlagEVO[0];
 
         /// <summary>
@@ -409,7 +421,7 @@ namespace FlowIoC.Editor.Help
                 string label = depth == 0 ? Label(section.Title, section.Subtitle) : section.Title;
 
                 if (DrawRow(label, section.Icon, section.Featured,
-                        _selected == section.Page, height, depth, null, section.SidebarFlags))
+                        _selected == section.Page, height, depth, null, section.SidebarFlags, section.Page.Beta))
                 {
                     Select(section.Page);
                 }
@@ -458,7 +470,7 @@ namespace FlowIoC.Editor.Help
         /// deep is still highlighted the full width of the menu.
         /// </summary>
         private bool DrawRow(string label, FlowIcon icon, bool featured, bool active, float height,
-            int depth, bool? expanded, IReadOnlyList<SidebarFlagEVO> flags)
+            int depth, bool? expanded, IReadOnlyList<SidebarFlagEVO> flags, bool beta = false)
         {
             bool pressed = GUILayout.Toggle(active, GUIContent.none, _theme.SidebarRow,
                 GUILayout.Height(height), GUILayout.ExpandWidth(true));
@@ -510,6 +522,20 @@ namespace FlowIoC.Editor.Help
 
             if (flags.Count > 0)
                 textRect.width = Mathf.Max(0f, flagsRight + SidebarFlagGap - SidebarPadding - textRect.x);
+
+            // A beta module wears BETA at the row's left edge, ahead of the indent, in the flags'
+            // small bold type. The indent a module row sits under leaves the room, so neither the
+            // icon nor the name moves, and the pills line up down the list.
+            if (beta)
+            {
+                Vector2 size = _theme.SidebarFlag.CalcSize(new GUIContent(BetaMark));
+                float width = Mathf.Ceil(size.x) + BetaPadding * 2f;
+                var pill = new Rect(Mathf.Round(row.x + BetaInset),
+                    Mathf.Round(row.y + (row.height - SidebarFlagHeight) * 0.5f), width, SidebarFlagHeight);
+
+                EditorGUI.DrawRect(pill, _theme.FlagBeta);
+                GUI.Label(pill, BetaMark, _theme.SidebarFlag);
+            }
 
             GUI.Label(textRect, label, text);
 
@@ -591,6 +617,12 @@ namespace FlowIoC.Editor.Help
 
             if (!active && row.Contains(Event.current.mousePosition))
                 EditorGUI.DrawRect(fill, _theme.SidebarRowHover);
+
+            // The dark hairline of the groove above the selected row - the row before's, already
+            // drawn - goes purple, so the selection starts on its own colour rather than on grey.
+            if (active)
+                EditorGUI.DrawRect(new Rect(row.x, row.y - SidebarGrooveHeight, row.width, 1f),
+                    _theme.SidebarRowSelectedBottom);
 
             EditorGUI.DrawRect(new Rect(row.x, row.yMax - 2f, row.width, 1f), _theme.SidebarSeparator);
             EditorGUI.DrawRect(new Rect(row.x, row.yMax - 1f, row.width, 1f), _theme.SidebarSeparatorLight);

@@ -8,22 +8,22 @@ using UnityEngine.Rendering;
 
 namespace Modules.CameraModule.ViewsMediators
 {
+    /// <summary>
+    /// Hands the rig's cameras to the module when it comes up and takes them back when it goes.
+    /// </summary>
     public class CameraAdapterMediator : IMediator
     {
         [Inject] private CameraAdapterView _view { get; set; }
-        [InjectSignal] private CameraSignals _cameraSignals { get; set; }
+        [InjectSignal] private CameraInternalSignals _signals { get; set; }
 
         public void OnRegister()
         {
             RegisterCameras();
-            _cameraSignals.Incoming.PublishCameraTarget.AddListener(PublishCameraTarget);
-            PublishCameraTarget();
             _view.OnUnregisterCameras += UnregisterCameras;
         }
 
         public void OnRemove()
         {
-            _cameraSignals.Incoming.PublishCameraTarget.RemoveListener(PublishCameraTarget);
             _view.OnUnregisterCameras -= UnregisterCameras;
         }
 
@@ -38,20 +38,8 @@ namespace Modules.CameraModule.ViewsMediators
 
             foreach (var kvp in configs)
             {
-                _cameraSignals.Incoming.RegisterCamera.Dispatch(kvp.Key, kvp.Value);
+                _signals.RegisterCamera.Dispatch(kvp.Key, kvp.Value);
             }
-        }
-
-        private void PublishCameraTarget()
-        {
-            var target = _view.GetCameraTarget();
-            if (target == null)
-            {
-                FlowLogger.LogWarning("[CameraAdapterMediator]: No camera target assigned.");
-                return;
-            }
-
-            _cameraSignals.Outgoing.CameraTargetReady.Dispatch(target);
         }
 
         private void UnregisterCameras(SerializedDictionary<CameraName, CameraCVO> configs)
@@ -61,7 +49,7 @@ namespace Modules.CameraModule.ViewsMediators
 
             foreach (var kvp in configs)
             {
-                _cameraSignals.Incoming.UnregisterCamera.Dispatch(kvp.Key);
+                _signals.UnregisterCamera.Dispatch(kvp.Key);
             }
         }
     }

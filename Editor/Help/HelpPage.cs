@@ -36,6 +36,8 @@ namespace FlowIoC.Editor.Help
 
         public virtual SidebarFlagEVO SidebarFlag => null;
 
+        public virtual bool Beta => false;
+
         public virtual string Version => null;
 
         public HelpGraph Graph { get; }

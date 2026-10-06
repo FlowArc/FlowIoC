@@ -1,0 +1,17 @@
+{
+  "name": "Modules.Camera.Test",
+  "references": [
+    "FlowIoC",
+    "Modules.Camera.Shared",
+    "Modules.Camera"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

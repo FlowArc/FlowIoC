@@ -15,7 +15,7 @@ namespace Modules.CameraModule.Models.Runtime
 {
     internal class CameraModel : ICameraModel, IConstructable
     {
-        [Inject(nameof(CameraSystemContext))] private GameObject _root { get; set; }
+        [Inject(nameof(CameraServiceContext))] private GameObject _root { get; set; }
         [ShowInModelViewer] private readonly Dictionary<CameraName, CameraVO> _cameras = new();
         [ShowInModelViewer] private CinemachineCamera _activeCamera;
         [ShowInModelViewer] private CinemachineBlenderSettings _sharedBlenderSettings;

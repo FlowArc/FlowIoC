@@ -36,10 +36,10 @@ namespace FlowIoC.Editor.Help.Pages
             {"ScreenServiceRoot", -70},
             {"PoolServiceRoot", -60},
             {"HapticServiceRoot", -50},
+            {"CameraServiceRoot", -40},
             {"WorldPointerServiceRoot", -30},
             {"LoadingServiceRoot", -10},
             {"GameplaySystemRoot", 0},
-            {"CameraSystemRoot", 1},
             {"ScreenRoot", 99},
             {"MainRoot", 100},
             {"ConnectorRoot", 98}
@@ -79,13 +79,13 @@ namespace FlowIoC.Editor.Help.Pages
                     "-80 to -10",
                     "-80 the asset service, the door every Addressables load goes through. -70 the "
                     + "screen service and -60 the pool service, which load through it. Then the "
-                    + "helpers: -50 haptics, -30 world pointers, -10 the loading service - last of the "
+                    + "helpers: -50 haptics, -40 cameras, -30 world pointers, -10 the loading service - last of the "
                     + "services, because it opens a screen."
                 },
                 new[]
                 {
                     "0 to 97",
-                    "The game's own modules and Systems. Gameplay, camera, whatever this game is made of."
+                    "The game's own modules and Systems. Gameplay, whatever this game is made of."
                 },
                 new[]
                 {

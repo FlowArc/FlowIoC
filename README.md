@@ -1367,6 +1367,11 @@ nobody can say who changed it. A sub
 module the new version removes or moves goes whole from where it was, and the dialog names any asmdef
 of yours that still references an assembly it takes away. Commit before you update.
 
+A versioned module is in beta until its card says `Stage: stable`: the Module Library puts a BETA pill
+at the left of its row and `-beta` after its version, and its update reminds you that the shape of its settings may
+have changed. A stable module keeps that shape, so the values you set in its data assets survive
+every update.
+
 A module whose card says `Update: never` is installed once. The setup set's Main, Screen, Gameplay
 and Connector say it, and so will a starter module you are meant to rewrite: the package keeps
 publishing it, a new install gets the latest copy, and nothing ever offers to update yours. Loading

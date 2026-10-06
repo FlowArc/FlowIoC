@@ -6,8 +6,8 @@ using FlowIoC.Editor.Icons;
 namespace FlowIoC.Editor.Help.Pages.Modules
 {
     /// <summary>
-    /// The camera module: the cameras it names, how a game hands its own Cinemachine
-    /// cameras over, what it does not wire up for you, and the button that puts it in the project.
+    /// The camera module: the cameras it names, how a game hands its own Cinemachine cameras
+    /// over, the Service a game calls, and the button that puts it in the project.
     ///
     /// Unlike the counter module this module has packages behind it, so installing it may have
     /// to add them first - RequiredPackages is what the adapter asks about before it copies.
@@ -38,22 +38,13 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         public override IReadOnlyList<HelpTab> MoreTabs => new[]
         {
             new HelpTab("Usage", DrawUsage,
-                "Put CameraSystemRoot in the scene, then say which cameras it has.",
-                "A rig with several cameras carries one CameraAdapterView and a single camera "
-                + "carries SingleCameraAdapterView. Both register on their own - there is no call "
-                + "to make."),
-            new HelpTab("Wiring", DrawWiring,
-                "Installing copies the module's folder and nothing else.",
-                "It writes no sub-context into your Connector and does not touch ConnectorRoot. A "
-                + "tool that edited another module's files behind your back would be harder to "
-                + "trust than the two minutes this takes.")
+                "Put CameraServiceRoot in the scene, then list its cameras on the one adapter.",
+                "Every camera sits under the Root's CameraManager and is listed on its "
+                + "CameraAdapterView. They register on their own when the scene loads - there is no "
+                + "call to make.")
         };
 
-        public override string InstalledHint =>
-            "Nothing else in the project was touched - see the Wiring tab for the one thing "
-            + "left to do.";
-
-        public override string BodyHeadline => "Cinemachine cameras get names, and switching is one signal.";
+        public override string BodyHeadline => "Cinemachine cameras get names, and switching is one call.";
 
         public override string BodyTagline =>
             "A menu camera and a gameplay camera come with the module; a game that needs more adds "
@@ -63,38 +54,38 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("What it gives you");
             painter.Bullet(
-                "A camera is a CameraName, not a scene reference. Switching is one dispatch, and "
-                + "nothing that switches has to know which GameObject the camera sits on.");
+                "A camera is a CameraName, not a scene reference. Switching is one call or one step, "
+                + "and nothing that switches has to know which GameObject the camera sits on.");
             painter.Bullet(
                 "Cameras register themselves. An adapter on the rig hands its cameras over when "
                 + "the scene loads and takes them back when it unloads, so a scene change does not "
                 + "leave the model holding cameras that are gone.");
             painter.Bullet(
-                "It remembers where a camera was. SetCameraLastPos stores a position per camera "
-                + "and MoveCameraToLastPos returns to it, which is what a game needs when the "
-                + "player comes back from a menu.");
+                "It moves the camera and remembers where it was. MoveCamera glides the live camera to "
+                + "a point; RememberPosition stores its position under a camera's name and "
+                + "TryGetRememberedPosition gives it back - what a game needs when the player comes "
+                + "back from a menu.");
             painter.Bullet(
                 "Custom blends are data. CD_CameraCustomBlends holds the Cinemachine blend table, "
                 + "and a camera's own entry can override it as it registers.");
 
             painter.Space();
             painter.Note(
-                "It is a System, not a Service: it is specific to the game it sits in. No other "
-                + "module references it. What reaches it are signals, wired in a Connector - which "
-                + "the install deliberately does not write for you. The Wiring tab has it.");
+                "It is a Service, and ICameraService is the only way in: the module has no public "
+                + "signals and needs no Connector. A module of yours references Modules.Camera, "
+                + "injects the Service and calls it, or binds one of its steps in a sequence.");
 
             painter.Separator();
             painter.SubHeading("What lands in the project");
             painter.Table(new[] {"What", "Holds"},
-                new[] {"Modules.Camera", "The model, the commands, the adapters."},
+                new[] {"Modules.Camera", "ICameraService and its steps, the model, the commands, the adapters."},
                 new[]
                 {
                     "Modules.Camera.Shared",
                     "The CameraName enum and CameraCVO on their own, so a module that names a camera "
                     + "references the data and not the module."
                 },
-                new[] {"Modules.Camera.Signals", "CameraSignals, which only a Connector references."},
-                new[] {"Prefabs/CameraSystemRoot", "The module's presence in the scene."},
+                new[] {"Prefabs/CameraServiceRoot", "The module's presence in the scene."},
                 new[] {"Scriptables/CD_CameraCustomBlends", "The blend table."});
 
             painter.Separator();
@@ -110,114 +101,109 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         {
             painter.SubHeading("The Root");
             painter.Paragraph(
-                "Drop CameraSystemRoot into the scene. It brings its own Main Camera with the "
-                + "Cinemachine brain, and a CameraManager - the adapter view - holding a Cinemachine camera and the target it follows.");
+                "Drop CameraServiceRoot into the scene, in the Services band at Initialize Order -40. "
+                + "It brings its own Main Camera with the Cinemachine brain, and a CameraManager - the "
+                + "adapter view - holding a Cinemachine camera and the target it follows.");
             painter.Image(_images.Get("CameraRootHierarchy.png"),
-                "CameraSystemRoot in MainScene, in the Systems band, opened out.");
+                "The Root in a scene, opened out.");
             painter.Image(_images.Get("CameraRootAdapter.png"),
                 "Its adapter as it ships: CD_CameraCustomBlends, the blend table, in the Scriptable Map.");
+
+            painter.Separator();
+            painter.SubHeading("Adding a camera");
+            painter.Paragraph(
+                "All of a scene's cameras live in one rig. Never give a camera a view of its own: the "
+                + "CameraManager's adapter is the one view, and it registers every camera it lists.");
+            painter.Bullet("Add a CinemachineCamera under CameraManager, and an empty target beside it for the camera to follow and look at.");
+            painter.Bullet("Give the camera a name in CameraName, with the next free number.");
+            painter.Bullet("Add a row to the adapter's Camera Configs: the name, the camera, and Activate At Register on the one camera the scene starts on.");
+            painter.Paragraph(
+                "Because each camera follows a target of its own, MoveCamera moves one camera without "
+                + "dragging the others, and the camera never follows a gameplay object directly unless "
+                + "Follow points it at one.");
 
             painter.Separator();
             painter.SubHeading("Naming a camera");
             painter.Paragraph(
                 "CameraName is the module's vocabulary and lives in its Shared assembly. Add the "
-                + "entries the game needs and fill the adapter's map in the Inspector.");
+                + "entries the game needs and fill the adapter's map in the Inspector. Give each the "
+                + "next free number: Unity stores a camera name as its number, so a name slipped in "
+                + "between two others moves every camera below it.");
             painter.Code(
                 "public enum CameraName\n"
                 + "{\n"
-                + "    Menu,\n"
-                + "    Gameplay,\n"
-                + "    Cutscene\n"
+                + "    Menu = 0,\n"
+                + "    Gameplay = 1,\n"
+                + "    Cutscene = 2\n"
                 + "}");
+            painter.Note(
+                "The file is yours to extend - the module's card says so on its Extend line. An "
+                + "update that changes it too asks before it touches your copy, the way it asks about "
+                + "a data asset you edited.");
 
             painter.Separator();
             painter.SubHeading("Switching");
             painter.Paragraph(
-                "Everything the module does is an incoming signal, so a Command drives it the way "
-                + "it drives anything else.");
+                "A switch that is one fixed step of a flow is bound as the module's own step, with "
+                + "the camera beside it, so the flow reads from the Context.");
             painter.Code(
-                "[InjectSignal] private CameraSignals _cameraSignals { get; set; }\n"
+                "CommandBinder.Bind(_signals.Incoming.LevelStarted)\n"
+                + "    .ToSequence<PrepareLevelCommand>()\n"
+                + "    .ToSequence<ICameraService.Commands.Switch>(CameraName.Gameplay);");
+            painter.Paragraph(
+                "Where a Command decides which camera goes live, or what it follows, it injects the "
+                + "Service.");
+            painter.Code(
+                "[Inject] private ICameraService _cameras { get; set; }\n"
                 + "\n"
-                + "_cameraSignals.Incoming.SwitchCamera.Dispatch(CameraName.Gameplay);\n"
-                + "_cameraSignals.Incoming.SetCameraTarget.Dispatch(_playerTransform);");
+                + "_cameras.Switch(CameraName.Gameplay);\n"
+                + "_cameras.Follow(_playerTransform);");
 
             painter.Separator();
-            painter.SubHeading("Coming back to where you were");
+            painter.SubHeading("Moving the camera");
             painter.Paragraph(
-                "Store a camera's position before leaving it and move back to it afterwards. The "
-                + "float is how long the move takes.");
+                "MoveCamera moves what the live camera follows to a point over the seconds given, so "
+                + "the camera glides there. As a step it holds the sequence until the camera arrives; "
+                + "called directly it takes a callback for the arrival.");
             painter.Code(
-                "_cameraSignals.Incoming.SetCameraLastPos.Dispatch(CameraName.Gameplay);\n"
-                + "_cameraSignals.Incoming.MoveCameraToLastPos.Dispatch(CameraName.Gameplay, 0.4f);");
+                "CommandBinder.Bind(_signals.Incoming.BossAppeared)\n"
+                + "    .ToSequence<ICameraService.Commands.MoveCamera>(new Vector3(0f, 12f, -8f), 0.6f)\n"
+                + "    .ToSequence<ShowBossIntroCommand>();\n"
+                + "\n"
+                + "_cameras.MoveCamera(_boss.position, 0.6f, () => FlowLogger.Log(\"Camera on the boss.\"));");
 
             painter.Separator();
-            painter.SubHeading("Asking who the target is");
+            painter.SubHeading("Zooming");
             painter.Paragraph(
-                "PublishCameraTarget asks; the answer comes back on Outgoing.CameraTargetReady, "
-                + "which is what a Connector listens to. A module that wants the target does not "
-                + "read it - it is told.");
+                "SetDistance eases the live camera's distance from what it follows - its position "
+                + "composer's Camera Distance - to the one given, over the seconds given. As a step it "
+                + "holds the sequence until the zoom ends.");
             painter.Code(
-                "_cameraSignals.Incoming.PublishCameraTarget.Dispatch();");
-
-            painter.Space();
-            painter.Note(
-                "The other incoming signals are MoveCamera, SetCameraDistance, RegisterCamera and "
-                + "UnregisterCamera. The last two are what the adapters dispatch, so a game rarely "
-                + "sends them itself.");
-        }
-
-        private void DrawWiring(HelpPainter painter)
-        {
-
-            painter.SubHeading("One reference");
-            painter.Paragraph(
-                "Add Modules.Camera to the references of the assembly that holds your "
-                + "connectors. That assembly is the only one in the project allowed to see both "
-                + "sides of a wire.");
+                "CommandBinder.Bind(_signals.Incoming.AimStarted)\n"
+                + "    .ToSequence<ICameraService.Commands.SetDistance>(6f, 0.4f);\n"
+                + "\n"
+                + "_cameras.SetDistance(14f, 0.4f);");
 
             painter.Separator();
-            painter.SubHeading("One sub-context");
+            painter.SubHeading("Remembering where a camera was");
             painter.Paragraph(
-                "Name it after the module on the other side of the wire and split the two "
-                + "directions, so a reader can see at a glance what leaves and what arrives.");
+                "Remember the live camera's position before the flow leaves it, and move back to it "
+                + "when the flow returns.");
             painter.Code(
-                "public class CameraConnectorSubContext : Context\n"
-                + "{\n"
-                + "    private MainSignals   _mainSignals;\n"
-                + "    private CameraSignals _cameraSignals;\n"
+                "CommandBinder.Bind(_signals.Incoming.MenuOpened)\n"
+                + "    .ToSequence<ICameraService.Commands.RememberPosition>(CameraName.Gameplay)\n"
+                + "    .ToSequence<ICameraService.Commands.Switch>(CameraName.Menu);\n"
                 + "\n"
-                + "    public override void Setup()\n"
-                + "    {\n"
-                + "        base.Setup();\n"
-                + "\n"
-                + "        _mainSignals   = InjectionBinderCrossContext.GetInstance<MainSignals>();\n"
-                + "        _cameraSignals = InjectionBinderCrossContext.GetInstance<CameraSignals>();\n"
-                + "\n"
-                + "        IncomingSignals();\n"
-                + "        OutgoingSignals();\n"
-                + "    }\n"
-                + "\n"
-                + "    private void IncomingSignals() =>\n"
-                + "        _mainSignals.Outgoing.SetCameraTarget\n"
-                + "            .Connect(_cameraSignals.Incoming.SetCameraTarget);\n"
-                + "\n"
-                + "    private void OutgoingSignals() =>\n"
-                + "        _cameraSignals.Outgoing.CameraTargetReady\n"
-                + "            .Connect(_mainSignals.Incoming.CameraTargetReady);\n"
-                + "}");
+                + "if (_cameras.TryGetRememberedPosition(CameraName.Gameplay, out Vector3 position))\n"
+                + "    _cameras.MoveCamera(position, 0.4f);");
 
             painter.Separator();
-            painter.SubHeading("One entry on the Root");
+            painter.SubHeading("The test scene");
             painter.Paragraph(
-                "A sub-context is not found by reflection: the Root that owns it lists it. Select "
-                + "your ConnectorRoot prefab and add CameraConnectorSubContext to Sub Context "
-                + "Types. Without that line the class compiles and never runs.");
-
-            painter.Space();
-            painter.Note(
-                "The signals on the other side are the game's, not the module's. MainSignals here "
-                + "is only the example - whichever module knows who the camera should follow is "
-                + "the one that declares SetCameraTarget and gets connected to it.");
+                "CameraTestScene, in the module's test module, shows all of it: two cubes, a camera on "
+                + "each with a target of its own. Switch camera goes from one to the other; Move camera "
+                + "glides the live one to a random point around its cube, which the scene remembered "
+                + "at launch; Zoom camera eases it to a random distance.");
         }
     }
 }
