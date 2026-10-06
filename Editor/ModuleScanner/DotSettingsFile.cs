@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml;
 using FlowIoC.Editor.CodeGenerator.Menus.Module;
 
@@ -16,6 +18,8 @@ namespace FlowIoC.Editor.ModuleScanner
     /// </summary>
     internal class DotSettingsFile
     {
+        private readonly Regex _skipKey = new Regex("NamespaceFoldersToSkip/=([^/\"]+)/@EntryIndexedValue");
+
         internal virtual bool Matches(string path, IReadOnlyList<string> skipFolders)
         {
             if (!File.Exists(path)) return false;
@@ -33,7 +37,28 @@ namespace FlowIoC.Editor.ModuleScanner
                 }
             }
 
-            return true;
+            return !HasRootedKey(content);
+        }
+
+        /// <summary>
+        /// A skip entry keyed by an absolute path - D:Work_005CCNYT_005C... - which Rider never
+        /// matches, since it keys a folder relative to the project. Create Module wrote such keys
+        /// for a parent resolved in another casing, and a file carrying one beside the right keys
+        /// used to pass; it is stale, and the repair writes the file again without it.
+        /// </summary>
+        private bool HasRootedKey(string content)
+        {
+            foreach (Match match in _skipKey.Matches(content))
+            {
+                string folder = match.Groups[1].Value;
+
+                if (folder.Contains(":")
+                    || folder.IndexOf("_003A", StringComparison.OrdinalIgnoreCase) >= 0
+                    || folder.StartsWith("_005C", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
         }
 
         internal virtual void Write(string path, IReadOnlyList<string> skipFolders)

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code style: a `private static readonly` field is named `_camelCase`, like every other private field; Rider flags the PascalCase ones once the Editor rewrites the solution's `.sln.DotSettings`.
 - Modules: Device Debugger 1.1.3, Local Save 1.0.5, Mobile Notification 1.0.5, Resource Fly 1.0.1 (new), World Pointer 1.2.4.
 
+### Fixed
+
+- Create Module wrote absolute folder keys into a nested module's `.csproj.DotSettings` when its parent came in another casing, so Rider flagged every namespace in it; Module Scanner now reports such a file and its repair rewrites it.
+
 ## [1.31.1] - 2026-10-05
 
 ### Changed

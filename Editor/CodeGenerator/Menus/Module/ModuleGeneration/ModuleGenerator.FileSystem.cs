@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -85,15 +84,6 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
         private static void AddParentPathNamespaceExceptions(string modulePath, string dotSettingsFilePath)
         {
-            string assetsRelativePath = modulePath.Replace(Application.dataPath, "").TrimStart('/', '\\');
-            string[] pathSegments = assetsRelativePath.Split(new[] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar},
-                StringSplitOptions.RemoveEmptyEntries);
-
-            if (pathSegments.Length <= 1)
-                return;
-
-            string currentPath = Path.Combine(Application.dataPath);
-
             ED_CodeGenerator codeGenSettings = AssetDatabase.LoadAssetAtPath<ED_CodeGenerator>(CodeGeneratorStrings.CONFIG_PATH);
             if (codeGenSettings == null)
             {
@@ -101,23 +91,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 return;
             }
 
-            for (int i = 0; i < pathSegments.Length; i++)
+            var skipFolderNames = new List<string>
             {
-                string segment = pathSegments[i];
-                currentPath = Path.Combine(currentPath, segment);
+                codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules],
+                codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules],
+                codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules]
+            };
 
-                // if (segment.EndsWith("Module") && currentPath != modulePath)
-                // {
-                //     NamespaceUtility.SetNamespaceProvider(currentPath, false, dotSettingsFilePath);
-                // }
-
-                if (segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.SubModules]) ||
-                    segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.ScreenModules]) ||
-                    segment.Equals(codeGenSettings.DirectoryStructureConfigMap[FolderEVO.FolderType.TestModules]))
-                {
-                    NamespaceUtility.SetNamespaceProvider(currentPath, false, dotSettingsFilePath);
-                }
-            }
+            foreach (string folder in new ModuleParentSkipFolders().For(modulePath, skipFolderNames))
+                NamespaceUtility.SetNamespaceProvider(folder, false, dotSettingsFilePath);
         }
 
         private static void TraverseFoldersForNamespaceExceptions(

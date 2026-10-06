@@ -141,9 +141,26 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         internal static string EncodeAssetPath(string assetFolderPath)
         {
-            return NormalizePath(assetFolderPath)
-                .Replace(NormalizePath(Application.dataPath), "Assets")
-                .Replace("/", "_005C");
+            return ProjectRelativePath(assetFolderPath).Replace("/", "_005C");
+        }
+
+        /// <summary>
+        /// The folder as Rider keys it: relative to the project root, Assets/... or Packages/...,
+        /// whatever form it was handed in. The root is stripped without case, because a script
+        /// resolves a path against the Editor's working directory - D:\Work\... where Unity says
+        /// D:/work/... - and a plain Replace of Application.dataPath then left the whole absolute
+        /// path in the key, which Rider never matches. A path already relative, or outside the
+        /// project, comes back as it was.
+        /// </summary>
+        internal static string ProjectRelativePath(string path)
+        {
+            string normalized = NormalizePath(path).TrimEnd('/');
+            string dataPath = NormalizePath(Application.dataPath).TrimEnd('/');
+            string projectRoot = dataPath.Substring(0, dataPath.LastIndexOf('/'));
+
+            return normalized.StartsWith(projectRoot + "/", StringComparison.OrdinalIgnoreCase)
+                ? normalized.Substring(projectRoot.Length + 1)
+                : normalized;
         }
 
         internal static string EncodeLowercaseAssetPath(string assetFolderPath) =>
@@ -151,8 +168,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
 
         internal static string EncodeLowercaseAssetPath(string assetFolderPath, CultureInfo culture)
         {
-            string relativePath = NormalizePath(assetFolderPath)
-                .Replace(NormalizePath(Application.dataPath), "Assets");
+            string relativePath = ProjectRelativePath(assetFolderPath);
 
             string lowered = relativePath.ToLower(culture);
 
