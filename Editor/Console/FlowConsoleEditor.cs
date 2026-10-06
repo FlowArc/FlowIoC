@@ -71,6 +71,8 @@ namespace FlowIoC.Editor.Console
         private bool _isResizingDetailPanel;
 
         private bool _needsRepaint;
+        private bool _logsArrived;
+        private readonly FlowConsoleLogPace _logPace = new();
         private List<ConsoleLog> _cachedFilteredLogs;
         private List<ConsoleLog> _cachedVisibleLogs;
         private bool _logsDirty = true;
@@ -1157,6 +1159,12 @@ namespace FlowIoC.Editor.Console
 
         private void Update()
         {
+            if (_logsArrived && _logPace.Due(EditorApplication.timeSinceStartup))
+            {
+                _logsArrived = false;
+                _needsRepaint = true;
+            }
+
             if (_needsRepaint)
             {
                 _needsRepaint = false;
@@ -2261,7 +2269,7 @@ namespace FlowIoC.Editor.Console
             _allLogs.Add(log);
             TrimToMaxLogCount();
             _logsDirty = true;
-            _needsRepaint = true;
+            _logsArrived = true;
         }
 
         /// <summary>

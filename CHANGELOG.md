@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Create Module wrote absolute folder keys into a nested module's `.csproj.DotSettings` when its parent came in another casing, so Rider flagged every namespace in it; Module Scanner now reports such a file and its repair rewrites it.
 - A Root or a ViewInjector selected during Play redrew the whole Inspector every frame and cost the game frame rate; the inspector now repaints only when a lifecycle or registration badge changes.
+- The Flow Console repainted, and refiltered its whole list, for every log that arrived, so a flow logging each frame cost the game 3-10 ms a frame; arriving logs now repaint it at most ten times a second.
 
 ## [1.31.1] - 2026-10-05
 
