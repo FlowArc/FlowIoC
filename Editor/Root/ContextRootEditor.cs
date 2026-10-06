@@ -25,6 +25,7 @@ namespace FlowIoC.Editor.Root
         private SubContextNameSync _nameSync;
         private SubContextSettingsTypes _settingsTypes;
         private SubContextBadge _badge;
+        private RootLifecycleWatch _lifecycle;
 
         private FlowPalette _palette;
         private FlowRoleResolver _roles;
@@ -79,13 +80,26 @@ namespace FlowIoC.Editor.Root
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
             _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
             _badge = new SubContextBadge(_declarations, _roles, _palette, _settingsTypes);
+
+            _lifecycle = new RootLifecycleWatch();
+            EditorApplication.update += RepaintOnLifecycleMove;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.update -= RepaintOnLifecycleMove;
         }
 
         /// <summary>
-        /// Only while the game runs: the lifecycle badges read fields that change without the
-        /// inspector being touched, and a repaint is the only way they can say so.
+        /// The lifecycle badges read fields that change without the inspector being touched, so a
+        /// repaint is the only way they can say so - one per change rather than one per frame, which
+        /// redrew the whole Inspector window and cost a selected Root's game its frame rate.
         /// </summary>
-        public override bool RequiresConstantRepaint() => Application.isPlaying;
+        private void RepaintOnLifecycleMove()
+        {
+            if (Application.isPlaying && _lifecycle.Moved(_root))
+                Repaint();
+        }
 
         public override void OnInspectorGUI()
         {
@@ -494,8 +508,7 @@ namespace FlowIoC.Editor.Root
                         break;
 
                     EditorGUILayout.PropertyField(field, true);
-                }
-                while (field.NextVisible(false));
+                } while (field.NextVisible(false));
             }
 
             if (serializedObject.ApplyModifiedProperties() && !Application.isPlaying)
@@ -533,8 +546,7 @@ namespace FlowIoC.Editor.Root
 
                     return $"{count.Value} {noun}";
                 }
-            }
-            while (field.NextVisible(false));
+            } while (field.NextVisible(false));
 
             return string.Empty;
         }

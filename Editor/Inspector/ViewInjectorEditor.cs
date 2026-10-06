@@ -48,6 +48,7 @@ namespace FlowIoC.Editor.Inspector
 
         private ViewInjectorEntries _entries;
         private ViewInjectorFoldouts _foldouts;
+        private ViewInjectorRegistrationWatch _registration;
 
         private void OnEnable()
         {
@@ -62,13 +63,26 @@ namespace FlowIoC.Editor.Inspector
 
             _entries = new ViewInjectorEntries();
             _foldouts = new ViewInjectorFoldouts();
+
+            _registration = new ViewInjectorRegistrationWatch();
+            EditorApplication.update += RepaintOnRegistrationMove;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.update -= RepaintOnRegistrationMove;
         }
 
         /// <summary>
-        /// Only while the game runs: registration happens without the inspector being touched, and
-        /// a repaint is the only way the badge can say so.
+        /// Registration happens without the inspector being touched, so a repaint is the only way
+        /// the badge can say so - one per change rather than one per frame, which redrew the whole
+        /// Inspector window and cost a selected view's game its frame rate.
         /// </summary>
-        public override bool RequiresConstantRepaint() => Application.isPlaying;
+        private void RepaintOnRegistrationMove()
+        {
+            if (Application.isPlaying && _registration.Moved(_injector))
+                Repaint();
+        }
 
         public override void OnInspectorGUI()
         {
