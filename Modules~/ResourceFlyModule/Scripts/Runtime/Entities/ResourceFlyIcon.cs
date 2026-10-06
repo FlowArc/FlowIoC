@@ -3,6 +3,7 @@ using FlowIoC.PoolModule.Entities;
 using Modules.ResourceFlyModule.Data.UnityObjects;
 using Modules.ResourceFlyModule.Data.ValueObjects;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Modules.ResourceFlyModule.Entities
 {
@@ -14,6 +15,11 @@ namespace Modules.ResourceFlyModule.Entities
     /// </summary>
     public class ResourceFlyIcon : PoolableItem
     {
+        [SerializeField] [Tooltip("Optional: the Image a flight's sprite is laid on. Empty: the icon always shows its own picture.")]
+        private Image _image;
+
+        private Sprite _ownSprite;
+        private bool _ownSpriteRead;
         private float _clock;
         private Vector3 _from;
         private int _seed;
@@ -22,6 +28,27 @@ namespace Modules.ResourceFlyModule.Entities
 
         internal bool IsFlying { get; private set; }
         internal CD_ResourceFlyMotion Motion { get; private set; }
+
+        /// <summary>Whether a flight's sprite has an Image to go on.</summary>
+        internal bool CanShowSprite => _image != null;
+
+        /// <summary>
+        /// Shows the flight's sprite, or the prefab's own when the flight names none - a pooled icon is
+        /// reused, so the last flight's picture must not stay on it.
+        /// </summary>
+        internal void ShowSprite(Sprite sprite)
+        {
+            if (_image == null)
+                return;
+
+            if (!_ownSpriteRead)
+            {
+                _ownSprite = _image.sprite;
+                _ownSpriteRead = true;
+            }
+
+            _image.sprite = sprite != null ? sprite : _ownSprite;
+        }
 
         /// <summary>Starts the icon; done(true) when it reaches the target, done(false) if it is lost before.</summary>
         public void Launch(Vector3 from, RectTransform target, CD_ResourceFlyMotion motion, float delay, Action<bool> done)

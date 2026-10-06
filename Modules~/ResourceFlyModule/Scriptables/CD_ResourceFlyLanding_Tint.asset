@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70058890f2801cc4aad59c0993ce8b08, type: 3}
   m_Name: CD_ResourceFlyLanding_Tint
   m_EditorClassIdentifier: Modules.ResourceFly::Modules.ResourceFlyModule.Data.UnityObjects.CD_ResourceFlyLandingTint
-  TintSeconds: 0.4
+  TintSeconds: 0.1
   TintColor: {r: 1, g: 0.4, b: 0.25, a: 1}
   Fade:
     serializedVersion: 2

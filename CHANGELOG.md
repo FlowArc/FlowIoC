@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A screen made for a test module now lives inside it: Create Module accepts a Test parent for a Screen and writes it Editor-only, loaded from `Editor/Resources`, with no card and no test module of its own.
 - Add Sub Context offers such a screen only on a Root inside a test module, and the Root inspector badges it `TEST SCREEN`.
 - Inside a test module, asset folders (`Prefabs`, `Resources`, `Scriptables`, `Art`) sit under `Editor/`; Module Scanner moves existing ones there.
-- Modules: AB Test Flow 1.1.0, Ads 1.1.0, Analytics 1.1.0, Asset Delivery 1.1.0, Audio 1.1.0, Counter 1.1.0, Device Debugger 1.2.0, Haptic 1.1.0, Loading 1.2.0, Local Save 1.1.0, Mobile Notification 1.1.0, Resource Fly 1.1.1 (new), World Pointer 1.3.0.
+- Modules: AB Test Flow 1.1.0, Ads 1.1.0, Analytics 1.1.0, Asset Delivery 1.1.0, Audio 1.1.0, Counter 1.1.0, Device Debugger 1.2.0, Haptic 1.1.0, Loading 1.2.0, Local Save 1.1.0, Mobile Notification 1.1.0, Resource Fly 1.2.0 (new), World Pointer 1.3.0.
 
 ### Fixed
 

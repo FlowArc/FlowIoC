@@ -16,10 +16,12 @@ namespace Modules.ResourceFlyModule.Models
     /// </summary>
     internal class ResourceFlyModel : IResourceFlyModel, IConstructable
     {
-        [Inject(nameof(ResourceFlyServiceContext))] private GameObject _root { get; set; }
+        [Inject(nameof(ResourceFlyServiceContext))]
+        private GameObject _root { get; set; }
 
         private readonly Dictionary<string, ResourceVO> _resources = new();
         private readonly Dictionary<string, RectTransform> _sources = new();
+        private readonly Dictionary<string, ResourceFlyLookVO> _looks = new();
 
         public ResourceFlyOptionsCVO Options { get; private set; } = new();
 
@@ -37,13 +39,38 @@ namespace Modules.ResourceFlyModule.Models
             }
 
             Options = config.Options;
+            IndexLooks(config);
+        }
+
+        /// <summary>Indexes the named looks; a nameless look is skipped, and a name filed twice answers with its first look.</summary>
+        internal void IndexLooks(Object context = null)
+        {
+            _looks.Clear();
+
+            foreach (ResourceFlyLookVO look in Options.Looks)
+            {
+                if (look == null || string.IsNullOrEmpty(look.Name))
+                {
+                    FlowLogger.LogError("CD_ResourceFly holds a look with no name; it is skipped.", context);
+                    continue;
+                }
+
+                if (!_looks.TryAdd(look.Name, look))
+                    FlowLogger.LogError($"CD_ResourceFly names the look '{look.Name}' twice; the first one answers.", context);
+            }
+        }
+
+        public bool TryGetLook(string name, out ResourceFlyLookVO look)
+        {
+            look = null;
+            return !string.IsNullOrEmpty(name) && _looks.TryGetValue(name, out look);
         }
 
         public ResourceVO Get(string key)
         {
             if (!_resources.TryGetValue(key, out ResourceVO resource))
             {
-                resource = new ResourceVO { Key = key };
+                resource = new ResourceVO {Key = key};
                 _resources[key] = resource;
             }
 

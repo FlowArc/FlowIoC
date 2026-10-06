@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using FlowIoC.BaseModule.Signals;
+using UnityEngine;
 
 namespace Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScreenModule.Signals
 {
@@ -12,6 +13,9 @@ namespace Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScree
         public Signal<int> FlyScatter = new();
         public Signal<int> FlyDirect = new();
         public Signal<int> FlyCurved = new();
+        public Signal<int> FlyBanknote = new();
+        public Signal<Sprite> FlyItem = new();
+        public Signal<int> FlyStones = new();
     }
 }
 #endif

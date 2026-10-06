@@ -23,20 +23,29 @@ namespace Modules.ResourceFlyModule.Entities
         [SerializeField] [Tooltip("Optional: what a landing's colour is laid on - the counter icon's Image. Empty: landings change no colour.")]
         private Graphic _tinted;
 
-        [SerializeField] [Tooltip("The count the icons add to.")]
+        [SerializeField] [Tooltip("Optional: the count the icons add to. Empty: the counter shows no number - an inventory box - and its landings still play.")]
         private TMP_Text _count;
 
         [SerializeField] [Tooltip("What the icons fly in. Place it just below the target in the hierarchy.")]
         private RectTransform _iconParent;
 
-        [SerializeField] [Tooltip("The pool item the icons are.")]
+        [SerializeField] [Tooltip("The pool item the icons are, when a flight's look names none.")]
         private string _iconPoolKey;
 
-        [SerializeField] [Tooltip("Optional: the motion flights into this counter play. Empty plays CD_ResourceFly's default.")]
+        [SerializeField] [Tooltip("Optional: the motion flights into this counter play when their look names none. Empty plays CD_ResourceFly's.")]
         private CD_ResourceFlyMotion _motion;
 
-        [SerializeField] [Tooltip("Optional: how this counter answers a landing. Empty plays CD_ResourceFly's default.")]
+        [SerializeField] [Tooltip("Optional: how this counter answers a landing when the flight's look names none. Empty plays CD_ResourceFly's.")]
         private CD_ResourceFlyLanding _landing;
+
+        [SerializeField] [Min(0)] [Tooltip("Optional: the most icons one flight into this counter uses when its look names none. 0 uses CD_ResourceFly's.")]
+        private int _maxIcons;
+
+        [SerializeField]
+        [Min(0)]
+        [Tooltip("Optional: how much one icon into this counter carries when the flight's look names none - 100 flies 1000 "
+                 + "in ten icons. 0 uses CD_ResourceFly's.")]
+        private int _unitsPerIcon;
 
         private int _flights;
         private bool _endPending;
@@ -59,13 +68,17 @@ namespace Modules.ResourceFlyModule.Entities
         public string IconPoolKey => _iconPoolKey;
         public CD_ResourceFlyMotion Motion => _motion;
         public CD_ResourceFlyLanding Landing => _landing;
+        public int MaxIcons => _maxIcons;
+        public int UnitsPerIcon => _unitsPerIcon;
 
         public void ShowValue(int value)
         {
             _countFrom = value;
             _countTo = value;
             _countClock = _countSeconds = 0f;
-            _count.text = value.ToString();
+
+            if (_count != null)
+                _count.text = value.ToString();
         }
 
         public void Land(int value, float countUpSeconds, CD_ResourceFlyLanding landing)
@@ -115,7 +128,9 @@ namespace Modules.ResourceFlyModule.Entities
             if (_countSeconds > 0f && _countClock < _countSeconds)
             {
                 _countClock += deltaTime;
-                _count.text = Mathf.RoundToInt(CurrentCount()).ToString();
+
+                if (_count != null)
+                    _count.text = Mathf.RoundToInt(CurrentCount()).ToString();
             }
 
             if (_landingClock >= 0f)

@@ -3,7 +3,6 @@ using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using FlowIoC.PoolModule.Entities;
 using FlowIoC.PoolModule.Services;
-using Modules.ResourceFlyModule.Data.UnityObjects;
 using Modules.ResourceFlyModule.Data.ValueObjects;
 using Modules.ResourceFlyModule.Entities;
 using Modules.ResourceFlyModule.Models;
@@ -55,13 +54,19 @@ namespace Modules.ResourceFlyModule.Services
 
         public int GetShown(string key) => _model.Get(key).Shown;
 
-        public void Fly(ResourceFlyRouteVO route, int amount, Action finished)
+        public void Fly(ResourceFlyRouteVO route, int amount, Action finished) => Fly(route, amount, null, finished);
+
+        public void Fly(ResourceFlyRouteVO route, int amount, ResourceFlyLookVO look, Action finished)
         {
             ResourceVO resource = _model.Get(route.Key);
-            // What is already flying is not flown twice: a second flight takes only what is left.
-            int flying = Mathf.Min(amount, resource.Unflown);
+            ResourceFlyLookVO named = Named(route, look);
+            bool visualOnly = look is {VisualOnly: true} || named is {VisualOnly: true};
+            // A visual flight only shows the amount; a counting one takes only what is pending and not already flying.
+            int flying = visualOnly ? amount : Mathf.Min(amount, resource.Unflown);
 
-            if (flying < amount)
+            if (visualOnly && flying <= 0)
+                FlowLogger.LogWarning($"Fly - {route} shows {amount}: a visual flight of nothing ends at once.");
+            else if (flying < amount)
                 FlowLogger.LogWarning($"Fly - {route} asked for {amount} with {resource.Unflown} pending and not flying; flies {flying}.");
 
             if (flying <= 0)
@@ -75,29 +80,43 @@ namespace Modules.ResourceFlyModule.Services
             if (counter == null || !_model.TryGetSource(route.Source, out RectTransform source))
             {
                 FlowLogger.LogWarning(
-                    $"Fly - {route} has no {(counter == null ? "counter" : "source")} registered; {flying} settled at once.");
-                Settle(resource, flying);
+                    $"Fly - {route} has no {(counter == null ? "counter" : "source")} registered; "
+                    + $"{(visualOnly ? "the flight ends" : $"{flying} settled")} at once.");
+
+                if (!visualOnly)
+                    Settle(resource, flying);
+
                 finished?.Invoke();
                 return;
             }
 
-            CD_ResourceFlyMotion motion = counter.Motion != null ? counter.Motion : _model.Options.Motion;
+            ResourceFlyLookVO resolved = Resolve(look, named, counter);
 
-            if (motion == null)
+            if (resolved.Motion == null)
             {
-                FlowLogger.LogError($"Fly - {route} has no motion: neither its counter nor CD_ResourceFly names one; {flying} settled at once.",
+                FlowLogger.LogError(
+                    $"Fly - {route} has no motion: neither the flight, its counter nor CD_ResourceFly names one; "
+                    + $"{(visualOnly ? "the flight ends" : $"{flying} settled")} at once.",
                     counter as UnityEngine.Object);
-                Settle(resource, flying);
+
+                if (!visualOnly)
+                    Settle(resource, flying);
+
                 finished?.Invoke();
                 return;
             }
 
-            ResourceFlyOptionsCVO options = _model.Options;
-            int icons = Mathf.Clamp(flying, 1, Mathf.Max(1, options.MaxIcons));
-            var flight = new ResourceFlightVO {Resource = resource, Counter = counter, IconsOut = icons, Finished = finished};
+            int unitsPerIcon = resolved.UnitsPerIcon;
+            int wanted = unitsPerIcon > 0 ? flying / unitsPerIcon + (flying % unitsPerIcon > 0 ? 1 : 0) : flying;
+            int icons = Mathf.Clamp(wanted, 1, Mathf.Max(1, resolved.MaxIcons));
+            // Each icon carries its value and the last one what is left; capped by MaxIcons, the amount is shared out evenly.
+            bool byValue = unitsPerIcon > 0 && icons == wanted;
+            var flight = new ResourceFlightVO {Resource = resource, Counter = counter, IconsOut = icons, Finished = finished, Look = resolved};
 
-            FlowLogger.Log($"Fly - {route} {flying} in {icons} icons");
-            resource.Flying += flying;
+            FlowLogger.Log($"Fly - {Describe(route, resolved)} {flying} in {icons} icons{(visualOnly ? ", visual only" : "")}");
+
+            if (!visualOnly)
+                resource.Flying += flying;
 
             try
             {
@@ -111,16 +130,83 @@ namespace Modules.ResourceFlyModule.Services
 
             for (int index = 0; index < icons; index++)
             {
-                // The first flying % icons carry one more, so the shares add up to what flies.
-                int share = flying / icons + (index < flying % icons ? 1 : 0);
-                Launch(flight, source, share, index * options.StaggerSeconds, motion);
+                // Shared evenly, the first flying % icons carry one more, so the shares add up to what flies.
+                int share = byValue
+                    ? Mathf.Min(unitsPerIcon, flying - index * unitsPerIcon)
+                    : flying / icons + (index < flying % icons ? 1 : 0);
+                Launch(flight, source, share, index * _model.Options.StaggerSeconds);
             }
         }
 
-        private void Launch(ResourceFlightVO flight, RectTransform source, int share, float delay, CD_ResourceFlyMotion motion)
+        /// <summary>The named look the flight picks - the given look's Name, else the route's; a name CD_ResourceFly lacks warns.</summary>
+        private ResourceFlyLookVO Named(ResourceFlyRouteVO route, ResourceFlyLookVO look)
+        {
+            string name = !string.IsNullOrEmpty(look?.Name) ? look.Name : route.Look;
+
+            if (string.IsNullOrEmpty(name))
+                return null;
+
+            if (_model.TryGetLook(name, out ResourceFlyLookVO named))
+                return named;
+
+            FlowLogger.LogWarning($"Fly - {route}: CD_ResourceFly holds no look '{name}'; the flight flies without it.");
+            return null;
+        }
+
+        /// <summary>Field by field: the given look, the named look, the counter, CD_ResourceFly.</summary>
+        private ResourceFlyLookVO Resolve(ResourceFlyLookVO given, ResourceFlyLookVO named, IResourceFlyCounter counter)
+        {
+            ResourceFlyOptionsCVO options = _model.Options;
+
+            return new ResourceFlyLookVO
+            {
+                Name = named?.Name,
+                IconPoolKey = FirstText(given?.IconPoolKey, named?.IconPoolKey, counter.IconPoolKey),
+                Sprite = FirstAsset(given?.Sprite, named?.Sprite),
+                UnitsPerIcon = FirstNumber(given?.UnitsPerIcon, named?.UnitsPerIcon, counter.UnitsPerIcon, options.UnitsPerIcon),
+                MaxIcons = FirstNumber(given?.MaxIcons, named?.MaxIcons, counter.MaxIcons, options.MaxIcons),
+                Motion = FirstAsset(given?.Motion, named?.Motion, counter.Motion, options.Motion),
+                Landing = FirstAsset(given?.Landing, named?.Landing, counter.Landing, options.Landing),
+                VisualOnly = given is {VisualOnly: true} || named is {VisualOnly: true}
+            };
+        }
+
+        private static string Describe(ResourceFlyRouteVO route, ResourceFlyLookVO look) =>
+            string.IsNullOrEmpty(look.Name) ? $"{route.Key} from {route.Source}" : $"{route.Key} from {route.Source}, look {look.Name}";
+
+        private static string FirstText(params string[] levels)
+        {
+            foreach (string level in levels)
+                if (!string.IsNullOrEmpty(level))
+                    return level;
+
+            return null;
+        }
+
+        private static int FirstNumber(params int?[] levels)
+        {
+            foreach (int? level in levels)
+                if (level > 0)
+                    return level.Value;
+
+            return 0;
+        }
+
+        /// <summary>Unity's null: a destroyed asset counts as not set.</summary>
+        private static T FirstAsset<T>(params T[] levels) where T : UnityEngine.Object
+        {
+            foreach (T level in levels)
+                if (level != null)
+                    return level;
+
+            return null;
+        }
+
+        private void Launch(ResourceFlightVO flight, RectTransform source, int share, float delay)
         {
             IResourceFlyCounter counter = flight.Counter;
-            IPoolableItem item = _poolService.Get(counter.IconPoolKey, counter.IconParent);
+            string poolKey = flight.Look.IconPoolKey;
+            IPoolableItem item = string.IsNullOrEmpty(poolKey) ? null : _poolService.Get(poolKey, counter.IconParent);
 
             if (item is not ResourceFlyIcon icon)
             {
@@ -130,7 +216,22 @@ namespace Modules.ResourceFlyModule.Services
                 return;
             }
 
-            icon.Launch(source.position, counter.Target, motion, delay, arrived => Land(flight, share, arrived));
+            if (flight.Look.Sprite != null && !icon.CanShowSprite)
+                ReportSpriteFault(flight, icon);
+
+            icon.ShowSprite(flight.Look.Sprite);
+            icon.Launch(source.position, counter.Target, flight.Look.Motion, delay, arrived => Land(flight, share, arrived));
+        }
+
+        /// <summary>Once per flight, on the icon so a double-click opens its prefab; the icon flies with its own picture.</summary>
+        private static void ReportSpriteFault(ResourceFlightVO flight, ResourceFlyIcon icon)
+        {
+            if (flight.SpriteFaultReported)
+                return;
+
+            flight.SpriteFaultReported = true;
+            FlowLogger.LogError($"The flight gives the icon '{flight.Look.IconPoolKey}' a sprite, but the icon has no Image slot; "
+                                + "it flies with its own picture.", icon);
         }
 
         /// <summary>Once per flight: every icon of it meets the same fault.</summary>
@@ -140,29 +241,37 @@ namespace Modules.ResourceFlyModule.Services
                 return;
 
             flight.LaunchFaultReported = true;
+            string poolKey = flight.Look.IconPoolKey;
 
-            if (item == null)
-                FlowLogger.LogError($"The pool has no item '{counter.IconPoolKey}' - is its pool group filed on a Root in the scene? "
+            if (string.IsNullOrEmpty(poolKey))
+                FlowLogger.LogError("The flight has no icon pool key: neither its look nor its counter names one. The flight lands at once.",
+                    counter as UnityEngine.Object);
+            else if (item == null)
+                FlowLogger.LogError($"The pool has no item '{poolKey}' - is its pool group filed on a Root in the scene? "
                                     + "The flight lands at once.", counter as UnityEngine.Object);
             else
-                FlowLogger.LogError($"The pool item '{counter.IconPoolKey}' is no ResourceFlyIcon; the flight lands at once.",
+                FlowLogger.LogError($"The pool item '{poolKey}' is no ResourceFlyIcon; the flight lands at once.",
                     item as UnityEngine.Object);
         }
 
-        /// <summary>An icon is down, or lost on the way; either way its share is no longer pending, and the flight ends with its last icon.</summary>
+        /// <summary>An icon is down, or lost on the way; a counting icon's share is no longer pending, and the flight ends with its last icon.</summary>
         private void Land(ResourceFlightVO flight, int share, bool arrived)
         {
             ResourceVO resource = flight.Resource;
-            resource.Pending -= share;
-            resource.Flying -= share;
+
+            // A visual flight's share was never pending: it lands the value already shown.
+            if (!flight.Look.VisualOnly)
+            {
+                resource.Pending -= share;
+                resource.Flying -= share;
+            }
 
             IResourceFlyCounter counter = Alive(resource.Counter);
 
             try
             {
                 if (arrived)
-                    counter?.Land(resource.Shown, _model.Options.CountUpSeconds,
-                        counter.Landing != null ? counter.Landing : _model.Options.Landing);
+                    counter?.Land(resource.Shown, _model.Options.CountUpSeconds, flight.Look.Landing);
                 else
                     counter?.ShowValue(resource.Shown);
             }

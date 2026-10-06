@@ -171,6 +171,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ResourceFlyServiceRoot
       objectReference: {fileID: 0}
+    - target: {fileID: 6478357869343940346, guid: 54d5d488649e1fa4586d5e7cf2cb2ffc, type: 3}
+      propertyPath: '_scriptableMap.m_Values.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: db8e67677981304408e0ac6821e0fa3a, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

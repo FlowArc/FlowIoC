@@ -3,6 +3,7 @@ using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
 using FlowIoC.ScreenModule.Enums;
 using FlowIoC.ScreenModule.ViewsMediators.Screen;
+using UnityEngine;
 using Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScreenModule.Signals;
 
 namespace Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScreenModule.ViewsMediators
@@ -35,6 +36,9 @@ namespace Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScree
             _view.ScatterPressed += OnScatter;
             _view.DirectPressed += OnDirect;
             _view.CurvedPressed += OnCurved;
+            _view.BanknotePressed += OnBanknote;
+            _view.ItemPressed += OnItem;
+            _view.StonesPressed += OnStones;
         }
 
         private void OnScreenHidden(IScreenBody screen)
@@ -42,6 +46,9 @@ namespace Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScree
             _view.ScatterPressed -= OnScatter;
             _view.DirectPressed -= OnDirect;
             _view.CurvedPressed -= OnCurved;
+            _view.BanknotePressed -= OnBanknote;
+            _view.ItemPressed -= OnItem;
+            _view.StonesPressed -= OnStones;
         }
 
         private void OnScatter(int amount)
@@ -57,6 +64,21 @@ namespace Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScree
         private void OnCurved(int amount)
         {
             if (_canSend) _internalSignals.FlyCurved.Dispatch(amount);
+        }
+
+        private void OnBanknote(int amount)
+        {
+            if (_canSend) _internalSignals.FlyBanknote.Dispatch(amount);
+        }
+
+        private void OnItem(Sprite sprite)
+        {
+            if (_canSend) _internalSignals.FlyItem.Dispatch(sprite);
+        }
+
+        private void OnStones(int amount)
+        {
+            if (_canSend) _internalSignals.FlyStones.Dispatch(amount);
         }
     }
 }

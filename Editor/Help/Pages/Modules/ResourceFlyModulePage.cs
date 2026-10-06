@@ -57,7 +57,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         public override void DrawBody(HelpPainter painter)
         {
             painter.Image(_images.Get("ResourceFlyTestScene.png"),
-                "ResourceFlyTestScene in play: one lane per motion, its counter answering with Punch, Flash or Tint as the icons land.");
+                "ResourceFlyTestScene in play: a lane per motion with banknotes flying into Direct, and a hat and stones flying into the box below.");
 
             painter.Separator();
             painter.SubHeading("What it gives you");
@@ -102,7 +102,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives with "
                 + "it. Open ResourceFlyTestScene under the test module's Scenes folder and press Play: "
-                + "three lanes, one per motion and one per landing, each with a counter, a source and a Fly button. A press "
+                + "three lanes, one per motion and one per landing, each with a counter, a source and a Fly button, "
+                + "a Banknote button flying a named look, and a Box lane below whose flights only show. A press "
                 + "runs Reserve, the save and Fly in the order a game binds them, and the Flow Console "
                 + "reads Reserve - <key> and Fly - <key> on the ResourceFlyModule channel.");
         }
@@ -118,7 +119,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "ResourceFlyServiceRoot in MainScene, in the Services band after PoolServiceRoot.");
             painter.Paragraph(
                 "Its adapter files CD_ResourceFly: the default motion, the most icons one flight uses, "
-                + "the gap between icons, the default landing and how fast the counter counts up.");
+                + "how much one icon carries, the gap between icons, the default landing, how fast "
+                + "the counter counts up, and the named looks a flight can pick.");
             painter.Image(_images.Get("ResourceFlyRootAdapter.png"),
                 "The Root's adapter with CD_ResourceFly in its slot.");
 
@@ -126,12 +128,13 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("2. A counter on a screen");
             painter.Paragraph(
                 "Put a ResourceFlyCounterDisplay beside the counter's icon on the screen that shows the "
-                + "resource. Target is the icon the flight lands on, Count the text that counts up, Icon "
-                + "Parent what the icons fly in, Icon Pool Key the pool item they are, and Motion the "
-                + "motion flights into this counter play, Landing how it answers each icon, and Tinted the "
-                + "Image a landing's colour is laid on. Empty Motion and Landing play CD_ResourceFly's.");
+                + "resource. Target is the icon the flight lands on, Icon Parent what the icons fly in, "
+                + "Tinted the Image a landing's colour is laid on, and Count the text that counts up - "
+                + "leave it empty for a counter that shows no number, an inventory box. Icon Pool Key, "
+                + "Motion, Landing, Max Icons and Units Per Icon are the counter's own look: a flight's "
+                + "look comes before them, and what both leave empty is CD_ResourceFly's.");
             painter.Image(_images.Get("ResourceFlyCounterDisplay.png"),
-                "A ResourceFlyCounterDisplay with the Curved motion and the Tint landing in its slots.");
+                "A ResourceFlyCounterDisplay with the Curved motion and the Tint landing in its slots, and its icon numbers left to CD_ResourceFly.");
             painter.Note(
                 "Important: Icon Parent is the sibling just before Target in the hierarchy, so the "
                 + "target and its landing draw over the icons that land on it. Placed after it, the icons "
@@ -194,6 +197,44 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    Retain();\n"
                 + "    _resourceFly.Fly(new ResourceFlyRouteVO(\"Chest\", \"Gem\"), _amount, () => Release());\n"
                 + "}");
+
+            painter.Separator();
+            painter.SubHeading("How many icons a flight uses");
+            painter.Paragraph(
+                "Units Per Icon says how much one icon carries and Max Icons how many one flight may "
+                + "use; the flight's look comes first, then the counter's own values, then "
+                + "CD_ResourceFly's - 0 leaves the choice to the next. With Units Per Icon at 100, 1000 "
+                + "coins fly in ten icons of 100 and 250 in three - 100, 100 and the last one 50. At 0 "
+                + "every unit is an icon, so 3 coins fly in three. Either way a flight uses no more than "
+                + "Max Icons: past it, the amount is shared out evenly, and 2500 coins at a limit of ten "
+                + "fly in ten icons of 250.");
+
+            painter.Separator();
+            painter.SubHeading("A flight's look");
+            painter.Paragraph(
+                "A flight can look different from its counter's usual: another icon prefab, a sprite on "
+                + "the icon, another value per icon, motion or landing. Name the look in CD_ResourceFly's "
+                + "Looks and pick it in the route, or pass a ResourceFlyLookVO from a Command. Field by "
+                + "field the look passed in comes first, then the named look - its Name, else the "
+                + "route's - then the counter, then CD_ResourceFly.");
+            painter.Image(_images.Get("ResourceFlyLooks.png"),
+                "CD_ResourceFly_Test from the sample: the Banknote, Item and Stone looks its buttons fly.");
+            painter.Code(
+                ".ToSequence<IResourceFlyService.Commands.Fly>(new ResourceFlyRouteVO(\"WinReward\", \"Coin\", \"Banknote\"))\n"
+                + "\n"
+                + "_resourceFly.Fly(new ResourceFlyRouteVO(\"Reward\", \"Inventory\"), 1,\n"
+                + "    new ResourceFlyLookVO { Name = \"Weapon\", Sprite = weapon.Icon }, () => Release());");
+            painter.Paragraph(
+                "A sprite is laid on the icon's Image slot, so one pool item serves every weapon's "
+                + "picture; an icon prefab with no Image slot reports it and flies its own picture.");
+
+            painter.Separator();
+            painter.SubHeading("Flights that only show");
+            painter.Paragraph(
+                "A look with Visual Only flies the amount without a Reserve and changes no value - a hat "
+                + "flying into an inventory box, 25 stones as ten icons. The landings and the counter's "
+                + "events play as for any flight. Leave Visual Only off for a grant: a counting flight "
+                + "with nothing reserved warns and ends at once.");
 
             painter.Separator();
             painter.SubHeading("The counter's events");

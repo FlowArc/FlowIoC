@@ -35,9 +35,17 @@ namespace Modules.ResourceFlyModule.Services
 
         /// <summary>
         /// Flies up to that much of the pending amount from the route's source to the key's counter,
-        /// and calls finished once the last icon is down, or at once when the flight cannot play.
+        /// with the route's named look if it names one, and calls finished once the last icon is down,
+        /// or at once when the flight cannot play.
         /// </summary>
         void Fly(ResourceFlyRouteVO route, int amount, Action finished);
+
+        /// <summary>
+        /// Fly with a look of its own: each field it sets comes before its named look - its Name, else
+        /// the route's - the counter's and CD_ResourceFly's. A VisualOnly look flies the amount without
+        /// a Reserve and changes no value.
+        /// </summary>
+        void Fly(ResourceFlyRouteVO route, int amount, ResourceFlyLookVO look, Action finished);
 
         public static partial class Commands
         {

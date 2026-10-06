@@ -13,8 +13,8 @@ namespace Modules.ResourceFlyModule.Services
             /// <summary>
             /// Flies the amount the signal carries along the route bound with the step, and holds the
             /// sequence until the last icon is down:
-            /// <c>.ToSequence&lt;IResourceFlyService.Commands.Fly&gt;(new ResourceFlyRouteVO("WinReward", "Coin"))</c>.
-            /// A flight that cannot play ends the step at once.
+            /// <c>.ToSequence&lt;IResourceFlyService.Commands.Fly&gt;(new ResourceFlyRouteVO("WinReward", "Coin", "Banknote"))</c>.
+            /// The route may name a look from CD_ResourceFly's Looks. A flight that cannot play ends the step at once.
             /// </summary>
             public class Fly : Command<ResourceFlyRouteVO>
             {

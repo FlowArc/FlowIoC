@@ -11,7 +11,7 @@ using Modules.ResourceFlyModule.Services;
 namespace Modules.ResourceFlyModule.ResourceFlyTestModule.Controllers
 {
     /// <summary>
-    /// Opens the sample screen and, from the view Show returns, registers its three counters and
+    /// Opens the sample screen and, from the view Show returns, registers its four counters and
     /// sources - the way a game's opening Command fills a screen before anything flies into it.
     /// </summary>
     internal class OpenSampleScreenCommand : Command
@@ -37,10 +37,12 @@ namespace Modules.ResourceFlyModule.ResourceFlyTestModule.Controllers
                 _resourceFly.RegisterCounter(ResourceFlySampleKeys.SCATTER, screen.ScatterCounter);
                 _resourceFly.RegisterCounter(ResourceFlySampleKeys.DIRECT, screen.DirectCounter);
                 _resourceFly.RegisterCounter(ResourceFlySampleKeys.CURVED, screen.CurvedCounter);
+                _resourceFly.RegisterCounter(ResourceFlySampleKeys.BOX, screen.BoxCounter);
 
                 _resourceFly.RegisterSource(ResourceFlySampleKeys.SCATTER_SOURCE, screen.ScatterSource);
                 _resourceFly.RegisterSource(ResourceFlySampleKeys.DIRECT_SOURCE, screen.DirectSource);
                 _resourceFly.RegisterSource(ResourceFlySampleKeys.CURVED_SOURCE, screen.CurvedSource);
+                _resourceFly.RegisterSource(ResourceFlySampleKeys.BOX_SOURCE, screen.BoxSource);
 
                 Release();
             }

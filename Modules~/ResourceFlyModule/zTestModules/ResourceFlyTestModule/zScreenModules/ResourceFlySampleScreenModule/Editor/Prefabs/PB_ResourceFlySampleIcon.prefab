@@ -88,3 +88,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11a795de22c91c142a532ca24d354c8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Modules.ResourceFly::Modules.ResourceFlyModule.Entities.ResourceFlyIcon
+  _image: {fileID: 1197593633497622912}

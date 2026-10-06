@@ -13,5 +13,8 @@ namespace Modules.ResourceFlyModule.Models
         void SetSource(string source, RectTransform rect);
         void RemoveSource(string source);
         bool TryGetSource(string source, out RectTransform rect);
+
+        /// <summary>The named look, from CD_ResourceFly's Looks.</summary>
+        bool TryGetLook(string name, out ResourceFlyLookVO look);
     }
 }

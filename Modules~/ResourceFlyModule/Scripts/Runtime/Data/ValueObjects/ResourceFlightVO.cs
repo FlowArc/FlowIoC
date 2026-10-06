@@ -14,7 +14,13 @@ namespace Modules.ResourceFlyModule.Data.ValueObjects
         public int IconsOut;
         public Action Finished;
 
+        /// <summary>The look the flight resolved at its start; every icon and landing of it reads this.</summary>
+        public ResourceFlyLookVO Look;
+
         /// <summary>A launch fault is reported once per flight, not once per icon.</summary>
         public bool LaunchFaultReported;
+
+        /// <summary>A sprite with no Image to go on is reported once per flight, not once per icon.</summary>
+        public bool SpriteFaultReported;
     }
 }
