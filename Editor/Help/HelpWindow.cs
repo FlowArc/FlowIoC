@@ -607,8 +607,6 @@ namespace FlowIoC.Editor.Help
             {
                 EditorGUI.DrawRect(fill, _theme.SidebarRowSelected);
                 EditorGUI.DrawRect(new Rect(fill.x, fill.y, fill.width, 1f), _theme.SidebarRowSelectedTop);
-                EditorGUI.DrawRect(new Rect(fill.x, fill.yMax - 1f, fill.width, 1f),
-                    _theme.SidebarRowSelectedBottom);
             }
             else if (featured)
             {
@@ -618,14 +616,12 @@ namespace FlowIoC.Editor.Help
             if (!active && row.Contains(Event.current.mousePosition))
                 EditorGUI.DrawRect(fill, _theme.SidebarRowHover);
 
-            // The dark hairline of the groove above the selected row - the row before's, already
-            // drawn - goes purple, so the selection starts on its own colour rather than on grey.
-            if (active)
-                EditorGUI.DrawRect(new Rect(row.x, row.y - SidebarGrooveHeight, row.width, 1f),
-                    _theme.SidebarRowSelectedBottom);
-
-            EditorGUI.DrawRect(new Rect(row.x, row.yMax - 2f, row.width, 1f), _theme.SidebarSeparator);
-            EditorGUI.DrawRect(new Rect(row.x, row.yMax - 1f, row.width, 1f), _theme.SidebarSeparatorLight);
+            // Under the selected row the groove takes the selection's own purple, so no dark line
+            // shows beneath it: the selection runs down to the next row.
+            EditorGUI.DrawRect(new Rect(row.x, row.yMax - 2f, row.width, 1f),
+                active ? _theme.SidebarRowSelected : _theme.SidebarSeparator);
+            EditorGUI.DrawRect(new Rect(row.x, row.yMax - 1f, row.width, 1f),
+                active ? _theme.SidebarRowSelected : _theme.SidebarSeparatorLight);
         }
 
         private string Label(string title, string subtitle) =>

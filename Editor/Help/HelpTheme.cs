@@ -230,13 +230,11 @@ namespace FlowIoC.Editor.Help
         public Color SidebarRowSelected => _palette.ChromeDeep;
 
         /// <summary>
-        /// The top and the bottom line of the selected row, a shade either side of its fill. The
-        /// row is lit from above the way every other raised thing in the Editor is, which is what
-        /// keeps a flat block of colour from reading as a hole cut in the panel.
+        /// The top line of the selected row, a shade lighter than its fill. The row is lit from
+        /// above the way every other raised thing in the Editor is; underneath, the fill runs down
+        /// through the groove to the next row, with no dark line beneath it.
         /// </summary>
         public Color SidebarRowSelectedTop => Color.Lerp(SidebarRowSelected, Color.white, 0.10f);
-
-        public Color SidebarRowSelectedBottom => Color.Lerp(SidebarRowSelected, Color.black, 0.28f);
 
         /// <summary>
         /// A featured topic that is not the one selected. The same violet thinned to a tint, so

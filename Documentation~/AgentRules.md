@@ -40,6 +40,15 @@ what is true whatever you are about to do.
   `Assets/Tests/`, referencing the modules' assemblies. FlowIoC itself and the ready-made modules
   it installs are not tested from a game: they are tested where they are made, and a copy of
   such a test breaks the day the module updates.
+- **A versioned module's test module stays as it shipped.** A module installed from the Module
+  Library whose card carries a `Version:` line - a Service such as ResourceFly or Haptic, or any
+  other module the package keeps updating - shows its sample in the package's own look. A game
+  does not restyle that module's test scene or test screens - not their font, colours or sprites:
+  the change buys nothing, and every update then asks about each file it touched. A game's own
+  font goes into `TMP Settings` as the Default Font Asset and onto the game's own screens, and TMP
+  Essentials' `LiberationSans SDF`, which a shipped sample names, may be moved but stays in the
+  project. An install-once module - `Update: never` on its card, like Main or BotBar - is the
+  game's to rewrite, its test module included.
 - Systems are never added to one another's assemblies. Two Systems in separate modules
   talk through signals wired in a Connector, like any other cross-module traffic.
 - A Connector gets signal holders, it never binds them:
