@@ -20,7 +20,7 @@ namespace Modules.ResourceFlyModule.Data.UnityObjects
 
         public override Vector3 Evaluate(in ResourceFlyPathVO path, float t)
         {
-            Vector3 scatterPoint = path.From + (Vector3) (path.Random * ScatterRadius * path.Scale);
+            Vector3 scatterPoint = path.From + (Vector3) (path.RandomInsideUnitCircle(0) * ScatterRadius * path.Scale);
             float split = Seconds <= 0f ? 0f : ScatterSeconds / Seconds;
 
             if (t < split)

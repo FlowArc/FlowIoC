@@ -4,19 +4,24 @@ using Modules.ResourceFlyModule.Data.ValueObjects;
 using Modules.ResourceFlyModule.Services;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Modules.ResourceFlyModule.Entities
 {
     /// <summary>
     /// The ready counter: put it on a screen beside the counter's icon, with the icons' parent just
-    /// below the icon in the hierarchy so they pass under it and its punch is seen over them, and
+    /// below the icon in the hierarchy so they pass under it and its landing is seen over them, and
     /// register it from the Command that opens the screen. It counts up to each landing's value and
-    /// punches the icon; its three events are for the screen - a badge to slide in, a haptic, a sound.
+    /// plays a landing on the icon - a punch, a flash; its three events are for the screen - a
+    /// badge to slide in, a haptic, a sound, a particle.
     /// </summary>
     public class ResourceFlyCounterDisplay : MonoBehaviour, IResourceFlyCounter
     {
-        [SerializeField] [Tooltip("The counter's icon: where the icons land, and what punches.")]
+        [SerializeField] [Tooltip("The counter's icon: where the icons land, and what a landing scales.")]
         private RectTransform _target;
+
+        [SerializeField] [Tooltip("Optional: what a landing's colour is laid on - the counter icon's Image. Empty: landings change no colour.")]
+        private Graphic _tinted;
 
         [SerializeField] [Tooltip("The count the icons add to.")]
         private TMP_Text _count;
@@ -30,16 +35,20 @@ namespace Modules.ResourceFlyModule.Entities
         [SerializeField] [Tooltip("Optional: the motion flights into this counter play. Empty plays CD_ResourceFly's default.")]
         private CD_ResourceFlyMotion _motion;
 
+        [SerializeField] [Tooltip("Optional: how this counter answers a landing. Empty plays CD_ResourceFly's default.")]
+        private CD_ResourceFlyLanding _landing;
+
         private int _flights;
         private bool _endPending;
         private float _countFrom;
         private int _countTo;
         private float _countClock;
         private float _countSeconds;
-        private float _punchClock = -1f;
-        private ResourceFlyOptionsCVO _punch;
-        private Vector3 _targetScale = Vector3.one;
-        private bool _scaleRead;
+        private float _landingClock = -1f;
+        private CD_ResourceFlyLanding _playing;
+        private Vector3 _restScale = Vector3.one;
+        private Color _restColor = Color.white;
+        private bool _restRead;
 
         public event Action FlightStarted;
         public event Action Landed;
@@ -49,6 +58,7 @@ namespace Modules.ResourceFlyModule.Entities
         public RectTransform IconParent => _iconParent;
         public string IconPoolKey => _iconPoolKey;
         public CD_ResourceFlyMotion Motion => _motion;
+        public CD_ResourceFlyLanding Landing => _landing;
 
         public void ShowValue(int value)
         {
@@ -58,16 +68,22 @@ namespace Modules.ResourceFlyModule.Entities
             _count.text = value.ToString();
         }
 
-        public void Land(int value, ResourceFlyOptionsCVO options)
+        public void Land(int value, float countUpSeconds, CD_ResourceFlyLanding landing)
         {
             _countFrom = CurrentCount();
             _countTo = value;
             _countClock = 0f;
-            _countSeconds = options.CountUpSeconds;
+            _countSeconds = countUpSeconds;
 
-            ReadScale();
-            _punch = options;
-            _punchClock = 0f;
+            // Read only at rest: mid-landing the icon shows the landing, not its own look.
+            if (_landingClock < 0f)
+                ReadRest();
+
+            _playing = landing;
+            _landingClock = landing != null ? 0f : -1f;
+
+            if (landing == null)
+                ShowLanding(ResourceFlyLandingVO.Rest);
 
             Landed?.Invoke();
         }
@@ -91,30 +107,54 @@ namespace Modules.ResourceFlyModule.Entities
                 _endPending = true;
         }
 
-        private void Update()
+        private void Update() => Step(Time.unscaledDeltaTime);
+
+        /// <summary>One frame of the count and the landing.</summary>
+        internal void Step(float deltaTime)
         {
             if (_countSeconds > 0f && _countClock < _countSeconds)
             {
-                _countClock += Time.unscaledDeltaTime;
+                _countClock += deltaTime;
                 _count.text = Mathf.RoundToInt(CurrentCount()).ToString();
             }
 
-            if (_punchClock >= 0f)
+            if (_landingClock >= 0f)
             {
-                _punchClock += Time.unscaledDeltaTime;
-                float t = _punch.PunchSeconds <= 0f ? 1f : Mathf.Clamp01(_punchClock / _punch.PunchSeconds);
-                // Up and back down in one punch: 0 at both ends, the full scale in the middle.
-                _target.localScale = _targetScale * Mathf.Lerp(1f, _punch.PunchScale, Mathf.Sin(t * Mathf.PI));
+                _landingClock += deltaTime;
+                float seconds = _playing.Seconds;
+                float t = seconds <= 0f ? 1f : Mathf.Clamp01(_landingClock / seconds);
 
                 if (t >= 1f)
-                    _punchClock = -1f;
+                {
+                    // Back to rest exactly, whatever the landing's last frame said.
+                    _landingClock = -1f;
+                    ShowLanding(ResourceFlyLandingVO.Rest);
+                }
+                else
+                    ShowLanding(_playing.Evaluate(t));
             }
 
             if (_endPending && IsAtRest())
                 AnnounceEnd();
         }
 
-        private bool IsAtRest() => (_countSeconds <= 0f || _countClock >= _countSeconds) && _punchClock < 0f;
+        private bool IsAtRest() => (_countSeconds <= 0f || _countClock >= _countSeconds) && _landingClock < 0f;
+
+        private void ShowLanding(ResourceFlyLandingVO look)
+        {
+            if (!_restRead)
+                return;
+
+            _target.localScale = _restScale * look.Scale;
+
+            if (_tinted != null)
+            {
+                // The icon's own alpha stays: a tint changes the colour, never how visible the icon is.
+                Color tinted = Color.Lerp(_restColor, look.Tint, look.Tint.a);
+                tinted.a = _restColor.a;
+                _tinted.color = tinted;
+            }
+        }
 
         private void AnnounceEnd()
         {
@@ -125,21 +165,22 @@ namespace Modules.ResourceFlyModule.Entities
         private float CurrentCount() =>
             _countSeconds <= 0f ? _countTo : Mathf.Lerp(_countFrom, _countTo, Mathf.Clamp01(_countClock / _countSeconds));
 
-        private void ReadScale()
+        private void ReadRest()
         {
-            if (_scaleRead)
-                return;
+            _restScale = _target.localScale;
 
-            _targetScale = _target.localScale;
-            _scaleRead = true;
+            if (_tinted != null)
+                _restColor = _tinted.color;
+
+            _restRead = true;
         }
 
         private void OnDisable()
         {
-            if (_scaleRead && _target != null)
-                _target.localScale = _targetScale;
+            if (_landingClock >= 0f && _target != null)
+                ShowLanding(ResourceFlyLandingVO.Rest);
 
-            _punchClock = -1f;
+            _landingClock = -1f;
 
             // Switched off - the screen hid or went: its flights are over, and their icons report lost.
             _flights = 0;

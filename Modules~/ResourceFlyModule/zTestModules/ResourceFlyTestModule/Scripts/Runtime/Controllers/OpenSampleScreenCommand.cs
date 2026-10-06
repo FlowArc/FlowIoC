@@ -4,8 +4,8 @@ using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Service;
-using Modules.ResourceFlyModule.ResourceFlySampleScreenModule.Constants;
-using Modules.ResourceFlyModule.ResourceFlySampleScreenModule.ViewsMediators;
+using Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScreenModule.Constants;
+using Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScreenModule.ViewsMediators;
 using Modules.ResourceFlyModule.Services;
 
 namespace Modules.ResourceFlyModule.ResourceFlyTestModule.Controllers

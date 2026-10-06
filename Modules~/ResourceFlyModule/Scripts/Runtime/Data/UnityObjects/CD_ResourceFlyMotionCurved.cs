@@ -20,9 +20,9 @@ namespace Modules.ResourceFlyModule.Data.UnityObjects
             Vector3 line = path.To - path.From;
             // The perpendicular in the screen plane, as long as the line itself.
             var across = new Vector3(-line.y, line.x, 0f);
-            float side = path.Random.x < 0f ? -1f : 1f;
+            float side = path.RandomValue(0) < 0.5f ? -1f : 1f;
             // Never a straight line: the swing is at least half the Bend.
-            float swing = Bend * Mathf.Lerp(0.5f, 1f, Mathf.Abs(path.Random.y));
+            float swing = Bend * Mathf.Lerp(0.5f, 1f, path.RandomValue(1));
             Vector3 control = (path.From + path.To) * 0.5f + across * (side * swing);
 
             float k = Curve.Evaluate(t);

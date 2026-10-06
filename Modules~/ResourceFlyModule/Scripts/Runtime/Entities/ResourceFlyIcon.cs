@@ -16,7 +16,7 @@ namespace Modules.ResourceFlyModule.Entities
     {
         private float _clock;
         private Vector3 _from;
-        private Vector2 _random;
+        private int _seed;
         private RectTransform _target;
         private Action<bool> _done;
 
@@ -30,7 +30,7 @@ namespace Modules.ResourceFlyModule.Entities
             _target = target;
             Motion = motion;
             _done = done;
-            _random = UnityEngine.Random.insideUnitCircle;
+            _seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
             transform.position = from;
             transform.localScale = Vector3.zero;
@@ -57,12 +57,12 @@ namespace Modules.ResourceFlyModule.Entities
                 return;
             }
 
-            transform.localScale = Vector3.one;
-
             float seconds = Motion.Seconds;
             float t = seconds <= 0f ? 1f : Mathf.Clamp01(_clock / seconds);
             float scale = transform.parent != null ? transform.parent.lossyScale.x : 1f;
-            transform.position = Motion.Evaluate(new ResourceFlyPathVO(_from, _target.position, _random, scale), t);
+            var path = new ResourceFlyPathVO(_from, _target.position, _seed, scale);
+            transform.position = Motion.Evaluate(path, t);
+            transform.localScale = Vector3.one * Motion.EvaluateScale(path, t);
 
             if (t >= 1f)
                 Finish(true);

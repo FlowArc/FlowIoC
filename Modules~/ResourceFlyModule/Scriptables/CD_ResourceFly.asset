@@ -16,6 +16,5 @@ MonoBehaviour:
     Motion: {fileID: 11400000, guid: 190d365eb0553c44d80ad0a879a5844c, type: 2}
     MaxIcons: 10
     StaggerSeconds: 0.04
-    PunchScale: 1.25
-    PunchSeconds: 0.15
+    Landing: {fileID: 11400000, guid: dbd4eba2c4ff3f84e909b84601ad36f7, type: 2}
     CountUpSeconds: 0.3

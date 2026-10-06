@@ -36,7 +36,11 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             new HelpTab("Motions", DrawMotions,
                 "Scatter, Direct and Curved ship. A motion of your own is one class and one asset.",
                 "A motion only says where an icon is at a moment. The icon plays it and reports when it "
-                + "landed, so a motion you write cannot leave a flight unfinished.")
+                + "landed, so a motion you write cannot leave a flight unfinished."),
+            new HelpTab("Landings", DrawLandings,
+                "Punch, Flash and Tint ship. A landing of your own is one class and one asset.",
+                "A landing only says how the counter's icon looks at a moment. The counter plays it and "
+                + "puts the icon back to its own look when it ends.")
         };
 
         public override string InstalledHint =>
@@ -53,7 +57,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
         public override void DrawBody(HelpPainter painter)
         {
             painter.Image(_images.Get("ResourceFlyTestScene.png"),
-                "ResourceFlyTestScene in play: one lane per ready-made motion, each flight on its way to its counter.");
+                "ResourceFlyTestScene in play: one lane per motion, its counter answering with Punch, Flash or Tint as the icons land.");
 
             painter.Separator();
             painter.SubHeading("What it gives you");
@@ -63,7 +67,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "worked out from it, so the two cannot drift apart.");
             painter.Bullet(
                 "Pooled icons that leave a named source, play a motion and land on the counter, which "
-                + "counts up to each landing's value and punches its icon. Everything runs on unscaled "
+                + "counts up to each landing's value and answers it - a punch, a flash. Everything runs on unscaled "
                 + "time, so a paused game still pays out.");
             painter.Bullet(
                 "Three motions - Scatter, Direct and Curved - chosen per counter, with CD_ResourceFly's "
@@ -80,7 +84,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Space();
             painter.Note(
                 "It is a Service, so another module references Modules.ResourceFly and injects "
-                + "IResourceFlyService directly. It plays no sound and no haptic: the counter raises "
+                + "IResourceFlyService directly. It plays no sound, no haptic and no particle: the counter raises "
                 + "FlightStarted, Landed and FlightEnded, and the screen that hosts it binds what "
                 + "should play.");
 
@@ -98,7 +102,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Paragraph(
                 "The module ships with a test module beside it, and the scene it runs in arrives with "
                 + "it. Open ResourceFlyTestScene under the test module's Scenes folder and press Play: "
-                + "three lanes, one per motion, each with a counter, a source and a Fly button. A press "
+                + "three lanes, one per motion and one per landing, each with a counter, a source and a Fly button. A press "
                 + "runs Reserve, the save and Fly in the order a game binds them, and the Flow Console "
                 + "reads Reserve - <key> and Fly - <key> on the ResourceFlyModule channel.");
         }
@@ -114,7 +118,7 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "ResourceFlyServiceRoot in MainScene, in the Services band after PoolServiceRoot.");
             painter.Paragraph(
                 "Its adapter files CD_ResourceFly: the default motion, the most icons one flight uses, "
-                + "the gap between icons, and how the counter punches and counts up.");
+                + "the gap between icons, the default landing and how fast the counter counts up.");
             painter.Image(_images.Get("ResourceFlyRootAdapter.png"),
                 "The Root's adapter with CD_ResourceFly in its slot.");
 
@@ -124,12 +128,13 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Put a ResourceFlyCounterDisplay beside the counter's icon on the screen that shows the "
                 + "resource. Target is the icon the flight lands on, Count the text that counts up, Icon "
                 + "Parent what the icons fly in, Icon Pool Key the pool item they are, and Motion the "
-                + "motion flights into this counter play - empty plays CD_ResourceFly's.");
+                + "motion flights into this counter play, Landing how it answers each icon, and Tinted the "
+                + "Image a landing's colour is laid on. Empty Motion and Landing play CD_ResourceFly's.");
             painter.Image(_images.Get("ResourceFlyCounterDisplay.png"),
-                "A ResourceFlyCounterDisplay with the Curved motion in its Motion slot.");
+                "A ResourceFlyCounterDisplay with the Curved motion and the Tint landing in its slots.");
             painter.Note(
                 "Important: Icon Parent is the sibling just before Target in the hierarchy, so the "
-                + "target and its punch draw over the icons that land on it. Placed after it, the icons "
+                + "target and its landing draw over the icons that land on it. Placed after it, the icons "
                 + "cover the counter as they arrive, and nothing reports it.");
             painter.Paragraph(
                 "The Command that opens the screen registers the counter and the screen's source with "
@@ -215,14 +220,20 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 "Each is a CD_ResourceFlyMotion asset in the module's Scriptables folder. Put one in "
                 + "CD_ResourceFly for every counter, or in a counter's Motion slot for that counter "
                 + "alone. Make another asset of the same class from the Create menu to tune it.");
+            painter.Paragraph(
+                "Every motion also carries a Scale Curve: the icon's size over the whole flight, from 0 "
+                + "at the source to 1 on the target. Flat at 1, as it ships, it leaves the size alone; "
+                + "shape it to grow an icon as it bursts out or shrink it into the counter.");
 
             painter.Separator();
             painter.SubHeading("A motion of your own");
             painter.Paragraph(
                 "Derive from CD_ResourceFlyMotion, say how long a flight takes and where the icon is at "
                 + "t, from 0 at the source to 1 on the target. The path hands you where the icon left "
-                + "from, where the target is this frame, a random point fixed for the icon's flight, "
-                + "and the canvas scale.");
+                + "from, where the target is this frame, and the canvas scale. Its RandomValue, "
+                + "RandomInsideUnitCircle and RandomOnUnitCircle answer from a seed fixed for the "
+                + "icon's flight, so every icon differs and none shakes; give each random thing its own "
+                + "stream number.");
             painter.Code(
                 "[CreateAssetMenu(menuName = \"Game/Data/CD_ResourceFlyMotionHop\")]\n"
                 + "public class CD_ResourceFlyMotionHop : CD_ResourceFlyMotion\n"
@@ -233,12 +244,60 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "    public override float Seconds => FlySeconds;\n"
                 + "\n"
                 + "    public override Vector3 Evaluate(in ResourceFlyPathVO path, float t) =>\n"
-                + "        Vector3.Lerp(path.From, path.To, t) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * Height * path.Scale);\n"
+                + "        Vector3.Lerp(path.From, path.To, t)\n"
+                + "        + Vector3.up * (Mathf.Sin(t * Mathf.PI) * Height * Mathf.Lerp(0.5f, 1f, path.RandomValue(0)) * path.Scale);\n"
                 + "}");
             painter.Note(
                 "Keep a motion stateless: it is asked every frame, for every icon in flight, and two "
-                + "counters may share one asset. Evaluate(0) should be the source and Evaluate(1) the "
-                + "target, or the icon jumps as it starts or lands.");
+                + "counters may share one asset. Draw randomness from the path, never UnityEngine.Random, "
+                + "which answers differently every frame. Evaluate(0) should be the source and "
+                + "Evaluate(1) the target, or the icon jumps as it starts or lands.");
+        }
+
+        private void DrawLandings(HelpPainter painter)
+        {
+            painter.SubHeading("The ready-made landings");
+            painter.Table(new[] {"Landing", "What it does", "Settings"},
+                new[] {"Punch", "The counter's icon grows and settles back. The default.", "Scale and seconds"},
+                new[] {"Flash", "The icon runs through a gradient and back to its own colour, with no change of size.", "Seconds and gradient"},
+                new[] {"Tint", "The icon takes one colour the moment an icon lands and fades back to its own.", "Seconds, colour and fade curve"});
+            painter.Paragraph(
+                "Each is a CD_ResourceFlyLanding asset in the module's Scriptables folder. Put one in "
+                + "CD_ResourceFly for every counter, or in a counter's Landing slot for that counter "
+                + "alone; empty in both, the counter only counts. A colour is laid on the counter's "
+                + "Tinted slot - the icon's Image - and the icon keeps its own alpha.");
+            painter.Note(
+                "Important: Flash and Tint change nothing while the counter's Tinted slot is empty. "
+                + "Drag the counter icon's Image into it.");
+
+            painter.Separator();
+            painter.SubHeading("A landing of your own");
+            painter.Paragraph(
+                "Derive from CD_ResourceFlyLanding, say how long it plays and how the icon looks at t, "
+                + "from 0 as the icon lands to 1 back at rest: a multiple of its size and a tint whose "
+                + "alpha says how much of it covers the icon. The counter returns the icon to its own "
+                + "look when the landing ends.");
+            painter.Code(
+                "[CreateAssetMenu(menuName = \"Game/Data/CD_ResourceFlyLandingSquash\")]\n"
+                + "public class CD_ResourceFlyLandingSquash : CD_ResourceFlyLanding\n"
+                + "{\n"
+                + "    public float SquashSeconds = 0.2f;\n"
+                + "\n"
+                + "    public override float Seconds => SquashSeconds;\n"
+                + "\n"
+                + "    public override ResourceFlyLandingVO Evaluate(float t) =>\n"
+                + "        new(1f - 0.2f * Mathf.Sin(t * Mathf.PI), Color.clear);\n"
+                + "}");
+
+            painter.Separator();
+            painter.SubHeading("A particle as an icon lands");
+            painter.Paragraph(
+                "A particle is not a landing: the screen that hosts the counter plays it on the "
+                + "counter's Landed event, the way it plays a sound, from a pool of its own.");
+            painter.Note(
+                "Important: a ParticleSystem does not draw on a Screen Space Overlay canvas, which is "
+                + "where the ScreenManager puts screens. It needs a UI particle component or a canvas "
+                + "with a camera; without one it plays and nothing is seen.");
         }
     }
 }

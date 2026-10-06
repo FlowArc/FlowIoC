@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Modules.ResourceFlyModule.Data.ValueObjects
 {
-    /// <summary>How a flight looks: how many icons, which motion when the counter names none, how the counter answers.</summary>
+    /// <summary>How a flight looks: how many icons, which motion and which landing when the counter names none, how fast it counts.</summary>
     [Serializable]
     public class ResourceFlyOptionsCVO
     {
@@ -17,10 +17,8 @@ namespace Modules.ResourceFlyModule.Data.ValueObjects
         [Min(0f)] [Tooltip("Seconds between one icon leaving the source and the next.")]
         public float StaggerSeconds = 0.04f;
 
-        [Min(1f)] [Tooltip("How large the counter's icon gets as an icon lands.")]
-        public float PunchScale = 1.25f;
-
-        [Min(0f)] public float PunchSeconds = 0.15f;
+        [Tooltip("How a counter answers an icon landing when it names no landing of its own. Empty: it only counts.")]
+        public CD_ResourceFlyLanding Landing;
 
         [Min(0f)] [Tooltip("Seconds the count takes to reach the value a landing brings.")]
         public float CountUpSeconds = 0.3f;

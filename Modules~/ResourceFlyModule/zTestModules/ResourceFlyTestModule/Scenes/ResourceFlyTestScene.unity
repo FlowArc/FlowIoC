@@ -207,7 +207,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.ResourceFly.Test::Modules.ResourceFlyModule.ResourceFlyTestModule.RootsContexts.ResourceFlyTestRoot
   SubContextTypes:
   - ContextScript: {fileID: 11500000, guid: 2656ac18a025bb14fbd74e341f34c6b6, type: 3}
-    ContextFullName: Modules.ResourceFlyModule.ResourceFlySampleScreenModule.RootsContexts.ResourceFlySampleScreenContext
+    ContextFullName: Modules.ResourceFlyModule.ResourceFlyTestModule.ResourceFlySampleScreenModule.RootsContexts.ResourceFlySampleScreenContext
     ContextName: ResourceFlySampleScreenContext
     AutoSetup: 1
     IsTest: 0

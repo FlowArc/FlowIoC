@@ -161,7 +161,8 @@ namespace Modules.ResourceFlyModule.Services
             try
             {
                 if (arrived)
-                    counter?.Land(resource.Shown, _model.Options);
+                    counter?.Land(resource.Shown, _model.Options.CountUpSeconds,
+                        counter.Landing != null ? counter.Landing : _model.Options.Landing);
                 else
                     counter?.ShowValue(resource.Shown);
             }
