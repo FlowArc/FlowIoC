@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Code style: a `private static readonly` field is named `_camelCase`, like every other private field; Rider flags the PascalCase ones once the Editor rewrites the solution's `.sln.DotSettings`.
-- Modules: Device Debugger 1.1.3, Local Save 1.0.5, Mobile Notification 1.0.5, World Pointer 1.2.4.
+- Modules: Device Debugger 1.1.3, Local Save 1.0.5, Mobile Notification 1.0.5, Resource Fly 1.0.1 (new), World Pointer 1.2.4.
 
 ## [1.31.1] - 2026-10-05
 

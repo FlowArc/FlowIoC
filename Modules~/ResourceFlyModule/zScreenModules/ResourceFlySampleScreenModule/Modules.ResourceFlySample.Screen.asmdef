@@ -1,0 +1,17 @@
+{
+  "name": "Modules.ResourceFlySample.Screen",
+  "references": [
+    "FlowIoC",
+    "Modules.ResourceFly",
+    "Modules.ResourceFlySample.Screen.Signals"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
