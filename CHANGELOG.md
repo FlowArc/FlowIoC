@@ -5,7 +5,7 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.32.0] - 2026-10-06
 
 ### Changed
 
@@ -14,12 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Sub Context offers such a screen only on a Root inside a test module, and the Root inspector badges it `TEST SCREEN`.
 - Inside a test module, asset folders (`Prefabs`, `Resources`, `Scriptables`, `Art`) sit under `Editor/`; Module Scanner moves existing ones there.
 - Modules: AB Test Flow 1.1.0, Ads 1.1.0, Analytics 1.1.0, Asset Delivery 1.1.0, Audio 1.1.0, Counter 1.1.0, Device Debugger 1.2.0, Haptic 1.1.0, Loading 1.2.0, Local Save 1.1.0, Mobile Notification 1.1.0, Resource Fly 1.2.0 (new), World Pointer 1.3.0.
+- Help updated.
 
 ### Fixed
 
 - Create Module wrote absolute folder keys into a nested module's `.csproj.DotSettings` when its parent came in another casing, so Rider flagged every namespace in it; Module Scanner now reports such a file and its repair rewrites it.
 - A Root or a ViewInjector selected during Play redrew the whole Inspector every frame and cost the game frame rate; the inspector now repaints only when a lifecycle or registration badge changes.
 - The Flow Console repainted, and refiltered its whole list, for every log that arrived, so a flow logging each frame cost the game 3-10 ms a frame; arriving logs now repaint it at most ten times a second.
+- A new module's internal signal holder said the public holder lives in `Shared`; it now names `Scripts/Signals`.
 
 ## [1.31.1] - 2026-10-05
 
