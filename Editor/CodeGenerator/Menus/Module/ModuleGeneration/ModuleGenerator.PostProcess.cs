@@ -5,12 +5,16 @@ using System.IO;
 using System.Linq;
 using FlowIoC.BaseModule.Injectable.Components;
 using FlowIoC.BaseModule.Root;
+using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 using FlowIoC.Editor.Root;
 using FlowIoC.ScreenModule.ViewsMediators.Manager;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 {
@@ -43,6 +47,9 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     case ModuleType.Main:
                     case ModuleType.Test:
                         PlaceRootInScene(handoff);
+                        break;
+                    case ModuleType.Screen when handoff.IsTestScreen:
+                        BuildTestScreen(handoff);
                         break;
                     case ModuleType.Screen:
                         BuildScreenTestScene(handoff);
@@ -178,26 +185,11 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 ScreenManager screenManagerPrefab = AssetDatabase.LoadAssetAtPath<ScreenManager>(CodeGeneratorStrings.SCREEN_MANAGER_PREFAB_PATH);
                 ScreenManager screenManager = (ScreenManager) PrefabUtility.InstantiatePrefab(screenManagerPrefab, rootGameObject.transform);
 
-                GameObject screenGameObject = new GameObject(prefabName, typeof(RectTransform));
-                screenGameObject.transform.SetParent(screenManager.ManagerData.ScreenLayerList[0].transform);
+                GameObject screenGameObject = NewScreenObject(prefabName, screenType, screenManager);
 
                 GameObject eventSystem = new GameObject("EventSystem");
                 eventSystem.AddComponent<EventSystem>();
                 eventSystem.AddComponent(new UiInputModuleType().Resolve());
-
-                ViewInjector viewInjector = screenGameObject.AddComponent<ViewInjector>();
-                screenGameObject.AddComponent(screenType);
-
-                if (screenGameObject.transform is RectTransform rectTransform)
-                {
-                    rectTransform.localScale = Vector3.one;
-                    rectTransform.anchorMax = Vector2.one;
-                    rectTransform.anchorMin = Vector2.zero;
-                    rectTransform.offsetMin = Vector2.zero;
-                    rectTransform.offsetMax = Vector2.zero;
-                }
-
-                viewInjector.InitializeForEditor();
 
                 if (!Directory.Exists(handoff.ScreenPrefabPath))
                     Directory.CreateDirectory(handoff.ScreenPrefabPath);
@@ -215,6 +207,92 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             string loaded = handoff.ScreenIsAddressable ? "marked as Addressable" : "placed under Resources";
             Debug.Log($"Screen prefab '{prefabName}' has been created and {loaded}. Scene saved at: {handoff.ScenePath}");
+        }
+
+        /// <summary>
+        /// The screen's GameObject under the ScreenManager's first layer, stretched over it, with
+        /// the View and the ViewInjector it is saved with.
+        /// </summary>
+        private static GameObject NewScreenObject(string prefabName, Type screenType, ScreenManager screenManager)
+        {
+            var screenGameObject = new GameObject(prefabName, typeof(RectTransform));
+            screenGameObject.transform.SetParent(screenManager.ManagerData.ScreenLayerList[0].transform);
+
+            var viewInjector = screenGameObject.AddComponent<ViewInjector>();
+
+            if (screenType != null)
+                screenGameObject.AddComponent(screenType);
+
+            if (screenGameObject.transform is RectTransform rectTransform)
+            {
+                rectTransform.localScale = Vector3.one;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+            }
+
+            viewInjector.InitializeForEditor();
+
+            return screenGameObject;
+        }
+
+        /// <summary>
+        /// A test screen has no scene of its own: it is seen in the scene of the test module it was
+        /// made for. Its prefab is built from the compiled View in a scene made for the purpose
+        /// beside the open ones and closed unsaved, and its context is then listed on the test Root
+        /// in the test module's scene.
+        /// </summary>
+        private static void BuildTestScreen(ModuleGenerationHandoffEVO handoff)
+        {
+            if (!string.IsNullOrEmpty(handoff.ScreenPrefabPath))
+                BuildScreenPrefabAside(handoff);
+
+            string scenes = new DirectoryStructureConfigProvider().LayoutFor(ModuleKind.Test, true)
+                .FindFullFolderPathByID(FolderEVO.FolderType.Scenes, handoff.HostModulePath);
+
+            new TestRootListing().Add(handoff.HostModulePath, scenes, handoff.ScreenContextFullName);
+            AssetDatabase.Refresh();
+        }
+
+        private static void BuildScreenPrefabAside(ModuleGenerationHandoffEVO handoff)
+        {
+            if (new UntitledScene().IsOpen)
+            {
+                Debug.LogError("<color=cyan>[FlowIoC]</color> The test screen's prefab is built in a scene beside the "
+                               + "open ones, and Unity makes no new scene beside an untitled one. Save the untitled "
+                               + $"scene, then build '{handoff.ScreenPrefabPath}' from the View by hand or create the "
+                               + "screen again.");
+                return;
+            }
+
+            string prefabName = string.IsNullOrEmpty(handoff.ScreenPrefabName) ? handoff.ModuleName : handoff.ScreenPrefabName;
+            Type screenType = AssemblyHelper.GetAllTypesFromAssemblies(handoff.ModuleName)
+                .FirstOrDefault(x => x.Name == handoff.ModuleName + "View" && x.Namespace == handoff.ViewNamespace);
+
+            ScreenManager screenManagerPrefab = AssetDatabase.LoadAssetAtPath<ScreenManager>(CodeGeneratorStrings.SCREEN_MANAGER_PREFAB_PATH);
+            Scene active = SceneManager.GetActiveScene();
+            Scene aside = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+
+            try
+            {
+                var screenManager = (ScreenManager) PrefabUtility.InstantiatePrefab(screenManagerPrefab, aside);
+                GameObject screenGameObject = NewScreenObject(prefabName, screenType, screenManager);
+
+                if (!Directory.Exists(handoff.ScreenPrefabPath))
+                    Directory.CreateDirectory(handoff.ScreenPrefabPath);
+
+                PrefabUtility.SaveAsPrefabAsset(screenGameObject, handoff.ScreenPrefabPath + "/" + prefabName + ".prefab");
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(aside, true);
+
+                if (active.IsValid() && active.isLoaded)
+                    SceneManager.SetActiveScene(active);
+            }
+
+            Debug.Log($"<color=cyan>[FlowIoC]</color> Test screen prefab '{prefabName}' built under '{handoff.ScreenPrefabPath}'.");
         }
 
         /// <summary>

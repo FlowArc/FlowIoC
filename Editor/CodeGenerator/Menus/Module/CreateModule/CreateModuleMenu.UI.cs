@@ -442,10 +442,15 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
         /// no longer holds the module's public surface either - the signal holder moved to
         /// Scripts/Signals, which every module gets. Shared is paid for on the day a module
         /// actually publishes something, and Tools > FlowIoC > Edit Module > Add Shared or Signals
-        /// gives it to a module that already exists.
+        /// gives it to a module that already exists. A test screen is not offered it: test code
+        /// publishes nothing, and the generator would drop the tick anyway.
         /// </summary>
-        private void CreateSharedToggle() =>
+        private void CreateSharedToggle()
+        {
+            if (IsTestScreen) return;
+
             OptionalFolderToggle(FolderEVO.FolderType.Shared, CREATE_SHARED_LABEL, withheldFrom: null);
+        }
 
         /// <summary>
         /// The module's public signal holder. Ticked by default, because most modules have a public

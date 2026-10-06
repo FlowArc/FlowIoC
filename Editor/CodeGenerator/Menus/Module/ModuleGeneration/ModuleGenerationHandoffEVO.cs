@@ -41,6 +41,16 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         /// no other.
         /// </summary>
         public string ScenePath;
+
+        /// <summary>
+        /// True for a screen made for a test module. It has no scene of its own: after the reload
+        /// its prefab is built aside and its context is listed on the test Root in the scene of
+        /// the test module at <see cref="HostModulePath"/>.
+        /// </summary>
+        public bool IsTestScreen;
+
+        /// <summary>The absolute path of the test module a test screen was made for.</summary>
+        public string HostModulePath;
     }
 }
 #endif

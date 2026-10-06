@@ -8,6 +8,8 @@ using FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule;
 using FlowIoC.Editor.CodeGenerator.Screens;
 using FlowIoC.Editor.Config.ModuleConfig;
 using FlowIoC.Editor.ModuleCards;
+using FlowIoC.Editor.Modules;
+using FlowIoC.ScreenModule.Data;
 using UnityEditor;
 using UnityEngine;
 
@@ -106,6 +108,27 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 ? Path.Combine(parentModulePath, $"{moduleName}Module")
                 : Path.Combine(parentModulePath, subDirectory, $"{moduleName}Module");
 
+            // A screen under a test module is a test screen: test code, made for that test module
+            // and deleted with it. It and every test module keep their asset folders under Editor/,
+            // so the layouts they are made from are the test-tree copies, and the folders the
+            // window ticked are found again in those copies.
+            bool testScreen = selectedModuleType == ModuleType.Screen
+                              && new TestTreePath(testModulesFolderName).Contains(parentModulePath);
+
+            directoryConfigMap = TestTreeLayouts(directoryConfigMap, testScreen);
+            selectedOptionalFolders = new OptionalFolderMatch().In(selectedOptionalFolders, directoryConfigMap[selectedModuleType]);
+
+            if (testScreen)
+            {
+                if (selectedOptionalFolders.RemoveAll(folder => folder.Type == FolderEVO.FolderType.Shared) > 0)
+                    Debug.Log("<color=cyan>[FlowIoC]</color> A test screen publishes nothing, so Scripts/Shared was not made.");
+
+                // Addressables takes no asset from an Editor folder, so a test screen loads from
+                // Editor/Resources whatever the window was set to.
+                screenSettings ??= new ScreenModuleSettings {AddressableKey = moduleName};
+                screenSettings.LoadType = ScreenLoadType.Resource;
+            }
+
             if (IsExistingModule(modulePath))
             {
                 AddMissingFolders(moduleName, modulePath, directoryConfigMap[selectedModuleType], selectedOptionalFolders,
@@ -132,8 +155,28 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                 moduleRole,
                 screenSettings,
                 testModulesFolderName,
-                card
+                card,
+                testScreen
             );
+        }
+
+        /// <summary>
+        /// The layouts this run writes from: the Test layout always in its test-tree form, and the
+        /// Screen layout too when the screen is a test screen. A copy of the map, so the window's
+        /// own map - and the assets behind it - are left as they were.
+        /// </summary>
+        private static Dictionary<ModuleType, DirectoryStructureConfig> TestTreeLayouts(
+            Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap, bool testScreen)
+        {
+            var layouts = new Dictionary<ModuleType, DirectoryStructureConfig>(directoryConfigMap);
+
+            if (layouts.TryGetValue(ModuleType.Test, out DirectoryStructureConfig test) && test != null)
+                layouts[ModuleType.Test] = test.ForTestTree();
+
+            if (testScreen && layouts.TryGetValue(ModuleType.Screen, out DirectoryStructureConfig screen) && screen != null)
+                layouts[ModuleType.Screen] = screen.ForTestTree();
+
+            return layouts;
         }
 
         private static void CreateAndUpdateModules(
@@ -153,7 +196,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             ModuleRole moduleRole,
             ScreenModuleSettings screenSettings,
             string testModulesFolderName,
-            ModuleCardDraftEVO card
+            ModuleCardDraftEVO card,
+            bool testScreen
         )
         {
             // The module this one lives in, if any. A top level module is parented to
@@ -234,7 +278,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
                     createScreen,
                     screenSettings,
                     parentSharedAssemblyName,
-                    handoff
+                    handoff,
+                    testScreen
                 );
             }
             else
@@ -256,7 +301,10 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
 
             if (selectedModuleType != ModuleType.Test)
             {
-                WriteModuleCard(moduleName, modulePath, card);
+                // Test code carries no card: nothing is routed to a test screen, and it goes
+                // wherever its test module goes.
+                if (!testScreen)
+                    WriteModuleCard(moduleName, modulePath, card);
 
                 // The index above already knows the module, so its channel's part is written now
                 // rather than on the next load - the module's own code compiles against it.

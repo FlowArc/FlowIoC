@@ -22,13 +22,13 @@ namespace FlowIoC.Editor.ModuleScanner
     /// </summary>
     internal class ModuleTargetFactory
     {
-        private readonly Func<ModuleKind, DirectoryStructureConfig> _layoutFor;
+        private readonly Func<ModuleKind, bool, DirectoryStructureConfig> _layoutFor;
 
-        internal ModuleTargetFactory() : this(new DirectoryStructureConfigProvider().ConfigFor)
+        internal ModuleTargetFactory() : this(new DirectoryStructureConfigProvider().LayoutFor)
         {
         }
 
-        internal ModuleTargetFactory(Func<ModuleKind, DirectoryStructureConfig> layoutFor)
+        internal ModuleTargetFactory(Func<ModuleKind, bool, DirectoryStructureConfig> layoutFor)
         {
             _layoutFor = layoutFor;
         }
@@ -47,7 +47,9 @@ namespace FlowIoC.Editor.ModuleScanner
 
             List<ScannedModule> scanned = Scan(settings, projectRoot);
 
-            return (ProjectFrom(projectRoot, scanned), ModulesFrom(projectRoot, scanned));
+            var testTree = new TestTreePath(settings.FolderNameFor(FolderEVO.FolderType.TestModules, "zTestModules"));
+
+            return (ProjectFrom(projectRoot, scanned), ModulesFrom(projectRoot, scanned, testTree));
         }
 
         private List<ScannedModule> Scan(ED_CodeGenerator settings, string projectRoot)
@@ -77,23 +79,24 @@ namespace FlowIoC.Editor.ModuleScanner
             };
         }
 
-        private List<ModuleTargetEVO> ModulesFrom(string projectRoot, List<ScannedModule> scanned)
+        private List<ModuleTargetEVO> ModulesFrom(string projectRoot, List<ScannedModule> scanned, TestTreePath testTree)
         {
             var names = new ModuleAssemblyName();
             var shared = new SharedAssemblyDefinition();
             var signals = new SignalsAssemblyDefinition();
             var paths = new ModuleAssetPathResolver();
 
-            // A layout is asked for once per kind and shared by every module of that kind. The
-            // lookup behind it runs the path migrator's probe - a walk of every module root - on
-            // every call, and asked per module, and twice more per nested module for its parent,
-            // that probe was two thirds of a scan that runs on every open and every reload.
-            var layouts = new Dictionary<ModuleKind, DirectoryStructureConfig>();
+            // A layout is asked for once per kind - and per side of the test-module line - and
+            // shared by every module asking the same. The lookup behind it runs the path migrator's
+            // probe - a walk of every module root - on every call, and asked per module, and twice
+            // more per nested module for its parent, that probe was two thirds of a scan that runs
+            // on every open and every reload.
+            var layouts = new Dictionary<(ModuleKind, bool), DirectoryStructureConfig>();
 
-            DirectoryStructureConfig LayoutFor(ModuleKind kind)
+            DirectoryStructureConfig LayoutFor(ModuleKind kind, bool inTestTree)
             {
-                if (!layouts.TryGetValue(kind, out DirectoryStructureConfig layout))
-                    layouts[kind] = layout = _layoutFor(kind);
+                if (!layouts.TryGetValue((kind, inTestTree), out DirectoryStructureConfig layout))
+                    layouts[(kind, inTestTree)] = layout = _layoutFor(kind, inTestTree);
 
                 return layout;
             }
@@ -103,6 +106,7 @@ namespace FlowIoC.Editor.ModuleScanner
             foreach (ScannedModule module in scanned.OrderBy(found => found.Name, StringComparer.Ordinal))
             {
                 string parent = ParentModulePathOf(module.AbsolutePath, scanned);
+                bool inTestTree = testTree.Contains(module.AbsolutePath);
 
                 modules.Add(new ModuleTargetEVO
                 {
@@ -110,15 +114,16 @@ namespace FlowIoC.Editor.ModuleScanner
                     Kind = module.Kind,
                     AbsolutePath = module.AbsolutePath,
                     AssetPath = paths.ToAssetPath(module.AbsolutePath),
-                    Layout = LayoutFor(module.Kind),
+                    Layout = LayoutFor(module.Kind, inTestTree),
+                    InTestTree = inTestTree,
                     ParentAbsolutePath = parent,
                     ParentName = parent == null ? null : Path.GetFileName(parent),
                     ParentSharedAssemblyName = parent == null
                         ? null
-                        : shared.FindIn(parent, LayoutFor(ModuleKind.Main)),
+                        : shared.FindIn(parent, LayoutFor(ModuleKind.Main, false)),
                     ParentSignalsAssemblyName = parent == null
                         ? null
-                        : signals.FindIn(parent, LayoutFor(ModuleKind.Main)),
+                        : signals.FindIn(parent, LayoutFor(ModuleKind.Main, false)),
                     ParentAssemblyName = parent == null ? null : names.From(Path.GetFileName(parent)),
                     ExpectedAssemblyName = names.From(module.Name),
                     ProjectRoot = projectRoot

@@ -9,8 +9,9 @@ namespace FlowIoC.Editor.Root
 {
     /// <summary>
     /// The word a sub-context wears beside its name, and its colour: SCREEN for a screen context,
-    /// CONNECTOR for a connector, and for a context a service ships to be configured on the Root
-    /// that uses it - the pool's - the name of what it configures in the service colour. The Root's
+    /// TEST SCREEN for one made for a test module, CONNECTOR for a connector, and for a context a
+    /// service ships to be configured on the Root that uses it - the pool's - the name of what it
+    /// configures in the service colour. The Root's
     /// list of sub-contexts and the Add Sub Context window both ask here, so the two never disagree.
     /// </summary>
     internal class SubContextBadge
@@ -19,14 +20,16 @@ namespace FlowIoC.Editor.Root
         private readonly FlowRoleResolver _roles;
         private readonly FlowPalette _palette;
         private readonly SubContextSettingsTypes _settingsTypes;
+        private readonly TestOnlyContexts _testOnly;
 
         internal SubContextBadge(ScreenSubContextDeclarations declarations, FlowRoleResolver roles, FlowPalette palette,
-            SubContextSettingsTypes settingsTypes)
+            SubContextSettingsTypes settingsTypes, TestOnlyContexts testOnly)
         {
             _declarations = declarations;
             _roles = roles;
             _palette = palette;
             _settingsTypes = settingsTypes;
+            _testOnly = testOnly;
         }
 
         /// <summary>False, with no badge, for a context that is none of the three.</summary>
@@ -36,8 +39,11 @@ namespace FlowIoC.Editor.Root
 
             if (_declarations.IsScreenContext(contextType))
             {
-                badge = "SCREEN";
-                color = _palette.Accent(FlowRole.Screen, proSkin);
+                // A screen made for a test module says so, in the test colour, so a fixture listed
+                // on a test Root is never read as one of the game's screens.
+                bool testOnly = _testOnly != null && _testOnly.IsTestOnly(contextType);
+                badge = testOnly ? "TEST SCREEN" : "SCREEN";
+                color = _palette.Accent(testOnly ? FlowRole.Test : FlowRole.Screen, proSkin);
                 return true;
             }
 

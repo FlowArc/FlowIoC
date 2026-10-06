@@ -4,7 +4,7 @@ using FlowIoC.BaseModule.Controller;
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.ConsoleModule;
 using FlowIoC.ScreenModule.Service;
-using Modules.WorldPointerModule.PointerControlsScreenModule.ViewsMediators;
+using Modules.WorldPointerModule.WorldPointerTestModule.PointerControlsScreenModule.ViewsMediators;
 
 namespace Modules.WorldPointerModule.WorldPointerTestModule.Controllers
 {

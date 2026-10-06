@@ -27,6 +27,13 @@ namespace FlowIoC.Editor.ModuleScanner
         /// </summary>
         public string ParentName { get; set; }
 
+        /// <summary>
+        /// Whether the module sits inside a test module - a test module itself, or a screen made
+        /// for one. Such a module is test code: it carries no card, may reference anything, and
+        /// keeps its assets under Editor/.
+        /// </summary>
+        public bool InTestTree { get; set; }
+
         internal string ParentSharedAssemblyName { get; set; }
 
         /// <summary>

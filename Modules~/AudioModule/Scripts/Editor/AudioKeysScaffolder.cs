@@ -22,6 +22,7 @@ namespace Modules.AudioModule.Editor
         internal const string ASMREF_FILE = "Modules.Audio.Shared.asmref";
         internal const string BANK_FOLDER = "Resources/Audio";
         internal const string BANK_FILE = "CD_AudioBank.asset";
+        private const string EDITOR_FOLDER = "Editor";
         internal const string SHARED_ASSEMBLY = "Modules.Audio.Shared";
         internal const string SERVICE_ASSEMBLY = "Modules.Audio";
 
@@ -37,7 +38,18 @@ namespace Modules.AudioModule.Editor
         internal string KeyFileOf(string moduleFolder) =>
             Combine(moduleFolder, KEYS_FOLDER, $"AudioKey.{ClassNameOf(Path.GetFileName(moduleFolder))}.cs");
 
-        internal string BankPathOf(string moduleFolder) => Combine(moduleFolder, BANK_FOLDER, BANK_FILE);
+        internal string BankPathOf(string moduleFolder) => Combine(BankFolderOf(moduleFolder), BANK_FILE);
+
+        /// <summary>
+        /// Resources/Audio in the module, or Editor/Resources/Audio in a test module: a test module
+        /// keeps its assets under Editor/, so its bank never ships, and Resources.Load still finds
+        /// it in the Editor.
+        /// </summary>
+        internal string BankFolderOf(string moduleFolder) =>
+            IsTestModule(moduleFolder) ? Combine(moduleFolder, EDITOR_FOLDER, BANK_FOLDER) : Combine(moduleFolder, BANK_FOLDER);
+
+        private static bool IsTestModule(string moduleFolder) =>
+            (moduleFolder ?? string.Empty).Replace('\\', '/').Contains("/zTestModules/");
 
         internal bool HasKeys(string moduleFolder) => File.Exists(Combine(moduleFolder, KEYS_FOLDER, ASMREF_FILE));
 
@@ -111,7 +123,7 @@ namespace Modules.AudioModule.Editor
             string keyFile = KeyFileOf(moduleFolder);
 
             if (!File.Exists(keyFile))
-                File.WriteAllText(keyFile, KeyFileText(moduleName, moduleFolder.Replace('\\', '/').Contains("/zTestModules/")));
+                File.WriteAllText(keyFile, KeyFileText(moduleName, IsTestModule(moduleFolder)));
 
             string asmdef = FindAsmdef(moduleFolder);
 
@@ -124,7 +136,7 @@ namespace Modules.AudioModule.Editor
 
             if (!File.Exists(bankPath))
             {
-                Directory.CreateDirectory(Combine(moduleFolder, BANK_FOLDER));
+                Directory.CreateDirectory(BankFolderOf(moduleFolder));
                 AssetDatabase.Refresh();
 
                 var bank = ScriptableObject.CreateInstance<CD_AudioBank>();
@@ -186,7 +198,7 @@ namespace Modules.AudioModule.Editor
             text.Append($"    /// The sounds {moduleName} plays. This file lives in {moduleName} and is compiled into\n");
             text.Append("    /// Modules.Audio.Shared by the asmref beside it, so its keys join every other module's under\n");
             text.Append($"    /// AudioKey. Each id starts with \"{moduleName}/\" - the bank the sound loads from, which is\n");
-            text.Append($"    /// {moduleName}/{BANK_FOLDER}/{BANK_FILE}.\n");
+            text.Append($"    /// {moduleName}/{(testModule ? EDITOR_FOLDER + "/" : string.Empty)}{BANK_FOLDER}/{BANK_FILE}.\n");
             text.Append("    /// </summary>\n");
             text.Append("    public readonly partial struct AudioKey\n    {\n");
             text.Append($"        public static class {className}\n        {{\n");

@@ -86,6 +86,14 @@ namespace FlowIoC.Editor.Help.Pages
                 + "it runs in, already built, rather than a menu item that builds it, so installing "
                 + "the module is the only step there is. Nothing a module owns belongs on the "
                 + "Tools > FlowIoC menu, which stays the framework's own.");
+            painter.Paragraph(
+                "Inside a test module the asset folders - Prefabs, Resources, Scriptables, Art - sit "
+                + "under Editor/, in the test module and in any screen made for it under its "
+                + "zScreenModules. A Resources folder anywhere else is shipped whether or not "
+                + "anything loads it; under Editor/ nothing of the test reaches a build. Scenes and "
+                + "Scripts stay at the module's root, and Module Scanner moves an asset folder left "
+                + "there - except one holding Addressables entries, which Addressables takes from no "
+                + "Editor folder.");
 
             painter.Separator();
             painter.SubHeading("Three assemblies, and who may reference each");

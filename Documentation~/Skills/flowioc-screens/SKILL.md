@@ -12,8 +12,16 @@ is in: FlowIoC put it there and is no longer in the project.
 ## Where a screen module lives
 
 A screen module belongs to the module whose feature it shows, so it sits in the `zScreenModules`
-of a main or a sub module - never under another screen module, and never under a test module.
-`Create Module` offers exactly those parents.
+of a main or a sub module - never under another screen module. `Create Module` offers exactly
+those parents, and one more: a test module.
+
+A screen made only for a test module - a sample's display, a test scene's buttons - is a **test
+screen**, and it lives in that test module's `zScreenModules`. It is test code: Create Module
+writes every script under `#if UNITY_EDITOR`, loads it from `Editor/Resources`, gives it no card
+and no test module of its own, and lists its context on the test Root in the test module's scene.
+Deleting the test module deletes it, and nothing the game runs can depend on it. The Root
+inspector badges it `TEST SCREEN`, and Add Sub Context offers it only on a Root whose script sits
+inside a test module. It may reference anything, the way its test module does.
 
 A screen module publishes only signals, so it usually has no Shared assembly at all: its own
 assembly, and `Scripts/Signals/` for the holder a Connector reads.

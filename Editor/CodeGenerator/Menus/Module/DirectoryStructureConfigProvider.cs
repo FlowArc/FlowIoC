@@ -33,6 +33,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module
             return ConfigFor(TypeOf(kind));
         }
 
+        /// <summary>
+        /// The layout a module's folders follow where it sits: inside a test module, its asset
+        /// folders are under Editor/ (DirectoryStructureConfig.ForTestTree says why). ConfigFor
+        /// stays the raw asset, because the settings inspector edits that one.
+        /// </summary>
+        public DirectoryStructureConfig LayoutFor(ModuleKind kind, bool inTestTree)
+        {
+            DirectoryStructureConfig config = ConfigFor(kind);
+            return inTestTree && config != null ? config.ForTestTree() : config;
+        }
+
         public DirectoryStructureConfig ConfigFor(ModuleType type)
         {
             return type switch

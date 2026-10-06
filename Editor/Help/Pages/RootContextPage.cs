@@ -150,6 +150,11 @@ namespace FlowIoC.Editor.Help.Pages
                 + "Connector Root and nowhere else, and every other Root is offered everything but "
                 + "those. A context counts as a Connector's when its name says so - "
                 + "HeroConnectorSubContext - or when it carries FlowHeader(FlowRole.Connector).");
+            painter.Paragraph(
+                "A screen made for a test module sits inside that test module, and is offered only on "
+                + "a Root whose own script sits inside a test module too. Its row says TEST SCREEN, in "
+                + "the window and on the Root, so a test fixture never passes for one of the game's "
+                + "screens. Nothing is declared on the class: where the script sits is the answer.");
 
             painter.Separator();
             painter.SubHeading("An entry points at the context's script");

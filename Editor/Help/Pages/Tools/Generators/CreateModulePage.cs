@@ -122,7 +122,14 @@ namespace FlowIoC.Editor.Help.Pages.Tools.Generators
                 + "module nests it inside, under zSubModules, zScreenModules or zTestModules "
                 + "according to the type. A parent that cannot host the type you chose is drawn dim "
                 + "and takes no click - a screen belongs to the module whose feature it shows, so "
-                + "another screen module and a test module are not parents.");
+                + "another screen module is not a parent.");
+            painter.Paragraph(
+                "A test module is, and a screen made under one is a test screen: test code made for "
+                + "that test module and deleted with it. Its scripts are wrapped in UNITY_EDITOR, it "
+                + "loads from Editor/Resources, and it gets no card and no test module of its own - "
+                + "after the reload its prefab is built from the View and its context is listed on "
+                + "the test Root in the test module's scene. The panel shows the one load it can "
+                + "have and offers no Shared tick.");
 
             painter.Separator();
             painter.SubHeading("What a Screen module gets on top");

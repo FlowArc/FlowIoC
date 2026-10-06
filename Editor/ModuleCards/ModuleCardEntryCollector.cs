@@ -10,8 +10,9 @@ using FlowIoC.Editor.ModuleScanner;
 namespace FlowIoC.Editor.ModuleCards
 {
     /// <summary>
-    /// Walks every card root and reads the authored half of each card it finds. Test modules are
-    /// skipped: nothing is routed to one, and it is already named on its parent's card.
+    /// Walks every card root and reads the authored half of each card it finds. Test modules, and
+    /// the screens made for them, are skipped: nothing is routed to test code, and the module it
+    /// tests already names it.
     ///
     /// A module with no card, or one whose purpose is still the stub's italics, is listed all the
     /// same with an empty purpose. Leaving it out would hide the module from the one file an
@@ -26,6 +27,7 @@ namespace FlowIoC.Editor.ModuleCards
 
         private readonly ModuleCardFile _file = new ModuleCardFile();
         private readonly ModuleCardReader _reader = new ModuleCardReader();
+        private readonly TestTreePath _testTree = new TestTreePath(TEST_FOLDER);
 
         internal IReadOnlyList<ModuleCardEntryEVO> Collect(string projectRoot)
         {
@@ -43,7 +45,9 @@ namespace FlowIoC.Editor.ModuleCards
                 {
                     ModuleKind kind = KindOf(folder);
 
-                    if (kind == ModuleKind.Test) continue;
+                    // A test module, and a screen made for one, is test code: nothing is routed to it,
+                    // and the module it tests already names it.
+                    if (kind == ModuleKind.Test || _testTree.Contains(Relative(root, folder))) continue;
 
                     string card = _file.Read(folder);
                     ModuleCardAuthoredEVO authored = _reader.Read(card);

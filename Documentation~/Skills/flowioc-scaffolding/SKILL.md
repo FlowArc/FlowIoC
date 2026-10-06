@@ -316,7 +316,13 @@ Then, for the module you just made:
 - **The index.** `Assets/Plugins/FlowIoC/MODULES.md` lists the module with its purpose and its
   concepts after the next compile. A test module gets no line of its own there either.
 - **A screen's test scene.** `<Name>ScreenTestScene` under the screen's test module, with the
-  prefab on its layer - written by the half that runs after the reload.
+  prefab on its layer - written by the half that runs after the reload. A test screen - one made
+  under a test module - has none: its prefab is built aside into `Editor/Resources` and its
+  context is listed on the test Root in its test module's scene.
+- **Inside a test module, assets go under `Editor/`.** `Prefabs`, `Resources`, `Scriptables` and
+  `Art` of a test module or a test screen sit in its `Editor/` folder; Module Scanner moves one left
+  at the root. A folder holding Addressables entries stays at the root: Addressables takes no
+  asset from an Editor folder.
 - **A test module of your own.** Made through the generator too, so it carries the mandatory
   folders; a test module copied or written by hand is the one the scanner finds a folder short.
   The smallest useful one is three things in its scene: the module's own Root and the Root of

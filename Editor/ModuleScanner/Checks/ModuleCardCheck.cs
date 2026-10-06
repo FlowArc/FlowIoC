@@ -13,8 +13,9 @@ namespace FlowIoC.Editor.ModuleScanner
     /// was never filled in is reported rather than passed over - but only as Manual, because
     /// saying what a module is for is the one part of it nothing can generate.
     ///
-    /// Test modules carry no card. Nothing is routed to a test module: it is named after the
-    /// module it drives and it is listed on that module's card already.
+    /// Test modules carry no card, and neither does a screen made for one. Nothing is routed to
+    /// test code: a test module is named after the module it drives and is listed on that
+    /// module's card already, and its screens go wherever it goes.
     /// </summary>
     internal class ModuleCardCheck : IModuleCheck
     {
@@ -64,8 +65,8 @@ namespace FlowIoC.Editor.ModuleScanner
 
         public FindingEVO Inspect(ModuleTargetEVO module)
         {
-            if (module.Kind == ModuleKind.Test)
-                return FindingEVO.Ok(Id, "Module card (a test module carries none)");
+            if (module.Kind == ModuleKind.Test || module.InTestTree)
+                return FindingEVO.Ok(Id, "Module card (test code carries none)");
 
             string card = _readCard(module);
             ModuleFactsEVO facts = _factsOf(module);

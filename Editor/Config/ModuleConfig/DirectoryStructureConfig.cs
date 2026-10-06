@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FlowIoC.Editor.CodeGenerator;
 using UnityEditor;
 using UnityEngine;
@@ -122,6 +123,56 @@ namespace FlowIoC.Editor.Config.ModuleConfig
 
             return true;
         }
+
+        /// <summary>
+        /// The same layout for a module inside a test module: its asset folders - Prefabs,
+        /// Resources, Scriptables, Art - sit under Editor/, so none of them can reach a player
+        /// build however it is referenced, and Resources in particular is never shipped. Scripts
+        /// and Scenes stay where they are: the scripts are already Editor-only through
+        /// #if UNITY_EDITOR, and the scene switcher reads a scene's kind off its folder.
+        ///
+        /// A copy, never saved: the asset on disk is the project's own and its inspector edits it.
+        /// </summary>
+        internal DirectoryStructureConfig ForTestTree()
+        {
+            var copy = (DirectoryStructureConfig) CreateInstance(GetType());
+            copy.hideFlags = HideFlags.DontSave;
+
+            var editor = new FolderEVO
+            {
+                FolderName = "Editor", Type = FolderEVO.FolderType.Folder, IsMandatory = true,
+                IsNamespaceProvider = false, SubFolders = new List<FolderEVO>()
+            };
+            var roots = new List<FolderEVO> {editor};
+
+            foreach (FolderEVO folder in RootFolders ?? new List<FolderEVO>())
+            {
+                if (folder == null) continue;
+
+                if (StaysAtTestTreeRoot(folder)) roots.Add(Copy(folder));
+                else editor.SubFolders.Add(Copy(folder));
+            }
+
+            copy.RootFolders = roots;
+            return copy;
+        }
+
+        private static bool StaysAtTestTreeRoot(FolderEVO folder) =>
+            folder.FolderName == "Scripts" || folder.FolderName == "Editor"
+                                           || folder.Type == FolderEVO.FolderType.Scenes
+                                           || folder.Type == FolderEVO.FolderType.SubModules
+                                           || folder.Type == FolderEVO.FolderType.TestModules
+                                           || folder.Type == FolderEVO.FolderType.ScreenModules;
+
+        private static FolderEVO Copy(FolderEVO folder) => new FolderEVO
+        {
+            FolderName = folder.FolderName,
+            Type = folder.Type,
+            IsMandatory = folder.IsMandatory,
+            IsOptional = folder.IsOptional,
+            IsNamespaceProvider = folder.IsNamespaceProvider,
+            SubFolders = (folder.SubFolders ?? new List<FolderEVO>()).Where(child => child != null).Select(Copy).ToList()
+        };
 
         /// <summary>
         /// Takes a folder type out of the tree wherever it sits. A folder retires in code, but a

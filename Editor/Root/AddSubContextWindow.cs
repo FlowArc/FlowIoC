@@ -27,6 +27,7 @@ namespace FlowIoC.Editor.Root
         private SceneSubContextUsage _usage;
         private ScreenSubContextDeclarations _declarations;
         private SubContextBadge _badge;
+        private TestOnlyContexts _testOnly;
         private FlowRoleResolver _roles;
         private FlowPalette _palette;
         private GUIStyle _nameStyle;
@@ -72,6 +73,11 @@ namespace FlowIoC.Editor.Root
                 _palette = new FlowPalette();
                 _declarations = new ScreenSubContextDeclarations();
                 _usage = new SceneSubContextUsage(_root);
+                _testOnly = new TestOnlyContexts();
+
+                // Read off the Root's script rather than the scene it sits in, so a test Root's
+                // prefab opened on its own is still a test Root.
+                bool rootIsTest = _testOnly.IsTestRoot(AssetDatabase.GetAssetPath(MonoScript.FromMonoBehaviour(_root)));
 
                 // A context another Root already lists is offered last: it is a legitimate thing to
                 // add twice, and a rare enough one that it should not sit among the ordinary
@@ -89,6 +95,9 @@ namespace FlowIoC.Editor.Root
                     // modules lives in one place, and the list says so before the reader has to
                     // know it.
                     .Where(x => _roles.IsConnector(x) == (_rootRole == FlowRole.Connector))
+                    // A screen made for a test module is offered to a Root inside a test module
+                    // and nowhere else: anywhere else it would be a test fixture wired into the game.
+                    .Where(x => rootIsTest || !_testOnly.IsTestOnly(x))
                     .OrderBy(x => _usage.UsedBy(x.FullName) == null ? 0 : 1)
                     .ThenBy(x => x.Name)
                     .ToList();
@@ -234,7 +243,7 @@ namespace FlowIoC.Editor.Root
         private void KindOf(Type type, out string badge, out Color color)
         {
             _badge ??= new SubContextBadge(_declarations ?? new ScreenSubContextDeclarations(), _roles, _palette,
-                new SubContextSettingsTypes());
+                new SubContextSettingsTypes(), _testOnly ?? new TestOnlyContexts());
 
             _badge.TryGet(type, out badge, out color);
         }

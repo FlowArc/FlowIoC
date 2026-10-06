@@ -544,14 +544,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Modules.WorldPointer.Test::Modules.WorldPointerModule.WorldPointerTestModule.RootsContexts.WorldPointerTestRoot
   SubContextTypes:
   - ContextScript: {fileID: 11500000, guid: 23c6a67acc4068b478cc64f2226d5190, type: 3}
-    ContextFullName: Modules.WorldPointerModule.PointerSampleScreenModule.RootsContexts.PointerSampleScreenContext
+    ContextFullName: Modules.WorldPointerModule.WorldPointerTestModule.PointerSampleScreenModule.RootsContexts.PointerSampleScreenContext
     ContextName: PointerSampleScreenContext
     AutoSetup: 1
     IsTest: 0
     Settings:
       rid: -2
   - ContextScript: {fileID: 11500000, guid: fbbea6cbe2b79f04c8c14e11e6130b3e, type: 3}
-    ContextFullName: Modules.WorldPointerModule.PointerControlsScreenModule.RootsContexts.PointerControlsScreenContext
+    ContextFullName: Modules.WorldPointerModule.WorldPointerTestModule.PointerControlsScreenModule.RootsContexts.PointerControlsScreenContext
     ContextName: PointerControlsScreenContext
     AutoSetup: 1
     IsTest: 0

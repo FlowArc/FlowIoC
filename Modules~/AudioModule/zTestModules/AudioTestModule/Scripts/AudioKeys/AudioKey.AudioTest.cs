@@ -7,7 +7,7 @@ namespace Modules.AudioModule.Shared
     /// The sounds AudioTestModule plays. This file lives in AudioTestModule and is compiled into
     /// Modules.Audio.Shared by the asmref beside it, so its keys join every other module's under
     /// AudioKey. Each id starts with "AudioTestModule/" - the bank the sound loads from, which is
-    /// AudioTestModule/Resources/Audio/CD_AudioBank.asset.
+    /// AudioTestModule/Editor/Resources/Audio/CD_AudioBank.asset.
     /// </summary>
     public readonly partial struct AudioKey
     {

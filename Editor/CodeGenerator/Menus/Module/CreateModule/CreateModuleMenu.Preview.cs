@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using FlowIoC.Editor.Inspector;
 using System.Collections.Generic;
+using System.Linq;
 using FlowIoC.Editor.Config.ModuleConfig;
+using FlowIoC.Editor.Modules;
 using FlowIoC.ScreenModule.Data;
 using FlowIoC.ScreenModule.Enums;
 using UnityEditor;
@@ -42,7 +44,7 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _folderPreviewScrollPosition = EditorGUILayout.BeginScrollView(_folderPreviewScrollPosition,
                 GUILayout.MinHeight(height), GUILayout.MaxHeight(height));
             EditorGUILayout.BeginVertical();
-            DrawFolderPreview(_directoryConfigMap[_selectedModuleType].RootFolders);
+            DrawFolderPreview(PreviewLayout().RootFolders);
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
@@ -128,7 +130,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             Rect rect = _previewRows.RowInset();
             Color accent = new FlowPalette().Chrome(EditorGUIUtility.isProSkin);
 
-            bool ticked = !folder.IsOptional || _selectedOptionalFolders.Contains(folder);
+            FolderEVO tick = TickOf(folder);
+            bool ticked = !folder.IsOptional || tick != null;
             bool written = ticked && !leftOut;
 
             if (written) _previewRows.Paint(rect, accent, FlowRowPainter.QUIET_ALPHA);
@@ -138,12 +141,12 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
 
             if (folder.IsOptional)
             {
-                bool wasSelected = _selectedOptionalFolders.Contains(folder);
+                bool wasSelected = tick != null;
                 bool selected = EditorGUI.Toggle(
                     new Rect(_previewTree.LeadX(rect), rect.y, PREVIEW_LEAD_WIDTH, rect.height), wasSelected);
 
                 if (selected && !wasSelected) _selectedOptionalFolders.Add(folder);
-                else if (!selected && wasSelected) _selectedOptionalFolders.Remove(folder);
+                else if (!selected && wasSelected) _selectedOptionalFolders.Remove(tick);
             }
 
             float x = _previewTree.TextX(rect, depth);
@@ -200,7 +203,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _screenSettings.ManagerId = EditorGUILayout.IntField("Manager Id", _screenSettings.ManagerId);
             _screenSettings.Layer = EditorGUILayout.IntField("Layer", _screenSettings.Layer);
             _screenSettings.Tag = (ScreenTag) EditorGUILayout.EnumPopup("Tag", _screenSettings.Tag);
-            _screenSettings.LoadType = (ScreenLoadType) EditorGUILayout.EnumPopup("Load", _screenSettings.LoadType);
+            // A test screen keeps its prefab under Editor/, which Addressables refuses, so the one
+            // way it can load is shown rather than offered.
+            if (IsTestScreen)
+            {
+                _screenSettings.LoadType = ScreenLoadType.Resource;
+                EditorGUILayout.LabelField("Load", "Resource (Editor/Resources)");
+            }
+            else
+            {
+                _screenSettings.LoadType = (ScreenLoadType) EditorGUILayout.EnumPopup("Load", _screenSettings.LoadType);
+            }
 
             switch (_screenSettings.LoadType)
             {
@@ -217,8 +230,60 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.CreateModule
             _screenSettings.HasShowAnimation = EditorGUILayout.ToggleLeft("Has Show Animation", _screenSettings.HasShowAnimation);
             _screenSettings.HasHideAnimation = EditorGUILayout.ToggleLeft("Has Hide Animation", _screenSettings.HasHideAnimation);
 
+            if (IsTestScreen)
+            {
+                EditorGUILayout.HelpBox(
+                    "A test screen: Editor-only, loaded from Editor/Resources, with no card and no test module of "
+                    + "its own. After the reload it is listed on the test Root in this test module's scene.",
+                    MessageType.None);
+            }
+
             EditorGUILayout.EndVertical();
         }
+
+        /// <summary>
+        /// The layout the module will be written from: a test module, and a screen made for one,
+        /// keep their asset folders under Editor/, so the preview shows the test-tree copy the
+        /// generator writes from. The copy is made once per type and side of the line, not per
+        /// repaint.
+        /// </summary>
+        private DirectoryStructureConfig PreviewLayout()
+        {
+            DirectoryStructureConfig raw = _directoryConfigMap[_selectedModuleType];
+            bool testTree = _selectedModuleType == ModuleType.Test || IsTestScreen;
+
+            if (!testTree || raw == null)
+                return raw;
+
+            if (_previewTestTreeSource != raw)
+            {
+                if (_previewTestTreeLayout != null)
+                    DestroyImmediate(_previewTestTreeLayout);
+
+                _previewTestTreeSource = raw;
+                _previewTestTreeLayout = raw.ForTestTree();
+            }
+
+            return _previewTestTreeLayout;
+        }
+
+        /// <summary>
+        /// The ticked entry standing for this preview row: the row itself, or - when the preview
+        /// draws the test-tree copy - the layout entry of the same type and name the window ticked.
+        /// </summary>
+        private FolderEVO TickOf(FolderEVO folder) =>
+            _selectedOptionalFolders.FirstOrDefault(tick => ReferenceEquals(tick, folder))
+            ?? _selectedOptionalFolders.FirstOrDefault(tick => tick != null && tick.Type == folder.Type
+                                                                && tick.FolderName == folder.FolderName);
+
+        private DirectoryStructureConfig _previewTestTreeSource;
+        private DirectoryStructureConfig _previewTestTreeLayout;
+
+        /// <summary>
+        /// A screen whose parent sits inside a test module - a screen made for that test module.
+        /// </summary>
+        private bool IsTestScreen =>
+            _selectedModuleType == ModuleType.Screen && new TestTreePath().Contains(_parentModulePath);
     }
 }
 #endif

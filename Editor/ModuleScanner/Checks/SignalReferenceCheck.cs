@@ -65,8 +65,8 @@ namespace FlowIoC.Editor.ModuleScanner
                 return FindingEVO.Ok(Id, "Signal references (a Connector may name any of them)");
 
             // Test code may reference anything, its parent and its siblings included.
-            if (module.Kind == ModuleKind.Test)
-                return FindingEVO.Ok(Id, "Signal references (a test module may name any of them)");
+            if (module.Kind == ModuleKind.Test || module.InTestTree)
+                return FindingEVO.Ok(Id, "Signal references (test code may name any of them)");
 
             string asmdef = _asmdefTextOf(module);
 

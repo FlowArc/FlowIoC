@@ -23,7 +23,8 @@ namespace FlowIoC.Editor.CodeGenerator.Screens
         /// An empty Resource path falls back to the module's name and is written back into the
         /// settings, so the context the template renders loads the prefab saved here.
         /// </summary>
-        public ScreenPrefabPlacement For(ScreenModuleSettings settings, string moduleName, string modulePath, string prefabsFolder)
+        public ScreenPrefabPlacement For(ScreenModuleSettings settings, string moduleName, string modulePath, string prefabsFolder,
+            string resourcesFolder = null)
         {
             if (settings == null || settings.LoadType != ScreenLoadType.Resource)
             {
@@ -35,7 +36,11 @@ namespace FlowIoC.Editor.CodeGenerator.Screens
 
             string path = settings.ResourcePath.Trim().Replace('\\', '/').Trim('/');
             int slash = path.LastIndexOf('/');
-            string folder = modulePath.Replace('\\', '/').TrimEnd('/') + "/Resources";
+            // A screen made for a test module keeps Resources under Editor/, and the generator says
+            // where; every other screen's Resources sits at the module's root.
+            string folder = string.IsNullOrEmpty(resourcesFolder)
+                ? modulePath.Replace('\\', '/').TrimEnd('/') + "/Resources"
+                : resourcesFolder.Replace('\\', '/').TrimEnd('/');
 
             return new ScreenPrefabPlacement
             {

@@ -58,6 +58,19 @@ namespace FlowIoC.Editor.ModuleScanner
 
         public FindingEVO Inspect(ModuleTargetEVO module)
         {
+            // A screen made for a test module keeps its prefab under Editor/, and Addressables
+            // takes no asset from an Editor folder - registering it is not a fix that can work.
+            string addressed = TestScreenAddress(module);
+
+            if (addressed != null)
+            {
+                return FindingEVO.Manual(
+                    Id,
+                    "A screen inside a test module loads from Editor/Resources: Addressables takes no asset under an "
+                    + $"Editor folder. Set the context's Load to ScreenLoadCVO.Resource(\"{addressed}\").",
+                    module.AssetPath);
+            }
+
             List<string> missing = MissingAddresses(module);
 
             if (missing.Count == 0)
@@ -94,11 +107,29 @@ namespace FlowIoC.Editor.ModuleScanner
             }
         }
 
+        /// <summary>
+        /// The first address a screen inside a test module asks for, or null when it asks for
+        /// none - or is not such a screen.
+        /// </summary>
+        private string TestScreenAddress(ModuleTargetEVO module)
+        {
+            if (module == null || module.Kind != ModuleKind.Screen || !module.InTestTree)
+                return null;
+
+            foreach (ScreenCVO declaration in _declarationsOf(module) ?? Enumerable.Empty<ScreenCVO>())
+            {
+                if (declaration != null && declaration.Load.Kind == ScreenLoadType.Addressable && declaration.Load.IsValid)
+                    return declaration.Load.Key;
+            }
+
+            return null;
+        }
+
         private List<string> MissingAddresses(ModuleTargetEVO module)
         {
             var missing = new List<string>();
 
-            if (module == null || module.Kind != ModuleKind.Screen)
+            if (module == null || module.Kind != ModuleKind.Screen || module.InTestTree)
                 return missing;
 
             foreach (ScreenCVO declaration in _declarationsOf(module) ?? Enumerable.Empty<ScreenCVO>())

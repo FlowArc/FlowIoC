@@ -29,7 +29,9 @@ what is true whatever you are about to do.
   its own `zScreenModules` or `zSubModules`.
 - **A test module reaches anything.** Everything under `zTestModules` is test code, so it
   may reference any module in the project. In exchange, every script in it is wrapped in
-  `#if UNITY_EDITOR`.
+  `#if UNITY_EDITOR`, and its asset folders - `Prefabs`, `Resources`, `Scriptables`, `Art` - sit
+  under `Editor/`, so none of them reaches a build; `Scenes/` and `Scripts/` stay at its root, and
+  so does a folder holding Addressables entries, which Addressables takes from no Editor folder.
 - **A module's sample is its test module; its unit tests live outside it.** There is no assembly
   of tests under a module's `Scripts/`: the shape `Create Module` writes has no `Tests` folder,
   and adding one gives the module a second assembly nothing else in the project has. What a
@@ -155,8 +157,11 @@ what is true whatever you are about to do.
   its whole show animation empty, or showing the last opening's values. A signal reaches an open
   screen only for a value that changes while it is up.
 - A screen module belongs to the module whose feature it shows, so it lives in the
-  `zScreenModules` of a main or a sub module and never under another screen module or a test
-  module.
+  `zScreenModules` of a main or a sub module and never under another screen module. **A screen
+  made only for a test module lives in that test module's `zScreenModules`**: it is test code -
+  Editor-only, loaded from `Editor/Resources`, with no card and no test module of its own - so
+  deleting the test module takes it along and the game never notices. The Root inspector calls it
+  `TEST SCREEN`, and Add Sub Context offers it only on a Root inside a test module.
 - A screen dispatches its module's **Outgoing** for what leaves it and its **internal** holder for
   what stays.
 - **An overlay canvas exists only through the ScreenManager.** No Root, module or Shared Mono

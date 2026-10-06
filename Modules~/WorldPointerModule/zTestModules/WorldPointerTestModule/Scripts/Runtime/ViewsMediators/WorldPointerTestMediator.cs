@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using FlowIoC.BaseModule.Injectable.Attributes;
 using FlowIoC.BaseModule.ViewsMediators.Mediator;
-using Modules.WorldPointerModule.PointerControlsScreenModule.Signals;
+using Modules.WorldPointerModule.WorldPointerTestModule.PointerControlsScreenModule.Signals;
 using Modules.WorldPointerModule.WorldPointerTestModule.Signals;
 
 namespace Modules.WorldPointerModule.WorldPointerTestModule.ViewsMediators

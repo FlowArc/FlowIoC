@@ -32,6 +32,7 @@ namespace FlowIoC.Editor.ModuleScanner
         internal ModuleCheckPipeline() : this(
             new IModuleCheck[]
             {
+                new TestTreeAssetFoldersCheck(),
                 new MandatoryFoldersCheck(),
                 new SharedAssemblyCheck(),
                 new SignalsAssemblyCheck(),

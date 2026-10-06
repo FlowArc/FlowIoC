@@ -27,9 +27,17 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             bool createScreen,
             ScreenModuleSettings screenSettings,
             string parentSharedAssemblyName,
-            ModuleGenerationHandoffEVO handoff
+            ModuleGenerationHandoffEVO handoff,
+            bool testScreen
         )
         {
+            if (testScreen)
+            {
+                HandleTestScreenModuleCreation(moduleName, modulePath, parentModulePath, directoryConfigMap, actionNames,
+                    createScreen, screenSettings, handoff);
+                return;
+            }
+
             string testModulePath = Path.Combine(modulePath, testModulesFolderName, $"{moduleName}TestModule");
 
             CreateFoldersRecursively(testModulePath, directoryConfigMap[ModuleType.Test].RootFolders, selectedOptionalFolders);
@@ -151,6 +159,93 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
         }
 
         /// <summary>
+        /// A screen made for a test module. It is test code, so everything it writes is wrapped in
+        /// #if UNITY_EDITOR, its prefab goes to Editor/Resources and loads from there, and it gets
+        /// no test module of its own - it is seen in the scene of the test module it was made for,
+        /// whose test Root lists it after the reload. Its assembly reaches the module under test
+        /// the way that test module does: test code may reference anything, and a sample screen
+        /// exists to drive the module it shows.
+        /// </summary>
+        private static void HandleTestScreenModuleCreation(
+            string moduleName,
+            string modulePath,
+            string testModulePath,
+            Dictionary<ModuleType, DirectoryStructureConfig> directoryConfigMap,
+            List<string> actionNames,
+            bool createScreen,
+            ScreenModuleSettings screenSettings,
+            ModuleGenerationHandoffEVO handoff)
+        {
+            DirectoryStructureConfig layout = directoryConfigMap[ModuleType.Screen];
+            DirectoryStructureConfig mainLayout = directoryConfigMap[ModuleType.Main];
+
+            string screenAsmdefName = moduleName + "Module";
+            string screenAsmdefPath = Path.Combine(modulePath, screenAsmdefName + ".asmdef");
+
+            // The module the test module tests: zTestModules sits in it, and the test module in that.
+            string testedModulePath = Path.GetDirectoryName(Path.GetDirectoryName(testModulePath));
+
+            string screenSignalsAssemblyName = new SignalsAssemblyDefinition()
+                .CreateFor(modulePath, layout, GetParsedAssemblyName(screenAsmdefName));
+
+            CreateAssemblyDefinitionFile(screenAsmdefPath, screenAsmdefName,
+                screenSignalsAssemblyName,
+                ParentModuleAssemblyName(testedModulePath),
+                new SharedAssemblyDefinition().FindIn(testedModulePath, mainLayout),
+                new SignalsAssemblyDefinition().FindIn(testedModulePath, mainLayout));
+            AddNamespaceExceptions(layout, modulePath);
+            AddSubAssemblyNamespaceExceptions(layout, modulePath, screenSignalsAssemblyName);
+
+            string viewsAndMediatorsPath = layout.FindFullFolderPathByID(FolderEVO.FolderType.ViewsAndMediators, modulePath);
+            string rootsAndContextsPath = layout.FindFullFolderPathByID(FolderEVO.FolderType.RootsAndContexts, modulePath);
+            string signalsPath = layout.FindFullFolderPathByID(FolderEVO.FolderType.Signals, modulePath);
+            string publicSignalsPath = layout.FindFullFolderPathByID(FolderEVO.FolderType.PublicSignals, modulePath);
+
+            if (string.IsNullOrEmpty(publicSignalsPath) || !Directory.Exists(publicSignalsPath))
+                publicSignalsPath = signalsPath;
+
+            string signalsName = null;
+            string signalsNamespace = null;
+
+            if (!string.IsNullOrEmpty(publicSignalsPath))
+            {
+                signalsName = CreateSignals(publicSignalsPath, moduleName + "Signals", "TempSignals",
+                    CodeGeneratorStrings.TempSignalsPath, true, true, out signalsNamespace);
+            }
+            else
+            {
+                Debug.LogWarning(SIGNALS_WARNING);
+            }
+
+            if (!string.IsNullOrEmpty(signalsPath))
+            {
+                CreateSignals(signalsPath, moduleName + "InternalSignals", "TempInternalSignals",
+                    CodeGeneratorStrings.TempInternalSignalsPath, true, false, out _);
+            }
+
+            handoff.ViewNamespace = CreateScreenViewAndMediator(viewsAndMediatorsPath, modulePath, moduleName, actionNames,
+                true, signalsName, signalsNamespace);
+
+            ScreenPrefabPlacement placement = new ScreenPrefabPlacement().For(screenSettings, moduleName, modulePath,
+                layout.FindFullFolderPathByID(FolderEVO.FolderType.Prefabs, modulePath),
+                layout.FindFullFolderPathByID(FolderEVO.FolderType.Resources, modulePath));
+
+            string contextFullName = CreateScreenContext(rootsAndContextsPath, modulePath, moduleName,
+                screenSettings, signalsName, signalsNamespace, out _, editorOnly: true);
+
+            handoff.IsTestScreen = true;
+            handoff.HostModulePath = testModulePath;
+            handoff.ScreenContextFullName = contextFullName;
+            handoff.ScreenIsAddressable = false;
+
+            if (createScreen)
+            {
+                handoff.ScreenPrefabPath = CreateScreenPrefab(placement.Name, placement.Folder);
+                handoff.ScreenPrefabName = placement.Name;
+            }
+        }
+
+        /// <summary>
         /// The screen's one declaration: its context, deriving from ScreenSubContext with the view
         /// and mediator as type arguments and the Screen block filled from the window. Returns the
         /// context's full name, which is what a Root's SubContextTypes entry stores.
@@ -166,7 +261,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             ScreenModuleSettings screenSettings,
             string signalsName,
             string signalsNamespace,
-            out string contextScriptPath)
+            out string contextScriptPath,
+            bool editorOnly = false)
         {
             contextScriptPath = null;
 
@@ -182,7 +278,8 @@ namespace FlowIoC.Editor.CodeGenerator.Menus.Module.ModuleGeneration
             string contextName = moduleName + "Context";
 
             string content = new ScreenContextTemplate().Render(
-                contextNamespace, contextName, moduleName + "View", moduleName + "Mediator", viewNamespace, screenSettings);
+                contextNamespace, contextName, moduleName + "View", moduleName + "Mediator", viewNamespace, screenSettings,
+                editorOnly);
 
             if (!Directory.Exists(rootsAndContextsPath))
                 Directory.CreateDirectory(rootsAndContextsPath);

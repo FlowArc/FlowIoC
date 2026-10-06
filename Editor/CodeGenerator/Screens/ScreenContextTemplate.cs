@@ -15,9 +15,14 @@ namespace FlowIoC.Editor.CodeGenerator.Screens
     internal class ScreenContextTemplate
     {
         internal string Render(string namespaceName, string contextName, string viewName, string mediatorName,
-            string viewNamespace, ScreenModuleSettings settings)
+            string viewNamespace, ScreenModuleSettings settings, bool editorOnly = false)
         {
             StringBuilder builder = new StringBuilder();
+
+            // A screen made for a test module is test code: the whole file, usings included,
+            // compiles away outside the Editor.
+            if (editorOnly)
+                builder.AppendLine("#if UNITY_EDITOR");
 
             builder.AppendLine("using FlowIoC.ScreenModule.Data;");
             builder.AppendLine("using FlowIoC.ScreenModule.Enums;");
@@ -41,6 +46,9 @@ namespace FlowIoC.Editor.CodeGenerator.Screens
             builder.AppendLine("        }");
             builder.AppendLine("    }");
             builder.AppendLine("}");
+
+            if (editorOnly)
+                builder.AppendLine("#endif");
 
             return builder.ToString();
         }

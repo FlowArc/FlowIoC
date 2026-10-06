@@ -79,7 +79,7 @@ namespace FlowIoC.Editor.Root
             _helpState = new FlowHelpState();
             _bar = new FlowHeaderBar(_palette, new FlowHelpPageMap());
             _gui = new FlowInspectorGUI(_palette, _roles, _help, _helpState);
-            _badge = new SubContextBadge(_declarations, _roles, _palette, _settingsTypes);
+            _badge = new SubContextBadge(_declarations, _roles, _palette, _settingsTypes, new TestOnlyContexts());
 
             _lifecycle = new RootLifecycleWatch();
             EditorApplication.update += RepaintOnLifecycleMove;
@@ -328,7 +328,7 @@ namespace FlowIoC.Editor.Root
             Color previous = GUI.color;
             GUI.color = color;
 
-            EditorGUILayout.LabelField(badge ?? string.Empty, EditorStyles.miniBoldLabel, GUILayout.Width(68));
+            EditorGUILayout.LabelField(badge ?? string.Empty, EditorStyles.miniBoldLabel, GUILayout.Width(80));
 
             GUI.color = previous;
         }
