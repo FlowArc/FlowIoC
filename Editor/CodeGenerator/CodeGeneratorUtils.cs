@@ -394,7 +394,7 @@ namespace FlowIoC.Editor.CodeGenerator
         /// </summary>
         /// <summary>
         /// Writes a signal holder from a template. <paramref name="makePublic"/> is what separates
-        /// the two a module gets: the public holder in Shared is what every other module talks to
+        /// the two a module gets: the public holder in Scripts/Signals/ is what every other module talks to
         /// it through, while the internal one stays internal because nothing outside the module's
         /// own assembly has any business dispatching it.
         /// </summary>
