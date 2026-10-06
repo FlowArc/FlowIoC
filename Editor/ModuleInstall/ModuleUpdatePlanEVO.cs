@@ -17,6 +17,18 @@ namespace FlowIoC.Editor.ModuleInstall
         /// </summary>
         internal bool HadRecord { get; set; }
 
+        /// <summary>
+        /// The sub modules the package no longer ships, relative to the module. Everything under
+        /// each goes, except a file the game added there, or edited and keeps on a conflict.
+        /// </summary>
+        internal List<string> RemovedModules { get; } = new List<string>();
+
+        /// <summary>
+        /// The conflicts the package no longer ships: its side of them is no file at all, so the
+        /// reader is offered keep or remove rather than mine or the package's.
+        /// </summary>
+        internal HashSet<string> Unshipped { get; } = new HashSet<string>(StringComparer.Ordinal);
+
         internal int Count(ModuleUpdateVerdict verdict)
         {
             var count = 0;
@@ -50,6 +62,8 @@ namespace FlowIoC.Editor.ModuleInstall
             Count(ModuleUpdateVerdict.Overwrite) == 0
             && Count(ModuleUpdateVerdict.Copy) == 0
             && Count(ModuleUpdateVerdict.Delete) == 0
+            && Count(ModuleUpdateVerdict.Replace) == 0
+            && Count(ModuleUpdateVerdict.RemoveEdited) == 0
             && Count(ModuleUpdateVerdict.Conflict) == 0;
     }
 }

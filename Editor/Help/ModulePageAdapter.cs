@@ -327,9 +327,9 @@ namespace FlowIoC.Editor.Help
         }
 
         /// <summary>
-        /// Plan, ask, apply. Nothing is written before the dialog, and the dialog describes
-        /// exactly the pass that follows it. One policy for every conflict: a reader who wants
-        /// finer control commits first and reads the diff.
+        /// Plan, ask, apply. Nothing is written before the question, and the question describes
+        /// exactly the pass that follows it. Without a conflict it is a dialog; with one it is a
+        /// window where the reader chooses for each of the game's files.
         /// </summary>
         private void Update()
         {
@@ -349,28 +349,27 @@ namespace FlowIoC.Editor.Help
 
             ModuleUpdatePlanEVO plan = new ModuleUpdatePlan().Build(installedAt, shipped);
             var summary = new ModuleUpdateSummary();
-            string question = summary.Ask(_page.Title, from, to, plan);
-            ConflictPolicy policy;
+            string projectRoot = System.IO.Path.GetDirectoryName(UnityEngine.Application.dataPath);
+            IReadOnlyList<string> references =
+                new RemovedAssemblyReferences().Find(plan, installedAt, shipped, projectRoot);
+            string question = summary.Ask(_page.Title, from, to, plan, references);
 
             if (plan.HasConflicts)
             {
-                int choice = EditorUtility.DisplayDialogComplex("Update " + _page.Title, question,
-                    "Keep mine on conflicts", "Cancel", "Take the package's on conflicts");
+                ModuleUpdateWindow.Show(_page.Title, question, plan,
+                    takeTheirs => Apply(plan, installedAt, shipped, to, takeTheirs));
 
-                if (choice == 1)
-                    return;
-
-                policy = choice == 0 ? ConflictPolicy.KeepMine : ConflictPolicy.TakeTheirs;
-            }
-            else
-            {
-                if (!EditorUtility.DisplayDialog("Update " + _page.Title, question, "Update", "Cancel"))
-                    return;
-
-                policy = ConflictPolicy.KeepMine;
+                return;
             }
 
-            if (new ModuleUpdater().TryApply(plan, installedAt, shipped, policy, out string error))
+            if (EditorUtility.DisplayDialog("Update " + _page.Title, question, "Update", "Cancel"))
+                Apply(plan, installedAt, shipped, to, new HashSet<string>());
+        }
+
+        private void Apply(ModuleUpdatePlanEVO plan, string installedAt, string shipped, string to,
+            ICollection<string> takeTheirs)
+        {
+            if (new ModuleUpdater().TryApply(plan, installedAt, shipped, takeTheirs, out string error))
             {
                 _registrar.Register(_installer.ProjectRelative(installedAt), "updated");
 
@@ -379,7 +378,7 @@ namespace FlowIoC.Editor.Help
                 new ModuleUpdateArtAddresses().Follow(plan, _installer.ProjectRelative(installedAt));
 
                 EditorUtility.DisplayDialog(_page.Title + " updated",
-                    summary.Done(_page.Title, to, plan, policy == ConflictPolicy.KeepMine), "OK");
+                    new ModuleUpdateSummary().Done(_page.Title, to, plan, takeTheirs), "OK");
 
                 return;
             }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FlowIoC.Editor.ModuleInstall;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -35,6 +36,7 @@ namespace FlowIoC.Editor.ModuleScanner
         private readonly Action<string> _deleteFolder;
         private readonly Action<string> _createFolder;
         private readonly Func<string, bool> _holdsAddressables;
+        private readonly Func<string, bool> _shippedThere;
 
         internal TestTreeAssetFoldersCheck() : this(
             RootFoldersOf,
@@ -43,7 +45,8 @@ namespace FlowIoC.Editor.ModuleScanner
             AssetDatabase.MoveAsset,
             path => AssetDatabase.DeleteAsset(path),
             CreateFolder,
-            HoldsAddressables)
+            HoldsAddressables,
+            ShippedThere)
         {
         }
 
@@ -54,7 +57,8 @@ namespace FlowIoC.Editor.ModuleScanner
             Func<string, string, string> moveAsset,
             Action<string> deleteFolder,
             Action<string> createFolder,
-            Func<string, bool> holdsAddressables = null)
+            Func<string, bool> holdsAddressables = null,
+            Func<string, bool> shippedThere = null)
         {
             _rootFoldersOf = rootFoldersOf;
             _folderExists = folderExists;
@@ -63,6 +67,7 @@ namespace FlowIoC.Editor.ModuleScanner
             _deleteFolder = deleteFolder;
             _createFolder = createFolder;
             _holdsAddressables = holdsAddressables ?? (_ => false);
+            _shippedThere = shippedThere ?? (_ => false);
         }
 
         public string Id => "test-tree-assets";
@@ -149,7 +154,39 @@ namespace FlowIoC.Editor.ModuleScanner
                 // Addressables takes no asset from an Editor folder, so a folder holding an entry -
                 // the Audio sample's clips, loaded through AssetReference - stays where it is.
                 .Where(folder => !_holdsAddressables(folder))
+                // A folder an installed module ships where it is stays there: the package decides
+                // its own layout, and a copy moved away would come back beside the moved one, with
+                // the same GUIDs, on the next update. Asked of the record rather than the project,
+                // so an entry missing from Addressables does not move it either.
+                .Where(folder => !_shippedThere(folder))
                 .ToList();
+        }
+
+        /// <summary>
+        /// Whether the shipped record of the installed module this folder sits in lists a file
+        /// under it. The record lives beside the installed module's card, so the walk goes up from
+        /// the folder to the first one holding a record, and never past Assets.
+        /// </summary>
+        private static bool ShippedThere(string folderAssetPath)
+        {
+            var record = new ShippedRecord();
+            string folder = Normalize(folderAssetPath).TrimEnd('/');
+            string owner = folder;
+
+            while (owner.Contains("/"))
+            {
+                owner = owner.Substring(0, owner.LastIndexOf('/'));
+
+                if (!File.Exists(Path.Combine(owner, ShippedRecord.FILE_NAME)))
+                    continue;
+
+                ShippedRecordEVO shipped = record.Read(owner);
+                string prefix = folder.Substring(owner.Length + 1) + "/";
+
+                return shipped != null && shipped.Files.Keys.Any(path => path.StartsWith(prefix, StringComparison.Ordinal));
+            }
+
+            return false;
         }
 
         private static bool HoldsAddressables(string folderAssetPath)

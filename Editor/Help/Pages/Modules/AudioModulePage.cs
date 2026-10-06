@@ -35,8 +35,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "a mute arrive through a Connector on the module's Incoming."),
             new HelpTab("Updates", DrawUpdates,
                 "What an update of the module touches, and what it never touches.",
-                "Keys and banks live in the modules that own them, and the game's mixer and settings "
-                + "are filed on the Root in its scene. An update replaces the module's own files only.")
+                "Keys and banks live in the modules that own them, out of an update's reach. A mixer "
+                + "or settings file you edited in the module is asked about before it is replaced.")
         };
 
         public override string InstalledHint =>
@@ -151,10 +151,10 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Separator();
             painter.SubHeading("3. Your own mixer or settings");
             painter.Paragraph(
-                "To change the voices, the fade times or the mixer, make a CD_AudioSettings of your own "
-                + "in your own folder and put it in the Scriptables of the AudioServiceRoot in your "
-                + "scene. Do not edit the one in the module: an update would have to choose between "
-                + "your edit and its own. A mixer of your own exposes its two levels as MusicVolume and "
+                "To change the voices, the fade times or the mixer, edit the module's CD_AudioSettings, "
+                + "or make one of your own and put it in the Scriptables of the AudioServiceRoot in "
+                + "your scene. An update asks before it touches a settings file you edited, and never "
+                + "sees one of your own. A mixer of your own exposes its two levels as MusicVolume and "
                 + "SfxVolume, or names them on the settings.");
         }
 
@@ -220,8 +220,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.SubHeading("What an update replaces");
             painter.Paragraph(
                 "The module's own folder: its code, Mixer_Audio, the shipped CD_AudioSettings and the "
-                + "AudioServiceRoot prefab. None of those is the game's, so none of them meets an edit "
-                + "of the game's.");
+                + "AudioServiceRoot prefab. Code takes the package's version; Mixer_Audio, the settings "
+                + "and the prefab are asked about, file by file, wherever you edited them.");
 
             painter.SubHeading("What an update never touches");
             painter.Bullet(
@@ -230,10 +230,8 @@ namespace FlowIoC.Editor.Help.Pages.Modules
             painter.Bullet(
                 "A CD_AudioSettings or a mixer of the game's own, filed on the Root in its scene: a "
                 + "prefab override stays with the scene when the prefab is replaced.");
-            painter.Note(
-                "Important: an edit made inside the Audio module's folder - to Mixer_Audio or its "
-                + "CD_AudioSettings - is one the update has to ask about. Put your own copy on the Root "
-                + "instead, and the update has nothing to ask.");
+            painter.Bullet(
+                "A file you added inside the Audio module's folder: it was never the package's.");
         }
     }
 }

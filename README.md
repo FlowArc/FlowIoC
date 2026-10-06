@@ -1356,11 +1356,16 @@ A module already in `Assets/Modules/` is never overwritten by **Install**. The c
 is the one you have been editing, so the button reads *Installed* - or **Update to 1.3.0** when the
 package ships a newer version, which every module under `Modules~` carries as the `Version:` line on
 its card. An update keeps what you changed: a file only the package changed is overwritten, a file
-only you changed stays, and a file both of you changed is listed before anything is written and
-resolved one way for all of them - keep yours, or take the package's. What the package shipped is
-remembered in `.flowioc-shipped.json` beside the card; a module installed before that record
-existed lists every differing file as a conflict, because nobody can say who changed it. Commit
-before you update.
+only you changed stays, and so does a file you added beside the package's - a motion of your own
+next to the shipped ones. Where both of you changed a file, its kind decides. Code - scripts,
+assembly files, shaders, the card - takes the package's version, and the dialog lists your edits it
+replaces before anything is written. Data - an asset, a prefab, a scene, art - may be your work, so
+a window lists each such file and you choose, keep yours or take the package's; its meta goes with
+it. What the package shipped is remembered in `.flowioc-shipped.json` beside the card; a module
+installed before that record existed reads every differing file as changed on both sides, because
+nobody can say who changed it. A sub
+module the new version removes or moves goes whole from where it was, and the dialog names any asmdef
+of yours that still references an assembly it takes away. Commit before you update.
 
 A module whose card says `Update: never` is installed once. The setup set's Main, Screen, Gameplay
 and Connector say it, and so will a starter module you are meant to rewrite: the package keeps

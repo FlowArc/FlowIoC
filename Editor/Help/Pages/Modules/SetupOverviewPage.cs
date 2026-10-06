@@ -72,7 +72,6 @@ namespace FlowIoC.Editor.Help.Pages.Modules
 
         protected override void DrawBody(HelpPainter painter)
         {
-
             painter.Separator();
             painter.SubHeading("What is here");
             painter.Paragraph(
@@ -138,12 +137,17 @@ namespace FlowIoC.Editor.Help.Pages.Modules
                 + "the day they land and say Update: never on their cards.");
             painter.Paragraph(
                 "An update keeps what you changed. A file only the package changed is overwritten, "
-                + "a file only you changed stays, and a file both of you changed is listed before "
-                + "anything is written - keep yours, or take the package's, for all of them at once.");
+                + "a file only you changed stays, and so does a file you added beside the package's. "
+                + "Where both of you changed a file, code - scripts, assembly files, shaders, the card - "
+                + "takes the package's version, listed before anything is written; data - an asset, a "
+                + "prefab, a scene, art - is listed file by file, and you keep yours or take the "
+                + "package's, its meta going with it. A sub module the new version removes or moves "
+                + "goes whole from where it was, and the dialog names any asmdef of yours that still "
+                + "references an assembly it takes away.");
             painter.Note(
-                "A module installed before it kept a record lists every file that differs from the "
-                + "shipped one as a conflict, because nobody can say who changed it. Commit before "
-                + "updating, and read the list.");
+                "A module installed before it kept a record reads every file that differs from the "
+                + "shipped one as changed on both sides, because nobody can say who changed it. Commit "
+                + "before updating, and read the list.");
         }
     }
 }

@@ -5,6 +5,18 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- A module update now decides per file: code you edited takes the package's version and is listed first; an asset, prefab, scene or art file you edited is offered file by file, keep yours or take the package's, with its meta following it.
+
+### Fixed
+
+- A module update left behind the asmdefs, card and generated parts of a sub module it removed or moved, which broke compilation; the sub module now goes whole, with the folders it empties.
+- The update dialog names your asmdefs that still reference an assembly the update removes.
+- Module Scanner no longer moves a folder an installed module ships at a test module's root (Audio's `Art`) under `Editor/`.
+
 ## [1.32.0] - 2026-10-06
 
 ### Changed
