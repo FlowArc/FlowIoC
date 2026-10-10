@@ -100,7 +100,7 @@ Or declare the scoped registry yourself in `Packages/manifest.json`:
     }
   ],
   "dependencies": {
-    "com.birrstudio.flowioc.core": "1.3.0"
+    "com.birrstudio.flowioc.core": "1.34.0"
   }
 }
 ```
@@ -119,7 +119,7 @@ not a warning about the package.
 In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
 
 ```
-https://github.com/BirrStudio/FlowIoC.git#1.3.0
+https://github.com/BirrStudio/FlowIoC.git#1.34.0
 ```
 
 Or add it to `Packages/manifest.json` directly:
@@ -127,7 +127,7 @@ Or add it to `Packages/manifest.json` directly:
 ```json
 {
   "dependencies": {
-    "com.birrstudio.flowioc.core": "https://github.com/BirrStudio/FlowIoC.git#1.3.0"
+    "com.birrstudio.flowioc.core": "https://github.com/BirrStudio/FlowIoC.git#1.34.0"
   }
 }
 ```
@@ -138,8 +138,9 @@ To upgrade, change the tag and let Unity re-resolve.
 
 > **Upgrading from `com.flowarc.flowioc.core`?** The package was renamed to
 > `com.birrstudio.flowioc.core` when FlowArc became Birr Studio. In `Packages/manifest.json`,
-> rename the dependency and change the scoped registry's scope from `com.flowarc` to
-> `com.birrstudio` - see the migration note in [`CHANGELOG.md`](CHANGELOG.md).
+> rename the dependency and change the scoped registry's scope (`com.flowarc` or
+> `com.flowarc.flowioc.core`) to `com.birrstudio` - see the migration note in
+> [`CHANGELOG.md`](CHANGELOG.md).
 
 ### As a git submodule (for working on FlowIoC itself)
 
