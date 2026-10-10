@@ -6,7 +6,7 @@ description: Use when placing a Root in a FlowIoC scene or choosing its Initiali
 # Ordering Roots in FlowIoC
 
 This skill applies only while FlowIoC is installed. If `Packages/manifest.json` contains no
-`com.flowarc.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
+`com.birrstudio.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
 is in: FlowIoC put it there and is no longer in the project.
 
 ## Overview

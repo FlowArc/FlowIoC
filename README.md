@@ -1,6 +1,6 @@
 # FlowIoC
 
-[![openupm](https://img.shields.io/npm/v/com.flowarc.flowioc.core?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.flowarc.flowioc.core/)
+[![openupm](https://img.shields.io/npm/v/com.birrstudio.flowioc.core?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.birrstudio.flowioc.core/)
 
 **A signal-driven IoC container and modular MVC framework for the Unity Engine — for the
 people writing the game and the coding agents working beside them.**
@@ -66,7 +66,7 @@ can be switched off per project.
 
 | | |
 |---|---|
-| Package name | `com.flowarc.flowioc.core` |
+| Package name | `com.birrstudio.flowioc.core` |
 | Minimum Unity | `6000.0` (declared in `package.json`) |
 | Actively developed against | Unity 6 (`6000.3`) |
 | Dependencies | `com.unity.addressables` 2.9.1+, `com.unity.render-pipelines.core` 17.0.0+ (resolved automatically) |
@@ -79,11 +79,11 @@ can be switched off per project.
 ### From OpenUPM (recommended)
 
 FlowIoC is published on
-[OpenUPM](https://openupm.com/packages/com.flowarc.flowioc.core/). With the
+[OpenUPM](https://openupm.com/packages/com.birrstudio.flowioc.core/). With the
 [openupm-cli](https://github.com/openupm/openupm-cli) installed:
 
 ```bash
-openupm add com.flowarc.flowioc.core
+openupm add com.birrstudio.flowioc.core
 ```
 
 Or declare the scoped registry yourself in `Packages/manifest.json`:
@@ -95,32 +95,31 @@ Or declare the scoped registry yourself in `Packages/manifest.json`:
       "name": "package.openupm.com",
       "url": "https://package.openupm.com",
       "scopes": [
-        "com.flowarc"
+        "com.birrstudio"
       ]
     }
   ],
   "dependencies": {
-    "com.flowarc.flowioc.core": "1.3.0"
+    "com.birrstudio.flowioc.core": "1.3.0"
   }
 }
 ```
 
 Either way the package shows up in the Package Manager under **My Registries**, together
-with every release from 1.1.0 onwards, so an upgrade is a version number rather than a new
-URL.
+with every release published under this name, so an upgrade is a version number rather than a
+new URL.
 
-Releases from 1.17.1 are signed for the FlowArc organization. Unity 6.3 and later show the
-signature as **Limited** - the tarball is verified unchanged and its signer is named, and only a
-package signed by Unity or by your own organization reads as *Full* - so that label is the
-expected one, not a warning about the package. Releases up to 1.17.0 predate signing and show
-**Missing**.
+Releases are signed for the Birr Studio organization. Unity 6.3 and later show the signature as
+**Limited** - the tarball is verified unchanged and its signer is named, and only a package
+signed by Unity or by your own organization reads as *Full* - so that label is the expected one,
+not a warning about the package.
 
 ### From a Git URL
 
 In the editor: **Window → Package Manager → + → Install package from git URL**, then enter:
 
 ```
-https://github.com/FlowArc/FlowIoC.git#1.3.0
+https://github.com/BirrStudio/FlowIoC.git#1.3.0
 ```
 
 Or add it to `Packages/manifest.json` directly:
@@ -128,7 +127,7 @@ Or add it to `Packages/manifest.json` directly:
 ```json
 {
   "dependencies": {
-    "com.flowarc.flowioc.core": "https://github.com/FlowArc/FlowIoC.git#1.3.0"
+    "com.birrstudio.flowioc.core": "https://github.com/BirrStudio/FlowIoC.git#1.3.0"
   }
 }
 ```
@@ -137,20 +136,21 @@ Always pin a tag. Without `#<tag>` Unity resolves the tip of `master` and then l
 commit into `packages-lock.json`, so the package silently stops tracking new releases.
 To upgrade, change the tag and let Unity re-resolve.
 
-> **Upgrading from `com.flowioc.core`?** The package was renamed in 1.1.0. Do it with the
-> Editor closed and delete `Library/` before reopening — see the migration note in
-> [`CHANGELOG.md`](CHANGELOG.md).
+> **Upgrading from `com.flowarc.flowioc.core`?** The package was renamed to
+> `com.birrstudio.flowioc.core` when FlowArc became Birr Studio. In `Packages/manifest.json`,
+> rename the dependency and change the scoped registry's scope from `com.flowarc` to
+> `com.birrstudio` - see the migration note in [`CHANGELOG.md`](CHANGELOG.md).
 
 ### As a git submodule (for working on FlowIoC itself)
 
 ```bash
-git submodule add https://github.com/FlowArc/FlowIoC.git Packages/FlowIoC
+git submodule add https://github.com/BirrStudio/FlowIoC.git Packages/FlowIoC
 git submodule update --init
 ```
 
 Any folder under `Packages/` containing a `package.json` is treated by Unity as an *embedded*
 package: it is writable, so you can edit and commit the framework straight from the consuming
-project, and it takes precedence over any registry or Git version of `com.flowarc.flowioc.core`.
+project, and it takes precedence over any registry or Git version of `com.birrstudio.flowioc.core`.
 
 Anyone cloning a project that uses the submodule must run `git submodule update --init`,
 otherwise `Packages/FlowIoC` stays empty and the project will not compile.
@@ -1433,7 +1433,7 @@ anything else in the file survives - and the result belongs in version control, 
 On every Editor start FlowIoC also writes `FlowIoC.csproj.DotSettings` and
 `FlowIoC.Editor.csproj.DotSettings` at the project root:
 the folders above the package's own sources marked as no namespace provider, so that Rider does
-not ask every file in `Library/PackageCache/com.flowarc.flowioc.core@<hash>/` to move to a
+not ask every file in `Library/PackageCache/com.birrstudio.flowioc.core@<hash>/` to move to a
 namespace with the cache folder's name in it. The hash changes with every version, which is why
 the files are written from where the package resolved rather than shipped, and the previous
 version's keys are dropped as the new ones go in. They may be committed or ignored; either way

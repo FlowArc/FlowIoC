@@ -1,7 +1,7 @@
 name: Sign and release
 
 # A pushed version tag packs the package with Unity's UPM CLI, which signs the tarball
-# for the FlowArc organization (package/.attestation.p7m inside it), and attaches the
+# for the Birr Studio organization (package/.attestation.p7m inside it), and attaches the
 # signed .tgz to a GitHub Release of the same tag. OpenUPM tracks the release asset
 # (trackingMode: githubRelease), so the tarball a consumer installs is the one signed here.
 # The packed package.json carries the tag's CHANGELOG section as _upm.changelog and a

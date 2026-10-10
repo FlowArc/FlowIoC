@@ -20,7 +20,7 @@ namespace FlowIoC.Editor.Help.WhatsNew
         internal const string FileName = "CHANGELOG.md";
 
         /// <summary>The name the package is published under, for when the Package Manager has none to give.</summary>
-        internal const string PACKAGE_NAME = "com.flowarc.flowioc.core";
+        internal const string PACKAGE_NAME = "com.birrstudio.flowioc.core";
 
         private readonly string _packageRootPath;
         private readonly string _version;

@@ -6,7 +6,7 @@ description: Use when adding or changing a UI screen in a FlowIoC Unity project 
 # FlowIoC Screens
 
 This skill applies only while FlowIoC is installed. If `Packages/manifest.json` contains no
-`com.flowarc.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
+`com.birrstudio.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
 is in: FlowIoC put it there and is no longer in the project.
 
 ## Where a screen module lives

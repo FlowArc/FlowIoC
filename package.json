@@ -1,13 +1,13 @@
 {
-  "name": "com.flowarc.flowioc.core",
+  "name": "com.birrstudio.flowioc.core",
   "version": "1.33.0",
   "displayName": "FlowIoC",
   "description": "Signal-driven IoC framework for Unity. Provides contexts, signals, commands, models and view/mediator binding, plus an editor code generator for scaffolding modules.",
   "unity": "6000.0",
   "license": "MIT",
-  "documentationUrl": "https://github.com/FlowArc/FlowIoC#readme",
-  "changelogUrl": "https://github.com/FlowArc/FlowIoC/blob/master/CHANGELOG.md",
-  "licensesUrl": "https://github.com/FlowArc/FlowIoC/blob/master/LICENSE.md",
+  "documentationUrl": "https://github.com/BirrStudio/FlowIoC#readme",
+  "changelogUrl": "https://github.com/BirrStudio/FlowIoC/blob/master/CHANGELOG.md",
+  "licensesUrl": "https://github.com/BirrStudio/FlowIoC/blob/master/LICENSE.md",
   "keywords": [
     "ioc",
     "dependency-injection",
@@ -18,8 +18,8 @@
     "framework"
   ],
   "author": {
-    "name": "FlowArc",
-    "url": "https://github.com/FlowArc"
+    "name": "Birr Studio",
+    "url": "https://birrstudio.com"
   },
   "dependencies": {
     "com.unity.addressables": "2.9.1",

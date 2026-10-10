@@ -12,7 +12,7 @@ namespace FlowIoC.Editor.CodeStyle
     /// settings that keep Rider's namespace inspection quiet inside the package.
     ///
     /// Rider derives the namespace it expects from the folders above a file, and a package
-    /// installed from a registry sits under <c>Library/PackageCache/com.flowarc.flowioc.core@hash</c>
+    /// installed from a registry sits under <c>Library/PackageCache/com.birrstudio.flowioc.core@hash</c>
     /// - so every file in it is told to move to a namespace with the cache folder's name in it.
     /// The folders down to the assembly's own are marked as no namespace provider in
     /// <c>FlowIoC.csproj.DotSettings</c> and <c>FlowIoC.Editor.csproj.DotSettings</c> at the

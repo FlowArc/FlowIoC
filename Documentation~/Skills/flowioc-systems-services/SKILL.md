@@ -6,7 +6,7 @@ description: Use when writing or shaping the logic side of a FlowIoC module - de
 # Systems and Services in FlowIoC
 
 This skill applies only while FlowIoC is installed. If `Packages/manifest.json` contains no
-`com.flowarc.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
+`com.birrstudio.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
 is in: FlowIoC put it there and is no longer in the project.
 
 ## Which of the three a module is

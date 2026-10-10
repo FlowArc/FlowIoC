@@ -13,9 +13,9 @@ namespace FlowIoC.Editor.CodeGenerator
         private static readonly PackageInfo _package =
             PackageInfo.FindForAssembly(typeof(CodeGeneratorStrings).Assembly);
 
-        // Unity virtual path, e.g. "Packages/com.flowarc.flowioc.core". Used with AssetDatabase.
+        // Unity virtual path, e.g. "Packages/com.birrstudio.flowioc.core". Used with AssetDatabase.
         private static readonly string _packageAssetRoot =
-            _package != null ? _package.assetPath : "Packages/com.flowarc.flowioc.core";
+            _package != null ? _package.assetPath : "Packages/com.birrstudio.flowioc.core";
 
         // Absolute path on disk. Used with System.IO when reading the code templates.
         private static readonly string _packageDiskRoot =

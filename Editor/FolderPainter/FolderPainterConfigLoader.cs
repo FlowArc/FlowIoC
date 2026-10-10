@@ -65,23 +65,23 @@ namespace FlowIoC.Editor.FolderPainter
             {
                 // The package rows are matched by package name and not by folder name: an embedded
                 // package sits under Packages/<name from package.json>, so "Packages/FlowIoC" on
-                // disk is "Packages/com.flowarc.flowioc.core" to the Project window. These come
+                // disk is "Packages/com.birrstudio.flowioc.core" to the Project window. These come
                 // first so the whole package reads as one block instead of picking up the generic
                 // Module, Test and Art colors below.
-                CreatePathRule("/com.flowarc.flowioc.core", FolderPainterPathCheckType.EndsWith,
+                CreatePathRule("/com.birrstudio.flowioc.core", FolderPainterPathCheckType.EndsWith,
                     new Color(0.7114389f, 0.5019608f, 1f, 0.101960786f),
                     new Color(0.32527715f, 0.2999733f, 0.5943396f, 0.50980395f)),
 
-                CreatePathRule("/com.flowarc.flowioc.core", FolderPainterPathCheckType.Contains,
+                CreatePathRule("/com.birrstudio.flowioc.core", FolderPainterPathCheckType.Contains,
                     new Color(0.101960786f, 0.101960786f, 0.40784314f, 0.101960786f),
                     new Color(0.14901961f, 0.101960786f, 0.40784314f, 0.20392157f)),
 
                 // Harmless in a project without the addons package: the rule simply never matches.
-                CreatePathRule("/com.flowarc.flowioc.addons", FolderPainterPathCheckType.EndsWith,
+                CreatePathRule("/com.birrstudio.flowioc.addons", FolderPainterPathCheckType.EndsWith,
                     new Color(0.5019608f, 0.88521314f, 1f, 0.101960786f),
                     new Color(0.3254902f, 0.29803923f, 0.59607846f, 0.50980395f)),
 
-                CreatePathRule("/com.flowarc.flowioc.addons", FolderPainterPathCheckType.Contains,
+                CreatePathRule("/com.birrstudio.flowioc.addons", FolderPainterPathCheckType.Contains,
                     new Color(0.101960786f, 0.34739718f, 0.40784314f, 0.101960786f),
                     new Color(0.14901961f, 0.101960786f, 0.40784314f, 0.20392157f)),
 

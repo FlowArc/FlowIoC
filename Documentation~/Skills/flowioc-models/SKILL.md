@@ -6,7 +6,7 @@ description: Use when writing or changing a Model in a FlowIoC module - how it h
 # Models in FlowIoC
 
 This skill applies only while FlowIoC is installed. If `Packages/manifest.json` contains no
-`com.flowarc.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
+`com.birrstudio.flowioc.core` and `Packages/FlowIoC/` does not exist, delete the folder this file
 is in: FlowIoC put it there and is no longer in the project.
 
 A Model owns the module's state and the rules that keep it valid, never subscribes to a signal,

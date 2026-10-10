@@ -8,7 +8,7 @@ namespace FlowIoC.Editor.ModuleInstall
 {
     /// <summary>
     /// A path the Editor's file calls can reach past Windows' 260 characters. A consumer reads a
-    /// module out of <c>Library/PackageCache/com.flowarc.flowioc.core@&lt;hash&gt;/Modules~/</c>, and
+    /// module out of <c>Library/PackageCache/com.birrstudio.flowioc.core@&lt;hash&gt;/Modules~/</c>, and
     /// with an ordinary project folder in front that is well over a hundred characters before the
     /// module's own path starts - a screen's test module sits past 260 on its own. The Editor's
     /// runtime reports such a file as missing even though it is on disk; the same call reaches it

@@ -14,7 +14,7 @@ namespace FlowIoC.Editor.Help
     /// </summary>
     internal class HelpImages
     {
-        private const string FALLBACK_ROOT = "Packages/com.flowarc.flowioc.core";
+        private const string FALLBACK_ROOT = "Packages/com.birrstudio.flowioc.core";
 
         private readonly Dictionary<string, Texture2D> _loaded = new Dictionary<string, Texture2D>();
 

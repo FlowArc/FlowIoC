@@ -1,7 +1,7 @@
 ## FlowIoC
 
 These rules apply only while FlowIoC is installed. If `Packages/manifest.json` contains no
-`com.flowarc.flowioc.core` and `Packages/FlowIoC/` does not exist, ignore this block and delete it
+`com.birrstudio.flowioc.core` and `Packages/FlowIoC/` does not exist, ignore this block and delete it
 from `AGENTS.md`.
 
 FlowIoC is a signal-driven IoC framework for Unity. A game is split into modules that own
@@ -650,9 +650,9 @@ behalf, and the setup steps that fail silently when skipped.
 
 | Topic | Where |
 |---|---|
-| Everything | https://github.com/FlowArc/FlowIoC/blob/{VERSION}/README.md |
-| Screens and popups | https://github.com/FlowArc/FlowIoC/blob/{VERSION}/Runtime/ScreenModule/Documentation/ScreenModule.md |
-| Object pooling | https://github.com/FlowArc/FlowIoC/blob/{VERSION}/Runtime/PoolModule/Documentation/PoolModule.md |
-| Addressables | https://github.com/FlowArc/FlowIoC/blob/{VERSION}/Runtime/AssetModule/Documentation/AssetModule.md |
-| Flow Console | https://github.com/FlowArc/FlowIoC/blob/{VERSION}/Runtime/ConsoleModule/Documentation/FlowConsole.md |
-| Code generators | https://github.com/FlowArc/FlowIoC/blob/{VERSION}/Editor/CodeGenerator/Documentation.md |
+| Everything | https://github.com/BirrStudio/FlowIoC/blob/{VERSION}/README.md |
+| Screens and popups | https://github.com/BirrStudio/FlowIoC/blob/{VERSION}/Runtime/ScreenModule/Documentation/ScreenModule.md |
+| Object pooling | https://github.com/BirrStudio/FlowIoC/blob/{VERSION}/Runtime/PoolModule/Documentation/PoolModule.md |
+| Addressables | https://github.com/BirrStudio/FlowIoC/blob/{VERSION}/Runtime/AssetModule/Documentation/AssetModule.md |
+| Flow Console | https://github.com/BirrStudio/FlowIoC/blob/{VERSION}/Runtime/ConsoleModule/Documentation/FlowConsole.md |
+| Code generators | https://github.com/BirrStudio/FlowIoC/blob/{VERSION}/Editor/CodeGenerator/Documentation.md |

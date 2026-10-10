@@ -37,7 +37,7 @@ namespace FlowIoC.Editor.AgentSkills
     /// </summary>
     internal class AgentSkillsRemovalWatcher
     {
-        internal const string PackageName = "com.flowarc.flowioc.core";
+        internal const string PackageName = "com.birrstudio.flowioc.core";
 
         private readonly string _projectRoot;
         private readonly AgentSkillsSource _source;

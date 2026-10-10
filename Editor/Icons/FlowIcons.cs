@@ -24,7 +24,7 @@ namespace FlowIoC.Editor.Icons
         /// <summary>The pixel sizes every icon ships at, smallest first.</summary>
         internal static readonly int[] ShippedSizes = {16, 24, 32, 48};
 
-        private const string FALLBACK_ROOT = "Packages/com.flowarc.flowioc.core";
+        private const string FALLBACK_ROOT = "Packages/com.birrstudio.flowioc.core";
 
         private readonly Dictionary<(FlowIcon, int), Texture2D> _loaded =
             new Dictionary<(FlowIcon, int), Texture2D>();
