@@ -11,35 +11,23 @@ namespace FlowIoC.Editor.CodeGenerator.Detector
     /// This used to also keep a list of auto-registered log types in step with the index; the
     /// index is the record now, and a module's channel is the part the generator writes into it,
     /// so the only work left here is rebuilding the one and regenerating the other.
+    ///
+    /// It has no load hook of its own: <see cref="Migration.FlowIoCPathMigrationBootstrap"/> runs
+    /// the generator on every load and hands the session's first one here instead. Two hooks
+    /// each ran the generator on that load, and its line reached the console twice.
     /// </summary>
     internal class ModuleAutoDetector
     {
         private const string InitializedKey = "ModuleAutoDetector_Initialized";
 
-        [InitializeOnLoadMethod]
-        private static void OnProjectLoad()
+        /// <summary>True on the first load of an Editor session and false after it.</summary>
+        internal static bool ClaimSessionStartup()
         {
-            if (!SessionState.GetBool(InitializedKey, false))
-            {
-                SessionState.SetBool(InitializedKey, true);
-                Schedule();
-            }
-        }
+            if (SessionState.GetBool(InitializedKey, false))
+                return false;
 
-        // An update tick rather than a delayCall, which never fires while the Editor sits
-        // unfocused - where an assistant drives it.
-        private static void Schedule()
-        {
-            EditorApplication.update -= RunOnce;
-            EditorApplication.update += RunOnce;
-        }
-
-        private static void RunOnce()
-        {
-            if (EditorApplication.isUpdating || EditorApplication.isCompiling) return;
-
-            EditorApplication.update -= RunOnce;
-            DetectAndRegisterModulesOnStartup();
+            SessionState.SetBool(InitializedKey, true);
+            return true;
         }
 
         /// <summary>

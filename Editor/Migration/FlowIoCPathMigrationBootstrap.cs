@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using FlowIoC.Editor.CodeGenerator.Detector;
 using FlowIoC.Editor.Console;
 using UnityEditor;
 
@@ -19,6 +20,9 @@ namespace FlowIoC.Editor.Migration
     /// the files an older FlowIoC wrote, and the generator writes the parts under the new name and
     /// sweeps the old ones - all before assemblies reload, or the compile between would see a
     /// reference with nothing declaring it.
+    ///
+    /// The first load of an Editor session goes to <see cref="ModuleAutoDetector"/> instead, which
+    /// rebuilds the module index before it runs the generator, so the generator runs once a load.
     /// </summary>
     internal static class FlowIoCPathMigrationBootstrap
     {
@@ -35,7 +39,10 @@ namespace FlowIoC.Editor.Migration
 
             EditorApplication.update -= Run;
 
-            FlowModuleGenerator.Generate();
+            if (ModuleAutoDetector.ClaimSessionStartup())
+                ModuleAutoDetector.DetectAndRegisterModulesOnStartup();
+            else
+                FlowModuleGenerator.Generate();
         }
     }
 }
