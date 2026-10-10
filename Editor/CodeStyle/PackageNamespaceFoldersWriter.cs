@@ -30,6 +30,8 @@ namespace FlowIoC.Editor.CodeStyle
         internal const string SettingsExtension = ".csproj.DotSettings";
         private const string AssemblyDefinitionExtension = ".asmdef";
         private const string ProviderFolderName = "Editor";
+        private const string CurrentPublisher = "com.birrstudio.";
+        private const string FormerPublisher = "com.flowarc.";
 
         private readonly string _projectRoot;
         private readonly string _packageRoot;
@@ -145,19 +147,38 @@ namespace FlowIoC.Editor.CodeStyle
 
             var stale = new List<string>();
 
-            foreach (string spelling in _key.Spellings(packageFolder.Substring(0, at + 1)))
+            foreach (string cacheFolder in CacheFolderPrefixes(packageFolder.Substring(0, at + 1)))
             {
-                string prefix = NamespaceSkipKey.Prefix + spelling;
-
-                foreach (string key in entries.Keys)
+                foreach (string spelling in _key.Spellings(cacheFolder))
                 {
-                    if (key.StartsWith(prefix, StringComparison.Ordinal))
-                        stale.Add(key);
+                    string prefix = NamespaceSkipKey.Prefix + spelling;
+
+                    foreach (string key in entries.Keys)
+                    {
+                        if (key.StartsWith(prefix, StringComparison.Ordinal))
+                            stale.Add(key);
+                    }
                 }
             }
 
             foreach (string key in stale)
                 entries.Remove(key);
+        }
+
+        /// <summary>
+        /// The cache folder up to its '@', and the same folder under the name the package had
+        /// before FlowArc became Birr Studio - a project that moved across keeps the old name's
+        /// keys otherwise.
+        /// </summary>
+        private static IEnumerable<string> CacheFolderPrefixes(string cacheFolder)
+        {
+            yield return cacheFolder;
+
+            int nameStart = cacheFolder.LastIndexOf('\\') + 1;
+            string name = cacheFolder.Substring(nameStart);
+
+            if (name.StartsWith(CurrentPublisher, StringComparison.Ordinal))
+                yield return cacheFolder.Substring(0, nameStart) + FormerPublisher + name.Substring(CurrentPublisher.Length);
         }
 
         private bool TryRelativeToProject(string fullPath, out string relative)

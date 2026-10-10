@@ -14,29 +14,54 @@ namespace FlowIoC.Editor.Help
     internal class ModuleLibraryArrivals
     {
         private const string KEY_PREFIX = "FlowIoC.ModuleLibrary.Arrivals.";
+        private const string CURRENT_PUBLISHER = "com.birrstudio.";
+        private const string FORMER_PUBLISHER = "com.flowarc.";
         private const char FIELD = '|';
         private const char ITEM = ',';
 
         private readonly string _key;
+        private readonly string _formerKey;
         private readonly string _version;
         private readonly ModuleLibraryArrivalsRule _rule = new ModuleLibraryArrivalsRule();
 
         internal ModuleLibraryArrivals(string packageName, string packageVersion, string projectRoot)
         {
-            _key = KEY_PREFIX + packageName + "." + (projectRoot ?? string.Empty).Replace('\\', '/').ToLowerInvariant();
+            string project = "." + (projectRoot ?? string.Empty).Replace('\\', '/').ToLowerInvariant();
+
+            _key = KEY_PREFIX + packageName + project;
+            _formerKey = packageName != null && packageName.StartsWith(CURRENT_PUBLISHER, StringComparison.Ordinal)
+                ? KEY_PREFIX + FORMER_PUBLISHER + packageName.Substring(CURRENT_PUBLISHER.Length) + project
+                : null;
             _version = packageVersion ?? string.Empty;
         }
 
         /// <summary>The folders new to this package version, the record brought up to date on the way.</summary>
         internal IReadOnlyList<string> NewFolders(IReadOnlyList<string> shippedFolders)
         {
+            bool moved = TakeFormerRecord();
             ModuleLibraryArrivalsEVO previous = Parse(EditorPrefs.GetString(_key, string.Empty));
             ModuleLibraryArrivalsEVO next = _rule.Next(previous, _version, shippedFolders);
 
-            if (!ReferenceEquals(previous, next))
+            if (moved || !ReferenceEquals(previous, next))
                 EditorPrefs.SetString(_key, Serialize(next));
 
             return next.New;
+        }
+
+        /// <summary>
+        /// Carries the record kept under the package's name from before FlowArc became Birr Studio
+        /// across to the current name, once, so the modules this reader has seen stay seen.
+        /// </summary>
+        private bool TakeFormerRecord()
+        {
+            if (_formerKey == null || !EditorPrefs.HasKey(_formerKey))
+                return false;
+
+            if (!EditorPrefs.HasKey(_key))
+                EditorPrefs.SetString(_key, EditorPrefs.GetString(_formerKey, string.Empty));
+
+            EditorPrefs.DeleteKey(_formerKey);
+            return true;
         }
 
         internal static string Serialize(ModuleLibraryArrivalsEVO record) =>

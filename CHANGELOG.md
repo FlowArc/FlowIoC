@@ -5,6 +5,13 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- A project that moved from `com.flowarc.flowioc.core` drops the old name's Rider namespace keys from `FlowIoC.csproj.DotSettings` and `FlowIoC.Editor.csproj.DotSettings`.
+- Module Library keeps the modules you have already seen across the move to `com.birrstudio.flowioc.core`, so a module arriving then still reads NEW.
+
 ## [1.34.0] - 2026-10-10
 
 ### Changed
